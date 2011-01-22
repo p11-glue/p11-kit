@@ -72,7 +72,8 @@ typedef struct _Module {
 	char *path;
 	void *dl_module;
 	CK_FUNCTION_LIST_PTR funcs;
-	int initialized;
+	int ref_count;
+	int initialize_count;
 	struct _Module *next;
 } Module;
 
@@ -92,13 +93,13 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
  * we can audit thread safety easier.
  */
 static struct _Shared {
-	int initialize_count;
 	Mapping *mappings;
 	unsigned int n_mappings;
 	hsh_t *sessions;
 	Module *modules;
 	CK_ULONG last_handle;
-} gl = { 0, NULL, 0, NULL, NULL, FIRST_HANDLE };
+	int registered_loaded;
+} gl = { NULL, 0, NULL, NULL, FIRST_HANDLE, 0 };
 
 #define MANUFACTURER_ID         "PKCS#11 Unity                   "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Unity Proxy Module      "
@@ -184,84 +185,25 @@ xrealloc (void * memory, size_t length)
 }
 
 /* -----------------------------------------------------------------------------
- * HELPER FUNCTIONS
+ * P11-UNITY FUNCTIONALITY
  */
-
-static CK_RV
-map_slot_unlocked (CK_SLOT_ID slot, Mapping *mapping)
-{
-	assert (mapping);
-
-	if (slot < MAPPING_OFFSET)
-		return CKR_SLOT_ID_INVALID;
-	slot -= MAPPING_OFFSET;
-
-	if (slot > gl.n_mappings) {
-		return CKR_SLOT_ID_INVALID;
-	} else {
-		assert (gl.mappings);
-		memcpy (mapping, &gl.mappings[slot], sizeof (Mapping));
-		return CKR_OK;
-	}
-}
-
-static CK_RV
-map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
-{
-	CK_RV rv;
-
-	assert (mapping);
-
-	pthread_mutex_lock (&mutex);
-
-		if (gl.initialize_count == 0)
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-		else
-			rv = map_slot_unlocked (*slot, mapping);
-		if (rv == CKR_OK)
-			*slot = mapping->real_slot;
-
-	pthread_mutex_unlock (&mutex);
-
-	return rv;
-}
-
-static CK_RV
-map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *session)
-{
-	CK_RV rv = CKR_OK;
-	Session *sess;
-
-	assert (handle);
-	assert (mapping);
-
-	pthread_mutex_lock (&mutex);
-
-		if (gl.initialize_count == 0) {
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-		} else {
-			assert (gl.sessions);
-			sess = hsh_get (gl.sessions, handle, sizeof (handle));
-			if (sess != NULL) {
-				*handle = sess->real_session;
-				rv = map_slot_unlocked (sess->wrap_slot, mapping);
-				if (session != NULL)
-					memcpy (session, sess, sizeof (Session));
-			} else {
-				rv = CKR_SESSION_HANDLE_INVALID;
-			}
-		}
-
-	pthread_mutex_unlock (&mutex);
-
-	return rv;
-}
 
 static CK_RV
 load_module_unlocked (const char *name, Module *module)
 {
 	CK_C_GetFunctionList gfl;
 	CK_RV rv;
+
+	/*
+	 * TODO: This function will change significantly once we're loading
+	 * from a config, see below.
+	 */
+	assert (name);
+	assert (module);
+
+	module->name = strdup (name);
+	if (!module->name)
+		return CKR_HOST_MEMORY;
 
 	module->path = strconcat (PKCS11_MODULE_PATH, "/", name, NULL);
 	if (!module->path)
@@ -294,88 +236,32 @@ load_module_unlocked (const char *name, Module *module)
 static void
 unload_module_unlocked (Module *module)
 {
+	assert (module);
+
 	/* Should have been finalized before this */
-	assert (!module->initialized);
+	assert (!module->initialize_count);
 
 	if (module->dl_module) {
 		dlclose (module->dl_module);
 		module->dl_module = NULL;
 	}
 
-	if (module->path) {
-		free (module->path);
-		module->path = NULL;
-	}
+	free (module->path);
+	module->path = NULL;
+
+	free (module->name);
+	module->name = NULL;
 
 	module->funcs = NULL;
 }
 
 static CK_RV
-finalize_unlocked (CK_VOID_PTR args)
+load_registered_modules_unlocked (void)
 {
-	Module *module, *next;
-	hsh_index_t *iter;
-
-	if (gl.initialize_count == 0)
-		return CKR_CRYPTOKI_NOT_INITIALIZED;
-
-	/* Finalize all the modules */
-	for (module = gl.modules; module; module = next) {
-		next = module->next;
-		if (module->initialized) {
-			(module->funcs->C_Finalize) (args);
-			module->initialized = 0;
-		}
-
-		unload_module_unlocked (module);
-		free (module);
-	}
-	gl.modules = NULL;
-
-	/* No more mappings */
-	free (gl.mappings);
-	gl.mappings = NULL;
-	gl.n_mappings = 0;
-
-	/* no more sessions */
-	if (gl.sessions) {
-		for (iter = hsh_first (gl.sessions); iter; iter = hsh_next (iter))
-			free (hsh_this (iter, NULL, NULL));
-		hsh_free (gl.sessions);
-		gl.sessions = NULL;
-	}
-
-	--gl.initialize_count;
-	return CKR_OK;
-}
-
-static CK_RV
-initialize_unlocked (CK_VOID_PTR init_args)
-{
-	CK_SLOT_ID_PTR slots;
-	CK_ULONG i, count;
-	DIR *dir;
 	struct dirent *dp;
 	Module *module;
+	DIR *dir;
 	CK_RV rv;
-
-	/*
-	 * We bend the rules of PKCS#11 here. We never return the
-	 * CKR_ALREADY_INITIALIZED error code, but just increase
-	 * an initialization ref count.
-	 *
-	 * C_Finalize must be called the same amount of times as
-	 * C_Initialize.
-	 */
-
-	if (gl.initialize_count > 0) {
-		++gl.initialize_count;
-		return CKR_OK;
-	}
-
-	assert (!gl.mappings);
-	assert (gl.n_mappings == 0);
-	assert (!gl.modules);
 
 	/* First we load all the modules */
 	dir = opendir (PKCS11_MODULE_PATH);
@@ -390,80 +276,17 @@ initialize_unlocked (CK_VOID_PTR init_args)
 				rv = CKR_HOST_MEMORY;
 			else
 				rv = load_module_unlocked (dp->d_name, module);
-			if (rv != CKR_OK) {
-				if (module)
-					unload_module_unlocked (module);
-				free (module);
-				break;
-			}
 
+			/* Cleanup for failures happens at caller */
 			module->next = gl.modules;
 			gl.modules = module;
+
+			if (rv != CKR_OK)
+				break;
 		}
 	}
 
 	closedir (dir);
-
-	for (module = gl.modules; rv == CKR_OK && module; module = module->next) {
-
-		/* Initialize each module */
-		rv = (module->funcs->C_Initialize) (init_args);
-		if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
-			rv = CKR_OK;
-		else if (rv == CKR_OK)
-			module->initialized = 1;
-		else
-			break;
-
-		/* And then ask it for its slots */
-		rv = (module->funcs->C_GetSlotList) (FALSE, NULL, &count);
-		if (rv != CKR_OK)
-			break;
-		if (!count)
-			continue;
-		slots = calloc (sizeof (CK_SLOT_ID), count);
-		if (!slots) {
-			rv = CKR_HOST_MEMORY;
-			break;
-		}
-		rv = (module->funcs->C_GetSlotList) (FALSE, slots, &count);
-		if (rv != CKR_OK) {
-			 free (slots);
-			 break;
-		}
-
-		gl.mappings = xrealloc (gl.mappings, sizeof (Mapping) * (gl.n_mappings + count));
-		if (!gl.mappings) {
-			rv = CKR_HOST_MEMORY;
-			free (slots);
-			break;
-		}
-
-		/* And now add a mapping for each of those slots */
-		for (i = 0; i < count; ++i) {
-			gl.mappings[gl.n_mappings].funcs = module->funcs;
-			gl.mappings[gl.n_mappings].wrap_slot = gl.n_mappings + MAPPING_OFFSET;
-			gl.mappings[gl.n_mappings].real_slot = slots[i];
-			++gl.n_mappings;
-		}
-
-		free (slots);
-	}
-
-	gl.sessions = hsh_create ();
-
-	/*
-	 * In the case of failure, we just finalize the partially
-	 * initialized stuff, which cleans everything up. That's
-	 * why we increment initialize_count, as finalize will bring
-	 * it back to zero.
-	 */
-
-	gl.initialize_count = 1;
-	if (rv != CKR_OK) {
-		finalize_unlocked (NULL);
-		assert (gl.initialize_count == 0);
-	}
 
 	return rv;
 }
@@ -531,15 +354,166 @@ unlock_mutex (CK_VOID_PTR mut)
 	return CKR_OK;
 }
 
-/* -----------------------------------------------------------------------------
- * PUBLIC FUNCTIONALITY
- */
+static CK_RV
+initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR args)
+{
+	CK_RV rv = CKR_OK;
+
+	assert (module);
+
+	/*
+	 * Initialize first, so module doesn't get freed out from
+	 * underneath us when the mutex is unlocked below.
+	 */
+	++module->ref_count;
+
+	if (!module->initialize_count) {
+
+		pthread_mutex_unlock (&mutex);
+
+			assert (module->funcs);
+			rv = module->funcs->C_Initialize (args);
+
+		pthread_mutex_lock (&mutex);
+
+		/*
+		 * Because we have the mutex unlocked above, two initializes could
+		 * race. Therefore we need to take CKR_CRYPTOKI_ALREADY_INITIALIZED
+		 * into account.
+		 *
+		 * We also need to take into account where in a race both calls return
+		 * CKR_OK (which is not according to the spec but may happen, I mean we
+		 * do it in this module, so it's not unimaginable).
+		 */
+
+		if (rv == CKR_OK)
+			++module->initialize_count;
+		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
+			rv = CKR_OK;
+		else
+			--module->ref_count;
+	}
+
+	return rv;
+}
+
+static CK_RV
+finalize_module_unlocked_reentrant (Module *module, CK_VOID_PTR args)
+{
+	Module *mod, *next;
+
+	assert (module);
+
+	/*
+	 * We leave module info around until all are finalized
+	 * so we can encounter these zombie Module structures.
+	 */
+	if (module->ref_count == 0)
+		return CKR_ARGUMENTS_BAD;
+
+	if (--module->ref_count > 0)
+		return CKR_OK;
+
+	/*
+	 * Becuase of the mutex unlock below, we temporarily increase
+	 * the ref count. This prevents module from being freed out
+	 * from ounder us.
+	 */
+	++module->ref_count;
+
+	while (module->initialize_count > 0) {
+
+		pthread_mutex_unlock (&mutex);
+
+			assert (module->funcs);
+			module->funcs->C_Finalize (args);
+
+		pthread_mutex_lock (&mutex);
+
+		if (module->initialize_count > 0)
+			--module->initialize_count;
+	}
+
+	/* Match the increment above */
+	--module->ref_count;
+
+	/* Check if any modules have a ref count */
+	for (mod = gl.modules; mod; mod = mod->next) {
+		if (mod->ref_count)
+			break;
+	}
+
+	/* No modules had a refcount? unload and free all info */
+	if (mod == NULL) {
+		for (mod = gl.modules; mod; mod = next) {
+			next = mod->next;
+			unload_module_unlocked (mod);
+			free (mod);
+		}
+		gl.modules = NULL;
+		gl.registered_loaded = 0;
+	}
+
+	return CKR_OK;
+}
+
+static Module*
+find_module_for_funcs_unlocked (CK_FUNCTION_LIST_PTR funcs)
+{
+	Module *module;
+
+	assert (funcs);
+
+	for (module = gl.modules; module; module = module->next)
+		if (module->ref_count && module->funcs == funcs)
+			return module;
+	return NULL;
+}
+
+static Module*
+find_module_for_name_unlocked (const char *name)
+{
+	Module *module;
+
+	assert (name);
+
+	for (module = gl.modules; module; module = module->next)
+		if (module->ref_count && module->name && strcmp (name, module->name))
+			return module;
+	return NULL;
+}
+
+static CK_RV
+initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args)
+{
+	Module *module;
+	CK_RV rv;
+
+	rv = load_registered_modules_unlocked ();
+	if (rv == CKR_OK) {
+		for (module = gl.modules; module; module = module->next) {
+
+			/* Skip all modules that aren't registered */
+			if (!module->name)
+				continue;
+
+			rv = initialize_module_unlocked_reentrant (module, args);
+
+			if (rv != CKR_OK)
+				break;
+		}
+	}
+
+	return rv;
+}
 
 CK_RV
-p11_unity_initialize (void)
+p11_unity_initialize_registered (void)
 {
 	CK_C_INITIALIZE_ARGS args;
 	CK_RV rv;
+
+	/* WARNING: This function must be reentrant */
 
 	memset (&args, 0, sizeof (args));
 	args.CreateMutex = create_mutex;
@@ -550,21 +524,48 @@ p11_unity_initialize (void)
 
 	pthread_mutex_lock (&mutex);
 
-		rv = initialize_unlocked (&args);
+		/* WARNING: Reentrancy can occur here */
+		rv = initialize_registered_unlocked_reentrant (&args);
 
 	pthread_mutex_unlock (&mutex);
+
+	/* Cleanup any partial initialization */
+	if (rv != CKR_OK)
+		p11_unity_finalize_registered ();
 
 	return rv;
 }
 
+static CK_RV
+finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
+{
+	Module *module;
+
+	/* WARNING: This function must be reentrant */
+
+	for (module = gl.modules; module; module = module->next) {
+
+		/* Skip all modules that aren't registered */
+		if (!module->name)
+			continue;
+
+		/* WARNING: Reentrant calls can occur here */
+		finalize_module_unlocked_reentrant (module, args);
+	}
+
+	return CKR_OK;
+}
 CK_RV
-p11_unity_finalize (void)
+p11_unity_finalize_registered (void)
 {
 	CK_RV rv;
 
+	/* WARNING: This function must be reentrant */
+
 	pthread_mutex_lock (&mutex);
 
-		rv = finalize_unlocked (NULL);
+		/* WARNING: Reentrant calls can occur here */
+		rv = finalize_registered_unlocked_reentrant (NULL);
 
 	pthread_mutex_unlock (&mutex);
 
@@ -572,7 +573,7 @@ p11_unity_finalize (void)
 }
 
 char**
-p11_unity_module_names (void)
+p11_unity_registered_names (void)
 {
 	Module *module;
 	char **result;
@@ -580,18 +581,36 @@ p11_unity_module_names (void)
 
 	pthread_mutex_lock (&mutex);
 
-		if (!gl.initialize_count) {
-			result = NULL;
-		} else {
-			for (module = gl.modules, count = 0;
-			     module; module = module->next)
-				++count;
-			result = calloc (count + 1, sizeof (char*));
-			if (result) {
-				for (module = gl.modules, i = 0;
-				     module; module = module->next, ++i)
-					result[i] = strdup (module->name);
-			}
+		for (module = gl.modules, count = 0;
+		     module; module = module->next)
+			++count;
+		result = calloc (count + 1, sizeof (char*));
+		if (result) {
+			for (module = gl.modules, i = 0;
+			     module; module = module->next, ++i)
+				result[i] = strdup (module->name);
+		}
+
+	pthread_mutex_unlock (&mutex);
+
+	return result;
+}
+
+CK_FUNCTION_LIST_PTR
+p11_unity_registered_module (const char *module_name)
+{
+	CK_FUNCTION_LIST_PTR result;
+	Module *module;
+
+	if (!module_name)
+		return NULL;
+
+	pthread_mutex_lock (&mutex);
+
+		module = find_module_for_name_unlocked (module_name);
+		if (module) {
+			assert (module);
+			result = module->funcs;
 		}
 
 	pthread_mutex_unlock (&mutex);
@@ -607,50 +626,72 @@ p11_unity_free_names (char **module_names)
 		free (name);
 }
 
-CK_FUNCTION_LIST_PTR
-p11_unity_module_functions (const char *module_name)
+char*
+p11_unity_registered_option (const char *module_name, const char *field)
 {
-	CK_FUNCTION_LIST_PTR result;
-	Module *module;
+	/* TODO: Need to implement */
+	assert (0);
+	return NULL;
+}
 
-	if (!module_name)
-		return NULL;
+CK_RV
+p11_unity_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR init_args)
+{
+	Module *module;
+	Module *allocated = NULL;
+	CK_RV rv = CKR_OK;
+
+	/* WARNING: This function must be reentrant for the same arguments */
 
 	pthread_mutex_lock (&mutex);
 
-		if (gl.initialize_count) {
-			for (module = gl.modules; module; module = module->next) {
-				if (strcmp (module_name, module->name) == 0) {
-					result = module->funcs;
-					break;
-				}
-			}
+		module = find_module_for_funcs_unlocked (funcs);
+		if (module == NULL) {
+			allocated = module = calloc (1, sizeof (Module));
+			module->name = NULL;
+			module->dl_module = NULL;
+			module->path = NULL;
+			module->funcs = funcs;
+		}
+
+		/* WARNING: Reentrancy can occur here */
+		rv = initialize_module_unlocked_reentrant (module, init_args);
+
+		/* If this was newly allocated, add it to the list */
+		if (rv == CKR_OK && allocated) {
+			allocated->next = gl.modules;
+			gl.modules = allocated;
+			allocated = NULL;
+		}
+
+		free (allocated);
+
+	pthread_mutex_unlock (&mutex);
+
+	return rv;
+}
+
+CK_RV
+p11_unity_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
+{
+	Module *module;
+	CK_RV rv = CKR_OK;
+
+	/* WARNING: This function must be reentrant for the same arguments */
+
+	pthread_mutex_lock (&mutex);
+
+		module = find_module_for_funcs_unlocked (funcs);
+		if (module == NULL) {
+			rv = CKR_ARGUMENTS_BAD;
+		} else {
+			/* WARNING: Rentrancy can occur here */
+			rv = finalize_module_unlocked_reentrant (module, reserved);
 		}
 
 	pthread_mutex_unlock (&mutex);
 
-	return result;
-}
-
-int
-p11_unity_module_add (const char *module_name, CK_FUNCTION_LIST_PTR module)
-{
-	assert (0);
-	return -1;
-}
-
-int
-p11_unity_module_remove (const char *module_name)
-{
-	assert (0);
-	return -1;
-}
-
-char*
-p11_unity_config_get_option (const char *module_name, const char *field)
-{
-	assert (0);
-	return NULL;
+	return rv;
 }
 
 /* -----------------------------------------------------------------------------
@@ -658,19 +699,191 @@ p11_unity_config_get_option (const char *module_name, const char *field)
  */
 
 static CK_RV
+map_slot_unlocked (CK_SLOT_ID slot, Mapping *mapping)
+{
+	assert (mapping);
+
+	if (slot < MAPPING_OFFSET)
+		return CKR_SLOT_ID_INVALID;
+	slot -= MAPPING_OFFSET;
+
+	if (slot > gl.n_mappings) {
+		return CKR_SLOT_ID_INVALID;
+	} else {
+		assert (gl.mappings);
+		memcpy (mapping, &gl.mappings[slot], sizeof (Mapping));
+		return CKR_OK;
+	}
+}
+
+static CK_RV
+map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
+{
+	CK_RV rv;
+
+	assert (mapping);
+
+	pthread_mutex_lock (&mutex);
+
+		if (!gl.mappings)
+			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+		else
+			rv = map_slot_unlocked (*slot, mapping);
+		if (rv == CKR_OK)
+			*slot = mapping->real_slot;
+
+	pthread_mutex_unlock (&mutex);
+
+	return rv;
+}
+
+static CK_RV
+map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *session)
+{
+	CK_RV rv = CKR_OK;
+	Session *sess;
+
+	assert (handle);
+	assert (mapping);
+
+	pthread_mutex_lock (&mutex);
+
+		if (!gl.sessions) {
+			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+		} else {
+			assert (gl.sessions);
+			sess = hsh_get (gl.sessions, handle, sizeof (handle));
+			if (sess != NULL) {
+				*handle = sess->real_session;
+				rv = map_slot_unlocked (sess->wrap_slot, mapping);
+				if (session != NULL)
+					memcpy (session, sess, sizeof (Session));
+			} else {
+				rv = CKR_SESSION_HANDLE_INVALID;
+			}
+		}
+
+	pthread_mutex_unlock (&mutex);
+
+	return rv;
+}
+
+static void
+finalize_mappings_unlocked (void)
+{
+	hsh_index_t *iter;
+
+	/* No more mappings */
+	free (gl.mappings);
+	gl.mappings = NULL;
+	gl.n_mappings = 0;
+
+	/* no more sessions */
+	if (gl.sessions) {
+		for (iter = hsh_first (gl.sessions); iter; iter = hsh_next (iter))
+			free (hsh_this (iter, NULL, NULL));
+		hsh_free (gl.sessions);
+		gl.sessions = NULL;
+	}
+}
+
+static CK_RV
 unity_C_Finalize (CK_VOID_PTR reserved)
 {
 	CK_RV rv;
+
+	/* WARNING: This function must be reentrant */
 
 	if (reserved)
 		return CKR_ARGUMENTS_BAD;
 
 	pthread_mutex_lock (&mutex);
 
-		rv = finalize_unlocked (reserved);
+		/* WARNING: Reentrancy can occur here */
+		rv = finalize_registered_unlocked_reentrant (reserved);
+
+		/*
+		 * If modules are all gone, then this was the last
+		 * finalize, so cleanup our mappings
+		 */
+		if (gl.modules == NULL)
+			finalize_mappings_unlocked ();
 
 	pthread_mutex_unlock (&mutex);
 
+	return rv;
+}
+
+static CK_RV
+initialize_mappings_unlocked_reentrant (void)
+{
+	CK_FUNCTION_LIST_PTR funcs;
+	Mapping *mappings = NULL;
+	int n_mappings = 0;
+	CK_SLOT_ID_PTR slots;
+	CK_ULONG i, count;
+	Module *module;
+	CK_RV rv;
+
+	assert (!gl.mappings);
+
+	for (module = gl.modules; module; module = module->next) {
+
+		/* Only do registered modules */
+		if (module->ref_count && !module->name)
+			continue;
+
+		funcs = module->funcs;
+		assert (funcs);
+		slots = NULL;
+
+		pthread_mutex_unlock (&mutex);
+
+			/* Ask module for its slots */
+			rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
+			if (rv == CKR_OK && count) {
+				slots = calloc (sizeof (CK_SLOT_ID), count);
+				if (!slots)
+					rv = CKR_HOST_MEMORY;
+				else
+					rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
+			}
+
+		pthread_mutex_lock (&mutex);
+
+		if (rv != CKR_OK) {
+			free (slots);
+			break;
+		}
+
+		mappings = xrealloc (mappings, sizeof (Mapping) * (n_mappings + count));
+		if (!mappings) {
+			free (slots);
+			rv = CKR_HOST_MEMORY;
+			break;
+		}
+
+		/* And now add a mapping for each of those slots */
+		for (i = 0; i < count; ++i) {
+			mappings[n_mappings].funcs = funcs;
+			mappings[n_mappings].wrap_slot = n_mappings + MAPPING_OFFSET;
+			mappings[n_mappings].real_slot = slots[i];
+			++n_mappings;
+		}
+
+		free (slots);
+	}
+
+	/* Another thread raced us here due to above reentrancy */
+	if (gl.mappings) {
+		free (mappings);
+		return CKR_OK;
+	}
+
+	assert (!gl.sessions);
+	gl.sessions = hsh_create ();
+
+	/* Any cleanup necessary for failure will happen at caller */
 	return rv;
 }
 
@@ -679,11 +892,21 @@ unity_C_Initialize (CK_VOID_PTR init_args)
 {
 	CK_RV rv;
 
+	/* WARNING: This function must be reentrant */
+
 	pthread_mutex_lock (&mutex);
 
-		rv = initialize_unlocked (init_args);
+		/* WARNING: Reentrancy can occur here */
+		rv = initialize_registered_unlocked_reentrant (init_args);
+
+		/* WARNING: Reentrancy can occur here */
+		if (rv == CKR_OK && !gl.mappings)
+			rv = initialize_mappings_unlocked_reentrant ();
 
 	pthread_mutex_unlock (&mutex);
+
+	if (rv != CKR_OK)
+		unity_C_Finalize (NULL);
 
 	return rv;
 }
@@ -698,7 +921,7 @@ unity_C_GetInfo (CK_INFO_PTR info)
 
 	pthread_mutex_lock (&mutex);
 
-		if (gl.initialize_count == 0)
+		if (!gl.mappings)
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
 	pthread_mutex_unlock (&mutex);
@@ -742,7 +965,7 @@ unity_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 
 	pthread_mutex_lock (&mutex);
 
-		if (gl.initialize_count == 0) {
+		if (!gl.mappings) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			index = 0;
@@ -866,8 +1089,15 @@ unity_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 	if (rv == CKR_OK) {
 		pthread_mutex_lock (&mutex);
 
-			if (gl.initialize_count == 0) {
+			if (!gl.sessions) {
+				/*
+				 * The underlying module should have returned an error, so this
+				 * code should never be reached with properly behaving modules.
+				 * That's why we don't cleanup and close the newly opened session here
+				 * or anything like that.
+				 */
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+
 			} else {
 				sess = calloc (1, sizeof (Session));
 				sess->wrap_slot = map.wrap_slot;
@@ -899,7 +1129,7 @@ unity_C_CloseSession (CK_SESSION_HANDLE handle)
 	if (rv == CKR_OK) {
 		pthread_mutex_lock (&mutex);
 
-			if (gl.initialize_count != 0)
+			if (gl.sessions)
 				hsh_rem (gl.sessions, &key, sizeof (key));
 
 		pthread_mutex_unlock (&mutex);
@@ -919,7 +1149,7 @@ unity_C_CloseAllSessions (CK_SLOT_ID id)
 
 	pthread_mutex_lock (&mutex);
 
-		if (gl.initialize_count == 0) {
+		if (!gl.sessions) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			to_close = calloc (sizeof (CK_SESSION_HANDLE), hsh_count (gl.sessions));
