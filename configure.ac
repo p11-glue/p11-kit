@@ -18,11 +18,14 @@ AC_PROG_CPP
 AM_PROG_CC_C_O
 
 dnl Checks for libraries.
-
 AC_CHECK_LIB(pthread, pthread_mutex_lock,,
 	[AC_MSG_ERROR([could not find pthread_mutex_lock])])
 AC_CHECK_LIB(dl, dlopen,,
 	[AC_MSG_ERROR([could not find dlopen])])
+
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 
 # --------------------------------------------------------------------
 # PAM Module Directory

@@ -37,11 +37,13 @@
 
 #include "hash.h"
 #include "pkcs11.h"
+#include "p11-unity.h"
 
 #include <sys/types.h>
 #include <assert.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -66,6 +68,7 @@ typedef struct _Session {
 } Session;
 
 typedef struct _Module {
+	char *name;
 	char *path;
 	void *dl_module;
 	CK_FUNCTION_LIST_PTR funcs;
@@ -76,6 +79,12 @@ typedef struct _Module {
 /* Forward declaration */
 static CK_FUNCTION_LIST unity_function_list;
 
+/*
+ * This is the mutex that protects the global data of this library
+ * and the pkcs11 proxy module. Note that we *never* call into our
+ * underlying pkcs11 modules while holding this mutex. Therefore it
+ * doesn't have to be recursive and we can keep things simple.
+ */
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*
@@ -302,6 +311,45 @@ unload_module_unlocked (Module *module)
 }
 
 static CK_RV
+finalize_unlocked (CK_VOID_PTR args)
+{
+	Module *module, *next;
+	hsh_index_t *iter;
+
+	if (gl.initialize_count == 0)
+		return CKR_CRYPTOKI_NOT_INITIALIZED;
+
+	/* Finalize all the modules */
+	for (module = gl.modules; module; module = next) {
+		next = module->next;
+		if (module->initialized) {
+			(module->funcs->C_Finalize) (args);
+			module->initialized = 0;
+		}
+
+		unload_module_unlocked (module);
+		free (module);
+	}
+	gl.modules = NULL;
+
+	/* No more mappings */
+	free (gl.mappings);
+	gl.mappings = NULL;
+	gl.n_mappings = 0;
+
+	/* no more sessions */
+	if (gl.sessions) {
+		for (iter = hsh_first (gl.sessions); iter; iter = hsh_next (iter))
+			free (hsh_this (iter, NULL, NULL));
+		hsh_free (gl.sessions);
+		gl.sessions = NULL;
+	}
+
+	--gl.initialize_count;
+	return CKR_OK;
+}
+
+static CK_RV
 initialize_unlocked (CK_VOID_PTR init_args)
 {
 	CK_SLOT_ID_PTR slots;
@@ -310,6 +358,20 @@ initialize_unlocked (CK_VOID_PTR init_args)
 	struct dirent *dp;
 	Module *module;
 	CK_RV rv;
+
+	/*
+	 * We bend the rules of PKCS#11 here. We never return the
+	 * CKR_ALREADY_INITIALIZED error code, but just increase
+	 * an initialization ref count.
+	 *
+	 * C_Finalize must be called the same amount of times as
+	 * C_Initialize.
+	 */
+
+	if (gl.initialize_count > 0) {
+		++gl.initialize_count;
+		return CKR_OK;
+	}
 
 	assert (!gl.mappings);
 	assert (gl.n_mappings == 0);
@@ -389,46 +451,210 @@ initialize_unlocked (CK_VOID_PTR init_args)
 	}
 
 	gl.sessions = hsh_create ();
+
+	/*
+	 * In the case of failure, we just finalize the partially
+	 * initialized stuff, which cleans everything up. That's
+	 * why we increment initialize_count, as finalize will bring
+	 * it back to zero.
+	 */
+
+	gl.initialize_count = 1;
+	if (rv != CKR_OK) {
+		finalize_unlocked (NULL);
+		assert (gl.initialize_count == 0);
+	}
+
 	return rv;
 }
 
 static CK_RV
-finalize_unlocked (CK_VOID_PTR args)
+create_mutex (CK_VOID_PTR_PTR mut)
 {
-	Module *module, *next;
-	hsh_index_t *iter;
+	pthread_mutex_t *pmutex;
+	int err;
 
-	/* Finalize all the modules */
-	for (module = gl.modules; module; module = next) {
-		next = module->next;
-		if (module->initialized) {
-			(module->funcs->C_Finalize) (args);
-			module->initialized = 0;
-		}
+	pmutex = malloc (sizeof (pthread_mutex_t));
+	if (!pmutex)
+		return CKR_HOST_MEMORY;
+	err = pthread_mutex_init (pmutex, NULL);
+	if (err == ENOMEM)
+		return CKR_HOST_MEMORY;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	*mut = pmutex;
+	return CKR_OK;
+}
 
-		unload_module_unlocked (module);
-		free (module);
-	}
-	gl.modules = NULL;
+static CK_RV
+destroy_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
 
-	/* No more mappings */
-	free (gl.mappings);
-	gl.mappings = NULL;
-	gl.n_mappings = 0;
+	err = pthread_mutex_destroy (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	free (pmutex);
+	return CKR_OK;
+}
 
-	/* no more sessions */
-	if (gl.sessions) {
-		for (iter = hsh_first (gl.sessions); iter; iter = hsh_next (iter))
-			free (hsh_this (iter, NULL, NULL));
-		hsh_free (gl.sessions);
-		gl.sessions = NULL;
-	}
+static CK_RV
+lock_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
 
+	err = pthread_mutex_lock (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	return CKR_OK;
+}
+
+static CK_RV
+unlock_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
+
+	err = pthread_mutex_unlock (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err == EPERM)
+		return CKR_MUTEX_NOT_LOCKED;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
 	return CKR_OK;
 }
 
 /* -----------------------------------------------------------------------------
- * PKCS#11 FUNCTIONS
+ * PUBLIC FUNCTIONALITY
+ */
+
+CK_RV
+p11_unity_initialize (void)
+{
+	CK_C_INITIALIZE_ARGS args;
+	CK_RV rv;
+
+	memset (&args, 0, sizeof (args));
+	args.CreateMutex = create_mutex;
+	args.DestroyMutex = destroy_mutex;
+	args.LockMutex = lock_mutex;
+	args.UnlockMutex = unlock_mutex;
+	args.flags = CKF_OS_LOCKING_OK;
+
+	pthread_mutex_lock (&mutex);
+
+		rv = initialize_unlocked (&args);
+
+	pthread_mutex_unlock (&mutex);
+
+	return rv;
+}
+
+CK_RV
+p11_unity_finalize (void)
+{
+	CK_RV rv;
+
+	pthread_mutex_lock (&mutex);
+
+		rv = finalize_unlocked (NULL);
+
+	pthread_mutex_unlock (&mutex);
+
+	return rv;
+}
+
+char**
+p11_unity_module_names (void)
+{
+	Module *module;
+	char **result;
+	int count, i;
+
+	pthread_mutex_lock (&mutex);
+
+		if (!gl.initialize_count) {
+			result = NULL;
+		} else {
+			for (module = gl.modules, count = 0;
+			     module; module = module->next)
+				++count;
+			result = calloc (count + 1, sizeof (char*));
+			if (result) {
+				for (module = gl.modules, i = 0;
+				     module; module = module->next, ++i)
+					result[i] = strdup (module->name);
+			}
+		}
+
+	pthread_mutex_unlock (&mutex);
+
+	return result;
+}
+
+void
+p11_unity_free_names (char **module_names)
+{
+	char **name;
+	for (name = module_names; *name; ++name)
+		free (name);
+}
+
+CK_FUNCTION_LIST_PTR
+p11_unity_module_functions (const char *module_name)
+{
+	CK_FUNCTION_LIST_PTR result;
+	Module *module;
+
+	if (!module_name)
+		return NULL;
+
+	pthread_mutex_lock (&mutex);
+
+		if (gl.initialize_count) {
+			for (module = gl.modules; module; module = module->next) {
+				if (strcmp (module_name, module->name) == 0) {
+					result = module->funcs;
+					break;
+				}
+			}
+		}
+
+	pthread_mutex_unlock (&mutex);
+
+	return result;
+}
+
+int
+p11_unity_module_add (const char *module_name, CK_FUNCTION_LIST_PTR module)
+{
+	assert (0);
+	return -1;
+}
+
+int
+p11_unity_module_remove (const char *module_name)
+{
+	assert (0);
+	return -1;
+}
+
+char*
+p11_unity_config_get_option (const char *module_name, const char *field)
+{
+	assert (0);
+	return NULL;
+}
+
+/* -----------------------------------------------------------------------------
+ * PKCS#11 PROXY MODULE
  */
 
 static CK_RV
@@ -441,13 +667,7 @@ unity_C_Finalize (CK_VOID_PTR reserved)
 
 	pthread_mutex_lock (&mutex);
 
-		if (gl.initialize_count == 0) {
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-		} else {
-			rv = finalize_unlocked (reserved);
-			if (rv == CKR_OK)
-				--gl.initialize_count;
-		}
+		rv = finalize_unlocked (reserved);
 
 	pthread_mutex_unlock (&mutex);
 
@@ -461,28 +681,9 @@ unity_C_Initialize (CK_VOID_PTR init_args)
 
 	pthread_mutex_lock (&mutex);
 
-		/*
-		 * We bend the rules of PKCS#11 here. We never return the
-		 * CKR_ALREADY_INITIALIZED error code, but just increase
-		 * an initialization ref count.
-		 *
-		 * C_Finalize must be called the same amount of times as
-		 * C_Initialize.
-		 */
-
-		if (gl.initialize_count > 0) {
-			++gl.initialize_count;
-			rv = CKR_OK;
-		} else {
-			rv = initialize_unlocked (init_args);
-			gl.initialize_count = 1;
-		}
+		rv = initialize_unlocked (init_args);
 
 	pthread_mutex_unlock (&mutex);
-
-	/* Finalize anything that was half initialized */
-	if (rv != CKR_OK)
-		unity_C_Finalize (NULL);
 
 	return rv;
 }
