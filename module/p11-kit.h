@@ -32,26 +32,26 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef __P11_UNITY_H__
-#define __P11_UNITY_H__
+#ifndef __P11_KIT_H__
+#define __P11_KIT_H__
 
-CK_RV                    p11_unity_initialize_registered     (void);
+CK_RV                    p11_kit_initialize_registered     (void);
 
-CK_RV                    p11_unity_finalize_registered       (void);
+CK_RV                    p11_kit_finalize_registered       (void);
 
-char**                   p11_unity_registered_names          (void);
+char**                   p11_kit_registered_names          (void);
 
-CK_FUNCTION_LIST_PTR     p11_unity_registered_module         (const char *module_name);
+CK_FUNCTION_LIST_PTR     p11_kit_registered_module         (const char *module_name);
 
-void                     p11_unity_free_names                (char **module_names);
+void                     p11_kit_free_names                (char **module_names);
 
-char*                    p11_unity_registered_option         (const char *module_name,
-                                                              const char *field);
+char*                    p11_kit_registered_option         (const char *module_name,
+                                                            const char *field);
 
-CK_RV                    p11_unity_initialize_module         (CK_FUNCTION_LIST_PTR module,
-                                                              CK_C_INITIALIZE_ARGS_PTR init_args);
+CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR module,
+                                                            CK_C_INITIALIZE_ARGS_PTR init_args);
 
-CK_RV                    p11_unity_finalize_module           (CK_FUNCTION_LIST_PTR module,
-                                                              CK_VOID_PTR reserved);
+CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR module,
+                                                            CK_VOID_PTR reserved);
 
-#endif /* __P11_UNITY_H__ */
+#endif /* __P11_KIT_H__ */

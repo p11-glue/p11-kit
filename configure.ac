@@ -1,9 +1,9 @@
 AC_PREREQ(2.65)
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_INIT([p11-unity],[0.1],[http://bugzilla.example.com])
+AC_INIT([p11-kit],[0.1],[http://bugzilla.example.com])
 
-AC_CONFIG_SRCDIR([module/p11-unity.c])
+AC_CONFIG_SRCDIR([module/p11-kit.c])
 AC_CONFIG_HEADERS([config.h])
 
 dnl Other initialization

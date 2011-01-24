@@ -37,7 +37,7 @@
 
 #include "hash.h"
 #include "pkcs11.h"
-#include "p11-unity.h"
+#include "p11-kit.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -78,7 +78,7 @@ typedef struct _Module {
 } Module;
 
 /* Forward declaration */
-static CK_FUNCTION_LIST unity_function_list;
+static CK_FUNCTION_LIST proxy_function_list;
 
 /*
  * This is the mutex that protects the global data of this library
@@ -101,8 +101,8 @@ static struct _Shared {
 	int registered_loaded;
 } gl = { NULL, 0, NULL, NULL, FIRST_HANDLE, 0 };
 
-#define MANUFACTURER_ID         "PKCS#11 Unity                   "
-#define LIBRARY_DESCRIPTION     "PKCS#11 Unity Proxy Module      "
+#define MANUFACTURER_ID         "PKCS#11 Kit                     "
+#define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
 #define LIBRARY_VERSION_MAJOR   1
 #define LIBRARY_VERSION_MINOR   1
 
@@ -120,7 +120,7 @@ warning (const char* msg, ...)
 
 	vsnprintf(buffer, sizeof (buffer) - 1, msg, va);
 	buffer[sizeof (buffer) - 1] = 0;
-	fprintf (stderr, "p11-unity: %s\n", buffer);
+	fprintf (stderr, "p11-kit: %s\n", buffer);
 
 	va_end (va);
 }
@@ -185,7 +185,7 @@ xrealloc (void * memory, size_t length)
 }
 
 /* -----------------------------------------------------------------------------
- * P11-UNITY FUNCTIONALITY
+ * P11-KIT FUNCTIONALITY
  */
 
 static CK_RV
@@ -508,7 +508,7 @@ initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args)
 }
 
 CK_RV
-p11_unity_initialize_registered (void)
+p11_kit_initialize_registered (void)
 {
 	CK_C_INITIALIZE_ARGS args;
 	CK_RV rv;
@@ -531,7 +531,7 @@ p11_unity_initialize_registered (void)
 
 	/* Cleanup any partial initialization */
 	if (rv != CKR_OK)
-		p11_unity_finalize_registered ();
+		p11_kit_finalize_registered ();
 
 	return rv;
 }
@@ -556,7 +556,7 @@ finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
 	return CKR_OK;
 }
 CK_RV
-p11_unity_finalize_registered (void)
+p11_kit_finalize_registered (void)
 {
 	CK_RV rv;
 
@@ -573,7 +573,7 @@ p11_unity_finalize_registered (void)
 }
 
 char**
-p11_unity_registered_names (void)
+p11_kit_registered_names (void)
 {
 	Module *module;
 	char **result;
@@ -597,7 +597,7 @@ p11_unity_registered_names (void)
 }
 
 CK_FUNCTION_LIST_PTR
-p11_unity_registered_module (const char *module_name)
+p11_kit_registered_module (const char *module_name)
 {
 	CK_FUNCTION_LIST_PTR result;
 	Module *module;
@@ -619,7 +619,7 @@ p11_unity_registered_module (const char *module_name)
 }
 
 void
-p11_unity_free_names (char **module_names)
+p11_kit_free_names (char **module_names)
 {
 	char **name;
 	for (name = module_names; *name; ++name)
@@ -627,7 +627,7 @@ p11_unity_free_names (char **module_names)
 }
 
 char*
-p11_unity_registered_option (const char *module_name, const char *field)
+p11_kit_registered_option (const char *module_name, const char *field)
 {
 	/* TODO: Need to implement */
 	assert (0);
@@ -635,7 +635,7 @@ p11_unity_registered_option (const char *module_name, const char *field)
 }
 
 CK_RV
-p11_unity_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR init_args)
+p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR init_args)
 {
 	Module *module;
 	Module *allocated = NULL;
@@ -672,7 +672,7 @@ p11_unity_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PT
 }
 
 CK_RV
-p11_unity_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
+p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
 {
 	Module *module;
 	CK_RV rv = CKR_OK;
@@ -788,7 +788,7 @@ finalize_mappings_unlocked (void)
 }
 
 static CK_RV
-unity_C_Finalize (CK_VOID_PTR reserved)
+proxy_C_Finalize (CK_VOID_PTR reserved)
 {
 	CK_RV rv;
 
@@ -888,7 +888,7 @@ initialize_mappings_unlocked_reentrant (void)
 }
 
 static CK_RV
-unity_C_Initialize (CK_VOID_PTR init_args)
+proxy_C_Initialize (CK_VOID_PTR init_args)
 {
 	CK_RV rv;
 
@@ -906,13 +906,13 @@ unity_C_Initialize (CK_VOID_PTR init_args)
 	pthread_mutex_unlock (&mutex);
 
 	if (rv != CKR_OK)
-		unity_C_Finalize (NULL);
+		proxy_C_Finalize (NULL);
 
 	return rv;
 }
 
 static CK_RV
-unity_C_GetInfo (CK_INFO_PTR info)
+proxy_C_GetInfo (CK_INFO_PTR info)
 {
 	CK_RV rv = CKR_OK;
 
@@ -940,18 +940,18 @@ unity_C_GetInfo (CK_INFO_PTR info)
 }
 
 static CK_RV
-unity_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
+proxy_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	/* Can be called before C_Initialize */
 
 	if (!list)
 		return CKR_ARGUMENTS_BAD;
-	*list = &unity_function_list;
+	*list = &proxy_function_list;
 	return CKR_OK;
 }
 
 static CK_RV
-unity_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
+proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
                        CK_ULONG_PTR count)
 {
 	CK_SLOT_INFO info;
@@ -1002,7 +1002,7 @@ unity_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 }
 
 static CK_RV
-unity_C_GetSlotInfo (CK_SLOT_ID id, CK_SLOT_INFO_PTR info)
+proxy_C_GetSlotInfo (CK_SLOT_ID id, CK_SLOT_INFO_PTR info)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1014,7 +1014,7 @@ unity_C_GetSlotInfo (CK_SLOT_ID id, CK_SLOT_INFO_PTR info)
 }
 
 static CK_RV
-unity_C_GetTokenInfo (CK_SLOT_ID id, CK_TOKEN_INFO_PTR info)
+proxy_C_GetTokenInfo (CK_SLOT_ID id, CK_TOKEN_INFO_PTR info)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1026,7 +1026,7 @@ unity_C_GetTokenInfo (CK_SLOT_ID id, CK_TOKEN_INFO_PTR info)
 }
 
 static CK_RV
-unity_C_GetMechanismList (CK_SLOT_ID id, CK_MECHANISM_TYPE_PTR mechanism_list,
+proxy_C_GetMechanismList (CK_SLOT_ID id, CK_MECHANISM_TYPE_PTR mechanism_list,
                           CK_ULONG_PTR count)
 {
 	Mapping map;
@@ -1039,7 +1039,7 @@ unity_C_GetMechanismList (CK_SLOT_ID id, CK_MECHANISM_TYPE_PTR mechanism_list,
 }
 
 static CK_RV
-unity_C_GetMechanismInfo (CK_SLOT_ID id, CK_MECHANISM_TYPE type,
+proxy_C_GetMechanismInfo (CK_SLOT_ID id, CK_MECHANISM_TYPE type,
                           CK_MECHANISM_INFO_PTR info)
 {
 	Mapping map;
@@ -1052,7 +1052,7 @@ unity_C_GetMechanismInfo (CK_SLOT_ID id, CK_MECHANISM_TYPE type,
 }
 
 static CK_RV
-unity_C_InitToken (CK_SLOT_ID id, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len, CK_UTF8CHAR_PTR label)
+proxy_C_InitToken (CK_SLOT_ID id, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len, CK_UTF8CHAR_PTR label)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1064,13 +1064,13 @@ unity_C_InitToken (CK_SLOT_ID id, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len, CK_UTF8
 }
 
 static CK_RV
-unity_C_WaitForSlotEvent (CK_FLAGS flags, CK_SLOT_ID_PTR slot, CK_VOID_PTR reserved)
+proxy_C_WaitForSlotEvent (CK_FLAGS flags, CK_SLOT_ID_PTR slot, CK_VOID_PTR reserved)
 {
 	return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 static CK_RV
-unity_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
+proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
                      CK_NOTIFY callback, CK_SESSION_HANDLE_PTR handle)
 {
 	Session *sess;
@@ -1114,7 +1114,7 @@ unity_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 }
 
 static CK_RV
-unity_C_CloseSession (CK_SESSION_HANDLE handle)
+proxy_C_CloseSession (CK_SESSION_HANDLE handle)
 {
 	CK_SESSION_HANDLE key;
 	Mapping map;
@@ -1139,7 +1139,7 @@ unity_C_CloseSession (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-unity_C_CloseAllSessions (CK_SLOT_ID id)
+proxy_C_CloseAllSessions (CK_SLOT_ID id)
 {
 	CK_SESSION_HANDLE_PTR to_close;
 	CK_RV rv = CKR_OK;
@@ -1171,14 +1171,14 @@ unity_C_CloseAllSessions (CK_SLOT_ID id)
 		return rv;
 
 	for (i = 0; i < count; ++i)
-		unity_C_CloseSession (to_close[i]);
+		proxy_C_CloseSession (to_close[i]);
 
 	free (to_close);
 	return CKR_OK;
 }
 
 static CK_RV
-unity_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
+proxy_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1190,7 +1190,7 @@ unity_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-unity_C_CancelFunction (CK_SESSION_HANDLE handle)
+proxy_C_CancelFunction (CK_SESSION_HANDLE handle)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1202,7 +1202,7 @@ unity_C_CancelFunction (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-unity_C_GetSessionInfo (CK_SESSION_HANDLE handle, CK_SESSION_INFO_PTR info)
+proxy_C_GetSessionInfo (CK_SESSION_HANDLE handle, CK_SESSION_INFO_PTR info)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1222,7 +1222,7 @@ unity_C_GetSessionInfo (CK_SESSION_HANDLE handle, CK_SESSION_INFO_PTR info)
 }
 
 static CK_RV
-unity_C_InitPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len)
+proxy_C_InitPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1235,7 +1235,7 @@ unity_C_InitPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len
 }
 
 static CK_RV
-unity_C_SetPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR old_pin, CK_ULONG old_pin_len,
+proxy_C_SetPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR old_pin, CK_ULONG old_pin_len,
                 CK_UTF8CHAR_PTR new_pin, CK_ULONG new_pin_len)
 {
 	Mapping map;
@@ -1249,7 +1249,7 @@ unity_C_SetPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR old_pin, CK_ULONG old_
 }
 
 static CK_RV
-unity_C_GetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state, CK_ULONG_PTR operation_state_len)
+proxy_C_GetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state, CK_ULONG_PTR operation_state_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1261,7 +1261,7 @@ unity_C_GetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state
 }
 
 static CK_RV
-unity_C_SetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state,
+proxy_C_SetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state,
                            CK_ULONG operation_state_len, CK_OBJECT_HANDLE encryption_key,
                            CK_OBJECT_HANDLE authentication_key)
 {
@@ -1275,7 +1275,7 @@ unity_C_SetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state
 }
 
 static CK_RV
-unity_C_Login (CK_SESSION_HANDLE handle, CK_USER_TYPE user_type,
+proxy_C_Login (CK_SESSION_HANDLE handle, CK_USER_TYPE user_type,
                CK_UTF8CHAR_PTR pin, CK_ULONG pin_len)
 {
 	Mapping map;
@@ -1289,7 +1289,7 @@ unity_C_Login (CK_SESSION_HANDLE handle, CK_USER_TYPE user_type,
 }
 
 static CK_RV
-unity_C_Logout (CK_SESSION_HANDLE handle)
+proxy_C_Logout (CK_SESSION_HANDLE handle)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1301,7 +1301,7 @@ unity_C_Logout (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-unity_C_CreateObject (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
+proxy_C_CreateObject (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
                       CK_ULONG count, CK_OBJECT_HANDLE_PTR new_object)
 {
 	Mapping map;
@@ -1315,7 +1315,7 @@ unity_C_CreateObject (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
 }
 
 static CK_RV
-unity_C_CopyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
+proxy_C_CopyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
                     CK_ATTRIBUTE_PTR template, CK_ULONG count,
                     CK_OBJECT_HANDLE_PTR new_object)
 {
@@ -1329,7 +1329,7 @@ unity_C_CopyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
 }
 
 static CK_RV
-unity_C_DestroyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object)
+proxy_C_DestroyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1341,7 +1341,7 @@ unity_C_DestroyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object)
 }
 
 static CK_RV
-unity_C_GetObjectSize (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
+proxy_C_GetObjectSize (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
                        CK_ULONG_PTR size)
 {
 	Mapping map;
@@ -1354,7 +1354,7 @@ unity_C_GetObjectSize (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
 }
 
 static CK_RV
-unity_C_GetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
+proxy_C_GetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
                            CK_ATTRIBUTE_PTR template, CK_ULONG count)
 {
 	Mapping map;
@@ -1367,7 +1367,7 @@ unity_C_GetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
 }
 
 static CK_RV
-unity_C_SetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
+proxy_C_SetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
                            CK_ATTRIBUTE_PTR template, CK_ULONG count)
 {
 	Mapping map;
@@ -1380,7 +1380,7 @@ unity_C_SetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
 }
 
 static CK_RV
-unity_C_FindObjectsInit (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
+proxy_C_FindObjectsInit (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
                          CK_ULONG count)
 {
 	Mapping map;
@@ -1393,7 +1393,7 @@ unity_C_FindObjectsInit (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
 }
 
 static CK_RV
-unity_C_FindObjects (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE_PTR objects,
+proxy_C_FindObjects (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE_PTR objects,
                      CK_ULONG max_count, CK_ULONG_PTR count)
 {
 	Mapping map;
@@ -1406,7 +1406,7 @@ unity_C_FindObjects (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE_PTR objects,
 }
 
 static CK_RV
-unity_C_FindObjectsFinal (CK_SESSION_HANDLE handle)
+proxy_C_FindObjectsFinal (CK_SESSION_HANDLE handle)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1418,7 +1418,7 @@ unity_C_FindObjectsFinal (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-unity_C_EncryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_EncryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                      CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1431,7 +1431,7 @@ unity_C_EncryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_Encrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
+proxy_C_Encrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
                  CK_BYTE_PTR encrypted_data, CK_ULONG_PTR encrypted_data_len)
 {
 	Mapping map;
@@ -1444,7 +1444,7 @@ unity_C_Encrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
 }
 
 static CK_RV
-unity_C_EncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
+proxy_C_EncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
                        CK_ULONG part_len, CK_BYTE_PTR encrypted_part,
                        CK_ULONG_PTR encrypted_part_len)
 {
@@ -1458,7 +1458,7 @@ unity_C_EncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
 }
 
 static CK_RV
-unity_C_EncryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
+proxy_C_EncryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
                       CK_ULONG_PTR last_part_len)
 {
 	Mapping map;
@@ -1471,7 +1471,7 @@ unity_C_EncryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
 }
 
 static CK_RV
-unity_C_DecryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_DecryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                      CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1484,7 +1484,7 @@ unity_C_DecryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_Decrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_data,
+proxy_C_Decrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_data,
                  CK_ULONG enc_data_len, CK_BYTE_PTR data, CK_ULONG_PTR data_len)
 {
 	Mapping map;
@@ -1497,7 +1497,7 @@ unity_C_Decrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_data,
 }
 
 static CK_RV
-unity_C_DecryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
+proxy_C_DecryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
                        CK_ULONG enc_part_len, CK_BYTE_PTR part, CK_ULONG_PTR part_len)
 {
 	Mapping map;
@@ -1510,7 +1510,7 @@ unity_C_DecryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
 }
 
 static CK_RV
-unity_C_DecryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
+proxy_C_DecryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
                       CK_ULONG_PTR last_part_len)
 {
 	Mapping map;
@@ -1523,7 +1523,7 @@ unity_C_DecryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
 }
 
 static CK_RV
-unity_C_DigestInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism)
+proxy_C_DigestInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1535,7 +1535,7 @@ unity_C_DigestInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism)
 }
 
 static CK_RV
-unity_C_Digest (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
+proxy_C_Digest (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
                 CK_BYTE_PTR digest, CK_ULONG_PTR digest_len)
 {
 	Mapping map;
@@ -1548,7 +1548,7 @@ unity_C_Digest (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
 }
 
 static CK_RV
-unity_C_DigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_DigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1560,7 +1560,7 @@ unity_C_DigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_
 }
 
 static CK_RV
-unity_C_DigestKey (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE key)
+proxy_C_DigestKey (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE key)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1572,7 +1572,7 @@ unity_C_DigestKey (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE key)
 }
 
 static CK_RV
-unity_C_DigestFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR digest,
+proxy_C_DigestFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR digest,
                      CK_ULONG_PTR digest_len)
 {
 	Mapping map;
@@ -1585,7 +1585,7 @@ unity_C_DigestFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR digest,
 }
 
 static CK_RV
-unity_C_SignInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_SignInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                   CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1598,7 +1598,7 @@ unity_C_SignInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_Sign (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
+proxy_C_Sign (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
               CK_BYTE_PTR signature, CK_ULONG_PTR signature_len)
 {
 	Mapping map;
@@ -1611,7 +1611,7 @@ unity_C_Sign (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
 }
 
 static CK_RV
-unity_C_SignUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_SignUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1623,7 +1623,7 @@ unity_C_SignUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_le
 }
 
 static CK_RV
-unity_C_SignFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
+proxy_C_SignFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
                    CK_ULONG_PTR signature_len)
 {
 	Mapping map;
@@ -1636,7 +1636,7 @@ unity_C_SignFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
 }
 
 static CK_RV
-unity_C_SignRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_SignRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                          CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1649,7 +1649,7 @@ unity_C_SignRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_SignRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
+proxy_C_SignRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
                      CK_BYTE_PTR signature, CK_ULONG_PTR signature_len)
 {
 	Mapping map;
@@ -1662,7 +1662,7 @@ unity_C_SignRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_l
 }
 
 static CK_RV
-unity_C_VerifyInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_VerifyInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                     CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1675,7 +1675,7 @@ unity_C_VerifyInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_Verify (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
+proxy_C_Verify (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
                 CK_BYTE_PTR signature, CK_ULONG signature_len)
 {
 	Mapping map;
@@ -1688,7 +1688,7 @@ unity_C_Verify (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
 }
 
 static CK_RV
-unity_C_VerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_VerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1700,7 +1700,7 @@ unity_C_VerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_
 }
 
 static CK_RV
-unity_C_VerifyFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
+proxy_C_VerifyFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
                      CK_ULONG signature_len)
 {
 	Mapping map;
@@ -1713,7 +1713,7 @@ unity_C_VerifyFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
 }
 
 static CK_RV
-unity_C_VerifyRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_VerifyRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                            CK_OBJECT_HANDLE key)
 {
 	Mapping map;
@@ -1726,7 +1726,7 @@ unity_C_VerifyRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_VerifyRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
+proxy_C_VerifyRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
                        CK_ULONG signature_len, CK_BYTE_PTR data, CK_ULONG_PTR data_len)
 {
 	Mapping map;
@@ -1739,7 +1739,7 @@ unity_C_VerifyRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
 }
 
 static CK_RV
-unity_C_DigestEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
+proxy_C_DigestEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
                              CK_ULONG part_len, CK_BYTE_PTR enc_part,
                              CK_ULONG_PTR enc_part_len)
 {
@@ -1753,7 +1753,7 @@ unity_C_DigestEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
 }
 
 static CK_RV
-unity_C_DecryptDigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
+proxy_C_DecryptDigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
                              CK_ULONG enc_part_len, CK_BYTE_PTR part,
                              CK_ULONG_PTR part_len)
 {
@@ -1767,7 +1767,7 @@ unity_C_DecryptDigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
 }
 
 static CK_RV
-unity_C_SignEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
+proxy_C_SignEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
                            CK_ULONG part_len, CK_BYTE_PTR enc_part,
                            CK_ULONG_PTR enc_part_len)
 {
@@ -1781,7 +1781,7 @@ unity_C_SignEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
 }
 
 static CK_RV
-unity_C_DecryptVerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
+proxy_C_DecryptVerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
                              CK_ULONG enc_part_len, CK_BYTE_PTR part,
                              CK_ULONG_PTR part_len)
 {
@@ -1795,7 +1795,7 @@ unity_C_DecryptVerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
 }
 
 static CK_RV
-unity_C_GenerateKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_GenerateKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                      CK_ATTRIBUTE_PTR template, CK_ULONG count,
                      CK_OBJECT_HANDLE_PTR key)
 {
@@ -1809,7 +1809,7 @@ unity_C_GenerateKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_GenerateKeyPair (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_GenerateKeyPair (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                          CK_ATTRIBUTE_PTR pub_template, CK_ULONG pub_count,
                          CK_ATTRIBUTE_PTR priv_template, CK_ULONG priv_count,
                          CK_OBJECT_HANDLE_PTR pub_key, CK_OBJECT_HANDLE_PTR priv_key)
@@ -1824,7 +1824,7 @@ unity_C_GenerateKeyPair (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_WrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_WrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                  CK_OBJECT_HANDLE wrapping_key, CK_OBJECT_HANDLE key,
                  CK_BYTE_PTR wrapped_key, CK_ULONG_PTR wrapped_key_len)
 {
@@ -1838,7 +1838,7 @@ unity_C_WrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_UnwrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_UnwrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                    CK_OBJECT_HANDLE unwrapping_key, CK_BYTE_PTR wrapped_key,
                    CK_ULONG wrapped_key_len, CK_ATTRIBUTE_PTR template,
                    CK_ULONG count, CK_OBJECT_HANDLE_PTR key)
@@ -1853,7 +1853,7 @@ unity_C_UnwrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_DeriveKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_DeriveKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
                    CK_OBJECT_HANDLE base_key, CK_ATTRIBUTE_PTR template,
                    CK_ULONG count, CK_OBJECT_HANDLE_PTR key)
 {
@@ -1867,7 +1867,7 @@ unity_C_DeriveKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
 }
 
 static CK_RV
-unity_C_SeedRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR seed, CK_ULONG seed_len)
+proxy_C_SeedRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR seed, CK_ULONG seed_len)
 {
 	Mapping map;
 	CK_RV rv;
@@ -1879,7 +1879,7 @@ unity_C_SeedRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR seed, CK_ULONG seed_le
 }
 
 static CK_RV
-unity_C_GenerateRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR random_data,
+proxy_C_GenerateRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR random_data,
                           CK_ULONG random_len)
 {
 	Mapping map;
@@ -1895,80 +1895,80 @@ unity_C_GenerateRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR random_data,
  * MODULE ENTRY POINT
  */
 
-static CK_FUNCTION_LIST unity_function_list = {
+static CK_FUNCTION_LIST proxy_function_list = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
-	unity_C_Initialize,
-	unity_C_Finalize,
-	unity_C_GetInfo,
-	unity_C_GetFunctionList,
-	unity_C_GetSlotList,
-	unity_C_GetSlotInfo,
-	unity_C_GetTokenInfo,
-	unity_C_GetMechanismList,
-	unity_C_GetMechanismInfo,
-	unity_C_InitToken,
-	unity_C_InitPIN,
-	unity_C_SetPIN,
-	unity_C_OpenSession,
-	unity_C_CloseSession,
-	unity_C_CloseAllSessions,
-	unity_C_GetSessionInfo,
-	unity_C_GetOperationState,
-	unity_C_SetOperationState,
-	unity_C_Login,
-	unity_C_Logout,
-	unity_C_CreateObject,
-	unity_C_CopyObject,
-	unity_C_DestroyObject,
-	unity_C_GetObjectSize,
-	unity_C_GetAttributeValue,
-	unity_C_SetAttributeValue,
-	unity_C_FindObjectsInit,
-	unity_C_FindObjects,
-	unity_C_FindObjectsFinal,
-	unity_C_EncryptInit,
-	unity_C_Encrypt,
-	unity_C_EncryptUpdate,
-	unity_C_EncryptFinal,
-	unity_C_DecryptInit,
-	unity_C_Decrypt,
-	unity_C_DecryptUpdate,
-	unity_C_DecryptFinal,
-	unity_C_DigestInit,
-	unity_C_Digest,
-	unity_C_DigestUpdate,
-	unity_C_DigestKey,
-	unity_C_DigestFinal,
-	unity_C_SignInit,
-	unity_C_Sign,
-	unity_C_SignUpdate,
-	unity_C_SignFinal,
-	unity_C_SignRecoverInit,
-	unity_C_SignRecover,
-	unity_C_VerifyInit,
-	unity_C_Verify,
-	unity_C_VerifyUpdate,
-	unity_C_VerifyFinal,
-	unity_C_VerifyRecoverInit,
-	unity_C_VerifyRecover,
-	unity_C_DigestEncryptUpdate,
-	unity_C_DecryptDigestUpdate,
-	unity_C_SignEncryptUpdate,
-	unity_C_DecryptVerifyUpdate,
-	unity_C_GenerateKey,
-	unity_C_GenerateKeyPair,
-	unity_C_WrapKey,
-	unity_C_UnwrapKey,
-	unity_C_DeriveKey,
-	unity_C_SeedRandom,
-	unity_C_GenerateRandom,
-	unity_C_GetFunctionStatus,
-	unity_C_CancelFunction,
-	unity_C_WaitForSlotEvent
+	proxy_C_Initialize,
+	proxy_C_Finalize,
+	proxy_C_GetInfo,
+	proxy_C_GetFunctionList,
+	proxy_C_GetSlotList,
+	proxy_C_GetSlotInfo,
+	proxy_C_GetTokenInfo,
+	proxy_C_GetMechanismList,
+	proxy_C_GetMechanismInfo,
+	proxy_C_InitToken,
+	proxy_C_InitPIN,
+	proxy_C_SetPIN,
+	proxy_C_OpenSession,
+	proxy_C_CloseSession,
+	proxy_C_CloseAllSessions,
+	proxy_C_GetSessionInfo,
+	proxy_C_GetOperationState,
+	proxy_C_SetOperationState,
+	proxy_C_Login,
+	proxy_C_Logout,
+	proxy_C_CreateObject,
+	proxy_C_CopyObject,
+	proxy_C_DestroyObject,
+	proxy_C_GetObjectSize,
+	proxy_C_GetAttributeValue,
+	proxy_C_SetAttributeValue,
+	proxy_C_FindObjectsInit,
+	proxy_C_FindObjects,
+	proxy_C_FindObjectsFinal,
+	proxy_C_EncryptInit,
+	proxy_C_Encrypt,
+	proxy_C_EncryptUpdate,
+	proxy_C_EncryptFinal,
+	proxy_C_DecryptInit,
+	proxy_C_Decrypt,
+	proxy_C_DecryptUpdate,
+	proxy_C_DecryptFinal,
+	proxy_C_DigestInit,
+	proxy_C_Digest,
+	proxy_C_DigestUpdate,
+	proxy_C_DigestKey,
+	proxy_C_DigestFinal,
+	proxy_C_SignInit,
+	proxy_C_Sign,
+	proxy_C_SignUpdate,
+	proxy_C_SignFinal,
+	proxy_C_SignRecoverInit,
+	proxy_C_SignRecover,
+	proxy_C_VerifyInit,
+	proxy_C_Verify,
+	proxy_C_VerifyUpdate,
+	proxy_C_VerifyFinal,
+	proxy_C_VerifyRecoverInit,
+	proxy_C_VerifyRecover,
+	proxy_C_DigestEncryptUpdate,
+	proxy_C_DecryptDigestUpdate,
+	proxy_C_SignEncryptUpdate,
+	proxy_C_DecryptVerifyUpdate,
+	proxy_C_GenerateKey,
+	proxy_C_GenerateKeyPair,
+	proxy_C_WrapKey,
+	proxy_C_UnwrapKey,
+	proxy_C_DeriveKey,
+	proxy_C_SeedRandom,
+	proxy_C_GenerateRandom,
+	proxy_C_GetFunctionStatus,
+	proxy_C_CancelFunction,
+	proxy_C_WaitForSlotEvent
 };
 
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
-	return unity_C_GetFunctionList (list);
+	return proxy_C_GetFunctionList (list);
 }
