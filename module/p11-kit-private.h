@@ -32,26 +32,20 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef __P11_KIT_H__
-#define __P11_KIT_H__
+#ifndef __P11_KIT_PRIVATE_H__
+#define __P11_KIT_PRIVATE_H__
 
-CK_RV                    p11_kit_initialize_registered     (void);
+extern pthread_mutex_t _p11_mutex;
 
-CK_RV                    p11_kit_finalize_registered       (void);
+#define     _p11_lock()    pthread_mutex_lock (&_p11_mutex);
 
-CK_FUNCTION_LIST_PTR*    p11_kit_registered_modules        (void);
+#define     _p11_unlock()  pthread_mutex_unlock (&_p11_mutex);
 
-char*                    p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs);
+CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
 
-CK_FUNCTION_LIST_PTR     p11_kit_registered_name_to_module (const char *name);
+CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (CK_C_INITIALIZE_ARGS_PTR args);
 
-char*                    p11_kit_registered_option         (CK_FUNCTION_LIST_PTR funcs,
-                                                            const char *field);
+CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (CK_VOID_PTR args);
 
-CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_C_INITIALIZE_ARGS_PTR init_args);
 
-CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_VOID_PTR reserved);
-
-#endif /* __P11_KIT_H__ */
+#endif /* __P11_KIT_PRIVATE_H__ */

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2005, Stefan Walter
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,26 +33,19 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef __P11_KIT_H__
-#define __P11_KIT_H__
+#ifndef __CONF_H__
+#define __CONF_H__
 
-CK_RV                    p11_kit_initialize_registered     (void);
+#include "hash.h"
 
-CK_RV                    p11_kit_finalize_registered       (void);
+enum {
+	CONF_IGNORE_MISSING = 0x01,
+};
 
-CK_FUNCTION_LIST_PTR*    p11_kit_registered_modules        (void);
+extern void   conf_error           (const char *filename,
+                                    const char *message);
 
-char*                    p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs);
+hash_t*       conf_parse_file      (const char *filename,
+                                    int flags);
 
-CK_FUNCTION_LIST_PTR     p11_kit_registered_name_to_module (const char *name);
-
-char*                    p11_kit_registered_option         (CK_FUNCTION_LIST_PTR funcs,
-                                                            const char *field);
-
-CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_C_INITIALIZE_ARGS_PTR init_args);
-
-CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_VOID_PTR reserved);
-
-#endif /* __P11_KIT_H__ */
+#endif /* __CONF_H__ */

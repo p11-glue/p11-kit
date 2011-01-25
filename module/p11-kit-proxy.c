@@ -38,11 +38,10 @@
 #include "hash.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
+#include "p11-kit-private.h"
 
 #include <sys/types.h>
 #include <assert.h>
-#include <dirent.h>
-#include <dlfcn.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>
@@ -67,26 +66,8 @@ typedef struct _Session {
 	CK_SLOT_ID wrap_slot;
 } Session;
 
-typedef struct _Module {
-	char *name;
-	char *path;
-	void *dl_module;
-	CK_FUNCTION_LIST_PTR funcs;
-	int ref_count;
-	int initialize_count;
-	struct _Module *next;
-} Module;
-
 /* Forward declaration */
 static CK_FUNCTION_LIST proxy_function_list;
-
-/*
- * This is the mutex that protects the global data of this library
- * and the pkcs11 proxy module. Note that we *never* call into our
- * underlying pkcs11 modules while holding this mutex. Therefore it
- * doesn't have to be recursive and we can keep things simple.
- */
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*
  * Shared data between threads, protected by the mutex, a structure so
@@ -95,11 +76,10 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct _Shared {
 	Mapping *mappings;
 	unsigned int n_mappings;
-	hsh_t *sessions;
-	Module *modules;
+	int mappings_refs;
+	hash_t *sessions;
 	CK_ULONG last_handle;
-	int registered_loaded;
-} gl = { NULL, 0, NULL, NULL, FIRST_HANDLE, 0 };
+} gl = { NULL, 0, 0, NULL, FIRST_HANDLE };
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
@@ -110,71 +90,6 @@ static struct _Shared {
  * UTILITIES
  */
 
-static void
-warning (const char* msg, ...)
-{
-	char buffer[512];
-	va_list va;
-
-	va_start (va, msg);
-
-	vsnprintf(buffer, sizeof (buffer) - 1, msg, va);
-	buffer[sizeof (buffer) - 1] = 0;
-	fprintf (stderr, "p11-kit: %s\n", buffer);
-
-	va_end (va);
-}
-
-static char*
-strconcat (const char *first, ...)
-{
-	size_t length = 0;
-	const char *arg;
-	char *result, *at;
-	va_list va;
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*))
-		length += strlen (arg);
-
-	va_end (va);
-
-	at = result = malloc (length);
-	if (!result)
-		return NULL;
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*)) {
-		length = strlen (arg);
-		memcpy (at, arg, length);
-		at += length;
-	}
-
-	va_end (va);
-
-	*at = 0;
-	return result;
-}
-
-static int
-ends_with (const char *haystack, const char *needle)
-{
-	size_t haystack_len, needle_len;
-
-	assert (haystack);
-	assert (needle);
-
-	haystack_len = strlen (haystack);
-	needle_len = strlen (needle);
-
-	if (needle_len > haystack_len)
-		return 0;
-	return memcmp (haystack + (haystack_len - needle_len),
-	               needle, needle_len) == 0;
-}
-
 static void*
 xrealloc (void * memory, size_t length)
 {
@@ -182,516 +97,6 @@ xrealloc (void * memory, size_t length)
 	if (!allocated)
 		free (memory);
 	return allocated;
-}
-
-/* -----------------------------------------------------------------------------
- * P11-KIT FUNCTIONALITY
- */
-
-static CK_RV
-load_module_unlocked (const char *name, Module *module)
-{
-	CK_C_GetFunctionList gfl;
-	CK_RV rv;
-
-	/*
-	 * TODO: This function will change significantly once we're loading
-	 * from a config, see below.
-	 */
-	assert (name);
-	assert (module);
-
-	module->name = strdup (name);
-	if (!module->name)
-		return CKR_HOST_MEMORY;
-
-	module->path = strconcat (PKCS11_MODULE_PATH, "/", name, NULL);
-	if (!module->path)
-		return CKR_HOST_MEMORY;
-
-	module->dl_module = dlopen (module->path, RTLD_LOCAL | RTLD_NOW);
-	if (module->dl_module == NULL) {
-		warning ("couldn't load module: %s: %s",
-		         module->path, dlerror ());
-		return CKR_GENERAL_ERROR;
-	}
-
-	gfl = dlsym (module->dl_module, "C_GetFunctionList");
-	if (!gfl) {
-		warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		         module->path, dlerror ());
-		return CKR_GENERAL_ERROR;
-	}
-
-	rv = gfl (&module->funcs);
-	if (rv != CKR_OK) {
-		warning ("call to C_GetFunctiontList failed in module: %s: %lu",
-		         module->path, (unsigned long)rv);
-		return rv;
-	}
-
-	return CKR_OK;
-}
-
-static void
-unload_module_unlocked (Module *module)
-{
-	assert (module);
-
-	/* Should have been finalized before this */
-	assert (!module->initialize_count);
-
-	if (module->dl_module) {
-		dlclose (module->dl_module);
-		module->dl_module = NULL;
-	}
-
-	free (module->path);
-	module->path = NULL;
-
-	free (module->name);
-	module->name = NULL;
-
-	module->funcs = NULL;
-}
-
-static CK_RV
-load_registered_modules_unlocked (void)
-{
-	struct dirent *dp;
-	Module *module;
-	DIR *dir;
-	CK_RV rv;
-
-	/* First we load all the modules */
-	dir = opendir (PKCS11_MODULE_PATH);
-
-	/* We're within a global mutex, so readdir is safe */
-	while ((dp = readdir(dir)) != NULL) {
-		if ((dp->d_type == DT_LNK || dp->d_type == DT_REG) &&
-		    !ends_with (dp->d_name, ".la")) {
-
-			module = calloc (sizeof (Module), 1);
-			if (!module)
-				rv = CKR_HOST_MEMORY;
-			else
-				rv = load_module_unlocked (dp->d_name, module);
-
-			/* Cleanup for failures happens at caller */
-			module->next = gl.modules;
-			gl.modules = module;
-
-			if (rv != CKR_OK)
-				break;
-		}
-	}
-
-	closedir (dir);
-
-	return rv;
-}
-
-static CK_RV
-create_mutex (CK_VOID_PTR_PTR mut)
-{
-	pthread_mutex_t *pmutex;
-	int err;
-
-	pmutex = malloc (sizeof (pthread_mutex_t));
-	if (!pmutex)
-		return CKR_HOST_MEMORY;
-	err = pthread_mutex_init (pmutex, NULL);
-	if (err == ENOMEM)
-		return CKR_HOST_MEMORY;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	*mut = pmutex;
-	return CKR_OK;
-}
-
-static CK_RV
-destroy_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_destroy (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	free (pmutex);
-	return CKR_OK;
-}
-
-static CK_RV
-lock_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_lock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	return CKR_OK;
-}
-
-static CK_RV
-unlock_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_unlock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err == EPERM)
-		return CKR_MUTEX_NOT_LOCKED;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	return CKR_OK;
-}
-
-static CK_RV
-initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR args)
-{
-	CK_RV rv = CKR_OK;
-
-	assert (module);
-
-	/*
-	 * Initialize first, so module doesn't get freed out from
-	 * underneath us when the mutex is unlocked below.
-	 */
-	++module->ref_count;
-
-	if (!module->initialize_count) {
-
-		pthread_mutex_unlock (&mutex);
-
-			assert (module->funcs);
-			rv = module->funcs->C_Initialize (args);
-
-		pthread_mutex_lock (&mutex);
-
-		/*
-		 * Because we have the mutex unlocked above, two initializes could
-		 * race. Therefore we need to take CKR_CRYPTOKI_ALREADY_INITIALIZED
-		 * into account.
-		 *
-		 * We also need to take into account where in a race both calls return
-		 * CKR_OK (which is not according to the spec but may happen, I mean we
-		 * do it in this module, so it's not unimaginable).
-		 */
-
-		if (rv == CKR_OK)
-			++module->initialize_count;
-		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
-			rv = CKR_OK;
-		else
-			--module->ref_count;
-	}
-
-	return rv;
-}
-
-static CK_RV
-finalize_module_unlocked_reentrant (Module *module, CK_VOID_PTR args)
-{
-	Module *mod, *next;
-
-	assert (module);
-
-	/*
-	 * We leave module info around until all are finalized
-	 * so we can encounter these zombie Module structures.
-	 */
-	if (module->ref_count == 0)
-		return CKR_ARGUMENTS_BAD;
-
-	if (--module->ref_count > 0)
-		return CKR_OK;
-
-	/*
-	 * Becuase of the mutex unlock below, we temporarily increase
-	 * the ref count. This prevents module from being freed out
-	 * from ounder us.
-	 */
-	++module->ref_count;
-
-	while (module->initialize_count > 0) {
-
-		pthread_mutex_unlock (&mutex);
-
-			assert (module->funcs);
-			module->funcs->C_Finalize (args);
-
-		pthread_mutex_lock (&mutex);
-
-		if (module->initialize_count > 0)
-			--module->initialize_count;
-	}
-
-	/* Match the increment above */
-	--module->ref_count;
-
-	/* Check if any modules have a ref count */
-	for (mod = gl.modules; mod; mod = mod->next) {
-		if (mod->ref_count)
-			break;
-	}
-
-	/* No modules had a refcount? unload and free all info */
-	if (mod == NULL) {
-		for (mod = gl.modules; mod; mod = next) {
-			next = mod->next;
-			unload_module_unlocked (mod);
-			free (mod);
-		}
-		gl.modules = NULL;
-		gl.registered_loaded = 0;
-	}
-
-	return CKR_OK;
-}
-
-static Module*
-find_module_for_funcs_unlocked (CK_FUNCTION_LIST_PTR funcs)
-{
-	Module *module;
-
-	assert (funcs);
-
-	for (module = gl.modules; module; module = module->next)
-		if (module->ref_count && module->funcs == funcs)
-			return module;
-	return NULL;
-}
-
-static Module*
-find_module_for_name_unlocked (const char *name)
-{
-	Module *module;
-
-	assert (name);
-
-	for (module = gl.modules; module; module = module->next)
-		if (module->ref_count && module->name && strcmp (name, module->name))
-			return module;
-	return NULL;
-}
-
-static CK_RV
-initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args)
-{
-	Module *module;
-	CK_RV rv;
-
-	rv = load_registered_modules_unlocked ();
-	if (rv == CKR_OK) {
-		for (module = gl.modules; module; module = module->next) {
-
-			/* Skip all modules that aren't registered */
-			if (!module->name)
-				continue;
-
-			rv = initialize_module_unlocked_reentrant (module, args);
-
-			if (rv != CKR_OK)
-				break;
-		}
-	}
-
-	return rv;
-}
-
-CK_RV
-p11_kit_initialize_registered (void)
-{
-	CK_C_INITIALIZE_ARGS args;
-	CK_RV rv;
-
-	/* WARNING: This function must be reentrant */
-
-	memset (&args, 0, sizeof (args));
-	args.CreateMutex = create_mutex;
-	args.DestroyMutex = destroy_mutex;
-	args.LockMutex = lock_mutex;
-	args.UnlockMutex = unlock_mutex;
-	args.flags = CKF_OS_LOCKING_OK;
-
-	pthread_mutex_lock (&mutex);
-
-		/* WARNING: Reentrancy can occur here */
-		rv = initialize_registered_unlocked_reentrant (&args);
-
-	pthread_mutex_unlock (&mutex);
-
-	/* Cleanup any partial initialization */
-	if (rv != CKR_OK)
-		p11_kit_finalize_registered ();
-
-	return rv;
-}
-
-static CK_RV
-finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
-{
-	Module *module;
-
-	/* WARNING: This function must be reentrant */
-
-	for (module = gl.modules; module; module = module->next) {
-
-		/* Skip all modules that aren't registered */
-		if (!module->name)
-			continue;
-
-		/* WARNING: Reentrant calls can occur here */
-		finalize_module_unlocked_reentrant (module, args);
-	}
-
-	return CKR_OK;
-}
-CK_RV
-p11_kit_finalize_registered (void)
-{
-	CK_RV rv;
-
-	/* WARNING: This function must be reentrant */
-
-	pthread_mutex_lock (&mutex);
-
-		/* WARNING: Reentrant calls can occur here */
-		rv = finalize_registered_unlocked_reentrant (NULL);
-
-	pthread_mutex_unlock (&mutex);
-
-	return rv;
-}
-
-char**
-p11_kit_registered_names (void)
-{
-	Module *module;
-	char **result;
-	int count, i;
-
-	pthread_mutex_lock (&mutex);
-
-		for (module = gl.modules, count = 0;
-		     module; module = module->next)
-			++count;
-		result = calloc (count + 1, sizeof (char*));
-		if (result) {
-			for (module = gl.modules, i = 0;
-			     module; module = module->next, ++i)
-				result[i] = strdup (module->name);
-		}
-
-	pthread_mutex_unlock (&mutex);
-
-	return result;
-}
-
-CK_FUNCTION_LIST_PTR
-p11_kit_registered_module (const char *module_name)
-{
-	CK_FUNCTION_LIST_PTR result;
-	Module *module;
-
-	if (!module_name)
-		return NULL;
-
-	pthread_mutex_lock (&mutex);
-
-		module = find_module_for_name_unlocked (module_name);
-		if (module) {
-			assert (module);
-			result = module->funcs;
-		}
-
-	pthread_mutex_unlock (&mutex);
-
-	return result;
-}
-
-void
-p11_kit_free_names (char **module_names)
-{
-	char **name;
-	for (name = module_names; *name; ++name)
-		free (name);
-}
-
-char*
-p11_kit_registered_option (const char *module_name, const char *field)
-{
-	/* TODO: Need to implement */
-	assert (0);
-	return NULL;
-}
-
-CK_RV
-p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR init_args)
-{
-	Module *module;
-	Module *allocated = NULL;
-	CK_RV rv = CKR_OK;
-
-	/* WARNING: This function must be reentrant for the same arguments */
-
-	pthread_mutex_lock (&mutex);
-
-		module = find_module_for_funcs_unlocked (funcs);
-		if (module == NULL) {
-			allocated = module = calloc (1, sizeof (Module));
-			module->name = NULL;
-			module->dl_module = NULL;
-			module->path = NULL;
-			module->funcs = funcs;
-		}
-
-		/* WARNING: Reentrancy can occur here */
-		rv = initialize_module_unlocked_reentrant (module, init_args);
-
-		/* If this was newly allocated, add it to the list */
-		if (rv == CKR_OK && allocated) {
-			allocated->next = gl.modules;
-			gl.modules = allocated;
-			allocated = NULL;
-		}
-
-		free (allocated);
-
-	pthread_mutex_unlock (&mutex);
-
-	return rv;
-}
-
-CK_RV
-p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
-{
-	Module *module;
-	CK_RV rv = CKR_OK;
-
-	/* WARNING: This function must be reentrant for the same arguments */
-
-	pthread_mutex_lock (&mutex);
-
-		module = find_module_for_funcs_unlocked (funcs);
-		if (module == NULL) {
-			rv = CKR_ARGUMENTS_BAD;
-		} else {
-			/* WARNING: Rentrancy can occur here */
-			rv = finalize_module_unlocked_reentrant (module, reserved);
-		}
-
-	pthread_mutex_unlock (&mutex);
-
-	return rv;
 }
 
 /* -----------------------------------------------------------------------------
@@ -723,7 +128,7 @@ map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
 
 	assert (mapping);
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		if (!gl.mappings)
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
@@ -732,7 +137,7 @@ map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
 		if (rv == CKR_OK)
 			*slot = mapping->real_slot;
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	return rv;
 }
@@ -746,13 +151,13 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 	assert (handle);
 	assert (mapping);
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		if (!gl.sessions) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (gl.sessions);
-			sess = hsh_get (gl.sessions, handle, sizeof (handle));
+			sess = hash_get (gl.sessions, &handle);
 			if (sess != NULL) {
 				*handle = sess->real_session;
 				rv = map_slot_unlocked (sess->wrap_slot, mapping);
@@ -763,7 +168,7 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 			}
 		}
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	return rv;
 }
@@ -771,7 +176,10 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 static void
 finalize_mappings_unlocked (void)
 {
-	hsh_index_t *iter;
+	assert (gl.mappings_refs);
+
+	if (--gl.mappings_refs)
+		return;
 
 	/* No more mappings */
 	free (gl.mappings);
@@ -779,12 +187,8 @@ finalize_mappings_unlocked (void)
 	gl.n_mappings = 0;
 
 	/* no more sessions */
-	if (gl.sessions) {
-		for (iter = hsh_first (gl.sessions); iter; iter = hsh_next (iter))
-			free (hsh_this (iter, NULL, NULL));
-		hsh_free (gl.sessions);
-		gl.sessions = NULL;
-	}
+	hash_free (gl.sessions);
+	gl.sessions = NULL;
 }
 
 static CK_RV
@@ -797,19 +201,19 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 	if (reserved)
 		return CKR_ARGUMENTS_BAD;
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
-		rv = finalize_registered_unlocked_reentrant (reserved);
+		rv = _p11_kit_finalize_registered_unlocked_reentrant (reserved);
 
 		/*
 		 * If modules are all gone, then this was the last
 		 * finalize, so cleanup our mappings
 		 */
-		if (gl.modules == NULL)
+		if (gl.mappings_refs)
 			finalize_mappings_unlocked ();
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	return rv;
 }
@@ -817,27 +221,24 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 static CK_RV
 initialize_mappings_unlocked_reentrant (void)
 {
+	CK_FUNCTION_LIST_PTR *funcss, *f;
 	CK_FUNCTION_LIST_PTR funcs;
 	Mapping *mappings = NULL;
 	int n_mappings = 0;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
-	Module *module;
 	CK_RV rv;
 
 	assert (!gl.mappings);
 
-	for (module = gl.modules; module; module = module->next) {
+	funcss = _p11_kit_registered_modules_unlocked ();
+	for (f = funcss; *f; ++f) {
+		funcs = *f;
 
-		/* Only do registered modules */
-		if (module->ref_count && !module->name)
-			continue;
-
-		funcs = module->funcs;
 		assert (funcs);
 		slots = NULL;
 
-		pthread_mutex_unlock (&mutex);
+		_p11_unlock ();
 
 			/* Ask module for its slots */
 			rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
@@ -849,7 +250,7 @@ initialize_mappings_unlocked_reentrant (void)
 					rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
 			}
 
-		pthread_mutex_lock (&mutex);
+		_p11_lock ();
 
 		if (rv != CKR_OK) {
 			free (slots);
@@ -881,7 +282,8 @@ initialize_mappings_unlocked_reentrant (void)
 	}
 
 	assert (!gl.sessions);
-	gl.sessions = hsh_create ();
+	gl.sessions = hash_create (hash_ulongptr_hash, hash_ulongptr_equal, NULL, free);
+	++gl.mappings_refs;
 
 	/* Any cleanup necessary for failure will happen at caller */
 	return rv;
@@ -894,16 +296,16 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 
 	/* WARNING: This function must be reentrant */
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
-		rv = initialize_registered_unlocked_reentrant (init_args);
+		rv = _p11_kit_initialize_registered_unlocked_reentrant (init_args);
 
 		/* WARNING: Reentrancy can occur here */
-		if (rv == CKR_OK && !gl.mappings)
+		if (rv == CKR_OK && !gl.mappings_refs == 0)
 			rv = initialize_mappings_unlocked_reentrant ();
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	if (rv != CKR_OK)
 		proxy_C_Finalize (NULL);
@@ -919,12 +321,12 @@ proxy_C_GetInfo (CK_INFO_PTR info)
 	if (info == NULL)
 		return CKR_ARGUMENTS_BAD;
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		if (!gl.mappings)
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	if (rv != CKR_OK)
 		return rv;
@@ -963,7 +365,7 @@ proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 	if (!count)
 		return CKR_ARGUMENTS_BAD;
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		if (!gl.mappings) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
@@ -996,7 +398,7 @@ proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 			*count = index;
 		}
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	return rv;
 }
@@ -1087,7 +489,7 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 	rv = (map.funcs->C_OpenSession) (id, flags, user_data, callback, handle);
 
 	if (rv == CKR_OK) {
-		pthread_mutex_lock (&mutex);
+		_p11_lock ();
 
 			if (!gl.sessions) {
 				/*
@@ -1103,11 +505,11 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 				sess->wrap_slot = map.wrap_slot;
 				sess->real_session = *handle;
 				sess->wrap_session = ++gl.last_handle; /* TODO: Handle wrapping, and then collisions */
-				hsh_set (gl.sessions, &sess->wrap_session, sizeof (sess->wrap_session), sess);
+				hash_set (gl.sessions, &sess->wrap_session, sess);
 				*handle = sess->wrap_session;
 			}
 
-		pthread_mutex_unlock (&mutex);
+		_p11_unlock ();
 	}
 
 	return rv;
@@ -1127,12 +529,12 @@ proxy_C_CloseSession (CK_SESSION_HANDLE handle)
 	rv = (map.funcs->C_CloseSession) (handle);
 
 	if (rv == CKR_OK) {
-		pthread_mutex_lock (&mutex);
+		_p11_lock ();
 
 			if (gl.sessions)
-				hsh_rem (gl.sessions, &key, sizeof (key));
+				hash_remove (gl.sessions, &key);
 
-		pthread_mutex_unlock (&mutex);
+		_p11_unlock ();
 	}
 
 	return rv;
@@ -1144,28 +546,28 @@ proxy_C_CloseAllSessions (CK_SLOT_ID id)
 	CK_SESSION_HANDLE_PTR to_close;
 	CK_RV rv = CKR_OK;
 	Session *sess;
-	CK_ULONG i, count;
-	hsh_index_t *iter;
+	CK_ULONG i, count = 0;
+	hash_iter_t iter;
 
-	pthread_mutex_lock (&mutex);
+	_p11_lock ();
 
 		if (!gl.sessions) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
-			to_close = calloc (sizeof (CK_SESSION_HANDLE), hsh_count (gl.sessions));
+			to_close = calloc (sizeof (CK_SESSION_HANDLE), hash_count (gl.sessions));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {
-				for (iter = hsh_first (gl.sessions), count = 0;
-				     iter; iter = hsh_next (iter)) {
-					sess = hsh_this (iter, NULL, NULL);
+				hash_iterate (gl.sessions, &iter);
+				count = 0;
+				while (hash_next (&iter, NULL, (void**)&sess)) {
 					if (sess->wrap_slot == id && to_close)
 						to_close[count++] = sess->wrap_session;
 				}
 			}
 		}
 
-	pthread_mutex_unlock (&mutex);
+	_p11_unlock ();
 
 	if (rv != CKR_OK)
 		return rv;

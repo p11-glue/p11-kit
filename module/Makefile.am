@@ -1,10 +1,14 @@
 
 INCLUDES = \
-	-DPKCS11_MODULE_PATH=\"$(PKCS11_MODULE_PATH)\"
+	-DPKCS11_CONFIG_FILE=\"$(sysconfdir)/pkcs11.conf\" \
+	-DPKCS11_CONFIG_LIBS=\"$(sysconfdir)/pkcs11/libs\"
 
 MODULE_SRCS = \
-	p11-kit.c \
-	hash.c hash.h
+	conf.c conf.h \
+	hash.c hash.h \
+	p11-kit-lib.c \
+	p11-kit-proxy.c \
+	p11-kit-private.h p11-kit.h
 
 lib_LTLIBRARIES = p11-kit.la
 

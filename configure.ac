@@ -3,11 +3,12 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_INIT([p11-kit],[0.1],[http://bugzilla.example.com])
 
-AC_CONFIG_SRCDIR([module/p11-kit.c])
+AC_CONFIG_SRCDIR([module/p11-kit-lib.c])
 AC_CONFIG_HEADERS([config.h])
 
 dnl Other initialization
 AM_INIT_AUTOMAKE
+AM_SANITY_CHECK
 AM_MAINTAINER_MODE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 LT_INIT
