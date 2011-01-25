@@ -191,6 +191,24 @@ finalize_mappings_unlocked (void)
 	gl.sessions = NULL;
 }
 
+void
+_p11_kit_proxy_after_fork (void)
+{
+	/*
+	 * After a fork the callers are supposed to call C_Initialize and all.
+	 * In addition the underlying libraries may change their state so free
+	 * up any mappings and all
+	 */
+
+	_p11_lock ();
+
+		gl.mappings_refs = 1;
+		finalize_mappings_unlocked ();
+		assert (!gl.mappings);
+
+	_p11_unlock ();
+}
+
 static CK_RV
 proxy_C_Finalize (CK_VOID_PTR reserved)
 {

@@ -47,5 +47,6 @@ CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (CK_C_INITIALIZE
 
 CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (CK_VOID_PTR args);
 
+void        _p11_kit_proxy_after_fork                           (void);
 
 #endif /* __P11_KIT_PRIVATE_H__ */

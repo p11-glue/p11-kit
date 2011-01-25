@@ -458,14 +458,56 @@ initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR a
 	return rv;
 }
 
-static CK_RV
-init_modules_unlocked (void)
+static void
+reinitialize_after_fork (void)
 {
+	CK_C_INITIALIZE_ARGS args;
+	hash_iter_t it;
+	Module *module;
+
+	/* WARNING: This function must be reentrant */
+
+	memset (&args, 0, sizeof (args));
+	args.CreateMutex = create_mutex;
+	args.DestroyMutex = destroy_mutex;
+	args.LockMutex = lock_mutex;
+	args.UnlockMutex = unlock_mutex;
+	args.flags = CKF_OS_LOCKING_OK;
+
+	_p11_lock ();
+
+		if (gl.modules) {
+			hash_iterate (gl.modules, &it);
+			while (hash_next (&it, NULL, (void**)&module)) {
+				module->initialize_count = 0;
+
+				/* WARNING: Reentrancy can occur here */
+				initialize_module_unlocked_reentrant (module, &args);
+			}
+		}
+
+	_p11_unlock ();
+
+	_p11_kit_proxy_after_fork ();
+}
+
+static CK_RV
+init_globals_unlocked (void)
+{
+	static int once = 0;
+
 	if (!gl.modules)
 		gl.modules = hash_create (hash_direct_hash, hash_direct_equal,
 		                          NULL, free_module_unlocked);
 	if (!gl.modules)
 		return CKR_HOST_MEMORY;
+
+	if (once)
+		return CKR_OK;
+
+	pthread_atfork (NULL, NULL, reinitialize_after_fork);
+	once = 1;
+
 	return CKR_OK;
 }
 
@@ -552,7 +594,9 @@ _p11_kit_initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args
 	hash_iter_t it;
 	CK_RV rv;
 
-	rv = load_registered_modules_unlocked ();
+	rv = init_globals_unlocked ();
+	if (rv == CKR_OK)
+		rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
 		hash_iterate (gl.modules, &it);
 		while (hash_next (&it, NULL, (void**)&module)) {
@@ -627,7 +671,6 @@ _p11_kit_finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
 	}
 
 	for (i = 0; i < count; ++i) {
-
 		/* WARNING: Reentrant calls can occur here */
 		finalize_module_unlocked_reentrant (to_finalize[i], args);
 	}
@@ -760,7 +803,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR 
 
 	_p11_lock ();
 
-		rv = init_modules_unlocked ();
+		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
 			module = hash_get (gl.modules, funcs);
