@@ -1,5 +1,5 @@
 
-SUBDIRS = module
+SUBDIRS = module tests
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -16,3 +16,13 @@ dist-hook:
 	else \
 		echo A git clone is required to generate a ChangeLog >&2; \
 	fi
+
+if WITH_COVERAGE
+coverage:
+	mkdir -p tests/coverage
+	$(LCOV) --directory . --zerocounters
+	$(MAKE) check
+	$(LCOV) --directory . --capture --output-file tests/coverage.info
+	$(GENHTML) --output-directory tests/coverage tests/coverage.info
+	@echo "file://$(abs_top_builddir)/tests/coverage/index.html"
+endif

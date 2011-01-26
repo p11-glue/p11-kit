@@ -2,6 +2,9 @@
 *.la
 *.lo
 *.tar.gz
+*.gcno
+*.gcda
+*.gcov
 
 .deps
 .libs
@@ -29,3 +32,8 @@ Makefile
 Makefile.in
 missing
 stamp-h1
+temp.txt
+
+/tests/coverage
+/tests/coverage.info
+/tests/hash-test

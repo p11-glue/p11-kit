@@ -425,6 +425,21 @@ hash_ulongptr_equal (const void *ulong_one, const void *ulong_two)
 }
 
 unsigned int
+hash_intptr_hash (const void *to_int)
+{
+	assert (to_int);
+	return (unsigned int)*((unsigned long*)to_int);
+}
+
+int
+hash_intptr_equal (const void *int_one, const void *int_two)
+{
+	assert (int_one);
+	assert (int_two);
+	return *((unsigned long*)int_one) == *((unsigned long*)int_two);
+}
+
+unsigned int
 hash_direct_hash (const void *ptr)
 {
 	return (unsigned int)ptr;

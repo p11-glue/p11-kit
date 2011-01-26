@@ -174,6 +174,11 @@ unsigned int       hash_ulongptr_hash          (const void *to_ulong);
 int                hash_ulongptr_equal         (const void *ulong_one,
                                                 const void *ulong_two);
 
+unsigned int       hash_intptr_hash            (const void *to_int);
+
+int                hash_intptr_equal           (const void *int_one,
+                                                const void *int_two);
+
 unsigned int       hash_direct_hash            (const void *ptr);
 
 int                hash_direct_equal           (const void *ptr_one,
