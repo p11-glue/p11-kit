@@ -42,10 +42,10 @@ enum {
 	CONF_IGNORE_MISSING = 0x01,
 };
 
-extern void   conf_error           (const char *filename,
-                                    const char *message);
+typedef void  (*conf_error_func)   (const char *message);
 
 hash_t*       conf_parse_file      (const char *filename,
-                                    int flags);
+                                    int flags,
+                                    conf_error_func error_func);
 
 #endif /* __CONF_H__ */

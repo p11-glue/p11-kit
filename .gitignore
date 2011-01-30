@@ -37,3 +37,4 @@ temp.txt
 /tests/coverage
 /tests/coverage.info
 /tests/hash-test
+/tests/conf-test

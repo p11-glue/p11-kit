@@ -101,8 +101,8 @@ warning (const char* msg, ...)
 	va_end (va);
 }
 
-void
-conf_error (const char *filename, const char *buffer)
+static void
+conf_error (const char *buffer)
 {
 	/* called from conf.c */
 	fprintf (stderr, "p11-kit: %s\n", buffer);
@@ -184,7 +184,7 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 	if (!module)
 		return CKR_HOST_MEMORY;
 
-	module->config = conf_parse_file (configfile, 0);
+	module->config = conf_parse_file (configfile, 0, conf_error);
 	if (!module->config) {
 		free_module_unlocked (module);
 		if (errno == ENOMEM)
@@ -335,7 +335,7 @@ load_registered_modules_unlocked (void)
 	assert (!gl.config);
 
 	/* Load the main configuration */
-	config = conf_parse_file (PKCS11_CONFIG_FILE, CONF_IGNORE_MISSING);
+	config = conf_parse_file (PKCS11_CONFIG_FILE, CONF_IGNORE_MISSING, conf_error);
 	if (!config) {
 		if (errno == ENOMEM)
 			return CKR_HOST_MEMORY;

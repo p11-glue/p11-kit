@@ -54,16 +54,19 @@
 #include <unistd.h>
 
 static void
-errmsg (const char *filename, const char* msg, ...)
+errmsg (conf_error_func error_func, const char* msg, ...)
 {
 	#define MAX_MSGLEN  1024
 	char buf[MAX_MSGLEN];
 	va_list ap;
 
+	if (!error_func)
+		return;
+
 	va_start (ap, msg);
 	vsnprintf (buf, MAX_MSGLEN, msg, ap);
 	buf[MAX_MSGLEN - 1] = 0;
-	conf_error (filename, buf);
+	error_func (buf);
 	va_end (ap);
 }
 
@@ -112,7 +115,8 @@ strtrim (char* data)
  */
 
 static char*
-read_config_file (const char* filename, int flags)
+read_config_file (const char* filename, int flags,
+                  conf_error_func error_func)
 {
 	char* config = NULL;
 	FILE* f = NULL;
@@ -129,7 +133,7 @@ read_config_file (const char* filename, int flags)
 				errno = ENOMEM;
 			return config;
 		}
-		errmsg (filename, "couldn't open config file: %s", filename);
+		errmsg (error_func, "couldn't open config file: %s", filename);
 		return NULL;
 	}
 
@@ -137,19 +141,19 @@ read_config_file (const char* filename, int flags)
 	if (fseek (f, 0, SEEK_END) == -1 ||
 	    (len = ftell (f)) == -1 ||
 	    fseek (f, 0, SEEK_SET) == -1) {
-		errmsg (filename, "couldn't seek config file: %s", filename);
+		errmsg (error_func, "couldn't seek config file: %s", filename);
 		return NULL;
 	}
 
 	if ((config = (char*)malloc (len + 2)) == NULL) {
-		errmsg (filename, "out of memory");
+		errmsg (error_func, "out of memory");
 		errno = ENOMEM;
 		return NULL;
 	}
 
 	/* And read in one block */
 	if (fread (config, 1, len, f) != len) {
-		errmsg (filename, "couldn't read config file: %s", filename);
+		errmsg (error_func, "couldn't read config file: %s", filename);
 		return NULL;
 	}
 
@@ -166,7 +170,8 @@ read_config_file (const char* filename, int flags)
 }
 
 hash_t*
-conf_parse_file (const char* filename, int flags)
+conf_parse_file (const char* filename, int flags,
+                 conf_error_func error_func)
 {
 	char *name;
 	char *value;
@@ -178,7 +183,7 @@ conf_parse_file (const char* filename, int flags)
 	assert (filename);
 
 	/* Adds an extra newline to end of file */
-	config = read_config_file (filename, flags);
+	config = read_config_file (filename, flags, error_func);
 	if (!config)
 		return NULL;
 
@@ -198,7 +203,7 @@ conf_parse_file (const char* filename, int flags)
 		/* Look for the break between name = value on the same line */
 		value = name + strcspn (name, ":=");
 		if (!*value) {
-			errmsg (filename, "%s: invalid config line: %s", filename, name);
+			errmsg (error_func, "%s: invalid config line: %s", filename, name);
 			errno = EINVAL;
 			break;
 		}
