@@ -287,68 +287,173 @@ load_modules_from_config_unlocked (const char *directory)
 	return rv;
 }
 
-static CK_RV
-load_config_modules_unlocked (hash_t *config)
+static char*
+expand_user_path (const char *path)
 {
-	const char *user_config;
+	const char *env;
 	struct passwd *pwd;
-	char *path;
-	CK_RV rv;
+
+	if (path[0] == '~' && path[1] == '/') {
+		env = getenv ("HOME");
+		if (env && env[0]) {
+			return strconcat (env, path + 1, NULL);
+		} else {
+			pwd = getpwuid (getuid ());
+			if (!pwd)
+				return NULL;
+			return strconcat (pwd->pw_dir, path + 1, NULL);
+		}
+	}
+
+	return strdup (path);
+}
+
+enum {
+	USER_CONFIG_INVALID = 0,
+	USER_CONFIG_NONE = 1,
+	USER_CONFIG_MERGE,
+	USER_CONFIG_OVERRIDE
+};
+
+static int
+user_config_mode (hash_t *config, int defmode)
+{
+	const char *mode;
 
 	/* Whether we should use or override from user directory */
-	user_config = hash_get (config, "user-config");
-	if (user_config == NULL)
-		user_config = "none";
-
-	/* Load each module from the main list */
-	if (strequal (user_config, "none") || strequal (user_config, "merge")) {
-		rv = load_modules_from_config_unlocked (PKCS11_CONFIG_LIBS);
-		if (rv != CKR_OK);
-			return rv;
+	mode = hash_get (config, "user-config");
+	if (mode == NULL) {
+		return defmode;
+	} else if (strequal (mode, "none")) {
+		return USER_CONFIG_NONE;
+	} else if (strequal (mode, "merge")) {
+		return USER_CONFIG_MERGE;
+	} else if (strequal (mode, "override")) {
+		return USER_CONFIG_OVERRIDE;
+	} else {
+		warning ("invalid mode for 'user-config': %s", mode);
+		return USER_CONFIG_INVALID;
 	}
-	if (strequal (user_config, "override") || strequal (user_config, "merge")) {
-		pwd = getpwuid (getuid ());
-		if (!pwd)
-			rv = CKR_GENERAL_ERROR;
-		else {
-			path = strconcat (pwd->pw_dir, "/.pkcs11/libs");
-			if (path == NULL)
-				rv = CKR_HOST_MEMORY;
-			else
-				rv = load_modules_from_config_unlocked (path);
-			free (path);
-		}
-		if (rv != CKR_OK);
-			return rv;
-	}
-
-	return CKR_OK;
 }
 
 static CK_RV
-load_registered_modules_unlocked (void)
+load_config_files_unlocked (int *user_mode)
 {
-	hash_t *config;
-	CK_RV rv;
+	hash_t *config = NULL;
+	hash_t *uconfig = NULL;
+	void *key = NULL;
+	void *value = NULL;
+	char *path;
+	int mode;
+	CK_RV rv = CKR_GENERAL_ERROR;
+	hash_iter_t hi;
 
 	/* Should only be called after everything has been unloaded */
 	assert (!gl.config);
 
 	/* Load the main configuration */
-	config = conf_parse_file (PKCS11_CONFIG_FILE, CONF_IGNORE_MISSING, conf_error);
+	config = conf_parse_file (P11_SYSTEM_CONF, CONF_IGNORE_MISSING, conf_error);
 	if (!config) {
-		if (errno == ENOMEM)
-			return CKR_HOST_MEMORY;
-		return CKR_GENERAL_ERROR;
+		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+		goto finished;
 	}
 
-	rv = load_config_modules_unlocked (config);
-	if (rv != CKR_OK) {
-		hash_free (config);
-		return rv;
+	/* Whether we should use or override from user directory */
+	mode = user_config_mode (config, USER_CONFIG_INVALID);
+	if (mode == USER_CONFIG_INVALID)
+		goto finished;
+
+	if (mode != USER_CONFIG_NONE) {
+		path = expand_user_path (P11_USER_CONF);
+		if (!path)
+			goto finished;
+
+		/* Load up the user configuration */
+		uconfig = conf_parse_file (path, CONF_IGNORE_MISSING, conf_error);
+		free (path);
+
+		if (!uconfig) {
+			rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+			goto finished;
+		}
+
+		/* Figure out what the user mode is */
+		mode = user_config_mode (uconfig, mode);
+		if (mode == USER_CONFIG_INVALID)
+			goto finished;
+
+		/* Merge everything into the system config */
+		if (mode == USER_CONFIG_MERGE) {
+			hash_iterate (uconfig, &hi);
+			while (hash_next (&hi, &key, &value)) {
+				key = strdup (key);
+				if (key == NULL)
+					goto finished;
+				value = strdup (value);
+				if (value == NULL)
+					goto finished;
+				if (!hash_set (config, key, value))
+					goto finished;
+				key = NULL;
+				value = NULL;
+			}
+
+		/* Override the system config */
+		} else if (mode == USER_CONFIG_OVERRIDE) {
+			hash_free (config);
+			config = uconfig;
+			uconfig = NULL;
+		}
 	}
 
 	gl.config = config;
+	config = NULL;
+	rv = CKR_OK;
+
+	if (user_mode)
+		*user_mode = mode;
+
+finished:
+	hash_free (config);
+	hash_free (uconfig);
+	free (key);
+	free (value);
+	return rv;
+}
+
+static CK_RV
+load_registered_modules_unlocked (void)
+{
+	char *path;
+	int mode;
+	CK_RV rv;
+
+	rv = load_config_files_unlocked (&mode);
+	if (rv != CKR_OK)
+		return rv;
+
+	assert (gl.config);
+	assert (mode != USER_CONFIG_INVALID);
+
+	/* Load each module from the main list */
+	if (mode != USER_CONFIG_OVERRIDE) {
+		rv = load_modules_from_config_unlocked (P11_SYSTEM_MODULES);
+		if (rv != CKR_OK);
+			return rv;
+	}
+
+	/* Load each module from the user list */
+	if (mode != USER_CONFIG_NONE) {
+		path = expand_user_path (P11_USER_MODULES);
+		if (!path)
+			rv = CKR_GENERAL_ERROR;
+		else
+			rv = load_modules_from_config_unlocked (path);
+		free (path);
+		if (rv != CKR_OK);
+			return rv;
+	}
+
 	return CKR_OK;
 }
 
