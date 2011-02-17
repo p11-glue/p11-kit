@@ -200,8 +200,8 @@ conf_parse_file (const char* filename, int flags,
 		if (!*name || *name == '#')
 			continue;
 
-		/* Look for the break between name = value on the same line */
-		value = name + strcspn (name, ":=");
+		/* Look for the break between name: value on the same line */
+		value = name + strcspn (name, ":");
 		if (!*value) {
 			errmsg (error_func, "%s: invalid config line: %s", filename, name);
 			errno = EINVAL;
