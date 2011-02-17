@@ -29,20 +29,22 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 
 # --------------------------------------------------------------------
-# PAM Module Directory
+# PKCS#11 Directories
 
-AC_ARG_WITH([pkcs11-dir],
-            [AC_HELP_STRING([--with-pkcs11-dir=DIR],
-                            [directory which holds pkcs11 modules])],
-            [], [with_pkcs11_dir='${libdir}/pkcs11'])
-PKCS11_MODULE_PATH="$with_pkcs11_dir"
-AC_SUBST(PKCS11_MODULE_PATH)
+p11_system_conf="$sysconfdir/pkcs11/pkcs11.conf"
+p11_system_modules="$sysconfdir/pkcs11/modules"
+p11_user_conf="~/.pkcs11/pkcs11.conf"
+p11_user_modules="~/.pkcs11/modules"
 
-AM_CONDITIONAL(WITH_PAM, test "$have_pam" = "yes")
+AC_DEFINE_UNQUOTED(P11_SYSTEM_CONF, "$p11_system_conf", [System configuration file])
+AC_DEFINE_UNQUOTED(P11_SYSTEM_MODULES, "$p11_system_modules", [System modules dir])
+AC_DEFINE_UNQUOTED(P11_USER_CONF, "$p11_user_conf", [User configuration file])
+AC_DEFINE_UNQUOTED(P11_USER_MODULES, "$p11_user_modules", [User modules dir])
 
-if test "$have_pam" = "yes"; then
-	pam_status="yes ($with_pam_dir)"
-fi
+AC_SUBST(p11_system_conf)
+AC_SUBST(p11_system_modules)
+AC_SUBST(p11_user_conf)
+AC_SUBST(p11_user_modules)
 
 # --------------------------------------------------------------------
 # Warnings to show if using GCC
@@ -130,6 +132,7 @@ fi
 
 AC_CONFIG_FILES([Makefile
 		module/Makefile
+		module/p11-kit.pc
 		tests/Makefile
 		])
 AC_OUTPUT

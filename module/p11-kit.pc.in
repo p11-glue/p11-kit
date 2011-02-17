@@ -1,0 +1,17 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+datarootdir=@datarootdir@
+datadir=@datadir@
+sysconfdir=@sysconfdir@
+p11_system_conf=@p11_system_conf@
+p11_system_modules=@p11_system_modules@
+p11_user_conf=@p11_user_conf@
+p11_user_modules=@p11_user_modules@
+
+Name: p11-kit
+Description: Library and proxy module for properly loading and sharing PKCS#11 modules.
+Version: @VERSION@
+Libs: -L${libdir} -lp11-kit
+Cflags: -I${includedir}/p11-kit

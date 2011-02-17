@@ -1,8 +1,4 @@
 
-INCLUDES = \
-	-DPKCS11_CONFIG_FILE=\"$(sysconfdir)/pkcs11.conf\" \
-	-DPKCS11_CONFIG_LIBS=\"$(sysconfdir)/pkcs11/libs\"
-
 MODULE_SRCS = \
 	conf.c conf.h \
 	hash.c hash.h \
@@ -26,5 +22,9 @@ libp11_kit_testable_la_LDFLAGS = \
 
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = p11-kit.pc
+
 EXTRA_DIST = \
-	pkcs11.h
+	pkcs11.h \
+	p11-kit.pc.in
