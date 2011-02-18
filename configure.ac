@@ -13,6 +13,9 @@ AM_MAINTAINER_MODE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 LT_INIT
 
+LINGUAS=""
+AM_GNU_GETTEXT([external], [need-ngettext])
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -133,6 +136,7 @@ fi
 AC_CONFIG_FILES([Makefile
 		module/Makefile
 		module/p11-kit.pc
+		po/Makefile.in
 		tests/Makefile
 		])
 AC_OUTPUT

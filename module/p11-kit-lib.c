@@ -222,8 +222,8 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 
 	rv = gfl (&module->funcs);
 	if (rv != CKR_OK) {
-		warning ("call to C_GetFunctiontList failed in module: %s: %lu",
-		         path, (unsigned long)rv);
+		warning ("call to C_GetFunctiontList failed in module: %s: %s",
+		         path, p11_kit_strerror (rv));
 		free_module_unlocked (module);
 		return rv;
 	}

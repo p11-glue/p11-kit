@@ -1,5 +1,5 @@
 
-SUBDIRS = module tests
+SUBDIRS = po module tests po
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -26,3 +26,5 @@ coverage:
 	$(GENHTML) --output-directory tests/coverage tests/coverage.info
 	@echo "file://$(abs_top_builddir)/tests/coverage/index.html"
 endif
+
+EXTRA_DIST = config.rpath

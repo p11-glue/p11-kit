@@ -5,6 +5,7 @@
 *.gcno
 *.gcda
 *.gcov
+*~
 
 .deps
 .libs
@@ -18,6 +19,7 @@ compile
 config.guess
 config.h*
 config.log
+config.rpath
 config.status
 config.sub
 configure
@@ -35,6 +37,9 @@ stamp-h1
 temp.txt
 
 /module/p11-kit.pc
+
+/po/POTFILES
+/po/stamp-po
 
 /tests/coverage
 /tests/coverage.info

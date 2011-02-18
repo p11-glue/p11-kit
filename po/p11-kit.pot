@@ -1,0 +1,342 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Collabora Ltd.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: p11-kit 0.1\n"
+"Report-Msgid-Bugs-To: http://bugzilla.example.com\n"
+"POT-Creation-Date: 2011-02-18 10:47+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: module/p11-kit-messages.c:70
+msgid "The operation was cancelled"
+msgstr ""
+
+#: module/p11-kit-messages.c:73
+msgid "Insufficient memory available"
+msgstr ""
+
+#: module/p11-kit-messages.c:75
+msgid "The specified slot ID is not valid"
+msgstr ""
+
+#: module/p11-kit-messages.c:77
+msgid "Internal error"
+msgstr ""
+
+#: module/p11-kit-messages.c:79
+msgid "The operation failed"
+msgstr ""
+
+#: module/p11-kit-messages.c:81
+msgid "Invalid arguments"
+msgstr ""
+
+#: module/p11-kit-messages.c:83
+msgid "The module cannot create needed threads"
+msgstr ""
+
+#: module/p11-kit-messages.c:85
+msgid "The module cannot lock data properly"
+msgstr ""
+
+#: module/p11-kit-messages.c:87
+msgid "The field is read-only"
+msgstr ""
+
+#: module/p11-kit-messages.c:89
+msgid "The field is sensitive and cannot be revealed"
+msgstr ""
+
+#: module/p11-kit-messages.c:91
+msgid "The field is invalid or does not exist"
+msgstr ""
+
+#: module/p11-kit-messages.c:93
+msgid "Invalid value for field"
+msgstr ""
+
+#: module/p11-kit-messages.c:95
+msgid "The data is not valid or unrecognized"
+msgstr ""
+
+#: module/p11-kit-messages.c:97
+msgid "The data is too long"
+msgstr ""
+
+#: module/p11-kit-messages.c:99
+msgid "An error occurred on the device"
+msgstr ""
+
+#: module/p11-kit-messages.c:101
+msgid "Insufficient memory available on the device"
+msgstr ""
+
+#: module/p11-kit-messages.c:103
+msgid "The device was removed or unplugged"
+msgstr ""
+
+#: module/p11-kit-messages.c:105
+msgid "The encrypted data is not valid or unrecognized"
+msgstr ""
+
+#: module/p11-kit-messages.c:107
+msgid "The encrypted data is too long"
+msgstr ""
+
+#: module/p11-kit-messages.c:109
+msgid "This operation is not supported"
+msgstr ""
+
+#: module/p11-kit-messages.c:111
+msgid "The key is missing or invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:113
+msgid "The key is the wrong size"
+msgstr ""
+
+#: module/p11-kit-messages.c:115
+msgid "The key is of the wrong type"
+msgstr ""
+
+#: module/p11-kit-messages.c:117
+msgid "No key is needed"
+msgstr ""
+
+#: module/p11-kit-messages.c:119
+msgid "The key is different than before"
+msgstr ""
+
+#: module/p11-kit-messages.c:121
+msgid "A key is needed"
+msgstr ""
+
+#: module/p11-kit-messages.c:123
+msgid "Cannot include the key in the digest"
+msgstr ""
+
+#: module/p11-kit-messages.c:125
+msgid "This operation cannot be done with this key"
+msgstr ""
+
+#: module/p11-kit-messages.c:127
+msgid "The key cannot be wrapped"
+msgstr ""
+
+#: module/p11-kit-messages.c:129
+msgid "Cannot export this key"
+msgstr ""
+
+#: module/p11-kit-messages.c:131
+msgid "The crypto mechanism is invalid or unrecognized"
+msgstr ""
+
+#: module/p11-kit-messages.c:133
+msgid "The crypto mechanism has an invalid argument"
+msgstr ""
+
+#: module/p11-kit-messages.c:135
+msgid "The object is missing or invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:137
+msgid "Another operation is already taking place"
+msgstr ""
+
+#: module/p11-kit-messages.c:139
+msgid "No operation is taking place"
+msgstr ""
+
+#: module/p11-kit-messages.c:141
+msgid "The password or PIN is incorrect"
+msgstr ""
+
+#: module/p11-kit-messages.c:143
+msgid "The password or PIN is invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:145
+msgid "The password or PIN is of an invalid length"
+msgstr ""
+
+#: module/p11-kit-messages.c:147
+msgid "The password or PIN has expired"
+msgstr ""
+
+#: module/p11-kit-messages.c:149
+msgid "The password or PIN is locked"
+msgstr ""
+
+#: module/p11-kit-messages.c:151
+msgid "The session is closed"
+msgstr ""
+
+#: module/p11-kit-messages.c:153
+msgid "Too many sessions are active"
+msgstr ""
+
+#: module/p11-kit-messages.c:155
+msgid "The session is invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:157
+msgid "The session is read-only"
+msgstr ""
+
+#: module/p11-kit-messages.c:159
+msgid "An open session exists"
+msgstr ""
+
+#: module/p11-kit-messages.c:161
+msgid "A read-only session exists"
+msgstr ""
+
+#: module/p11-kit-messages.c:163
+msgid "An administrator session exists"
+msgstr ""
+
+#: module/p11-kit-messages.c:165
+msgid "The signature is bad or corrupted"
+msgstr ""
+
+#: module/p11-kit-messages.c:167
+msgid "The signature is unrecognized or corrupted"
+msgstr ""
+
+#: module/p11-kit-messages.c:169
+msgid "Certain required fields are missing"
+msgstr ""
+
+#: module/p11-kit-messages.c:171
+msgid "Certain fields have invalid values"
+msgstr ""
+
+#: module/p11-kit-messages.c:173
+msgid "The device is not present or unplugged"
+msgstr ""
+
+#: module/p11-kit-messages.c:175
+msgid "The device is invalid or unrecognizable"
+msgstr ""
+
+#: module/p11-kit-messages.c:177
+msgid "The device is write protected"
+msgstr ""
+
+#: module/p11-kit-messages.c:179
+msgid "Cannot import because the key is invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:181
+msgid "Cannot import because the key is of the wrong size"
+msgstr ""
+
+#: module/p11-kit-messages.c:183
+msgid "Cannot import because the key is of the wrong type"
+msgstr ""
+
+#: module/p11-kit-messages.c:185
+msgid "You are already logged in"
+msgstr ""
+
+#: module/p11-kit-messages.c:187
+msgid "No user has logged in"
+msgstr ""
+
+#: module/p11-kit-messages.c:189
+msgid "The user's password or PIN is not set"
+msgstr ""
+
+#: module/p11-kit-messages.c:191
+msgid "The user is of an invalid type"
+msgstr ""
+
+#: module/p11-kit-messages.c:193
+msgid "Another user is already logged in"
+msgstr ""
+
+#: module/p11-kit-messages.c:195
+msgid "Too many users of different types are logged in"
+msgstr ""
+
+#: module/p11-kit-messages.c:197
+msgid "Cannot import an invalid key"
+msgstr ""
+
+#: module/p11-kit-messages.c:199
+msgid "Cannot import a key of the wrong size"
+msgstr ""
+
+#: module/p11-kit-messages.c:201
+msgid "Cannot export because the key is invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:203
+msgid "Cannot export because the key is of the wrong size"
+msgstr ""
+
+#: module/p11-kit-messages.c:205
+msgid "Cannot export because the key is of the wrong type"
+msgstr ""
+
+#: module/p11-kit-messages.c:207
+msgid "Unable to initialize the random number generator"
+msgstr ""
+
+#: module/p11-kit-messages.c:209
+msgid "No random number generator available"
+msgstr ""
+
+#: module/p11-kit-messages.c:211
+msgid "The crypto mechanism has an invalid parameter"
+msgstr ""
+
+#: module/p11-kit-messages.c:213
+msgid "Not enough space to store the result"
+msgstr ""
+
+#: module/p11-kit-messages.c:215
+msgid "The saved state is invalid"
+msgstr ""
+
+#: module/p11-kit-messages.c:217
+msgid "The information is sensitive and cannot be revealed"
+msgstr ""
+
+#: module/p11-kit-messages.c:219
+msgid "The state cannot be saved"
+msgstr ""
+
+#: module/p11-kit-messages.c:221
+msgid "The module has not been initialized"
+msgstr ""
+
+#: module/p11-kit-messages.c:223
+msgid "The module has already been initialized"
+msgstr ""
+
+#: module/p11-kit-messages.c:225
+msgid "Cannot lock data"
+msgstr ""
+
+#: module/p11-kit-messages.c:227
+msgid "The data cannot be locked"
+msgstr ""
+
+#: module/p11-kit-messages.c:229
+msgid "The signature request was rejected by the user"
+msgstr ""
+
+#: module/p11-kit-messages.c:232
+msgid "Unknown error"
+msgstr ""

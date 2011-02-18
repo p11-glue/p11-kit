@@ -54,4 +54,6 @@ CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR
 CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs,
                                                             CK_VOID_PTR reserved);
 
+const char*              p11_kit_strerror                  (CK_RV rv);
+
 #endif /* __P11_KIT_H__ */

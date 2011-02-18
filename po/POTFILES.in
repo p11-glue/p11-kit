@@ -1,0 +1,2 @@
+# List of source files which contain translatable strings.
+module/p11-kit-messages.c
