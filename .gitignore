@@ -45,3 +45,4 @@ temp.txt
 /tests/coverage.info
 /tests/hash-test
 /tests/conf-test
+/tests/uri-test

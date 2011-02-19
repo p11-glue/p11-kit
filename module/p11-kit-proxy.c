@@ -39,6 +39,7 @@
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "p11-kit-private.h"
+#include "util.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -85,19 +86,6 @@ static struct _Shared {
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
 #define LIBRARY_VERSION_MAJOR   1
 #define LIBRARY_VERSION_MINOR   1
-
-/* -----------------------------------------------------------------------------
- * UTILITIES
- */
-
-static void*
-xrealloc (void * memory, size_t length)
-{
-	void *allocated = realloc (memory, length);
-	if (!allocated)
-		free (memory);
-	return allocated;
-}
 
 /* -----------------------------------------------------------------------------
  * PKCS#11 PROXY MODULE

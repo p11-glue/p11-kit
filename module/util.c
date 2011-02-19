@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2011 Collabora Ltd
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,33 +30,22 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ *
+ * CONTRIBUTORS
+ *  Stef Walter <stef@memberwebs.com>
  */
 
-#ifndef __P11_KIT_H__
-#define __P11_KIT_H__
+#include "config.h"
 
-#include "pkcs11.h"
+#include "util.h"
 
-CK_RV                    p11_kit_initialize_registered     (void);
+#include <stdlib.h>
 
-CK_RV                    p11_kit_finalize_registered       (void);
-
-CK_FUNCTION_LIST_PTR*    p11_kit_registered_modules        (void);
-
-char*                    p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs);
-
-CK_FUNCTION_LIST_PTR     p11_kit_registered_name_to_module (const char *name);
-
-char*                    p11_kit_registered_option         (CK_FUNCTION_LIST_PTR funcs,
-                                                            const char *field);
-
-CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_C_INITIALIZE_ARGS_PTR init_args);
-
-CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_VOID_PTR reserved);
-
-const char*              p11_kit_strerror                  (CK_RV rv);
-
-#endif /* __P11_KIT_H__ */
+void*
+xrealloc (void *memory, size_t length)
+{
+	void *allocated = realloc (memory, length);
+	if (!allocated)
+		free (memory);
+	return allocated;
+}

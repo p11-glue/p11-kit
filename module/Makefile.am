@@ -4,15 +4,18 @@ incdir = $(includedir)/p11-kit
 
 inc_HEADERS = \
 	p11-kit.h \
+	p11-kit-uri.h \
 	pkcs11.h
 
 MODULE_SRCS = \
 	conf.c conf.h \
 	hash.c hash.h \
+	util.c util.h \
 	p11-kit-lib.c \
 	p11-kit-proxy.c \
 	p11-kit-private.h \
 	p11-kit-messages.c \
+	p11-kit-uri.c \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \

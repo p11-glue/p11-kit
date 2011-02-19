@@ -7,7 +7,8 @@ INCLUDES = \
 
 noinst_PROGRAMS = \
 	hash-test \
-	conf-test
+	conf-test \
+	uri-test
 
 hash_test_LDADD = \
 	$(top_builddir)/module/libp11-kit-testable.la
@@ -15,6 +16,10 @@ hash_test_LDADD = \
 conf_test_LDADD = \
 	$(top_builddir)/module/libp11-kit-testable.la
 
+uri_test_LDADD = \
+	$(top_builddir)/module/libp11-kit-testable.la
+
 check-am:
 	./hash-test
 	./conf-test
+	./uri-test
