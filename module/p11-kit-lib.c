@@ -164,7 +164,8 @@ free_module_unlocked (void *data)
 	/* Module must have no outstanding references */
 	assert (module->ref_count == 0);
 
-	dlclose (module->dl_module);
+	if (module->dl_module)
+		dlclose (module->dl_module);
 	hash_free (module->config);
 	free (module->name);
 	free (module);
