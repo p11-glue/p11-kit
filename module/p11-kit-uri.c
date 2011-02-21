@@ -127,7 +127,7 @@ url_encode (const unsigned char *value, const unsigned char *end, size_t *length
 	while (value != end) {
 
 		/* These characters we let through verbatim */
-		if (isalnum (*value) || strchr ("_-.", *value) != NULL) {
+		if (*value && (isalnum (*value) || strchr ("_-.", *value) != NULL)) {
 			*(p++) = *(value++);
 
 		/* All others get encoded */
@@ -254,6 +254,28 @@ p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 	        match_struct_string (uri->token.serialNumber,
 	                             token_info->serialNumber,
 	                             sizeof (token_info->serialNumber)));
+}
+
+CK_ATTRIBUTE_TYPE*
+p11_kit_uri_get_attribute_types (P11KitUri *uri, int *n_types)
+{
+	CK_ATTRIBUTE_TYPE *result;
+	int i, j;
+
+	assert (uri);
+	assert (n_types);
+
+	result = calloc (NUM_ATTRS, sizeof (CK_ATTRIBUTE_TYPE));
+	if (result == NULL)
+		return NULL;
+
+	for (i = 0, j = 0; i < NUM_ATTRS; ++i) {
+		if (uri->attrs[i].ulValueLen != (CK_ULONG)-1)
+			result[j++] = uri->attrs[i].type;
+	}
+
+	*n_types = j;
+	return result;
 }
 
 CK_ATTRIBUTE_PTR
