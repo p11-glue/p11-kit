@@ -1,11 +1,37 @@
 <?xml version="1.0"?>
-<book xml:id="index" xmlns="http://docbook.org/ns/docbook" version="5.0">
+<article xml:id="index" xmlns="http://docbook.org/ns/docbook" version="5.0">
 
-		<xi:include href="p11-kit-multiple-problem.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-			<xi:fallback/>
-		</xi:include>
-		<xi:include href="p11-kit-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-			<xi:fallback/>
-		</xi:include>
+	<articleinfo>
+		<title>P11 Kit</title>
+		<releaseinfo>
+			Work in Progress
+		</releaseinfo>
 
-</book>
+		<authorgroup>
+		<author>
+			<firstname>Stef</firstname>
+			<surname>Walter</surname>
+			<affiliation>
+				<orgname>Collabora Ltd.</orgname>
+				<address>
+					<email>stefw@collabora.co.uk</email>
+				</address>
+			</affiliation>
+		</author>
+		</authorgroup>
+
+		<copyright>
+			<year>2011</year>
+			<holder>Collabora Ltd.</holder>
+		</copyright>
+
+	</articleinfo>
+
+	<xi:include href="p11-kit-multiple-problem.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+		<xi:fallback/>
+	</xi:include>
+	<xi:include href="p11-kit-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+		<xi:fallback/>
+	</xi:include>
+
+</article>
