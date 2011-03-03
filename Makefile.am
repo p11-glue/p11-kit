@@ -1,5 +1,5 @@
 
-SUBDIRS = po module tests po
+SUBDIRS = module tests doc po
 
 ACLOCAL_AMFLAGS = -I m4
 

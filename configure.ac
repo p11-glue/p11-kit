@@ -138,6 +138,7 @@ AC_CONFIG_FILES([Makefile
 		module/p11-kit.pc
 		po/Makefile.in
 		tests/Makefile
+		doc/Makefile
 		])
 AC_OUTPUT
 

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<book xml:id="index" xmlns="http://docbook.org/ns/docbook" version="5.0">
+
+		<xi:include href="p11-kit-multiple-problem.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+			<xi:fallback/>
+		</xi:include>
+		<xi:include href="p11-kit-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+			<xi:fallback/>
+		</xi:include>
+
+</book>

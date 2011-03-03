@@ -6,6 +6,7 @@
 *.gcda
 *.gcov
 *~
+*.html
 
 .deps
 .libs
@@ -30,6 +31,7 @@ INSTALL
 libtool
 ltmain.sh
 m4
+makefile
 Makefile
 Makefile.in
 missing

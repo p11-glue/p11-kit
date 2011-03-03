@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="config">
+	<title>PKCS#11 Configuration</title>
+
+	<section id="config-introduction">
+		<title>Consistent configuration</title>
+
+		<para>In order for multiple applications on the user's desktop to use
+			PKCS#11 modules in a consistent manner, there must be a configuration
+			or registry to specify which modules to load and how to use them. The
+			PKCS#11 specification does not specify such a configuration standard.
+		</para>
+
+		<para>Because of the multi-library module initialization problem, use of
+			PKCS#11 modules must be coordinated within an application. p11-kit
+			provides that coordination. Since coordination is required, it follows
+			that p11-kit can also implement a consistent module configuration.
+		</para>
+	</section>
+
+	<section id="config-format">
+		<title>File format</title>
+
+		<para>A complete configuration consists of several files. These files are
+		text files. Since <literal>p11-kit</literal> is built to be used in all
+		sorts of environments and at very low levels of the software stack, we
+		cannot make use of high level configuration APIs that you may find on a
+		modern desktop.</para>
+
+		<para>Each setting in the config file is specified consists of a name and
+		a value. The name is a simple string consisting of characters and dashes.
+		The name consists of alpha numeric characters, dot, hyphen and
+		underscore.</para>
+
+		<para>The value is specified after the name on the same line, separated
+		from it by a a <literal>:</literal> colon. White space between the
+		name and value is ignored.</para>
+
+		<para>Blank lines are ignored. White space at the beginning or end of
+		lines is stripped. Lines that begin with a <literal>#</literal> character
+		are ignored as comments. Comments are not recognized when they come after
+		a value on a line.</para>
+
+		<para>A fictitious sample configuration file might look like:</para>
+
+		<programlisting>
+	name:value
+	# Here is a comment
+
+	setting.2: A long value with text.
+	x-custom : text
+		</programlisting>
+
+	</section>
+
+	<section id="config-module">
+		<title>Module Configuration</title>
+
+		<para>Each configured PKCS#11 module has its own config file. The
+		location(s) of these files are described below. Most importantly each
+		config file specifies the location of the PKCS#11 module to load. Each
+		module config file has the following fields:</para>
+
+		<variablelist>
+			<varlistentry>
+				<term>module</term>
+				<listitem><para>The absolute path to the PKCS#11 module to load.
+				This should include an extension line <literal>.so</literal></para></listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>Other fields may be present, but it is recommended that field names
+		that are not specified in this document start with a <literal>x-</literal>
+		prefix.</para>
+	</section>
+
+	<section id="config-global">
+		<title>Global Configuration</title>
+
+		<para>A global configuration is also present. This file contains settings
+		that are not related to a single PKCS#11 module. The location(s) of the
+		global configuration are described below. The global configuration file
+		can contain the following fields:</para>
+
+		<variablelist>
+			<varlistentry>
+				<term>user-config</term>
+				<listitem><para>This will be equal to one of the following values:
+				<literal>none</literal>, <literal>merge</literal>,
+				<literal>override</literal>.</para></listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>Other fields may be present, but it is recommended that field names
+		that are not specified in this document start with a <literal>x-</literal>
+		prefix.</para>
+	</section>
+
+	<section id="config-locations">
+		<title>Configuration Files</title>
+
+		<para>Each configured PKCS#11 module is has its own config file. These
+		files are placed in a directory. In addition a global config file exists.
+		There is a system configuration consisting of the various module config
+		files and a file for global configuration. Optionally each user can provide
+		additional configuration or override the system configuration.</para>
+
+		<para>The system global configuration file is in
+		<literal>/etc/pkcs11/pkcs11.conf</literal> and the user global
+		configuration file is in <literal>~/.pkcs11/pkcs11.conf</literal> in the
+		user's home directory.</para>
+
+		<para>
+			The module config files are located XXX>
+		</para>
+	</section>
+</chapter>
