@@ -732,6 +732,20 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 	return rv;
 }
 
+/**
+ * p11_kit_initialize_registered:
+ *
+ * Initialize all the registered PKCS#11 modules.
+ *
+ * If this is the first time this function is called multiple times
+ * consecutively within a single process, then it merely increments an
+ * initialization reference count for each of these modules.
+ *
+ * Use p11_kit_finalize_registered() to finalize these registered modules once
+ * the caller is done with them.
+ *
+ * Returns: CKR_OK if the initialization succeeded, or an error code.
+ */
 CK_RV
 p11_kit_initialize_registered (void)
 {
@@ -788,6 +802,19 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 	return CKR_OK;
 }
 
+/**
+ * p11_kit_finalize_registered:
+ *
+ * Finalize all the registered PKCS#11 modules. These should have been
+ * initialized with p11_kit_initialize_registered().
+ *
+ * If p11_kit_initialize_registered() has been called more than once in this
+ * process, then this function must be called the same number of times before
+ * actual finalization will occur.
+ *
+ * Returns: CKR_OK if the finalization succeeded, or an error code.
+ */
+
 CK_RV
 p11_kit_finalize_registered (void)
 {
@@ -825,6 +852,18 @@ _p11_kit_registered_modules_unlocked (void)
 	return result;
 }
 
+/**
+ * p11_kit_registered_modules:
+ *
+ * Get a list of all the registered PKCS#11 modules. This list will be valid
+ * once the p11_kit_initialize_registered() function has been called.
+ *
+ * The returned value is a %NULL terminated array of %CK_FUNCTION_LIST_PTR
+ * pointers.
+ *
+ * Returns: A list of all the registered modules. Use the free() function to
+ * free the list.
+ */
 CK_FUNCTION_LIST_PTR_PTR
 p11_kit_registered_modules (void)
 {
@@ -839,6 +878,18 @@ p11_kit_registered_modules (void)
 	return result;
 }
 
+/**
+ * p11_kit_registered_module_to_name:
+ * @funcs: pointer to a registered module
+ *
+ * Get the name of a registered PKCS#11 module.
+ *
+ * You can use p11_kit_registered_modules() to get a list of all the registered
+ * modules. This name is specified by the registered module configuration.
+ *
+ * Returns: A newly allocated string containing the module name, or %NULL
+ *     if no such registered module exists. Use free() to free this string.
+ */
 char*
 p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
 {
@@ -859,6 +910,15 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
 	return name;
 }
 
+/**
+ * p11_kit_registered_name_to_module:
+ * @name: name of a registered module
+ *
+ * Lookup a registered PKCS#11 module by its name. This name is specified by
+ * the registered module configuration.
+ *
+ * Returns: a pointer to a PKCS#11 module, or %NULL if this name was not found.
+ */
 CK_FUNCTION_LIST_PTR
 p11_kit_registered_name_to_module (const char *name)
 {
@@ -878,6 +938,17 @@ p11_kit_registered_name_to_module (const char *name)
 	return funcs;
 }
 
+/**
+ * p11_kit_registered_option:
+ * @funcs: a pointer to a registered module
+ * @field: the name of the option to lookup.
+ *
+ * Lookup a configured option for a registered PKCS#11 module.
+ *
+ * Returns: A newly allocated string containing the option value, or %NULL
+ *     if the registered module or the option were not found. Use free() to free
+ *     the returned string.
+ */
 char*
 p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 {
@@ -901,9 +972,36 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 	return option;
 }
 
+/**
+ * p11_kit_initialize_module:
+ * @funcs: loaded module to initialize.
+ *
+ * Initialize an arbitrary PKCS#11 module. Normally using the
+ * p11_kit_initialize_registered() is preferred.
+ *
+ * Using this function to initialize modules allows coordination between
+ * multiple users of the same module in a single process. It should be called
+ * on modules that have been loaded (with dlopen() for example) but not yet
+ * initialized. The caller should not yet have called the module's
+ * %C_Initialize method. This function will call %C_Initialize as necessary.
+ *
+ * Subsequent calls to this function for the same module will result in an
+ * initialization count being incremented for the module. It is safe (although
+ * usually unnecessary) to use this function on registered modules.
+ *
+ * The module must be finalized with p11_kit_finalize_module() instead of
+ * calling its %C_Finalize method directly.
+ *
+ * This function does not accept a %CK_C_INITIALIZE_ARGS argument. Custom
+ * initialization arguments cannot be supported when multiple consumers load
+ * the same module.
+ *
+ * Returns: CKR_OK if the initialization was successful.
+ */
 CK_RV
 p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 {
+	CK_C_INITIALIZE_ARGS args;
 	Module *module;
 	Module *allocated = NULL;
 	CK_RV rv = CKR_OK;
@@ -938,6 +1036,27 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 	return rv;
 }
 
+/**
+ * p11_kit_finalize_module:
+ * @funcs: loaded module to finalize.
+ *
+ * Finalize an arbitrary PKCS#11 module. The module must have been initialized
+ * using p11_kit_initialize_module(). In most cases callers will want to use
+ * p11_kit_finalize_registered() instead of this function.
+ *
+ * Using this function to finalize modules allows coordination between
+ * multiple users of the same module in a single process. The caller should
+ * call the module's %C_Finalize method. This function will call
+ * %C_Finalize as necessary.
+ *
+ * If the module was initialized more than once, then this function will
+ * decrement an initialization count for the module. When the count reaches zero
+ * the module will be truly finalized. It is safe (although usually unnecessary)
+ * to use this function on registered modules if (and only if) they were
+ * initialized using p11_kit_initialize_module() for some reason.
+ *
+ * Returns: CKR_OK if the finalization was successful.
+ */
 CK_RV
 p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
 {

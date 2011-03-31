@@ -200,6 +200,13 @@ match_struct_version (CK_VERSION_PTR inuri, CK_VERSION_PTR real)
 	return memcmp (inuri, real, sizeof (CK_VERSION));
 }
 
+/**
+ * p11_kit_uri_get_module_info:
+ *
+ * Get the %CK_INFO structure associated with this URI.
+ *
+ * Returns: A pointer to the %CK_INFO structure.
+ */
 CK_INFO_PTR
 p11_kit_uri_get_module_info (P11KitUri *uri)
 {
@@ -207,6 +214,18 @@ p11_kit_uri_get_module_info (P11KitUri *uri)
 	return &uri->module;
 }
 
+/**
+ * p11_kit_uri_match_module_info:
+ *
+ * Match a %CK_INFO structure against the library parts of this URI.
+ *
+ * Only the fields of the %CK_INFO structure that are valid for use in a
+ * URI will be matched. A URI part that was not specified in the URI will
+ * match any value in the structure. If during the URI parsing any unrecognized
+ * parts were encountered then this match will fail.
+ *
+ * Returns: 1 if the URI matches, 0 if not.
+ */
 int
 p11_kit_uri_match_module_info (P11KitUri *uri, CK_INFO_PTR info)
 {
@@ -233,6 +252,18 @@ p11_kit_uri_get_token_info (P11KitUri *uri)
 	return &uri->token;
 }
 
+/**
+ * p11_kit_uri_match_token_info:
+ *
+ * Match a %CK_TOKEN_INFO structure against the token parts of this URI.
+ *
+ * Only the fields of the %CK_TOKEN_INFO structure that are valid for use in a
+ * URI will be matched. A URI part that was not specified in the URI will
+ * match any value in the structure. If during the URI parsing any unrecognized
+ * parts were encountered then this match will fail.
+ *
+ * Returns: 1 if the URI matches, 0 if not.
+ */
 int
 p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 {
@@ -362,6 +393,18 @@ match_attributes (CK_ATTRIBUTE_PTR one, CK_ATTRIBUTE_PTR two)
 	return memcmp (one->pValue, two->pValue, one->ulValueLen) == 0;
 }
 
+/**
+ * p11_kit_uri_match_attributes:
+ *
+ * Match a attributes against the object parts of this URI.
+ *
+ * Only the attributes that are valid for use in a URI will be matched. A URI
+ * part that was not specified in the URI will match any attribute value. If
+ * during the URI parsing any unrecognized parts were encountered then this
+ * match will fail.
+ *
+ * Returns: 1 if the URI matches, 0 if not.
+ */
 int
 p11_kit_uri_match_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
                               CK_ULONG n_attrs)
