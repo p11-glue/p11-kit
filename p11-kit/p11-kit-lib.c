@@ -367,6 +367,13 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 		return CKR_GENERAL_ERROR;
 	}
 
+	/*
+	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
+	 * 'x-init-reserved' setting in the config. This only works with specific
+	 * PKCS#11 modules, and is non-standard use of that field.
+	 */
+	module->init_args.pReserved = hash_get (module->config, "x-init-reserved");
+
 	return CKR_OK;
 }
 
