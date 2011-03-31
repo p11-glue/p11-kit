@@ -31,4 +31,10 @@ coverage:
 	@echo "file://$(abs_top_builddir)/tests/coverage/index.html"
 endif
 
+if ENABLE_GTK_DOC
+upload-doc: all
+	rsync -Hvax --exclude doc \
+		doc/html/./ anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/doc/p11-kit/./
+endif
+
 EXTRA_DIST = config.rpath
