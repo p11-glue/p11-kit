@@ -35,7 +35,7 @@
 		underscore.</para>
 
 		<para>The value is specified after the name on the same line, separated
-		from it by a a <literal>:</literal> colon. White space between the
+		from it by a <literal>:</literal> (colon). White space between the
 		name and value is ignored.</para>
 
 		<para>Blank lines are ignored. White space at the beginning or end of
@@ -50,8 +50,7 @@
 	# Here is a comment
 
 	setting.2: A long value with text.
-	x-custom : text
-		</programlisting>
+	x-custom : text</programlisting>
 
 	</section>
 
@@ -113,7 +112,10 @@
 		user's home directory.</para>
 
 		<para>
-			The module config files are located XXX>
+			The module config files are located in the
+			<literal>/etc/pkcs11/modules</literal> directory, with one configuration
+			file per module. In addition the <literal>~/.pkcs11/modules</literal>
+			directory can be used for modules installed by the user.
 		</para>
 	</section>
 </chapter>

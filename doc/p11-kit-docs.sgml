@@ -11,14 +11,18 @@
 		<releaseinfo>for p11-kit &version;</releaseinfo>
 	</bookinfo>
 
+	<xi:include href="p11-kit-config.xml"/>
+	<xi:include href="p11-kit-sharing.xml"/>
+
 	<chapter>
 		<title>Reference</title>
 		<xi:include href="xml/p11-kit.xml"/>
 		<xi:include href="xml/p11-kit-uri.xml"/>
 		<xi:include href="xml/p11-kit-util.xml"/>
-		<index id="api-index-full">
-			<title>API Index</title>
-			<xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
-		</index>
 	</chapter>
+
+	<index id="api-index-full">
+		<title>API Index</title>
+		<xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+	</index>
 </book>

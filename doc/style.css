@@ -40,22 +40,25 @@ DIV.book,
 DIV.refentry,
 DIV.chapter,
 DIV.index,
-DIV.footer {
+DIV.footer,
+DIV.section {
 	font-family: Verdana, Arial, 'Bitstream Vera Sans', Helvetica, sans-serif;
 	font-size: 9.5pt;
 	line-height: 150%;
+}
+
+BODY > DIV.book,
+BODY > DIV.footer {
+	margin-left: 1em;
 	margin-right: 1em;
 }
 
-DIV.book,
-DIV.footer {
-	margin-left: 1em;
-}
-
-DIV.refentry,
-DIV.chapter,
-DIV.index {
+BODY > DIV.refentry,
+BODY > DIV.chapter,
+BODY > DIV.index,
+BODY > DIV.section {
 	margin-left: 3em;
+	margin-right: 1em;
 }
 
 DIV.variablelist TABLE {
