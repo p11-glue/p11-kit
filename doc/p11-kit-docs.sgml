@@ -14,7 +14,7 @@
 	<xi:include href="p11-kit-config.xml"/>
 	<xi:include href="p11-kit-sharing.xml"/>
 
-	<chapter>
+	<chapter xml:id="reference">
 		<title>Reference</title>
 		<xi:include href="xml/p11-kit.xml"/>
 		<xi:include href="xml/p11-kit-uri.xml"/>
