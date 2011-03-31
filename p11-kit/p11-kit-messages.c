@@ -40,7 +40,7 @@
 /**
  * SECTION:p11-kit-util
  * @title: Utilities
- * @short_description: Message Utilities
+ * @short_description: PKCS\#11 utilities
  *
  * Utility functions for working with PKCS\#11.
  */
@@ -54,7 +54,7 @@
 
 /**
  * p11_kit_strerror:
- * @rv: The PKCS\#11 return value to get a message for.
+ * @rv: The code to get a message for.
  *
  * Get a message for a PKCS\#11 return value or error code. Do not
  * pass CKR_OK or other such non errors to this function.

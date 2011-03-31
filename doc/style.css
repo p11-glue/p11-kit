@@ -38,10 +38,24 @@ BODY {
 
 DIV.book,
 DIV.refentry,
-DIV.chapter {
+DIV.chapter,
+DIV.index,
+DIV.footer {
 	font-family: Verdana, Arial, 'Bitstream Vera Sans', Helvetica, sans-serif;
 	font-size: 9.5pt;
 	line-height: 150%;
+	margin-right: 1em;
+}
+
+DIV.book,
+DIV.footer {
+	margin-left: 1em;
+}
+
+DIV.refentry,
+DIV.chapter,
+DIV.index {
+	margin-left: 3em;
 }
 
 DIV.variablelist TABLE {
@@ -49,13 +63,9 @@ DIV.variablelist TABLE {
 	line-height: 150%;
 }
 
-DIV.refentry,
-DIV.chapter {
-	margin-left: 3em;
-	margin-right: 1em;
-}
-
-DIV.refsect2 {
+DIV.refsect1,
+DIV.refsect2,
+DIV.refsynopsisdiv {
 	margin-bottom: 3em !important;
 }
 
