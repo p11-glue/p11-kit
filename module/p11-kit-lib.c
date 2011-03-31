@@ -263,7 +263,7 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 
 	assert (configfile);
 
-	module = calloc (1, sizeof (Module));
+	module = alloc_module_unlocked ();
 	if (!module)
 		return CKR_HOST_MEMORY;
 
@@ -917,7 +917,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 
 			module = hash_get (gl.modules, funcs);
 			if (module == NULL) {
-				allocated = module = calloc (1, sizeof (Module));
+				allocated = module = alloc_module_unlocked ();
 				module->funcs = funcs;
 			}
 
