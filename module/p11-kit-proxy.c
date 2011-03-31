@@ -210,7 +210,7 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
-		rv = _p11_kit_finalize_registered_unlocked_reentrant (reserved);
+		rv = _p11_kit_finalize_registered_unlocked_reentrant ();
 
 		/*
 		 * If modules are all gone, then this was the last
@@ -305,7 +305,7 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
-		rv = _p11_kit_initialize_registered_unlocked_reentrant (init_args);
+		rv = _p11_kit_initialize_registered_unlocked_reentrant ();
 
 		/* WARNING: Reentrancy can occur here */
 		if (rv == CKR_OK && !gl.mappings_refs == 0)

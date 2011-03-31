@@ -43,9 +43,9 @@ extern pthread_mutex_t _p11_mutex;
 
 CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
 
-CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (CK_C_INITIALIZE_ARGS_PTR args);
+CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (void);
 
-CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (CK_VOID_PTR args);
+CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (void);
 
 void        _p11_kit_proxy_after_fork                           (void);
 

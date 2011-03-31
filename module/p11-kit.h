@@ -50,11 +50,9 @@ CK_FUNCTION_LIST_PTR     p11_kit_registered_name_to_module (const char *name);
 char*                    p11_kit_registered_option         (CK_FUNCTION_LIST_PTR funcs,
                                                             const char *field);
 
-CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_C_INITIALIZE_ARGS_PTR init_args);
+CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR funcs);
 
-CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs,
-                                                            CK_VOID_PTR reserved);
+CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR funcs);
 
 const char*              p11_kit_strerror                  (CK_RV rv);
 

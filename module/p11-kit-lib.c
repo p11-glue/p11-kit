@@ -63,6 +63,7 @@ typedef struct _Module {
 	CK_FUNCTION_LIST_PTR funcs;
 	int ref_count;
 	int initialize_count;
+	CK_C_INITIALIZE_ARGS init_args;
 } Module;
 
 /*
@@ -151,6 +152,69 @@ strequal (const char *one, const char *two)
  * P11-KIT FUNCTIONALITY
  */
 
+static CK_RV
+create_mutex (CK_VOID_PTR_PTR mut)
+{
+	pthread_mutex_t *pmutex;
+	int err;
+
+	pmutex = malloc (sizeof (pthread_mutex_t));
+	if (!pmutex)
+		return CKR_HOST_MEMORY;
+	err = pthread_mutex_init (pmutex, NULL);
+	if (err == ENOMEM)
+		return CKR_HOST_MEMORY;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	*mut = pmutex;
+	return CKR_OK;
+}
+
+static CK_RV
+destroy_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
+
+	err = pthread_mutex_destroy (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	free (pmutex);
+	return CKR_OK;
+}
+
+static CK_RV
+lock_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
+
+	err = pthread_mutex_lock (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	return CKR_OK;
+}
+
+static CK_RV
+unlock_mutex (CK_VOID_PTR mut)
+{
+	pthread_mutex_t *pmutex = mut;
+	int err;
+
+	err = pthread_mutex_unlock (pmutex);
+	if (err == EINVAL)
+		return CKR_MUTEX_BAD;
+	else if (err == EPERM)
+		return CKR_MUTEX_NOT_LOCKED;
+	else if (err != 0)
+		return CKR_GENERAL_ERROR;
+	return CKR_OK;
+}
+
 static void
 free_module_unlocked (void *data)
 {
@@ -171,6 +235,24 @@ free_module_unlocked (void *data)
 	free (module);
 }
 
+static Module*
+alloc_module_unlocked (void)
+{
+	Module *module;
+
+	module = calloc (1, sizeof (Module));
+	if (!module)
+		return NULL;
+
+	module->init_args.CreateMutex = create_mutex;
+	module->init_args.DestroyMutex = destroy_mutex;
+	module->init_args.LockMutex = lock_mutex;
+	module->init_args.UnlockMutex = unlock_mutex;
+	module->init_args.flags = CKF_OS_LOCKING_OK;
+
+	return module;
+}
+
 static CK_RV
 load_module_from_config_unlocked (const char *configfile, const char *name)
 {
@@ -181,7 +263,7 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 
 	assert (configfile);
 
-	module = calloc (sizeof (Module), 1);
+	module = calloc (1, sizeof (Module));
 	if (!module)
 		return CKR_HOST_MEMORY;
 
@@ -459,70 +541,7 @@ load_registered_modules_unlocked (void)
 }
 
 static CK_RV
-create_mutex (CK_VOID_PTR_PTR mut)
-{
-	pthread_mutex_t *pmutex;
-	int err;
-
-	pmutex = malloc (sizeof (pthread_mutex_t));
-	if (!pmutex)
-		return CKR_HOST_MEMORY;
-	err = pthread_mutex_init (pmutex, NULL);
-	if (err == ENOMEM)
-		return CKR_HOST_MEMORY;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	*mut = pmutex;
-	return CKR_OK;
-}
-
-static CK_RV
-destroy_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_destroy (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	free (pmutex);
-	return CKR_OK;
-}
-
-static CK_RV
-lock_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_lock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	return CKR_OK;
-}
-
-static CK_RV
-unlock_mutex (CK_VOID_PTR mut)
-{
-	pthread_mutex_t *pmutex = mut;
-	int err;
-
-	err = pthread_mutex_unlock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err == EPERM)
-		return CKR_MUTEX_NOT_LOCKED;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
-	return CKR_OK;
-}
-
-static CK_RV
-initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR args)
+initialize_module_unlocked_reentrant (Module *module)
 {
 	CK_RV rv = CKR_OK;
 
@@ -539,7 +558,7 @@ initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR a
 		_p11_unlock ();
 
 			assert (module->funcs);
-			rv = module->funcs->C_Initialize (args);
+			rv = module->funcs->C_Initialize (&module->init_args);
 
 		_p11_lock ();
 
@@ -567,18 +586,10 @@ initialize_module_unlocked_reentrant (Module *module, CK_C_INITIALIZE_ARGS_PTR a
 static void
 reinitialize_after_fork (void)
 {
-	CK_C_INITIALIZE_ARGS args;
 	hash_iter_t it;
 	Module *module;
 
 	/* WARNING: This function must be reentrant */
-
-	memset (&args, 0, sizeof (args));
-	args.CreateMutex = create_mutex;
-	args.DestroyMutex = destroy_mutex;
-	args.LockMutex = lock_mutex;
-	args.UnlockMutex = unlock_mutex;
-	args.flags = CKF_OS_LOCKING_OK;
 
 	_p11_lock ();
 
@@ -588,7 +599,7 @@ reinitialize_after_fork (void)
 				module->initialize_count = 0;
 
 				/* WARNING: Reentrancy can occur here */
-				initialize_module_unlocked_reentrant (module, &args);
+				initialize_module_unlocked_reentrant (module);
 			}
 		}
 
@@ -637,7 +648,7 @@ free_modules_when_no_refs_unlocked (void)
 }
 
 static CK_RV
-finalize_module_unlocked_reentrant (Module *module, CK_VOID_PTR args)
+finalize_module_unlocked_reentrant (Module *module)
 {
 	assert (module);
 
@@ -663,7 +674,7 @@ finalize_module_unlocked_reentrant (Module *module, CK_VOID_PTR args)
 		_p11_unlock ();
 
 			assert (module->funcs);
-			module->funcs->C_Finalize (args);
+			module->funcs->C_Finalize (NULL);
 
 		_p11_lock ();
 
@@ -694,7 +705,7 @@ find_module_for_name_unlocked (const char *name)
 }
 
 CK_RV
-_p11_kit_initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args)
+_p11_kit_initialize_registered_unlocked_reentrant (void)
 {
 	Module *module;
 	hash_iter_t it;
@@ -711,7 +722,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args
 			if (!module->name)
 				continue;
 
-			rv = initialize_module_unlocked_reentrant (module, args);
+			rv = initialize_module_unlocked_reentrant (module);
 
 			if (rv != CKR_OK)
 				break;
@@ -724,22 +735,14 @@ _p11_kit_initialize_registered_unlocked_reentrant (CK_C_INITIALIZE_ARGS_PTR args
 CK_RV
 p11_kit_initialize_registered (void)
 {
-	CK_C_INITIALIZE_ARGS args;
 	CK_RV rv;
 
 	/* WARNING: This function must be reentrant */
 
-	memset (&args, 0, sizeof (args));
-	args.CreateMutex = create_mutex;
-	args.DestroyMutex = destroy_mutex;
-	args.LockMutex = lock_mutex;
-	args.UnlockMutex = unlock_mutex;
-	args.flags = CKF_OS_LOCKING_OK;
-
 	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
-		rv = _p11_kit_initialize_registered_unlocked_reentrant (&args);
+		rv = _p11_kit_initialize_registered_unlocked_reentrant ();
 
 	_p11_unlock ();
 
@@ -751,7 +754,7 @@ p11_kit_initialize_registered (void)
 }
 
 CK_RV
-_p11_kit_finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
+_p11_kit_finalize_registered_unlocked_reentrant (void)
 {
 	Module *module;
 	hash_iter_t it;
@@ -778,7 +781,7 @@ _p11_kit_finalize_registered_unlocked_reentrant (CK_VOID_PTR args)
 
 	for (i = 0; i < count; ++i) {
 		/* WARNING: Reentrant calls can occur here */
-		finalize_module_unlocked_reentrant (to_finalize[i], args);
+		finalize_module_unlocked_reentrant (to_finalize[i]);
 	}
 
 	free (to_finalize);
@@ -795,7 +798,7 @@ p11_kit_finalize_registered (void)
 	_p11_lock ();
 
 		/* WARNING: Reentrant calls can occur here */
-		rv = _p11_kit_finalize_registered_unlocked_reentrant (NULL);
+		rv = _p11_kit_finalize_registered_unlocked_reentrant ();
 
 	_p11_unlock ();
 
@@ -899,7 +902,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 }
 
 CK_RV
-p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR init_args)
+p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 {
 	Module *module;
 	Module *allocated = NULL;
@@ -919,7 +922,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR 
 			}
 
 			/* WARNING: Reentrancy can occur here */
-			rv = initialize_module_unlocked_reentrant (module, init_args);
+			rv = initialize_module_unlocked_reentrant (module);
 
 			/* If this was newly allocated, add it to the list */
 			if (rv == CKR_OK && allocated) {
@@ -936,7 +939,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs, CK_C_INITIALIZE_ARGS_PTR 
 }
 
 CK_RV
-p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
+p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
 {
 	Module *module;
 	CK_RV rv = CKR_OK;
@@ -950,7 +953,7 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs, CK_VOID_PTR reserved)
 			rv = CKR_ARGUMENTS_BAD;
 		} else {
 			/* WARNING: Rentrancy can occur here */
-			rv = finalize_module_unlocked_reentrant (module, reserved);
+			rv = finalize_module_unlocked_reentrant (module);
 		}
 
 	_p11_unlock ();
