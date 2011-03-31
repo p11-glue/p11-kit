@@ -44,6 +44,78 @@
 #include <stdio.h>
 #include <string.h>
 
+/**
+ * SECTION:p11-kit-uri
+ * @title: URIs
+ * @short_description: Parsing and formatting PKCS\#11 URIs
+ *
+ * PKCS\#11 URIs can be used in configuration files or applications to represent
+ * PKCS\#11 modules, tokens or objects. An example of a URI might be:
+ *
+ * <code><literallayout>
+ *      pkcs11:token=The\%20Software\%20PKCS\#11\%20softtoken;
+ *          manufacturer=Snake\%20Oil,\%20Inc.;serial=;object=my-certificate;
+ *          model=1.0;objecttype=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
+ * </literallayout></code>
+ *
+ * You can use p11_kit_uri_parse() to parse such a URI, and p11_kit_uri_format()
+ * to build one. URIs are represented by the #P11KitUri structure. You can match
+ * a parsed URI against PKCS\#11 tokens with p11_kit_uri_match_token_info()
+ * or attributes with p11_kit_uri_match_attributes().
+ *
+ * Since URIs can represent different sorts of things, when parsing or formatting
+ * a URI a 'context' can be used to indicate which sort of URI is expected.
+ *
+ * URIs have an <code>unrecognized</code> flag. This flag is set during parsing
+ * if any parts of the URI are not recognized. This may be because the part is
+ * from a newer version of the PKCS\#11 spec or because that part was not valid
+ * inside of the desired context used when parsing.
+ */
+
+/**
+ * P11KitUri:
+ *
+ * A structure representing a PKCS\#11 URI. There are no public fields
+ * visible in this structure. Use the various accessor functions.
+ */
+
+/**
+ * P11KitUriType:
+ * @P11_KIT_URI_IS_MODULE: The URI represents one or more modules
+ * @P11_KIT_URI_IS_TOKEN: The URI represents one or more tokens
+ * @P11_KIT_URI_IS_OBJECT: The URI represents one or more objects
+ * @P11_KIT_URI_IS_ANY: The URI can represent anything
+ *
+ * A PKCS\#11 URI can represent different kinds of things. This flag is used by
+ * p11_kit_uri_parse() to denote in what context the URI will be used.
+ */
+
+/**
+ * P11KitUriResult:
+ * @P11_KIT_URI_OK: Success
+ * @P11_KIT_URI_NO_MEMORY: Memory allocation failed
+ * @P11_KIT_URI_BAD_SCHEME: The URI had a bad scheme
+ * @P11_KIT_URI_BAD_ENCODING: The URI had a bad encoding
+ * @P11_KIT_URI_BAD_SYNTAX: The URI had a bad syntax
+ * @P11_KIT_URI_BAD_VERSION: The URI contained a bad version number
+ * @P11_KIT_URI_NOT_FOUND: A requested part of the URI was not found
+ *
+ * Error codes returned by various functions. The functions each clearly state
+ * which error codes they are capable of returning.
+ */
+
+/**
+ * P11_KIT_URI_SCHEME:
+ *
+ * String of URI scheme for PKCS\#11 URIs.
+ */
+
+/**
+ * P11_KIT_URI_SCHEME_LEN:
+ *
+ * Length of %P11_KIT_URI_SCHEME.
+ */
+
 enum {
 	CLASS_IDX,
 	LABEL_IDX,
@@ -202,10 +274,19 @@ match_struct_version (CK_VERSION_PTR inuri, CK_VERSION_PTR real)
 
 /**
  * p11_kit_uri_get_module_info:
+ * @uri: the URI
  *
- * Get the %CK_INFO structure associated with this URI.
+ * Get the <code>CK_INFO</code> structure associated with this URI.
  *
- * Returns: A pointer to the %CK_INFO structure.
+ * If this is a parsed URI, then the fields corresponding to library parts of
+ * the URI will be filled in. Any library URI parts that were missing will have
+ * their fields filled with zeros.
+ *
+ * If the caller wishes to setup information for building a URI, then relevant
+ * fields should be filled in. Fields that should not appear as parts in the
+ * resulting URI should be filled with zeros.
+ *
+ * Returns: A pointer to the <code>CK_INFO</code> structure.
  */
 CK_INFO_PTR
 p11_kit_uri_get_module_info (P11KitUri *uri)
@@ -216,11 +297,13 @@ p11_kit_uri_get_module_info (P11KitUri *uri)
 
 /**
  * p11_kit_uri_match_module_info:
+ * @uri: the URI
+ * @info: the structure to match against the URI
  *
- * Match a %CK_INFO structure against the library parts of this URI.
+ * Match a <code>CK_INFO</code> structure against the library parts of this URI.
  *
- * Only the fields of the %CK_INFO structure that are valid for use in a
- * URI will be matched. A URI part that was not specified in the URI will
+ * Only the fields of the <code>CK_INFO</code> structure that are valid for use
+ * in a URI will be matched. A URI part that was not specified in the URI will
  * match any value in the structure. If during the URI parsing any unrecognized
  * parts were encountered then this match will fail.
  *
@@ -245,6 +328,22 @@ p11_kit_uri_match_module_info (P11KitUri *uri, CK_INFO_PTR info)
 	                              &info->libraryVersion));
 }
 
+/**
+ * p11_kit_uri_get_token_info:
+ * @uri: the URI
+ *
+ * Get the <code>CK_TOKEN_INFO</code> structure associated with this URI.
+ *
+ * If this is a parsed URI, then the fields corresponding to token parts of
+ * the URI will be filled in. Any token URI parts that were missing will have
+ * their fields filled with zeros.
+ *
+ * If the caller wishes to setup information for building a URI, then relevant
+ * fields should be filled in. Fields that should not appear as parts in the
+ * resulting URI should be filled with zeros.
+ *
+ * Returns: A pointer to the <code>CK_INFO</code> structure.
+ */
 CK_TOKEN_INFO_PTR
 p11_kit_uri_get_token_info (P11KitUri *uri)
 {
@@ -254,13 +353,16 @@ p11_kit_uri_get_token_info (P11KitUri *uri)
 
 /**
  * p11_kit_uri_match_token_info:
+ * @uri: the URI
+ * @token_info: the structure to match against the URI
  *
- * Match a %CK_TOKEN_INFO structure against the token parts of this URI.
+ * Match a <code>CK_TOKEN_INFO</code> structure against the token parts of this
+ * URI.
  *
- * Only the fields of the %CK_TOKEN_INFO structure that are valid for use in a
- * URI will be matched. A URI part that was not specified in the URI will
- * match any value in the structure. If during the URI parsing any unrecognized
- * parts were encountered then this match will fail.
+ * Only the fields of the <code>CK_TOKEN_INFO</code> structure that are valid
+ * for use in a URI will be matched. A URI part that was not specified in the
+ * URI will match any value in the structure. If during the URI parsing any
+ * unrecognized parts were encountered then this match will fail.
  *
  * Returns: 1 if the URI matches, 0 if not.
  */
@@ -287,6 +389,16 @@ p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 	                             sizeof (token_info->serialNumber)));
 }
 
+/**
+ * p11_kit_uri_get_attribute_types:
+ * @uri: The URI
+ * @n_types: A location at which to return the number of types returned
+ *
+ * Get the types of the attributes present in this URI.
+ *
+ * Returns: A newly allocated array of <code>CK_ATTRIBUTE_TYPE</code>. This
+ *     should be freed with free() when done.
+ */
 CK_ATTRIBUTE_TYPE*
 p11_kit_uri_get_attribute_types (P11KitUri *uri, int *n_types)
 {
@@ -309,14 +421,24 @@ p11_kit_uri_get_attribute_types (P11KitUri *uri, int *n_types)
 	return result;
 }
 
+/**
+ * p11_kit_uri_get_attribute:
+ * @uri: The URI
+ * @attr_type: The attribute type
+ *
+ * Get a pointer to an attribute present in this URI.
+ *
+ * Returns: A pointer to the attribute, or <code>NULL</code> if not present.
+ *     The attribute is owned by the URI and should not be freed.
+ */
 CK_ATTRIBUTE_PTR
-p11_kit_uri_get_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE type)
+p11_kit_uri_get_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 {
 	int idx;
 
 	assert (uri);
 
-	idx = attribute_to_idx (type);
+	idx = attribute_to_idx (attr_type);
 	if (idx < 0)
 		return NULL;
 
@@ -326,6 +448,19 @@ p11_kit_uri_get_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE type)
 	return &uri->attrs[idx];
 }
 
+/**
+ * p11_kit_uri_set_attribute:
+ * @uri: The URI
+ * @attr: The attribute to set
+ *
+ * Set an attribute on the URI.
+ *
+ * Only attributes that map to parts in a PKCS\#11 URI will be accepted.
+ *
+ * Returns: %P11_KIT_URI_OK if the attribute was successfully set.
+ *     %P11_KIT_URI_NOT_FOUND if the attribute was not valid for a URI.
+ *     %P11_KIT_URI_NO_MEMORY if allocation failed.
+ */
 int
 p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 {
@@ -358,14 +493,26 @@ p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 	return P11_KIT_URI_OK;
 }
 
+/**
+ * p11_kit_uri_clear_attribute:
+ * @uri: The URI
+ * @attr_type: The type of the attribute to clear
+ *
+ * Clear an attribute on the URI.
+ *
+ * Only attributes that map to parts in a PKCS\#11 URI will be accepted.
+ *
+ * Returns: %P11_KIT_URI_OK if the attribute was successfully cleared.
+ *     %P11_KIT_URI_NOT_FOUND if the attribute was not valid for a URI.
+ */
 int
-p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE type)
+p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 {
 	int idx;
 
 	assert (uri);
 
-	idx = attribute_to_idx (type);
+	idx = attribute_to_idx (attr_type);
 	if (idx < 0)
 		return P11_KIT_URI_NOT_FOUND;
 	assert (idx < NUM_ATTRS);
@@ -373,7 +520,7 @@ p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE type)
 	free (uri->attrs[idx].pValue);
 	uri->attrs[idx].pValue = NULL;
 	uri->attrs[idx].ulValueLen = (CK_ULONG)-1;
-	return 0;
+	return P11_KIT_URI_OK;
 }
 
 static int
@@ -395,6 +542,9 @@ match_attributes (CK_ATTRIBUTE_PTR one, CK_ATTRIBUTE_PTR two)
 
 /**
  * p11_kit_uri_match_attributes:
+ * @uri: The URI
+ * @attrs: The attributes to match
+ * @n_attrs: The number of attributes
  *
  * Match a attributes against the object parts of this URI.
  *
@@ -433,6 +583,17 @@ p11_kit_uri_match_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
 	return 1;
 }
 
+/**
+ * p11_kit_uri_set_unrecognized:
+ * @uri: The URI
+ * @unrecognized: The new unregognized flag value
+ *
+ * Set the unrecognized flag on this URI.
+ *
+ * The unrecognized flag is automatically set to 1 when during parsing any part
+ * of the URI is unrecognized. If the unrecognized flag is set to 1, then
+ * matching against this URI will always fail.
+ */
 void
 p11_kit_uri_set_unrecognized (P11KitUri *uri, int unrecognized)
 {
@@ -440,6 +601,18 @@ p11_kit_uri_set_unrecognized (P11KitUri *uri, int unrecognized)
 	uri->unrecognized = unrecognized;
 }
 
+/**
+ * p11_kit_uri_any_unrecognized:
+ * @uri: The URI
+ *
+ * Get the unrecognized flag for this URI.
+ *
+ * The unrecognized flag is automatically set to 1 when during parsing any part
+ * of the URI is unrecognized. If the unrecognized flag is set to 1, then
+ * matching against this URI will always fail.
+ *
+ * Returns: 1 if unrecognized flag is set, 0 otherwise.
+ */
 int
 p11_kit_uri_any_unrecognized (P11KitUri *uri)
 {
@@ -447,6 +620,16 @@ p11_kit_uri_any_unrecognized (P11KitUri *uri)
 	return uri->unrecognized;
 }
 
+/**
+ * p11_kit_uri_new:
+ *
+ * Create a new blank PKCS\#11 URI.
+ *
+ * The new URI is in the right state to parse a string into. All relevant fields
+ * are zeroed out. Formatting this URI will produce a valid but empty URI.
+ *
+ * Returns: A newly allocated URI. This should be freed with p11_kit_uri_free().
+ */
 P11KitUri*
 p11_kit_uri_new (void)
 {
@@ -608,8 +791,28 @@ format_struct_version (char **string, size_t *length, int *is_first,
 	return format_raw_string (string, length, is_first, name, buffer);
 }
 
+/**
+ * p11_kit_uri_format:
+ * @uri: The URI.
+ * @uri_type: The type of URI that should be produced.
+ * @string: Location to store a newly allocated string.
+ *
+ * Format a PKCS\#11 URI into a string.
+ *
+ * Fields which are zeroed out will not be included in the resulting string.
+ * Attributes which are not present will also not be included.
+ *
+ * The uri_type of URI specified limits the different parts of the resulting
+ * URI. To format a URI containing all possible information use
+ * %P11_KIT_URI_IS_ANY
+ *
+ * The resulting string should be freed with free().
+ *
+ * Returns: %P11_KIT_URI_OK if the URI was formatted successfully.
+ *     %P11_KIT_URI_NO_MEMORY if memory allocation failed.
+ */
 int
-p11_kit_uri_format (P11KitUri *uri, char **string)
+p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 {
 	char *result = NULL;
 	size_t length = 0;
@@ -619,46 +822,56 @@ p11_kit_uri_format (P11KitUri *uri, char **string)
 	if (!result)
 		return P11_KIT_URI_NO_MEMORY;
 
-	length = P11_KIT_URI_PREFIX_LEN;
-	memcpy (result, P11_KIT_URI_PREFIX, length);
+	length = P11_KIT_URI_SCHEME_LEN;
+	memcpy (result, P11_KIT_URI_SCHEME, length);
 	result[length] = 0;
 
-	if (!format_struct_string (&result, &length, &is_first, "library-description",
-	                           uri->module.libraryDescription,
-	                           sizeof (uri->module.libraryDescription)) ||
-	    !format_struct_string (&result, &length, &is_first, "library-manufacturer",
-	                           uri->module.manufacturerID,
-	                           sizeof (uri->module.manufacturerID)) ||
-	    !format_struct_string (&result, &length, &is_first, "model",
-	                           uri->token.model,
-	                           sizeof (uri->token.model)) ||
-	    !format_struct_string (&result, &length, &is_first, "manufacturer",
-	                           uri->token.manufacturerID,
-	                           sizeof (uri->token.manufacturerID)) ||
-	    !format_struct_string (&result, &length, &is_first, "serial",
-	                           uri->token.serialNumber,
-	                           sizeof (uri->token.serialNumber)) ||
-	    !format_struct_string (&result, &length, &is_first, "token",
-	                           uri->token.label,
-	                           sizeof (uri->token.label)) ||
-	    !format_struct_version (&result, &length, &is_first, "library-version",
-	                            &uri->module.libraryVersion)) {
-		free (result);
-		return P11_KIT_URI_NO_MEMORY;
+	if (uri_type & P11_KIT_URI_IS_MODULE) {
+		if (!format_struct_string (&result, &length, &is_first, "library-description",
+		                           uri->module.libraryDescription,
+		                           sizeof (uri->module.libraryDescription)) ||
+		    !format_struct_version (&result, &length, &is_first, "library-version",
+		                            &uri->module.libraryVersion) ||
+		    !format_struct_string (&result, &length, &is_first, "library-manufacturer",
+		                           uri->module.manufacturerID,
+		                           sizeof (uri->module.manufacturerID))) {
+			free (result);
+			return P11_KIT_URI_NO_MEMORY;
+		}
 	}
 
-	if (!format_attribute_string (&result, &length, &is_first, "id",
-	                              &uri->attrs[ID_IDX]) ||
-	    !format_attribute_string (&result, &length, &is_first, "object",
-	                              &uri->attrs[LABEL_IDX])) {
-		free (result);
-		return P11_KIT_URI_NO_MEMORY;
+	if (uri_type & P11_KIT_URI_IS_TOKEN) {
+		if (!format_struct_string (&result, &length, &is_first, "model",
+		                           uri->token.model,
+		                           sizeof (uri->token.model)) ||
+		    !format_struct_string (&result, &length, &is_first, "manufacturer",
+		                           uri->token.manufacturerID,
+		                           sizeof (uri->token.manufacturerID)) ||
+		    !format_struct_string (&result, &length, &is_first, "serial",
+		                           uri->token.serialNumber,
+		                           sizeof (uri->token.serialNumber)) ||
+		    !format_struct_string (&result, &length, &is_first, "token",
+		                           uri->token.label,
+		                           sizeof (uri->token.label))) {
+			free (result);
+			return P11_KIT_URI_NO_MEMORY;
+		}
 	}
 
-	if (!format_attribute_class (&result, &length, &is_first, "objecttype",
-	                             &uri->attrs[CLASS_IDX])) {
-		free (result);
-		return P11_KIT_URI_NO_MEMORY;
+	if (uri_type & P11_KIT_URI_IS_OBJECT) {
+		if (!format_attribute_string (&result, &length, &is_first, "id",
+		                              &uri->attrs[ID_IDX]) ||
+		    !format_attribute_string (&result, &length, &is_first, "object",
+		                              &uri->attrs[LABEL_IDX])) {
+			free (result);
+			return P11_KIT_URI_NO_MEMORY;
+		}
+
+		if (!format_attribute_class (&result, &length, &is_first, "objecttype",
+		                             &uri->attrs[CLASS_IDX])) {
+			free (result);
+			return P11_KIT_URI_NO_MEMORY;
+		}
 	}
 
 	*string = result;
@@ -866,8 +1079,33 @@ parse_module_info (const char *name, const char *start, const char *end,
 	return parse_struct_info (where, length, start, end, uri);
 }
 
+/**
+ * p11_kit_uri_parse:
+ * @string: The string to parse
+ * @uri_type: The type of URI that is expected
+ * @uri: The blank URI to parse the values into
+ *
+ * Parse a PKCS\#11 URI string.
+ *
+ * PKCS\#11 URIs can represent tokens, objects or modules. The uri_type argument
+ * allows the caller to specify what type of URI is expected and the sorts of
+ * objects the URI should match. %P11_KIT_URI_IS_ANY can be used to parse a URI
+ * for any context. It's then up to the caller to make sense of the way that
+ * it is used.
+ *
+ * If the PKCS\#11 URI contains unrecognized URI parts or parts not applicable
+ * to the specified context, then the unrecognized flag will be set. This will
+ * prevent the URI from matching using the various match functions.
+ *
+ * Returns: %P11_KIT_URI_OK if the URI was parsed successfully.
+ *     %P11_KIT_URI_BAD_SCHEME if this was not a PKCS\#11 URI.
+ *     %P11_KIT_URI_BAD_SYNTAX if the URI syntax was bad.
+ *     %P11_KIT_URI_NO_MEMORY if memory allocation failed.
+ *     %P11_KIT_URI_BAD_VERSION if a version number was bad.
+ *     %P11_KIT_URI_BAD_ENCODING if the URI encoding was invalid.
+ */
 int
-p11_kit_uri_parse (const char *string, P11KitUriContext context,
+p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
                    P11KitUri *uri)
 {
 	const char *spos, *epos;
@@ -878,10 +1116,10 @@ p11_kit_uri_parse (const char *string, P11KitUriContext context,
 	assert (string);
 	assert (uri);
 
-	if (strncmp (string, P11_KIT_URI_PREFIX, P11_KIT_URI_PREFIX_LEN) != 0)
-		return P11_KIT_URI_BAD_PREFIX;
+	if (strncmp (string, P11_KIT_URI_SCHEME, P11_KIT_URI_SCHEME_LEN) != 0)
+		return P11_KIT_URI_BAD_SCHEME;
 
-	string += P11_KIT_URI_PREFIX_LEN;
+	string += P11_KIT_URI_SCHEME_LEN;
 
 	/* Clear everything out */
 	memset (&uri->module, 0, sizeof (uri->module));
@@ -913,13 +1151,13 @@ p11_kit_uri_parse (const char *string, P11KitUriContext context,
 		epos++;
 
 		ret = 0;
-		if (context & P11_KIT_URI_PARSE_OBJECT)
+		if (uri_type & P11_KIT_URI_IS_OBJECT)
 			ret = parse_string_attribute (key, epos, spos, uri);
-		if (ret == 0 && context & P11_KIT_URI_PARSE_OBJECT)
+		if (ret == 0 && uri_type & P11_KIT_URI_IS_OBJECT)
 			ret = parse_class_attribute (key, epos, spos, uri);
-		if (ret == 0 && context & P11_KIT_URI_PARSE_TOKEN)
+		if (ret == 0 && uri_type & P11_KIT_URI_IS_TOKEN)
 			ret = parse_token_info (key, epos, spos, uri);
-		if (ret == 0 && context & P11_KIT_URI_PARSE_MODULE)
+		if (ret == 0 && uri_type & P11_KIT_URI_IS_MODULE)
 			ret = parse_module_info (key, epos, spos, uri);
 		free (key);
 
@@ -936,6 +1174,12 @@ p11_kit_uri_parse (const char *string, P11KitUriContext context,
 	return P11_KIT_URI_OK;
 }
 
+/**
+ * p11_kit_uri_free:
+ * @uri: The URI
+ *
+ * Free a PKCS\#11 URI.
+ */
 void
 p11_kit_uri_free (P11KitUri *uri)
 {

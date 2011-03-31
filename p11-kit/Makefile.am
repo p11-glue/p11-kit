@@ -1,5 +1,4 @@
 
-
 incdir = $(includedir)/p11-kit
 
 inc_HEADERS = \

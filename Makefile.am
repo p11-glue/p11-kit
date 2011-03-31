@@ -1,5 +1,9 @@
 
-SUBDIRS = module tests doc po
+SUBDIRS = \
+	p11-kit \
+	tests \
+	doc \
+	po
 
 ACLOCAL_AMFLAGS = -I m4
 

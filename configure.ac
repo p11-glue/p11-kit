@@ -3,7 +3,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_INIT([p11-kit],[0.1],[http://bugzilla.example.com])
 
-AC_CONFIG_SRCDIR([module/p11-kit-lib.c])
+AC_CONFIG_SRCDIR([p11-kit/p11-kit-lib.c])
 AC_CONFIG_HEADERS([config.h])
 
 dnl Other initialization
@@ -30,6 +30,8 @@ AC_CHECK_LIB(dl, dlopen,,
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
+
+GTK_DOC_CHECK([1.15])
 
 # --------------------------------------------------------------------
 # PKCS#11 Directories
@@ -134,11 +136,12 @@ fi
 # ---------------------------------------------------------------------
 
 AC_CONFIG_FILES([Makefile
-		module/Makefile
-		module/p11-kit.pc
-		po/Makefile.in
-		tests/Makefile
-		doc/Makefile
-		])
+	doc/Makefile
+	doc/version.xml
+	po/Makefile.in
+	p11-kit/Makefile
+	p11-kit/p11-kit.pc
+	tests/Makefile
+])
 AC_OUTPUT
 

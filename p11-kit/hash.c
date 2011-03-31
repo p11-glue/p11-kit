@@ -450,4 +450,3 @@ hash_direct_equal (const void *ptr_one, const void *ptr_two)
 {
 	return ptr_one == ptr_two;
 }
-

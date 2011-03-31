@@ -1,0 +1,17 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+datarootdir=${prefix}/share
+datadir=${datarootdir}
+sysconfdir=/etc
+p11_system_conf=/etc/pkcs11/pkcs11.conf
+p11_system_modules=/etc/pkcs11/modules
+p11_user_conf=~/.pkcs11/pkcs11.conf
+p11_user_modules=~/.pkcs11/modules
+
+Name: p11-kit
+Description: Library and proxy module for properly loading and sharing PKCS#11 modules.
+Version: 0.1
+Libs: -L${libdir} -lp11-kit
+Cflags: -I${includedir}/p11-kit

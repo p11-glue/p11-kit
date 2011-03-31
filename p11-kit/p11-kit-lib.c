@@ -56,6 +56,42 @@
 #include <string.h>
 #include <unistd.h>
 
+/**
+ * SECTION:p11-kit
+ * @title: Modules
+ * @short_description: Module loading and initializing
+ *
+ * PKCS\#11 modules are used by crypto libraries and applications to access
+ * crypto objects (like keys and certificates) and to perform crypto operations.
+ *
+ * In order for applications to behave consistently with regard to the user's
+ * installed PKCS\#11 modules, each module must be registered so that applications
+ * or libraries know that they should load it.
+ *
+ * The functions here provide support for initializing registered modules. The
+ * p11_kit_initialize_registered() function should be used to load and initialize
+ * the registered modules. When done, the p11_kit_finalize_registered() function
+ * should be used to release those modules and associated resources.
+ *
+ * In addition p11_kit_registered_option() can be used to access other parts
+ * of the module configuration.
+ *
+ * When multiple consumers of a module (such as libraries or applications) are
+ * in the same process, coordination of the initialization and finalization
+ * of PKCS\#11 modules is required. The functions here automatically provide
+ * initialization reference counting to make this work.
+ *
+ * If a consumer wishes to load an arbitrary PKCS\#11 module that's not
+ * registered, that module should be initialized with p11_kit_initialize_module()
+ * and finalized with p11_kit_finalize_module(). The module's own
+ * <code>C_Initialize</code> and <code>C_Finalize</code> methods should not
+ * be called directly.
+ *
+ * Modules are represented by a pointer to their <code>CK_FUNCTION_LIST</code>
+ * entry points. This means that callers can load modules elsewhere, using
+ * dlopen() for example, and then still use these methods on them.
+ */
+
 typedef struct _Module {
 	char *name;
 	hash_t *config;
@@ -735,7 +771,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 /**
  * p11_kit_initialize_registered:
  *
- * Initialize all the registered PKCS#11 modules.
+ * Initialize all the registered PKCS\#11 modules.
  *
  * If this is the first time this function is called multiple times
  * consecutively within a single process, then it merely increments an
@@ -805,7 +841,7 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 /**
  * p11_kit_finalize_registered:
  *
- * Finalize all the registered PKCS#11 modules. These should have been
+ * Finalize all the registered PKCS\#11 modules. These should have been
  * initialized with p11_kit_initialize_registered().
  *
  * If p11_kit_initialize_registered() has been called more than once in this
@@ -855,11 +891,11 @@ _p11_kit_registered_modules_unlocked (void)
 /**
  * p11_kit_registered_modules:
  *
- * Get a list of all the registered PKCS#11 modules. This list will be valid
+ * Get a list of all the registered PKCS\#11 modules. This list will be valid
  * once the p11_kit_initialize_registered() function has been called.
  *
- * The returned value is a %NULL terminated array of %CK_FUNCTION_LIST_PTR
- * pointers.
+ * The returned value is a <code>NULL</code> terminated array of
+ * <code>CK_FUNCTION_LIST_PTR</code> pointers.
  *
  * Returns: A list of all the registered modules. Use the free() function to
  * free the list.
@@ -882,13 +918,14 @@ p11_kit_registered_modules (void)
  * p11_kit_registered_module_to_name:
  * @funcs: pointer to a registered module
  *
- * Get the name of a registered PKCS#11 module.
+ * Get the name of a registered PKCS\#11 module.
  *
  * You can use p11_kit_registered_modules() to get a list of all the registered
  * modules. This name is specified by the registered module configuration.
  *
- * Returns: A newly allocated string containing the module name, or %NULL
- *     if no such registered module exists. Use free() to free this string.
+ * Returns: A newly allocated string containing the module name, or
+ *     <code>NULL</code> if no such registered module exists. Use free() to
+ *     free this string.
  */
 char*
 p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
@@ -914,10 +951,11 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
  * p11_kit_registered_name_to_module:
  * @name: name of a registered module
  *
- * Lookup a registered PKCS#11 module by its name. This name is specified by
+ * Lookup a registered PKCS\#11 module by its name. This name is specified by
  * the registered module configuration.
  *
- * Returns: a pointer to a PKCS#11 module, or %NULL if this name was not found.
+ * Returns: a pointer to a PKCS\#11 module, or <code>NULL</code> if this name was
+ *     not found.
  */
 CK_FUNCTION_LIST_PTR
 p11_kit_registered_name_to_module (const char *name)
@@ -943,25 +981,36 @@ p11_kit_registered_name_to_module (const char *name)
  * @funcs: a pointer to a registered module
  * @field: the name of the option to lookup.
  *
- * Lookup a configured option for a registered PKCS#11 module.
+ * Lookup a configured option for a registered PKCS\#11 module. If a
+ * <code>NULL</code> funcs argument is specified, then this will lookup
+ * the configuration option in the global config file.
  *
- * Returns: A newly allocated string containing the option value, or %NULL
- *     if the registered module or the option were not found. Use free() to free
- *     the returned string.
+ * Returns: A newly allocated string containing the option value, or
+ *     <code>NULL</code> if the registered module or the option were not found.
+ *     Use free() to free the returned string.
  */
 char*
 p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 {
 	Module *module;
 	char *option = NULL;
+	hash_t *config;
 
-	if (!funcs || !field)
+	if (!field)
 		return NULL;
 
 	_p11_lock ();
 
-		module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
-		if (module && module->config) {
+		if (funcs == NULL) {
+			config = gl.config;
+
+		} else {
+			module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
+			if (module)
+				config = module->config;
+		}
+
+		if (config) {
 			option = hash_get (module->config, field);
 			if (option)
 				option = strdup (option);
@@ -976,32 +1025,32 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
  * p11_kit_initialize_module:
  * @funcs: loaded module to initialize.
  *
- * Initialize an arbitrary PKCS#11 module. Normally using the
+ * Initialize an arbitrary PKCS\#11 module. Normally using the
  * p11_kit_initialize_registered() is preferred.
  *
  * Using this function to initialize modules allows coordination between
  * multiple users of the same module in a single process. It should be called
  * on modules that have been loaded (with dlopen() for example) but not yet
  * initialized. The caller should not yet have called the module's
- * %C_Initialize method. This function will call %C_Initialize as necessary.
+ * <code>C_Initialize</code> method. This function will call
+ * <code>C_Initialize</code> as necessary.
  *
  * Subsequent calls to this function for the same module will result in an
  * initialization count being incremented for the module. It is safe (although
  * usually unnecessary) to use this function on registered modules.
  *
  * The module must be finalized with p11_kit_finalize_module() instead of
- * calling its %C_Finalize method directly.
+ * calling its <code>C_Finalize</code> method directly.
  *
- * This function does not accept a %CK_C_INITIALIZE_ARGS argument. Custom
- * initialization arguments cannot be supported when multiple consumers load
- * the same module.
+ * This function does not accept a <code>CK_C_INITIALIZE_ARGS</code> argument.
+ * Custom initialization arguments cannot be supported when multiple consumers
+ * load the same module.
  *
  * Returns: CKR_OK if the initialization was successful.
  */
 CK_RV
 p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 {
-	CK_C_INITIALIZE_ARGS args;
 	Module *module;
 	Module *allocated = NULL;
 	CK_RV rv = CKR_OK;
@@ -1040,14 +1089,14 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
  * p11_kit_finalize_module:
  * @funcs: loaded module to finalize.
  *
- * Finalize an arbitrary PKCS#11 module. The module must have been initialized
+ * Finalize an arbitrary PKCS\#11 module. The module must have been initialized
  * using p11_kit_initialize_module(). In most cases callers will want to use
  * p11_kit_finalize_registered() instead of this function.
  *
  * Using this function to finalize modules allows coordination between
  * multiple users of the same module in a single process. The caller should
- * call the module's %C_Finalize method. This function will call
- * %C_Finalize as necessary.
+ * call the module's <code>C_Finalize</code> method. This function will call
+ * <code>C_Finalize</code> as necessary.
  *
  * If the module was initialized more than once, then this function will
  * decrement an initialization count for the module. When the count reaches zero

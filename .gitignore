@@ -7,6 +7,7 @@
 *.gcov
 *~
 *.html
+*.stamp
 
 .deps
 .libs
@@ -37,6 +38,22 @@ Makefile.in
 missing
 stamp-h1
 temp.txt
+
+/doc/html
+/doc/p11-kit-decl-list.txt
+/doc/p11-kit-decl.txt
+/doc/p11-kit-undeclared.txt
+/doc/p11-kit-undocumented.txt
+/doc/p11-kit-unused.txt
+/doc/p11-kit.args
+/doc/p11-kit.hierarchy
+/doc/p11-kit.interfaces
+/doc/p11-kit.prerequisites
+/doc/p11-kit.signals
+/doc/p11-kit.types
+/doc/tmpl/
+/doc/version.xml
+/doc/xml/
 
 /module/p11-kit.pc
 

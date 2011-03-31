@@ -37,6 +37,14 @@
 #include "pkcs11.h"
 #include "p11-kit.h"
 
+/**
+ * SECTION:p11-kit-util
+ * @title: Utilities
+ * @short_description: Message Utilities
+ *
+ * Utility functions for working with PKCS\#11.
+ */
+
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #define _(x) dgettext(PACKAGE_NAME, x)
@@ -45,13 +53,13 @@
 #endif
 
 /**
- * gck_message_from_rv:
- * @rv: The PKCS#11 return value to get a message for.
+ * p11_kit_strerror:
+ * @rv: The PKCS\#11 return value to get a message for.
  *
- * Get a message for a PKCS#11 return value or error code. Do not
+ * Get a message for a PKCS\#11 return value or error code. Do not
  * pass CKR_OK or other such non errors to this function.
  *
- * Return value: The user readable message.
+ * Returns: The user readable and localized message.
  **/
 const char*
 p11_kit_strerror (CK_RV rv)

@@ -37,25 +37,25 @@
 #ifndef __P11_KIT_URI_H__
 #define __P11_KIT_URI_H__
 
-#define P11_KIT_URI_PREFIX "pkcs11:"
-#define P11_KIT_URI_PREFIX_LEN 7
+#define P11_KIT_URI_SCHEME "pkcs11:"
+#define P11_KIT_URI_SCHEME_LEN 7
 
 typedef enum {
 	P11_KIT_URI_OK = 0,
 	P11_KIT_URI_NO_MEMORY = -1,
-	P11_KIT_URI_BAD_PREFIX = -2,
+	P11_KIT_URI_BAD_SCHEME = -2,
 	P11_KIT_URI_BAD_ENCODING = -3,
 	P11_KIT_URI_BAD_SYNTAX = -4,
 	P11_KIT_URI_BAD_VERSION = -5,
 	P11_KIT_URI_NOT_FOUND = -6,
-} P11KitUriParseStatus;
+} P11KitUriResult;
 
 typedef enum {
-	P11_KIT_URI_PARSE_MODULE = (1 << 1),
-	P11_KIT_URI_PARSE_TOKEN =   (1 << 2) | P11_KIT_URI_PARSE_MODULE,
-	P11_KIT_URI_PARSE_OBJECT =  (1 << 3) | P11_KIT_URI_PARSE_TOKEN,
-	P11_KIT_URI_PARSE_ANY =     0xFFFFFFFF,
-} P11KitUriContext;
+	P11_KIT_URI_IS_MODULE = (1 << 1),
+	P11_KIT_URI_IS_TOKEN =   (1 << 2) | P11_KIT_URI_IS_MODULE,
+	P11_KIT_URI_IS_OBJECT =  (1 << 3) | P11_KIT_URI_IS_TOKEN,
+	P11_KIT_URI_IS_ANY =     0x0000FFFF,
+} P11KitUriType;
 
 typedef struct _P11KitUri P11KitUri;
 
@@ -73,13 +73,13 @@ CK_ATTRIBUTE_TYPE*  p11_kit_uri_get_attribute_types         (P11KitUri *uri,
                                                              int *n_types);
 
 CK_ATTRIBUTE_PTR    p11_kit_uri_get_attribute               (P11KitUri *uri,
-                                                             CK_ATTRIBUTE_TYPE type);
+                                                             CK_ATTRIBUTE_TYPE attr_type);
 
 int                 p11_kit_uri_set_attribute               (P11KitUri *uri,
                                                              CK_ATTRIBUTE_PTR attr);
 
 int                 p11_kit_uri_clear_attribute             (P11KitUri *uri,
-                                                             CK_ATTRIBUTE_TYPE type);
+                                                             CK_ATTRIBUTE_TYPE attr_type);
 
 int                 p11_kit_uri_match_attributes            (P11KitUri *uri,
                                                              CK_ATTRIBUTE_PTR attrs,
@@ -93,10 +93,11 @@ int                 p11_kit_uri_any_unrecognized            (P11KitUri *uri);
 P11KitUri*          p11_kit_uri_new                         (void);
 
 int                 p11_kit_uri_format                      (P11KitUri *uri,
+                                                             P11KitUriType uri_type,
                                                              char **string);
 
 int                 p11_kit_uri_parse                       (const char *string,
-                                                             P11KitUriContext context,
+                                                             P11KitUriType uri_type,
                                                              P11KitUri *uri);
 
 void                p11_kit_uri_free                        (P11KitUri *uri);

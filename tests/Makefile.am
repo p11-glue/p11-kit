@@ -1,7 +1,7 @@
 
 INCLUDES = \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/module \
+	-I$(top_srcdir)/p11-kit \
 	-Icutest \
 	-DSRCDIR=\"$(srcdir)\"
 
@@ -11,13 +11,13 @@ noinst_PROGRAMS = \
 	uri-test
 
 hash_test_LDADD = \
-	$(top_builddir)/module/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la
 
 conf_test_LDADD = \
-	$(top_builddir)/module/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la
 
 uri_test_LDADD = \
-	$(top_builddir)/module/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la
 
 check-am:
 	./hash-test
