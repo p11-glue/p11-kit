@@ -124,7 +124,7 @@ sgml.stamp: sgml-build.stamp
 
 #### html ####
 
-html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files) style.css
 	@echo 'gtk-doc: Building HTML'
 	@-chmod -R u+w $(srcdir)
 	@rm -rf $(srcdir)/html
@@ -138,6 +138,8 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
 	@echo 'gtk-doc: Fixing cross-references'
 	@cd $(srcdir) && gtkdoc-fixxref --module=$(DOC_MODULE) --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS) | grep -v "no link for.*CK-.*CAPS" || true
+	@mv html/style.css html/gtk-doc.css
+	@cp $(srcdir)/style.css html
 	@touch html-build.stamp
 
 #### pdf ####

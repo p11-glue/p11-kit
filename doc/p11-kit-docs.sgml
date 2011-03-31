@@ -7,7 +7,7 @@
 ]>
 <book id="index">
 	<bookinfo>
-		<title>P11-Kit Manual</title>
+		<title>p11-kit</title>
 		<releaseinfo>for p11-kit &version;</releaseinfo>
 	</bookinfo>
 
