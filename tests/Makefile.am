@@ -3,7 +3,8 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/p11-kit \
 	-Icutest \
-	-DSRCDIR=\"$(srcdir)\"
+	-DSRCDIR=\"$(srcdir)\" \
+	-DP11_KIT_API_SUBJECT_TO_CHANGE
 
 noinst_PROGRAMS = \
 	hash-test \
