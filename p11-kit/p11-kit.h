@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2011 Collabora Ltd.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

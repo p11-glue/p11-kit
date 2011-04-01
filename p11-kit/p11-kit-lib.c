@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2011 Collabora Ltd.
  * Copyright (C) 2008 Stefan Walter
+ * Copyright (C) 2011 Collabora Ltd.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
