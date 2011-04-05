@@ -43,6 +43,7 @@
 #include "p11-kit.h"
 #include "p11-kit-private.h"
 
+#include <sys/stat.h>
 #include <sys/types.h>
 
 #include <assert.h>
@@ -357,14 +358,12 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 		module->initialize_count = prev->initialize_count;
 		prev->ref_count = 0;
 		prev->initialize_count = 0;
-		hash_set (gl.modules, module->funcs, module);
-		prev = NULL; /* freed by hash above */
+		prev = NULL; /* freed by hash_set below */
 	}
 
 	/* Refuse to load duplicate module */
 	if (prev) {
-		warning ("duplicate configured module: %s: %s",
-		         module->name, path);
+		warning ("duplicate configured module: %s: %s", module->name, path);
 		free_module_unlocked (module);
 		return CKR_GENERAL_ERROR;
 	}
@@ -376,6 +375,11 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 	 */
 	module->init_args.pReserved = hash_get (module->config, "x-init-reserved");
 
+	if (!hash_set (gl.modules, module->funcs, module)) {
+		free_module_unlocked (module);
+		return CKR_HOST_MEMORY;
+	}
+
 	return CKR_OK;
 }
 
@@ -383,9 +387,13 @@ static CK_RV
 load_modules_from_config_unlocked (const char *directory)
 {
 	struct dirent *dp;
+	struct stat st;
 	CK_RV rv = CKR_OK;
 	DIR *dir;
+	int is_dir;
 	char *path;
+
+	debug ("loading module configs in: %s", directory);
 
 	/* First we load all the modules */
 	dir = opendir (directory);
@@ -397,13 +405,33 @@ load_modules_from_config_unlocked (const char *directory)
 
 	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir(dir)) != NULL) {
-		path = strconcat (directory, "/", dp->d_name);
+		path = strconcat (directory, "/", dp->d_name, NULL);
 		if (!path) {
 			rv = CKR_HOST_MEMORY;
 			break;
 		}
 
-		rv = load_module_from_config_unlocked (path, dp->d_name);
+		is_dir = 0;
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+		if(dp->d_type != DT_UNKNOWN) {
+			is_dir = (dp->d_type == DT_DIR);
+		} else
+#endif
+		{
+			if (stat (path, &st) < 0) {
+				warning ("couldn't stat path: %s", path);
+				free (path);
+				rv = CKR_GENERAL_ERROR;
+				break;
+			}
+			is_dir = S_ISDIR (st.st_mode);
+		}
+
+		if (is_dir)
+			rv = CKR_OK;
+		else
+			rv = load_module_from_config_unlocked (path, dp->d_name);
+
 		free (path);
 
 		if (rv != CKR_OK)
@@ -487,7 +515,7 @@ load_config_files_unlocked (int *user_mode)
 	}
 
 	/* Whether we should use or override from user directory */
-	mode = user_config_mode (config, USER_CONFIG_INVALID);
+	mode = user_config_mode (config, USER_CONFIG_NONE);
 	if (mode == USER_CONFIG_INVALID)
 		goto finished;
 
@@ -770,8 +798,11 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 
 			rv = initialize_module_unlocked_reentrant (module);
 
-			if (rv != CKR_OK)
+			if (rv != CKR_OK) {
+				debug ("failed to initialize module: %s: %s",
+				       module->name, p11_kit_strerror (rv));
 				break;
+			}
 		}
 	}
 
@@ -1008,9 +1039,9 @@ p11_kit_registered_name_to_module (const char *name)
 char*
 p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 {
-	Module *module;
+	Module *module = NULL;
 	char *option = NULL;
-	hash_t *config;
+	hash_t *config = NULL;
 
 	if (!field)
 		return NULL;

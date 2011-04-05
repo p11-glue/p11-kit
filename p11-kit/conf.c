@@ -130,6 +130,7 @@ read_config_file (const char* filename, int flags,
 	if (f == NULL) {
 		if ((flags & CONF_IGNORE_MISSING) &&
 		    (errno == ENOENT || errno == ENOTDIR)) {
+			debug ("config file does not exist");
 			config = strdup ("\n");
 			if (!config)
 				errno = ENOMEM;
@@ -231,7 +232,7 @@ conf_parse_file (const char* filename, int flags,
 			break;
 		}
 
-		debug ("config value: %s = %s", name, value);
+		debug ("config value: %s: %s", name, value);
 
 		if (!hash_set (ht, name, value)) {
 			free (name);
