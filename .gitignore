@@ -1,6 +1,7 @@
 *.o
 *.la
 *.lo
+*.bak
 *.tar.gz
 *.gcno
 *.gcda

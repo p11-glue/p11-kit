@@ -38,6 +38,8 @@
 #include "config.h"
 
 #include "conf.h"
+#define DEBUG_FLAG DEBUG_CONF
+#include "debug.h"
 
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -182,6 +184,8 @@ conf_parse_file (const char* filename, int flags,
 
 	assert (filename);
 
+	debug ("reading config file: %s", filename);
+
 	/* Adds an extra newline to end of file */
 	config = read_config_file (filename, flags, error_func);
 	if (!config)
@@ -226,6 +230,9 @@ conf_parse_file (const char* filename, int flags,
 			errno = ENOMEM;
 			break;
 		}
+
+		debug ("config value: %s = %s", name, value);
+
 		if (!hash_set (ht, name, value)) {
 			free (name);
 			free (value);

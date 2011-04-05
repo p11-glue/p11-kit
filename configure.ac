@@ -124,14 +124,25 @@ AC_SUBST(GENHTML)
 # Debug mode
 
 AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([--enable-debug],
-              [Compile binaries in debug mode]))
+              AC_HELP_STRING([--enable-debug=no/yes/full],
+              [Turn on or off debugging]))
 
-if test "$enable_debug" = "yes"; then
-	CFLAGS="$CFLAGS -g -O0"
-	AC_DEFINE_UNQUOTED(_DEBUG, 1, [In debug mode])
-	echo "enabling debug compile mode"
+if test "$enable_debug" != "no"; then
+	AC_DEFINE_UNQUOTED(WITH_DEBUG, 1, [Print debug output])
 fi
+
+if test "$enable_debug" = "full"; then
+	debug_status="full"
+	CFLAGS="$CFLAGS -g -O0 -Werror"
+
+elif test "$enable_debug" = "no"; then
+	debug_status="no"
+	AC_DEFINE_UNQUOTED(NDEBUG, 1, [Disable glib assertions])
+
+else
+	debug_status="yes"
+fi
+
 
 # ---------------------------------------------------------------------
 

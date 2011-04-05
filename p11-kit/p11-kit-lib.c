@@ -36,6 +36,8 @@
 #include "config.h"
 
 #include "conf.h"
+#define DEBUG_FLAG DEBUG_LIB
+#include "debug.h"
 #include "hash.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
@@ -633,6 +635,7 @@ reinitialize_after_fork (void)
 	Module *module;
 
 	/* WARNING: This function must be reentrant */
+	debug ("forked");
 
 	_p11_lock ();
 
@@ -742,7 +745,7 @@ find_module_for_name_unlocked (const char *name)
 
 	hash_iterate (gl.modules, &it);
 	while (hash_next (&it, NULL, (void**)&module))
-		if (module->ref_count && module->name && strcmp (name, module->name))
+		if (module->ref_count && module->name && strcmp (name, module->name) == 0)
 			return module;
 	return NULL;
 }
@@ -795,6 +798,7 @@ p11_kit_initialize_registered (void)
 	CK_RV rv;
 
 	/* WARNING: This function must be reentrant */
+	debug ("in");
 
 	_p11_lock ();
 
@@ -807,6 +811,7 @@ p11_kit_initialize_registered (void)
 	if (rv != CKR_OK)
 		p11_kit_finalize_registered ();
 
+	debug ("out: %lu");
 	return rv;
 }
 
@@ -836,6 +841,8 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 			to_finalize[count++] = module;
 	}
 
+	debug ("finalizing %d modules", count);
+
 	for (i = 0; i < count; ++i) {
 		/* WARNING: Reentrant calls can occur here */
 		finalize_module_unlocked_reentrant (to_finalize[i]);
@@ -864,6 +871,7 @@ p11_kit_finalize_registered (void)
 	CK_RV rv;
 
 	/* WARNING: This function must be reentrant */
+	debug ("in");
 
 	_p11_lock ();
 
@@ -872,6 +880,7 @@ p11_kit_finalize_registered (void)
 
 	_p11_unlock ();
 
+	debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -1063,6 +1072,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 	CK_RV rv = CKR_OK;
 
 	/* WARNING: This function must be reentrant for the same arguments */
+	debug ("in");
 
 	_p11_lock ();
 
@@ -1071,6 +1081,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 
 			module = hash_get (gl.modules, funcs);
 			if (module == NULL) {
+				debug ("allocating new module");
 				allocated = module = alloc_module_unlocked ();
 				module->funcs = funcs;
 			}
@@ -1089,6 +1100,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 
 	_p11_unlock ();
 
+	debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -1120,11 +1132,13 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
 	CK_RV rv = CKR_OK;
 
 	/* WARNING: This function must be reentrant for the same arguments */
+	debug ("in");
 
 	_p11_lock ();
 
 		module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
 		if (module == NULL) {
+			debug ("module not found");
 			rv = CKR_ARGUMENTS_BAD;
 		} else {
 			/* WARNING: Rentrancy can occur here */
@@ -1133,5 +1147,6 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
 
 	_p11_unlock ();
 
+	debug ("out: %lu", rv);
 	return rv;
 }

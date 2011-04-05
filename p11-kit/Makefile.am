@@ -11,6 +11,7 @@ inc_HEADERS = \
 
 MODULE_SRCS = \
 	conf.c conf.h \
+	debug.c debug.h \
 	hash.c hash.h \
 	util.c util.h \
 	p11-kit-lib.c \
