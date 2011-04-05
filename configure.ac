@@ -153,6 +153,7 @@ AC_CONFIG_FILES([Makefile
 	p11-kit/Makefile
 	p11-kit/p11-kit.pc
 	tests/Makefile
+	tools/Makefile
 ])
 AC_OUTPUT
 

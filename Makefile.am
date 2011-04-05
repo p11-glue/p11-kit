@@ -1,6 +1,7 @@
 
 SUBDIRS = \
 	p11-kit \
+	tools \
 	tests \
 	doc \
 	po

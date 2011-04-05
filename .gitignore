@@ -66,3 +66,5 @@ temp.txt
 /tests/hash-test
 /tests/conf-test
 /tests/uri-test
+
+/tools/p11-kit
