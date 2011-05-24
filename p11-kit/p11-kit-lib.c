@@ -1058,7 +1058,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 		}
 
 		if (config) {
-			option = hash_get (module->config, field);
+			option = hash_get (config, field);
 			if (option)
 				option = strdup (option);
 		}
