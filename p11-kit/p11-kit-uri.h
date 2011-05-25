@@ -115,6 +115,8 @@ int                 p11_kit_uri_parse                       (const char *string,
 
 void                p11_kit_uri_free                        (P11KitUri *uri);
 
+const char*         p11_kit_uri_message                     (int code);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

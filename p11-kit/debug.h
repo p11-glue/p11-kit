@@ -38,7 +38,8 @@
 /* Please keep this enum in sync with keys in debug.c */
 typedef enum {
 	DEBUG_LIB = 1 << 1,
-	DEBUG_CONF = 1 << 2
+	DEBUG_CONF = 1 << 2,
+	DEBUG_URI = 1 << 3
 } DebugFlags;
 
 extern int        debug_current_flags;

@@ -34,6 +34,8 @@
 
 #include "config.h"
 
+#define DEBUG_FLAG DEBUG_URI
+#include "debug.h"
 #include "pkcs11.h"
 #include "p11-kit-uri.h"
 #include "util.h"
@@ -1192,4 +1194,40 @@ p11_kit_uri_free (P11KitUri *uri)
 		free (uri->attrs[i].pValue);
 
 	free (uri);
+}
+
+/**
+ * p11_kit_uri_message:
+ * @code: The error code
+ *
+ * Lookup a message for the uri error code. These codes are the P11_KIT_URI_XXX
+ * error codes that can be returned from p11_kit_uri_parse() or
+ * p11_kit_uri_format(). As a special case %NULL, will be returned for
+ * %P11_KIT_URI_OK.
+ *
+ * Returns: The message for the error code. This string is owned by the p11-kit
+ *      library.
+ */
+const char*
+p11_kit_uri_message (int code)
+{
+	switch (code) {
+	case P11_KIT_URI_OK:
+		return NULL;
+	case P11_KIT_URI_NO_MEMORY:
+		return "Out of memory";
+	case P11_KIT_URI_BAD_SCHEME:
+		return "URI scheme must be 'pkcs11:'";
+	case P11_KIT_URI_BAD_ENCODING:
+		return "URI encoding invalid or corrupted";
+	case P11_KIT_URI_BAD_SYNTAX:
+		return "URI syntax is invalid";
+	case P11_KIT_URI_BAD_VERSION:
+		return "URI version component is invalid";
+	case P11_KIT_URI_NOT_FOUND:
+		return "The URI component was not found";
+	default:
+		debug ("unknown error code: %d", code);
+		return "Unknown error";
+	}
 }
