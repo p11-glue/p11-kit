@@ -942,11 +942,8 @@ test_uri_match_attributes (CuTest *tc)
 static void
 test_uri_get_set_attribute (CuTest *tc)
 {
-	CK_ATTRIBUTE_PTR attrs;
-	CK_OBJECT_CLASS klass;
 	CK_ATTRIBUTE attr;
 	CK_ATTRIBUTE_PTR ptr;
-	CK_ULONG n_attrs;
 	P11KitUri *uri;
 	int ret;
 
@@ -988,6 +985,22 @@ test_uri_get_set_attribute (CuTest *tc)
 
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
 	CuAssertPtrEquals (tc, NULL, ptr);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_get_set_attributes (CuTest *tc)
+{
+	CK_ATTRIBUTE_PTR attrs;
+	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE attr;
+	CK_ULONG n_attrs;
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	CuAssertPtrNotNull (tc, uri);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
 	CuAssertPtrNotNull (tc, attrs);
@@ -1049,9 +1062,28 @@ test_uri_get_set_attribute (CuTest *tc)
 	CuAssertTrue (tc, attrs[0].ulValueLen == sizeof (klass));
 	CuAssertTrue (tc, memcmp (attrs[0].pValue, &klass, sizeof (klass)) == 0);
 
+	attr.type = CKA_LABEL;
+	attr.pValue = "Three";
+	attr.ulValueLen = 5;
+
+	ret = p11_kit_uri_set_attributes (uri, &attr, 1);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 1, n_attrs);
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertTrue (tc, attrs[0].ulValueLen == 5);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Three", 5) == 0);
+
+	p11_kit_uri_clear_attributes (uri);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 0, n_attrs);
+
 	p11_kit_uri_free (uri);
 }
-
 static void
 test_uri_pinfile (CuTest *tc)
 {
@@ -1137,6 +1169,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_match_module);
 	SUITE_ADD_TEST (suite, test_uri_match_attributes);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attribute);
+	SUITE_ADD_TEST (suite, test_uri_get_set_attributes);
 	SUITE_ADD_TEST (suite, test_uri_pinfile);
 	SUITE_ADD_TEST (suite, test_uri_free_null);
 	SUITE_ADD_TEST (suite, test_uri_message);

@@ -368,27 +368,6 @@ p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 }
 
 /**
- * p11_kit_uri_get_attribute_types:
- * @uri: The URI
- * @n_attrs: A location to store the number of attributes returned.
- *
- * Get the attributes present in this URI. The attributes and values are
- * owned by the URI. If the URI is modified, then the attributes that were
- * returned from this function will not remain consistent.
- *
- * Returns: The attributes for this URI. These are owned by the URI.
- */
-CK_ATTRIBUTE_PTR
-p11_kit_uri_get_attributes (P11KitUri *uri, CK_ULONG_PTR n_attrs)
-{
-	assert (uri);
-	assert (n_attrs);
-
-	*n_attrs = uri->n_attributes;
-	return uri->attributes;
-}
-
-/**
  * p11_kit_uri_get_attribute:
  * @uri: The URI
  * @attr_type: The attribute type
@@ -537,6 +516,60 @@ p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 	memset (clear, 0, sizeof (CK_ATTRIBUTE));
 	return P11_KIT_URI_OK;
 }
+
+/**
+ * p11_kit_uri_get_attribute_types:
+ * @uri: The URI
+ * @n_attrs: A location to store the number of attributes returned.
+ *
+ * Get the attributes present in this URI. The attributes and values are
+ * owned by the URI. If the URI is modified, then the attributes that were
+ * returned from this function will not remain consistent.
+ *
+ * Returns: The attributes for this URI. These are owned by the URI.
+ */
+CK_ATTRIBUTE_PTR
+p11_kit_uri_get_attributes (P11KitUri *uri, CK_ULONG_PTR n_attrs)
+{
+	assert (uri);
+	assert (n_attrs);
+
+	*n_attrs = uri->n_attributes;
+	return uri->attributes;
+}
+
+int
+p11_kit_uri_set_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
+                            CK_ULONG n_attrs)
+{
+	CK_ULONG i;
+	int ret;
+
+	assert (uri);
+
+	p11_kit_uri_clear_attributes (uri);
+
+	for (i = 0; i < n_attrs; i++) {
+		ret = p11_kit_uri_set_attribute (uri, &attrs[i]);
+		if (ret != P11_KIT_URI_OK && ret != P11_KIT_URI_NOT_FOUND)
+			return ret;
+	}
+
+	return P11_KIT_URI_OK;
+}
+
+void
+p11_kit_uri_clear_attributes (P11KitUri *uri)
+{
+	CK_ULONG i;
+
+	assert (uri);
+
+	for (i = 0; i < uri->n_attributes; i++)
+		free (uri->attributes[i].pValue);
+	uri->n_attributes = 0;
+}
+
 
 static int
 match_attributes (CK_ATTRIBUTE_PTR one, CK_ATTRIBUTE_PTR two)
