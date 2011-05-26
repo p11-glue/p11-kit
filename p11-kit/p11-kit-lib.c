@@ -197,6 +197,9 @@ create_mutex (CK_VOID_PTR_PTR mut)
 	pthread_mutex_t *pmutex;
 	int err;
 
+	if (mut == NULL)
+		return CKR_ARGUMENTS_BAD;
+
 	pmutex = malloc (sizeof (pthread_mutex_t));
 	if (!pmutex)
 		return CKR_HOST_MEMORY;
@@ -215,6 +218,9 @@ destroy_mutex (CK_VOID_PTR mut)
 	pthread_mutex_t *pmutex = mut;
 	int err;
 
+	if (mut == NULL)
+		return CKR_MUTEX_BAD;
+
 	err = pthread_mutex_destroy (pmutex);
 	if (err == EINVAL)
 		return CKR_MUTEX_BAD;
@@ -230,6 +236,9 @@ lock_mutex (CK_VOID_PTR mut)
 	pthread_mutex_t *pmutex = mut;
 	int err;
 
+	if (mut == NULL)
+		return CKR_MUTEX_BAD;
+
 	err = pthread_mutex_lock (pmutex);
 	if (err == EINVAL)
 		return CKR_MUTEX_BAD;
@@ -243,6 +252,9 @@ unlock_mutex (CK_VOID_PTR mut)
 {
 	pthread_mutex_t *pmutex = mut;
 	int err;
+
+	if (mut == NULL)
+		return CKR_MUTEX_BAD;
 
 	err = pthread_mutex_unlock (pmutex);
 	if (err == EINVAL)
