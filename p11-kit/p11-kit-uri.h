@@ -82,8 +82,8 @@ CK_TOKEN_INFO_PTR   p11_kit_uri_get_token_info              (P11KitUri *uri);
 int                 p11_kit_uri_match_token_info            (P11KitUri *uri,
                                                              CK_TOKEN_INFO_PTR token_info);
 
-CK_ATTRIBUTE_TYPE*  p11_kit_uri_get_attribute_types         (P11KitUri *uri,
-                                                             int *n_types);
+CK_ATTRIBUTE_PTR    p11_kit_uri_get_attributes              (P11KitUri *uri,
+                                                             CK_ULONG *n_attrs);
 
 CK_ATTRIBUTE_PTR    p11_kit_uri_get_attribute               (P11KitUri *uri,
                                                              CK_ATTRIBUTE_TYPE attr_type);
@@ -97,6 +97,11 @@ int                 p11_kit_uri_clear_attribute             (P11KitUri *uri,
 int                 p11_kit_uri_match_attributes            (P11KitUri *uri,
                                                              CK_ATTRIBUTE_PTR attrs,
                                                              CK_ULONG n_attrs);
+
+const char*         p11_kit_uri_get_pinfile                 (P11KitUri *uri);
+
+void                p11_kit_uri_set_pinfile                 (P11KitUri *uri,
+                                                             const char *pinfile);
 
 void                p11_kit_uri_set_unrecognized            (P11KitUri *uri,
                                                              int unrecognized);

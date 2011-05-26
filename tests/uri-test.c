@@ -942,8 +942,11 @@ test_uri_match_attributes (CuTest *tc)
 static void
 test_uri_get_set_attribute (CuTest *tc)
 {
+	CK_ATTRIBUTE_PTR attrs;
+	CK_OBJECT_CLASS klass;
 	CK_ATTRIBUTE attr;
 	CK_ATTRIBUTE_PTR ptr;
+	CK_ULONG n_attrs;
 	P11KitUri *uri;
 	int ret;
 
@@ -986,6 +989,96 @@ test_uri_get_set_attribute (CuTest *tc)
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
 	CuAssertPtrEquals (tc, NULL, ptr);
 
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 0, n_attrs);
+
+	attr.type = CKA_LABEL;
+	attr.pValue = "Test";
+	attr.ulValueLen = 4;
+
+	ret = p11_kit_uri_set_attribute (uri, &attr);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 1, n_attrs);
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertTrue (tc, attrs[0].ulValueLen == 4);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Test", 4) == 0);
+
+	attr.type = CKA_LABEL;
+	attr.pValue = "Kablooey";
+	attr.ulValueLen = 8;
+
+	ret = p11_kit_uri_set_attribute (uri, &attr);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 1, n_attrs);
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertTrue (tc, attrs[0].ulValueLen == 8);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
+
+	klass = CKO_DATA;
+	attr.type = CKA_CLASS;
+	attr.pValue = &klass;
+	attr.ulValueLen = sizeof (klass);
+
+	ret = p11_kit_uri_set_attribute (uri, &attr);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 2, n_attrs);
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertTrue (tc, attrs[0].ulValueLen == 8);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
+	CuAssertTrue (tc, attrs[1].type == CKA_CLASS);
+	CuAssertTrue (tc, attrs[1].ulValueLen == sizeof (klass));
+	CuAssertTrue (tc, memcmp (attrs[1].pValue, &klass, sizeof (klass)) == 0);
+
+	ret = p11_kit_uri_clear_attribute (uri, CKA_LABEL);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertIntEquals (tc, 1, n_attrs);
+	CuAssertTrue (tc, attrs[0].type == CKA_CLASS);
+	CuAssertTrue (tc, attrs[0].ulValueLen == sizeof (klass));
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, &klass, sizeof (klass)) == 0);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_pinfile (CuTest *tc)
+{
+	P11KitUri *uri;
+	const char *pinfile;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	CuAssertPtrNotNull (tc, uri);
+
+	p11_kit_uri_set_pinfile (uri, "|my-pin-file");
+
+	pinfile = p11_kit_uri_get_pinfile (uri);
+	CuAssertStrEquals (tc, "|my-pin-file", pinfile);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	CuAssertTrue (tc, strstr (string, "pinfile=%7cmy-pin-file") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:pinfile=blah%2Fblah", P11_KIT_URI_IS_ANY, uri);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	pinfile = p11_kit_uri_get_pinfile (uri);
+	CuAssertStrEquals (tc, "blah/blah", pinfile);
+
 	p11_kit_uri_free (uri);
 }
 
@@ -993,6 +1086,14 @@ static void
 test_uri_free_null (CuTest *tc)
 {
 	p11_kit_uri_free (NULL);
+}
+
+static void
+test_uri_message (CuTest *tc)
+{
+	CuAssertTrue (tc, p11_kit_uri_message (P11_KIT_URI_OK) == NULL);
+	CuAssertPtrNotNull (tc, p11_kit_uri_message (P11_KIT_URI_NO_MEMORY));
+	CuAssertPtrNotNull (tc, p11_kit_uri_message (-555555));
 }
 
 int
@@ -1036,7 +1137,9 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_match_module);
 	SUITE_ADD_TEST (suite, test_uri_match_attributes);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attribute);
+	SUITE_ADD_TEST (suite, test_uri_pinfile);
 	SUITE_ADD_TEST (suite, test_uri_free_null);
+	SUITE_ADD_TEST (suite, test_uri_message);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);
