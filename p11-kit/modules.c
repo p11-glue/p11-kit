@@ -269,105 +269,105 @@ unlock_mutex (CK_VOID_PTR mut)
 static void
 free_module_unlocked (void *data)
 {
-	Module *module = data;
+	Module *mod = data;
 
-	assert (module);
+	assert (mod);
 
 	/* Module must be finalized */
-	assert (module->initialize_count == 0);
+	assert (mod->initialize_count == 0);
 
 	/* Module must have no outstanding references */
-	assert (module->ref_count == 0);
+	assert (mod->ref_count == 0);
 
-	if (module->dl_module)
-		dlclose (module->dl_module);
-	hash_free (module->config);
-	free (module->name);
-	free (module);
+	if (mod->dl_module)
+		dlclose (mod->dl_module);
+	hash_free (mod->config);
+	free (mod->name);
+	free (mod);
 }
 
 static Module*
 alloc_module_unlocked (void)
 {
-	Module *module;
+	Module *mod;
 
-	module = calloc (1, sizeof (Module));
-	if (!module)
+	mod = calloc (1, sizeof (Module));
+	if (!mod)
 		return NULL;
 
-	module->init_args.CreateMutex = create_mutex;
-	module->init_args.DestroyMutex = destroy_mutex;
-	module->init_args.LockMutex = lock_mutex;
-	module->init_args.UnlockMutex = unlock_mutex;
-	module->init_args.flags = CKF_OS_LOCKING_OK;
+	mod->init_args.CreateMutex = create_mutex;
+	mod->init_args.DestroyMutex = destroy_mutex;
+	mod->init_args.LockMutex = lock_mutex;
+	mod->init_args.UnlockMutex = unlock_mutex;
+	mod->init_args.flags = CKF_OS_LOCKING_OK;
 
-	return module;
+	return mod;
 }
 
 static CK_RV
 load_module_from_config_unlocked (const char *configfile, const char *name)
 {
-	Module *module, *prev;
+	Module *mod, *prev;
 	const char *path;
 	CK_C_GetFunctionList gfl;
 	CK_RV rv;
 
 	assert (configfile);
 
-	module = alloc_module_unlocked ();
-	if (!module)
+	mod = alloc_module_unlocked ();
+	if (!mod)
 		return CKR_HOST_MEMORY;
 
-	module->config = conf_parse_file (configfile, 0, conf_error);
-	if (!module->config) {
-		free_module_unlocked (module);
+	mod->config = conf_parse_file (configfile, 0, conf_error);
+	if (!mod->config) {
+		free_module_unlocked (mod);
 		if (errno == ENOMEM)
 			return CKR_HOST_MEMORY;
 		return CKR_GENERAL_ERROR;
 	}
 
-	module->name = strdup (name);
-	if (!module->name) {
-		free_module_unlocked (module);
+	mod->name = strdup (name);
+	if (!mod->name) {
+		free_module_unlocked (mod);
 		return CKR_HOST_MEMORY;
 	}
 
-	path = hash_get (module->config, "module");
+	path = hash_get (mod->config, "module");
 	if (path == NULL) {
-		free_module_unlocked (module);
+		free_module_unlocked (mod);
 		warning ("no module path specified in config: %s", configfile);
 		return CKR_GENERAL_ERROR;
 	}
 
-	module->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
-	if (module->dl_module == NULL) {
+	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
+	if (mod->dl_module == NULL) {
 		warning ("couldn't load module: %s: %s", path, dlerror ());
-		free_module_unlocked (module);
+		free_module_unlocked (mod);
 		return CKR_GENERAL_ERROR;
 	}
 
-	gfl = dlsym (module->dl_module, "C_GetFunctionList");
+	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
 		warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
 		         path, dlerror ());
-		free_module_unlocked (module);
+		free_module_unlocked (mod);
 		return CKR_GENERAL_ERROR;
 	}
 
-	rv = gfl (&module->funcs);
+	rv = gfl (&mod->funcs);
 	if (rv != CKR_OK) {
 		warning ("call to C_GetFunctiontList failed in module: %s: %s",
 		         path, p11_kit_strerror (rv));
-		free_module_unlocked (module);
+		free_module_unlocked (mod);
 		return rv;
 	}
 
-	prev = hash_get (gl.modules, module->funcs);
+	prev = hash_get (gl.modules, mod->funcs);
 
 	/* Replace previous module that was loaded explicitly? */
 	if (prev && !prev->name) {
-		module->ref_count = prev->ref_count;
-		module->initialize_count = prev->initialize_count;
+		mod->ref_count = prev->ref_count;
+		mod->initialize_count = prev->initialize_count;
 		prev->ref_count = 0;
 		prev->initialize_count = 0;
 		prev = NULL; /* freed by hash_set below */
@@ -375,8 +375,8 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 
 	/* Refuse to load duplicate module */
 	if (prev) {
-		warning ("duplicate configured module: %s: %s", module->name, path);
-		free_module_unlocked (module);
+		warning ("duplicate configured module: %s: %s", mod->name, path);
+		free_module_unlocked (mod);
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -385,10 +385,10 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 	 * 'x-init-reserved' setting in the config. This only works with specific
 	 * PKCS#11 modules, and is non-standard use of that field.
 	 */
-	module->init_args.pReserved = hash_get (module->config, "x-init-reserved");
+	mod->init_args.pReserved = hash_get (mod->config, "x-init-reserved");
 
-	if (!hash_set (gl.modules, module->funcs, module)) {
-		free_module_unlocked (module);
+	if (!hash_set (gl.modules, mod->funcs, mod)) {
+		free_module_unlocked (mod);
 		return CKR_HOST_MEMORY;
 	}
 
@@ -626,24 +626,24 @@ load_registered_modules_unlocked (void)
 }
 
 static CK_RV
-initialize_module_unlocked_reentrant (Module *module)
+initialize_module_unlocked_reentrant (Module *mod)
 {
 	CK_RV rv = CKR_OK;
 
-	assert (module);
+	assert (mod);
 
 	/*
 	 * Initialize first, so module doesn't get freed out from
 	 * underneath us when the mutex is unlocked below.
 	 */
-	++module->ref_count;
+	++mod->ref_count;
 
-	if (!module->initialize_count) {
+	if (!mod->initialize_count) {
 
 		_p11_unlock ();
 
-			assert (module->funcs);
-			rv = module->funcs->C_Initialize (&module->init_args);
+			assert (mod->funcs);
+			rv = mod->funcs->C_Initialize (&mod->init_args);
 
 		_p11_lock ();
 
@@ -658,11 +658,11 @@ initialize_module_unlocked_reentrant (Module *module)
 		 */
 
 		if (rv == CKR_OK)
-			++module->initialize_count;
+			++mod->initialize_count;
 		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
 			rv = CKR_OK;
 		else
-			--module->ref_count;
+			--mod->ref_count;
 	}
 
 	return rv;
@@ -672,7 +672,7 @@ static void
 reinitialize_after_fork (void)
 {
 	hash_iter_t it;
-	Module *module;
+	Module *mod;
 
 	/* WARNING: This function must be reentrant */
 	debug ("forked");
@@ -681,11 +681,11 @@ reinitialize_after_fork (void)
 
 		if (gl.modules) {
 			hash_iterate (gl.modules, &it);
-			while (hash_next (&it, NULL, (void**)&module)) {
-				module->initialize_count = 0;
+			while (hash_next (&it, NULL, (void**)&mod)) {
+				mod->initialize_count = 0;
 
 				/* WARNING: Reentrancy can occur here */
-				initialize_module_unlocked_reentrant (module);
+				initialize_module_unlocked_reentrant (mod);
 			}
 		}
 
@@ -717,13 +717,13 @@ init_globals_unlocked (void)
 static void
 free_modules_when_no_refs_unlocked (void)
 {
-	Module *module;
+	Module *mod;
 	hash_iter_t it;
 
 	/* Check if any modules have a ref count */
 	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&module)) {
-		if (module->ref_count)
+	while (hash_next (&it, NULL, (void**)&mod)) {
+		if (mod->ref_count)
 			return;
 	}
 
@@ -734,18 +734,18 @@ free_modules_when_no_refs_unlocked (void)
 }
 
 static CK_RV
-finalize_module_unlocked_reentrant (Module *module)
+finalize_module_unlocked_reentrant (Module *mod)
 {
-	assert (module);
+	assert (mod);
 
 	/*
 	 * We leave module info around until all are finalized
 	 * so we can encounter these zombie Module structures.
 	 */
-	if (module->ref_count == 0)
+	if (mod->ref_count == 0)
 		return CKR_ARGUMENTS_BAD;
 
-	if (--module->ref_count > 0)
+	if (--mod->ref_count > 0)
 		return CKR_OK;
 
 	/*
@@ -753,23 +753,23 @@ finalize_module_unlocked_reentrant (Module *module)
 	 * the ref count. This prevents module from being freed out
 	 * from ounder us.
 	 */
-	++module->ref_count;
+	++mod->ref_count;
 
-	while (module->initialize_count > 0) {
+	while (mod->initialize_count > 0) {
 
 		_p11_unlock ();
 
-			assert (module->funcs);
-			module->funcs->C_Finalize (NULL);
+			assert (mod->funcs);
+			mod->funcs->C_Finalize (NULL);
 
 		_p11_lock ();
 
-		if (module->initialize_count > 0)
-			--module->initialize_count;
+		if (mod->initialize_count > 0)
+			--mod->initialize_count;
 	}
 
 	/* Match the increment above */
-	--module->ref_count;
+	--mod->ref_count;
 
 	free_modules_when_no_refs_unlocked ();
 	return CKR_OK;
@@ -778,22 +778,22 @@ finalize_module_unlocked_reentrant (Module *module)
 static Module*
 find_module_for_name_unlocked (const char *name)
 {
-	Module *module;
+	Module *mod;
 	hash_iter_t it;
 
 	assert (name);
 
 	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&module))
-		if (module->ref_count && module->name && strcmp (name, module->name) == 0)
-			return module;
+	while (hash_next (&it, NULL, (void**)&mod))
+		if (mod->ref_count && mod->name && strcmp (name, mod->name) == 0)
+			return mod;
 	return NULL;
 }
 
 CK_RV
 _p11_kit_initialize_registered_unlocked_reentrant (void)
 {
-	Module *module;
+	Module *mod;
 	hash_iter_t it;
 	CK_RV rv;
 
@@ -802,17 +802,17 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 		rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
 		hash_iterate (gl.modules, &it);
-		while (hash_next (&it, NULL, (void**)&module)) {
+		while (hash_next (&it, NULL, (void**)&mod)) {
 
 			/* Skip all modules that aren't registered */
-			if (!module->name)
+			if (!mod->name)
 				continue;
 
-			rv = initialize_module_unlocked_reentrant (module);
+			rv = initialize_module_unlocked_reentrant (mod);
 
 			if (rv != CKR_OK) {
 				debug ("failed to initialize module: %s: %s",
-				       module->name, p11_kit_strerror (rv));
+				       mod->name, p11_kit_strerror (rv));
 				break;
 			}
 		}
@@ -861,7 +861,7 @@ p11_kit_initialize_registered (void)
 CK_RV
 _p11_kit_finalize_registered_unlocked_reentrant (void)
 {
-	Module *module;
+	Module *mod;
 	hash_iter_t it;
 	Module **to_finalize;
 	int i, count;
@@ -877,11 +877,11 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 
 	count = 0;
 	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&module)) {
+	while (hash_next (&it, NULL, (void**)&mod)) {
 
 		/* Skip all modules that aren't registered */
-		if (module->name)
-			to_finalize[count++] = module;
+		if (mod->name)
+			to_finalize[count++] = mod;
 	}
 
 	debug ("finalizing %d modules", count);
@@ -931,16 +931,16 @@ CK_FUNCTION_LIST_PTR_PTR
 _p11_kit_registered_modules_unlocked (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR result;
-	Module *module;
+	Module *mod;
 	hash_iter_t it;
 	int i = 0;
 
 	result = calloc (hash_count (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
 	if (result) {
 		hash_iterate (gl.modules, &it);
-		while (hash_next (&it, NULL, (void**)&module)) {
-			if (module->ref_count && module->name)
-				result[i++] = module->funcs;
+		while (hash_next (&it, NULL, (void**)&mod)) {
+			if (mod->ref_count && mod->name)
+				result[i++] = mod->funcs;
 		}
 	}
 
@@ -975,7 +975,7 @@ p11_kit_registered_modules (void)
 
 /**
  * p11_kit_registered_module_to_name:
- * @funcs: pointer to a registered module
+ * @module: pointer to a registered module
  *
  * Get the name of a registered PKCS\#11 module.
  *
@@ -987,19 +987,19 @@ p11_kit_registered_modules (void)
  *     free this string.
  */
 char*
-p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
+p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module)
 {
-	Module *module;
+	Module *mod;
 	char *name = NULL;
 
-	if (!funcs)
+	if (!module)
 		return NULL;
 
 	_p11_lock ();
 
-		module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
-		if (module && module->name)
-			name = strdup (module->name);
+		mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+		if (mod && mod->name)
+			name = strdup (mod->name);
 
 	_p11_unlock ();
 
@@ -1019,29 +1019,29 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR funcs)
 CK_FUNCTION_LIST_PTR
 p11_kit_registered_name_to_module (const char *name)
 {
-	CK_FUNCTION_LIST_PTR funcs = NULL;
-	Module *module;
+	CK_FUNCTION_LIST_PTR module = NULL;
+	Module *mod;
 
 	_p11_lock ();
 
 		if (gl.modules) {
-			module = find_module_for_name_unlocked (name);
-			if (module)
-				funcs = module->funcs;
+			mod = find_module_for_name_unlocked (name);
+			if (mod)
+				module = mod->funcs;
 		}
 
 	_p11_unlock ();
 
-	return funcs;
+	return module;
 }
 
 /**
  * p11_kit_registered_option:
- * @funcs: a pointer to a registered module
+ * @module: a pointer to a registered module
  * @field: the name of the option to lookup.
  *
  * Lookup a configured option for a registered PKCS\#11 module. If a
- * <code>NULL</code> funcs argument is specified, then this will lookup
+ * <code>NULL</code> module argument is specified, then this will lookup
  * the configuration option in the global config file.
  *
  * Returns: A newly allocated string containing the option value, or
@@ -1049,9 +1049,9 @@ p11_kit_registered_name_to_module (const char *name)
  *     Use free() to free the returned string.
  */
 char*
-p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
+p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 {
-	Module *module = NULL;
+	Module *mod = NULL;
 	char *option = NULL;
 	hash_t *config = NULL;
 
@@ -1060,13 +1060,13 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 
 	_p11_lock ();
 
-		if (funcs == NULL) {
+		if (module == NULL) {
 			config = gl.config;
 
 		} else {
-			module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
-			if (module)
-				config = module->config;
+			mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+			if (mod)
+				config = mod->config;
 		}
 
 		if (config) {
@@ -1082,7 +1082,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
 
 /**
  * p11_kit_initialize_module:
- * @funcs: loaded module to initialize.
+ * @module: loaded module to initialize.
  *
  * Initialize an arbitrary PKCS\#11 module. Normally using the
  * p11_kit_initialize_registered() is preferred.
@@ -1108,9 +1108,9 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR funcs, const char *field)
  * Returns: CKR_OK if the initialization was successful.
  */
 CK_RV
-p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
+p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 {
-	Module *module;
+	Module *mod;
 	Module *allocated = NULL;
 	CK_RV rv = CKR_OK;
 
@@ -1122,15 +1122,15 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			module = hash_get (gl.modules, funcs);
-			if (module == NULL) {
+			mod = hash_get (gl.modules, module);
+			if (mod == NULL) {
 				debug ("allocating new module");
-				allocated = module = alloc_module_unlocked ();
-				module->funcs = funcs;
+				allocated = mod = alloc_module_unlocked ();
+				mod->funcs = module;
 			}
 
 			/* WARNING: Reentrancy can occur here */
-			rv = initialize_module_unlocked_reentrant (module);
+			rv = initialize_module_unlocked_reentrant (mod);
 
 			/* If this was newly allocated, add it to the list */
 			if (rv == CKR_OK && allocated) {
@@ -1149,7 +1149,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
 
 /**
  * p11_kit_finalize_module:
- * @funcs: loaded module to finalize.
+ * @module: loaded module to finalize.
  *
  * Finalize an arbitrary PKCS\#11 module. The module must have been initialized
  * using p11_kit_initialize_module(). In most cases callers will want to use
@@ -1169,9 +1169,9 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR funcs)
  * Returns: CKR_OK if the finalization was successful.
  */
 CK_RV
-p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
+p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 {
-	Module *module;
+	Module *mod;
 	CK_RV rv = CKR_OK;
 
 	/* WARNING: This function must be reentrant for the same arguments */
@@ -1179,13 +1179,13 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR funcs)
 
 	_p11_lock ();
 
-		module = gl.modules ? hash_get (gl.modules, funcs) : NULL;
-		if (module == NULL) {
+		mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+		if (mod == NULL) {
 			debug ("module not found");
 			rv = CKR_ARGUMENTS_BAD;
 		} else {
 			/* WARNING: Rentrancy can occur here */
-			rv = finalize_module_unlocked_reentrant (module);
+			rv = finalize_module_unlocked_reentrant (mod);
 		}
 
 	_p11_unlock ();
