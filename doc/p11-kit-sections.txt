@@ -10,16 +10,21 @@ p11_kit_uri_get_module_info
 p11_kit_uri_match_module_info
 p11_kit_uri_get_token_info
 p11_kit_uri_match_token_info
-p11_kit_uri_get_attribute_types
+p11_kit_uri_get_attributes
+p11_kit_uri_set_attributes
+p11_kit_uri_clear_attributes
+p11_kit_uri_match_attributes
 p11_kit_uri_get_attribute
 p11_kit_uri_set_attribute
 p11_kit_uri_clear_attribute
-p11_kit_uri_match_attributes
 p11_kit_uri_set_unrecognized
 p11_kit_uri_any_unrecognized
+p11_kit_uri_get_pinfile
+p11_kit_uri_set_pinfile
 p11_kit_uri_format
 p11_kit_uri_parse
 p11_kit_uri_free
+p11_kit_uri_message
 </SECTION>
 
 <SECTION>
