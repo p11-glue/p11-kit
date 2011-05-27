@@ -233,7 +233,7 @@ initialize_mappings_unlocked_reentrant (void)
 	int n_mappings = 0;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
-	CK_RV rv;
+	CK_RV rv = CKR_OK;
 
 	assert (!gl.mappings);
 
