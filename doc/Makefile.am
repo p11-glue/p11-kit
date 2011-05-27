@@ -69,4 +69,5 @@ GTKDOC_LIBS=
 include $(top_srcdir)/gtk-doc.make
 
 EXTRA_DIST += \
-	version.xml.in
+	version.xml.in \
+	version.xml

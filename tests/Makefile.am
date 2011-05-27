@@ -2,7 +2,7 @@
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/p11-kit \
-	-Icutest \
+	-I$(srcdir)/cutest \
 	-DSRCDIR=\"$(srcdir)\" \
 	-DP11_KIT_API_SUBJECT_TO_CHANGE
 
@@ -24,3 +24,7 @@ check-am:
 	./hash-test
 	./conf-test
 	./uri-test
+
+EXTRA_DIST = \
+	cutest \
+	files

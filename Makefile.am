@@ -8,6 +8,10 @@ SUBDIRS = \
 
 ACLOCAL_AMFLAGS = -I m4
 
+DISTCHECK_CONFIGURE_FLAGS = \
+	--enable-gtk-doc \
+	--disable-coverage
+
 dist-hook:
 	@if test -d "$(srcdir)/.git"; \
 	then \
