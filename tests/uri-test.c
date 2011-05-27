@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "p11-kit-uri.h"
+#include "uri.h"
 
 static int
 is_module_empty (P11KitUri *uri)

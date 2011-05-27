@@ -44,7 +44,7 @@
 #error "This API has not yet reached stability."
 #endif
 
-#include "pkcs11.h"
+#include "p11-kit/pkcs11.h"
 
 #ifdef __cplusplus
 extern "C" {

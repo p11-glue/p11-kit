@@ -14,4 +14,4 @@ Name: p11-kit
 Description: Library and proxy module for properly loading and sharing PKCS#11 modules.
 Version: @VERSION@
 Libs: -L${libdir} -lp11-kit
-Cflags: -I${includedir}/p11-kit
+Cflags: -I${includedir}/p11-kit-1

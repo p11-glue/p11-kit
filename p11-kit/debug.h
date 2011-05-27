@@ -55,13 +55,13 @@ void              debug_message                  (int flag,
  * more than once. So you can do:
  *
  * #define DEBUG_FLAG DEBUG_ONE_THING
- * #include "gkr-debug.h"
+ * #include "debug.h"
  * ...
  * DEBUG ("if we're debugging one thing");
  * ...
  * #undef DEBUG_FLAG
  * #define DEBUG_FLAG DEBUG_OTHER_THING
- * #include "gkr-debug.h"
+ * #include "debug.h"
  * ...
  * DEBUG ("if we're debugging the other thing");
  * ...

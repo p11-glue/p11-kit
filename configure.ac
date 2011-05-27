@@ -3,7 +3,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_INIT([p11-kit],[0.1],[http://bugzilla.example.com])
 
-AC_CONFIG_SRCDIR([p11-kit/p11-kit-lib.c])
+AC_CONFIG_SRCDIR([p11-kit/modules.c])
 AC_CONFIG_HEADERS([config.h])
 
 dnl Other initialization
@@ -151,7 +151,7 @@ AC_CONFIG_FILES([Makefile
 	doc/version.xml
 	po/Makefile.in
 	p11-kit/Makefile
-	p11-kit/p11-kit.pc
+	p11-kit/p11-kit-1.pc
 	tests/Makefile
 	tools/Makefile
 ])

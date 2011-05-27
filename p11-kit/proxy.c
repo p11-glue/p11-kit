@@ -38,7 +38,7 @@
 #include "hash.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
-#include "p11-kit-private.h"
+#include "private.h"
 #include "util.h"
 
 #include <sys/types.h>

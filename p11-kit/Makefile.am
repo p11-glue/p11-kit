@@ -2,11 +2,11 @@
 INCLUDES = \
 	-DP11_KIT_API_SUBJECT_TO_CHANGE
 
-incdir = $(includedir)/p11-kit
+incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
 	p11-kit.h \
-	p11-kit-uri.h \
+	uri.h \
 	pkcs11.h
 
 MODULE_SRCS = \
@@ -14,11 +14,11 @@ MODULE_SRCS = \
 	debug.c debug.h \
 	hash.c hash.h \
 	util.c util.h \
-	p11-kit-lib.c \
-	p11-kit-proxy.c \
-	p11-kit-private.h \
-	p11-kit-messages.c \
-	p11-kit-uri.c \
+	modules.c \
+	proxy.c \
+	private.h \
+	messages.c \
+	uri.c \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \
@@ -38,7 +38,7 @@ libp11_kit_testable_la_LDFLAGS = \
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = p11-kit.pc
+pkgconfig_DATA = p11-kit-1.pc
 
 EXTRA_DIST = \
-	p11-kit.pc.in
+	p11-kit-1.pc.in

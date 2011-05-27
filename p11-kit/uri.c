@@ -37,7 +37,7 @@
 #define DEBUG_FLAG DEBUG_URI
 #include "debug.h"
 #include "pkcs11.h"
-#include "p11-kit-uri.h"
+#include "uri.h"
 #include "util.h"
 
 #include <assert.h>
