@@ -67,6 +67,9 @@ CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR
 
 CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR module);
 
+CK_RV                    p11_kit_load_initialize_module    (const char *module_path,
+                                                            CK_FUNCTION_LIST_PTR_PTR module);
+
 const char*              p11_kit_strerror                  (CK_RV rv);
 
 #ifdef __cplusplus

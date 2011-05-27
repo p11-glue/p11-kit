@@ -96,13 +96,20 @@
  */
 
 typedef struct _Module {
-	char *name;
-	hash_t *config;
-	void *dl_module;
 	CK_FUNCTION_LIST_PTR funcs;
 	int ref_count;
-	int initialize_count;
+
+	/* Registered modules */
+	char *name;
+	hash_t *config;
+
+	/* Loaded modules */
+	void *dl_module;
+	int dlopen_count;
+
+	/* Initialized modules */
 	CK_C_INITIALIZE_ARGS init_args;
+	int initialize_count;
 } Module;
 
 /*
@@ -305,11 +312,79 @@ alloc_module_unlocked (void)
 }
 
 static CK_RV
-load_module_from_config_unlocked (const char *configfile, const char *name)
+dlopen_and_get_function_list (Module *mod, const char *path)
+{
+	CK_C_GetFunctionList gfl;
+	CK_RV rv;
+
+	assert (mod);
+	assert (path);
+
+	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
+	if (mod->dl_module == NULL) {
+		warning ("couldn't load module: %s: %s", path, dlerror ());
+		return CKR_GENERAL_ERROR;
+	}
+
+	mod->dlopen_count++;
+
+	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
+	if (!gfl) {
+		warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
+		         path, dlerror ());
+		return CKR_GENERAL_ERROR;
+	}
+
+	rv = gfl (&mod->funcs);
+	if (rv != CKR_OK) {
+		warning ("call to C_GetFunctiontList failed in module: %s: %s",
+		         path, p11_kit_strerror (rv));
+		return rv;
+	}
+
+	return CKR_OK;
+}
+
+static CK_RV
+load_module_from_file_unlocked (const char *path, Module **result)
+{
+	Module *mod;
+	Module *prev;
+	CK_RV rv;
+
+	mod = alloc_module_unlocked ();
+	if (!mod)
+		return CKR_HOST_MEMORY;
+
+	rv = dlopen_and_get_function_list (mod, path);
+	if (rv != CKR_OK) {
+		free_module_unlocked (mod);
+		return rv;
+	}
+
+	/* Do we have a previous one like this, if so ignore load */
+	prev = hash_get (gl.modules, mod->funcs);
+
+	if (prev != NULL) {
+		free_module_unlocked (mod);
+		mod = prev;
+
+	} else if (!hash_set (gl.modules, mod->funcs, mod)) {
+		free_module_unlocked (mod);
+		return CKR_HOST_MEMORY;
+	}
+
+	if (result)
+		*result= mod;
+	return CKR_OK;
+}
+
+static CK_RV
+load_module_from_config_unlocked (const char *configfile, const char *name,
+                                  Module **result)
 {
 	Module *mod, *prev;
 	const char *path;
-	CK_C_GetFunctionList gfl;
 	CK_RV rv;
 
 	assert (configfile);
@@ -339,25 +414,8 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 		return CKR_GENERAL_ERROR;
 	}
 
-	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
-	if (mod->dl_module == NULL) {
-		warning ("couldn't load module: %s: %s", path, dlerror ());
-		free_module_unlocked (mod);
-		return CKR_GENERAL_ERROR;
-	}
-
-	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
-	if (!gfl) {
-		warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		         path, dlerror ());
-		free_module_unlocked (mod);
-		return CKR_GENERAL_ERROR;
-	}
-
-	rv = gfl (&mod->funcs);
+	rv = dlopen_and_get_function_list (mod, path);
 	if (rv != CKR_OK) {
-		warning ("call to C_GetFunctiontList failed in module: %s: %s",
-		         path, p11_kit_strerror (rv));
 		free_module_unlocked (mod);
 		return rv;
 	}
@@ -392,6 +450,8 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 		return CKR_HOST_MEMORY;
 	}
 
+	if (result)
+		*result = mod;
 	return CKR_OK;
 }
 
@@ -442,7 +502,7 @@ load_modules_from_config_unlocked (const char *directory)
 		if (is_dir)
 			rv = CKR_OK;
 		else
-			rv = load_module_from_config_unlocked (path, dp->d_name);
+			rv = load_module_from_config_unlocked (path, dp->d_name, NULL);
 
 		free (path);
 
@@ -1186,6 +1246,65 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 		} else {
 			/* WARNING: Rentrancy can occur here */
 			rv = finalize_module_unlocked_reentrant (mod);
+		}
+
+	_p11_unlock ();
+
+	debug ("out: %lu", rv);
+	return rv;
+}
+
+/**
+ * p11_kit_load_initialize_module:
+ * @module_path: full file path of module library
+ * @module: location to place loaded module pointer
+ *
+ * Load an arbitrary PKCS\#11 module from a dynamic library file, and
+ * initialize it. Normally using the p11_kit_initialize_registered() function
+ * is preferred.
+ *
+ * Using this function to load and initialize modules allows coordination between
+ * multiple users of the same module in a single process. The caller should not
+ * call the module's <code>C_Initialize</code> method. This function will call
+ * <code>C_Initialize</code> as necessary.
+ *
+ * If a module has already been loaded, then use of this function is unnecesasry.
+ * Instead use the p11_kit_initialize_module() function to initialize it.
+ *
+ * Subsequent calls to this function for the same module will result in an
+ * initialization count being incremented for the module. It is safe (although
+ * usually unnecessary) to use this function on registered modules.
+ *
+ * The module must be finalized with p11_kit_finalize_module() instead of
+ * calling its <code>C_Finalize</code> method directly.
+ *
+ * This function does not accept a <code>CK_C_INITIALIZE_ARGS</code> argument.
+ * Custom initialization arguments cannot be supported when multiple consumers
+ * load the same module.
+ *
+ * Returns: CKR_OK if the initialization was successful.
+ */
+CK_RV
+p11_kit_load_initialize_module (const char *module_path,
+                                CK_FUNCTION_LIST_PTR_PTR module)
+{
+	Module *mod;
+	CK_RV rv = CKR_OK;
+
+	/* WARNING: This function must be reentrant for the same arguments */
+	debug ("in");
+
+	_p11_lock ();
+
+		rv = init_globals_unlocked ();
+		if (rv == CKR_OK) {
+
+			rv = load_module_from_file_unlocked (module_path, &mod);
+			if (rv == CKR_OK) {
+
+				/* WARNING: Reentrancy can occur here */
+				rv = initialize_module_unlocked_reentrant (mod);
+			}
 		}
 
 	_p11_unlock ();

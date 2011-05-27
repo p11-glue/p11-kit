@@ -36,6 +36,7 @@ p11_kit_registered_module_to_name
 p11_kit_registered_name_to_module
 p11_kit_registered_option
 p11_kit_initialize_module
+p11_kit_load_initialize_module
 p11_kit_finalize_module
 </SECTION>
 
