@@ -43,6 +43,7 @@ p11_kit_finalize_module
 <SECTION>
 <FILE>p11-kit-util</FILE>
 p11_kit_strerror
+p11_kit_uri_space_strlen
 <SUBSECTION Private>
 CK_FUNCTION_LIST_PTR
 CK_RV

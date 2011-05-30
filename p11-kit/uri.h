@@ -140,6 +140,9 @@ void                p11_kit_uri_free                        (P11KitUri *uri);
 
 const char*         p11_kit_uri_message                     (int code);
 
+size_t              p11_kit_uri_space_strlen                (const unsigned char *string,
+                                                             size_t max_length);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

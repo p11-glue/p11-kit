@@ -724,8 +724,8 @@ p11_kit_uri_new (void)
 	return uri;
 }
 
-static size_t
-space_strlen (const unsigned char *string, size_t max_length)
+size_t
+p11_kit_uri_space_strlen (const unsigned char *string, size_t max_length)
 {
 	size_t i = max_length - 1;
 
@@ -796,7 +796,7 @@ format_struct_string (char **string, size_t *length, int *is_first,
 	if (!value[0])
 		return 1;
 
-	len = space_strlen (value, value_max);
+	len = p11_kit_uri_space_strlen (value, value_max);
 	return format_encode_string (string, length, is_first, name, value, len);
 }
 
