@@ -50,18 +50,6 @@
 extern "C" {
 #endif
 
-/*
- * If the caller is using the PKCS#11 GNU calling convention, then we cater
- * to that here.
- */
-#ifdef CRYPTOKI_GNU
-typedef struct ck_info *CK_INFO_PTR;
-typedef struct ck_token_info *CK_TOKEN_INFO_PTR;
-typedef ck_attribute_type_t CK_ATTRIBUTE_TYPE;
-typedef struct ck_attribute *CK_ATTRIBUTE_PTR;
-typedef unsigned long int CK_ULONG;
-#endif
-
 #define P11_KIT_URI_SCHEME "pkcs11:"
 #define P11_KIT_URI_SCHEME_LEN 7
 
@@ -91,6 +79,20 @@ typedef enum {
 
 	P11_KIT_URI_FOR_ANY =     0x0000FFFF,
 } P11KitUriType;
+
+/*
+ * If the caller is using the PKCS#11 GNU calling convention, then we cater
+ * to that here.
+ */
+#ifdef CRYPTOKI_GNU
+typedef struct ck_info *CK_INFO_PTR;
+typedef struct ck_token_info *CK_TOKEN_INFO_PTR;
+typedef ck_attribute_type_t CK_ATTRIBUTE_TYPE;
+typedef struct ck_attribute *CK_ATTRIBUTE_PTR;
+typedef unsigned long int CK_ULONG;
+typedef P11KitUriType p11_kit_uri_type_t;
+typedef P11KitUriResult p11_kit_uri_result_t;
+#endif
 
 typedef struct p11_kit_uri P11KitUri;
 
