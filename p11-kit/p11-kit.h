@@ -46,6 +46,15 @@
 
 #include "p11-kit/pkcs11.h"
 
+/*
+ * If the caller is using the PKCS#11 GNU calling convention, then we cater
+ * to that here.
+ */
+#ifdef CRYPTOKI_GNU
+typedef ck_rv_t CK_RV;
+typedef struct ck_function_list* CK_FUNCTION_LIST_PTR;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -68,7 +77,7 @@ CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR
 CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR module);
 
 CK_RV                    p11_kit_load_initialize_module    (const char *module_path,
-                                                            CK_FUNCTION_LIST_PTR_PTR module);
+                                                            CK_FUNCTION_LIST_PTR *module);
 
 const char*              p11_kit_strerror                  (CK_RV rv);
 

@@ -127,7 +127,7 @@ static const CK_ATTRIBUTE_TYPE SUPPORTED_ATTRIBUTE_TYPES[] = {
 #define NUM_ATTRIBUTE_TYPES \
 	(sizeof (SUPPORTED_ATTRIBUTE_TYPES) / sizeof (SUPPORTED_ATTRIBUTE_TYPES[0]))
 
-struct _P11KitUri {
+struct p11_kit_uri {
 	int unrecognized;
 	CK_INFO module;
 	CK_TOKEN_INFO token;
