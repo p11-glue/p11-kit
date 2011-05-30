@@ -1247,7 +1247,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 
 	/* Clear everything out */
 	memset (&uri->module, 0, sizeof (uri->module));
-	memset (&uri->token, 0, sizeof (uri->module));
+	memset (&uri->token, 0, sizeof (uri->token));
 	for (i = 0; i < uri->n_attributes; ++i) {
 		free (uri->attributes[i].pValue);
 		memset (&uri->attributes[i], 0, sizeof (CK_ATTRIBUTE));
