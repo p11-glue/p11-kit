@@ -79,7 +79,7 @@ test_uri_parse (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:", P11_KIT_URI_FOR_MODULE, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	CuAssertTrue (tc, is_module_empty (uri));
@@ -98,7 +98,7 @@ test_uri_parse_bad_scheme (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("http:\\example.com\test", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("http:\\example.com\test", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_SCHEME, ret);
 
 	p11_kit_uri_free (uri);
@@ -114,7 +114,7 @@ test_uri_parse_with_label (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	CuAssertTrue (tc, is_module_empty (uri));
@@ -138,7 +138,7 @@ test_uri_parse_with_label_and_klass (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;objecttype=cert", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;objecttype=cert", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
@@ -164,7 +164,7 @@ test_uri_parse_with_id (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:id=%54%45%53%54%00", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:id=%54%45%53%54%00", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	/* Note that there's a NULL in the attribute (end) */
@@ -186,7 +186,7 @@ test_uri_parse_with_bad_string_encoding (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Test%", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Test%", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
@@ -201,7 +201,7 @@ test_uri_parse_with_bad_hex_encoding (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=T%xxest", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=T%xxest", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
@@ -232,7 +232,7 @@ test_uri_parse_with_token (CuTest *tc)
 	CuAssertPtrNotNull (tc, uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:token=Token%20Label;serial=3333;model=Deluxe;manufacturer=Me",
-	                         P11_KIT_URI_IS_TOKEN, uri);
+	                         P11_KIT_URI_FOR_TOKEN, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	token = p11_kit_uri_get_token_info (uri);
@@ -253,7 +253,7 @@ test_uri_parse_with_token_bad_encoding (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:token=Token%", P11_KIT_URI_IS_TOKEN, uri);
+	ret = p11_kit_uri_parse ("pkcs11:token=Token%", P11_KIT_URI_FOR_TOKEN, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
@@ -268,7 +268,7 @@ test_uri_parse_with_bad_syntax (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:token", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:token", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_SYNTAX, ret);
 
 	p11_kit_uri_free (uri);
@@ -285,7 +285,7 @@ test_uri_parse_with_library (CuTest *tc)
 	CuAssertPtrNotNull (tc, uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-description=The%20Library;library-manufacturer=Me",
-	                         P11_KIT_URI_IS_MODULE, uri);
+	                         P11_KIT_URI_FOR_MODULE, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
@@ -305,7 +305,7 @@ test_uri_parse_with_library_bad_encoding (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-description=Library%", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-description=Library%", P11_KIT_URI_FOR_MODULE, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
@@ -321,7 +321,7 @@ test_uri_build_empty (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertStrEquals (tc, "pkcs11:", string);
 	free (string);
 
@@ -355,14 +355,14 @@ test_uri_build_with_token_info (CuTest *tc)
 	set_space_string (token->manufacturerID, sizeof (token->manufacturerID), "Me");
 	set_space_string (token->model, sizeof (token->model), "Deluxe");
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertPtrNotNull (tc, string);
 
 	check = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, check);
 
-	ret = p11_kit_uri_parse (string, P11_KIT_URI_IS_TOKEN, check);
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_TOKEN, check);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	p11_kit_uri_match_token_info (check, p11_kit_uri_get_token_info (uri));
@@ -392,7 +392,7 @@ test_uri_build_with_token_null_info (CuTest *tc)
 	token = p11_kit_uri_get_token_info (uri);
 	set_space_string (token->label, sizeof (token->label), "The Label");
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	CuAssertTrue (tc, strstr (string, "token=The%20Label") != NULL);
@@ -417,7 +417,7 @@ test_uri_build_with_token_empty_info (CuTest *tc)
 	set_space_string (token->label, sizeof (token->label), "");
 	set_space_string (token->serialNumber, sizeof (token->serialNumber), "");
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	CuAssertTrue (tc, strstr (string, "token=") != NULL);
@@ -457,13 +457,13 @@ test_uri_build_with_attributes (CuTest *tc)
 	at.ulValueLen = sizeof (klass);
 	ret = p11_kit_uri_set_attribute (uri, &at);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	check = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, check);
 
-	ret = p11_kit_uri_parse (string, P11_KIT_URI_IS_ANY, check);
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_ANY, check);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (check, CKA_LABEL);
@@ -501,7 +501,7 @@ test_uri_parse_private_key (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=private", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:objecttype=private", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -522,7 +522,7 @@ test_uri_parse_secret_key (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=secretkey", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:objecttype=secretkey", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -543,33 +543,33 @@ test_uri_parse_library_version (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=2.101", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=2.101", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
 	CuAssertIntEquals (tc, 2, info->libraryVersion.major);
 	CuAssertIntEquals (tc, 101, info->libraryVersion.minor);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=23", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=23", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
 	CuAssertIntEquals (tc, 23, info->libraryVersion.major);
 	CuAssertIntEquals (tc, 0, info->libraryVersion.minor);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=23.", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=23.", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=a.a", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=a.a", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=.23", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=.23", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=1000", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=1000", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-version=2.1000", P11_KIT_URI_IS_MODULE, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-version=2.1000", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
 
 	p11_kit_uri_free (uri);
@@ -585,7 +585,7 @@ test_uri_parse_parse_unknown_objecttype (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=unknown", P11_KIT_URI_IS_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:objecttype=unknown", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -603,7 +603,7 @@ test_uri_parse_unrecognized (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:x-blah=some-value", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:x-blah=some-value", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
@@ -622,7 +622,7 @@ test_uri_parse_too_long_is_unrecognized (CuTest *tc)
 	CuAssertPtrNotNull (tc, uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:model=a-value-that-is-too-long-for-the-field-that-it-goes-with",
-	                         P11_KIT_URI_IS_ANY, uri);
+	                         P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
@@ -651,7 +651,7 @@ test_uri_build_objecttype_cert (CuTest *tc)
 	attr.ulValueLen = sizeof (klass);
 	p11_kit_uri_set_attribute (uri, &attr);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "objecttype=cert") != NULL);
 
@@ -677,7 +677,7 @@ test_uri_build_objecttype_private (CuTest *tc)
 	attr.ulValueLen = sizeof (klass);
 	p11_kit_uri_set_attribute (uri, &attr);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "objecttype=private") != NULL);
 
@@ -703,7 +703,7 @@ test_uri_build_objecttype_public (CuTest *tc)
 	attr.ulValueLen = sizeof (klass);
 	p11_kit_uri_set_attribute (uri, &attr);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "objecttype=public") != NULL);
 
@@ -729,7 +729,7 @@ test_uri_build_objecttype_secret (CuTest *tc)
 	attr.ulValueLen = sizeof (klass);
 	p11_kit_uri_set_attribute (uri, &attr);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "objecttype=secretkey") != NULL);
 
@@ -751,7 +751,7 @@ test_uri_build_with_library (CuTest *tc)
 	info = p11_kit_uri_get_module_info (uri);
 	set_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Description");
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "library-description=The%20Description") != NULL);
 
@@ -774,7 +774,7 @@ test_uri_build_library_version (CuTest *tc)
 	info->libraryVersion.major = 2;
 	info->libraryVersion.minor = 10;
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "library-version=2.10") != NULL);
 
@@ -817,7 +817,7 @@ test_uri_match_token (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:model=Giselle", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:model=Giselle", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	set_space_string (token.label, sizeof (token.label), "A label");
@@ -854,7 +854,7 @@ test_uri_match_module (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:library-description=Quiet", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:library-description=Quiet", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	set_space_string (info.libraryDescription, sizeof (info.libraryDescription), "Quiet");
@@ -909,7 +909,7 @@ test_uri_match_attributes (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;objecttype=data", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;objecttype=data", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
@@ -1100,12 +1100,12 @@ test_uri_pinfile (CuTest *tc)
 	pinfile = p11_kit_uri_get_pinfile (uri);
 	CuAssertStrEquals (tc, "|my-pin-file", pinfile);
 
-	ret = p11_kit_uri_format (uri, P11_KIT_URI_IS_ANY, &string);
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertTrue (tc, strstr (string, "pinfile=%7cmy-pin-file") != NULL);
 	free (string);
 
-	ret = p11_kit_uri_parse ("pkcs11:pinfile=blah%2Fblah", P11_KIT_URI_IS_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:pinfile=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	pinfile = p11_kit_uri_get_pinfile (uri);

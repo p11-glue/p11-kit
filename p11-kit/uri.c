@@ -83,13 +83,22 @@
 
 /**
  * P11KitUriType:
- * @P11_KIT_URI_IS_MODULE: The URI represents one or more modules
- * @P11_KIT_URI_IS_TOKEN: The URI represents one or more tokens
- * @P11_KIT_URI_IS_OBJECT: The URI represents one or more objects
- * @P11_KIT_URI_IS_ANY: The URI can represent anything
+ * @P11_KIT_URI_FOR_OBJECT: The URI represents one or more objects
+ * @P11_KIT_URI_FOR_TOKEN: The URI represents one or more tokens
+ * @P11_KIT_URI_FOR_MODULE: The URI represents one or more modules
+ * @P11_KIT_URI_FOR_MODULE_WITH_VERSION: The URI represents a module with
+ *     a specific version.
+ * @P11_KIT_URI_FOR_OBJECT_ON_TOKEN: The URI represents one or more objects
+ *     that are present on a specific token.
+ * @P11_KIT_URI_FOR_OBJECT_ON_TOKEN_AND_MODULE: The URI represents one or more
+ *     objects that are present on a specific token, being used with a certain
+ *     module.
+ * @P11_KIT_URI_FOR_ANY: The URI can represent anything
  *
  * A PKCS\#11 URI can represent different kinds of things. This flag is used by
  * p11_kit_uri_parse() to denote in what context the URI will be used.
+ *
+ * The various types can be combined.
  */
 
 /**
@@ -875,7 +884,7 @@ format_struct_version (char **string, size_t *length, int *is_first,
  *
  * The uri_type of URI specified limits the different parts of the resulting
  * URI. To format a URI containing all possible information use
- * %P11_KIT_URI_IS_ANY
+ * %P11_KIT_URI_FOR_ANY
  *
  * The resulting string should be freed with free().
  *
@@ -897,12 +906,10 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	memcpy (result, P11_KIT_URI_SCHEME, length);
 	result[length] = 0;
 
-	if (uri_type & P11_KIT_URI_IS_MODULE) {
+	if ((uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE) {
 		if (!format_struct_string (&result, &length, &is_first, "library-description",
 		                           uri->module.libraryDescription,
 		                           sizeof (uri->module.libraryDescription)) ||
-		    !format_struct_version (&result, &length, &is_first, "library-version",
-		                            &uri->module.libraryVersion) ||
 		    !format_struct_string (&result, &length, &is_first, "library-manufacturer",
 		                           uri->module.manufacturerID,
 		                           sizeof (uri->module.manufacturerID))) {
@@ -911,7 +918,15 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
-	if (uri_type & P11_KIT_URI_IS_TOKEN) {
+	if ((uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION) {
+		if (!format_struct_version (&result, &length, &is_first, "library-version",
+		                            &uri->module.libraryVersion)) {
+			free (result);
+			return P11_KIT_URI_NO_MEMORY;
+		}
+	}
+
+	if ((uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN) {
 		if (!format_struct_string (&result, &length, &is_first, "model",
 		                           uri->token.model,
 		                           sizeof (uri->token.model)) ||
@@ -929,7 +944,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
-	if (uri_type & P11_KIT_URI_IS_OBJECT) {
+	if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT) {
 		if (!format_attribute_string (&result, &length, &is_first, "id",
 		                              p11_kit_uri_get_attribute (uri, CKA_ID)) ||
 		    !format_attribute_string (&result, &length, &is_first, "object",
@@ -1133,6 +1148,19 @@ parse_struct_version (const char *start, const char *end, CK_VERSION_PTR version
 }
 
 static int
+parse_module_version_info (const char *name, const char *start, const char *end,
+                           P11KitUri *uri)
+{
+	assert (start <= end);
+
+	if (strcmp (name, "library-version") == 0)
+		return parse_struct_version (start, end,
+		                             &uri->module.libraryVersion);
+
+	return 0;
+}
+
+static int
 parse_module_info (const char *name, const char *start, const char *end,
                    P11KitUri *uri)
 {
@@ -1147,9 +1175,6 @@ parse_module_info (const char *name, const char *start, const char *end,
 	} else if (strcmp (name, "library-manufacturer") == 0) {
 		where = uri->module.manufacturerID;
 		length = sizeof (uri->module.manufacturerID);
-	} else if (strcmp (name, "library-version") == 0) {
-		return parse_struct_version (start, end,
-		                             &uri->module.libraryVersion);
 	} else {
 		return 0;
 	}
@@ -1188,7 +1213,7 @@ parse_extra_info (const char *name, const char *start, const char *end,
  *
  * PKCS\#11 URIs can represent tokens, objects or modules. The uri_type argument
  * allows the caller to specify what type of URI is expected and the sorts of
- * objects the URI should match. %P11_KIT_URI_IS_ANY can be used to parse a URI
+ * things the URI should match. %P11_KIT_URI_FOR_ANY can be used to parse a URI
  * for any context. It's then up to the caller to make sense of the way that
  * it is used.
  *
@@ -1255,14 +1280,16 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		epos++;
 
 		ret = 0;
-		if (uri_type & P11_KIT_URI_IS_OBJECT)
+		if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT)
 			ret = parse_string_attribute (key, epos, spos, uri);
-		if (ret == 0 && uri_type & P11_KIT_URI_IS_OBJECT)
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT)
 			ret = parse_class_attribute (key, epos, spos, uri);
-		if (ret == 0 && uri_type & P11_KIT_URI_IS_TOKEN)
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN)
 			ret = parse_token_info (key, epos, spos, uri);
-		if (ret == 0 && uri_type & P11_KIT_URI_IS_MODULE)
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE)
 			ret = parse_module_info (key, epos, spos, uri);
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION)
+			ret = parse_module_version_info (key, epos, spos, uri);
 		if (ret == 0)
 			ret = parse_extra_info (key, epos, spos, uri);
 		free (key);
