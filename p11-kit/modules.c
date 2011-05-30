@@ -1307,6 +1307,9 @@ p11_kit_load_initialize_module (const char *module_path,
 			}
 		}
 
+		if (rv == CKR_OK && module)
+			*module = mod->funcs;
+
 	_p11_unlock ();
 
 	debug ("out: %lu", rv);
