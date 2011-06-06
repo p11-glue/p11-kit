@@ -62,6 +62,7 @@ temp.txt
 /po/POTFILES
 /po/stamp-po
 /po/remove-potcdate.sed
+/po/Makevars.template
 
 /tests/coverage
 /tests/coverage.info

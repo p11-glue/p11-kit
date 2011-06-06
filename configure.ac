@@ -1,17 +1,18 @@
 AC_PREREQ(2.65)
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_INIT([p11-kit],[0.1],[http://bugzilla.example.com])
+AC_INIT([p11-kit],[0.1],[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],[p11-kit],[http://p11-glue.freedesktop.org/p11-kit.html])
 
 AC_CONFIG_SRCDIR([p11-kit/modules.c])
 AC_CONFIG_HEADERS([config.h])
 
 dnl Other initialization
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.11])
 AM_SANITY_CHECK
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
-LT_INIT
+LT_PREREQ([2.2.6])
+LT_INIT([dlopen disable-static])
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
@@ -124,8 +125,7 @@ AC_SUBST(GENHTML)
 # Debug mode
 
 AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([--enable-debug=no/yes/full],
-              [Turn on or off debugging]))
+              AS_HELP_STRING([--enable-debug=no/yes/full],[Turn on or off debugging]))
 
 if test "$enable_debug" != "no"; then
 	AC_DEFINE_UNQUOTED(WITH_DEBUG, 1, [Print debug output])
@@ -156,4 +156,3 @@ AC_CONFIG_FILES([Makefile
 	tools/Makefile
 ])
 AC_OUTPUT
-
