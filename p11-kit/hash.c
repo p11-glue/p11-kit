@@ -442,7 +442,7 @@ hash_intptr_equal (const void *int_one, const void *int_two)
 unsigned int
 hash_direct_hash (const void *ptr)
 {
-	return (unsigned int)ptr;
+	return (unsigned int)(unsigned long)ptr;
 }
 
 int

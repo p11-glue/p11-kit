@@ -322,6 +322,7 @@ test_uri_build_empty (CuTest *tc)
 	CuAssertPtrNotNull (tc, uri);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 	CuAssertStrEquals (tc, "pkcs11:", string);
 	free (string);
 
