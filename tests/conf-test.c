@@ -115,6 +115,7 @@ main (void)
 	printf ("%s\n", output->buffer);
 	ret = suite->failCount;
 	CuSuiteDelete (suite);
+	CuStringDelete (output);
 	return ret;
 }
 
