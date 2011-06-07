@@ -152,6 +152,7 @@ hash_free (hash_t* ht)
 			ht->key_destroy_func (hi.ths->key);
 		if (ht->value_destroy_func)
 			ht->value_destroy_func (hi.ths->val);
+		free (hi.ths);
 	}
 
 	if (ht->array)
@@ -231,7 +232,7 @@ expand_array (hash_t* ht)
  */
 
 static hash_entry_t**
-find_entry (hash_t* ht, const void* key, void* val)
+find_entry (hash_t* ht, const void* key, int create)
 {
 	hash_entry_t** hep;
 	hash_entry_t* he;
@@ -247,7 +248,7 @@ find_entry (hash_t* ht, const void* key, void* val)
 			break;
 	}
 
-	if(he || !val)
+	if(he || !create)
 		return hep;
 
 	/* add a new entry for non-NULL val */
@@ -257,7 +258,7 @@ find_entry (hash_t* ht, const void* key, void* val)
 		he->key = (void*)key;
 		he->next = NULL;
 		he->hash = hash;
-		he->val = val;
+		he->val = NULL;
 
 		*hep = he;
 		ht->count++;
@@ -269,7 +270,7 @@ find_entry (hash_t* ht, const void* key, void* val)
 void*
 hash_get (hash_t* ht, const void *key)
 {
-	hash_entry_t** he = find_entry (ht, key, NULL);
+	hash_entry_t** he = find_entry (ht, key, 0);
 	if (he && *he)
 		return (void*)((*he)->val);
 	else
@@ -279,8 +280,11 @@ hash_get (hash_t* ht, const void *key)
 int
 hash_set (hash_t* ht, void* key, void* val)
 {
-	hash_entry_t** hep = find_entry (ht, key, val);
+	hash_entry_t** hep = find_entry (ht, key, 1);
 	if(hep && *hep) {
+		if ((*hep)->val && ht->value_destroy_func)
+			ht->value_destroy_func ((*hep)->val);
+
 		/* replace entry */
 		(*hep)->val = val;
 
@@ -299,7 +303,7 @@ hash_set (hash_t* ht, void* key, void* val)
 int
 hash_remove (hash_t* ht, const void* key)
 {
-	hash_entry_t** hep = find_entry (ht, key, NULL);
+	hash_entry_t** hep = find_entry (ht, key, 0);
 
 	if (hep && *hep) {
 		hash_entry_t* old = *hep;
@@ -428,7 +432,7 @@ unsigned int
 hash_intptr_hash (const void *to_int)
 {
 	assert (to_int);
-	return (unsigned int)*((unsigned long*)to_int);
+	return (unsigned int)*((int*)to_int);
 }
 
 int
@@ -436,7 +440,7 @@ hash_intptr_equal (const void *int_one, const void *int_two)
 {
 	assert (int_one);
 	assert (int_two);
-	return *((unsigned long*)int_one) == *((unsigned long*)int_two);
+	return *((int*)int_one) == *((int*)int_two);
 }
 
 unsigned int

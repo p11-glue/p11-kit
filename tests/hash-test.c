@@ -223,6 +223,38 @@ test_hash_remove_destroys (CuTest *tc)
 }
 
 static void
+test_hash_set_destroys (CuTest *tc)
+{
+	hash_t *ht;
+	int key = 0;
+	int value = 0;
+	int value2 = 0;
+	int ret;
+
+	ht = hash_create (hash_direct_hash, hash_direct_equal, destroy_key, destroy_value);
+	CuAssertPtrNotNull (tc, ht);
+	if (!hash_set (ht, &key, &value))
+		CuFail (tc, "should not be reached");
+
+	ret = hash_set (ht, &key, &value2);
+	CuAssertIntEquals (tc, ret, 1);
+	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 2, value);
+	CuAssertIntEquals (tc, 0, value2);
+
+	key = 0;
+	value = 0;
+	value2 = 0;
+
+	hash_free (ht);
+
+	CuAssertIntEquals (tc, 1, key);
+	CuAssertIntEquals (tc, 0, value);
+	CuAssertIntEquals (tc, 2, value2);
+}
+
+
+static void
 test_hash_clear_destroys (CuTest *tc)
 {
 	hash_t *ht;
@@ -260,7 +292,7 @@ static unsigned int
 test_hash_intptr_with_collisions (const void *data)
 {
 	/* lots and lots of collisions, only returns 100 values */
-	return (unsigned int)(*((unsigned long*)data) % 100);
+	return (unsigned int)(*((int*)data) % 100);
 }
 
 static void
@@ -330,7 +362,7 @@ test_hash_ulongptr (CuTest *tc)
 	ht = hash_create (hash_ulongptr_hash, hash_ulongptr_equal, NULL, free);
 
 	for (i = 0; i < 20000; ++i) {
-		value = malloc (sizeof (int));
+		value = malloc (sizeof (unsigned long));
 		*value = i;
 		if (!hash_set (ht, value, value))
 			CuFail (tc, "should not be reached");
@@ -357,6 +389,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_hash_set_get_remove);
 	SUITE_ADD_TEST (suite, test_hash_remove_destroys);
 	SUITE_ADD_TEST (suite, test_hash_set_get_clear);
+	SUITE_ADD_TEST (suite, test_hash_set_destroys);
 	SUITE_ADD_TEST (suite, test_hash_clear_destroys);
 	SUITE_ADD_TEST (suite, test_hash_free_null);
 	SUITE_ADD_TEST (suite, test_hash_free_destroys);
@@ -371,6 +404,8 @@ main (void)
 	printf ("%s\n", output->buffer);
 	ret = suite->failCount;
 	CuSuiteDelete (suite);
+	CuStringDelete (output);
+
 	return ret;
 }
 
