@@ -52,6 +52,27 @@ xrealloc (void *memory, size_t length)
 	return allocated;
 }
 
+/**
+ * p11_kit_space_strlen:
+ * @string: Pointer to string block
+ * @max_length: Maximum length of string block
+ *
+ * In PKCS\#11 structures many strings are encoded in a strange way. The string
+ * is placed in a fixed length buffer and then padded with spaces.
+ *
+ * This function determines the actual length of the string. Since the string
+ * is not null-terminated you need to pass in the size of buffer as max_length.
+ * The string will never be longer than this buffer.
+ *
+ * <informalexample><programlisting>
+ * CK_INFO info;
+ * size_t length;
+ *    ...
+ * length = p11_kit_space_strlen (info->libraryDescription, sizeof (info->libraryDescription));
+ * </programlisting></informalexample>
+ *
+ * Returns: The length of the space padded string.
+ */
 size_t
 p11_kit_space_strlen (const unsigned char *string, size_t max_length)
 {
@@ -64,6 +85,26 @@ p11_kit_space_strlen (const unsigned char *string, size_t max_length)
 	return i + 1;
 }
 
+/**
+ * p11_kit_space_strdup:
+ * @string: Pointer to string block
+ * @max_length: Maximum length of string block
+ *
+ * In PKCS\#11 structures many strings are encoded in a strange way. The string
+ * is placed in a fixed length buffer and then padded with spaces.
+ *
+ * This function copies the space padded string into a normal null-terminated
+ * string. The result is owned by the caller.
+ *
+ * <informalexample><programlisting>
+ * CK_INFO info;
+ * char *description;
+ *    ...
+ * description = p11_kit_space_strdup (info->libraryDescription, sizeof (info->libraryDescription));
+ * </programlisting></informalexample>
+ *
+ * Returns: The newly allocated string, or %NULL if memory could not be allocated.
+ */
 char*
 p11_kit_space_strdup (const unsigned char *string, size_t max_length)
 {
