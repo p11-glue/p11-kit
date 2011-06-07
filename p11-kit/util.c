@@ -36,9 +36,12 @@
 
 #include "config.h"
 
+#include "p11-kit.h"
 #include "util.h"
 
+#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 void*
 xrealloc (void *memory, size_t length)
@@ -47,4 +50,35 @@ xrealloc (void *memory, size_t length)
 	if (!allocated)
 		free (memory);
 	return allocated;
+}
+
+size_t
+p11_kit_space_strlen (const unsigned char *string, size_t max_length)
+{
+	size_t i = max_length - 1;
+
+	assert (string);
+
+	while (i > 0 && string[i] == ' ')
+		--i;
+	return i + 1;
+}
+
+char*
+p11_kit_space_strdup (const unsigned char *string, size_t max_length)
+{
+	size_t length;
+	char *result;
+
+	assert (string);
+
+	length = p11_kit_space_strlen (string, max_length);
+
+	result = malloc (length + 1);
+	if (!result)
+		return NULL;
+
+	memcpy (result, string, length);
+	result[length] = 0;
+	return result;
 }

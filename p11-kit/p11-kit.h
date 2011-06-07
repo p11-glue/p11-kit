@@ -72,6 +72,12 @@ CK_RV                    p11_kit_load_initialize_module    (const char *module_p
 
 const char*              p11_kit_strerror                  (CK_RV rv);
 
+size_t                   p11_kit_space_strlen              (const unsigned char *string,
+                                                            size_t max_length);
+
+char*                    p11_kit_space_strdup              (const unsigned char *string,
+                                                            size_t max_length);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

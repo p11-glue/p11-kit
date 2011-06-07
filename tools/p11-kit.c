@@ -41,7 +41,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "p11-kit.h"
+#include "p11-kit/p11-kit.h"
+#include "p11-kit/uri.h"
 
 typedef int (*operation) (int argc, char *argv[]);
 int verbose = 0;
@@ -52,6 +53,30 @@ usage (void)
 	fprintf (stderr, "usage: p11-kit [-v] -l\n");
 	fprintf (stderr, "       p11-kit -h\n");
 	exit (2);
+}
+
+static void
+print_module_info (CK_FUNCTION_LIST_PTR module)
+{
+	CK_INFO info;
+	char *value;
+	CK_RV rv;
+
+	rv = (module->C_GetInfo) (&info);
+	if (rv != CKR_OK) {
+		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		return;
+	}
+
+	value = p11_kit_space_strdup (info.libraryDescription,
+	                              sizeof (info.libraryDescription));
+	printf ("\tlibrary-description: %s\n", value);
+	free (value);
+
+	value = p11_kit_space_strdup (info.manufacturerID,
+	                              sizeof (info.manufacturerID));
+	printf ("\tlibrary-manufacturer: %s\n", value);
+	free (value);
 }
 
 static int
@@ -79,6 +104,7 @@ list_modules (int argc, char *argv[])
 		printf ("%s: %s\n",
 		        name ? name : "(null)",
 		        path ? path : "(null)");
+		print_module_info (module_list[i]);
 
 		free (name);
 		free (path);

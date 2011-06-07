@@ -37,6 +37,7 @@
 #define DEBUG_FLAG DEBUG_URI
 #include "debug.h"
 #include "pkcs11.h"
+#include "p11-kit.h"
 #include "uri.h"
 #include "util.h"
 
@@ -733,18 +734,6 @@ p11_kit_uri_new (void)
 	return uri;
 }
 
-size_t
-p11_kit_uri_space_strlen (const unsigned char *string, size_t max_length)
-{
-	size_t i = max_length - 1;
-
-	assert (string);
-
-	while (i > 0 && string[i] == ' ')
-		--i;
-	return i + 1;
-}
-
 static int
 format_raw_string (char **string, size_t *length, int *is_first,
                    const char *name, const char *value)
@@ -805,7 +794,7 @@ format_struct_string (char **string, size_t *length, int *is_first,
 	if (!value[0])
 		return 1;
 
-	len = p11_kit_uri_space_strlen (value, value_max);
+	len = p11_kit_space_strlen (value, value_max);
 	return format_encode_string (string, length, is_first, name, value, len);
 }
 
