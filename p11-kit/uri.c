@@ -1324,6 +1324,7 @@ p11_kit_uri_free (P11KitUri *uri)
 	for (i = 0; i < uri->n_attributes; ++i)
 		free (uri->attributes[i].pValue);
 
+	free (uri->pinfile);
 	free (uri);
 }
 
