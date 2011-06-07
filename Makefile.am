@@ -42,4 +42,7 @@ upload-doc: all
 		doc/html/./ anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/doc/p11-kit/./
 endif
 
+upload-release: $(DIST_ARCHIVES)
+	scp $(DIST_ARCHIVES) anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/releases/
+
 EXTRA_DIST = config.rpath
