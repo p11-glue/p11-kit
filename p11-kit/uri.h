@@ -35,15 +35,6 @@
 #ifndef P11_KIT_URI_H
 #define P11_KIT_URI_H
 
-/*
- * To use this API, you need to be prepared for changes to the API,
- * and add the C flag: -DP11_KIT_API_SUBJECT_TO_CHANGE
- */
-
-#ifndef P11_KIT_API_SUBJECT_TO_CHANGE
-#error "This API has not yet reached stability."
-#endif
-
 #include "p11-kit/pkcs11.h"
 
 #ifdef __cplusplus

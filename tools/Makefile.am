@@ -2,8 +2,7 @@
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/p11-kit \
-	-DSRCDIR=\"$(srcdir)\" \
-	-DP11_KIT_API_SUBJECT_TO_CHANGE
+	-DSRCDIR=\"$(srcdir)\"
 
 bin_PROGRAMS = \
 	p11-kit

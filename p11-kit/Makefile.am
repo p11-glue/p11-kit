@@ -1,7 +1,4 @@
 
-INCLUDES = \
-	-DP11_KIT_API_SUBJECT_TO_CHANGE
-
 incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
