@@ -170,7 +170,7 @@ strconcat (const char *first, ...)
 
 	va_end (va);
 
-	at = result = malloc (length);
+	at = result = malloc (length + 1);
 	if (!result)
 		return NULL;
 
@@ -471,7 +471,8 @@ load_modules_from_config_unlocked (const char *directory)
 	dir = opendir (directory);
 	if (!dir) {
 		if (errno == ENOENT || errno == ENOTDIR)
-			warning ("couldn't list directory: %s", directory);
+			return CKR_OK;
+		warning ("couldn't list directory: %s", directory);
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -858,8 +859,10 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 	CK_RV rv;
 
 	rv = init_globals_unlocked ();
-	if (rv == CKR_OK)
-		rv = load_registered_modules_unlocked ();
+	if (rv != CKR_OK)
+		return rv;
+
+	rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
 		hash_iterate (gl.modules, &it);
 		while (hash_next (&it, NULL, (void**)&mod)) {
@@ -952,6 +955,11 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 	}
 
 	free (to_finalize);
+
+	/* In case nothing loaded, free up internal memory */
+	if (count == 0)
+		free_modules_when_no_refs_unlocked ();
+
 	return CKR_OK;
 }
 

@@ -83,6 +83,9 @@ list_modules (int argc, char *argv[])
 		free (name);
 		free (path);
 	}
+	free (module_list);
+
+	p11_kit_finalize_registered ();
 
 	return 0;
 }
