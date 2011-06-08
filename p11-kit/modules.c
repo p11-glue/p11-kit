@@ -51,7 +51,6 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <pthread.h>
-#include <pwd.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -128,71 +127,6 @@ static struct _Shared {
 	hash_t *modules;
 	hash_t *config;
 } gl = { NULL, NULL };
-
-/* -----------------------------------------------------------------------------
- * UTILITIES
- */
-
-static void
-warning (const char* msg, ...)
-{
-	char buffer[512];
-	va_list va;
-
-	va_start (va, msg);
-
-	vsnprintf(buffer, sizeof (buffer) - 1, msg, va);
-	buffer[sizeof (buffer) - 1] = 0;
-	fprintf (stderr, "p11-kit: %s\n", buffer);
-
-	va_end (va);
-}
-
-static void
-conf_error (const char *buffer)
-{
-	/* called from conf.c */
-	fprintf (stderr, "p11-kit: %s\n", buffer);
-}
-
-static char*
-strconcat (const char *first, ...)
-{
-	size_t length = 0;
-	const char *arg;
-	char *result, *at;
-	va_list va;
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*))
-		length += strlen (arg);
-
-	va_end (va);
-
-	at = result = malloc (length + 1);
-	if (!result)
-		return NULL;
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*)) {
-		length = strlen (arg);
-		memcpy (at, arg, length);
-		at += length;
-	}
-
-	va_end (va);
-
-	*at = 0;
-	return result;
-}
-
-static int
-strequal (const char *one, const char *two)
-{
-	return strcmp (one, two) == 0;
-}
 
 /* -----------------------------------------------------------------------------
  * P11-KIT FUNCTIONALITY
@@ -322,7 +256,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 
 	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
 	if (mod->dl_module == NULL) {
-		warning ("couldn't load module: %s: %s", path, dlerror ());
+		_p11_warning ("couldn't load module: %s: %s", path, dlerror ());
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -330,15 +264,15 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 
 	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
-		warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		         path, dlerror ());
+		_p11_warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
+		              path, dlerror ());
 		return CKR_GENERAL_ERROR;
 	}
 
 	rv = gfl (&mod->funcs);
 	if (rv != CKR_OK) {
-		warning ("call to C_GetFunctiontList failed in module: %s: %s",
-		         path, p11_kit_strerror (rv));
+		_p11_warning ("call to C_GetFunctiontList failed in module: %s: %s",
+		              path, p11_kit_strerror (rv));
 		return rv;
 	}
 
@@ -380,38 +314,32 @@ load_module_from_file_unlocked (const char *path, Module **result)
 }
 
 static CK_RV
-load_module_from_config_unlocked (const char *configfile, const char *name)
+take_config_and_load_module_unlocked (char **name, hash_t **config)
 {
 	Module *mod, *prev;
 	const char *path;
 	CK_RV rv;
 
-	assert (configfile);
+	assert (name);
+	assert (*name);
+	assert (config);
+	assert (*config);
+
+	path = hash_get (*config, "module");
+	if (path == NULL) {
+		debug ("no module path for module, skipping: %s", *name);
+		return CKR_OK;
+	}
 
 	mod = alloc_module_unlocked ();
 	if (!mod)
 		return CKR_HOST_MEMORY;
 
-	mod->config = conf_parse_file (configfile, 0, conf_error);
-	if (!mod->config) {
-		free_module_unlocked (mod);
-		if (errno == ENOMEM)
-			return CKR_HOST_MEMORY;
-		return CKR_GENERAL_ERROR;
-	}
-
-	mod->name = strdup (name);
-	if (!mod->name) {
-		free_module_unlocked (mod);
-		return CKR_HOST_MEMORY;
-	}
-
-	path = hash_get (mod->config, "module");
-	if (path == NULL) {
-		free_module_unlocked (mod);
-		debug ("no module path specified in config, skipping: %s", configfile);
-		return CKR_OK;
-	}
+	/* Take ownership of thes evariables */
+	mod->config = *config;
+	*config = NULL;
+	mod->name = *name;
+	*name = NULL;
 
 	rv = dlopen_and_get_function_list (mod, path);
 	if (rv != CKR_OK) {
@@ -432,7 +360,7 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 
 	/* Refuse to load duplicate module */
 	if (prev) {
-		warning ("duplicate configured module: %s: %s", mod->name, path);
+		_p11_warning ("duplicate configured module: %s: %s", mod->name, path);
 		free_module_unlocked (mod);
 		return CKR_GENERAL_ERROR;
 	}
@@ -453,233 +381,61 @@ load_module_from_config_unlocked (const char *configfile, const char *name)
 }
 
 static CK_RV
-load_modules_from_config_unlocked (const char *directory)
-{
-	struct dirent *dp;
-	struct stat st;
-	CK_RV rv = CKR_OK;
-	DIR *dir;
-	int is_dir;
-	char *path;
-
-	debug ("loading module configs in: %s", directory);
-
-	/* First we load all the modules */
-	dir = opendir (directory);
-	if (!dir) {
-		if (errno == ENOENT || errno == ENOTDIR)
-			return CKR_OK;
-		warning ("couldn't list directory: %s", directory);
-		return CKR_GENERAL_ERROR;
-	}
-
-	/* We're within a global mutex, so readdir is safe */
-	while ((dp = readdir(dir)) != NULL) {
-		path = strconcat (directory, "/", dp->d_name, NULL);
-		if (!path) {
-			rv = CKR_HOST_MEMORY;
-			break;
-		}
-
-		is_dir = 0;
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-		if(dp->d_type != DT_UNKNOWN) {
-			is_dir = (dp->d_type == DT_DIR);
-		} else
-#endif
-		{
-			if (stat (path, &st) < 0) {
-				warning ("couldn't stat path: %s", path);
-				free (path);
-				rv = CKR_GENERAL_ERROR;
-				break;
-			}
-			is_dir = S_ISDIR (st.st_mode);
-		}
-
-		if (is_dir)
-			rv = CKR_OK;
-		else
-			rv = load_module_from_config_unlocked (path, dp->d_name);
-
-		free (path);
-
-		if (rv != CKR_OK)
-			break;
-	}
-
-	closedir (dir);
-
-	return rv;
-}
-
-static char*
-expand_user_path (const char *path)
-{
-	const char *env;
-	struct passwd *pwd;
-
-	if (path[0] == '~' && path[1] == '/') {
-		env = getenv ("HOME");
-		if (env && env[0]) {
-			return strconcat (env, path + 1, NULL);
-		} else {
-			pwd = getpwuid (getuid ());
-			if (!pwd)
-				return NULL;
-			return strconcat (pwd->pw_dir, path + 1, NULL);
-		}
-	}
-
-	return strdup (path);
-}
-
-enum {
-	USER_CONFIG_INVALID = 0,
-	USER_CONFIG_NONE = 1,
-	USER_CONFIG_MERGE,
-	USER_CONFIG_OVERRIDE
-};
-
-static int
-user_config_mode (hash_t *config, int defmode)
-{
-	const char *mode;
-
-	/* Whether we should use or override from user directory */
-	mode = hash_get (config, "user-config");
-	if (mode == NULL) {
-		return defmode;
-	} else if (strequal (mode, "none")) {
-		return USER_CONFIG_NONE;
-	} else if (strequal (mode, "merge")) {
-		return USER_CONFIG_MERGE;
-	} else if (strequal (mode, "override")) {
-		return USER_CONFIG_OVERRIDE;
-	} else {
-		warning ("invalid mode for 'user-config': %s", mode);
-		return USER_CONFIG_INVALID;
-	}
-}
-
-static CK_RV
-load_config_files_unlocked (int *user_mode)
-{
-	hash_t *config = NULL;
-	hash_t *uconfig = NULL;
-	void *key = NULL;
-	void *value = NULL;
-	char *path;
-	int mode;
-	CK_RV rv = CKR_GENERAL_ERROR;
-	hash_iter_t hi;
-
-	/* Should only be called after everything has been unloaded */
-	assert (!gl.config);
-
-	/* Load the main configuration */
-	config = conf_parse_file (P11_SYSTEM_CONF, CONF_IGNORE_MISSING, conf_error);
-	if (!config) {
-		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
-		goto finished;
-	}
-
-	/* Whether we should use or override from user directory */
-	mode = user_config_mode (config, USER_CONFIG_NONE);
-	if (mode == USER_CONFIG_INVALID)
-		goto finished;
-
-	if (mode != USER_CONFIG_NONE) {
-		path = expand_user_path (P11_USER_CONF);
-		if (!path)
-			goto finished;
-
-		/* Load up the user configuration */
-		uconfig = conf_parse_file (path, CONF_IGNORE_MISSING, conf_error);
-		free (path);
-
-		if (!uconfig) {
-			rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
-			goto finished;
-		}
-
-		/* Figure out what the user mode is */
-		mode = user_config_mode (uconfig, mode);
-		if (mode == USER_CONFIG_INVALID)
-			goto finished;
-
-		/* Merge everything into the system config */
-		if (mode == USER_CONFIG_MERGE) {
-			hash_iterate (uconfig, &hi);
-			while (hash_next (&hi, &key, &value)) {
-				key = strdup (key);
-				if (key == NULL)
-					goto finished;
-				value = strdup (value);
-				if (value == NULL)
-					goto finished;
-				if (!hash_set (config, key, value))
-					goto finished;
-				key = NULL;
-				value = NULL;
-			}
-
-		/* Override the system config */
-		} else if (mode == USER_CONFIG_OVERRIDE) {
-			hash_free (config);
-			config = uconfig;
-			uconfig = NULL;
-		}
-	}
-
-	gl.config = config;
-	config = NULL;
-	rv = CKR_OK;
-
-	if (user_mode)
-		*user_mode = mode;
-
-finished:
-	hash_free (config);
-	hash_free (uconfig);
-	free (key);
-	free (value);
-	return rv;
-}
-
-static CK_RV
 load_registered_modules_unlocked (void)
 {
-	char *path;
+	hash_iter_t hi;
+	hash_t *configs;
+	void *key;
+	char *name;
+	hash_t *config;
 	int mode;
 	CK_RV rv;
 
-	rv = load_config_files_unlocked (&mode);
-	if (rv != CKR_OK)
+	if (gl.config)
+		return CKR_OK;
+
+	/* Load the global configuration files */
+	config = _p11_conf_load_globals (P11_SYSTEM_CONF, P11_USER_CONF, &mode);
+	if (config == NULL)
+		return (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+
+	assert (mode != CONF_USER_INVALID);
+
+	configs = _p11_conf_load_modules (mode, P11_SYSTEM_MODULES, P11_USER_MODULES);
+	if (configs == NULL) {
+		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+		hash_free (config);
 		return rv;
-
-	assert (gl.config);
-	assert (mode != USER_CONFIG_INVALID);
-
-	/* Load each module from the main list */
-	if (mode != USER_CONFIG_OVERRIDE) {
-		rv = load_modules_from_config_unlocked (P11_SYSTEM_MODULES);
-		if (rv != CKR_OK);
-			return rv;
 	}
 
-	/* Load each module from the user list */
-	if (mode != USER_CONFIG_NONE) {
-		path = expand_user_path (P11_USER_MODULES);
-		if (!path)
-			rv = CKR_GENERAL_ERROR;
-		else
-			rv = load_modules_from_config_unlocked (path);
-		free (path);
-		if (rv != CKR_OK);
+	assert (gl.config == NULL);
+	gl.config = config;
+
+	/*
+	 * Now go through each config and turn it into a module. As we iterate
+	 * we steal the values of the config.
+	 */
+	hash_iterate (configs, &hi);
+	while (hash_next (&hi, &key, NULL)) {
+		if (!hash_steal (configs, name, (void**)&name, (void**)config))
+			assert (0 && "not reached");
+
+		rv = take_config_and_load_module_unlocked (&name, &config);
+
+		/*
+		 * These variables will be cleared if ownership is transeferred
+		 * by the above function call.
+		 */
+		free (name);
+		hash_free (config);
+
+		if (rv != CKR_OK) {
+			hash_free (configs);
 			return rv;
+		}
 	}
 
+	hash_free (configs);
 	return CKR_OK;
 }
 

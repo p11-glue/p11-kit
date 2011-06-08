@@ -10,10 +10,10 @@ inc_HEADERS = \
 	pkcs11.h
 
 MODULE_SRCS = \
+	util.c util.h \
 	conf.c conf.h \
 	debug.c debug.h \
 	hash.c hash.h \
-	util.c util.h \
 	modules.c \
 	proxy.c \
 	private.h \

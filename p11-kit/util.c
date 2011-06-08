@@ -37,10 +37,13 @@
 #include "config.h"
 
 #include "p11-kit.h"
+#include "private.h"
 #include "util.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 void*
@@ -122,4 +125,18 @@ p11_kit_space_strdup (const unsigned char *string, size_t max_length)
 	memcpy (result, string, length);
 	result[length] = 0;
 	return result;
+}
+
+void
+_p11_warning (const char* msg, ...)
+{
+	char buffer[512];
+	va_list va;
+
+	va_start (va, msg);
+	vsnprintf (buffer, sizeof (buffer) - 1, msg, va);
+	va_end (va);
+
+	buffer[sizeof (buffer) - 1] = 0;
+	fprintf (stderr, "p11-kit: %s\n", buffer);
 }

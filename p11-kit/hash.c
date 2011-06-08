@@ -100,10 +100,6 @@ struct hash {
 #define int_calloc calloc
 #define int_free free
 
-/*
- * Hash creation functions.
- */
-
 static hash_entry_t**
 alloc_array(hash_t* ht, unsigned int max)
 {
@@ -138,46 +134,30 @@ hash_create (hash_hash_func hash_func,
 	return ht;
 }
 
-void
-hash_free (hash_t* ht)
+static hash_entry_t*
+next_entry (hash_iter_t* hi)
 {
-	hash_iter_t hi;
-
-	if (!ht)
-		return;
-
-	hash_iterate (ht, &hi);
-	while (hash_next (&hi, NULL, NULL)) {
-		if (ht->key_destroy_func)
-			ht->key_destroy_func (hi.ths->key);
-		if (ht->value_destroy_func)
-			ht->value_destroy_func (hi.ths->val);
-		free (hi.ths);
+	hash_entry_t *he = hi->next;
+	while (!he) {
+		if (hi->index > hi->ht->max)
+			return NULL;
+		he = hi->ht->array[hi->index++];
 	}
-
-	if (ht->array)
-		int_free (ht->array);
-
-	int_free (ht);
+	hi->next = he->next;
+	return he;
 }
 
-/*
- * Hash iteration functions.
- */
+
 int
 hash_next (hash_iter_t* hi, void **key, void **value)
 {
-	hi->ths = hi->next;
-	while (!hi->ths) {
-		if (hi->index > hi->ht->max)
-			return 0;
-		hi->ths = hi->ht->array[hi->index++];
-	}
-	hi->next = hi->ths->next;
+	hash_entry_t *he = next_entry (hi);
+	if (he == NULL)
+		return 0;
 	if (key)
-		*key = hi->ths->key;
+		*key = he->key;
 	if (value)
-		*value = hi->ths->val;
+		*value = he->val;
 	return 1;
 }
 
@@ -186,19 +166,15 @@ hash_iterate (hash_t* ht, hash_iter_t *hi)
 {
 	hi->ht = ht;
 	hi->index = 0;
-	hi->ths = NULL;
 	hi->next = NULL;
 }
-
-/*
- * Expanding a hash table
- */
 
 static int
 expand_array (hash_t* ht)
 {
 	hash_iter_t hi;
-	hash_entry_t** new_array;
+	hash_entry_t *he;
+	hash_entry_t **new_array;
 	unsigned int new_max;
 
 	new_max = ht->max * 2 + 1;
@@ -208,10 +184,10 @@ expand_array (hash_t* ht)
 		return 0;
 
 	hash_iterate (ht, &hi);
-	while (hash_next (&hi, NULL, NULL)) {
-		unsigned int i = hi.ths->hash & new_max;
-		hi.ths->next = new_array[i];
-		new_array[i] = hi.ths;
+	while ((he = next_entry (&hi)) != NULL) {
+		unsigned int i = he->hash & new_max;
+		he->next = new_array[i];
+		new_array[i] = he;
 	}
 
 	if(ht->array)
@@ -301,7 +277,7 @@ hash_set (hash_t* ht, void* key, void* val)
 }
 
 int
-hash_remove (hash_t* ht, const void* key)
+hash_steal (hash_t *ht, const void *key, void **stolen_key, void **stolen_value)
 {
 	hash_entry_t** hep = find_entry (ht, key, 0);
 
@@ -309,15 +285,32 @@ hash_remove (hash_t* ht, const void* key)
 		hash_entry_t* old = *hep;
 		*hep = (*hep)->next;
 		--ht->count;
-		if (ht->key_destroy_func)
-			ht->key_destroy_func (old->key);
-		if (ht->value_destroy_func)
-			ht->value_destroy_func (old->val);
+		if (stolen_key)
+			*stolen_key = old->key;
+		if (stolen_value)
+			*stolen_value = old->val;
 		free (old);
 		return 1;
 	}
 
 	return 0;
+
+}
+
+int
+hash_remove (hash_t *ht, const void *key)
+{
+	void *old_key;
+	void *old_value;
+
+	if (!hash_steal (ht, key, &old_key, &old_value))
+		return 0;
+
+	if (ht->key_destroy_func)
+		ht->key_destroy_func (old_key);
+	if (ht->value_destroy_func)
+		ht->value_destroy_func (old_value);
+	return 1;
 }
 
 void
@@ -342,6 +335,30 @@ hash_clear (hash_t* ht)
 
 	memset (ht->array, 0, ht->max * sizeof (hash_entry_t*));
 	ht->count = 0;
+}
+
+void
+hash_free (hash_t* ht)
+{
+	hash_entry_t *he;
+	hash_iter_t hi;
+
+	if (!ht)
+		return;
+
+	hash_iterate (ht, &hi);
+	while ((he = next_entry (&hi)) != NULL) {
+		if (ht->key_destroy_func)
+			ht->key_destroy_func (he->key);
+		if (ht->value_destroy_func)
+			ht->value_destroy_func (he->val);
+		free (he);
+	}
+
+	if (ht->array)
+		int_free (ht->array);
+
+	int_free (ht);
 }
 
 unsigned int

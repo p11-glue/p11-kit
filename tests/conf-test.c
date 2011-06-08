@@ -44,18 +44,12 @@
 static int n_errors = 0;
 
 static void
-error_func (const char *buffer)
-{
-	++n_errors;
-}
-
-static void
 test_parse_conf_1 (CuTest *tc)
 {
 	hash_t *ht;
 	const char *value;
 
-	ht = conf_parse_file (SRCDIR "/files/test-1.conf", 0, error_func);
+	ht = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
 	CuAssertPtrNotNull (tc, ht);
 
 	value = hash_get (ht, "key1");
@@ -79,7 +73,7 @@ test_parse_ignore_missing (CuTest *tc)
 	hash_t *ht;
 
 	n_errors = 0;
-	ht = conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING, error_func);
+	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
 	CuAssertPtrNotNull (tc, ht);
 
 	CuAssertIntEquals (tc, 0, hash_count (ht));
@@ -93,9 +87,36 @@ test_parse_fail_missing (CuTest *tc)
 	hash_t *ht;
 
 	n_errors = 0;
-	ht = conf_parse_file (SRCDIR "/files/non-existant.conf", 0, error_func);
+	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
 	CuAssertPtrEquals (tc, ht, NULL);
 	CuAssertIntEquals (tc, 1, n_errors);
+}
+
+static void
+test_merge_defaults (CuTest *tc)
+{
+	hash_t *values;
+	hash_t *defaults;
+
+	values = hash_create (hash_string_hash, hash_string_equal, free, free);
+	defaults = hash_create (hash_string_hash, hash_string_equal, free, free);
+
+	hash_set (values, strdup ("one"), strdup ("real1"));
+	hash_set (values, strdup ("two"), strdup ("real2"));
+
+	hash_set (defaults, strdup ("two"), strdup ("default2"));
+	hash_set (defaults, strdup ("three"), strdup ("default3"));
+
+	if (!_p11_conf_merge_defaults (values, defaults))
+		CuFail (tc, "should not be reached");
+
+	hash_free (defaults);
+
+	CuAssertStrEquals (tc, hash_get (values, "one"), "real1");
+	CuAssertStrEquals (tc, hash_get (values, "two"), "real2");
+	CuAssertStrEquals (tc, hash_get (values, "three"), "default3");
+
+	hash_free (values);
 }
 
 int
@@ -108,6 +129,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_conf_1);
 	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
 	SUITE_ADD_TEST (suite, test_parse_fail_missing);
+	SUITE_ADD_TEST (suite, test_merge_defaults);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

@@ -42,10 +42,28 @@ enum {
 	CONF_IGNORE_MISSING = 0x01,
 };
 
+enum {
+	CONF_USER_INVALID = 0,
+	CONF_USER_NONE = 1,
+	CONF_USER_MERGE,
+	CONF_USER_ONLY
+};
+
 typedef void  (*conf_error_func)   (const char *message);
 
-hash_t*       conf_parse_file      (const char *filename,
-                                    int flags,
-                                    conf_error_func error_func);
+int           _p11_conf_merge_defaults       (hash_t *config,
+                                              hash_t *defaults);
+
+/* Returns a hash of char *key -> char *value */
+hash_t*       _p11_conf_parse_file           (const char *filename,
+                                              int flags);
+
+/* Returns a hash of char *key -> char *value */
+hash_t*       _p11_conf_load_globals         (const char *system_conf, const char *user_conf,
+                                              int *user_mode);
+
+/* Returns a hash of char* name -> hash_t *config */
+hash_t*       _p11_conf_load_modules         (int user_mode, const char *system_dir,
+                                              const char *user_dir);
 
 #endif /* __CONF_H__ */

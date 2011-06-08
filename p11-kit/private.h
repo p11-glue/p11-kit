@@ -35,11 +35,16 @@
 #ifndef __P11_KIT_PRIVATE_H__
 #define __P11_KIT_PRIVATE_H__
 
+#include "pkcs11.h"
+#include "pthread.h"
+
 extern pthread_mutex_t _p11_mutex;
 
 #define     _p11_lock()    pthread_mutex_lock (&_p11_mutex);
 
 #define     _p11_unlock()  pthread_mutex_unlock (&_p11_mutex);
+
+void        _p11_warning                                        (const char* msg, ...);
 
 CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
 
@@ -48,5 +53,11 @@ CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (void);
 CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (void);
 
 void        _p11_kit_proxy_after_fork                           (void);
+
+CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
+                                                                 const char *user_conf,
+                                                                 int *user_mode);
+
+const char* _p11_kit_clear_message                              (void);
 
 #endif /* __P11_KIT_PRIVATE_H__ */

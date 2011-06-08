@@ -81,7 +81,6 @@ typedef struct hash hash_t;
 typedef struct hash_iter
 {
 	hash_t* ht;
-	struct hash_entry* ths;
 	struct hash_entry* next;
 	unsigned int index;
 } hash_iter_t;
@@ -138,6 +137,15 @@ int                hash_set                    (hash_t* ht,
  */
 int                hash_remove                 (hash_t* ht,
                                                 const void* key);
+
+/*
+ * hash_steal: Remove a value from the hash table without calling destroy funcs
+ * - returns 1 if the entry was found
+ */
+int                hash_steal                  (hash_t *ht,
+                                                const void *key,
+                                                void **stolen_key,
+                                                void **stolen_value);
 
 /*
  * hash_first: Start enumerating through the hash table
