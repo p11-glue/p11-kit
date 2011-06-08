@@ -380,8 +380,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 }
 
 static CK_RV
-load_module_from_config_unlocked (const char *configfile, const char *name,
-                                  Module **result)
+load_module_from_config_unlocked (const char *configfile, const char *name)
 {
 	Module *mod, *prev;
 	const char *path;
@@ -410,8 +409,8 @@ load_module_from_config_unlocked (const char *configfile, const char *name,
 	path = hash_get (mod->config, "module");
 	if (path == NULL) {
 		free_module_unlocked (mod);
-		warning ("no module path specified in config: %s", configfile);
-		return CKR_GENERAL_ERROR;
+		debug ("no module path specified in config, skipping: %s", configfile);
+		return CKR_OK;
 	}
 
 	rv = dlopen_and_get_function_list (mod, path);
@@ -450,8 +449,6 @@ load_module_from_config_unlocked (const char *configfile, const char *name,
 		return CKR_HOST_MEMORY;
 	}
 
-	if (result)
-		*result = mod;
 	return CKR_OK;
 }
 
@@ -503,7 +500,7 @@ load_modules_from_config_unlocked (const char *directory)
 		if (is_dir)
 			rv = CKR_OK;
 		else
-			rv = load_module_from_config_unlocked (path, dp->d_name, NULL);
+			rv = load_module_from_config_unlocked (path, dp->d_name);
 
 		free (path);
 
