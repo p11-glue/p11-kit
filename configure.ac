@@ -41,8 +41,13 @@ GTK_DOC_CHECK([1.15])
 # --------------------------------------------------------------------
 # PKCS#11 Directories
 
-p11_system_conf="$sysconfdir/pkcs11/pkcs11.conf"
-p11_system_modules="$sysconfdir/pkcs11/modules"
+AC_ARG_WITH([pkcs11-dir],
+            [AS_HELP_STRING([--with-pkcs11-dir], [Change PKCS#11 system config directory])],
+            [pkcs11_dir=$withval],
+            [pkcs11_dir=/etc/pkcs11])
+
+p11_system_conf="$pkcs11_dir/pkcs11.conf"
+p11_system_modules="$pkcs11_dir/modules"
 p11_user_conf="~/.pkcs11/pkcs11.conf"
 p11_user_modules="~/.pkcs11/modules"
 
@@ -160,3 +165,11 @@ AC_CONFIG_FILES([Makefile
 	tools/Makefile
 ])
 AC_OUTPUT
+
+AC_MSG_NOTICE([build options:
+
+    System Global Config:     $p11_system_conf
+    User Global Config:       $p11_user_conf
+    System Module Directory:  $p11_system_modules
+    User Module Directory:    $p11_user_modules
+])
