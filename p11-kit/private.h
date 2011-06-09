@@ -44,7 +44,7 @@ extern pthread_mutex_t _p11_mutex;
 
 #define     _p11_unlock()  pthread_mutex_unlock (&_p11_mutex);
 
-void        _p11_warning                                        (const char* msg, ...);
+void        _p11_message                                        (const char* msg, ...);
 
 CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
 
@@ -58,6 +58,8 @@ CK_RV       _p11_load_config_files_unlocked                     (const char *sys
                                                                  const char *user_conf,
                                                                  int *user_mode);
 
-const char* _p11_kit_clear_message                              (void);
+void        _p11_kit_clear_message                              (void);
+
+void        _p11_kit_default_message                            (CK_RV rv);
 
 #endif /* __P11_KIT_PRIVATE_H__ */

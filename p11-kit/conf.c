@@ -156,14 +156,15 @@ read_config_file (const char* filename, int flags)
 	if (f == NULL) {
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&
-		    (errno == ENOENT || errno == ENOTDIR)) {
+		    (error == ENOENT || error == ENOTDIR)) {
 			debug ("config file does not exist");
 			config = strdup ("\n");
 			if (!config)
 				errno = ENOMEM;
 			return config;
 		}
-		_p11_warning ("couldn't open config file: %s", filename);
+		_p11_message ("couldn't open config file: %s: %s", filename,
+		              strerror (error));
 		errno = error;
 		return NULL;
 	}
@@ -173,13 +174,13 @@ read_config_file (const char* filename, int flags)
 	    (len = ftell (f)) == -1 ||
 	    fseek (f, 0, SEEK_SET) == -1) {
 		error = errno;
-		_p11_warning ("couldn't seek config file: %s", filename);
+		_p11_message ("couldn't seek config file: %s", filename);
 		errno = error;
 		return NULL;
 	}
 
 	if ((config = (char*)malloc (len + 2)) == NULL) {
-		_p11_warning ("out of memory");
+		_p11_message ("out of memory");
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -187,7 +188,7 @@ read_config_file (const char* filename, int flags)
 	/* And read in one block */
 	if (fread (config, 1, len, f) != len) {
 		error = errno;
-		_p11_warning ("couldn't read config file: %s", filename);
+		_p11_message ("couldn't read config file: %s", filename);
 		errno = error;
 		return NULL;
 	}
@@ -281,7 +282,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 		/* Look for the break between name: value on the same line */
 		value = name + strcspn (name, ":");
 		if (!*value) {
-			_p11_warning ("%s: invalid config line: %s", filename, name);
+			_p11_message ("%s: invalid config line: %s", filename, name);
 			error = EINVAL;
 			break;
 		}
@@ -341,7 +342,7 @@ expand_user_path (const char *path)
 			pwd = getpwuid (getuid ());
 			if (!pwd) {
 				error = errno;
-				_p11_warning ("couldn't lookup home directory for user %d: %s",
+				_p11_message ("couldn't lookup home directory for user %d: %s",
 				              getuid (), strerror (errno));
 				errno = error;
 				return NULL;
@@ -371,7 +372,7 @@ user_config_mode (hash_t *config, int defmode)
 	} else if (strequal (mode, "override")) {
 		return CONF_USER_ONLY;
 	} else {
-		_p11_warning ("invalid mode for 'user-config': %s", mode);
+		_p11_message ("invalid mode for 'user-config': %s", mode);
 		return CONF_USER_INVALID;
 	}
 }
@@ -515,7 +516,8 @@ load_configs_from_directory (const char *directory, hash_t *configs)
 		error = errno;
 		if (errno == ENOENT || errno == ENOTDIR)
 			return 0;
-		_p11_warning ("couldn't list directory: %s", directory);
+		_p11_message ("couldn't list directory: %s: %s", directory,
+		              strerror (error));
 		errno = error;
 		return -1;
 	}
@@ -537,7 +539,7 @@ load_configs_from_directory (const char *directory, hash_t *configs)
 		{
 			if (stat (path, &st) < 0) {
 				error = errno;
-				_p11_warning ("couldn't stat path: %s", path);
+				_p11_message ("couldn't stat path: %s", path);
 				free (path);
 				break;
 			}

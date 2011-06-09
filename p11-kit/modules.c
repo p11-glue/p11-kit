@@ -256,7 +256,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 
 	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
 	if (mod->dl_module == NULL) {
-		_p11_warning ("couldn't load module: %s: %s", path, dlerror ());
+		_p11_message ("couldn't load module: %s: %s", path, dlerror ());
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -264,14 +264,14 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 
 	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
-		_p11_warning ("couldn't find C_GetFunctionList entry point in module: %s: %s",
+		_p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
 		              path, dlerror ());
 		return CKR_GENERAL_ERROR;
 	}
 
 	rv = gfl (&mod->funcs);
 	if (rv != CKR_OK) {
-		_p11_warning ("call to C_GetFunctiontList failed in module: %s: %s",
+		_p11_message ("call to C_GetFunctiontList failed in module: %s: %s",
 		              path, p11_kit_strerror (rv));
 		return rv;
 	}
@@ -360,7 +360,7 @@ take_config_and_load_module_unlocked (char **name, hash_t **config)
 
 	/* Refuse to load duplicate module */
 	if (prev) {
-		_p11_warning ("duplicate configured module: %s: %s", mod->name, path);
+		_p11_message ("duplicate configured module: %s: %s", mod->name, path);
 		free_module_unlocked (mod);
 		return CKR_GENERAL_ERROR;
 	}
@@ -661,8 +661,12 @@ p11_kit_initialize_registered (void)
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		/* WARNING: Reentrancy can occur here */
 		rv = _p11_kit_initialize_registered_unlocked_reentrant ();
+
+		_p11_kit_default_message (rv);
 
 	_p11_unlock ();
 
@@ -739,8 +743,12 @@ p11_kit_finalize_registered (void)
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		/* WARNING: Reentrant calls can occur here */
 		rv = _p11_kit_finalize_registered_unlocked_reentrant ();
+
+		_p11_kit_default_message (rv);
 
 	_p11_unlock ();
 
@@ -787,6 +795,8 @@ p11_kit_registered_modules (void)
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		result = _p11_kit_registered_modules_unlocked ();
 
 	_p11_unlock ();
@@ -813,12 +823,11 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module)
 	Module *mod;
 	char *name = NULL;
 
-	if (!module)
-		return NULL;
-
 	_p11_lock ();
 
-		mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+		_p11_kit_clear_message ();
+
+		mod = module && gl.modules ? hash_get (gl.modules, module) : NULL;
 		if (mod && mod->name)
 			name = strdup (mod->name);
 
@@ -844,6 +853,8 @@ p11_kit_registered_name_to_module (const char *name)
 	Module *mod;
 
 	_p11_lock ();
+
+		_p11_kit_clear_message ();
 
 		if (gl.modules) {
 			mod = find_module_for_name_unlocked (name);
@@ -876,10 +887,9 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 	char *option = NULL;
 	hash_t *config = NULL;
 
-	if (!field)
-		return NULL;
-
 	_p11_lock ();
+
+		_p11_kit_clear_message ();
 
 		if (module == NULL) {
 			config = gl.config;
@@ -890,7 +900,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 				config = mod->config;
 		}
 
-		if (config) {
+		if (config && field) {
 			option = hash_get (config, field);
 			if (option)
 				option = strdup (option);
@@ -940,6 +950,8 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
@@ -961,6 +973,8 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 			free (allocated);
 		}
+
+		_p11_kit_default_message (rv);
 
 	_p11_unlock ();
 
@@ -1000,6 +1014,8 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		mod = gl.modules ? hash_get (gl.modules, module) : NULL;
 		if (mod == NULL) {
 			debug ("module not found");
@@ -1008,6 +1024,8 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 			/* WARNING: Rentrancy can occur here */
 			rv = finalize_module_unlocked_reentrant (mod);
 		}
+
+		_p11_kit_default_message (rv);
 
 	_p11_unlock ();
 
@@ -1057,6 +1075,8 @@ p11_kit_load_initialize_module (const char *module_path,
 
 	_p11_lock ();
 
+		_p11_kit_clear_message ();
+
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
@@ -1070,6 +1090,8 @@ p11_kit_load_initialize_module (const char *module_path,
 
 		if (rv == CKR_OK && module)
 			*module = mod->funcs;
+
+		_p11_kit_default_message (rv);
 
 	_p11_unlock ();
 

@@ -88,7 +88,7 @@
 				<term>user-config</term>
 				<listitem><para>This will be equal to one of the following values:
 				<literal>none</literal>, <literal>merge</literal>,
-				<literal>override</literal>.</para></listitem>
+				<literal>only</literal>.</para></listitem>
 			</varlistentry>
 		</variablelist>
 

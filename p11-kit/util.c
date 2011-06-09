@@ -46,6 +46,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MAX_MESSAGE 512
+static pthread_once_t key_once = PTHREAD_ONCE_INIT;
+static pthread_key_t message_buffer_key = 0;
+static int print_messages = 1;
+
 void*
 xrealloc (void *memory, size_t length)
 {
@@ -127,16 +132,88 @@ p11_kit_space_strdup (const unsigned char *string, size_t max_length)
 	return result;
 }
 
-void
-_p11_warning (const char* msg, ...)
+static void
+create_message_buffer_key (void)
 {
-	char buffer[512];
+	pthread_key_create (&message_buffer_key, free);
+}
+
+static void
+store_message_buffer (const char* msg, size_t length)
+{
+	char *thread_buf;
+
+	if (length > MAX_MESSAGE - 1)
+		length = MAX_MESSAGE - 1;
+
+	pthread_once (&key_once, create_message_buffer_key);
+	thread_buf = pthread_getspecific (message_buffer_key);
+	if (!thread_buf) {
+		thread_buf = malloc (MAX_MESSAGE);
+		pthread_setspecific (message_buffer_key, thread_buf);
+	}
+
+	memcpy (thread_buf, msg, length);
+	thread_buf[length] = 0;
+}
+
+void
+_p11_message (const char* msg, ...)
+{
+	char buffer[MAX_MESSAGE];
 	va_list va;
+	size_t length;
 
 	va_start (va, msg);
-	vsnprintf (buffer, sizeof (buffer) - 1, msg, va);
+	length = vsnprintf (buffer, MAX_MESSAGE - 1, msg, va);
 	va_end (va);
 
-	buffer[sizeof (buffer) - 1] = 0;
-	fprintf (stderr, "p11-kit: %s\n", buffer);
+	/* Was it truncated? */
+	if (length > MAX_MESSAGE - 1)
+		length = MAX_MESSAGE - 1;
+	buffer[length] = 0;
+
+	/* If printing is not disabled, just print out */
+	if (print_messages)
+		fprintf (stderr, "p11-kit: %s\n", buffer);
+
+	store_message_buffer (buffer, length);
+}
+
+void
+p11_kit_be_quiet (void)
+{
+	_p11_lock ();
+	print_messages = 0;
+	_p11_unlock ();
+}
+
+const char*
+p11_kit_message (void)
+{
+	char *thread_buf;
+	pthread_once (&key_once, create_message_buffer_key);
+	thread_buf = pthread_getspecific (message_buffer_key);
+	return thread_buf && thread_buf[0] ? thread_buf : NULL;
+}
+
+void
+_p11_kit_clear_message (void)
+{
+	char *thread_buf;
+	pthread_once (&key_once, create_message_buffer_key);
+	thread_buf = pthread_getspecific (message_buffer_key);
+	if (thread_buf != NULL)
+		thread_buf[0] = 0;
+}
+
+void
+_p11_kit_default_message (CK_RV rv)
+{
+	const char *msg;
+
+	if (rv != CKR_OK) {
+		msg = p11_kit_strerror (rv);
+		store_message_buffer (msg, strlen (msg));
+	}
 }

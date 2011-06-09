@@ -78,6 +78,14 @@ size_t                   p11_kit_space_strlen              (const unsigned char 
 char*                    p11_kit_space_strdup              (const unsigned char *string,
                                                             size_t max_length);
 
+#ifdef P11_KIT_FUTURE_UNSTABLE_API
+
+void                     p11_kit_be_quiet                  (void);
+
+const char*              p11_kit_message                   (void);
+
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

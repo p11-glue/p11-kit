@@ -40,8 +40,7 @@
 #include <string.h>
 
 #include "conf.h"
-
-static int n_errors = 0;
+#include "p11-kit.h"
 
 static void
 test_parse_conf_1 (CuTest *tc)
@@ -72,12 +71,11 @@ test_parse_ignore_missing (CuTest *tc)
 {
 	hash_t *ht;
 
-	n_errors = 0;
 	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
 	CuAssertPtrNotNull (tc, ht);
 
 	CuAssertIntEquals (tc, 0, hash_count (ht));
-	CuAssertIntEquals (tc, 0, n_errors);
+	CuAssertPtrEquals (tc, NULL, (void*)p11_kit_message ());
 	hash_free (ht);
 }
 
@@ -86,10 +84,9 @@ test_parse_fail_missing (CuTest *tc)
 {
 	hash_t *ht;
 
-	n_errors = 0;
 	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
 	CuAssertPtrEquals (tc, ht, NULL);
-	CuAssertIntEquals (tc, 1, n_errors);
+	CuAssertPtrNotNull (tc, p11_kit_message ());
 }
 
 static void
@@ -107,7 +104,7 @@ test_merge_defaults (CuTest *tc)
 	hash_set (defaults, strdup ("two"), strdup ("default2"));
 	hash_set (defaults, strdup ("three"), strdup ("default3"));
 
-	if (!_p11_conf_merge_defaults (values, defaults))
+	if (_p11_conf_merge_defaults (values, defaults) < 0)
 		CuFail (tc, "should not be reached");
 
 	hash_free (defaults);
@@ -130,6 +127,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
 	SUITE_ADD_TEST (suite, test_parse_fail_missing);
 	SUITE_ADD_TEST (suite, test_merge_defaults);
+
+	p11_kit_be_quiet ();
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

@@ -1,6 +1,7 @@
 
 INCLUDES = \
-	-I$(top_srcdir)
+	-I$(top_srcdir) \
+	-DP11_KIT_FUTURE_UNSTABLE_API
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 
