@@ -35,12 +35,14 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "conf.h"
 #include "p11-kit.h"
+#include "private.h"
 
 static void
 test_parse_conf_1 (CuTest *tc)
@@ -116,6 +118,256 @@ test_merge_defaults (CuTest *tc)
 	hash_free (values);
 }
 
+static void
+test_load_globals_merge (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
+	                                 SRCDIR "/files/test-user.conf",
+	                                 &user_mode);
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertIntEquals (tc, CONF_USER_MERGE, user_mode);
+
+	CuAssertStrEquals (tc, hash_get (config, "key1"), "system1");
+	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+
+	hash_free (config);
+}
+
+static void
+test_load_globals_no_user (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-none.conf",
+	                                 SRCDIR "/files/test-user.conf",
+	                                 &user_mode);
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertIntEquals (tc, CONF_USER_NONE, user_mode);
+
+	CuAssertStrEquals (tc, hash_get (config, "key1"), "system1");
+	CuAssertStrEquals (tc, hash_get (config, "key2"), "system2");
+	CuAssertStrEquals (tc, hash_get (config, "key3"), "system3");
+
+	hash_free (config);
+}
+
+static void
+test_load_globals_user_sets_only (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
+	                                 SRCDIR "/files/test-user-only.conf",
+	                                 &user_mode);
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
+
+	CuAssertStrEquals (tc, hash_get (config, "key1"), NULL);
+	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+
+	hash_free (config);
+}
+
+static void
+test_load_globals_system_sets_only (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-only.conf",
+	                                 SRCDIR "/files/test-user.conf",
+	                                 &user_mode);
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
+
+	CuAssertStrEquals (tc, hash_get (config, "key1"), NULL);
+	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+
+	hash_free (config);
+}
+
+static void
+test_load_globals_system_sets_invalid (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+	int error;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-invalid.conf",
+	                                 SRCDIR "/files/non-existant.conf",
+	                                 &user_mode);
+	error = errno;
+	CuAssertPtrEquals (tc, NULL, config);
+	CuAssertIntEquals (tc, EINVAL, error);
+	CuAssertPtrNotNull (tc, p11_kit_message ());
+
+	hash_free (config);
+}
+
+static void
+test_load_globals_user_sets_invalid (CuTest *tc)
+{
+	int user_mode = -1;
+	hash_t *config;
+	int error;
+
+	_p11_kit_clear_message ();
+
+	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
+	                                 SRCDIR "/files/test-user-invalid.conf",
+	                                 &user_mode);
+	error = errno;
+	CuAssertPtrEquals (tc, NULL, config);
+	CuAssertIntEquals (tc, EINVAL, error);
+	CuAssertPtrNotNull (tc, p11_kit_message ());
+
+	hash_free (config);
+}
+
+static void
+test_load_modules_merge (CuTest *tc)
+{
+	hash_t *configs;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	configs = _p11_conf_load_modules (CONF_USER_MERGE,
+	                                  SRCDIR "/files/system-modules",
+	                                  SRCDIR "/files/user-modules");
+	CuAssertPtrNotNull (tc, configs);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+
+	config = hash_get (configs, "one");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "user1");
+
+	config = hash_get (configs, "two");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+
+	config = hash_get (configs, "three");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "user3");
+
+	hash_free (configs);
+}
+
+static void
+test_load_modules_user_none (CuTest *tc)
+{
+	hash_t *configs;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	configs = _p11_conf_load_modules (CONF_USER_NONE,
+	                                  SRCDIR "/files/system-modules",
+	                                  SRCDIR "/files/user-modules");
+	CuAssertPtrNotNull (tc, configs);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+
+	config = hash_get (configs, "one");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "system1");
+
+	config = hash_get (configs, "two");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+
+	config = hash_get (configs, "three");
+	CuAssertPtrEquals (tc, NULL, config);
+
+	hash_free (configs);
+}
+
+static void
+test_load_modules_user_only (CuTest *tc)
+{
+	hash_t *configs;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	configs = _p11_conf_load_modules (CONF_USER_ONLY,
+	                                  SRCDIR "/files/system-modules",
+	                                  SRCDIR "/files/user-modules");
+	CuAssertPtrNotNull (tc, configs);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+
+	config = hash_get (configs, "one");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), NULL);
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "user1");
+
+	config = hash_get (configs, "two");
+	CuAssertPtrEquals (tc, NULL, config);
+
+	config = hash_get (configs, "three");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "user3");
+
+	hash_free (configs);
+}
+
+static void
+test_load_modules_no_user (CuTest *tc)
+{
+	hash_t *configs;
+	hash_t *config;
+
+	_p11_kit_clear_message ();
+
+	configs = _p11_conf_load_modules (CONF_USER_MERGE,
+	                                  SRCDIR "/files/system-modules",
+	                                  SRCDIR "/files/non-existant");
+	CuAssertPtrNotNull (tc, configs);
+	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+
+	config = hash_get (configs, "one");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "system1");
+
+	config = hash_get (configs, "two");
+	CuAssertPtrNotNull (tc, config);
+	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+
+	config = hash_get (configs, "three");
+	CuAssertPtrEquals (tc, NULL, config);
+
+	hash_free (configs);
+}
+
 int
 main (void)
 {
@@ -127,6 +379,16 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
 	SUITE_ADD_TEST (suite, test_parse_fail_missing);
 	SUITE_ADD_TEST (suite, test_merge_defaults);
+	SUITE_ADD_TEST (suite, test_load_globals_merge);
+	SUITE_ADD_TEST (suite, test_load_globals_no_user);
+	SUITE_ADD_TEST (suite, test_load_globals_system_sets_only);
+	SUITE_ADD_TEST (suite, test_load_globals_user_sets_only);
+	SUITE_ADD_TEST (suite, test_load_globals_system_sets_invalid);
+	SUITE_ADD_TEST (suite, test_load_globals_user_sets_invalid);
+	SUITE_ADD_TEST (suite, test_load_modules_merge);
+	SUITE_ADD_TEST (suite, test_load_modules_no_user);
+	SUITE_ADD_TEST (suite, test_load_modules_user_only);
+	SUITE_ADD_TEST (suite, test_load_modules_user_none);
 
 	p11_kit_be_quiet ();
 
