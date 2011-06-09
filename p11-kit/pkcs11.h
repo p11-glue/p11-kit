@@ -95,7 +95,7 @@ extern "C" {
 
 #endif
 
-
+
 #ifdef CRYPTOKI_COMPAT
   /* If we are in compatibility mode, switch all exposed names to the
      PKCS #11 variant.  There are corresponding #undefs below.  */
@@ -181,7 +181,7 @@ extern "C" {
 
 #endif	/* CRYPTOKI_COMPAT */
 
-
+
 
 typedef unsigned long ck_flags_t;
 
@@ -674,6 +674,22 @@ typedef unsigned long ck_mechanism_type_t;
 #define CKM_X9_42_DH_PARAMETER_GEN	(0x2002UL)
 #define CKM_VENDOR_DEFINED		((unsigned long) (1UL << 31))
 
+/* Ammendments */
+#define CKM_SHA224 (0x255UL)
+#define CKM_SHA224_HMAC (0x256UL)
+#define CKM_SHA224_HMAC_GENERAL (0x257UL)
+#define CKM_SHA224_RSA_PKCS (0x46UL)
+#define CKM_SHA224_RSA_PKCS_PSS (0x47UL)
+#define CKM_SHA224_KEY_DERIVATION (0x396UL)
+
+#define CKM_CAMELLIA_KEY_GEN (0x550UL)
+#define CKM_CAMELLIA_ECB (0x551UL)
+#define CKM_CAMELLIA_CBC (0x552UL)
+#define CKM_CAMELLIA_MAC (0x553UL)
+#define CKM_CAMELLIA_MAC_GENERAL (0x554UL)
+#define CKM_CAMELLIA_CBC_PAD (0x555UL)
+#define CKM_CAMELLIA_ECB_ENCRYPT_DATA (0x556UL)
+#define CKM_CAMELLIA_CBC_ENCRYPT_DATA (0x557UL)
 
 struct ck_mechanism
 {
@@ -1182,7 +1198,7 @@ struct ck_c_initialize_args
 #define CKR_VENDOR_DEFINED			((unsigned long) (1UL << 31))
 
 
-
+
 /* Compatibility layer.  */
 
 #ifdef CRYPTOKI_COMPAT
