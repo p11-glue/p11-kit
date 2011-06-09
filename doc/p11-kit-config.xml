@@ -64,9 +64,9 @@
 
 		<variablelist>
 			<varlistentry>
-				<term>module</term>
+				<term>module:</term>
 				<listitem><para>The absolute path to the PKCS#11 module to load.
-				This should include an extension line <literal>.so</literal></para></listitem>
+				This should include an extension like <literal>.so</literal></para></listitem>
 			</varlistentry>
 		</variablelist>
 
@@ -85,7 +85,7 @@
 
 		<variablelist>
 			<varlistentry>
-				<term>user-config</term>
+				<term>user-config:</term>
 				<listitem><para>This will be equal to one of the following values:
 				<literal>none</literal>, <literal>merge</literal>,
 				<literal>only</literal>.</para></listitem>
