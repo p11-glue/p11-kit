@@ -649,6 +649,9 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
  * Use p11_kit_finalize_registered() to finalize these registered modules once
  * the caller is done with them.
  *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
+ *
  * Returns: CKR_OK if the initialization succeeded, or an error code.
  */
 CK_RV
@@ -729,6 +732,9 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
  * If p11_kit_initialize_registered() has been called more than once in this
  * process, then this function must be called the same number of times before
  * actual finalization will occur.
+ *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
  *
  * Returns: CKR_OK if the finalization succeeded, or an error code.
  */
@@ -936,6 +942,9 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
  * Custom initialization arguments cannot be supported when multiple consumers
  * load the same module.
  *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
+ *
  * Returns: CKR_OK if the initialization was successful.
  */
 CK_RV
@@ -1001,6 +1010,9 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
  * to use this function on registered modules if (and only if) they were
  * initialized using p11_kit_initialize_module() for some reason.
  *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
+ *
  * Returns: CKR_OK if the finalization was successful.
  */
 CK_RV
@@ -1060,6 +1072,9 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
  * This function does not accept a <code>CK_C_INITIALIZE_ARGS</code> argument.
  * Custom initialization arguments cannot be supported when multiple consumers
  * load the same module.
+ *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
  *
  * Returns: CKR_OK if the initialization was successful.
  */

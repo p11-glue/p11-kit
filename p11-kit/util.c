@@ -46,6 +46,16 @@
 #include <stdio.h>
 #include <string.h>
 
+/**
+ * SECTION:p11-kit-future
+ * @title: Future
+ * @short_description: Future Unstable API
+ *
+ * API that is not yet stable enough to be enabled by default. In all likelyhood
+ * this will be included in the next release. To use this API you must define a
+ * MACRO. See the p11-kit.h header for more details.
+ */
+
 #define MAX_MESSAGE 512
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 static pthread_key_t message_buffer_key = 0;
@@ -180,6 +190,12 @@ _p11_message (const char* msg, ...)
 	store_message_buffer (buffer, length);
 }
 
+/**
+ * p11_kit_be_quiet:
+ *
+ * Once this function is called, the p11-kit library will no longer print
+ * failure or warning messages to stderr.
+ */
 void
 p11_kit_be_quiet (void)
 {
@@ -188,6 +204,19 @@ p11_kit_be_quiet (void)
 	_p11_unlock ();
 }
 
+/**
+ * p11_kit_message:
+ *
+ * Gets the failure message for a recently called p11-kit function, which
+ * returned a failure code on this thread. Not all functions set this message.
+ * Each function that does so, will note it in its documentation.
+ *
+ * If the most recent p11-kit function did not fail, then this will return NULL.
+ * The string is owned by the p11-kit library and is only valid on the same
+ * thread that the failed function executed on.
+ *
+ * Returns: The last failure message, or %NULL.
+ */
 const char*
 p11_kit_message (void)
 {

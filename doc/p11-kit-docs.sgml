@@ -19,6 +19,7 @@
 		<xi:include href="xml/p11-kit.xml"/>
 		<xi:include href="xml/p11-kit-uri.xml"/>
 		<xi:include href="xml/p11-kit-util.xml"/>
+		<xi:include href="xml/p11-kit-future.xml"/>
 	</chapter>
 
 	<index id="api-index-full">
