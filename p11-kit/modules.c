@@ -417,7 +417,7 @@ load_registered_modules_unlocked (void)
 	 */
 	hash_iterate (configs, &hi);
 	while (hash_next (&hi, &key, NULL)) {
-		if (!hash_steal (configs, name, (void**)&name, (void**)config))
+		if (!hash_steal (configs, key, (void**)&name, (void**)&config))
 			assert (0 && "not reached");
 
 		rv = take_config_and_load_module_unlocked (&name, &config);
