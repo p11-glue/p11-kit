@@ -7,6 +7,7 @@ incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
 	p11-kit.h \
+	pin.h \
 	uri.h \
 	pkcs11.h
 
@@ -16,8 +17,10 @@ MODULE_SRCS = \
 	debug.c debug.h \
 	hash.c hash.h \
 	modules.c \
+	pin.c \
 	proxy.c \
 	private.h \
+	ptr-array.c ptr-array.h \
 	messages.c \
 	uri.c \
 	$(inc_HEADERS)

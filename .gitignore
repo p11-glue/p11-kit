@@ -67,6 +67,8 @@ temp.txt
 /tests/coverage
 /tests/coverage.info
 /tests/hash-test
+/tests/pin-test
+/tests/ptr-array-test
 /tests/conf-test
 /tests/uri-test
 
