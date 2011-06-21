@@ -58,7 +58,7 @@ typedef int         (*p11_kit_pin_callback)                 (const char *pinfile
                                                              P11KitPinFlags pin_flags,
                                                              void *callback_data,
                                                              char *pin,
-                                                             size_t pin_max);
+                                                             size_t pin_length);
 
 typedef void        (*p11_kit_pin_callback_destroy)         (void *callback_data);
 
@@ -71,7 +71,7 @@ void                p11_kit_pin_unregister_callback         (const char *pinfile
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data);
 
-int                 p11_kit_pin_read_pinfile                (const char *pinfile,
+int                 p11_kit_pin_retrieve                    (const char *pinfile,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags,

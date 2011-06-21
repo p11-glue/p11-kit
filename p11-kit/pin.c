@@ -284,9 +284,9 @@ p11_kit_pin_unregister_callback (const char *pinfile, p11_kit_pin_callback callb
 }
 
 int
-p11_kit_pin_read_pinfile (const char *pinfile, P11KitUri *pin_uri,
-                          const char *pin_description, P11KitPinFlags flags,
-                          char *pin, size_t pin_max)
+p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
+                      const char *pin_description, P11KitPinFlags flags,
+                      char *pin, size_t pin_length)
 {
 	PinfileCallback **snapshot = NULL;
 	unsigned int snapshot_count = 0;
@@ -317,9 +317,10 @@ p11_kit_pin_read_pinfile (const char *pinfile, P11KitUri *pin_uri,
 	if (snapshot == NULL)
 		return 0;
 
-	for (i = 0; i < snapshot_count; i++) {
-		ret = (snapshot[i]->func) (pinfile, pin_uri, pin_description, flags,
-		                           snapshot[i]->user_data, pin, pin_max);
+	ret = 0;
+	for (i = snapshot_count; ret == 0 && i > 0; i--) {
+		ret = (snapshot[i - 1]->func) (pinfile, pin_uri, pin_description, flags,
+		                               snapshot[i - 1]->user_data, pin, pin_length);
 	}
 
 	_p11_lock ();
