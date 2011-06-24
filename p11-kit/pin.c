@@ -42,11 +42,14 @@
 #include "pin.h"
 #include "private.h"
 #include "ptr-array.h"
+#include "util.h"
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /**
  * SECTION:p11-pin
@@ -138,7 +141,7 @@ typedef struct _PinfileCallback {
 	/* Readonly after construct */
 	p11_kit_pin_callback func;
 	void *user_data;
-	p11_kit_pin_callback_destroy destroy;
+	p11_kit_pin_destroy_func destroy;
 } PinfileCallback;
 
 /*
@@ -173,7 +176,7 @@ unref_pinfile_callback (void *pointer)
 
 int
 p11_kit_pin_register_callback (const char *pinfile, p11_kit_pin_callback callback,
-                               void *callback_data, p11_kit_pin_callback_destroy callback_destroy)
+                               void *callback_data, p11_kit_pin_destroy_func callback_destroy)
 {
 	PinfileCallback *cb;
 	ptr_array_t *callbacks;
@@ -283,16 +286,15 @@ p11_kit_pin_unregister_callback (const char *pinfile, p11_kit_pin_callback callb
 	_p11_unlock ();
 }
 
-int
+P11KitPin*
 p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
-                      const char *pin_description, P11KitPinFlags flags,
-                      char *pin, size_t pin_length)
+                      const char *pin_description, P11KitPinFlags flags)
 {
 	PinfileCallback **snapshot = NULL;
 	unsigned int snapshot_count = 0;
 	ptr_array_t *callbacks;
+	P11KitPin *pin;
 	unsigned int i;
-	int ret;
 
 	_p11_lock ();
 
@@ -315,12 +317,11 @@ p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
 	_p11_unlock ();
 
 	if (snapshot == NULL)
-		return 0;
+		return NULL;
 
-	ret = 0;
-	for (i = snapshot_count; ret == 0 && i > 0; i--) {
-		ret = (snapshot[i - 1]->func) (pinfile, pin_uri, pin_description, flags,
-		                               snapshot[i - 1]->user_data, pin, pin_length);
+	for (pin = NULL, i = snapshot_count; pin == NULL && i > 0; i--) {
+		pin = (snapshot[i - 1]->func) (pinfile, pin_uri, pin_description, flags,
+		                               snapshot[i - 1]->user_data);
 	}
 
 	_p11_lock ();
@@ -329,5 +330,151 @@ p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
 		free (snapshot);
 	_p11_unlock ();
 
-	return ret;
+	return pin;
+}
+
+P11KitPin*
+p11_kit_pin_file_callback (const char *pinfile,
+                           P11KitUri *pin_uri,
+                           const char *pin_description,
+                           P11KitPinFlags pin_flags,
+                           void *callback_data)
+{
+	unsigned char *buffer;
+	size_t used, allocated;
+	int error = 0;
+	int fd;
+	int res;
+
+	/* We don't support retries */
+	if (pin_flags & P11_KIT_PIN_FLAGS_RETRY)
+		return NULL;
+
+	fd = open (pinfile, O_RDONLY);
+	if (fd == -1)
+		return NULL;
+
+	buffer = NULL;
+	used = 0;
+	allocated = 0;
+
+	for (;;) {
+		if (used + 256 > allocated) {
+			buffer = xrealloc (buffer, used + 1024);
+			if (buffer == NULL) {
+				error = ENOMEM;
+				break;
+			}
+			allocated = used + 1024;
+		}
+
+		res = read (fd, buffer + used, allocated - used);
+		if (res < 0) {
+			if (errno == EAGAIN)
+				continue;
+			error = errno;
+			free (buffer);
+			buffer = NULL;
+			error = errno;
+			break;
+		} else if (res == 0) {
+			break;
+		} else {
+			used += res;
+		}
+	}
+
+	if (buffer == NULL) {
+		errno = error;
+		return NULL;
+	}
+
+	return p11_kit_pin_new_for_buffer (buffer, used, free);
+}
+
+struct _P11KitPin {
+	int ref_count;
+	unsigned char *buffer;
+	size_t length;
+	p11_kit_pin_destroy_func destroy;
+};
+
+P11KitPin*
+p11_kit_pin_new (const unsigned char *value, size_t length)
+{
+	unsigned char *copy;
+	P11KitPin *pin;
+
+	copy = malloc (length);
+	if (copy == NULL)
+		return NULL;
+
+	memcpy (copy, value, length);
+	pin = p11_kit_pin_new_for_buffer (copy, length, free);
+	if (pin == NULL)
+		free (copy);
+	return pin;
+}
+
+P11KitPin*
+p11_kit_pin_new_for_string (const char *value)
+{
+	return p11_kit_pin_new ((const unsigned char *)value, strlen (value));
+}
+
+P11KitPin*
+p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
+                            p11_kit_pin_destroy_func destroy)
+{
+	P11KitPin *pin;
+
+	pin = calloc (1, sizeof (P11KitPin));
+	if (pin == NULL)
+		return NULL;
+
+	pin->ref_count = 1;
+	pin->buffer = buffer;
+	pin->length = length;
+	pin->destroy = destroy;
+
+	return pin;
+}
+
+const unsigned char*
+p11_kit_pin_get_value (P11KitPin *pin, size_t *length)
+{
+	if (length)
+		*length = pin->length;
+	return pin->buffer;
+}
+
+P11KitPin*
+p11_kit_pin_ref (P11KitPin *pin)
+{
+	_p11_lock ();
+
+		pin->ref_count++;
+
+	_p11_unlock ();
+
+	return pin;
+}
+
+void
+p11_kit_pin_unref (P11KitPin *pin)
+{
+	int last = 0;
+
+	_p11_lock ();
+
+		last = (pin->ref_count == 1);
+		pin->ref_count--;
+
+	_p11_unlock ();
+
+	if (last) {
+		if (pin->destroy)
+			(pin->destroy) (pin->buffer);
+		free (pin);
+	}
 }

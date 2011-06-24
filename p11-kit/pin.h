@@ -41,6 +41,8 @@
 extern "C" {
 #endif
 
+typedef struct _P11KitPin P11KitPin;
+
 typedef enum {
 	P11_KIT_PIN_FLAGS_USER_LOGIN = 1,
 	P11_KIT_PIN_FLAGS_SO_LOGIN = 2,
@@ -52,31 +54,49 @@ typedef enum {
 
 #define P11_KIT_PIN_FALLBACK ""
 
-typedef int         (*p11_kit_pin_callback)                 (const char *pinfile,
+typedef void        (*p11_kit_pin_destroy_func)             (void *callback_data);
+
+P11KitPin*            p11_kit_pin_new                       (const unsigned char *value,
+                                                             size_t length);
+
+P11KitPin*            p11_kit_pin_new_for_string            (const char *value);
+
+P11KitPin*            p11_kit_pin_new_for_buffer            (unsigned char *buffer,
+                                                             size_t length,
+                                                             p11_kit_pin_destroy_func destroy);
+
+P11KitPin*            p11_kit_pin_ref                       (P11KitPin *pin);
+
+void                  p11_kit_pin_unref                     (P11KitPin *pin);
+
+const unsigned char * p11_kit_pin_get_value                 (P11KitPin *pin,
+                                                             size_t *length);
+
+typedef P11KitPin*  (*p11_kit_pin_callback)                 (const char *pinfile,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags,
-                                                             void *callback_data,
-                                                             char *pin,
-                                                             size_t pin_length);
+                                                             void *callback_data);
 
-typedef void        (*p11_kit_pin_callback_destroy)         (void *callback_data);
-
-int                 p11_kit_pin_register_callback           (const char *pinfile,
+int                   p11_kit_pin_register_callback         (const char *pinfile,
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data,
-                                                             p11_kit_pin_callback_destroy callback_destroy);
+                                                             p11_kit_pin_destroy_func callback_destroy);
 
-void                p11_kit_pin_unregister_callback         (const char *pinfile,
+void                  p11_kit_pin_unregister_callback       (const char *pinfile,
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data);
 
-int                 p11_kit_pin_retrieve                    (const char *pinfile,
+P11KitPin*            p11_kit_pin_retrieve                  (const char *pinfile,
+                                                             P11KitUri *pin_uri,
+                                                             const char *pin_description,
+                                                             P11KitPinFlags pin_flags);
+
+P11KitPin*            p11_kit_pin_file_callback             (const char *pinfile,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags,
-                                                             char *pin,
-                                                             size_t pin_max);
+                                                             void *callback_data);
 
 #ifdef __cplusplus
 } /* extern "C" */
