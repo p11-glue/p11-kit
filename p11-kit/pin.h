@@ -54,7 +54,7 @@ typedef enum {
 
 #define P11_KIT_PIN_FALLBACK ""
 
-typedef void        (*p11_kit_pin_destroy_func)             (void *callback_data);
+typedef void        (*p11_kit_pin_destroy_func)             (void *data);
 
 P11KitPin*            p11_kit_pin_new                       (const unsigned char *value,
                                                              size_t length);
@@ -87,7 +87,7 @@ void                  p11_kit_pin_unregister_callback       (const char *pinfile
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data);
 
-P11KitPin*            p11_kit_pin_retrieve                  (const char *pinfile,
+P11KitPin*            p11_kit_pin_request                   (const char *pinfile,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags);

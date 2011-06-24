@@ -18,6 +18,7 @@
 		<title>Reference</title>
 		<xi:include href="xml/p11-kit.xml"/>
 		<xi:include href="xml/p11-kit-uri.xml"/>
+		<xi:include href="xml/p11-kit-pin.xml"/>
 		<xi:include href="xml/p11-kit-util.xml"/>
 		<xi:include href="xml/p11-kit-future.xml"/>
 	</chapter>

@@ -28,6 +28,25 @@ p11_kit_uri_message
 </SECTION>
 
 <SECTION>
+<FILE>p11-kit-pin</FILE>
+P11KitPin
+p11_kit_pin_new
+p11_kit_pin_new_for_buffer
+p11_kit_pin_new_for_string
+p11_kit_pin_get_value
+p11_kit_pin_ref
+p11_kit_pin_unref
+P11KitPinFlags
+P11_KIT_PIN_FALLBACK
+p11_kit_pin_register_callback
+p11_kit_pin_unregister_callback
+p11_kit_pin_callback
+p11_kit_pin_request
+p11_kit_pin_destroy_func
+p11_kit_pin_file_callback
+</SECTION>
+
+<SECTION>
 <FILE>p11-kit</FILE>
 p11_kit_initialize_registered
 p11_kit_finalize_registered

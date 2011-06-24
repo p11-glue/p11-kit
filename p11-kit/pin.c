@@ -52,86 +52,83 @@
 #include <unistd.h>
 
 /**
- * SECTION:p11-pin
+ * SECTION:p11-kit-pin
  * @title: PIN Callbacks
  * @short_description: PIN Callbacks
  *
- * Applications can register a callback which will be called to provide a password
- * associated with a given pin file.
- * PKCS\#11 URIs can be used in configuration files or applications to represent
- * PKCS\#11 modules, tokens or objects. An example of a URI might be:
+ * Applications can register a callback which will be called to provide a
+ * password associated with a given pin file.
+ *
+ * PKCS\#11 URIs can contain a 'pinfile' attribute. The value of this attribute
+ * is application dependent, but often references a file containing a PIN to
+ * use.
+ *
+ * Using these functions, an applications or libraries can register a
+ * callback with p11_kit_pin_register_callback() to be called when a given
+ * 'pinfile' attribute value is requested. The application can then prompt
+ * the user or retrieve a PIN for the given context. These registered
+ * callbacks are only relevant and valid within the current process.
+ *
+ * A fallback callback can be registered by passing the %P11_KIT_PIN_FALLBACK
+ * value to p11_kit_pin_register_callback(). This fallback callback will be
+ * called for every 'pinfile' attribute request for which no callback has been
+ * directly registered.
+ *
+ * To request a PIN for a given 'pinfile' attribute, use the
+ * p11_kit_pin_request() function. If this function returns %NULL then either
+ * no callbacks were registered or none of them could handle the request.
+ *
+ * If multiple callbacks are registered for the same pinfile, then they are
+ * called in last-registered-first-called order. They are called in turn until
+ * one of them can handle the request. Fallback callbacks are not called if
+ * a callback was registered specifically for a requested 'pinfile' attribute.
+ *
+ * PINs themselves are handled inside of P11KitPin structures. These are thread
+ * safe and allow the callback to specify how the PIN is stored in memory
+ * and freed. A callback can use p11_kit_pin_new_for_string() or related
+ * functions to create a PIN to be returned.
+ *
+ * For example in order to handle the following PKCS\#11 URI with a 'pinfile'
+ * attribute
  *
  * <code><literallayout>
- *      pkcs11:token=The\%20Software\%20PKCS\#11\%20softtoken;
- *          manufacturer=Snake\%20Oil,\%20Inc.;serial=;object=my-certificate;
- *          model=1.0;objecttype=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
+ *      pkcs11:id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91;pinfile=my-application
  * </literallayout></code>
  *
- * You can use p11_kit_uri_parse() to parse such a URI, and p11_kit_uri_format()
- * to build one. URIs are represented by the #P11KitUri structure. You can match
- * a parsed URI against PKCS\#11 tokens with p11_kit_uri_match_token_info()
- * or attributes with p11_kit_uri_match_attributes().
+ * an application could register a callback like this:
  *
- * Since URIs can represent different sorts of things, when parsing or formatting
- * a URI a 'context' can be used to indicate which sort of URI is expected.
+ * <informalexample><programlisting>
+ * static P11KitPin*
+ * my_application_pin_callback (const char *pinfile, P11KitUri *pin_uri,
+ *                              const char *pin_description, P11KitPinFlags pin_flags,
+ *                              void *callback_data)
+ * {
+ *     return p11_kit_pin_new_from_string ("pin-value");
+ * }
  *
- * URIs have an <code>unrecognized</code> flag. This flag is set during parsing
- * if any parts of the URI are not recognized. This may be because the part is
- * from a newer version of the PKCS\#11 spec or because that part was not valid
- * inside of the desired context used when parsing.
+ * p11_kit_pin_register_callback ("my-application", my_application_pin_callback,
+ *                                NULL, NULL);
+ * </programlisting></informalexample>
  */
 
 /**
- * P11KitUri:
+ * P11KitPinFlags:
+ * @P11_KIT_PIN_FLAGS_USER_LOGIN: The PIN is for a PKCS\#11 user type login.
+ * @P11_KIT_PIN_FLAGS_SO_LOGIN: The PIN is for a PKCS\#11 security officer type login.
+ * @P11_KIT_PIN_FLAGS_CONTEXT_LOGIN: The PIN is for a PKCS\#11 contect specific type login.
+ * @P11_KIT_PIN_FLAGS_RETRY: The PIN is being requested again, due to an invalid previous PIN.
+ * @P11_KIT_PIN_FLAGS_MANY_TRIES: The PIN has failed too many times, and few tries are left.
+ * @P11_KIT_PIN_FLAGS_FINAL_TRY: The PIN has failed too many times, and this is the last try.
  *
- * A structure representing a PKCS\#11 URI. There are no public fields
- * visible in this structure. Use the various accessor functions.
+ * Flags that are passed to p11_kit_pin_request() and registered callbacks.
  */
 
 /**
- * P11KitUriType:
- * @P11_KIT_URI_FOR_OBJECT: The URI represents one or more objects
- * @P11_KIT_URI_FOR_TOKEN: The URI represents one or more tokens
- * @P11_KIT_URI_FOR_MODULE: The URI represents one or more modules
- * @P11_KIT_URI_FOR_MODULE_WITH_VERSION: The URI represents a module with
- *     a specific version.
- * @P11_KIT_URI_FOR_OBJECT_ON_TOKEN: The URI represents one or more objects
- *     that are present on a specific token.
- * @P11_KIT_URI_FOR_OBJECT_ON_TOKEN_AND_MODULE: The URI represents one or more
- *     objects that are present on a specific token, being used with a certain
- *     module.
- * @P11_KIT_URI_FOR_ANY: The URI can represent anything
+ * P11_KIT_PIN_FALLBACK:
  *
- * A PKCS\#11 URI can represent different kinds of things. This flag is used by
- * p11_kit_uri_parse() to denote in what context the URI will be used.
- *
- * The various types can be combined.
- */
-
-/**
- * P11KitUriResult:
- * @P11_KIT_URI_OK: Success
- * @P11_KIT_URI_NO_MEMORY: Memory allocation failed
- * @P11_KIT_URI_BAD_SCHEME: The URI had a bad scheme
- * @P11_KIT_URI_BAD_ENCODING: The URI had a bad encoding
- * @P11_KIT_URI_BAD_SYNTAX: The URI had a bad syntax
- * @P11_KIT_URI_BAD_VERSION: The URI contained a bad version number
- * @P11_KIT_URI_NOT_FOUND: A requested part of the URI was not found
- *
- * Error codes returned by various functions. The functions each clearly state
- * which error codes they are capable of returning.
- */
-
-/**
- * P11_KIT_URI_SCHEME:
- *
+ * Used with p11_kit_pin_register_callback() to register a fallback callback.
+ * This callback will be called if no other
  * String of URI scheme for PKCS\#11 URIs.
- */
-
-/**
- * P11_KIT_URI_SCHEME_LEN:
- *
- * Length of %P11_KIT_URI_SCHEME.
  */
 
 typedef struct _PinfileCallback {
@@ -174,6 +171,25 @@ unref_pinfile_callback (void *pointer)
 	}
 }
 
+/**
+ * p11_kit_pin_register_callback:
+ * @pinfile: the 'pinfile' attribute this this callback is for
+ * @callback: the callback function
+ * @callback_data: data that will be passed to the callback
+ * @callback_destroy: a function that will be called with @callback_data when
+ *     the callback is unregistered.
+ *
+ * Register a callback to handle PIN requests for a given 'pinfile' attribute.
+ * If @pinfile is set to P11_KIT_PIN_FALLBACK then this will be a fallback
+ * callback and will be called for requests for which no other callback has
+ * been specifically registered.
+ *
+ * If multiple callbacks are registered for the same @pinfile value, then
+ * the last registered callback will be the first to be called.
+ *
+ * Returns: Returns negative if registering fails. This can only happen if
+ *     memory cannot be allocated.
+ */
 int
 p11_kit_pin_register_callback (const char *pinfile, p11_kit_pin_callback callback,
                                void *callback_data, p11_kit_pin_destroy_func callback_destroy)
@@ -251,6 +267,17 @@ p11_kit_pin_register_callback (const char *pinfile, p11_kit_pin_callback callbac
 	return ret;
 }
 
+/**
+ * p11_kit_pin_unregister_callback:
+ * @pinfile: the 'pinfile' attribute the callback was registered for
+ * @callback: the callback function that was registered
+ * @callback_data: data that was registered for the callback
+ *
+ * Unregister a callback that was previously registered with the
+ * p11_kit_pin_register_callback() function. If more than one registered
+ * callback matches the given arguments, then only one of those will be
+ * removed.
+ */
 void
 p11_kit_pin_unregister_callback (const char *pinfile, p11_kit_pin_callback callback,
                                  void *callback_data)
@@ -286,9 +313,40 @@ p11_kit_pin_unregister_callback (const char *pinfile, p11_kit_pin_callback callb
 	_p11_unlock ();
 }
 
+/**
+ * p11_kit_pin_request:
+ * @pinfile: the 'pinfile' attribute that is being requested
+ * @pin_uri: a PKCS\#11 URI that the PIN is being requested for, optionally %NULL.
+ * @pin_description: a description of what the PIN is for, must not be %NULL.
+ * @pin_flags: various flags for this request
+ *
+ * Request a PIN for a given 'pinfile' attribute. The result depends on the
+ * registered callbacks.
+ *
+ * If not %NULL, then the @pin_uri attribute should point to the thing that the
+ * PIN is being requested for. In most use cases this should be a PKCS\#11 URI
+ * pointing to a token.
+ *
+ * The @pin_description should always be specified. It is a string describing
+ * what the PIN is for. For example this would be the token label, if the PIN
+ * is for a token.
+ *
+ * If more than one callback is registered for the @pinfile, then the latest
+ * registered one will be called first. If that callback does not return a
+ * PIN, then the next will be called in turn.
+ *
+ * If no callback is registered for @pinfile, then the fallback callbacks will
+ * be invoked in the same way. The fallback callbacks will not be called if any
+ * callback has been registered specifically for @pinfile.
+ *
+ * The PIN returned should be released with p11_kit_pin_unref().
+ *
+ * Returns: the PIN which should be released with p11_kit_pin_unref(), or %NULL
+ *     if no callback was registered or could proivde a PIN
+ */
 P11KitPin*
-p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
-                      const char *pin_description, P11KitPinFlags flags)
+p11_kit_pin_request (const char *pinfile, P11KitUri *pin_uri,
+                     const char *pin_description, P11KitPinFlags pin_flags)
 {
 	PinfileCallback **snapshot = NULL;
 	unsigned int snapshot_count = 0;
@@ -320,7 +378,7 @@ p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
 		return NULL;
 
 	for (pin = NULL, i = snapshot_count; pin == NULL && i > 0; i--) {
-		pin = (snapshot[i - 1]->func) (pinfile, pin_uri, pin_description, flags,
+		pin = (snapshot[i - 1]->func) (pinfile, pin_uri, pin_description, pin_flags,
 		                               snapshot[i - 1]->user_data);
 	}
 
@@ -333,6 +391,59 @@ p11_kit_pin_retrieve (const char *pinfile, P11KitUri *pin_uri,
 	return pin;
 }
 
+/**
+ * p11_kit_pin_callback:
+ * @pinfile: a 'pinfile' attribute string
+ * @pin_uri: a PKCS\#11 URI that the PIN is for, or %NULL
+ * @pin_description: a descrption of what the PIN is for
+ * @pin_flags: flags describing the PIN request
+ * @callback_data: data that was provided when registering this callback
+ *
+ * Represents a PIN callback function.
+ *
+ * The various arguments are the same as the ones passed to
+ * p11_kit_pin_request(). The @callback_data argument was the one passed to
+ * p11_kit_pin_register_callback() when registering this callback.
+ *
+ * The function should return %NULL if it could not provide a PIN, either
+ * because of an error or a user cancellation.
+ *
+ * If a PIN is returned, it will be unreferenced by the caller. So it should be
+ * either newly allocated, or referenced before returning.
+ *
+ * Returns: A PIN or %NULL
+ */
+
+/**
+ * p11_kit_pin_destroy_func:
+ * @data: the data to destroy
+ *
+ * A function called to free or cleanup @data.
+ */
+
+/**
+ * p11_kit_pin_file_callback:
+ * @pinfile: a 'pinfile' attribute string
+ * @pin_uri: a PKCS\#11 URI that the PIN is for, or %NULL
+ * @pin_description: a descrption of what the PIN is for
+ * @pin_flags: flags describing the PIN request
+ * @callback_data: unused, should be %NULL
+ *
+ * This is a PIN callback function that looks up the 'pinfile' attribute in
+ * a file with that name. This can be used to enable the normal PKCS\#11 URI
+ * behavior described in the RFC.
+ *
+ * This callback is not registered by default. To register it use code like
+ * the following:
+ *
+ * <informalexample><programlisting>
+ * p11_kit_pin_register_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
+ *                                NULL, NULL);
+ * </programlisting></informalexample>
+ *
+ * Returns: A referenced PIN with the pinfile contents, or %NULL if the file
+ *    could not be read.
+ */
 P11KitPin*
 p11_kit_pin_file_callback (const char *pinfile,
                            P11KitUri *pin_uri,
@@ -392,6 +503,12 @@ p11_kit_pin_file_callback (const char *pinfile,
 	return p11_kit_pin_new_for_buffer (buffer, used, free);
 }
 
+/**
+ * P11KitPin:
+ *
+ * A structure representing a PKCS\#11 PIN. There are no public fields
+ * visible in this structure. Use the various accessor functions.
+ */
 struct _P11KitPin {
 	int ref_count;
 	unsigned char *buffer;
@@ -399,6 +516,20 @@ struct _P11KitPin {
 	p11_kit_pin_destroy_func destroy;
 };
 
+/**
+ * p11_kit_pin_new:
+ * @value: the value of the PIN
+ * @length: the length of @value
+ *
+ * Create a new P11KitPin with the given PIN value. The exactly @length bytes
+ * from @value are used. Null terminated strings, or encodings are not
+ * considered.
+ *
+ * A copy of the @value will be made.
+ *
+ * Returns: The newly allocated P11KitPin, which should be freed with
+ *     p11_kit_pin_unref() when no longer needed.
+ */
 P11KitPin*
 p11_kit_pin_new (const unsigned char *value, size_t length)
 {
@@ -416,12 +547,48 @@ p11_kit_pin_new (const unsigned char *value, size_t length)
 	return pin;
 }
 
+/**
+ * p11_kit_pin_new_for_string:
+ * @value: the value of the PIN
+ *
+ * Create a new P11KitPin for the given null-terminated string, such as a
+ * password. The PIN will consist of the string not including the null terminator.
+ * String encoding is not considered.
+ *
+ * A copy of the @value will be made.
+ *
+ * Returns: The newly allocated P11KitPin, which should be freed with
+ *     p11_kit_pin_unref() when no longer needed.
+ */
 P11KitPin*
 p11_kit_pin_new_for_string (const char *value)
 {
 	return p11_kit_pin_new ((const unsigned char *)value, strlen (value));
 }
 
+/**
+ * p11_kit_pin_new_for_buffer:
+ * @buffer: the value of the PIN
+ * @length: the length of @buffer
+ * @destroy: if not %NULL, then called when PIN is destroyed.
+ *
+ * Create a new P11KitPin which will use @buffer for the PIN value. The buffer
+ * will not be copied. String encodings and null characters are not considered.
+ *
+ * When the last reference to this PIN is lost, then the @destroy callback
+ * function will be called passing @buffer as an argument. This allows the
+ * caller to use a buffer as a PIN without copying it.
+ *
+ * <informalexample><programlisting>
+ * char *buffer = malloc (128);
+ * P11KitPin *pin;
+ *  ....
+ * pin = p11_kit_pin_new_for_buffer (buffer, 128, free);
+ * </programlisting></informalexample>
+ *
+ * Returns: The newly allocated P11KitPin, which should be freed with
+ *     p11_kit_pin_unref() when no longer needed.
+ */
 P11KitPin*
 p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
                             p11_kit_pin_destroy_func destroy)
@@ -440,6 +607,20 @@ p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
 	return pin;
 }
 
+/**
+ * p11_kit_pin_get_value:
+ * @pin: the P11KitPin
+ * @length: a location to return the value length
+ *
+ * Get the PIN value from a P11KitPin. @length will be set to the
+ * length of the value.
+ *
+ * The value returned is owned by the P11KitPin and should not be modified.
+ * It remains valid as long as a reference to the PIN is held. The PIN value
+ * will contain an extra null-terminator character.
+ *
+ * Returns: the value for the PIN.
+ */
 const unsigned char*
 p11_kit_pin_get_value (P11KitPin *pin, size_t *length)
 {
@@ -448,6 +629,16 @@ p11_kit_pin_get_value (P11KitPin *pin, size_t *length)
 	return pin->buffer;
 }
 
+/**
+ * p11_kit_pin_ref:
+ * @pin: the P11KitPin
+ *
+ * Add a reference to a P11KitPin. This should be matched with a later call
+ * to p11_kit_pin_unref(). As long as at least one reference is held, the PIN
+ * will remain valid and in memory.
+ *
+ * Returns: the @pin pointer, for convenience sake.
+ */
 P11KitPin*
 p11_kit_pin_ref (P11KitPin *pin)
 {
@@ -460,6 +651,13 @@ p11_kit_pin_ref (P11KitPin *pin)
 	return pin;
 }
 
+/**
+ * p11_kit_pin_unref:
+ * @pin: the P11KitPin
+ *
+ * Remove a reference from a P11KitPin. When all references have been removed
+ * then the PIN will be freed and will no longer be in memory.
+ */
 void
 p11_kit_pin_unref (P11KitPin *pin)
 {
