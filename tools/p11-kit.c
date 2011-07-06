@@ -56,8 +56,28 @@ usage (void)
 }
 
 static void
+print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
+{
+	CK_TOKEN_INFO info;
+	char *value;
+	CK_RV rv;
+
+	rv = (module->C_GetTokenInfo) (slot_id, &info);
+	if (rv != CKR_OK) {
+		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		return;
+	}
+
+	value = p11_kit_space_strdup (info.label, sizeof (info.label));
+	printf ("    token: %s\n", value);
+	free (value);
+}
+
+static void
 print_module_info (CK_FUNCTION_LIST_PTR module)
 {
+	CK_SLOT_ID slot_list[256];
+	CK_ULONG i, count;
 	CK_INFO info;
 	char *value;
 	CK_RV rv;
@@ -70,13 +90,23 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 
 	value = p11_kit_space_strdup (info.libraryDescription,
 	                              sizeof (info.libraryDescription));
-	printf ("\tlibrary-description: %s\n", value);
+	printf ("    library-description: %s\n", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.manufacturerID,
 	                              sizeof (info.manufacturerID));
-	printf ("\tlibrary-manufacturer: %s\n", value);
+	printf ("    library-manufacturer: %s\n", value);
 	free (value);
+
+	count = sizeof (slot_list) / sizeof (slot_list[0]);
+	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
+	if (rv != CKR_OK) {
+		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		return;
+	}
+
+	for (i = 0; i < count; i++)
+		print_token_info (module, slot_list[i]);
 }
 
 static int
