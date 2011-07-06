@@ -509,7 +509,7 @@ p11_kit_pin_file_callback (const char *pinfile,
  * A structure representing a PKCS\#11 PIN. There are no public fields
  * visible in this structure. Use the various accessor functions.
  */
-struct _P11KitPin {
+struct p11_kit_pin {
 	int ref_count;
 	unsigned char *buffer;
 	size_t length;
@@ -617,7 +617,7 @@ p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
  *
  * The value returned is owned by the P11KitPin and should not be modified.
  * It remains valid as long as a reference to the PIN is held. The PIN value
- * will contain an extra null-terminator character.
+ * will not contain an extra null-terminator character.
  *
  * Returns: the value for the PIN.
  */
@@ -627,6 +627,20 @@ p11_kit_pin_get_value (P11KitPin *pin, size_t *length)
 	if (length)
 		*length = pin->length;
 	return pin->buffer;
+}
+
+/**
+ * p11_kit_pin_get_length
+ * @pin: the P11KitPin
+ *
+ * Get the length of the PIN value from a P11KitPin.
+ *
+ * Returns: the length of the PIN value.
+ */
+size_t
+p11_kit_pin_get_length (P11KitPin *pin)
+{
+	return pin->length;
 }
 
 /**

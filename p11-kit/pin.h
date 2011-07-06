@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-typedef struct _P11KitPin P11KitPin;
+typedef struct p11_kit_pin P11KitPin;
 
 typedef enum {
 	P11_KIT_PIN_FLAGS_USER_LOGIN = 1,
@@ -71,6 +71,8 @@ void                  p11_kit_pin_unref                     (P11KitPin *pin);
 
 const unsigned char * p11_kit_pin_get_value                 (P11KitPin *pin,
                                                              size_t *length);
+
+size_t                p11_kit_pin_get_length                (P11KitPin *pin);
 
 typedef P11KitPin*  (*p11_kit_pin_callback)                 (const char *pinfile,
                                                              P11KitUri *pin_uri,

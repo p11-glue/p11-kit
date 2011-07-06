@@ -34,6 +34,7 @@ p11_kit_pin_new
 p11_kit_pin_new_for_buffer
 p11_kit_pin_new_for_string
 p11_kit_pin_get_value
+p11_kit_pin_get_length
 p11_kit_pin_ref
 p11_kit_pin_unref
 P11KitPinFlags
