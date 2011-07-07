@@ -3,6 +3,7 @@
 *.lo
 *.bak
 *.tar.gz
+*.sig
 *.gcno
 *.gcda
 *.gcov

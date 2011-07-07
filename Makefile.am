@@ -43,6 +43,7 @@ upload-doc: all
 endif
 
 upload-release: $(DIST_ARCHIVES)
-	scp $(DIST_ARCHIVES) anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/releases/
+	gpg --detach-sign --local-user 'stef@thewalter.net' $(DIST_ARCHIVES)
+	scp $(DIST_ARCHIVES) $(DIST_ARCHIVES).sig anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/releases/
 
 EXTRA_DIST = config.rpath
