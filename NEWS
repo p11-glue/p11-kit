@@ -1,2 +1,8 @@
+0.2
+ * List token labels in 'p11-kit -l'
+ * Add API's for handing the pinfile part of URIs
+ * Use /etc/pkcs11 by default instead of ${prefix}/etc/pkcs11
+ * Bug fixes
+
 0.1
  * Initial release
