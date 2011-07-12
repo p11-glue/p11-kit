@@ -194,8 +194,8 @@ int
 p11_kit_pin_register_callback (const char *pinfile, p11_kit_pin_callback callback,
                                void *callback_data, p11_kit_pin_destroy_func callback_destroy)
 {
+	ptr_array_t *callbacks = NULL;
 	PinfileCallback *cb;
-	ptr_array_t *callbacks;
 	char *name;
 	int ret;
 
