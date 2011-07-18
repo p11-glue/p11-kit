@@ -12,10 +12,15 @@ fi
 
 set -x
 
-aclocal
-libtoolize
-autoheader
-automake -a
-autoconf
-./configure "$@"
+# Copied from avahi's autogen.sh to work around gettext braindamage
+rm -f Makefile.am~ configure.ac~
+# Evil, evil, evil, evil hack
+sed 's/read dummy/\#/' `which gettextize` | sh -s -- --copy --force --no-changelog
+test -f Makefile.am~ && mv Makefile.am~ Makefile.am
+test -f configure.ac~ && mv configure.ac~ configure.ac
+
+autoreconf --force --install --verbose
+if test x"$NOCONFIGURE" = x; then
+  exec ./configure "$@"
+fi
 

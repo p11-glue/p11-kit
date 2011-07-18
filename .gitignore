@@ -33,7 +33,6 @@ install-sh
 INSTALL
 libtool
 ltmain.sh
-m4
 makefile
 Makefile
 Makefile.in
