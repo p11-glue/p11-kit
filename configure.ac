@@ -44,7 +44,7 @@ GTK_DOC_CHECK([1.15])
 AC_ARG_WITH([pkcs11-dir],
             [AS_HELP_STRING([--with-pkcs11-dir], [Change PKCS#11 system config directory])],
             [pkcs11_dir=$withval],
-            [pkcs11_dir=/etc/pkcs11])
+            [pkcs11_dir=$sysconfdir/pkcs11])
 
 p11_system_conf="$pkcs11_dir/pkcs11.conf"
 p11_system_modules="$pkcs11_dir/modules"
