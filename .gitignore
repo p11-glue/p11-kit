@@ -16,7 +16,9 @@
 .project
 .cproject
 .settings
+m4/*.m4
 
+ABOUT-NLS
 aclocal.m4
 autom4te.cache
 compile
