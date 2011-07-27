@@ -271,7 +271,7 @@ hash_create (hash_hash_func hash_func,
 			return NULL;
 		}
 
-		map->num_buckets = 0;
+		map->num_items = 0;
 	}
 
 	return map;
