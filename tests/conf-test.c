@@ -47,55 +47,55 @@
 static void
 test_parse_conf_1 (CuTest *tc)
 {
-	hash_t *ht;
+	hashmap *map;
 	const char *value;
 
-	ht = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
-	CuAssertPtrNotNull (tc, ht);
+	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
+	CuAssertPtrNotNull (tc, map);
 
-	value = hash_get (ht, "key1");
+	value = hash_get (map, "key1");
 	CuAssertStrEquals (tc, "value1", value);
 
-	value = hash_get (ht, "with-colon");
+	value = hash_get (map, "with-colon");
 	CuAssertStrEquals (tc, "value-of-colon", value);
 
-	value = hash_get (ht, "with-whitespace");
+	value = hash_get (map, "with-whitespace");
 	CuAssertStrEquals (tc, "value-with-whitespace", value);
 
-	value = hash_get (ht, "embedded-comment");
+	value = hash_get (map, "embedded-comment");
 	CuAssertStrEquals (tc, "this is # not a comment", value);
 
-	hash_free (ht);
+	hash_free (map);
 }
 
 static void
 test_parse_ignore_missing (CuTest *tc)
 {
-	hash_t *ht;
+	hashmap *map;
 
-	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
-	CuAssertPtrNotNull (tc, ht);
+	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
+	CuAssertPtrNotNull (tc, map);
 
-	CuAssertIntEquals (tc, 0, hash_count (ht));
+	CuAssertIntEquals (tc, 0, hash_size (map));
 	CuAssertPtrEquals (tc, NULL, (void*)p11_kit_message ());
-	hash_free (ht);
+	hash_free (map);
 }
 
 static void
 test_parse_fail_missing (CuTest *tc)
 {
-	hash_t *ht;
+	hashmap *map;
 
-	ht = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
-	CuAssertPtrEquals (tc, ht, NULL);
+	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
+	CuAssertPtrEquals (tc, map, NULL);
 	CuAssertPtrNotNull (tc, p11_kit_message ());
 }
 
 static void
 test_merge_defaults (CuTest *tc)
 {
-	hash_t *values;
-	hash_t *defaults;
+	hashmap *values;
+	hashmap *defaults;
 
 	values = hash_create (hash_string_hash, hash_string_equal, free, free);
 	defaults = hash_create (hash_string_hash, hash_string_equal, free, free);
@@ -122,7 +122,7 @@ static void
 test_load_globals_merge (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -144,7 +144,7 @@ static void
 test_load_globals_no_user (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -166,7 +166,7 @@ static void
 test_load_globals_user_sets_only (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -188,7 +188,7 @@ static void
 test_load_globals_system_sets_only (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -210,7 +210,7 @@ static void
 test_load_globals_system_sets_invalid (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 	int error;
 
 	_p11_kit_clear_message ();
@@ -230,7 +230,7 @@ static void
 test_load_globals_user_sets_invalid (CuTest *tc)
 {
 	int user_mode = -1;
-	hash_t *config;
+	hashmap *config;
 	int error;
 
 	_p11_kit_clear_message ();
@@ -249,8 +249,8 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 static void
 test_load_modules_merge (CuTest *tc)
 {
-	hash_t *configs;
-	hash_t *config;
+	hashmap *configs;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -281,8 +281,8 @@ test_load_modules_merge (CuTest *tc)
 static void
 test_load_modules_user_none (CuTest *tc)
 {
-	hash_t *configs;
-	hash_t *config;
+	hashmap *configs;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -311,8 +311,8 @@ test_load_modules_user_none (CuTest *tc)
 static void
 test_load_modules_user_only (CuTest *tc)
 {
-	hash_t *configs;
-	hash_t *config;
+	hashmap *configs;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 
@@ -341,8 +341,8 @@ test_load_modules_user_only (CuTest *tc)
 static void
 test_load_modules_no_user (CuTest *tc)
 {
-	hash_t *configs;
-	hash_t *config;
+	hashmap *configs;
+	hashmap *config;
 
 	_p11_kit_clear_message ();
 

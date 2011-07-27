@@ -35,7 +35,7 @@
 
 #include "config.h"
 
-#include "hash.h"
+#include "hashmap.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"
@@ -78,7 +78,7 @@ static struct _Shared {
 	Mapping *mappings;
 	unsigned int n_mappings;
 	int mappings_refs;
-	hash_t *sessions;
+	hashmap *sessions;
 	CK_ULONG last_handle;
 } gl = { NULL, 0, 0, NULL, FIRST_HANDLE };
 
@@ -553,14 +553,14 @@ proxy_C_CloseAllSessions (CK_SLOT_ID id)
 	CK_RV rv = CKR_OK;
 	Session *sess;
 	CK_ULONG i, count = 0;
-	hash_iter_t iter;
+	hashiter iter;
 
 	_p11_lock ();
 
 		if (!gl.sessions) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
-			to_close = calloc (sizeof (CK_SESSION_HANDLE), hash_count (gl.sessions));
+			to_close = calloc (sizeof (CK_SESSION_HANDLE), hash_size (gl.sessions));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {

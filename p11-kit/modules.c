@@ -38,7 +38,7 @@
 #include "conf.h"
 #define DEBUG_FLAG DEBUG_LIB
 #include "debug.h"
-#include "hash.h"
+#include "hashmap.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"
@@ -100,7 +100,7 @@ typedef struct _Module {
 
 	/* Registered modules */
 	char *name;
-	hash_t *config;
+	hashmap *config;
 
 	/* Loaded modules */
 	void *dl_module;
@@ -124,8 +124,8 @@ pthread_mutex_t _p11_mutex = PTHREAD_MUTEX_INITIALIZER;
  * we can audit thread safety easier.
  */
 static struct _Shared {
-	hash_t *modules;
-	hash_t *config;
+	hashmap *modules;
+	hashmap *config;
 } gl = { NULL, NULL };
 
 /* -----------------------------------------------------------------------------
@@ -314,7 +314,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 }
 
 static CK_RV
-take_config_and_load_module_unlocked (char **name, hash_t **config)
+take_config_and_load_module_unlocked (char **name, hashmap **config)
 {
 	Module *mod, *prev;
 	const char *path;
@@ -383,11 +383,11 @@ take_config_and_load_module_unlocked (char **name, hash_t **config)
 static CK_RV
 load_registered_modules_unlocked (void)
 {
-	hash_iter_t hi;
-	hash_t *configs;
+	hashiter iter;
+	hashmap *configs;
 	void *key;
 	char *name;
-	hash_t *config;
+	hashmap *config;
 	int mode;
 	CK_RV rv;
 
@@ -415,8 +415,8 @@ load_registered_modules_unlocked (void)
 	 * Now go through each config and turn it into a module. As we iterate
 	 * we steal the values of the config.
 	 */
-	hash_iterate (configs, &hi);
-	while (hash_next (&hi, &key, NULL)) {
+	hash_iterate (configs, &iter);
+	while (hash_next (&iter, &key, NULL)) {
 		if (!hash_steal (configs, key, (void**)&name, (void**)&config))
 			assert (0 && "not reached");
 
@@ -485,7 +485,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 static void
 reinitialize_after_fork (void)
 {
-	hash_iter_t it;
+	hashiter iter;
 	Module *mod;
 
 	/* WARNING: This function must be reentrant */
@@ -494,8 +494,8 @@ reinitialize_after_fork (void)
 	_p11_lock ();
 
 		if (gl.modules) {
-			hash_iterate (gl.modules, &it);
-			while (hash_next (&it, NULL, (void**)&mod)) {
+			hash_iterate (gl.modules, &iter);
+			while (hash_next (&iter, NULL, (void **)&mod)) {
 				mod->initialize_count = 0;
 
 				/* WARNING: Reentrancy can occur here */
@@ -532,11 +532,11 @@ static void
 free_modules_when_no_refs_unlocked (void)
 {
 	Module *mod;
-	hash_iter_t it;
+	hashiter iter;
 
 	/* Check if any modules have a ref count */
-	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&mod)) {
+	hash_iterate (gl.modules, &iter);
+	while (hash_next (&iter, NULL, (void **)&mod)) {
 		if (mod->ref_count)
 			return;
 	}
@@ -593,12 +593,12 @@ static Module*
 find_module_for_name_unlocked (const char *name)
 {
 	Module *mod;
-	hash_iter_t it;
+	hashiter iter;
 
 	assert (name);
 
-	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&mod))
+	hash_iterate (gl.modules, &iter);
+	while (hash_next (&iter, NULL, (void **)&mod))
 		if (mod->ref_count && mod->name && strcmp (name, mod->name) == 0)
 			return mod;
 	return NULL;
@@ -608,7 +608,7 @@ CK_RV
 _p11_kit_initialize_registered_unlocked_reentrant (void)
 {
 	Module *mod;
-	hash_iter_t it;
+	hashiter iter;
 	CK_RV rv;
 
 	rv = init_globals_unlocked ();
@@ -617,8 +617,8 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 
 	rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
-		hash_iterate (gl.modules, &it);
-		while (hash_next (&it, NULL, (void**)&mod)) {
+		hash_iterate (gl.modules, &iter);
+		while (hash_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered */
 			if (!mod->name)
@@ -685,7 +685,7 @@ CK_RV
 _p11_kit_finalize_registered_unlocked_reentrant (void)
 {
 	Module *mod;
-	hash_iter_t it;
+	hashiter iter;
 	Module **to_finalize;
 	int i, count;
 
@@ -694,13 +694,13 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 
 	/* WARNING: This function must be reentrant */
 
-	to_finalize = calloc (hash_count (gl.modules), sizeof (Module*));
+	to_finalize = calloc (hash_size (gl.modules), sizeof (Module *));
 	if (!to_finalize)
 		return CKR_HOST_MEMORY;
 
 	count = 0;
-	hash_iterate (gl.modules, &it);
-	while (hash_next (&it, NULL, (void**)&mod)) {
+	hash_iterate (gl.modules, &iter);
+	while (hash_next (&iter, NULL, (void **)&mod)) {
 
 		/* Skip all modules that aren't registered */
 		if (mod->name)
@@ -767,13 +767,13 @@ _p11_kit_registered_modules_unlocked (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR result;
 	Module *mod;
-	hash_iter_t it;
+	hashiter iter;
 	int i = 0;
 
-	result = calloc (hash_count (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
+	result = calloc (hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
 	if (result) {
-		hash_iterate (gl.modules, &it);
-		while (hash_next (&it, NULL, (void**)&mod)) {
+		hash_iterate (gl.modules, &iter);
+		while (hash_next (&iter, NULL, (void **)&mod)) {
 			if (mod->ref_count && mod->name)
 				result[i++] = mod->funcs;
 		}
@@ -891,7 +891,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 {
 	Module *mod = NULL;
 	char *option = NULL;
-	hash_t *config = NULL;
+	hashmap *config = NULL;
 
 	_p11_lock ();
 

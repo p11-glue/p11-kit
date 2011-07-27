@@ -15,7 +15,7 @@ MODULE_SRCS = \
 	util.c util.h \
 	conf.c conf.h \
 	debug.c debug.h \
-	hash.c hash.h \
+	hashmap.c hashmap.h \
 	modules.c \
 	pin.c \
 	proxy.c \

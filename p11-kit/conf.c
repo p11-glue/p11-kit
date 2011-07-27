@@ -206,16 +206,16 @@ read_config_file (const char* filename, int flags)
 }
 
 int
-_p11_conf_merge_defaults (hash_t *ht, hash_t *defaults)
+_p11_conf_merge_defaults (hashmap *map, hashmap *defaults)
 {
-	hash_iter_t hi;
+	hashiter iter;
 	void *key;
 	void *value;
 
-	hash_iterate (defaults, &hi);
-	while (hash_next (&hi, &key, &value)) {
+	hash_iterate (defaults, &iter);
+	while (hash_next (&iter, &key, &value)) {
 		/* Only override if not set */
-		if (hash_get (ht, key))
+		if (hash_get (map, key))
 			continue;
 		key = strdup (key);
 		if (key == NULL) {
@@ -228,7 +228,7 @@ _p11_conf_merge_defaults (hash_t *ht, hash_t *defaults)
 			errno = ENOMEM;
 			return -1;
 		}
-		if (!hash_set (ht, key, value)) {
+		if (!hash_set (map, key, value)) {
 			free (key);
 			free (value);
 			errno = ENOMEM;
@@ -241,12 +241,12 @@ _p11_conf_merge_defaults (hash_t *ht, hash_t *defaults)
 	return 0;
 }
 
-hash_t*
+hashmap *
 _p11_conf_parse_file (const char* filename, int flags)
 {
 	char *name;
 	char *value;
-	hash_t *ht = NULL;
+	hashmap *map = NULL;
 	char *data;
 	char *next;
 	char *end;
@@ -261,8 +261,8 @@ _p11_conf_parse_file (const char* filename, int flags)
 	if (!data)
 		return NULL;
 
-	ht = hash_create (hash_string_hash, hash_string_equal, free, free);
-	if (ht == NULL) {
+	map = hash_create (hash_string_hash, hash_string_equal, free, free);
+	if (map == NULL) {
 		free (data);
 		errno = ENOMEM;
 		return NULL;
@@ -308,7 +308,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 
 		debug ("config value: %s: %s", name, value);
 
-		if (!hash_set (ht, name, value)) {
+		if (!hash_set (map, name, value)) {
 			free (name);
 			free (value);
 			error = ENOMEM;
@@ -319,12 +319,12 @@ _p11_conf_parse_file (const char* filename, int flags)
 	free (data);
 
 	if (error != 0) {
-		hash_free (ht);
-		ht = NULL;
+		hash_free (map);
+		map = NULL;
 		errno = error;
 	}
 
-	return ht;
+	return map;
 }
 
 static char*
@@ -355,7 +355,7 @@ expand_user_path (const char *path)
 }
 
 static int
-user_config_mode (hash_t *config, int defmode)
+user_config_mode (hashmap *config, int defmode)
 {
 	const char *mode;
 
@@ -377,13 +377,13 @@ user_config_mode (hash_t *config, int defmode)
 	}
 }
 
-hash_t*
+hashmap *
 _p11_conf_load_globals (const char *system_conf, const char *user_conf,
                         int *user_mode)
 {
-	hash_t *config = NULL;
-	hash_t *uconfig = NULL;
-	hash_t *result = NULL;
+	hashmap *config = NULL;
+	hashmap *uconfig = NULL;
+	hashmap *result = NULL;
 	char *path = NULL;
 	int error = 0;
 	int mode;
@@ -459,10 +459,10 @@ finished:
 }
 
 static int
-load_config_from_file (const char *configfile, const char *name, hash_t *configs)
+load_config_from_file (const char *configfile, const char *name, hashmap *configs)
 {
-	hash_t *config;
-	hash_t *prev;
+	hashmap *config;
+	hashmap *prev;
 	char *key;
 	int error = 0;
 
@@ -498,7 +498,7 @@ load_config_from_file (const char *configfile, const char *name, hash_t *configs
 }
 
 static int
-load_configs_from_directory (const char *directory, hash_t *configs)
+load_configs_from_directory (const char *directory, hashmap *configs)
 {
 	struct dirent *dp;
 	struct stat st;
@@ -566,10 +566,10 @@ load_configs_from_directory (const char *directory, hash_t *configs)
 	return count;
 }
 
-hash_t*
+hashmap *
 _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 {
-	hash_t *configs;
+	hashmap *configs;
 	char *path;
 	int error = 0;
 

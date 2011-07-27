@@ -36,7 +36,7 @@
 #ifndef __CONF_H__
 #define __CONF_H__
 
-#include "hash.h"
+#include "hashmap.h"
 
 enum {
 	CONF_IGNORE_MISSING = 0x01,
@@ -51,19 +51,19 @@ enum {
 
 typedef void  (*conf_error_func)   (const char *message);
 
-int           _p11_conf_merge_defaults       (hash_t *config,
-                                              hash_t *defaults);
+int           _p11_conf_merge_defaults       (hashmap *config,
+                                              hashmap *defaults);
 
 /* Returns a hash of char *key -> char *value */
-hash_t*       _p11_conf_parse_file           (const char *filename,
+hashmap *     _p11_conf_parse_file           (const char *filename,
                                               int flags);
 
 /* Returns a hash of char *key -> char *value */
-hash_t*       _p11_conf_load_globals         (const char *system_conf, const char *user_conf,
+hashmap *     _p11_conf_load_globals         (const char *system_conf, const char *user_conf,
                                               int *user_mode);
 
 /* Returns a hash of char* name -> hash_t *config */
-hash_t*       _p11_conf_load_modules         (int user_mode, const char *system_dir,
+hashmap *     _p11_conf_load_modules         (int user_mode, const char *system_dir,
                                               const char *user_dir);
 
 #endif /* __CONF_H__ */

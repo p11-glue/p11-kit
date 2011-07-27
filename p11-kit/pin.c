@@ -36,7 +36,7 @@
 
 #define DEBUG_FLAG DEBUG_PIN
 #include "debug.h"
-#include "hash.h"
+#include "hashmap.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "pin.h"
@@ -146,7 +146,7 @@ typedef struct _PinfileCallback {
  * we can audit thread safety easier.
  */
 static struct _Shared {
-	hash_t *pinfiles;
+	hashmap *pinfiles;
 } gl = { NULL };
 
 static void*
@@ -304,7 +304,7 @@ p11_kit_pin_unregister_callback (const char *pinfile, p11_kit_pin_callback callb
 			}
 
 			/* When there are no more pinfiles, get rid of the hash table */
-			if (hash_count (gl.pinfiles) == 0) {
+			if (hash_size (gl.pinfiles) == 0) {
 				hash_free (gl.pinfiles);
 				gl.pinfiles = NULL;
 			}

@@ -33,40 +33,18 @@
  * Author: Stef Waler <stefw@collabora.co.uk>
  */
 
-/*
- * Originally from apache 2.0
- * Modifications for general use by <stef@memberwebs.com>
- */
-
-/* Copyright 2000-2004 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-#ifndef __HSH_H__
-#define __HSH_H__
+#ifndef HASHMAP_H_
+#define HASHMAP_H_
 
 #include <sys/types.h>
 
 /*
  * ARGUMENT DOCUMENTATION
  *
- * ht: The hashtable
+ * map: The hashmap
  * key: Pointer to the key value
- * klen: The length of the key
  * val: Pointer to the value
- * hi: A hashtable iterator
- * stamp: A unix timestamp
+ * iter: A hashmap iterator
  */
 
 
@@ -74,16 +52,15 @@
  * TYPES
  */
 
-/* Abstract type for hash tables. */
-typedef struct hash hash_t;
+/* Abstract type for hash maps. */
+typedef struct _hashmap hashmap;
 
 /* Type for scanning hash tables.  */
-typedef struct hash_iter
-{
-	hash_t* ht;
-	struct hash_entry* next;
+typedef struct _hashiter {
+	hashmap *map;
+	struct _hashbucket *next;
 	unsigned int index;
-} hash_iter_t;
+} hashiter;
 
 typedef unsigned int (*hash_hash_func)            (const void *data);
 
@@ -100,7 +77,7 @@ typedef void         (*hash_destroy_func)         (void *data);
  * hash_create : Create a hash table
  * - returns an allocated hashtable
  */
-hash_t*            hash_create                 (hash_hash_func hash_func,
+hashmap*           hash_create                 (hash_hash_func hash_func,
                                                 hash_equal_func equal_func,
                                                 hash_destroy_func key_destroy_func,
                                                 hash_destroy_func value_destroy_func);
@@ -108,26 +85,26 @@ hash_t*            hash_create                 (hash_hash_func hash_func,
 /*
  * hash_free : Free a hash table
  */
-void               hash_free                   (hash_t* ht);
+void               hash_free                   (hashmap *map);
 
 /*
- * hash_count: Number of values in hash table
+ * hash_size: Number of values in hash table
  * - returns the number of entries in hash table
  */
-unsigned int       hash_count                  (hash_t* ht);
+unsigned int       hash_size                   (hashmap *map);
 
 /*
  * hash_get: Retrieves a value from the hash table
  * - returns the value of the entry
  */
-void*              hash_get                    (hash_t* ht,
+void*              hash_get                    (hashmap *map,
                                                 const void *key);
 
 /*
  * hash_set: Set a value in the hash table
  * - returns 1 if the entry was added properly
  */
-int                hash_set                    (hash_t* ht,
+int                hash_set                    (hashmap *map,
                                                 void *key,
                                                 void *value);
 
@@ -135,14 +112,14 @@ int                hash_set                    (hash_t* ht,
  * hash_remove: Remove a value from the hash table
  * - returns 1 if the entry was found
  */
-int                hash_remove                 (hash_t* ht,
-                                                const void* key);
+int                hash_remove                 (hashmap *map,
+                                                const void *key);
 
 /*
  * hash_steal: Remove a value from the hash table without calling destroy funcs
  * - returns 1 if the entry was found
  */
-int                hash_steal                  (hash_t *ht,
+int                hash_steal                  (hashmap *map,
                                                 const void *key,
                                                 void **stolen_key,
                                                 void **stolen_value);
@@ -151,22 +128,22 @@ int                hash_steal                  (hash_t *ht,
  * hash_first: Start enumerating through the hash table
  * - returns a hash iterator
  */
-void               hash_iterate                (hash_t* ht,
-                                                hash_iter_t *hi);
+void               hash_iterate                (hashmap *map,
+                                                hashiter *iter);
 
 /*
  * hash_next: Enumerate through hash table
  * - sets key and value to key and/or value
  * - returns whether there was another entry
  */
-int                hash_next                   (hash_iter_t* hi,
+int                hash_next                   (hashiter *iter,
                                                 void **key,
                                                 void **value);
 
 /*
  * hash_clear: Clear all values from has htable.
  */
-void               hash_clear                  (hash_t* ht);
+void               hash_clear                  (hashmap *map);
 
 /* -----------------------------------------------------------------------------
  * HASH FUNCTIONS
@@ -192,4 +169,4 @@ unsigned int       hash_direct_hash            (const void *ptr);
 int                hash_direct_equal           (const void *ptr_one,
                                                 const void *ptr_two);
 
-#endif  /* __HASH_H__ */
+#endif  /* __HASHMAP_H__ */
