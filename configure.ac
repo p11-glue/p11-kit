@@ -7,6 +7,19 @@ AC_INIT([p11-kit],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
 
+dnl ****************************************************************************
+dnl p11-kit libtool versioning
+dnl CURRENT : REVISION : AGE
+dnl   +1    :     0    : +1   == new interface that does not break old one.
+dnl   +1    :     0    :  0   == removed an interface. Breaks old apps.
+dnl    ?    :    +1    :  ?   == internal changes that doesn't break anything.
+
+P11KIT_CURRENT=0
+P11KIT_REVISION=0
+P11KIT_AGE=0
+
+dnl ****************************************************************************
+
 AC_CONFIG_SRCDIR([p11-kit/modules.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -155,6 +168,9 @@ fi
 
 
 # ---------------------------------------------------------------------
+
+P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
+AC_SUBST(P11KIT_LT_RELEASE)
 
 AC_CONFIG_FILES([Makefile
 	doc/Makefile

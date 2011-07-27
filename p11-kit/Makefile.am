@@ -32,7 +32,9 @@ noinst_LTLIBRARIES = \
 	libp11-kit-testable.la
 
 libp11_kit_la_LDFLAGS = \
-	-no-undefined -export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+	-no-undefined \
+	-version-info $(P11KIT_LT_RELEASE) \
+	-export-symbols-regex '^C_GetFunctionList|^p11_kit_'
 
 libp11_kit_la_SOURCES = $(MODULE_SRCS)
 
