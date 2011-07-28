@@ -51,4 +51,4 @@ EXTRA_DIST = \
 
 # Proxy module is actually same as library, so install a link
 install-exec-hook:
-	$(LN_S) libp11-kit.so $(DESTDIR)$(libdir)/p11-kit-proxy.so
+	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.so` $(DESTDIR)$(libdir)/p11-kit-proxy.so
