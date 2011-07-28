@@ -42,7 +42,7 @@ AM_PROG_CC_C_O
 dnl Checks for libraries.
 AC_CHECK_LIB(pthread, pthread_mutex_lock,,
 	[AC_MSG_ERROR([could not find pthread_mutex_lock])])
-AC_CHECK_LIB(dl, dlopen,,
+AC_SEARCH_LIBS([dlopen], [dl dld], [],
 	[AC_MSG_ERROR([could not find dlopen])])
 
 
