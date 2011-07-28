@@ -14,19 +14,24 @@ noinst_PROGRAMS = \
 	pin-test
 
 hash_test_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+        $(LTLIBINTL)
 
 ptr_array_test_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+        $(LTLIBINTL)
 
 conf_test_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+        $(LTLIBINTL)
 
 uri_test_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+        $(LTLIBINTL)
 
 pin_test_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit-testable.la
+	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+        $(LTLIBINTL)
 
 check-am:
 	./hash-test
