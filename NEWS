@@ -1,3 +1,8 @@
+0.3
+ * Rewrite hash table, and simplify licensing.
+ * Correct paths for p11-kit config files.
+ * Many build fixes and tweaks.
+
 0.2
  * List token labels in 'p11-kit -l'
  * Add API's for handing the pinfile part of URIs
