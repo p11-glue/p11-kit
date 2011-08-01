@@ -20,6 +20,54 @@
 		</para>
 	</section>
 
+	<section id="config-example">
+		<title>Example</title>
+
+		<para>The following sections describe the config format in detail. But first
+		an example which shows the various features. The configuration below, loads
+		two modules called 'my-module' and 'nss'. The user settings override some
+		aspects of the system settings.</para>
+
+<para>Global configuration file: <literal>/etc/pkcs11/pkcs11.conf</literal></para>
+<programlisting>
+# This setting controls whether to load user configuration from the
+# ~/.pkcs11 directory. Possible values:
+#    none: No user configuration (default)
+#    merge: Merge the user configuration over the system configuration
+#    only: Only user configuration, ignore system configuration
+user-config: merge
+</programlisting>
+
+<para>One module configuration file per module: <literal>/etc/pkcs11/modules/my-module</literal></para>
+<programlisting>
+# This setting controls the actual module library to load. This config file might
+# be installed by the package that installs this module library.
+module: /usr/lib/my-pkcs11-module.so
+</programlisting>
+
+<para>User configuration file: <literal>~/.pkcs11/pkcs11.conf</literal></para>
+<programlisting>
+# This is an empty file. Files that do not exist are treated as empty.
+</programlisting>
+
+<para>User configuration file: <literal>~/.pkcs11/modules/my-module</literal></para>
+<programlisting>
+# Merge with the settings in the system my-module config file. In this case
+# a developer has overridden to load a different module for my-module instead.
+module: /home/user/src/custom-module/my-module.so
+</programlisting>
+
+<para>User configuration file: <literal>~/.pkcs11/modules/nss</literal></para>
+<programlisting>
+# Load the NSS libsoftokn.so.3 PKCS#11 library as a module. Note that we pass
+# some custom non-standard initialization arguments, as NSS expects.
+module: /usr/lib/libsoftokn3.so
+x-init-reserved: configdir='sql:/home/test/.pki/nssdb' certPrefix='' keyPrefix='' secmod='socmod.db'
+</programlisting>
+
+
+</section>
+
 	<section id="config-format">
 		<title>File format</title>
 

@@ -60,6 +60,7 @@ temp.txt
 
 /p11-kit/p11-kit.pc
 /p11-kit/p11-kit-1.pc
+/p11-kit/pkcs11.conf.example
 
 /po/POTFILES
 /po/stamp-po

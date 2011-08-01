@@ -60,8 +60,9 @@ AC_ARG_WITH([pkcs11-dir],
             [pkcs11_dir=$sysconfdir/pkcs11])
 
 # We expand these so we have concrete paths
-p11_system_conf=$(eval echo $pkcs11_dir/pkcs11.conf)
-p11_system_modules=$(eval echo $pkcs11_dir/modules)
+p11_system_dir=$(eval echo $pkcs11_dir)
+p11_system_conf=$(eval echo $p11_system_dir/pkcs11.conf)
+p11_system_modules=$(eval echo $p11_system_dir/modules)
 p11_user_conf="~/.pkcs11/pkcs11.conf"
 p11_user_modules="~/.pkcs11/modules"
 
@@ -70,6 +71,7 @@ AC_DEFINE_UNQUOTED(P11_SYSTEM_MODULES, "$p11_system_modules", [System modules di
 AC_DEFINE_UNQUOTED(P11_USER_CONF, "$p11_user_conf", [User configuration file])
 AC_DEFINE_UNQUOTED(P11_USER_MODULES, "$p11_user_modules", [User modules dir])
 
+AC_SUBST(p11_system_dir)
 AC_SUBST(p11_system_conf)
 AC_SUBST(p11_system_modules)
 AC_SUBST(p11_user_conf)
@@ -178,6 +180,7 @@ AC_CONFIG_FILES([Makefile
 	po/Makefile.in
 	p11-kit/Makefile
 	p11-kit/p11-kit-1.pc
+	p11-kit/pkcs11.conf.example
 	tests/Makefile
 	tools/Makefile
 ])

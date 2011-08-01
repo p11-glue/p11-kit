@@ -46,8 +46,12 @@ libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc
 
+exampledir = $(p11_system_dir)
+example_DATA = pkcs11.conf.example
+
 EXTRA_DIST = \
-	p11-kit-1.pc.in
+	p11-kit-1.pc.in \
+	pkcs11.conf.example.in
 
 # Proxy module is actually same as library, so install a link
 install-exec-hook:
