@@ -104,7 +104,6 @@ typedef struct _Module {
 
 	/* Loaded modules */
 	void *dl_module;
-	int dlopen_count;
 
 	/* Initialized modules */
 	CK_C_INITIALIZE_ARGS init_args;
@@ -260,8 +259,6 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 		return CKR_GENERAL_ERROR;
 	}
 
-	mod->dlopen_count++;
-
 	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
 		_p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
@@ -276,6 +273,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 		return rv;
 	}
 
+	debug ("opened module: %s", path);
 	return CKR_OK;
 }
 
@@ -300,6 +298,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 	prev = hash_get (gl.modules, mod->funcs);
 
 	if (prev != NULL) {
+		debug ("duplicate module %s, using previous", path);
 		free_module_unlocked (mod);
 		mod = prev;
 
@@ -454,12 +453,16 @@ initialize_module_unlocked_reentrant (Module *mod)
 
 	if (!mod->initialize_count) {
 
+		debug ("C_Initialize: calling");
+
 		_p11_unlock ();
 
 			assert (mod->funcs);
 			rv = mod->funcs->C_Initialize (&mod->init_args);
 
 		_p11_lock ();
+
+		debug ("C_Initialize: result: %lu", rv);
 
 		/*
 		 * Because we have the mutex unlocked above, two initializes could
@@ -1086,7 +1089,7 @@ p11_kit_load_initialize_module (const char *module_path,
 	CK_RV rv = CKR_OK;
 
 	/* WARNING: This function must be reentrant for the same arguments */
-	debug ("in");
+	debug ("in: %s", module_path);
 
 	_p11_lock ();
 
