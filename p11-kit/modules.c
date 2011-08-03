@@ -361,7 +361,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	if (prev) {
 		_p11_message ("duplicate configured module: %s: %s", mod->name, path);
 		free_module_unlocked (mod);
-		return CKR_GENERAL_ERROR;
+		return CKR_OK;
 	}
 
 	/*
