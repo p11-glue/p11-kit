@@ -677,7 +677,7 @@ p11_kit_initialize_registered (void)
 	if (rv != CKR_OK)
 		p11_kit_finalize_registered ();
 
-	debug ("out: %lu");
+	debug ("out: %lu", rv);
 	return rv;
 }
 
