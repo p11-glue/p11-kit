@@ -119,10 +119,19 @@ int                 p11_kit_uri_match_attributes            (P11KitUri *uri,
                                                              CK_ATTRIBUTE_PTR attrs,
                                                              CK_ULONG n_attrs);
 
+const char*         p11_kit_uri_get_pin_source              (P11KitUri *uri);
+
+void                p11_kit_uri_set_pin_source              (P11KitUri *uri,
+                                                             const char *pin_source);
+
+#ifndef P11_KIT_DISABLE_DEPRECATED
+
 const char*         p11_kit_uri_get_pinfile                 (P11KitUri *uri);
 
 void                p11_kit_uri_set_pinfile                 (P11KitUri *uri,
                                                              const char *pinfile);
+
+#endif /* P11_KIT_DISABLE_DEPRECATED */
 
 void                p11_kit_uri_set_unrecognized            (P11KitUri *uri,
                                                              int unrecognized);

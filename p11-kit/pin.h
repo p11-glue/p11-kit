@@ -74,27 +74,27 @@ const unsigned char * p11_kit_pin_get_value                 (P11KitPin *pin,
 
 size_t                p11_kit_pin_get_length                (P11KitPin *pin);
 
-typedef P11KitPin*  (*p11_kit_pin_callback)                 (const char *pinfile,
+typedef P11KitPin*  (*p11_kit_pin_callback)                 (const char *pin_source,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags,
                                                              void *callback_data);
 
-int                   p11_kit_pin_register_callback         (const char *pinfile,
+int                   p11_kit_pin_register_callback         (const char *pin_source,
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data,
                                                              p11_kit_pin_destroy_func callback_destroy);
 
-void                  p11_kit_pin_unregister_callback       (const char *pinfile,
+void                  p11_kit_pin_unregister_callback       (const char *pin_source,
                                                              p11_kit_pin_callback callback,
                                                              void *callback_data);
 
-P11KitPin*            p11_kit_pin_request                   (const char *pinfile,
+P11KitPin*            p11_kit_pin_request                   (const char *pin_source,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags);
 
-P11KitPin*            p11_kit_pin_file_callback             (const char *pinfile,
+P11KitPin*            p11_kit_pin_file_callback             (const char *pin_source,
                                                              P11KitUri *pin_uri,
                                                              const char *pin_description,
                                                              P11KitPinFlags pin_flags,

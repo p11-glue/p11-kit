@@ -58,7 +58,7 @@
  * <code><literallayout>
  *      pkcs11:token=The\%20Software\%20PKCS\#11\%20softtoken;
  *          manufacturer=Snake\%20Oil,\%20Inc.;serial=;object=my-certificate;
- *          model=1.0;objecttype=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
+ *          model=1.0;object-type=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
  * </literallayout></code>
  *
  * You can use p11_kit_uri_parse() to parse such a URI, and p11_kit_uri_format()
@@ -143,7 +143,7 @@ struct p11_kit_uri {
 	CK_TOKEN_INFO token;
 	CK_ATTRIBUTE attributes[NUM_ATTRIBUTE_TYPES];
 	CK_ULONG n_attributes;
-	char *pinfile;
+	char *pin_source;
 };
 
 const static char HEX_CHARS[] = "0123456789abcdef";
@@ -677,35 +677,60 @@ p11_kit_uri_any_unrecognized (P11KitUri *uri)
 }
 
 /**
+ * p11_kit_uri_get_pin_source:
+ * @uri: The URI
+ *
+ * Get the 'pin-source' part of the URI. This is used by some applications to
+ * lookup a PIN for logging into a PKCS\#11 token.
+ *
+ * Returns: The pin-source or %NULL if not present.
+ */
+const char*
+p11_kit_uri_get_pin_source (P11KitUri *uri)
+{
+	assert (uri);
+	return uri->pin_source;
+}
+
+/**
  * p11_kit_uri_get_pinfile:
  * @uri: The URI
  *
- * Get the 'pinfile' part of the URI. This is used by some applications to
- * lookup a PIN for logging into a PKCS\#11 token.
- *
- * Returns: The pinfile or %NULL if not present.
+ * Deprecated: use p11_kit_uri_get_pin_source().
  */
 const char*
 p11_kit_uri_get_pinfile (P11KitUri *uri)
 {
+	return p11_kit_uri_get_pin_source (uri);
+}
+
+/**
+ * p11_kit_uri_set_pin_source:
+ * @uri: The URI
+ * @pin_source: The new pin-source
+ *
+ * Set the 'pin-source' part of the URI. This is used by some applications to
+ * lookup a PIN for logging into a PKCS\#11 token.
+ */
+void
+p11_kit_uri_set_pin_source (P11KitUri *uri, const char *pin_source)
+{
 	assert (uri);
-	return uri->pinfile;
+	free (uri->pin_source);
+	uri->pin_source = strdup (pin_source);
 }
 
 /**
  * p11_kit_uri_set_pinfile:
  * @uri: The URI
- * @pinfile: The new pinfile
+ * @pinfile: The pinfile
  *
- * Set the 'pinfile' part of the URI. This is used by some applications to
- * lookup a PIN for logging into a PKCS\#11 token.
+ * Deprecated: use p11_kit_uri_set_pin_source().
  */
 void
 p11_kit_uri_set_pinfile (P11KitUri *uri, const char *pinfile)
 {
-	assert (uri);
-	free (uri->pinfile);
-	uri->pinfile = strdup (pinfile);
+	p11_kit_uri_set_pin_source (uri, pinfile);
 }
 
 /**
@@ -827,7 +852,7 @@ format_attribute_class (char **string, size_t *length, int *is_first,
 		value = "data";
 		break;
 	case CKO_SECRET_KEY:
-		value = "secretkey";
+		value = "secret-key";
 		break;
 	case CKO_CERTIFICATE:
 		value = "cert";
@@ -942,17 +967,17 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 			return P11_KIT_URI_NO_MEMORY;
 		}
 
-		if (!format_attribute_class (&result, &length, &is_first, "objecttype",
+		if (!format_attribute_class (&result, &length, &is_first, "object-type",
 		                             p11_kit_uri_get_attribute (uri, CKA_CLASS))) {
 			free (result);
 			return P11_KIT_URI_NO_MEMORY;
 		}
 	}
 
-	if (uri->pinfile) {
-		format_encode_string (&result, &length, &is_first, "pinfile",
-		                      (const unsigned char*)uri->pinfile,
-		                      strlen (uri->pinfile));
+	if (uri->pin_source) {
+		format_encode_string (&result, &length, &is_first, "pin-source",
+		                      (const unsigned char*)uri->pin_source,
+		                      strlen (uri->pin_source));
 	}
 
 	*string = result;
@@ -1004,7 +1029,8 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 
 	assert (start <= end);
 
-	if (strcmp ("objecttype", name) != 0)
+	if (strcmp ("objecttype", name) != 0 &&
+	    strcmp ("object-type", name) != 0)
 		return 0;
 
 	if (equals_segment (start, end, "cert"))
@@ -1014,6 +1040,8 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 	else if (equals_segment (start, end, "private"))
 		klass = CKO_PRIVATE_KEY;
 	else if (equals_segment (start, end, "secretkey"))
+		klass = CKO_SECRET_KEY;
+	else if (equals_segment (start, end, "secret-key"))
 		klass = CKO_SECRET_KEY;
 	else if (equals_segment (start, end, "data"))
 		klass = CKO_DATA;
@@ -1175,17 +1203,18 @@ static int
 parse_extra_info (const char *name, const char *start, const char *end,
                   P11KitUri *uri)
 {
-	unsigned char *pinfile;
+	unsigned char *pin_source;
 	int ret;
 
 	assert (start <= end);
 
-	if (strcmp (name, "pinfile") == 0) {
-		ret = url_decode (start, end, &pinfile, NULL);
+	if (strcmp (name, "pinfile") == 0 ||
+	    strcmp (name, "pin-source") == 0) {
+		ret = url_decode (start, end, &pin_source, NULL);
 		if (ret < 0)
 			return ret;
-		free (uri->pinfile);
-		uri->pinfile = (char*)pinfile;
+		free (uri->pin_source);
+		uri->pin_source = (char*)pin_source;
 		return 1;
 	}
 
@@ -1245,8 +1274,8 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->unrecognized = 0;
-	free (uri->pinfile);
-	uri->pinfile = NULL;
+	free (uri->pin_source);
+	uri->pin_source = NULL;
 
 	for (;;) {
 		spos = strchr (string, ';');
@@ -1313,7 +1342,7 @@ p11_kit_uri_free (P11KitUri *uri)
 	for (i = 0; i < uri->n_attributes; ++i)
 		free (uri->attributes[i].pValue);
 
-	free (uri->pinfile);
+	free (uri->pin_source);
 	free (uri);
 }
 

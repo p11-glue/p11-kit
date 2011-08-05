@@ -138,7 +138,7 @@ test_uri_parse_with_label_and_klass (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;objecttype=cert", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;object-type=cert", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
@@ -485,7 +485,7 @@ test_uri_build_with_attributes (CuTest *tc)
 	p11_kit_uri_free (check);
 
 	CuAssertTrue (tc, strstr (string, "object=The%20Label") != NULL);
-	CuAssertTrue (tc, strstr (string, "objecttype=data") != NULL);
+	CuAssertTrue (tc, strstr (string, "object-type=data") != NULL);
 	CuAssertTrue (tc, strstr (string, "id=HELLO") != NULL);
 
 	free (string);
@@ -502,7 +502,7 @@ test_uri_parse_private_key (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=private", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object-type=private", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -523,7 +523,7 @@ test_uri_parse_secret_key (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=secretkey", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object-type=secret-key", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -577,7 +577,7 @@ test_uri_parse_library_version (CuTest *tc)
 }
 
 static void
-test_uri_parse_parse_unknown_objecttype (CuTest *tc)
+test_uri_parse_parse_unknown_object_type (CuTest *tc)
 {
 	P11KitUri *uri;
 	CK_ATTRIBUTE_PTR attr;
@@ -586,7 +586,7 @@ test_uri_parse_parse_unknown_objecttype (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:objecttype=unknown", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object-type=unknown", P11_KIT_URI_FOR_OBJECT, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -635,7 +635,7 @@ test_uri_parse_too_long_is_unrecognized (CuTest *tc)
 
 
 static void
-test_uri_build_objecttype_cert (CuTest *tc)
+test_uri_build_object_type_cert (CuTest *tc)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -654,14 +654,14 @@ test_uri_build_objecttype_cert (CuTest *tc)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "objecttype=cert") != NULL);
+	CuAssertTrue (tc, strstr (string, "object-type=cert") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_objecttype_private (CuTest *tc)
+test_uri_build_object_type_private (CuTest *tc)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -680,14 +680,14 @@ test_uri_build_objecttype_private (CuTest *tc)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "objecttype=private") != NULL);
+	CuAssertTrue (tc, strstr (string, "object-type=private") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_objecttype_public (CuTest *tc)
+test_uri_build_object_type_public (CuTest *tc)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -706,14 +706,14 @@ test_uri_build_objecttype_public (CuTest *tc)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "objecttype=public") != NULL);
+	CuAssertTrue (tc, strstr (string, "object-type=public") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_objecttype_secret (CuTest *tc)
+test_uri_build_object_type_secret (CuTest *tc)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -732,7 +732,7 @@ test_uri_build_objecttype_secret (CuTest *tc)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "objecttype=secretkey") != NULL);
+	CuAssertTrue (tc, strstr (string, "object-type=secret-key") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
@@ -910,7 +910,7 @@ test_uri_match_attributes (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;objecttype=data", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;object-type=data", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
@@ -1086,31 +1086,31 @@ test_uri_get_set_attributes (CuTest *tc)
 	p11_kit_uri_free (uri);
 }
 static void
-test_uri_pinfile (CuTest *tc)
+test_uri_pin_source (CuTest *tc)
 {
 	P11KitUri *uri;
-	const char *pinfile;
+	const char *pin_source;
 	char *string;
 	int ret;
 
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	p11_kit_uri_set_pinfile (uri, "|my-pin-file");
+	p11_kit_uri_set_pin_source (uri, "|my-pin-file");
 
-	pinfile = p11_kit_uri_get_pinfile (uri);
-	CuAssertStrEquals (tc, "|my-pin-file", pinfile);
+	pin_source = p11_kit_uri_get_pin_source (uri);
+	CuAssertStrEquals (tc, "|my-pin-file", pin_source);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "pinfile=%7cmy-pin-file") != NULL);
+	CuAssertTrue (tc, strstr (string, "pin-source=%7cmy-pin-file") != NULL);
 	free (string);
 
-	ret = p11_kit_uri_parse ("pkcs11:pinfile=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:pin-source=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
-	pinfile = p11_kit_uri_get_pinfile (uri);
-	CuAssertStrEquals (tc, "blah/blah", pinfile);
+	pin_source = p11_kit_uri_get_pin_source (uri);
+	CuAssertStrEquals (tc, "blah/blah", pin_source);
 
 	p11_kit_uri_free (uri);
 }
@@ -1156,13 +1156,13 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_parse_private_key);
 	SUITE_ADD_TEST (suite, test_uri_parse_secret_key);
 	SUITE_ADD_TEST (suite, test_uri_parse_library_version);
-	SUITE_ADD_TEST (suite, test_uri_parse_parse_unknown_objecttype);
+	SUITE_ADD_TEST (suite, test_uri_parse_parse_unknown_object_type);
 	SUITE_ADD_TEST (suite, test_uri_parse_unrecognized);
 	SUITE_ADD_TEST (suite, test_uri_parse_too_long_is_unrecognized);
-	SUITE_ADD_TEST (suite, test_uri_build_objecttype_cert);
-	SUITE_ADD_TEST (suite, test_uri_build_objecttype_private);
-	SUITE_ADD_TEST (suite, test_uri_build_objecttype_public);
-	SUITE_ADD_TEST (suite, test_uri_build_objecttype_secret);
+	SUITE_ADD_TEST (suite, test_uri_build_object_type_cert);
+	SUITE_ADD_TEST (suite, test_uri_build_object_type_private);
+	SUITE_ADD_TEST (suite, test_uri_build_object_type_public);
+	SUITE_ADD_TEST (suite, test_uri_build_object_type_secret);
 	SUITE_ADD_TEST (suite, test_uri_build_with_library);
 	SUITE_ADD_TEST (suite, test_uri_build_library_version);
 	SUITE_ADD_TEST (suite, test_uri_get_set_unrecognized);
@@ -1171,7 +1171,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_match_attributes);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attribute);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attributes);
-	SUITE_ADD_TEST (suite, test_uri_pinfile);
+	SUITE_ADD_TEST (suite, test_uri_pin_source);
 	SUITE_ADD_TEST (suite, test_uri_free_null);
 	SUITE_ADD_TEST (suite, test_uri_message);
 

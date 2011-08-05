@@ -19,6 +19,8 @@ p11_kit_uri_set_attribute
 p11_kit_uri_clear_attribute
 p11_kit_uri_set_unrecognized
 p11_kit_uri_any_unrecognized
+p11_kit_uri_get_pin_source
+p11_kit_uri_set_pin_source
 p11_kit_uri_get_pinfile
 p11_kit_uri_set_pinfile
 p11_kit_uri_format
