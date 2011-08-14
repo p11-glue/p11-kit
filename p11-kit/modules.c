@@ -971,20 +971,36 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 			if (mod == NULL) {
 				debug ("allocating new module");
 				allocated = mod = alloc_module_unlocked ();
-				mod->funcs = module;
+				if (mod == NULL)
+					rv = CKR_HOST_MEMORY;
+				else
+					mod->funcs = module;
 			}
-
-			/* WARNING: Reentrancy can occur here */
-			rv = initialize_module_unlocked_reentrant (mod);
 
 			/* If this was newly allocated, add it to the list */
 			if (rv == CKR_OK && allocated) {
-				hash_set (gl.modules, allocated->funcs, allocated);
-				allocated = NULL;
+				if (hash_set (gl.modules, allocated->funcs, allocated))
+					allocated = NULL;
+				else
+					rv = CKR_HOST_MEMORY;
+			}
+
+			if (rv == CKR_OK) {
+
+				/* WARNING: Reentrancy can occur here */
+				rv = initialize_module_unlocked_reentrant (mod);
 			}
 
 			free (allocated);
 		}
+
+		/*
+		 * If initialization failed, we may need to cleanup.
+		 * If we added this module above, then this will
+		 * clean things up as expected.
+		 */
+		if (rv != CKR_OK)
+			free_modules_when_no_refs_unlocked ();
 
 		_p11_kit_default_message (rv);
 
@@ -1108,6 +1124,14 @@ p11_kit_load_initialize_module (const char *module_path,
 
 		if (rv == CKR_OK && module)
 			*module = mod->funcs;
+
+		/*
+		 * If initialization failed, we may need to cleanup.
+		 * If we added this module above, then this will
+		 * clean things up as expected.
+		 */
+		if (rv != CKR_OK)
+			free_modules_when_no_refs_unlocked ();
 
 		_p11_kit_default_message (rv);
 
