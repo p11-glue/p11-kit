@@ -446,7 +446,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 	assert (mod);
 
 	/*
-	 * Initialize first, so module doesn't get freed out from
+	 * Increase ref first, so module doesn't get freed out from
 	 * underneath us when the mutex is unlocked below.
 	 */
 	++mod->ref_count;
@@ -499,10 +499,12 @@ reinitialize_after_fork (void)
 		if (gl.modules) {
 			hash_iterate (gl.modules, &iter);
 			while (hash_next (&iter, NULL, (void **)&mod)) {
-				mod->initialize_count = 0;
+				if (mod->initialize_count > 0) {
+					mod->initialize_count = 0;
 
-				/* WARNING: Reentrancy can occur here */
-				initialize_module_unlocked_reentrant (mod);
+					/* WARNING: Reentrancy can occur here */
+					initialize_module_unlocked_reentrant (mod);
+				}
 			}
 		}
 
@@ -953,8 +955,8 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 CK_RV
 p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 {
-	Module *mod;
 	Module *allocated = NULL;
+	Module *mod;
 	CK_RV rv = CKR_OK;
 
 	/* WARNING: This function must be reentrant for the same arguments */
