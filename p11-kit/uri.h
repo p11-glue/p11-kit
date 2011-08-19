@@ -41,8 +41,8 @@
 extern "C" {
 #endif
 
-#define P11_KIT_URI_SCHEME "pkcs11:"
-#define P11_KIT_URI_SCHEME_LEN 7
+#define P11_KIT_URI_SCHEME "pkcs11"
+#define P11_KIT_URI_SCHEME_LEN 6
 
 typedef enum {
 	P11_KIT_URI_OK = 0,

@@ -275,6 +275,29 @@ test_uri_parse_with_bad_syntax (CuTest *tc)
 }
 
 static void
+test_uri_parse_with_spaces (CuTest *tc)
+{
+	P11KitUri *uri = NULL;
+	CK_INFO_PTR info;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	CuAssertPtrNotNull (tc, uri);
+
+	ret = p11_kit_uri_parse ("pkc\ns11: lib rary-desc\rrip  \n  tion =The%20Library;\n\n\nlibrary-manufacturer=\rMe",
+	                         P11_KIT_URI_FOR_MODULE, uri);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	info = p11_kit_uri_get_module_info (uri);
+
+	CuAssertTrue (tc, is_space_string (info->manufacturerID, sizeof (info->manufacturerID), "Me"));
+	CuAssertTrue (tc, is_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Library"));
+
+	p11_kit_uri_free (uri);
+}
+
+
+static void
 test_uri_parse_with_library (CuTest *tc)
 {
 	P11KitUri *uri = NULL;
@@ -1146,6 +1169,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_parse_with_token);
 	SUITE_ADD_TEST (suite, test_uri_parse_with_token_bad_encoding);
 	SUITE_ADD_TEST (suite, test_uri_parse_with_bad_syntax);
+	SUITE_ADD_TEST (suite, test_uri_parse_with_spaces);
 	SUITE_ADD_TEST (suite, test_uri_parse_with_library);
 	SUITE_ADD_TEST (suite, test_uri_parse_with_library_bad_encoding);
 	SUITE_ADD_TEST (suite, test_uri_build_empty);

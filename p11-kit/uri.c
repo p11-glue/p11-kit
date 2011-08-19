@@ -147,6 +147,7 @@ struct p11_kit_uri {
 };
 
 const static char HEX_CHARS[] = "0123456789abcdef";
+const static char WHITESPACE[] = " \n\r\v";
 
 static int
 url_decode (const char *value, const char *end,
@@ -185,6 +186,12 @@ url_decode (const char *value, const char *end,
 			*p = (a - HEX_CHARS) << 4;
 			*(p++) |= (b - HEX_CHARS);
 			value += 2;
+
+		/* Ignore whitespace characters */
+		} else if (strchr (WHITESPACE, *value)) {
+			value++;
+
+		/* A different character */
 		} else {
 			*(p++) = *(value++);
 		}
@@ -233,6 +240,32 @@ url_encode (const unsigned char *value, const unsigned char *end, size_t *length
 	if (length)
 		*length = p - result;
 	return result;
+}
+
+static char *
+key_decode (const char *value, const char *end)
+{
+	size_t length = (end - value);
+	char *at, *pos;
+	char *key;
+
+	key = malloc (length + 1);
+	if (key == NULL)
+		return NULL;
+
+	memcpy (key, value, length);
+	key[length] = '\0';
+
+	/* Do we have any whitespace? Strip it out. */
+	if (strcspn (key, WHITESPACE) != length) {
+		for (at = key, pos = key; pos != key + length + 1; ++pos) {
+			if (!strchr (WHITESPACE, *pos))
+				*(at++) = *pos;
+		}
+		*at = '\0';
+	}
+
+	return key;
 }
 
 static int
@@ -918,7 +951,8 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 
 	length = P11_KIT_URI_SCHEME_LEN;
 	memcpy (result, P11_KIT_URI_SCHEME, length);
-	result[length] = 0;
+	result[length] = ':';
+	result[++length] = 0;
 
 	if ((uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE) {
 		if (!format_struct_string (&result, &length, &is_first, "library-description",
@@ -1013,19 +1047,12 @@ parse_string_attribute (const char *name, const char *start, const char *end,
 }
 
 static int
-equals_segment (const char *start, const char *end, const char *match)
-{
-	size_t len = strlen (match);
-	assert (start <= end);
-	return (end - start == len) && memcmp (start, match, len) == 0;
-}
-
-static int
 parse_class_attribute (const char *name, const char *start, const char *end,
                        P11KitUri *uri)
 {
 	CK_OBJECT_CLASS klass = 0;
 	CK_ATTRIBUTE attr;
+	char *value;
 
 	assert (start <= end);
 
@@ -1033,22 +1060,28 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 	    strcmp ("object-type", name) != 0)
 		return 0;
 
-	if (equals_segment (start, end, "cert"))
+	value = key_decode (start, end);
+	if (value == NULL)
+		return P11_KIT_URI_NO_MEMORY;
+	if (strcmp (value, "cert") == 0)
 		klass = CKO_CERTIFICATE;
-	else if (equals_segment (start, end, "public"))
+	else if (strcmp (value, "public") == 0)
 		klass = CKO_PUBLIC_KEY;
-	else if (equals_segment (start, end, "private"))
+	else if (strcmp (value, "private") == 0)
 		klass = CKO_PRIVATE_KEY;
-	else if (equals_segment (start, end, "secretkey"))
+	else if (strcmp (value, "secretkey") == 0)
 		klass = CKO_SECRET_KEY;
-	else if (equals_segment (start, end, "secret-key"))
+	else if (strcmp (value, "secret-key") == 0)
 		klass = CKO_SECRET_KEY;
-	else if (equals_segment (start, end, "data"))
+	else if (strcmp (value, "data") == 0)
 		klass = CKO_DATA;
 	else {
+		free (value);
 		uri->unrecognized = 1;
 		return 1;
 	}
+
+	free (value);
 
 	attr.pValue = malloc (sizeof (klass));
 	if (attr.pValue == NULL)
@@ -1123,6 +1156,10 @@ atoin (const char *start, const char *end)
 {
 	int ret = 0;
 	while (start != end) {
+		if (strchr (WHITESPACE, *start)) {
+			start++;
+			continue;
+		}
 		if (*start < '0' || *start > '9')
 			return -1;
 		ret *= 10;
@@ -1252,16 +1289,24 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 {
 	const char *spos, *epos;
 	char *key = NULL;
-	int ret = -1;
+	int ret;
 	int i;
 
 	assert (string);
 	assert (uri);
 
-	if (strncmp (string, P11_KIT_URI_SCHEME, P11_KIT_URI_SCHEME_LEN) != 0)
+	epos = strchr (string, ':');
+	if (epos == NULL)
+		return P11_KIT_URI_BAD_SCHEME;
+	key = key_decode (string, epos);
+	ret = strcmp (key, P11_KIT_URI_SCHEME);
+	free (key);
+
+	if (ret != 0)
 		return P11_KIT_URI_BAD_SCHEME;
 
-	string += P11_KIT_URI_SCHEME_LEN;
+	string = epos + 1;
+	ret = -1;
 
 	/* Clear everything out */
 	memset (&uri->module, 0, sizeof (uri->module));
@@ -1290,11 +1335,9 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		if (epos == NULL || spos == string || epos == string || epos >= spos)
 			return P11_KIT_URI_BAD_SYNTAX;
 
-		key = malloc ((epos - string) + 1);
+		key = key_decode (string, epos);
 		if (key == NULL)
 			return P11_KIT_URI_NO_MEMORY;
-		memcpy (key, string, epos - string);
-		key[epos - string] = 0;
 		epos++;
 
 		ret = 0;
