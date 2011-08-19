@@ -1,3 +1,11 @@
+0.4
+ * Fix endless loop if module forks during initialization
+ * Update PKCS#11 URI code for new draft of spec
+ * Don't fail when duplicate modules are configured
+ * Better debug output
+ * Add example configuration documentation
+ * Support whitespace in PKCS#11 URIs
+
 0.3
  * Rewrite hash table, and simplify licensing.
  * Correct paths for p11-kit config files.
