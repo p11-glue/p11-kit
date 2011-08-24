@@ -35,6 +35,8 @@
 
 #include "config.h"
 
+#define DEBUG_FLAG DEBUG_PROXY
+#include "debug.h"
 #include "hashmap.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
@@ -145,7 +147,7 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (gl.sessions);
-			sess = hash_get (gl.sessions, &handle);
+			sess = hash_get (gl.sessions, handle);
 			if (sess != NULL) {
 				*handle = sess->real_session;
 				rv = map_slot_unlocked (sess->wrap_slot, mapping);
@@ -202,25 +204,30 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 {
 	CK_RV rv;
 
+	debug ("in");
+
 	/* WARNING: This function must be reentrant */
 
-	if (reserved)
-		return CKR_ARGUMENTS_BAD;
+	if (reserved) {
+		rv = CKR_ARGUMENTS_BAD;
 
-	_p11_lock ();
+	} else {
+		_p11_lock ();
 
-		/* WARNING: Reentrancy can occur here */
-		rv = _p11_kit_finalize_registered_unlocked_reentrant ();
+			/* WARNING: Reentrancy can occur here */
+			rv = _p11_kit_finalize_registered_unlocked_reentrant ();
 
-		/*
-		 * If modules are all gone, then this was the last
-		 * finalize, so cleanup our mappings
-		 */
-		if (gl.mappings_refs)
-			finalize_mappings_unlocked ();
+			/*
+			 * If modules are all gone, then this was the last
+			 * finalize, so cleanup our mappings
+			 */
+			if (gl.mappings_refs)
+				finalize_mappings_unlocked ();
 
-	_p11_unlock ();
+		_p11_unlock ();
+	}
 
+	debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -288,6 +295,8 @@ initialize_mappings_unlocked_reentrant (void)
 	}
 
 	assert (!gl.sessions);
+	gl.mappings = mappings;
+	gl.n_mappings = n_mappings;
 	gl.sessions = hash_create (hash_ulongptr_hash, hash_ulongptr_equal, NULL, free);
 	++gl.mappings_refs;
 
@@ -302,20 +311,25 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 
 	/* WARNING: This function must be reentrant */
 
+	debug ("in");
+
 	_p11_lock ();
 
 		/* WARNING: Reentrancy can occur here */
 		rv = _p11_kit_initialize_registered_unlocked_reentrant ();
 
 		/* WARNING: Reentrancy can occur here */
-		if (rv == CKR_OK && !gl.mappings_refs == 0)
+		if (rv == CKR_OK && gl.mappings_refs == 0)
 			rv = initialize_mappings_unlocked_reentrant ();
 
 	_p11_unlock ();
 
+	debug ("here");
+
 	if (rv != CKR_OK)
 		proxy_C_Finalize (NULL);
 
+	debug ("out: %lu", rv);
 	return rv;
 }
 

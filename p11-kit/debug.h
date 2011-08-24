@@ -39,7 +39,8 @@
 typedef enum {
 	DEBUG_LIB = 1 << 1,
 	DEBUG_CONF = 1 << 2,
-	DEBUG_URI = 1 << 3
+	DEBUG_URI = 1 << 3,
+	DEBUG_PROXY = 1 << 4,
 } DebugFlags;
 
 extern int        debug_current_flags;

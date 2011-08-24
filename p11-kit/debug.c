@@ -54,6 +54,7 @@ static struct DebugKey debug_keys[] = {
 	{ "lib", DEBUG_LIB },
 	{ "conf", DEBUG_CONF },
 	{ "uri", DEBUG_URI },
+	{ "proxy", DEBUG_PROXY },
 	{ 0, }
 };
 
