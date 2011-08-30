@@ -49,8 +49,6 @@ enum {
 	CONF_USER_ONLY
 };
 
-typedef void  (*conf_error_func)   (const char *message);
-
 int           _p11_conf_merge_defaults       (hashmap *config,
                                               hashmap *defaults);
 
