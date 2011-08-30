@@ -43,6 +43,10 @@ user-config: merge
 # This setting controls the actual module library to load. This config file might
 # be installed by the package that installs this module library.
 module: /usr/lib/my-pkcs11-module.so
+
+# This controls whether the module is required to successfully initialize. If 'yes', then
+# a failure to load or initialize this module will result in a p11-kit system failure.
+critical: no
 </programlisting>
 
 <para>User configuration file: <literal>~/.pkcs11/pkcs11.conf</literal></para>
@@ -63,6 +67,7 @@ module: /home/user/src/custom-module/my-module.so
 # some custom non-standard initialization arguments, as NSS expects.
 module: /usr/lib/libsoftokn3.so
 x-init-reserved: configdir='sql:/home/test/.pki/nssdb' certPrefix='' keyPrefix='' secmod='socmod.db'
+critical: yes
 </programlisting>
 
 
@@ -113,8 +118,23 @@ x-init-reserved: configdir='sql:/home/test/.pki/nssdb' certPrefix='' keyPrefix='
 		<variablelist>
 			<varlistentry>
 				<term>module:</term>
-				<listitem><para>The absolute path to the PKCS#11 module to load.
-				This should include an extension like <literal>.so</literal></para></listitem>
+				<listitem>
+					<para>The absolute path to the PKCS#11 module to load.
+					This should include an extension like <literal>.so</literal></para>
+					<para>If this value is blank, then the module will be ignored.
+					This can be used in the user configs to override loading of a module
+					specified in the system configuration.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>critical:</term>
+				<listitem>
+					<para>Set to <literal>yes</literal> if the module is critical and
+					required to load. If a critical module fails to load or initialize,
+					then the loading process for all registered modules will abort and
+					return an error code.</para>
+					<para>This argument is optional and defaults to <literal>no</literal>.</para>
+				</listitem>
 			</varlistentry>
 		</variablelist>
 

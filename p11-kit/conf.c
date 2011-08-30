@@ -608,3 +608,21 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 
 	return configs;
 }
+
+int
+_p11_conf_parse_boolean (const char *string,
+                         int default_value)
+{
+	if (!string)
+		return default_value;
+
+	if (strcmp (string, "yes") == 0) {
+		return 1;
+	} else if (strcmp (string, "no") == 0) {
+		return 0;
+	} else {
+		_p11_message ("invalid setting '%s' defaulting to '%s'",
+		              default_value ? "yes" : "no");
+		return default_value;
+	}
+}

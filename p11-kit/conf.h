@@ -66,4 +66,7 @@ hashmap *     _p11_conf_load_globals         (const char *system_conf, const cha
 hashmap *     _p11_conf_load_modules         (int user_mode, const char *system_dir,
                                               const char *user_dir);
 
+int           _p11_conf_parse_boolean        (const char *string,
+                                              int default_value);
+
 #endif /* __CONF_H__ */

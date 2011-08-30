@@ -389,6 +389,7 @@ load_registered_modules_unlocked (void)
 	hashmap *config;
 	int mode;
 	CK_RV rv;
+	int critical;
 
 	if (gl.config)
 		return CKR_OK;
@@ -419,6 +420,9 @@ load_registered_modules_unlocked (void)
 		if (!hash_steal (configs, key, (void**)&name, (void**)&config))
 			assert (0 && "not reached");
 
+		/* Is this a critical module, should abort loading of others? */
+		critical = _p11_conf_parse_boolean (hash_get (config, "critical"), 0);
+
 		rv = take_config_and_load_module_unlocked (&name, &config);
 
 		/*
@@ -428,7 +432,8 @@ load_registered_modules_unlocked (void)
 		free (name);
 		hash_free (config);
 
-		if (rv != CKR_OK) {
+		if (critical && rv != CKR_OK) {
+			_p11_message ("aborting initializationg because module '%s' was marked as critical");
 			hash_free (configs);
 			return rv;
 		}
