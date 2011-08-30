@@ -775,12 +775,13 @@ p11_kit_finalize_registered (void)
 CK_FUNCTION_LIST_PTR_PTR
 _p11_kit_registered_modules_unlocked (void)
 {
-	CK_FUNCTION_LIST_PTR_PTR result;
+	CK_FUNCTION_LIST_PTR_PTR result = NULL;
 	Module *mod;
 	hashiter iter;
 	int i = 0;
 
-	result = calloc (hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
+	if (gl.modules)
+		result = calloc (hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
 	if (result) {
 		hash_iterate (gl.modules, &iter);
 		while (hash_next (&iter, NULL, (void **)&mod)) {
