@@ -1,3 +1,8 @@
+0.5
+ * Fix crasher in p11_kit_registered_modules()
+ * Add 'critical' setting for modules, which defaults to 'no'
+ * Fix initialization issues in the proxy module
+
 0.4
  * Fix endless loop if module forks during initialization
  * Update PKCS#11 URI code for new draft of spec
