@@ -13,6 +13,7 @@
 
 	<xi:include href="p11-kit-config.xml"/>
 	<xi:include href="p11-kit-sharing.xml"/>
+	<xi:include href="p11-kit-notes.xml"/>
 
 	<chapter xml:id="reference">
 		<title>Reference</title>

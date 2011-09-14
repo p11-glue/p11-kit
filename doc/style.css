@@ -79,5 +79,7 @@ H2 {
 }
 
 H3 {
+	position: relative;
+	left: -1em;
 	font-weight: normal !important;
 }

@@ -40,9 +40,11 @@ user-config: merge
 
 <para>One module configuration file per module: <literal>/etc/pkcs11/modules/my-module</literal></para>
 <programlisting>
-# This setting controls the actual module library to load. This config file might
-# be installed by the package that installs this module library.
-module: /usr/lib/my-pkcs11-module.so
+# This setting controls the actual module library to load. This config file
+# might be installed by the package that installs this module library. This
+# is not an absolute path name. Relative path names are loaded from the
+# $(libdir)/pkcs11 directory by default.
+module: my-pkcs11-module.so
 
 # This controls whether the module is required to successfully initialize. If 'yes', then
 # a failure to load or initialize this module will result in a p11-kit system failure.
@@ -110,20 +112,22 @@ critical: yes
 	<section id="config-module">
 		<title>Module Configuration</title>
 
-		<para>Each configured PKCS#11 module has its own config file. The
-		location(s) of these files are described below. Most importantly each
-		config file specifies the location of the PKCS#11 module to load. Each
-		module config file has the following fields:</para>
+		<para>Each configured PKCS#11 module has its own config file. These files
+		can be <link linkend="config-locations">placed in various locations</link>.
+		Most importantly each config file specifies the path of the PKCS#11 module to
+		load. A module config file has the following fields:</para>
 
 		<variablelist>
 			<varlistentry>
 				<term>module:</term>
 				<listitem>
-					<para>The absolute path to the PKCS#11 module to load.
+					<para>The filename of the PKCS#11 module to load.
 					This should include an extension like <literal>.so</literal></para>
 					<para>If this value is blank, then the module will be ignored.
 					This can be used in the user configs to override loading of a module
 					specified in the system configuration.</para>
+					<para>If this is a relative path, then the module will be loaded
+					from the <link linkend="notes-paths-modules">default module directory</link>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -174,16 +178,19 @@ critical: yes
 		files and a file for global configuration. Optionally each user can provide
 		additional configuration or override the system configuration.</para>
 
-		<para>The system global configuration file is in
+		<para>The system global configuration file is usually in
 		<literal>/etc/pkcs11/pkcs11.conf</literal> and the user global
 		configuration file is in <literal>~/.pkcs11/pkcs11.conf</literal> in the
 		user's home directory.</para>
 
-		<para>
-			The module config files are located in the
-			<literal>/etc/pkcs11/modules</literal> directory, with one configuration
-			file per module. In addition the <literal>~/.pkcs11/modules</literal>
-			directory can be used for modules installed by the user.
-		</para>
+		<para>The module config files are usually located in the
+		<literal>/etc/pkcs11/modules</literal> directory, with one configuration
+		file per module. In addition the <literal>~/.pkcs11/modules</literal> directory
+		can be used for modules installed by the user.</para>
+
+		<para>The default system config file and module directory can be changed
+		when building p11-kit. Always
+		<link linkend="notes-paths">lookup these paths</link> using
+		<literal>pkg-config</literal>.</para>
 	</section>
 </chapter>

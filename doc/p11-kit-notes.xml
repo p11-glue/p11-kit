@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="config">
+	<title>Developer and Packager Notes</title>
+
+	<section id="notes-paths">
+		<title>Using pkg-config to determine paths</title>
+
+		<para>Developers or packagers of PKCS#11 modules need to install various
+		files into specific locations so that p11-kit will recognize and load the
+		module correctly.</para>
+
+		<para>You should use <literal>pkg-config</literal> as described below
+		to determine configuration paths. p11-kit installs a
+		<literal>pkg-config</literal> file called <literal>p11-kit-1.pc</literal>.
+		This file contains all the information about the various paths that p11-kit
+		looks for files at.</para>
+
+		<section id="notes-paths-config">
+			<title>Path to place module configuration</title>
+
+			<para>As described in the <link linkend="config-module">module configuration</link>
+			documentation, each PKCS#11 module should install a config file describing
+			that module. These config files should be installed to a specific directory which
+			can be determined by running:</para>
+
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_system_config_modules</command>
+/etc/pkcs11/modules</programlisting>
+		</section>
+
+		<section id="notes-paths-modules">
+			<title>Default path for modules with relative paths</title>
+
+			<para>If a <link linkend="config-module">module configuration</link>
+			contains a relative path in its <literal>module:</literal> setting,
+			then that module will be loaded from the default module path. This
+			path can be determined by running:</para>
+
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting>
+		</section>
+
+	</section>
+
+</chapter>

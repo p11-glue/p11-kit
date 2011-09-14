@@ -33,5 +33,8 @@
 	<xi:include href="p11-kit-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
 		<xi:fallback/>
 	</xi:include>
+	<xi:include href="p11-kit-notes.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+		<xi:fallback/>
+	</xi:include>
 
 </article>
