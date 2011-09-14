@@ -2,7 +2,7 @@ AC_PREREQ(2.65)
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_INIT([p11-kit],
-	[0.5],
+	[0.6],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])

@@ -1,3 +1,8 @@
+0.6
+ * Add concept of a default module directory from which modules with
+   relative paths are loaded.
+ * Renamed pkg-config variables to make it clearer what's what.
+
 0.5
  * Fix crasher in p11_kit_registered_modules()
  * Add 'critical' setting for modules, which defaults to 'no'
