@@ -59,6 +59,11 @@ AC_ARG_WITH([system-config],
             [system_config_dir=$withval],
             [system_config_dir=$sysconfdir/pkcs11])
 
+AC_ARG_WITH([module-path],
+            [AS_HELP_STRING([--with-module-path], [Load modules with relative path names from here])],
+            [module_path=$withval],
+            [module_path=$libdir/pkcs11])
+
 # We expand these so we have concrete paths
 p11_system_config=$(eval echo $system_config_dir)
 p11_system_config_file=$(eval echo $p11_system_config/pkcs11.conf)
@@ -66,11 +71,13 @@ p11_system_config_modules=$(eval echo $p11_system_config/modules)
 p11_user_config="~/.pkcs11"
 p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
+p11_module_path="$module_path"
 
 AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_FILE, "$p11_system_config_file", [System configuration file])
 AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_MODULES, "$p11_system_config_modules", [System modules configuration dir])
 AC_DEFINE_UNQUOTED(P11_USER_CONFIG_FILE, "$p11_user_config_file", [User configuration file])
 AC_DEFINE_UNQUOTED(P11_USER_CONFIG_MODULES, "$p11_user_config_modules", [User modules configuration dir])
+AC_DEFINE_UNQUOTED(P11_MODULE_PATH, "$p11_module_path", [Path to load modules with relative path names from])
 
 AC_SUBST(p11_system_config)
 AC_SUBST(p11_system_config_file)
@@ -78,6 +85,7 @@ AC_SUBST(p11_system_config_modules)
 AC_SUBST(p11_user_config)
 AC_SUBST(p11_user_config_file)
 AC_SUBST(p11_user_config_modules)
+AC_SUBST(p11_module_path)
 
 # --------------------------------------------------------------------
 # Warnings to show if using GCC
@@ -194,4 +202,5 @@ AC_MSG_NOTICE([build options:
     System Module Config Directory:  $p11_system_config_modules
     User Global Config:              $p11_user_config_file
     User Module Config Directory:    $p11_user_config_modules
+    Load relative module paths from: $p11_module_path
 ])

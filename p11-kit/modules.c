@@ -244,6 +244,35 @@ alloc_module_unlocked (void)
 	return mod;
 }
 
+static int
+is_relative_path (const char *path)
+{
+	assert (path);
+
+	return (*path != '/');
+}
+
+static char*
+build_path (const char *dir, const char *filename)
+{
+	char *path;
+	int len;
+
+	assert (dir);
+	assert (filename);
+
+	len = snprintf (NULL, 0, "%s/%s", dir, filename) + 1;
+	if (len <= 0 || len > PATH_MAX)
+		return NULL;
+
+	if (!(path = malloc (len)))
+		return NULL;
+
+	sprintf (path, "%s/%s", dir, filename);
+
+	return path;
+}
+
 static CK_RV
 dlopen_and_get_function_list (Module *mod, const char *path)
 {
@@ -312,11 +341,27 @@ load_module_from_file_unlocked (const char *path, Module **result)
 	return CKR_OK;
 }
 
+static char*
+expand_module_path (const char *filename)
+{
+	char *path;
+
+	if (is_relative_path (filename)) {
+		debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
+		path = build_path (P11_MODULE_PATH, filename);
+	} else {
+		path = strdup (filename);
+	}
+
+	return path;
+}
+
 static CK_RV
 take_config_and_load_module_unlocked (char **name, hashmap **config)
 {
 	Module *mod, *prev;
-	const char *path;
+	const char *module_filename;
+	char *path;
 	CK_RV rv;
 
 	assert (name);
@@ -324,10 +369,20 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	assert (config);
 	assert (*config);
 
-	path = hash_get (*config, "module");
-	if (path == NULL) {
+	module_filename = hash_get (*config, "module");
+	if (module_filename == NULL) {
 		debug ("no module path for module, skipping: %s", *name);
 		return CKR_OK;
+	}
+
+	path = expand_module_path (module_filename);
+	if (!path)
+		return CKR_HOST_MEMORY;
+
+	/* The hash map will take ownership of the variable */
+	if (!hash_set (*config, "module", path)) {
+		free (path);
+		return CKR_HOST_MEMORY;
 	}
 
 	mod = alloc_module_unlocked ();

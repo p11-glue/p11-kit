@@ -11,6 +11,7 @@ p11_system_config_modules=@p11_system_config_modules@
 p11_user_config=@p11_user_config@
 p11_user_config_file=@p11_user_config_file@
 p11_user_config_modules=@p11_user_config_modules@
+p11_module_path=@p11_module_path@
 proxy_module=@libdir@/p11-kit-proxy.so
 
 Name: p11-kit
