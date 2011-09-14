@@ -54,28 +54,30 @@ GTK_DOC_CHECK([1.15])
 # --------------------------------------------------------------------
 # PKCS#11 Directories
 
-AC_ARG_WITH([pkcs11-dir],
-            [AS_HELP_STRING([--with-pkcs11-dir], [Change PKCS#11 system config directory])],
-            [pkcs11_dir=$withval],
-            [pkcs11_dir=$sysconfdir/pkcs11])
+AC_ARG_WITH([system-config],
+            [AS_HELP_STRING([--with-system-config], [Change PKCS#11 system config directory])],
+            [system_config_dir=$withval],
+            [system_config_dir=$sysconfdir/pkcs11])
 
 # We expand these so we have concrete paths
-p11_system_dir=$(eval echo $pkcs11_dir)
-p11_system_conf=$(eval echo $p11_system_dir/pkcs11.conf)
-p11_system_modules=$(eval echo $p11_system_dir/modules)
-p11_user_conf="~/.pkcs11/pkcs11.conf"
-p11_user_modules="~/.pkcs11/modules"
+p11_system_config=$(eval echo $system_config_dir)
+p11_system_config_file=$(eval echo $p11_system_config/pkcs11.conf)
+p11_system_config_modules=$(eval echo $p11_system_config/modules)
+p11_user_config="~/.pkcs11"
+p11_user_config_file="$p11_user_config/pkcs11.conf"
+p11_user_config_modules="$p11_user_config/modules"
 
-AC_DEFINE_UNQUOTED(P11_SYSTEM_CONF, "$p11_system_conf", [System configuration file])
-AC_DEFINE_UNQUOTED(P11_SYSTEM_MODULES, "$p11_system_modules", [System modules dir])
-AC_DEFINE_UNQUOTED(P11_USER_CONF, "$p11_user_conf", [User configuration file])
-AC_DEFINE_UNQUOTED(P11_USER_MODULES, "$p11_user_modules", [User modules dir])
+AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_FILE, "$p11_system_config_file", [System configuration file])
+AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_MODULES, "$p11_system_config_modules", [System modules configuration dir])
+AC_DEFINE_UNQUOTED(P11_USER_CONFIG_FILE, "$p11_user_config_file", [User configuration file])
+AC_DEFINE_UNQUOTED(P11_USER_CONFIG_MODULES, "$p11_user_config_modules", [User modules configuration dir])
 
-AC_SUBST(p11_system_dir)
-AC_SUBST(p11_system_conf)
-AC_SUBST(p11_system_modules)
-AC_SUBST(p11_user_conf)
-AC_SUBST(p11_user_modules)
+AC_SUBST(p11_system_config)
+AC_SUBST(p11_system_config_file)
+AC_SUBST(p11_system_config_modules)
+AC_SUBST(p11_user_config)
+AC_SUBST(p11_user_config_file)
+AC_SUBST(p11_user_config_modules)
 
 # --------------------------------------------------------------------
 # Warnings to show if using GCC
@@ -188,8 +190,8 @@ AC_OUTPUT
 
 AC_MSG_NOTICE([build options:
 
-    System Global Config:     $p11_system_conf
-    User Global Config:       $p11_user_conf
-    System Module Directory:  $p11_system_modules
-    User Module Directory:    $p11_user_modules
+    System Global Config:            $p11_system_config_file
+    System Module Config Directory:  $p11_system_config_modules
+    User Global Config:              $p11_user_config_file
+    User Module Config Directory:    $p11_user_config_modules
 ])

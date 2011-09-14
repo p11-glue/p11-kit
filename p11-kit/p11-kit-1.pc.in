@@ -5,10 +5,12 @@ includedir=@includedir@
 datarootdir=@datarootdir@
 datadir=@datadir@
 sysconfdir=@sysconfdir@
-p11_system_conf=@p11_system_conf@
-p11_system_modules=@p11_system_modules@
-p11_user_conf=@p11_user_conf@
-p11_user_modules=@p11_user_modules@
+p11_system_config=@p11_system_config@
+p11_system_config_file=@p11_system_config_file@
+p11_system_config_modules=@p11_system_config_modules@
+p11_user_config=@p11_user_config@
+p11_user_config_file=@p11_user_config_file@
+p11_user_config_modules=@p11_user_config_modules@
 proxy_module=@libdir@/p11-kit-proxy.so
 
 Name: p11-kit

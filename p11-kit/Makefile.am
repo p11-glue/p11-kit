@@ -46,7 +46,7 @@ libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc
 
-exampledir = $(p11_system_dir)
+exampledir = $(p11_system_config)
 example_DATA = pkcs11.conf.example
 
 EXTRA_DIST = \

@@ -395,13 +395,14 @@ load_registered_modules_unlocked (void)
 		return CKR_OK;
 
 	/* Load the global configuration files */
-	config = _p11_conf_load_globals (P11_SYSTEM_CONF, P11_USER_CONF, &mode);
+	config = _p11_conf_load_globals (P11_SYSTEM_CONFIG_FILE, P11_USER_CONFIG_FILE, &mode);
 	if (config == NULL)
 		return (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
 
 	assert (mode != CONF_USER_INVALID);
 
-	configs = _p11_conf_load_modules (mode, P11_SYSTEM_MODULES, P11_USER_MODULES);
+	configs = _p11_conf_load_modules (mode, P11_SYSTEM_CONFIG_MODULES,
+	                                  P11_USER_CONFIG_MODULES);
 	if (configs == NULL) {
 		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
 		hash_free (config);
