@@ -1,7 +1,14 @@
+NULL =
 
 INCLUDES = \
 	-I$(top_srcdir) \
-	-DP11_KIT_FUTURE_UNSTABLE_API
+	-DP11_KIT_FUTURE_UNSTABLE_API \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(p11_system_config_modules)"\" \
+	-DP11_USER_CONFIG_FILE=\""$(p11_user_config_file)"\" \
+	-DP11_USER_CONFIG_MODULES=\""$p11_user_config_modules"\" \
+	-DP11_MODULE_PATH=\""$p11_module_path"\" \
+	$(NULL)
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 

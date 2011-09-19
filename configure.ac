@@ -73,12 +73,6 @@ p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
 p11_module_path="$module_path"
 
-AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_FILE, "$p11_system_config_file", [System configuration file])
-AC_DEFINE_UNQUOTED(P11_SYSTEM_CONFIG_MODULES, "$p11_system_config_modules", [System modules configuration dir])
-AC_DEFINE_UNQUOTED(P11_USER_CONFIG_FILE, "$p11_user_config_file", [User configuration file])
-AC_DEFINE_UNQUOTED(P11_USER_CONFIG_MODULES, "$p11_user_config_modules", [User modules configuration dir])
-AC_DEFINE_UNQUOTED(P11_MODULE_PATH, "$p11_module_path", [Path to load modules with relative path names from])
-
 AC_SUBST(p11_system_config)
 AC_SUBST(p11_system_config_file)
 AC_SUBST(p11_system_config_modules)
