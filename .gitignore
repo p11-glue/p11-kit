@@ -8,6 +8,7 @@
 *.gcno
 *.gcda
 *.gcov
+*.gmo
 *~
 *.html
 *.pot
@@ -81,6 +82,8 @@ temp.txt
 /po/stamp-po
 /po/remove-potcdate.sed
 /po/Makevars.template
+/po/en@boldquot*
+/po/en@quot*
 
 /p11-kit/tests/p11-test
 /p11-kit/tests/pin-test

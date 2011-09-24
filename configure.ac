@@ -30,6 +30,9 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen disable-static])
+AM_GNU_GETTEXT([external], [need-ngettext])
+
+dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
