@@ -16,7 +16,8 @@ noinst_PROGRAMS = \
 	conf-test \
 	uri-test \
 	pin-test \
-	p11-test
+	p11-test \
+	print-messages
 
 p11_test_SOURCES = \
 	p11-test.c \
