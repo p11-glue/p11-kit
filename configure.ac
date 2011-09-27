@@ -65,9 +65,9 @@ AC_ARG_WITH([module-path],
             [module_path=$libdir/pkcs11])
 
 # We expand these so we have concrete paths
-p11_system_config=$(eval echo $system_config_dir)
-p11_system_config_file=$(eval echo $p11_system_config/pkcs11.conf)
-p11_system_config_modules=$(eval echo $p11_system_config/modules)
+p11_system_config=$system_config_dir
+p11_system_config_file=$p11_system_config/pkcs11.conf
+p11_system_config_modules=$p11_system_config/modules
 p11_user_config="~/.pkcs11"
 p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
