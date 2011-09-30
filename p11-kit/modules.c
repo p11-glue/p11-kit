@@ -263,8 +263,13 @@ build_path (const char *dir, const char *filename)
 	assert (filename);
 
 	len = snprintf (NULL, 0, "%s/%s", dir, filename) + 1;
-	if (len <= 0 || len > PATH_MAX)
+	if (len <= 0)
 		return NULL;
+
+#ifdef PATH_MAX
+	if (len > PATH_MAX)
+		return NULL;
+#endif
 
 	if (!(path = malloc (len)))
 		return NULL;
