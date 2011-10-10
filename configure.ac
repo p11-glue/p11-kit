@@ -1,5 +1,4 @@
 AC_PREREQ(2.65)
-AC_CONFIG_MACRO_DIR([m4])
 
 AC_INIT([p11-kit],
 	[0.7],
@@ -7,51 +6,48 @@ AC_INIT([p11-kit],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
 
-dnl ****************************************************************************
-dnl p11-kit libtool versioning
-dnl CURRENT : REVISION : AGE
-dnl   +1    :     0    : +1   == new interface that does not break old one.
-dnl   +1    :     0    :  0   == removed an interface. Breaks old apps.
-dnl    ?    :    +1    :  ?   == internal changes that doesn't break anything.
+# ------------------------------------------------------------------------------
+# p11-kit libtool versioning
+# CURRENT : REVISION : AGE
+#   +1    :     0    : +1   == new interface that does not break old one.
+#   +1    :     0    :  0   == removed an interface. Breaks old apps.
+#    ?    :    +1    :  ?   == internal changes that doesn't break anything.
 
 P11KIT_CURRENT=0
 P11KIT_REVISION=0
 P11KIT_AGE=0
 
-dnl ****************************************************************************
+# ------------------------------------------------------------------------------
 
-AC_CONFIG_SRCDIR([p11-kit/modules.c])
 AC_CONFIG_HEADERS([config.h])
-
-dnl Other initialization
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([1.11])
 AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
+
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen disable-static])
-
-LINGUAS=""
-AM_GNU_GETTEXT([external], [need-ngettext])
-
-dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
 
-dnl Checks for libraries.
+LINGUAS=""
+AM_GNU_GETTEXT([external], [need-ngettext])
+
+GTK_DOC_CHECK([1.15])
+
+# ------------------------------------------------------------------------------
+# Checks for libraries
+
 AC_CHECK_LIB(pthread, pthread_mutex_lock,,
 	[AC_MSG_ERROR([could not find pthread_mutex_lock])])
 AC_SEARCH_LIBS([dlopen], [dl dld], [],
 	[AC_MSG_ERROR([could not find dlopen])])
 
-
-dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 
-GTK_DOC_CHECK([1.15])
-
-# --------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # PKCS#11 Directories
 
 AC_ARG_WITH([system-config],
@@ -82,13 +78,33 @@ AC_SUBST(p11_user_config_modules)
 AC_SUBST(p11_module_path)
 
 # --------------------------------------------------------------------
-# Warnings to show if using GCC
+# Compilation and linking options
 
-AC_ARG_ENABLE(more-warnings,
-	      AS_HELP_STRING([--disable-more-warnings], [Inhibit compiler warnings]),
-	      set_more_warnings=no)
+AC_MSG_CHECKING([for debug mode])
+AC_ARG_ENABLE(debug,
+              AC_HELP_STRING([--enable-debug=no/default/yes],
+              [Turn on or off debugging]))
 
-if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
+if test "$enable_debug" != "no"; then
+	AC_DEFINE_UNQUOTED(WITH_DEBUG, 1, [Print debug output])
+	AC_DEFINE_UNQUOTED(_DEBUG, 1, [In debug mode])
+	CFLAGS="$CFLAGS -g"
+fi
+
+if test "$enable_debug" = "yes"; then
+	debug_status="yes (-g, -O0, debug output)"
+	CFLAGS="$CFLAGS -O0"
+elif test "$enable_debug" = "no"; then
+	debug_status="no (no debug output, NDEBUG)"
+	AC_DEFINE_UNQUOTED(NDEBUG, 1, [Disable glib assertions])
+else
+	debug_status="default (-g, debug output)"
+fi
+
+AC_MSG_RESULT($debug_status)
+
+AC_MSG_CHECKING(for more warnings)
+if test "$GCC" = "yes"; then
 	CFLAGS="$CFLAGS \
 		-Wall -Wstrict-prototypes -Wmissing-declarations \
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
@@ -107,15 +123,29 @@ if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
 			CFLAGS="$SAVE_CFLAGS"
 		fi
 	done
+else
+	AC_MSG_RESULT(no)
 fi
 
-# ----------------------------------------------------------------------
-# Coverage
+AC_ARG_ENABLE(strict,
+              [AS_HELP_STRING([--enable-strict], [Strict code compilation])]
+             )
+
+AC_MSG_CHECKING([build strict])
+
+if test "$enable_strict" = "yes"; then
+	CFLAGS="$CFLAGS -Werror"
+	AC_DEFINE_UNQUOTED(WITH_STRICT, 1, [More strict checks])
+	strict_status="yes (-Werror, fatals)"
+else
+	strict_status="no"
+fi
+
+AC_MSG_RESULT($strict_status)
 
 AC_MSG_CHECKING([whether to build with gcov testing])
 AC_ARG_ENABLE([coverage],
-		AS_HELP_STRING([--enable-coverage],
-			[Whether to enable coverage testing ]),
+		[AS_HELP_STRING([--enable-coverage], [Whether to enable coverage testing ])],
 		[],
 		[enable_coverage=no])
 
@@ -151,29 +181,6 @@ AC_SUBST(GCOV)
 AC_SUBST(GENHTML)
 
 # ---------------------------------------------------------------------
-# Debug mode
-
-AC_ARG_ENABLE(debug,
-              AS_HELP_STRING([--enable-debug=no/yes/full],[Turn on or off debugging]))
-
-if test "$enable_debug" != "no"; then
-	AC_DEFINE_UNQUOTED(WITH_DEBUG, 1, [Print debug output])
-fi
-
-if test "$enable_debug" = "full"; then
-	debug_status="full"
-	CFLAGS="$CFLAGS -g -O0 -Werror"
-
-elif test "$enable_debug" = "no"; then
-	debug_status="no"
-	AC_DEFINE_UNQUOTED(NDEBUG, 1, [Disable glib assertions])
-
-else
-	debug_status="yes"
-fi
-
-
-# ---------------------------------------------------------------------
 
 P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
 AC_SUBST(P11KIT_LT_RELEASE)
@@ -192,9 +199,11 @@ AC_OUTPUT
 
 AC_MSG_NOTICE([build options:
 
-    System Global Config:            $p11_system_config_file
-    System Module Config Directory:  $p11_system_config_modules
-    User Global Config:              $p11_user_config_file
-    User Module Config Directory:    $p11_user_config_modules
+    Debug build:                     $debug_status
+    Strict build:                    $strict_status
+    System global config:            $p11_system_config_file
+    System module config directory:  $p11_system_config_modules
+    User global config:              $p11_user_config_file
+    User module config directory:    $p11_user_config_modules
     Load relative module paths from: $p11_module_path
 ])
