@@ -16,11 +16,16 @@ noinst_PROGRAMS = \
 	conf-test \
 	uri-test \
 	pin-test \
+	print-messages \
 	test-fork \
-	print-messages
+	test-recursive
 
 test_fork_SOURCES = \
 	test-fork.c \
+	mock-module.c mock-module.h
+
+test_recursive_SOURCES = \
+	test-recursive.c \
 	mock-module.c mock-module.h
 
 check-am:
@@ -29,7 +34,8 @@ check-am:
 	./conf-test
 	./uri-test
 	./pin-test
-	./p11-test
+	./test-fork
+	./test-recursive
 
 EXTRA_DIST = \
 	cutest \

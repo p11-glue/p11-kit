@@ -109,6 +109,7 @@ typedef struct _Module {
 	/* Initialized modules */
 	CK_C_INITIALIZE_ARGS init_args;
 	int initialize_count;
+	int initializing;
 } Module;
 
 /*
@@ -509,8 +510,12 @@ static CK_RV
 initialize_module_unlocked_reentrant (Module *mod)
 {
 	CK_RV rv = CKR_OK;
-
 	assert (mod);
+
+	if (mod->initializing) {
+		_p11_message ("p11-kit initialization called recursively");
+		return CKR_FUNCTION_FAILED;
+	}
 
 	/*
 	 * Increase ref first, so module doesn't get freed out from
@@ -520,6 +525,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 
 	if (!mod->initialize_count) {
 
+		mod->initializing = 1;
 		debug ("C_Initialize: calling");
 
 		_p11_unlock ();
@@ -530,6 +536,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 		_p11_lock ();
 
 		debug ("C_Initialize: result: %lu", rv);
+		mod->initializing = 0;
 
 		/*
 		 * Because we have the mutex unlocked above, two initializes could
