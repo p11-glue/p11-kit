@@ -39,6 +39,7 @@
 #include <sys/wait.h>
 
 #include <assert.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,7 +95,6 @@ test_fork_initialization (CuTest *tc)
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
-
 static CK_RV
 mock_C_Initialize__with_recursive (CK_VOID_PTR init_args)
 {
@@ -120,6 +120,108 @@ test_recursive_initialization (CuTest *tc)
 	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
 }
 
+static pthread_mutex_t race_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int initialization_count = 0;
+static int finalization_count = 0;
+
+#include "private.h"
+
+static CK_RV
+mock_C_Initialize__threaded_race (CK_VOID_PTR init_args)
+{
+	struct timespec ts = { 0, 100 * 1000 * 1000 };
+
+	/* Atomically increment value */
+	pthread_mutex_lock (&race_mutex);
+	initialization_count += 1;
+	pthread_mutex_unlock (&race_mutex);
+
+	nanosleep (&ts, NULL);
+	return CKR_OK;
+}
+
+static CK_RV
+mock_C_Finalize__threaded_race (CK_VOID_PTR reserved)
+{
+	struct timespec ts = { 0, 100 * 1000 * 1000 };
+
+	/* Atomically increment value */
+	pthread_mutex_lock (&race_mutex);
+	finalization_count += 1;
+	pthread_mutex_unlock (&race_mutex);
+
+	nanosleep (&ts, NULL);
+	return CKR_OK;
+}
+
+static void *
+initialization_thread (void *data)
+{
+	CuTest *tc = data;
+	CK_RV rv;
+
+	rv = p11_kit_initialize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	return tc;
+}
+
+static void *
+finalization_thread (void *data)
+{
+	CuTest *tc = data;
+	CK_RV rv;
+
+	rv = p11_kit_finalize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	return tc;
+}
+
+static void
+test_threaded_initialization (CuTest *tc)
+{
+	static const int num_threads = 100;
+	pthread_t threads[num_threads];
+	void *retval;
+	int ret;
+	int i;
+
+	/* Build up our own function list */
+	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
+	module.C_Initialize = mock_C_Initialize__threaded_race;
+	module.C_Finalize = mock_C_Finalize__threaded_race;
+
+	initialization_count = 0;
+	finalization_count = 0;
+
+	for (i = 0; i < num_threads; i++) {
+		ret = pthread_create (&threads[i], NULL, initialization_thread, tc);
+		CuAssertIntEquals (tc, 0, ret);
+	}
+
+	for (i = 0; i < num_threads; i++) {
+		ret = pthread_join (threads[i], &retval);
+		CuAssertIntEquals (tc, 0, ret);
+		CuAssertPtrEquals (tc, tc, retval);
+	}
+
+	for (i = 0; i < num_threads; i++) {
+		ret = pthread_create (&threads[i], NULL, finalization_thread, tc);
+		CuAssertIntEquals (tc, 0, ret);
+	}
+
+	for (i = 0; i < num_threads; i++) {
+		ret = pthread_join (threads[i], &retval);
+		CuAssertIntEquals (tc, 0, ret);
+		CuAssertPtrEquals (tc, tc, retval);
+	}
+
+	/* C_Initialize should have been called exactly once */
+	CuAssertIntEquals (tc, 1, initialization_count);
+	CuAssertIntEquals (tc, 1, finalization_count);
+}
+
 int
 main (void)
 {
@@ -129,6 +231,7 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_fork_initialization);
 	SUITE_ADD_TEST (suite, test_recursive_initialization);
+	SUITE_ADD_TEST (suite, test_threaded_initialization);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

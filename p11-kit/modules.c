@@ -97,6 +97,7 @@
 
 typedef struct _Module {
 	CK_FUNCTION_LIST_PTR funcs;
+	CK_C_INITIALIZE_ARGS init_args;
 	int ref_count;
 
 	/* Registered modules */
@@ -106,10 +107,10 @@ typedef struct _Module {
 	/* Loaded modules */
 	void *dl_module;
 
-	/* Initialized modules */
-	CK_C_INITIALIZE_ARGS init_args;
-	int initialize_count;
-	int initializing;
+	/* Initialization, mutex must be held */
+	pthread_mutex_t initialize_mutex;
+	int initialize_called;
+	pthread_t initialize_thread;
 } Module;
 
 /*
@@ -216,13 +217,16 @@ free_module_unlocked (void *data)
 	assert (mod);
 
 	/* Module must be finalized */
-	assert (mod->initialize_count == 0);
+	assert (mod->initialize_called == 0);
+	assert (mod->initialize_thread == 0);
 
 	/* Module must have no outstanding references */
 	assert (mod->ref_count == 0);
 
 	if (mod->dl_module)
 		dlclose (mod->dl_module);
+
+	pthread_mutex_destroy (&mod->initialize_mutex);
 	hash_free (mod->config);
 	free (mod->name);
 	free (mod);
@@ -242,6 +246,7 @@ alloc_module_unlocked (void)
 	mod->init_args.LockMutex = lock_mutex;
 	mod->init_args.UnlockMutex = unlock_mutex;
 	mod->init_args.flags = CKF_OS_LOCKING_OK;
+	pthread_mutex_init (&mod->initialize_mutex, NULL);
 
 	return mod;
 }
@@ -410,33 +415,33 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 
 	prev = hash_get (gl.modules, mod->funcs);
 
-	/* Replace previous module that was loaded explicitly? */
-	if (prev && !prev->name) {
-		mod->ref_count = prev->ref_count;
-		mod->initialize_count = prev->initialize_count;
-		prev->ref_count = 0;
-		prev->initialize_count = 0;
-		prev = NULL; /* freed by hash_set below */
-	}
+	/* If same module was loaded previously, just take over config */
+	if (prev && !prev->name && !prev->config) {
+		prev->name = mod->name;
+		mod->name = NULL;
+		prev->config = mod->config;
+		mod->config = NULL;
+		free_module_unlocked (mod);
 
-	/* Refuse to load duplicate module */
-	if (prev) {
+	/* Ignore duplicate module */
+	} else if (prev) {
 		_p11_message ("duplicate configured module: %s: %s", mod->name, path);
 		free_module_unlocked (mod);
-		return CKR_OK;
-	}
 
+	/* Add this new module to our hash table */
+	} else {
+		if (!hash_set (gl.modules, mod->funcs, mod)) {
+			free_module_unlocked (mod);
+			return CKR_HOST_MEMORY;
+		}
+
+	}
 	/*
 	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
 	 * 'x-init-reserved' setting in the config. This only works with specific
 	 * PKCS#11 modules, and is non-standard use of that field.
 	 */
 	mod->init_args.pReserved = hash_get (mod->config, "x-init-reserved");
-
-	if (!hash_set (gl.modules, mod->funcs, mod)) {
-		free_module_unlocked (mod);
-		return CKR_HOST_MEMORY;
-	}
 
 	return CKR_OK;
 }
@@ -510,9 +515,12 @@ static CK_RV
 initialize_module_unlocked_reentrant (Module *mod)
 {
 	CK_RV rv = CKR_OK;
+	pthread_t self;
 	assert (mod);
 
-	if (mod->initializing) {
+	self = pthread_self ();
+
+	if (mod->initialize_thread == self) {
 		_p11_message ("p11-kit initialization called recursively");
 		return CKR_FUNCTION_FAILED;
 	}
@@ -522,40 +530,38 @@ initialize_module_unlocked_reentrant (Module *mod)
 	 * underneath us when the mutex is unlocked below.
 	 */
 	++mod->ref_count;
+	mod->initialize_thread = self;
 
-	if (!mod->initialize_count) {
+	/* Change over to the module specific mutex */
+	pthread_mutex_lock (&mod->initialize_mutex);
+	_p11_unlock ();
 
-		mod->initializing = 1;
+	if (!mod->initialize_called) {
+
 		debug ("C_Initialize: calling");
 
-		_p11_unlock ();
-
-			assert (mod->funcs);
-			rv = mod->funcs->C_Initialize (&mod->init_args);
-
-		_p11_lock ();
+		assert (mod->funcs);
+		rv = mod->funcs->C_Initialize (&mod->init_args);
 
 		debug ("C_Initialize: result: %lu", rv);
-		mod->initializing = 0;
 
-		/*
-		 * Because we have the mutex unlocked above, two initializes could
-		 * race. Therefore we need to take CKR_CRYPTOKI_ALREADY_INITIALIZED
-		 * into account.
-		 *
-		 * We also need to take into account where in a race both calls return
-		 * CKR_OK (which is not according to the spec but may happen, I mean we
-		 * do it in this module, so it's not unimaginable).
-		 */
-
+		/* Module was initialized and C_Finalize should be called */
 		if (rv == CKR_OK)
-			++mod->initialize_count;
+			mod->initialize_called = 1;
+
+		/* Module was already initialized, we don't call C_Finalize */
 		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
 			rv = CKR_OK;
-		else
-			--mod->ref_count;
 	}
 
+	pthread_mutex_unlock (&mod->initialize_mutex);
+	_p11_lock ();
+
+	/* Don't claim reference if failed */
+	if (rv != CKR_OK)
+		--mod->ref_count;
+
+	mod->initialize_thread = 0;
 	return rv;
 }
 
@@ -573,8 +579,8 @@ reinitialize_after_fork (void)
 		if (gl.modules) {
 			hash_iterate (gl.modules, &iter);
 			while (hash_next (&iter, NULL, (void **)&mod)) {
-				if (mod->initialize_count > 0) {
-					mod->initialize_count = 0;
+				if (mod->initialize_called) {
+					mod->initialize_called = 0;
 
 					/* WARNING: Reentrancy can occur here */
 					initialize_module_unlocked_reentrant (mod);
@@ -648,18 +654,19 @@ finalize_module_unlocked_reentrant (Module *mod)
 	 */
 	++mod->ref_count;
 
-	while (mod->initialize_count > 0) {
+	pthread_mutex_lock (&mod->initialize_mutex);
+	_p11_unlock ();
 
-		_p11_unlock ();
+	if (mod->initialize_called) {
 
-			assert (mod->funcs);
-			mod->funcs->C_Finalize (NULL);
+		assert (mod->funcs);
+		mod->funcs->C_Finalize (NULL);
 
-		_p11_lock ();
-
-		if (mod->initialize_count > 0)
-			--mod->initialize_count;
+		mod->initialize_called = 0;
 	}
+
+	pthread_mutex_unlock (&mod->initialize_mutex);
+	_p11_lock ();
 
 	/* Match the increment above */
 	--mod->ref_count;

@@ -156,8 +156,8 @@ CK_RV
 mock_C_Finalize (CK_VOID_PTR reserved)
 {
 	debug (("C_Finalize: enter"));
-	return_val_if_fail (pkcs11_initialized, CKR_CRYPTOKI_NOT_INITIALIZED);
-	return_val_if_fail (!reserved, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (pkcs11_initialized != 0, CKR_CRYPTOKI_NOT_INITIALIZED);
+	return_val_if_fail (reserved == NULL, CKR_ARGUMENTS_BAD);
 
 	pthread_mutex_lock (&init_mutex);
 
