@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "p11-kit/p11-kit.h"
@@ -49,6 +50,50 @@
 #include "mock-module.h"
 
 CK_FUNCTION_LIST module;
+
+static CK_RV
+mock_C_Initialize__with_fork (CK_VOID_PTR init_args)
+{
+	struct timespec ts = { 0, 100 * 1000 * 1000 };
+	CK_RV rv;
+	pid_t child;
+	pid_t ret;
+	int status;
+
+	rv = mock_C_Initialize (init_args);
+	assert (rv == CKR_OK);
+
+	/* Fork during the initialization */
+	child = fork ();
+	if (child == 0) {
+		nanosleep (&ts, NULL);
+		exit (66);
+	}
+
+	ret = waitpid (child, &status, 0);
+	assert (ret == child);
+	assert (WIFEXITED (status));
+	assert (WEXITSTATUS (status) == 66);
+
+	return CKR_OK;
+}
+
+static void
+test_fork_initialization (CuTest *tc)
+{
+	CK_RV rv;
+
+	/* Build up our own function list */
+	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
+	module.C_Initialize = mock_C_Initialize__with_fork;
+
+	rv = p11_kit_initialize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = p11_kit_finalize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+}
+
 
 static CK_RV
 mock_C_Initialize__with_recursive (CK_VOID_PTR init_args)
@@ -82,6 +127,7 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
+	SUITE_ADD_TEST (suite, test_fork_initialization);
 	SUITE_ADD_TEST (suite, test_recursive_initialization);
 
 	CuSuiteRun (suite);
