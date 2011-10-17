@@ -34,9 +34,10 @@
 
 #include "config.h"
 
+#include "compat.h"
+
 #include <assert.h>
 #include <ctype.h>
-#include <err.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -253,7 +254,7 @@ main (int argc, char *argv[])
 			break;
 		case 'v':
 			verbose = 1;
-			setenv ("P11_KIT_DEBUG", "all", 1);
+			putenv ("P11_KIT_DEBUG=all");
 			break;
 		case 'h':
 		case '?':

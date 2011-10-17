@@ -38,6 +38,7 @@
 #define DEBUG_FLAG DEBUG_PROXY
 #include "debug.h"
 #include "hashmap.h"
+#define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"
@@ -46,7 +47,6 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
-#include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -1389,8 +1389,13 @@ static CK_FUNCTION_LIST proxy_function_list = {
 	proxy_C_WaitForSlotEvent
 };
 
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
+	_p11_library_init_once ();
 	return proxy_C_GetFunctionList (list);
 }

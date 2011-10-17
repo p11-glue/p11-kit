@@ -32,66 +32,32 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef __ERR_H__
+#define __ERR_H__
 
-/* Please keep this enum in sync with keys in debug.c */
-typedef enum {
-	DEBUG_LIB = 1 << 1,
-	DEBUG_CONF = 1 << 2,
-	DEBUG_URI = 1 << 3,
-	DEBUG_PROXY = 1 << 4,
-} DebugFlags;
+#include "config.h"
 
-extern int        debug_current_flags;
+#ifdef HAVE_ERR_H
+#include <err.h>
 
-void              debug_init                     (void);
+#else /* !HAVE_ERR_H */
 
-void              debug_message                  (int flag,
-                                                  const char *format,
-                                                  ...);
+#include <stdarg.h>
+void err_set_file (void *fp);
+void err_set_exit (void (*ef)(int));
+void err (int eval, const char *fmt, ...);
+void verr (int eval, const char *fmt, va_list ap);
+void errc (int eval, int code, const char *fmt, ...);
+void verrc (int eval, int code, const char *fmt, va_list ap);
+void errx (int eval, const char *fmt, ...);
+void verrx (int eval, const char *fmt, va_list ap);
+void warn (const char *fmt, ...);
+void vwarn (const char *fmt, va_list ap);
+void warnc (int code, const char *fmt, ...);
+void vwarnc (int code, const char *fmt, va_list ap);
+void warnx (const char *fmt, ...);
+void vwarnx (const char *fmt, va_list ap);
 
-#endif /* DEBUG_H */
+#endif /* !HAVE_ERR_H */
 
-/* -----------------------------------------------------------------------------
- * Below this point is outside the DEBUG_H guard - so it can take effect
- * more than once. So you can do:
- *
- * #define DEBUG_FLAG DEBUG_ONE_THING
- * #include "debug.h"
- * ...
- * DEBUG ("if we're debugging one thing");
- * ...
- * #undef DEBUG_FLAG
- * #define DEBUG_FLAG DEBUG_OTHER_THING
- * #include "debug.h"
- * ...
- * DEBUG ("if we're debugging the other thing");
- * ...
- */
-
-#ifdef DEBUG_FLAG
-#ifdef WITH_DEBUG
-
-#undef debug
-#define debug(format, ...) do { \
-	if (DEBUG_FLAG & debug_current_flags) \
-		debug_message (DEBUG_FLAG, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
-	} while (0)
-
-#undef debugging
-#define debugging \
-	(DEBUG_FLAG & debug_current_flags)
-
-#else /* !defined (WITH_DEBUG) */
-
-#undef debug
-#define debug(format, ...) \
-	do {} while (0)
-
-#undef debugging
-#define debugging 0
-
-#endif /* !defined (WITH_DEBUG) */
-
-#endif /* defined (DEBUG_FLAG) */
+#endif /* __ERR_H__ */

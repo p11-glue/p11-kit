@@ -20,6 +20,7 @@ inc_HEADERS = \
 
 MODULE_SRCS = \
 	util.c util.h \
+	compat.c compat.h \
 	conf.c conf.h \
 	debug.c debug.h \
 	hashmap.c hashmap.h \

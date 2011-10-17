@@ -37,15 +37,33 @@ AM_GNU_GETTEXT([external], [need-ngettext])
 
 GTK_DOC_CHECK([1.15])
 
+AC_MSG_CHECKING([for win32])
+case "$host" in
+	*-*-mingw*)
+		AC_DEFINE_UNQUOTED(OS_WIN32, 1, [Building for win32])
+		os_win32=yes
+		os_unix=no
+		;;
+	*)
+		AC_DEFINE_UNQUOTED(OS_UNIX, 1, [Building for unix])
+		os_win32=no
+		os_unix=yes
+		;;
+esac
+AC_MSG_RESULT([$os_win32])
+AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "yes")
+
 # ------------------------------------------------------------------------------
-# Checks for libraries
+# Checks for libraries and headers
 
-AC_CHECK_LIB(pthread, pthread_mutex_lock,,
-	[AC_MSG_ERROR([could not find pthread_mutex_lock])])
-AC_SEARCH_LIBS([dlopen], [dl dld], [],
-	[AC_MSG_ERROR([could not find dlopen])])
-
-AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
+if test "$os_unix" = "yes"; then
+	AC_CHECK_LIB(pthread, pthread_mutex_lock,,
+		[AC_MSG_ERROR([could not find pthread_mutex_lock])])
+	AC_SEARCH_LIBS([dlopen], [dl dld], [],
+		[AC_MSG_ERROR([could not find dlopen])])
+	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
+	AC_CHECK_HEADERS([err.h])
+fi
 
 # ------------------------------------------------------------------------------
 # PKCS#11 Directories
@@ -199,6 +217,7 @@ AC_OUTPUT
 
 AC_MSG_NOTICE([build options:
 
+    Host:                            $host
     Debug build:                     $debug_status
     Strict build:                    $strict_status
     System global config:            $p11_system_config_file

@@ -37,6 +37,7 @@
 
 #include "config.h"
 
+#include "compat.h"
 #include "conf.h"
 #define DEBUG_FLAG DEBUG_CONF
 #include "debug.h"
@@ -50,12 +51,19 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef OS_UNIX
+#include <pwd.h>
+#endif
+
+#ifdef OS_WIN32
+#include <shlobj.h>
+#endif
 
 static void
 strcln (char* data, char ch)
@@ -327,31 +335,47 @@ _p11_conf_parse_file (const char* filename, int flags)
 	return map;
 }
 
-static char*
+static char *
 expand_user_path (const char *path)
 {
 	const char *env;
-	struct passwd *pwd;
-	int error = 0;
 
-	if (path[0] == '~' && path[1] == '/') {
-		env = getenv ("HOME");
-		if (env && env[0]) {
-			return strconcat (env, path + 1, NULL);
-		} else {
-			pwd = getpwuid (getuid ());
-			if (!pwd) {
-				error = errno;
-				_p11_message ("couldn't lookup home directory for user %d: %s",
-				              getuid (), strerror (errno));
-				errno = error;
-				return NULL;
-			}
-			return strconcat (pwd->pw_dir, path + 1, NULL);
+	if (path[0] != '~' || path[1] != '/')
+		return strdup (path);
+
+	path += 1;
+	env = getenv ("HOME");
+	if (env && env[0]) {
+		return strconcat (env, path, NULL);
+
+	} else {
+#ifdef OS_UNIX
+		struct passwd *pwd;
+		int error = 0;
+
+		pwd = getpwuid (getuid ());
+		if (!pwd) {
+			error = errno;
+			_p11_message ("couldn't lookup home directory for user %d: %s",
+			              getuid (), strerror (errno));
+			errno = error;
+			return NULL;
 		}
-	}
 
-	return strdup (path);
+		return strconcat (pwd->pw_dir, path, NULL);
+
+#else /* OS_WIN32 */
+		char directory[MAX_PATH + 1];
+
+		if (!SHGetSpecialFolderPathA (NULL, directory, CSIDL_PROFILE, TRUE)) {
+			_p11_message ("couldn't lookup home directory for user");
+			errno = ENOTDIR;
+			return NULL;
+		}
+
+		return strconcat (directory, path, NULL);
+#endif /* OS_WIN32 */
+	}
 }
 
 static int

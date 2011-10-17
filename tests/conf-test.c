@@ -375,6 +375,8 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
+	_p11_library_init ();
+
 	SUITE_ADD_TEST (suite, test_parse_conf_1);
 	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
 	SUITE_ADD_TEST (suite, test_parse_fail_missing);

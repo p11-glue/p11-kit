@@ -42,7 +42,7 @@ CFILE_GLOB=$(top_srcdir)/p11-kit/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
-IGNORE_HFILES= p11-kit-private.h pkcs11.h conf.h debug.h hashmap.h util.h ptr-array.h
+IGNORE_HFILES= private.h pkcs11.h conf.h debug.h hashmap.h util.h ptr-array.h compat.h
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

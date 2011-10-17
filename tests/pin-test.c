@@ -42,6 +42,7 @@
 #include <string.h>
 
 #include "p11-kit/pin.h"
+#include "p11-kit/private.h"
 
 static P11KitPin *
 callback_one (const char *pin_source, P11KitUri *pin_uri, const char *pin_description,
@@ -273,6 +274,8 @@ main (void)
 	CuString *output = CuStringNew ();
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
+
+	_p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_pin_register_unregister);
 	SUITE_ADD_TEST (suite, test_pin_read);

@@ -36,9 +36,10 @@
 
 #include "config.h"
 
+#include "compat.h"
 #include "debug.h"
 
-#include <pthread.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -58,10 +59,11 @@ static struct DebugKey debug_keys[] = {
 	{ 0, }
 };
 
-pthread_mutex_t debug_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int debug_inited = 0;
+static mutex_t debug_mutex;
 
 /* global variable exported in debug.h */
-int debug_current_flags = ~0;
+int debug_current_flags;
 
 static int
 parse_environ_flags (void)
@@ -109,22 +111,21 @@ parse_environ_flags (void)
 }
 
 void
+debug_init (void)
+{
+	debug_current_flags = parse_environ_flags ();
+	mutex_init (&debug_mutex);
+	debug_inited = 1;
+}
+
+void
 debug_message (int flag, const char *format, ...)
 {
-	static int initialized_flags = 0;
 	char buffer[512];
 	va_list args;
 
-	pthread_mutex_lock (&debug_mutex);
-
-	/*
-	 * This is not thread-safe, but it's not really the end of the
-	 * world if it happens more than once.
-	 */
-	if (!initialized_flags) {
-		initialized_flags = 1;
-		debug_current_flags = parse_environ_flags ();
-	}
+	assert (debug_inited);
+	mutex_lock (&debug_mutex);
 
 	if (flag & debug_current_flags) {
 		va_start (args, format);
@@ -134,5 +135,5 @@ debug_message (int flag, const char *format, ...)
 		fprintf (stderr, "(p11-kit:%d) %s\n", getpid(), buffer);
 	}
 
-	pthread_mutex_unlock (&debug_mutex);
+	mutex_unlock (&debug_mutex);
 }

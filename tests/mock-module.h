@@ -28,6 +28,7 @@
 
 CK_FUNCTION_LIST    mock_module_no_slots;
 
+void        mock_module_init                              (void);
 
 CK_RV       mock_C_Initialize                             (CK_VOID_PTR init_args);
 

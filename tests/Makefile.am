@@ -10,26 +10,26 @@ LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit-testable.la \
 	$(LTLIBINTL)
 
-noinst_PROGRAMS = \
+CHECK_PROGS = \
 	hash-test \
 	ptr-array-test \
 	conf-test \
 	uri-test \
 	pin-test \
-	print-messages \
 	test-init
+
+noinst_PROGRAMS = \
+	print-messages \
+	$(CHECK_PROGS)
 
 test_init_SOURCES = \
 	test-init.c \
 	mock-module.c mock-module.h
 
+CHECK_EXECUTABLES = $(CHECK_PROGS:=$(EXEEXT))
+
 check-am:
-	./hash-test
-	./ptr-array-test
-	./conf-test
-	./uri-test
-	./pin-test
-	./test-init
+	for prog in $(CHECK_EXECUTABLES); do ./$$prog; done
 
 EXTRA_DIST = \
 	cutest \

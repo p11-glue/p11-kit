@@ -32,64 +32,83 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef __P11_KIT_PRIVATE_H__
-#define __P11_KIT_PRIVATE_H__
+#include "config.h"
 
-#include "pkcs11.h"
 #include "compat.h"
+#include "private.h"
 
-extern mutex_t _p11_mutex;
+#include <assert.h>
 
-#define P11_MAX_MESSAGE 512
+#ifdef OS_UNIX
 
-typedef struct {
-	char message[P11_MAX_MESSAGE];
+void
+mutex_init (mutex_t *mutex)
+{
+	pthread_mutexattr_t attr;
+	int ret;
+
+	pthread_mutexattr_init (&attr);
+	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+	ret = pthread_mutex_init (mutex, &attr);
+	assert (ret == 0);
+	pthread_mutexattr_destroy (&attr);
+}
+
+#endif /* OS_UNIX */
+
 #ifdef OS_WIN32
-	void *last_error;
-#endif
-} p11_local;
 
-#define       _p11_lock()    mutex_lock (&_p11_mutex);
+const char *
+module_error (void)
+{
+	DWORD code = GetLastError();
+	p11_local *local;
+	LPVOID msg_buf;
 
-#define       _p11_unlock()  mutex_unlock (&_p11_mutex);
+	local = _p11_library_get_thread_local ();
 
-void          _p11_message                                      (const char* msg, ...);
+	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	                FORMAT_MESSAGE_FROM_SYSTEM |
+	                FORMAT_MESSAGE_IGNORE_INSERTS,
+	                NULL, code,
+	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                (LPSTR)&msg_buf, 0, NULL);
 
-p11_local *   _p11_library_get_thread_local                     (void);
+	if (local->last_error)
+		LocalFree (local->last_error);
+	local->last_error = msg_buf;
 
-#ifdef OS_WIN32
+	return msg_buf;
+}
 
-/* No implementation, because done by DllMain */
-#define     _p11_library_init_once()
+int
+thread_create (thread_t *thread,
+               thread_routine routine,
+               void *arg)
+{
+	assert (thread);
 
-#else /* !OS_WIN32 */
+	*thread = CreateThread (NULL, 0,
+	                        (LPTHREAD_START_ROUTINE)routine,
+	                        arg, 0, NULL);
 
-extern pthread_once_t _p11_once;
+	if (*thread == NULL)
+		return GetLastError ();
 
-#define     _p11_library_init_once() \
-	pthread_once (&_p11_once, _p11_library_init);
+	return 0;
+}
 
-#endif /* !OS_WIN32 */
+int
+thread_join (thread_t thread)
+{
+	DWORD res;
 
+	res = WaitForSingleObject (thread, INFINITE);
+	if (res == WAIT_FAILED)
+		return GetLastError ();
 
-void        _p11_library_init                                   (void);
+	CloseHandle (thread);
+	return 0;
+}
 
-void        _p11_library_uninit                                 (void);
-
-CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
-
-CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (void);
-
-CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (void);
-
-void        _p11_kit_proxy_after_fork                           (void);
-
-CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
-                                                                 const char *user_conf,
-                                                                 int *user_mode);
-
-void        _p11_kit_clear_message                              (void);
-
-void        _p11_kit_default_message                            (CK_RV rv);
-
-#endif /* __P11_KIT_PRIVATE_H__ */
+#endif /* OS_WIN32 */

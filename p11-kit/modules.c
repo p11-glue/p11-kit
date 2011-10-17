@@ -48,10 +48,8 @@
 
 #include <assert.h>
 #include <dirent.h>
-#include <dlfcn.h>
 #include <errno.h>
 #include <limits.h>
-#include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -105,21 +103,13 @@ typedef struct _Module {
 	hashmap *config;
 
 	/* Loaded modules */
-	void *dl_module;
+	dl_module_t dl_module;
 
 	/* Initialization, mutex must be held */
-	pthread_mutex_t initialize_mutex;
+	mutex_t initialize_mutex;
 	int initialize_called;
-	pthread_t initialize_thread;
+	thread_t initialize_thread;
 } Module;
-
-/*
- * This is the mutex that protects the global data of this library
- * and the pkcs11 proxy module. Note that we *never* call into our
- * underlying pkcs11 modules while holding this mutex. Therefore it
- * doesn't have to be recursive and we can keep things simple.
- */
-pthread_mutex_t _p11_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*
  * Shared data between threads, protected by the mutex, a structure so
@@ -137,20 +127,15 @@ static struct _Shared {
 static CK_RV
 create_mutex (CK_VOID_PTR_PTR mut)
 {
-	pthread_mutex_t *pmutex;
-	int err;
+	mutex_t *pmutex;
 
 	if (mut == NULL)
 		return CKR_ARGUMENTS_BAD;
 
-	pmutex = malloc (sizeof (pthread_mutex_t));
+	pmutex = malloc (sizeof (mutex_t));
 	if (!pmutex)
 		return CKR_HOST_MEMORY;
-	err = pthread_mutex_init (pmutex, NULL);
-	if (err == ENOMEM)
-		return CKR_HOST_MEMORY;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
+	mutex_init (pmutex);
 	*mut = pmutex;
 	return CKR_OK;
 }
@@ -158,17 +143,12 @@ create_mutex (CK_VOID_PTR_PTR mut)
 static CK_RV
 destroy_mutex (CK_VOID_PTR mut)
 {
-	pthread_mutex_t *pmutex = mut;
-	int err;
+	mutex_t *pmutex = mut;
 
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	err = pthread_mutex_destroy (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
+	mutex_uninit (pmutex);
 	free (pmutex);
 	return CKR_OK;
 }
@@ -176,36 +156,24 @@ destroy_mutex (CK_VOID_PTR mut)
 static CK_RV
 lock_mutex (CK_VOID_PTR mut)
 {
-	pthread_mutex_t *pmutex = mut;
-	int err;
+	mutex_t *pmutex = mut;
 
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	err = pthread_mutex_lock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
+	mutex_lock (pmutex);
 	return CKR_OK;
 }
 
 static CK_RV
 unlock_mutex (CK_VOID_PTR mut)
 {
-	pthread_mutex_t *pmutex = mut;
-	int err;
+	mutex_t *pmutex = mut;
 
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	err = pthread_mutex_unlock (pmutex);
-	if (err == EINVAL)
-		return CKR_MUTEX_BAD;
-	else if (err == EPERM)
-		return CKR_MUTEX_NOT_LOCKED;
-	else if (err != 0)
-		return CKR_GENERAL_ERROR;
+	mutex_unlock (pmutex);
 	return CKR_OK;
 }
 
@@ -224,9 +192,9 @@ free_module_unlocked (void *data)
 	assert (mod->ref_count == 0);
 
 	if (mod->dl_module)
-		dlclose (mod->dl_module);
+		module_close (mod->dl_module);
 
-	pthread_mutex_destroy (&mod->initialize_mutex);
+	mutex_uninit (&mod->initialize_mutex);
 	hash_free (mod->config);
 	free (mod->name);
 	free (mod);
@@ -246,7 +214,7 @@ alloc_module_unlocked (void)
 	mod->init_args.LockMutex = lock_mutex;
 	mod->init_args.UnlockMutex = unlock_mutex;
 	mod->init_args.flags = CKF_OS_LOCKING_OK;
-	pthread_mutex_init (&mod->initialize_mutex, NULL);
+	mutex_init (&mod->initialize_mutex);
 
 	return mod;
 }
@@ -294,16 +262,16 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 	assert (mod);
 	assert (path);
 
-	mod->dl_module = dlopen (path, RTLD_LOCAL | RTLD_NOW);
+	mod->dl_module = module_open (path);
 	if (mod->dl_module == NULL) {
-		_p11_message ("couldn't load module: %s: %s", path, dlerror ());
+		_p11_message ("couldn't load module: %s: %s", path, module_error ());
 		return CKR_GENERAL_ERROR;
 	}
 
-	gfl = dlsym (mod->dl_module, "C_GetFunctionList");
+	gfl = module_symbol (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
 		_p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		              path, dlerror ());
+		              path, module_error ());
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -515,10 +483,10 @@ static CK_RV
 initialize_module_unlocked_reentrant (Module *mod)
 {
 	CK_RV rv = CKR_OK;
-	pthread_t self;
+	thread_t self;
 	assert (mod);
 
-	self = pthread_self ();
+	self = thread_self ();
 
 	if (mod->initialize_thread == self) {
 		_p11_message ("p11-kit initialization called recursively");
@@ -533,7 +501,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 	mod->initialize_thread = self;
 
 	/* Change over to the module specific mutex */
-	pthread_mutex_lock (&mod->initialize_mutex);
+	mutex_lock (&mod->initialize_mutex);
 	_p11_unlock ();
 
 	if (!mod->initialize_called) {
@@ -554,7 +522,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 			rv = CKR_OK;
 	}
 
-	pthread_mutex_unlock (&mod->initialize_mutex);
+	mutex_unlock (&mod->initialize_mutex);
 	_p11_lock ();
 
 	/* Don't claim reference if failed */
@@ -564,6 +532,8 @@ initialize_module_unlocked_reentrant (Module *mod)
 	mod->initialize_thread = 0;
 	return rv;
 }
+
+#ifdef OS_UNIX
 
 static void
 reinitialize_after_fork (void)
@@ -593,6 +563,8 @@ reinitialize_after_fork (void)
 	_p11_kit_proxy_after_fork ();
 }
 
+#endif /* OS_UNIX */
+
 static CK_RV
 init_globals_unlocked (void)
 {
@@ -607,7 +579,9 @@ init_globals_unlocked (void)
 	if (once)
 		return CKR_OK;
 
+#ifdef OS_UNIX
 	pthread_atfork (NULL, NULL, reinitialize_after_fork);
+#endif
 	once = 1;
 
 	return CKR_OK;
@@ -654,7 +628,7 @@ finalize_module_unlocked_reentrant (Module *mod)
 	 */
 	++mod->ref_count;
 
-	pthread_mutex_lock (&mod->initialize_mutex);
+	mutex_lock (&mod->initialize_mutex);
 	_p11_unlock ();
 
 	if (mod->initialize_called) {
@@ -665,7 +639,7 @@ finalize_module_unlocked_reentrant (Module *mod)
 		mod->initialize_called = 0;
 	}
 
-	pthread_mutex_unlock (&mod->initialize_mutex);
+	mutex_unlock (&mod->initialize_mutex);
 	_p11_lock ();
 
 	/* Match the increment above */
@@ -747,6 +721,8 @@ p11_kit_initialize_registered (void)
 
 	/* WARNING: This function must be reentrant */
 	debug ("in");
+
+	_p11_library_init_once ();
 
 	_p11_lock ();
 
@@ -833,6 +809,8 @@ p11_kit_finalize_registered (void)
 	/* WARNING: This function must be reentrant */
 	debug ("in");
 
+	_p11_library_init_once ();
+
 	_p11_lock ();
 
 		_p11_kit_clear_message ();
@@ -886,6 +864,8 @@ p11_kit_registered_modules (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR result;
 
+	_p11_library_init_once ();
+
 	_p11_lock ();
 
 		_p11_kit_clear_message ();
@@ -915,6 +895,8 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module)
 {
 	Module *mod;
 	char *name = NULL;
+
+	_p11_library_init_once ();
 
 	_p11_lock ();
 
@@ -980,6 +962,8 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 	char *option = NULL;
 	hashmap *config = NULL;
 
+	_p11_library_init_once ();
+
 	_p11_lock ();
 
 		_p11_kit_clear_message ();
@@ -1043,6 +1027,8 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 	/* WARNING: This function must be reentrant for the same arguments */
 	debug ("in");
+
+	_p11_library_init_once ();
 
 	_p11_lock ();
 
@@ -1127,6 +1113,8 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 	/* WARNING: This function must be reentrant for the same arguments */
 	debug ("in");
 
+	_p11_library_init_once ();
+
 	_p11_lock ();
 
 		_p11_kit_clear_message ();
@@ -1190,6 +1178,8 @@ p11_kit_load_initialize_module (const char *module_path,
 
 	/* WARNING: This function must be reentrant for the same arguments */
 	debug ("in: %s", module_path);
+
+	_p11_library_init_once ();
 
 	_p11_lock ();
 
