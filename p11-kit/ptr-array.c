@@ -45,7 +45,8 @@ struct ptr_array {
 };
 
 static int
-maybe_expand_array (ptr_array_t *array, unsigned int length)
+maybe_expand_array (ptr_array_t *array,
+                    unsigned int length)
 {
 	unsigned int new_allocated;
 	void **new_memory;
@@ -66,8 +67,8 @@ maybe_expand_array (ptr_array_t *array, unsigned int length)
 	return 1;
 }
 
-ptr_array_t*
-ptr_array_create (ptr_array_destroy_func destroy_func)
+ptr_array_t *
+_p11_ptr_array_create (ptr_array_destroy_func destroy_func)
 {
 	ptr_array_t *array;
 
@@ -76,7 +77,7 @@ ptr_array_create (ptr_array_destroy_func destroy_func)
 		return NULL;
 
 	if (!maybe_expand_array (array, 2)) {
-		ptr_array_free (array);
+		_p11_ptr_array_free (array);
 		return NULL;
 	}
 
@@ -85,7 +86,7 @@ ptr_array_create (ptr_array_destroy_func destroy_func)
 }
 
 void
-ptr_array_free (ptr_array_t *array)
+_p11_ptr_array_free (ptr_array_t *array)
 {
 	unsigned int i;
 
@@ -102,13 +103,14 @@ ptr_array_free (ptr_array_t *array)
 }
 
 unsigned int
-ptr_array_count (ptr_array_t *array)
+_p11_ptr_array_count (ptr_array_t *array)
 {
 	return array->length;
 }
 
 int
-ptr_array_add (ptr_array_t *array, void *value)
+_p11_ptr_array_add (ptr_array_t *array,
+                    void *value)
 {
 	if (!maybe_expand_array (array, array->length + 1))
 		return 0;
@@ -119,7 +121,8 @@ ptr_array_add (ptr_array_t *array, void *value)
 }
 
 void
-ptr_array_remove (ptr_array_t *array, unsigned int index)
+_p11_ptr_array_remove (ptr_array_t *array,
+                       unsigned int index)
 {
 	if (array->destroy)
 		(array->destroy) (array->memory[index]);
@@ -128,14 +131,15 @@ ptr_array_remove (ptr_array_t *array, unsigned int index)
 	array->length--;
 }
 
-void*
-ptr_array_at (ptr_array_t *array, unsigned int index)
+void *
+_p11_ptr_array_at (ptr_array_t *array,
+                   unsigned int index)
 {
 	return array->memory[index];
 }
 
-void**
-ptr_array_snapshot (ptr_array_t *array)
+void **
+_p11_ptr_array_snapshot (ptr_array_t *array)
 {
 	void **snapshot;
 	size_t bytes;

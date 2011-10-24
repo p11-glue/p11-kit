@@ -63,7 +63,7 @@ static int debug_inited = 0;
 static mutex_t debug_mutex;
 
 /* global variable exported in debug.h */
-int debug_current_flags;
+int _p11_debug_current_flags = ~0;
 
 static int
 parse_environ_flags (void)
@@ -111,23 +111,24 @@ parse_environ_flags (void)
 }
 
 void
-debug_init (void)
+_p11_debug_init (void)
 {
-	debug_current_flags = parse_environ_flags ();
-	mutex_init (&debug_mutex);
+	_p11_debug_current_flags = parse_environ_flags ();
+	_p11_mutex_init (&debug_mutex);
 	debug_inited = 1;
 }
 
 void
-debug_message (int flag, const char *format, ...)
+_p11_debug_message (int flag,
+                    const char *format, ...)
 {
 	char buffer[512];
 	va_list args;
 
 	assert (debug_inited);
-	mutex_lock (&debug_mutex);
+	_p11_mutex_lock (&debug_mutex);
 
-	if (flag & debug_current_flags) {
+	if (flag & _p11_debug_current_flags) {
 		va_start (args, format);
 		vsnprintf (buffer, sizeof (buffer), format, args);
 		buffer[sizeof (buffer) -1] = 0;
@@ -135,5 +136,5 @@ debug_message (int flag, const char *format, ...)
 		fprintf (stderr, "(p11-kit:%d) %s\n", getpid(), buffer);
 	}
 
-	mutex_unlock (&debug_mutex);
+	_p11_mutex_unlock (&debug_mutex);
 }

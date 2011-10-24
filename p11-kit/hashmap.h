@@ -62,111 +62,112 @@ typedef struct _hashiter {
 	unsigned int index;
 } hashiter;
 
-typedef unsigned int (*hash_hash_func)            (const void *data);
+typedef unsigned int (*hash_hash_func)        (const void *data);
 
-typedef int          (*hash_equal_func)           (const void *one,
+typedef int          (*hash_equal_func)       (const void *one,
                                                    const void *two);
 
-typedef void         (*hash_destroy_func)         (void *data);
+typedef void         (*hash_destroy_func)     (void *data);
 
 /* -----------------------------------------------------------------------------
  * MAIN
  */
 
 /*
- * hash_create : Create a hash table
+ * _p11_hash_create : Create a hash table
  * - returns an allocated hashtable
  */
-hashmap*           hash_create                 (hash_hash_func hash_func,
+hashmap*           _p11_hash_create            (hash_hash_func hash_func,
                                                 hash_equal_func equal_func,
                                                 hash_destroy_func key_destroy_func,
                                                 hash_destroy_func value_destroy_func);
 
 /*
- * hash_free : Free a hash table
+ * _p11_hash_free : Free a hash table
  */
-void               hash_free                   (hashmap *map);
+void               _p11_hash_free              (hashmap *map);
 
 /*
- * hash_size: Number of values in hash table
+ * _p11_hash_size: Number of values in hash table
  * - returns the number of entries in hash table
  */
-unsigned int       hash_size                   (hashmap *map);
+unsigned int       _p11_hash_size              (hashmap *map);
 
 /*
- * hash_get: Retrieves a value from the hash table
+ * _p11_hash_get: Retrieves a value from the hash table
  * - returns the value of the entry
  */
-void*              hash_get                    (hashmap *map,
+void*              _p11_hash_get               (hashmap *map,
                                                 const void *key);
 
 /*
- * hash_set: Set a value in the hash table
+ * _p11_hash_set: Set a value in the hash table
  * - returns 1 if the entry was added properly
  */
-int                hash_set                    (hashmap *map,
+int                _p11_hash_set               (hashmap *map,
                                                 void *key,
                                                 void *value);
 
 /*
- * hash_remove: Remove a value from the hash table
+ * _p11_hash_remove: Remove a value from the hash table
  * - returns 1 if the entry was found
  */
-int                hash_remove                 (hashmap *map,
+int                _p11_hash_remove            (hashmap *map,
                                                 const void *key);
 
 /*
- * hash_steal: Remove a value from the hash table without calling destroy funcs
+ * _p11_hash_steal: Remove a value from the hash table without calling
+ * destroy funcs
  * - returns 1 if the entry was found
  */
-int                hash_steal                  (hashmap *map,
+int                _p11_hash_steal             (hashmap *map,
                                                 const void *key,
                                                 void **stolen_key,
                                                 void **stolen_value);
 
 /*
- * hash_first: Start enumerating through the hash table
+ * _p11_hash_iterate: Start enumerating through the hash table
  * - returns a hash iterator
  */
-void               hash_iterate                (hashmap *map,
+void               _p11_hash_iterate           (hashmap *map,
                                                 hashiter *iter);
 
 /*
- * hash_next: Enumerate through hash table
+ * _p11_hash_next: Enumerate through hash table
  * - sets key and value to key and/or value
  * - returns whether there was another entry
  */
-int                hash_next                   (hashiter *iter,
+int                _p11_hash_next              (hashiter *iter,
                                                 void **key,
                                                 void **value);
 
 /*
- * hash_clear: Clear all values from has htable.
+ * _p11_hash_clear: Clear all values from has htable.
  */
-void               hash_clear                  (hashmap *map);
+void               _p11_hash_clear             (hashmap *map);
 
 /* -----------------------------------------------------------------------------
  * HASH FUNCTIONS
  */
 
-unsigned int       hash_string_hash            (const void *string);
+unsigned int       _p11_hash_string_hash       (const void *string);
 
-int                hash_string_equal           (const void *string_one,
+int                _p11_hash_string_equal      (const void *string_one,
                                                 const void *string_two);
 
-unsigned int       hash_ulongptr_hash          (const void *to_ulong);
+unsigned int       _p11_hash_ulongptr_hash     (const void *to_ulong);
 
-int                hash_ulongptr_equal         (const void *ulong_one,
+int                _p11_hash_ulongptr_equal    (const void *ulong_one,
                                                 const void *ulong_two);
 
-unsigned int       hash_intptr_hash            (const void *to_int);
+unsigned int       _p11_hash_intptr_hash       (const void *to_int);
 
-int                hash_intptr_equal           (const void *int_one,
+int                _p11_hash_intptr_equal      (const void *int_one,
                                                 const void *int_two);
 
-unsigned int       hash_direct_hash            (const void *ptr);
+unsigned int       _p11_hash_direct_hash       (const void *ptr);
 
-int                hash_direct_equal           (const void *ptr_one,
+int                _p11_hash_direct_equal      (const void *ptr_one,
                                                 const void *ptr_two);
 
 #endif  /* __HASHMAP_H__ */

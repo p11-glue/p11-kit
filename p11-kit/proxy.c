@@ -147,7 +147,7 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (gl.sessions);
-			sess = hash_get (gl.sessions, handle);
+			sess = _p11_hash_get (gl.sessions, handle);
 			if (sess != NULL) {
 				*handle = sess->real_session;
 				rv = map_slot_unlocked (sess->wrap_slot, mapping);
@@ -177,7 +177,7 @@ finalize_mappings_unlocked (void)
 	gl.n_mappings = 0;
 
 	/* no more sessions */
-	hash_free (gl.sessions);
+	_p11_hash_free (gl.sessions);
 	gl.sessions = NULL;
 }
 
@@ -270,7 +270,7 @@ initialize_mappings_unlocked_reentrant (void)
 			break;
 		}
 
-		mappings = xrealloc (mappings, sizeof (Mapping) * (n_mappings + count));
+		mappings = _p11_realloc (mappings, sizeof (Mapping) * (n_mappings + count));
 		if (!mappings) {
 			free (slots);
 			rv = CKR_HOST_MEMORY;
@@ -297,7 +297,7 @@ initialize_mappings_unlocked_reentrant (void)
 	assert (!gl.sessions);
 	gl.mappings = mappings;
 	gl.n_mappings = n_mappings;
-	gl.sessions = hash_create (hash_ulongptr_hash, hash_ulongptr_equal, NULL, free);
+	gl.sessions = _p11_hash_create (_p11_hash_ulongptr_hash, _p11_hash_ulongptr_equal, NULL, free);
 	++gl.mappings_refs;
 
 	/* Any cleanup necessary for failure will happen at caller */
@@ -525,7 +525,7 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 				sess->wrap_slot = map.wrap_slot;
 				sess->real_session = *handle;
 				sess->wrap_session = ++gl.last_handle; /* TODO: Handle wrapping, and then collisions */
-				hash_set (gl.sessions, &sess->wrap_session, sess);
+				_p11_hash_set (gl.sessions, &sess->wrap_session, sess);
 				*handle = sess->wrap_session;
 			}
 
@@ -552,7 +552,7 @@ proxy_C_CloseSession (CK_SESSION_HANDLE handle)
 		_p11_lock ();
 
 			if (gl.sessions)
-				hash_remove (gl.sessions, &key);
+				_p11_hash_remove (gl.sessions, &key);
 
 		_p11_unlock ();
 	}
@@ -574,13 +574,13 @@ proxy_C_CloseAllSessions (CK_SLOT_ID id)
 		if (!gl.sessions) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
-			to_close = calloc (sizeof (CK_SESSION_HANDLE), hash_size (gl.sessions));
+			to_close = calloc (sizeof (CK_SESSION_HANDLE), _p11_hash_size (gl.sessions));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {
-				hash_iterate (gl.sessions, &iter);
+				_p11_hash_iterate (gl.sessions, &iter);
 				count = 0;
-				while (hash_next (&iter, NULL, (void**)&sess)) {
+				while (_p11_hash_next (&iter, NULL, (void**)&sess)) {
 					if (sess->wrap_slot == id && to_close)
 						to_close[count++] = sess->wrap_session;
 				}

@@ -806,7 +806,7 @@ format_raw_string (char **string, size_t *length, int *is_first,
 	namelen = strlen (name);
 	vallen = strlen (value);
 
-	*string = xrealloc (*string, *length + namelen + vallen + 3);
+	*string = _p11_realloc (*string, *length + namelen + vallen + 3);
 	if (!*string)
 		return 0;
 

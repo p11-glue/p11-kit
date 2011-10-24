@@ -97,7 +97,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 
 	debug (("C_Initialize: enter"));
 
-	mutex_lock (&init_mutex);
+	_p11_mutex_lock (&init_mutex);
 
 		if (init_args != NULL) {
 			int supplied_ok;
@@ -148,7 +148,7 @@ done:
 			pkcs11_initialized_pid = 0;
 		}
 
-	mutex_unlock (&init_mutex);
+	_p11_mutex_unlock (&init_mutex);
 
 	debug (("C_Initialize: %d", ret));
 	return ret;
@@ -161,13 +161,13 @@ mock_C_Finalize (CK_VOID_PTR reserved)
 	return_val_if_fail (pkcs11_initialized != 0, CKR_CRYPTOKI_NOT_INITIALIZED);
 	return_val_if_fail (reserved == NULL, CKR_ARGUMENTS_BAD);
 
-	mutex_lock (&init_mutex);
+	_p11_mutex_lock (&init_mutex);
 
 		/* This should stop all other calls in */
 		pkcs11_initialized = 0;
 		pkcs11_initialized_pid = 0;
 
-	mutex_unlock (&init_mutex);
+	_p11_mutex_unlock (&init_mutex);
 
 	debug (("C_Finalize: %d", CKR_OK));
 	return CKR_OK;
@@ -890,5 +890,5 @@ CK_FUNCTION_LIST mock_module_no_slots = {
 void
 mock_module_init (void)
 {
-	mutex_init (&init_mutex);
+	_p11_mutex_init (&init_mutex);
 }

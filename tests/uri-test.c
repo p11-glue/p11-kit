@@ -40,7 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "uri.h"
+#include "p11-kit/uri.h"
+#include "p11-kit/private.h"
 
 static int
 is_module_empty (P11KitUri *uri)
@@ -1158,6 +1159,8 @@ main (void)
 	CuString *output = CuStringNew ();
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
+
+	_p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_uri_parse);
 	SUITE_ADD_TEST (suite, test_uri_parse_bad_scheme);

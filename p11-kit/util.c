@@ -72,7 +72,7 @@ pthread_once_t _p11_once;
 static int print_messages = 1;
 
 void*
-xrealloc (void *memory, size_t length)
+_p11_realloc (void *memory, size_t length)
 {
 	void *allocated = realloc (memory, length);
 	if (!allocated)
@@ -268,8 +268,8 @@ _p11_library_get_thread_local (void)
 void
 _p11_library_init (void)
 {
-	debug_init ();
-	mutex_init (&_p11_mutex);
+	_p11_debug_init ();
+	_p11_mutex_init (&_p11_mutex);
 	pthread_key_create (&thread_local, free);
 }
 
@@ -277,7 +277,7 @@ void
 _p11_library_uninit (void)
 {
 	pthread_key_delete (thread_local);
-	mutex_uninit (&_p11_mutex);
+	_p11_mutex_uninit (&_p11_mutex);
 }
 
 #endif /* OS_UNIX */
@@ -309,7 +309,7 @@ void
 _p11_library_init (void)
 {
 	debug_init ();
-	mutex_init (&_p11_mutex);
+	_p11_mutex_init (&_p11_mutex);
 	thread_local = TlsAlloc ();
 }
 
@@ -332,7 +332,7 @@ _p11_library_uninit (void)
 		free_tls_value (data);
 		TlsFree (thread_local);
 	}
-	mutex_uninit (&_p11_mutex);
+	_p11_mutex_uninit (&_p11_mutex);
 }
 
 BOOL WINAPI

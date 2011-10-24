@@ -41,21 +41,21 @@ typedef struct ptr_array ptr_array_t;
 
 typedef void         (*ptr_array_destroy_func)         (void *data);
 
-ptr_array_t*         ptr_array_create                  (ptr_array_destroy_func destroy_func);
+ptr_array_t*         _p11_ptr_array_create             (ptr_array_destroy_func destroy_func);
 
-void                 ptr_array_free                    (ptr_array_t *array);
+void                 _p11_ptr_array_free               (ptr_array_t *array);
 
-unsigned int         ptr_array_count                   (ptr_array_t *array);
+unsigned int         _p11_ptr_array_count              (ptr_array_t *array);
 
-int                  ptr_array_add                     (ptr_array_t *array,
+int                  _p11_ptr_array_add                (ptr_array_t *array,
                                                         void *value);
 
-void                 ptr_array_remove                  (ptr_array_t *array,
+void                 _p11_ptr_array_remove             (ptr_array_t *array,
                                                         unsigned int index);
 
-void*                ptr_array_at                      (ptr_array_t *array,
+void*                _p11_ptr_array_at                 (ptr_array_t *array,
                                                         unsigned int index);
 
-void**               ptr_array_snapshot                (ptr_array_t *array);
+void**               _p11_ptr_array_snapshot           (ptr_array_t *array);
 
 #endif  /* __PTR_ARRAY_H__ */

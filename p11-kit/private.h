@@ -49,9 +49,9 @@ typedef struct {
 #endif
 } p11_local;
 
-#define       _p11_lock()    mutex_lock (&_p11_mutex);
+#define       _p11_lock()    _p11_mutex_lock (&_p11_mutex);
 
-#define       _p11_unlock()  mutex_unlock (&_p11_mutex);
+#define       _p11_unlock()  _p11_mutex_unlock (&_p11_mutex);
 
 void          _p11_message                                      (const char* msg, ...);
 

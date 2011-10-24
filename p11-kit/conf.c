@@ -220,10 +220,10 @@ _p11_conf_merge_defaults (hashmap *map, hashmap *defaults)
 	void *key;
 	void *value;
 
-	hash_iterate (defaults, &iter);
-	while (hash_next (&iter, &key, &value)) {
+	_p11_hash_iterate (defaults, &iter);
+	while (_p11_hash_next (&iter, &key, &value)) {
 		/* Only override if not set */
-		if (hash_get (map, key))
+		if (_p11_hash_get (map, key))
 			continue;
 		key = strdup (key);
 		if (key == NULL) {
@@ -236,7 +236,7 @@ _p11_conf_merge_defaults (hashmap *map, hashmap *defaults)
 			errno = ENOMEM;
 			return -1;
 		}
-		if (!hash_set (map, key, value)) {
+		if (!_p11_hash_set (map, key, value)) {
 			free (key);
 			free (value);
 			errno = ENOMEM;
@@ -269,7 +269,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 	if (!data)
 		return NULL;
 
-	map = hash_create (hash_string_hash, hash_string_equal, free, free);
+	map = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, free, free);
 	if (map == NULL) {
 		free (data);
 		errno = ENOMEM;
@@ -316,7 +316,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 
 		debug ("config value: %s: %s", name, value);
 
-		if (!hash_set (map, name, value)) {
+		if (!_p11_hash_set (map, name, value)) {
 			free (name);
 			free (value);
 			error = ENOMEM;
@@ -327,7 +327,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 	free (data);
 
 	if (error != 0) {
-		hash_free (map);
+		_p11_hash_free (map);
 		map = NULL;
 		errno = error;
 	}
@@ -384,7 +384,7 @@ user_config_mode (hashmap *config, int defmode)
 	const char *mode;
 
 	/* Whether we should use or override from user directory */
-	mode = hash_get (config, "user-config");
+	mode = _p11_hash_get (config, "user-config");
 	if (mode == NULL) {
 		return defmode;
 	} else if (strequal (mode, "none")) {
@@ -462,7 +462,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 		/* If user config valid at all, then replace system with what we have */
 		if (mode != CONF_USER_NONE) {
-			hash_free (config);
+			_p11_hash_free (config);
 			config = uconfig;
 			uconfig = NULL;
 		}
@@ -476,8 +476,8 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 finished:
 	free (path);
-	hash_free (config);
-	hash_free (uconfig);
+	_p11_hash_free (config);
+	_p11_hash_free (uconfig);
 	errno = error;
 	return result;
 }
@@ -496,12 +496,12 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 	if (!config)
 		return -1;
 
-	prev = hash_get (configs, name);
+	prev = _p11_hash_get (configs, name);
 	if (prev == NULL) {
 		key = strdup (name);
 		if (key == NULL)
 			error = ENOMEM;
-		else if (!hash_set (configs, key, config))
+		else if (!_p11_hash_set (configs, key, config))
 			error = errno;
 		else
 			config = NULL;
@@ -511,7 +511,7 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 	}
 
 	/* If still set */
-	hash_free (config);
+	_p11_hash_free (config);
 
 	if (error) {
 		errno = error;
@@ -598,8 +598,8 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	int error = 0;
 
 	/* A hash table of name -> config */
-	configs = hash_create (hash_string_hash, hash_string_equal,
-	                       free, (hash_destroy_func)hash_free);
+	configs = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal,
+	                            free, (hash_destroy_func)_p11_hash_free);
 
 	/* Load each user config first, if user config is allowed */
 	if (mode != CONF_USER_NONE) {
@@ -610,7 +610,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 			error = errno;
 		free (path);
 		if (error != 0) {
-			hash_free (configs);
+			_p11_hash_free (configs);
 			errno = error;
 			return NULL;
 		}
@@ -624,7 +624,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	if (mode != CONF_USER_ONLY) {
 		if (load_configs_from_directory (system_dir, configs) < 0) {
 			error = errno;
-			hash_free (configs);
+			_p11_hash_free (configs);
 			errno = error;
 			return NULL;
 		}

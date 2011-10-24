@@ -42,19 +42,19 @@
 #include "hashmap.h"
 
 static void
-test_hash_create (CuTest *tc)
+test__p11_hash_create (CuTest *tc)
 {
 	hashmap *map;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, NULL, NULL);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
 	CuAssertPtrNotNull (tc, map);
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
-test_hash_free_null (CuTest *tc)
+test__p11_hash_free_null (CuTest *tc)
 {
-	hash_free (NULL);
+	_p11_hash_free (NULL);
 }
 
 static void
@@ -72,24 +72,24 @@ destroy_value (void *data)
 }
 
 static void
-test_hash_free_destroys (CuTest *tc)
+test__p11_hash_free_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
 	int value = 0;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
 	CuAssertPtrNotNull (tc, map);
-	if (!hash_set (map, &key, &value))
+	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
-	hash_free (map);
+	_p11_hash_free (map);
 
 	CuAssertIntEquals (tc, 1, key);
 	CuAssertIntEquals (tc, 2, value);
 }
 
 static void
-test_hash_iterate (CuTest *tc)
+test__p11_hash_iterate (CuTest *tc)
 {
 	hashmap *map;
 	hashiter iter;
@@ -99,42 +99,42 @@ test_hash_iterate (CuTest *tc)
 	void *pvalue;
 	int ret;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, NULL, NULL);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
 	CuAssertPtrNotNull (tc, map);
-	if (!hash_set (map, &key, &value))
+	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
-	hash_iterate (map, &iter);
+	_p11_hash_iterate (map, &iter);
 
-	ret = hash_next (&iter, &pkey, &pvalue);
+	ret = _p11_hash_next (&iter, &pkey, &pvalue);
 	CuAssertIntEquals (tc, 1, ret);
 	CuAssertPtrEquals (tc, pkey, &key);
 	CuAssertPtrEquals (tc, pvalue, &value);
 
-	ret = hash_next (&iter, &pkey, &pvalue);
+	ret = _p11_hash_next (&iter, &pkey, &pvalue);
 	CuAssertIntEquals (tc, 0, ret);
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
-test_hash_set_get (CuTest *tc)
+test__p11_hash_set_get (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
 	char *check;
 	hashmap *map;
 
-	map = hash_create (hash_string_hash, hash_string_equal, NULL, NULL);
-	hash_set (map, key, value);
-	check = hash_get (map, key);
+	map = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, NULL, NULL);
+	_p11_hash_set (map, key, value);
+	check = _p11_hash_get (map, key);
 	CuAssertPtrEquals (tc, check, value);
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
-test_hash_set_get_remove (CuTest *tc)
+test__p11_hash_set_get_remove (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -142,63 +142,63 @@ test_hash_set_get_remove (CuTest *tc)
 	hashmap *map;
 	int ret;
 
-	map = hash_create (hash_string_hash, hash_string_equal, NULL, NULL);
+	map = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, NULL, NULL);
 
-	if (!hash_set (map, key, value))
+	if (!_p11_hash_set (map, key, value))
 		CuFail (tc, "should not be reached");
 
-	check = hash_get (map, key);
+	check = _p11_hash_get (map, key);
 	CuAssertPtrEquals (tc, check, value);
 
-	ret = hash_remove (map, key);
+	ret = _p11_hash_remove (map, key);
 	CuAssertIntEquals (tc, ret, 1);
-	ret = hash_remove (map, key);
+	ret = _p11_hash_remove (map, key);
 	CuAssertIntEquals (tc, ret, 0);
 
-	check = hash_get (map, key);
+	check = _p11_hash_get (map, key);
 	CuAssert (tc, "should be null", check == NULL);
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
-test_hash_set_get_clear (CuTest *tc)
+test__p11_hash_set_get_clear (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
 	char *check;
 	hashmap *map;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, NULL, NULL);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
 
-	if (!hash_set (map, key, value))
+	if (!_p11_hash_set (map, key, value))
 		CuFail (tc, "should not be reached");
 
-	check = hash_get (map, key);
+	check = _p11_hash_get (map, key);
 	CuAssertPtrEquals (tc, check, value);
 
-	hash_clear (map);
+	_p11_hash_clear (map);
 
-	check = hash_get (map, key);
+	check = _p11_hash_get (map, key);
 	CuAssert (tc, "should be null", check == NULL);
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
-test_hash_remove_destroys (CuTest *tc)
+test__p11_hash_remove_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
 	int value = 0;
 	int ret;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
 	CuAssertPtrNotNull (tc, map);
-	if (!hash_set (map, &key, &value))
+	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
-	ret = hash_remove (map, &key);
+	ret = _p11_hash_remove (map, &key);
 	CuAssertIntEquals (tc, ret, 1);
 	CuAssertIntEquals (tc, 1, key);
 	CuAssertIntEquals (tc, 2, value);
@@ -207,7 +207,7 @@ test_hash_remove_destroys (CuTest *tc)
 	key = 0;
 	value = 0;
 
-	ret = hash_remove (map, &key);
+	ret = _p11_hash_remove (map, &key);
 	CuAssertIntEquals (tc, ret, 0);
 	CuAssertIntEquals (tc, 0, key);
 	CuAssertIntEquals (tc, 0, value);
@@ -216,14 +216,14 @@ test_hash_remove_destroys (CuTest *tc)
 	key = 0;
 	value = 0;
 
-	hash_free (map);
+	_p11_hash_free (map);
 
 	CuAssertIntEquals (tc, 0, key);
 	CuAssertIntEquals (tc, 0, value);
 }
 
 static void
-test_hash_set_destroys (CuTest *tc)
+test__p11_hash_set_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
@@ -231,12 +231,12 @@ test_hash_set_destroys (CuTest *tc)
 	int value2 = 0;
 	int ret;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
 	CuAssertPtrNotNull (tc, map);
-	if (!hash_set (map, &key, &value))
+	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
-	ret = hash_set (map, &key, &value2);
+	ret = _p11_hash_set (map, &key, &value2);
 	CuAssertIntEquals (tc, ret, 1);
 	CuAssertIntEquals (tc, 0, key);
 	CuAssertIntEquals (tc, 2, value);
@@ -246,7 +246,7 @@ test_hash_set_destroys (CuTest *tc)
 	value = 0;
 	value2 = 0;
 
-	hash_free (map);
+	_p11_hash_free (map);
 
 	CuAssertIntEquals (tc, 1, key);
 	CuAssertIntEquals (tc, 0, value);
@@ -255,18 +255,18 @@ test_hash_set_destroys (CuTest *tc)
 
 
 static void
-test_hash_clear_destroys (CuTest *tc)
+test__p11_hash_clear_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
 	int value = 0;
 
-	map = hash_create (hash_direct_hash, hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
 	CuAssertPtrNotNull (tc, map);
-	if (!hash_set (map, &key, &value))
+	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
-	hash_clear (map);
+	_p11_hash_clear (map);
 	CuAssertIntEquals (tc, 1, key);
 	CuAssertIntEquals (tc, 2, value);
 
@@ -274,7 +274,7 @@ test_hash_clear_destroys (CuTest *tc)
 	key = 0;
 	value = 0;
 
-	hash_clear (map);
+	_p11_hash_clear (map);
 	CuAssertIntEquals (tc, 0, key);
 	CuAssertIntEquals (tc, 0, value);
 
@@ -282,7 +282,7 @@ test_hash_clear_destroys (CuTest *tc)
 	key = 0;
 	value = 0;
 
-	hash_free (map);
+	_p11_hash_free (map);
 
 	CuAssertIntEquals (tc, 0, key);
 	CuAssertIntEquals (tc, 0, value);
@@ -302,23 +302,23 @@ test_hash_add_check_lots_and_collisions (CuTest *tc)
 	int *value;
 	int i;
 
-	map = hash_create (test_hash_intptr_with_collisions,
-	                  hash_intptr_equal, NULL, free);
+	map = _p11_hash_create (test_hash_intptr_with_collisions,
+	                  _p11_hash_intptr_equal, NULL, free);
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
 		*value = i;
-		if (!hash_set (map, value, value))
+		if (!_p11_hash_set (map, value, value))
 			CuFail (tc, "should not be reached");
 	}
 
 	for (i = 0; i < 20000; ++i) {
-		value = hash_get (map, &i);
+		value = _p11_hash_get (map, &i);
 		CuAssertPtrNotNull (tc, value);
 		CuAssertIntEquals (tc, i, *value);
 	}
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
@@ -328,28 +328,28 @@ test_hash_count (CuTest *tc)
 	int *value;
 	int i, ret;
 
-	map = hash_create (hash_intptr_hash, hash_intptr_equal, NULL, free);
+	map = _p11_hash_create (_p11_hash_intptr_hash, _p11_hash_intptr_equal, NULL, free);
 
-	CuAssertIntEquals (tc, 0, hash_size (map));
+	CuAssertIntEquals (tc, 0, _p11_hash_size (map));
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
 		*value = i;
-		if (!hash_set (map, value, value))
+		if (!_p11_hash_set (map, value, value))
 			CuFail (tc, "should not be reached");
-		CuAssertIntEquals (tc, i + 1, hash_size (map));
+		CuAssertIntEquals (tc, i + 1, _p11_hash_size (map));
 	}
 
 	for (i = 0; i < 20000; ++i) {
-		ret = hash_remove (map, &i);
+		ret = _p11_hash_remove (map, &i);
 		CuAssertIntEquals (tc, 1, ret);
-		CuAssertIntEquals (tc, 20000 - (i + 1), hash_size (map));
+		CuAssertIntEquals (tc, 20000 - (i + 1), _p11_hash_size (map));
 	}
 
-	hash_clear (map);
-	CuAssertIntEquals (tc, 0, hash_size (map));
+	_p11_hash_clear (map);
+	CuAssertIntEquals (tc, 0, _p11_hash_size (map));
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
@@ -359,22 +359,22 @@ test_hash_ulongptr (CuTest *tc)
 	unsigned long *value;
 	unsigned long i;
 
-	map = hash_create (hash_ulongptr_hash, hash_ulongptr_equal, NULL, free);
+	map = _p11_hash_create (_p11_hash_ulongptr_hash, _p11_hash_ulongptr_equal, NULL, free);
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (unsigned long));
 		*value = i;
-		if (!hash_set (map, value, value))
+		if (!_p11_hash_set (map, value, value))
 			CuFail (tc, "should not be reached");
 	}
 
 	for (i = 0; i < 20000; ++i) {
-		value = hash_get (map, &i);
+		value = _p11_hash_get (map, &i);
 		CuAssertPtrNotNull (tc, value);
 		CuAssertIntEquals (tc, i, *value);
 	}
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 int
@@ -384,16 +384,16 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	SUITE_ADD_TEST (suite, test_hash_create);
-	SUITE_ADD_TEST (suite, test_hash_set_get);
-	SUITE_ADD_TEST (suite, test_hash_set_get_remove);
-	SUITE_ADD_TEST (suite, test_hash_remove_destroys);
-	SUITE_ADD_TEST (suite, test_hash_set_get_clear);
-	SUITE_ADD_TEST (suite, test_hash_set_destroys);
-	SUITE_ADD_TEST (suite, test_hash_clear_destroys);
-	SUITE_ADD_TEST (suite, test_hash_free_null);
-	SUITE_ADD_TEST (suite, test_hash_free_destroys);
-	SUITE_ADD_TEST (suite, test_hash_iterate);
+	SUITE_ADD_TEST (suite, test__p11_hash_create);
+	SUITE_ADD_TEST (suite, test__p11_hash_set_get);
+	SUITE_ADD_TEST (suite, test__p11_hash_set_get_remove);
+	SUITE_ADD_TEST (suite, test__p11_hash_remove_destroys);
+	SUITE_ADD_TEST (suite, test__p11_hash_set_get_clear);
+	SUITE_ADD_TEST (suite, test__p11_hash_set_destroys);
+	SUITE_ADD_TEST (suite, test__p11_hash_clear_destroys);
+	SUITE_ADD_TEST (suite, test__p11_hash_free_null);
+	SUITE_ADD_TEST (suite, test__p11_hash_free_destroys);
+	SUITE_ADD_TEST (suite, test__p11_hash_iterate);
 	SUITE_ADD_TEST (suite, test_hash_add_check_lots_and_collisions);
 	SUITE_ADD_TEST (suite, test_hash_count);
 	SUITE_ADD_TEST (suite, test_hash_ulongptr);

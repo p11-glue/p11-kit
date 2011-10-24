@@ -39,6 +39,6 @@
 
 #include <sys/types.h>
 
-void* xrealloc (void *memory, size_t length);
+void* _p11_realloc (void *memory, size_t length);
 
 #endif /* __UTIL_H__ */

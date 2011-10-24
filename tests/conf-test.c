@@ -53,19 +53,19 @@ test_parse_conf_1 (CuTest *tc)
 	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
 	CuAssertPtrNotNull (tc, map);
 
-	value = hash_get (map, "key1");
+	value = _p11_hash_get (map, "key1");
 	CuAssertStrEquals (tc, "value1", value);
 
-	value = hash_get (map, "with-colon");
+	value = _p11_hash_get (map, "with-colon");
 	CuAssertStrEquals (tc, "value-of-colon", value);
 
-	value = hash_get (map, "with-whitespace");
+	value = _p11_hash_get (map, "with-whitespace");
 	CuAssertStrEquals (tc, "value-with-whitespace", value);
 
-	value = hash_get (map, "embedded-comment");
+	value = _p11_hash_get (map, "embedded-comment");
 	CuAssertStrEquals (tc, "this is # not a comment", value);
 
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
@@ -76,9 +76,9 @@ test_parse_ignore_missing (CuTest *tc)
 	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
 	CuAssertPtrNotNull (tc, map);
 
-	CuAssertIntEquals (tc, 0, hash_size (map));
+	CuAssertIntEquals (tc, 0, _p11_hash_size (map));
 	CuAssertPtrEquals (tc, NULL, (void*)p11_kit_message ());
-	hash_free (map);
+	_p11_hash_free (map);
 }
 
 static void
@@ -97,25 +97,25 @@ test_merge_defaults (CuTest *tc)
 	hashmap *values;
 	hashmap *defaults;
 
-	values = hash_create (hash_string_hash, hash_string_equal, free, free);
-	defaults = hash_create (hash_string_hash, hash_string_equal, free, free);
+	values = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, free, free);
+	defaults = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, free, free);
 
-	hash_set (values, strdup ("one"), strdup ("real1"));
-	hash_set (values, strdup ("two"), strdup ("real2"));
+	_p11_hash_set (values, strdup ("one"), strdup ("real1"));
+	_p11_hash_set (values, strdup ("two"), strdup ("real2"));
 
-	hash_set (defaults, strdup ("two"), strdup ("default2"));
-	hash_set (defaults, strdup ("three"), strdup ("default3"));
+	_p11_hash_set (defaults, strdup ("two"), strdup ("default2"));
+	_p11_hash_set (defaults, strdup ("three"), strdup ("default3"));
 
 	if (_p11_conf_merge_defaults (values, defaults) < 0)
 		CuFail (tc, "should not be reached");
 
-	hash_free (defaults);
+	_p11_hash_free (defaults);
 
-	CuAssertStrEquals (tc, hash_get (values, "one"), "real1");
-	CuAssertStrEquals (tc, hash_get (values, "two"), "real2");
-	CuAssertStrEquals (tc, hash_get (values, "three"), "default3");
+	CuAssertStrEquals (tc, _p11_hash_get (values, "one"), "real1");
+	CuAssertStrEquals (tc, _p11_hash_get (values, "two"), "real2");
+	CuAssertStrEquals (tc, _p11_hash_get (values, "three"), "default3");
 
-	hash_free (values);
+	_p11_hash_free (values);
 }
 
 static void
@@ -133,11 +133,11 @@ test_load_globals_merge (CuTest *tc)
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 	CuAssertIntEquals (tc, CONF_USER_MERGE, user_mode);
 
-	CuAssertStrEquals (tc, hash_get (config, "key1"), "system1");
-	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key1"), "system1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key3"), "user3");
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -155,11 +155,11 @@ test_load_globals_no_user (CuTest *tc)
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 	CuAssertIntEquals (tc, CONF_USER_NONE, user_mode);
 
-	CuAssertStrEquals (tc, hash_get (config, "key1"), "system1");
-	CuAssertStrEquals (tc, hash_get (config, "key2"), "system2");
-	CuAssertStrEquals (tc, hash_get (config, "key3"), "system3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key1"), "system1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key2"), "system2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key3"), "system3");
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -177,11 +177,11 @@ test_load_globals_user_sets_only (CuTest *tc)
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
 
-	CuAssertStrEquals (tc, hash_get (config, "key1"), NULL);
-	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key1"), NULL);
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key3"), "user3");
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -199,11 +199,11 @@ test_load_globals_system_sets_only (CuTest *tc)
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
 
-	CuAssertStrEquals (tc, hash_get (config, "key1"), NULL);
-	CuAssertStrEquals (tc, hash_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, hash_get (config, "key3"), "user3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key1"), NULL);
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key2"), "user2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "key3"), "user3");
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -223,7 +223,7 @@ test_load_globals_system_sets_invalid (CuTest *tc)
 	CuAssertIntEquals (tc, EINVAL, error);
 	CuAssertPtrNotNull (tc, p11_kit_message ());
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -243,7 +243,7 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 	CuAssertIntEquals (tc, EINVAL, error);
 	CuAssertPtrNotNull (tc, p11_kit_message ());
 
-	hash_free (config);
+	_p11_hash_free (config);
 }
 
 static void
@@ -260,22 +260,22 @@ test_load_modules_merge (CuTest *tc)
 	CuAssertPtrNotNull (tc, configs);
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 
-	config = hash_get (configs, "one");
+	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "user1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user1");
 
-	config = hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
-	config = hash_get (configs, "three");
+	config = _p11_hash_get (configs, "three");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-three");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "user3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user3");
 
-	hash_free (configs);
+	_p11_hash_free (configs);
 }
 
 static void
@@ -292,20 +292,20 @@ test_load_modules_user_none (CuTest *tc)
 	CuAssertPtrNotNull (tc, configs);
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 
-	config = hash_get (configs, "one");
+	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "system1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
-	config = hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
-	config = hash_get (configs, "three");
+	config = _p11_hash_get (configs, "three");
 	CuAssertPtrEquals (tc, NULL, config);
 
-	hash_free (configs);
+	_p11_hash_free (configs);
 }
 
 static void
@@ -322,20 +322,20 @@ test_load_modules_user_only (CuTest *tc)
 	CuAssertPtrNotNull (tc, configs);
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 
-	config = hash_get (configs, "one");
+	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), NULL);
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "user1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), NULL);
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user1");
 
-	config = hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two");
 	CuAssertPtrEquals (tc, NULL, config);
 
-	config = hash_get (configs, "three");
+	config = _p11_hash_get (configs, "three");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-three");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "user3");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user3");
 
-	hash_free (configs);
+	_p11_hash_free (configs);
 }
 
 static void
@@ -352,20 +352,20 @@ test_load_modules_no_user (CuTest *tc)
 	CuAssertPtrNotNull (tc, configs);
 	CuAssertStrEquals (tc, NULL, p11_kit_message ());
 
-	config = hash_get (configs, "one");
+	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-one");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "system1");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
-	config = hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, hash_get (config, "module"), "/path/to/module-two");
-	CuAssertStrEquals (tc, hash_get (config, "setting"), "system2");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
-	config = hash_get (configs, "three");
+	config = _p11_hash_get (configs, "three");
 	CuAssertPtrEquals (tc, NULL, config);
 
-	hash_free (configs);
+	_p11_hash_free (configs);
 }
 
 int

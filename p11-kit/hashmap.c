@@ -74,7 +74,9 @@ next_entry (hashiter *iter)
 
 
 int
-hash_next (hashiter *iter, void **key, void **value)
+_p11_hash_next (hashiter *iter,
+                void **key,
+                void **value)
 {
 	hashbucket *bucket = next_entry (iter);
 	if (bucket == NULL)
@@ -87,7 +89,8 @@ hash_next (hashiter *iter, void **key, void **value)
 }
 
 void
-hash_iterate (hashmap *map, hashiter *iter)
+_p11_hash_iterate (hashmap *map,
+                   hashiter *iter)
 {
 	iter->map = map;
 	iter->index = 0;
@@ -95,7 +98,9 @@ hash_iterate (hashmap *map, hashiter *iter)
 }
 
 static hashbucket **
-lookup_or_create_bucket (hashmap *map, const void *key, int create)
+lookup_or_create_bucket (hashmap *map,
+                         const void *key,
+                         int create)
 {
 	hashbucket **bucketp;
 	unsigned int hash;
@@ -125,8 +130,9 @@ lookup_or_create_bucket (hashmap *map, const void *key, int create)
 	return bucketp;
 }
 
-void*
-hash_get (hashmap *map, const void *key)
+void *
+_p11_hash_get (hashmap *map,
+               const void *key)
 {
 	hashbucket **bucketp;
 
@@ -138,7 +144,9 @@ hash_get (hashmap *map, const void *key)
 }
 
 int
-hash_set (hashmap *map, void *key, void *val)
+_p11_hash_set (hashmap *map,
+               void *key,
+               void *val)
 {
 	hashbucket **bucketp;
 	hashiter iter;
@@ -164,7 +172,7 @@ hash_set (hashmap *map, void *key, void *val)
 
 			/* Ignore failures, maybe we can expand later */
 			if(new_buckets) {
-				hash_iterate (map, &iter);
+				_p11_hash_iterate (map, &iter);
 				while ((bucket = next_entry (&iter)) != NULL) {
 					unsigned int i = bucket->hashed & num_buckets;
 					bucket->next = new_buckets[i];
@@ -184,7 +192,10 @@ hash_set (hashmap *map, void *key, void *val)
 }
 
 int
-hash_steal (hashmap *map, const void *key, void **stolen_key, void **stolen_value)
+_p11_hash_steal (hashmap *map,
+                 const void *key,
+                 void **stolen_key,
+                 void **stolen_value)
 {
 	hashbucket **bucketp;
 
@@ -206,12 +217,13 @@ hash_steal (hashmap *map, const void *key, void **stolen_key, void **stolen_valu
 }
 
 int
-hash_remove (hashmap *map, const void *key)
+_p11_hash_remove (hashmap *map,
+                  const void *key)
 {
 	void *old_key;
 	void *old_value;
 
-	if (!hash_steal (map, key, &old_key, &old_value))
+	if (!_p11_hash_steal (map, key, &old_key, &old_value))
 		return 0;
 
 	if (map->key_destroy_func)
@@ -222,7 +234,7 @@ hash_remove (hashmap *map, const void *key)
 }
 
 void
-hash_clear (hashmap *map)
+_p11_hash_clear (hashmap *map)
 {
 	hashbucket *bucket, *next;
 	int i;
@@ -246,10 +258,10 @@ hash_clear (hashmap *map)
 }
 
 hashmap *
-hash_create (hash_hash_func hash_func,
-             hash_equal_func equal_func,
-             hash_destroy_func key_destroy_func,
-             hash_destroy_func value_destroy_func)
+_p11_hash_create (hash_hash_func hash_func,
+                  hash_equal_func equal_func,
+                  hash_destroy_func key_destroy_func,
+                  hash_destroy_func value_destroy_func)
 {
 	hashmap *map;
 
@@ -278,7 +290,7 @@ hash_create (hash_hash_func hash_func,
 }
 
 void
-hash_free (hashmap *map)
+_p11_hash_free (hashmap *map)
 {
 	hashbucket *bucket;
 	hashiter iter;
@@ -286,7 +298,7 @@ hash_free (hashmap *map)
 	if (!map)
 		return;
 
-	hash_iterate (map, &iter);
+	_p11_hash_iterate (map, &iter);
 	while ((bucket = next_entry (&iter)) != NULL) {
 		if (map->key_destroy_func)
 			map->key_destroy_func (bucket->key);
@@ -302,13 +314,13 @@ hash_free (hashmap *map)
 }
 
 unsigned int
-hash_size (hashmap *map)
+_p11_hash_size (hashmap *map)
 {
 	return map->num_items;
 }
 
 unsigned int
-hash_string_hash (const void *string)
+_p11_hash_string_hash (const void *string)
 {
 	const char *p = string;
 	unsigned int hash = *p;
@@ -321,7 +333,8 @@ hash_string_hash (const void *string)
 }
 
 int
-hash_string_equal (const void *string_one, const void *string_two)
+_p11_hash_string_equal (const void *string_one,
+                        const void *string_two)
 {
 	assert (string_one);
 	assert (string_two);
@@ -330,14 +343,15 @@ hash_string_equal (const void *string_one, const void *string_two)
 }
 
 unsigned int
-hash_ulongptr_hash (const void *to_ulong)
+_p11_hash_ulongptr_hash (const void *to_ulong)
 {
 	assert (to_ulong);
 	return (unsigned int)*((unsigned long*)to_ulong);
 }
 
 int
-hash_ulongptr_equal (const void *ulong_one, const void *ulong_two)
+_p11_hash_ulongptr_equal (const void *ulong_one,
+                          const void *ulong_two)
 {
 	assert (ulong_one);
 	assert (ulong_two);
@@ -345,14 +359,15 @@ hash_ulongptr_equal (const void *ulong_one, const void *ulong_two)
 }
 
 unsigned int
-hash_intptr_hash (const void *to_int)
+_p11_hash_intptr_hash (const void *to_int)
 {
 	assert (to_int);
 	return (unsigned int)*((int*)to_int);
 }
 
 int
-hash_intptr_equal (const void *int_one, const void *int_two)
+_p11_hash_intptr_equal (const void *int_one,
+                        const void *int_two)
 {
 	assert (int_one);
 	assert (int_two);
@@ -360,13 +375,14 @@ hash_intptr_equal (const void *int_one, const void *int_two)
 }
 
 unsigned int
-hash_direct_hash (const void *ptr)
+_p11_hash_direct_hash (const void *ptr)
 {
 	return (unsigned int)(unsigned long)ptr;
 }
 
 int
-hash_direct_equal (const void *ptr_one, const void *ptr_two)
+_p11_hash_direct_equal (const void *ptr_one,
+                        const void *ptr_two)
 {
 	return ptr_one == ptr_two;
 }

@@ -43,11 +43,11 @@ typedef enum {
 	DEBUG_PROXY = 1 << 4,
 } DebugFlags;
 
-extern int        debug_current_flags;
+extern int        _p11_debug_current_flags;
 
-void              debug_init                     (void);
+void              _p11_debug_init                (void);
 
-void              debug_message                  (int flag,
+void              _p11_debug_message             (int flag,
                                                   const char *format,
                                                   ...);
 
@@ -75,13 +75,13 @@ void              debug_message                  (int flag,
 
 #undef debug
 #define debug(format, ...) do { \
-	if (DEBUG_FLAG & debug_current_flags) \
-		debug_message (DEBUG_FLAG, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
+	if (DEBUG_FLAG & _p11_debug_current_flags) \
+		_p11_debug_message (DEBUG_FLAG, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
 	} while (0)
 
 #undef debugging
 #define debugging \
-	(DEBUG_FLAG & debug_current_flags)
+	(DEBUG_FLAG & _p11_debug_current_flags)
 
 #else /* !defined (WITH_DEBUG) */
 

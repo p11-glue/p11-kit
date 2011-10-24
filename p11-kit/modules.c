@@ -135,7 +135,7 @@ create_mutex (CK_VOID_PTR_PTR mut)
 	pmutex = malloc (sizeof (mutex_t));
 	if (!pmutex)
 		return CKR_HOST_MEMORY;
-	mutex_init (pmutex);
+	_p11_mutex_init (pmutex);
 	*mut = pmutex;
 	return CKR_OK;
 }
@@ -148,7 +148,7 @@ destroy_mutex (CK_VOID_PTR mut)
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	mutex_uninit (pmutex);
+	_p11_mutex_uninit (pmutex);
 	free (pmutex);
 	return CKR_OK;
 }
@@ -161,7 +161,7 @@ lock_mutex (CK_VOID_PTR mut)
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	mutex_lock (pmutex);
+	_p11_mutex_lock (pmutex);
 	return CKR_OK;
 }
 
@@ -173,7 +173,7 @@ unlock_mutex (CK_VOID_PTR mut)
 	if (mut == NULL)
 		return CKR_MUTEX_BAD;
 
-	mutex_unlock (pmutex);
+	_p11_mutex_unlock (pmutex);
 	return CKR_OK;
 }
 
@@ -192,10 +192,10 @@ free_module_unlocked (void *data)
 	assert (mod->ref_count == 0);
 
 	if (mod->dl_module)
-		module_close (mod->dl_module);
+		_p11_module_close (mod->dl_module);
 
-	mutex_uninit (&mod->initialize_mutex);
-	hash_free (mod->config);
+	_p11_mutex_uninit (&mod->initialize_mutex);
+	_p11_hash_free (mod->config);
 	free (mod->name);
 	free (mod);
 }
@@ -214,7 +214,7 @@ alloc_module_unlocked (void)
 	mod->init_args.LockMutex = lock_mutex;
 	mod->init_args.UnlockMutex = unlock_mutex;
 	mod->init_args.flags = CKF_OS_LOCKING_OK;
-	mutex_init (&mod->initialize_mutex);
+	_p11_mutex_init (&mod->initialize_mutex);
 
 	return mod;
 }
@@ -262,16 +262,16 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 	assert (mod);
 	assert (path);
 
-	mod->dl_module = module_open (path);
+	mod->dl_module = _p11_module_open (path);
 	if (mod->dl_module == NULL) {
-		_p11_message ("couldn't load module: %s: %s", path, module_error ());
+		_p11_message ("couldn't load module: %s: %s", path, _p11_module_error ());
 		return CKR_GENERAL_ERROR;
 	}
 
-	gfl = module_symbol (mod->dl_module, "C_GetFunctionList");
+	gfl = _p11_module_symbol (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
 		_p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		              path, module_error ());
+		              path, _p11_module_error ());
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -304,14 +304,14 @@ load_module_from_file_unlocked (const char *path, Module **result)
 	}
 
 	/* Do we have a previous one like this, if so ignore load */
-	prev = hash_get (gl.modules, mod->funcs);
+	prev = _p11_hash_get (gl.modules, mod->funcs);
 
 	if (prev != NULL) {
 		debug ("duplicate module %s, using previous", path);
 		free_module_unlocked (mod);
 		mod = prev;
 
-	} else if (!hash_set (gl.modules, mod->funcs, mod)) {
+	} else if (!_p11_hash_set (gl.modules, mod->funcs, mod)) {
 		free_module_unlocked (mod);
 		return CKR_HOST_MEMORY;
 	}
@@ -349,7 +349,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	assert (config);
 	assert (*config);
 
-	module_filename = hash_get (*config, "module");
+	module_filename = _p11_hash_get (*config, "module");
 	if (module_filename == NULL) {
 		debug ("no module path for module, skipping: %s", *name);
 		return CKR_OK;
@@ -360,7 +360,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 		return CKR_HOST_MEMORY;
 
 	/* The hash map will take ownership of the variable */
-	if (!hash_set (*config, "module", path)) {
+	if (!_p11_hash_set (*config, "module", path)) {
 		free (path);
 		return CKR_HOST_MEMORY;
 	}
@@ -381,7 +381,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 		return rv;
 	}
 
-	prev = hash_get (gl.modules, mod->funcs);
+	prev = _p11_hash_get (gl.modules, mod->funcs);
 
 	/* If same module was loaded previously, just take over config */
 	if (prev && !prev->name && !prev->config) {
@@ -398,7 +398,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 
 	/* Add this new module to our hash table */
 	} else {
-		if (!hash_set (gl.modules, mod->funcs, mod)) {
+		if (!_p11_hash_set (gl.modules, mod->funcs, mod)) {
 			free_module_unlocked (mod);
 			return CKR_HOST_MEMORY;
 		}
@@ -409,7 +409,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	 * 'x-init-reserved' setting in the config. This only works with specific
 	 * PKCS#11 modules, and is non-standard use of that field.
 	 */
-	mod->init_args.pReserved = hash_get (mod->config, "x-init-reserved");
+	mod->init_args.pReserved = _p11_hash_get (mod->config, "x-init-reserved");
 
 	return CKR_OK;
 }
@@ -440,7 +440,7 @@ load_registered_modules_unlocked (void)
 	                                  P11_USER_CONFIG_MODULES);
 	if (configs == NULL) {
 		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
-		hash_free (config);
+		_p11_hash_free (config);
 		return rv;
 	}
 
@@ -451,13 +451,13 @@ load_registered_modules_unlocked (void)
 	 * Now go through each config and turn it into a module. As we iterate
 	 * we steal the values of the config.
 	 */
-	hash_iterate (configs, &iter);
-	while (hash_next (&iter, &key, NULL)) {
-		if (!hash_steal (configs, key, (void**)&name, (void**)&config))
+	_p11_hash_iterate (configs, &iter);
+	while (_p11_hash_next (&iter, &key, NULL)) {
+		if (!_p11_hash_steal (configs, key, (void**)&name, (void**)&config))
 			assert (0 && "not reached");
 
 		/* Is this a critical module, should abort loading of others? */
-		critical = _p11_conf_parse_boolean (hash_get (config, "critical"), 0);
+		critical = _p11_conf_parse_boolean (_p11_hash_get (config, "critical"), 0);
 
 		rv = take_config_and_load_module_unlocked (&name, &config);
 
@@ -466,16 +466,16 @@ load_registered_modules_unlocked (void)
 		 * by the above function call.
 		 */
 		free (name);
-		hash_free (config);
+		_p11_hash_free (config);
 
 		if (critical && rv != CKR_OK) {
 			_p11_message ("aborting initializationg because module '%s' was marked as critical");
-			hash_free (configs);
+			_p11_hash_free (configs);
 			return rv;
 		}
 	}
 
-	hash_free (configs);
+	_p11_hash_free (configs);
 	return CKR_OK;
 }
 
@@ -486,7 +486,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 	thread_t self;
 	assert (mod);
 
-	self = thread_self ();
+	self = _p11_thread_self ();
 
 	if (mod->initialize_thread == self) {
 		_p11_message ("p11-kit initialization called recursively");
@@ -501,7 +501,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 	mod->initialize_thread = self;
 
 	/* Change over to the module specific mutex */
-	mutex_lock (&mod->initialize_mutex);
+	_p11_mutex_lock (&mod->initialize_mutex);
 	_p11_unlock ();
 
 	if (!mod->initialize_called) {
@@ -522,7 +522,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 			rv = CKR_OK;
 	}
 
-	mutex_unlock (&mod->initialize_mutex);
+	_p11_mutex_unlock (&mod->initialize_mutex);
 	_p11_lock ();
 
 	/* Don't claim reference if failed */
@@ -547,8 +547,8 @@ reinitialize_after_fork (void)
 	_p11_lock ();
 
 		if (gl.modules) {
-			hash_iterate (gl.modules, &iter);
-			while (hash_next (&iter, NULL, (void **)&mod)) {
+			_p11_hash_iterate (gl.modules, &iter);
+			while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 				if (mod->initialize_called) {
 					mod->initialize_called = 0;
 
@@ -571,7 +571,7 @@ init_globals_unlocked (void)
 	static int once = 0;
 
 	if (!gl.modules)
-		gl.modules = hash_create (hash_direct_hash, hash_direct_equal,
+		gl.modules = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal,
 		                          NULL, free_module_unlocked);
 	if (!gl.modules)
 		return CKR_HOST_MEMORY;
@@ -594,15 +594,15 @@ free_modules_when_no_refs_unlocked (void)
 	hashiter iter;
 
 	/* Check if any modules have a ref count */
-	hash_iterate (gl.modules, &iter);
-	while (hash_next (&iter, NULL, (void **)&mod)) {
+	_p11_hash_iterate (gl.modules, &iter);
+	while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 		if (mod->ref_count)
 			return;
 	}
 
-	hash_free (gl.modules);
+	_p11_hash_free (gl.modules);
 	gl.modules = NULL;
-	hash_free (gl.config);
+	_p11_hash_free (gl.config);
 	gl.config = NULL;
 }
 
@@ -628,7 +628,7 @@ finalize_module_unlocked_reentrant (Module *mod)
 	 */
 	++mod->ref_count;
 
-	mutex_lock (&mod->initialize_mutex);
+	_p11_mutex_lock (&mod->initialize_mutex);
 	_p11_unlock ();
 
 	if (mod->initialize_called) {
@@ -639,7 +639,7 @@ finalize_module_unlocked_reentrant (Module *mod)
 		mod->initialize_called = 0;
 	}
 
-	mutex_unlock (&mod->initialize_mutex);
+	_p11_mutex_unlock (&mod->initialize_mutex);
 	_p11_lock ();
 
 	/* Match the increment above */
@@ -657,8 +657,8 @@ find_module_for_name_unlocked (const char *name)
 
 	assert (name);
 
-	hash_iterate (gl.modules, &iter);
-	while (hash_next (&iter, NULL, (void **)&mod))
+	_p11_hash_iterate (gl.modules, &iter);
+	while (_p11_hash_next (&iter, NULL, (void **)&mod))
 		if (mod->ref_count && mod->name && strcmp (name, mod->name) == 0)
 			return mod;
 	return NULL;
@@ -677,8 +677,8 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 
 	rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
-		hash_iterate (gl.modules, &iter);
-		while (hash_next (&iter, NULL, (void **)&mod)) {
+		_p11_hash_iterate (gl.modules, &iter);
+		while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered */
 			if (!mod->name)
@@ -756,13 +756,13 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 
 	/* WARNING: This function must be reentrant */
 
-	to_finalize = calloc (hash_size (gl.modules), sizeof (Module *));
+	to_finalize = calloc (_p11_hash_size (gl.modules), sizeof (Module *));
 	if (!to_finalize)
 		return CKR_HOST_MEMORY;
 
 	count = 0;
-	hash_iterate (gl.modules, &iter);
-	while (hash_next (&iter, NULL, (void **)&mod)) {
+	_p11_hash_iterate (gl.modules, &iter);
+	while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 
 		/* Skip all modules that aren't registered */
 		if (mod->name)
@@ -835,10 +835,10 @@ _p11_kit_registered_modules_unlocked (void)
 	int i = 0;
 
 	if (gl.modules)
-		result = calloc (hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
+		result = calloc (_p11_hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
 	if (result) {
-		hash_iterate (gl.modules, &iter);
-		while (hash_next (&iter, NULL, (void **)&mod)) {
+		_p11_hash_iterate (gl.modules, &iter);
+		while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 			if (mod->ref_count && mod->name)
 				result[i++] = mod->funcs;
 		}
@@ -902,7 +902,7 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module)
 
 		_p11_kit_clear_message ();
 
-		mod = module && gl.modules ? hash_get (gl.modules, module) : NULL;
+		mod = module && gl.modules ? _p11_hash_get (gl.modules, module) : NULL;
 		if (mod && mod->name)
 			name = strdup (mod->name);
 
@@ -972,13 +972,13 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 			config = gl.config;
 
 		} else {
-			mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+			mod = gl.modules ? _p11_hash_get (gl.modules, module) : NULL;
 			if (mod)
 				config = mod->config;
 		}
 
 		if (config && field) {
-			option = hash_get (config, field);
+			option = _p11_hash_get (config, field);
 			if (option)
 				option = strdup (option);
 		}
@@ -1037,7 +1037,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			mod = hash_get (gl.modules, module);
+			mod = _p11_hash_get (gl.modules, module);
 			if (mod == NULL) {
 				debug ("allocating new module");
 				allocated = mod = alloc_module_unlocked ();
@@ -1049,7 +1049,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 			/* If this was newly allocated, add it to the list */
 			if (rv == CKR_OK && allocated) {
-				if (hash_set (gl.modules, allocated->funcs, allocated))
+				if (_p11_hash_set (gl.modules, allocated->funcs, allocated))
 					allocated = NULL;
 				else
 					rv = CKR_HOST_MEMORY;
@@ -1119,7 +1119,7 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 
 		_p11_kit_clear_message ();
 
-		mod = gl.modules ? hash_get (gl.modules, module) : NULL;
+		mod = gl.modules ? _p11_hash_get (gl.modules, module) : NULL;
 		if (mod == NULL) {
 			debug ("module not found");
 			rv = CKR_ARGUMENTS_BAD;

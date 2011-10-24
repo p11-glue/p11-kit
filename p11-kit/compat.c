@@ -42,7 +42,7 @@
 #ifdef OS_UNIX
 
 void
-mutex_init (mutex_t *mutex)
+_p11_mutex_init (mutex_t *mutex)
 {
 	pthread_mutexattr_t attr;
 	int ret;
@@ -59,7 +59,7 @@ mutex_init (mutex_t *mutex)
 #ifdef OS_WIN32
 
 const char *
-module_error (void)
+_p11_module_error (void)
 {
 	DWORD code = GetLastError();
 	p11_local *local;
@@ -82,7 +82,7 @@ module_error (void)
 }
 
 int
-thread_create (thread_t *thread,
+_p11_thread_create (thread_t *thread,
                thread_routine routine,
                void *arg)
 {
@@ -99,7 +99,7 @@ thread_create (thread_t *thread,
 }
 
 int
-thread_join (thread_t thread)
+_p11_thread_join (thread_t thread)
 {
 	DWORD res;
 
