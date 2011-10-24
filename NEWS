@@ -1,3 +1,10 @@
+0.8
+ * Rename non-static functions to have a _p11_xxx prefix
+ * No concurrent calling of C_Initialize and C_Finalize
+ * Print more information in 'p11-kit -l'
+ * Initial port to win32
+ * Build, testing fixes
+
 0.7
  * Expand p11-kit config variables correctly invarious build scenarios
  * Add test tool to print out error messages
