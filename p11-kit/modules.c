@@ -282,7 +282,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 		return rv;
 	}
 
-	debug ("opened module: %s", path);
+	_p11_debug ("opened module: %s", path);
 	return CKR_OK;
 }
 
@@ -307,7 +307,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 	prev = _p11_hash_get (gl.modules, mod->funcs);
 
 	if (prev != NULL) {
-		debug ("duplicate module %s, using previous", path);
+		_p11_debug ("duplicate module %s, using previous", path);
 		free_module_unlocked (mod);
 		mod = prev;
 
@@ -327,7 +327,7 @@ expand_module_path (const char *filename)
 	char *path;
 
 	if (is_relative_path (filename)) {
-		debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
+		_p11_debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
 		path = build_path (P11_MODULE_PATH, filename);
 	} else {
 		path = strdup (filename);
@@ -351,7 +351,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 
 	module_filename = _p11_hash_get (*config, "module");
 	if (module_filename == NULL) {
-		debug ("no module path for module, skipping: %s", *name);
+		_p11_debug ("no module path for module, skipping: %s", *name);
 		return CKR_OK;
 	}
 
@@ -506,12 +506,12 @@ initialize_module_unlocked_reentrant (Module *mod)
 
 	if (!mod->initialize_called) {
 
-		debug ("C_Initialize: calling");
+		_p11_debug ("C_Initialize: calling");
 
 		assert (mod->funcs);
 		rv = mod->funcs->C_Initialize (&mod->init_args);
 
-		debug ("C_Initialize: result: %lu", rv);
+		_p11_debug ("C_Initialize: result: %lu", rv);
 
 		/* Module was initialized and C_Finalize should be called */
 		if (rv == CKR_OK)
@@ -542,7 +542,7 @@ reinitialize_after_fork (void)
 	Module *mod;
 
 	/* WARNING: This function must be reentrant */
-	debug ("forked");
+	_p11_debug ("forked");
 
 	_p11_lock ();
 
@@ -687,7 +687,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 			rv = initialize_module_unlocked_reentrant (mod);
 
 			if (rv != CKR_OK) {
-				debug ("failed to initialize module: %s: %s",
+				_p11_debug ("failed to initialize module: %s: %s",
 				       mod->name, p11_kit_strerror (rv));
 				break;
 			}
@@ -719,10 +719,10 @@ p11_kit_initialize_registered (void)
 {
 	CK_RV rv;
 
-	/* WARNING: This function must be reentrant */
-	debug ("in");
-
 	_p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant */
+	_p11_debug ("in");
 
 	_p11_lock ();
 
@@ -739,7 +739,7 @@ p11_kit_initialize_registered (void)
 	if (rv != CKR_OK)
 		p11_kit_finalize_registered ();
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -769,7 +769,7 @@ _p11_kit_finalize_registered_unlocked_reentrant (void)
 			to_finalize[count++] = mod;
 	}
 
-	debug ("finalizing %d modules", count);
+	_p11_debug ("finalizing %d modules", count);
 
 	for (i = 0; i < count; ++i) {
 		/* WARNING: Reentrant calls can occur here */
@@ -806,10 +806,10 @@ p11_kit_finalize_registered (void)
 {
 	CK_RV rv;
 
-	/* WARNING: This function must be reentrant */
-	debug ("in");
-
 	_p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant */
+	_p11_debug ("in");
 
 	_p11_lock ();
 
@@ -822,7 +822,7 @@ p11_kit_finalize_registered (void)
 
 	_p11_unlock ();
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -1025,10 +1025,10 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 	Module *mod;
 	CK_RV rv = CKR_OK;
 
-	/* WARNING: This function must be reentrant for the same arguments */
-	debug ("in");
-
 	_p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant for the same arguments */
+	_p11_debug ("in");
 
 	_p11_lock ();
 
@@ -1039,7 +1039,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 			mod = _p11_hash_get (gl.modules, module);
 			if (mod == NULL) {
-				debug ("allocating new module");
+				_p11_debug ("allocating new module");
 				allocated = mod = alloc_module_unlocked ();
 				if (mod == NULL)
 					rv = CKR_HOST_MEMORY;
@@ -1076,7 +1076,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 
 	_p11_unlock ();
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -1110,10 +1110,10 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 	Module *mod;
 	CK_RV rv = CKR_OK;
 
-	/* WARNING: This function must be reentrant for the same arguments */
-	debug ("in");
-
 	_p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant for the same arguments */
+	_p11_debug ("in");
 
 	_p11_lock ();
 
@@ -1121,7 +1121,7 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 
 		mod = gl.modules ? _p11_hash_get (gl.modules, module) : NULL;
 		if (mod == NULL) {
-			debug ("module not found");
+			_p11_debug ("module not found");
 			rv = CKR_ARGUMENTS_BAD;
 		} else {
 			/* WARNING: Rentrancy can occur here */
@@ -1132,7 +1132,7 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 
 	_p11_unlock ();
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -1176,10 +1176,10 @@ p11_kit_load_initialize_module (const char *module_path,
 	Module *mod;
 	CK_RV rv = CKR_OK;
 
-	/* WARNING: This function must be reentrant for the same arguments */
-	debug ("in: %s", module_path);
-
 	_p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant for the same arguments */
+	_p11_debug ("in: %s", module_path);
 
 	_p11_lock ();
 
@@ -1211,6 +1211,6 @@ p11_kit_load_initialize_module (const char *module_path,
 
 	_p11_unlock ();
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }

@@ -204,7 +204,7 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 {
 	CK_RV rv;
 
-	debug ("in");
+	_p11_debug ("in");
 
 	/* WARNING: This function must be reentrant */
 
@@ -227,7 +227,7 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 		_p11_unlock ();
 	}
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -309,9 +309,11 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 {
 	CK_RV rv;
 
+	_p11_library_init_once ();
+
 	/* WARNING: This function must be reentrant */
 
-	debug ("in");
+	_p11_debug ("in");
 
 	_p11_lock ();
 
@@ -324,12 +326,12 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 
 	_p11_unlock ();
 
-	debug ("here");
+	_p11_debug ("here");
 
 	if (rv != CKR_OK)
 		proxy_C_Finalize (NULL);
 
-	debug ("out: %lu", rv);
+	_p11_debug ("out: %lu", rv);
 	return rv;
 }
 
@@ -337,6 +339,8 @@ static CK_RV
 proxy_C_GetInfo (CK_INFO_PTR info)
 {
 	CK_RV rv = CKR_OK;
+
+	_p11_library_init_once ();
 
 	if (info == NULL)
 		return CKR_ARGUMENTS_BAD;

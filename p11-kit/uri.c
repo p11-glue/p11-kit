@@ -1420,7 +1420,7 @@ p11_kit_uri_message (int code)
 	case P11_KIT_URI_NOT_FOUND:
 		return "The URI component was not found";
 	default:
-		debug ("unknown error code: %d", code);
+		_p11_debug ("unknown error code: %d", code);
 		return "Unknown error";
 	}
 }

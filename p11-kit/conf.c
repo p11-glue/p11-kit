@@ -165,7 +165,7 @@ read_config_file (const char* filename, int flags)
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&
 		    (error == ENOENT || error == ENOTDIR)) {
-			debug ("config file does not exist");
+			_p11_debug ("config file does not exist");
 			config = strdup ("\n");
 			if (!config)
 				errno = ENOMEM;
@@ -262,7 +262,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 
 	assert (filename);
 
-	debug ("reading config file: %s", filename);
+	_p11_debug ("reading config file: %s", filename);
 
 	/* Adds an extra newline to end of file */
 	data = read_config_file (filename, flags);
@@ -314,7 +314,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 			break;
 		}
 
-		debug ("config value: %s: %s", name, value);
+		_p11_debug ("config value: %s: %s", name, value);
 
 		if (!_p11_hash_set (map, name, value)) {
 			free (name);
@@ -532,7 +532,7 @@ load_configs_from_directory (const char *directory, hashmap *configs)
 	char *path;
 	int count = 0;
 
-	debug ("loading module configs in: %s", directory);
+	_p11_debug ("loading module configs in: %s", directory);
 
 	/* First we load all the modules */
 	dir = opendir (directory);

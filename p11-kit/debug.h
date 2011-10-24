@@ -73,24 +73,24 @@ void              _p11_debug_message             (int flag,
 #ifdef DEBUG_FLAG
 #ifdef WITH_DEBUG
 
-#undef debug
-#define debug(format, ...) do { \
+#undef _p11_debug
+#define _p11_debug(format, ...) do { \
 	if (DEBUG_FLAG & _p11_debug_current_flags) \
 		_p11_debug_message (DEBUG_FLAG, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
 	} while (0)
 
-#undef debugging
-#define debugging \
+#undef _p11_debugging
+#define _p11_debugging \
 	(DEBUG_FLAG & _p11_debug_current_flags)
 
 #else /* !defined (WITH_DEBUG) */
 
-#undef debug
-#define debug(format, ...) \
+#undef _p11_debug
+#define _p11_debug(format, ...) \
 	do {} while (0)
 
-#undef debugging
-#define debugging 0
+#undef _p11_debugging
+#define _p11_debugging 0
 
 #endif /* !defined (WITH_DEBUG) */
 
