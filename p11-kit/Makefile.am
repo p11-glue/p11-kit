@@ -46,6 +46,8 @@ libp11_kit_la_LDFLAGS = \
 
 libp11_kit_la_SOURCES = $(MODULE_SRCS)
 
+libp11_kit_la_LIBADD = $(LTLIBINTL)
+
 libp11_kit_testable_la_LDFLAGS = \
 	-no-undefined
 
