@@ -308,7 +308,7 @@ _p11_library_get_thread_local (void)
 void
 _p11_library_init (void)
 {
-	debug_init ();
+	_p11_debug_init ();
 	_p11_mutex_init (&_p11_mutex);
 	thread_local = TlsAlloc ();
 }
