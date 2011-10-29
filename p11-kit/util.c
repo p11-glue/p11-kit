@@ -36,6 +36,7 @@
 
 #include "config.h"
 
+#define DEBUG_FLAG DEBUG_LIB
 #include "debug.h"
 #include "p11-kit.h"
 #include "private.h"
@@ -309,6 +310,7 @@ void
 _p11_library_init (void)
 {
 	_p11_debug_init ();
+	_p11_debug ("initializing library");
 	_p11_mutex_init (&_p11_mutex);
 	thread_local = TlsAlloc ();
 }
@@ -326,6 +328,8 @@ void
 _p11_library_uninit (void)
 {
 	LPVOID data;
+
+	_p11_debug ("uninitializing library");
 
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		data = TlsGetValue (thread_local);
@@ -345,12 +349,15 @@ DllMain (HINSTANCE instance,
 	switch (reason) {
 	case DLL_PROCESS_ATTACH:
 		_p11_library_init ();
-		if (thread_local == TLS_OUT_OF_INDEXES)
+		if (thread_local == TLS_OUT_OF_INDEXES) {
+			_p11_debug ("couldn't setup tls");
 			return FALSE;
+		}
 		break;
 
 	case DLL_THREAD_DETACH:
 		if (thread_local != TLS_OUT_OF_INDEXES) {
+			_p11_debug ("thread stopped, freeing tls");
 			data = TlsGetValue (thread_local);
 			free_tls_value (data);
 		}
