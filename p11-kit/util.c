@@ -319,6 +319,8 @@ static void
 free_tls_value (LPVOID data)
 {
 	p11_local *local = data;
+	if (local == NULL)
+		return;
 	if (local->last_error)
 		LocalFree (local->last_error);
 	LocalFree (data);
