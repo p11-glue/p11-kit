@@ -35,6 +35,10 @@ AM_PROG_CC_C_O
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
 
+if test "$enable_static" = "yes"; then
+	AC_MSG_ERROR([p11-kit cannot be used as a static library])
+fi
+
 AC_MSG_CHECKING([for win32])
 case "$host" in
 	*-*-mingw*)
