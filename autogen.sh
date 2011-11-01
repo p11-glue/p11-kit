@@ -12,7 +12,7 @@ fi
 
 set -x
 
-gettextize=$(which gettextize)
+gettextize=$(which gettextize || true)
 if test -z "$gettextize"; then
 	echo "Couldn't find gettextize" >&2
 	exit 1
