@@ -1,3 +1,9 @@
+0.9
+ * p11-kit can't be used as a static library
+ * Fix problems crashing when freeing TLS on windows
+ * Add debug output to windows init and uninit of library
+ * Build fixes, especially for windows
+
 0.8
  * Rename non-static functions to have a _p11_xxx prefix
  * No concurrent calling of C_Initialize and C_Finalize
