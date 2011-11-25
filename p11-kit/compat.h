@@ -43,8 +43,14 @@
 
 #ifdef OS_WIN32
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x500
-#define _WIN32_IE 0x400
+#endif
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x500
+#endif
+
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
