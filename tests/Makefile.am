@@ -26,10 +26,7 @@ test_init_SOURCES = \
 	test-init.c \
 	mock-module.c mock-module.h
 
-CHECK_EXECUTABLES = $(CHECK_PROGS:=$(EXEEXT))
-
-check-am:
-	for prog in $(CHECK_EXECUTABLES); do ./$$prog; done
+TESTS = $(CHECK_PROGS:=$(EXEEXT))
 
 EXTRA_DIST = \
 	cutest \
