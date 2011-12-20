@@ -42,7 +42,7 @@
 #include "hashmap.h"
 
 static void
-test__p11_hash_create (CuTest *tc)
+test_create (CuTest *tc)
 {
 	hashmap *map;
 
@@ -52,7 +52,7 @@ test__p11_hash_create (CuTest *tc)
 }
 
 static void
-test__p11_hash_free_null (CuTest *tc)
+test_free_null (CuTest *tc)
 {
 	_p11_hash_free (NULL);
 }
@@ -72,7 +72,7 @@ destroy_value (void *data)
 }
 
 static void
-test__p11_hash_free_destroys (CuTest *tc)
+test_free_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
@@ -89,7 +89,7 @@ test__p11_hash_free_destroys (CuTest *tc)
 }
 
 static void
-test__p11_hash_iterate (CuTest *tc)
+test_iterate (CuTest *tc)
 {
 	hashmap *map;
 	hashiter iter;
@@ -118,7 +118,7 @@ test__p11_hash_iterate (CuTest *tc)
 }
 
 static void
-test__p11_hash_set_get (CuTest *tc)
+test_set_get (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -134,7 +134,7 @@ test__p11_hash_set_get (CuTest *tc)
 }
 
 static void
-test__p11_hash_set_get_remove (CuTest *tc)
+test_set_get_remove (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -162,7 +162,7 @@ test__p11_hash_set_get_remove (CuTest *tc)
 }
 
 static void
-test__p11_hash_set_get_clear (CuTest *tc)
+test_set_clear (CuTest *tc)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -171,11 +171,10 @@ test__p11_hash_set_get_clear (CuTest *tc)
 
 	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
 
+	fprintf (stderr, "%p setting\n", value);
+
 	if (!_p11_hash_set (map, key, value))
 		CuFail (tc, "should not be reached");
-
-	check = _p11_hash_get (map, key);
-	CuAssertPtrEquals (tc, check, value);
 
 	_p11_hash_clear (map);
 
@@ -186,7 +185,7 @@ test__p11_hash_set_get_clear (CuTest *tc)
 }
 
 static void
-test__p11_hash_remove_destroys (CuTest *tc)
+test_remove_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
@@ -223,7 +222,7 @@ test__p11_hash_remove_destroys (CuTest *tc)
 }
 
 static void
-test__p11_hash_set_destroys (CuTest *tc)
+test_set_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
@@ -255,7 +254,7 @@ test__p11_hash_set_destroys (CuTest *tc)
 
 
 static void
-test__p11_hash_clear_destroys (CuTest *tc)
+test_clear_destroys (CuTest *tc)
 {
 	hashmap *map;
 	int key = 0;
@@ -384,16 +383,16 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	SUITE_ADD_TEST (suite, test__p11_hash_create);
-	SUITE_ADD_TEST (suite, test__p11_hash_set_get);
-	SUITE_ADD_TEST (suite, test__p11_hash_set_get_remove);
-	SUITE_ADD_TEST (suite, test__p11_hash_remove_destroys);
-	SUITE_ADD_TEST (suite, test__p11_hash_set_get_clear);
-	SUITE_ADD_TEST (suite, test__p11_hash_set_destroys);
-	SUITE_ADD_TEST (suite, test__p11_hash_clear_destroys);
-	SUITE_ADD_TEST (suite, test__p11_hash_free_null);
-	SUITE_ADD_TEST (suite, test__p11_hash_free_destroys);
-	SUITE_ADD_TEST (suite, test__p11_hash_iterate);
+	SUITE_ADD_TEST (suite, test_create);
+	SUITE_ADD_TEST (suite, test_set_get);
+	SUITE_ADD_TEST (suite, test_set_get_remove);
+	SUITE_ADD_TEST (suite, test_remove_destroys);
+	SUITE_ADD_TEST (suite, test_set_clear);
+	SUITE_ADD_TEST (suite, test_set_destroys);
+	SUITE_ADD_TEST (suite, test_clear_destroys);
+	SUITE_ADD_TEST (suite, test_free_null);
+	SUITE_ADD_TEST (suite, test_free_destroys);
+	SUITE_ADD_TEST (suite, test_iterate);
 	SUITE_ADD_TEST (suite, test_hash_add_check_lots_and_collisions);
 	SUITE_ADD_TEST (suite, test_hash_count);
 	SUITE_ADD_TEST (suite, test_hash_ulongptr);
