@@ -22,9 +22,17 @@ noinst_PROGRAMS = \
 	print-messages \
 	$(CHECK_PROGS)
 
+cutestfiles = cutest/CuTest.c cutest/CuTest.h
+
+conf_test_SOURCES = conf-test.c $(cutestfiles)
+hash_test_SOURCES = hash-test.c $(cutestfiles)
+pin_test_SOURCES = pin-test.c $(cutestfiles)
+ptr_array_test_SOURCES = ptr-array-test.c $(cutestfiles)
 test_init_SOURCES = \
 	test-init.c \
-	mock-module.c mock-module.h
+	mock-module.c mock-module.h $(cutestfiles)
+
+uri_test_SOURCES = uri-test.c $(cutestfiles)
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
 

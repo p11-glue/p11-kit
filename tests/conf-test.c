@@ -403,5 +403,3 @@ main (void)
 	CuStringDelete (output);
 	return ret;
 }
-
-#include "CuTest.c"

@@ -407,5 +407,3 @@ main (void)
 
 	return ret;
 }
-
-#include "CuTest.c"
