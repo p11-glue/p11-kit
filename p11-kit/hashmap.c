@@ -377,7 +377,7 @@ _p11_hash_intptr_equal (const void *int_one,
 unsigned int
 _p11_hash_direct_hash (const void *ptr)
 {
-	return (unsigned int)(unsigned long)ptr;
+	return (unsigned int)(size_t)ptr;
 }
 
 int
