@@ -1,3 +1,6 @@
+0.10
+ * Build fixes, for windows, gcc 4.6.1
+
 0.9
  * p11-kit can't be used as a static library
  * Fix problems crashing when freeing TLS on windows
