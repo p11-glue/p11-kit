@@ -541,21 +541,14 @@ reinitialize_after_fork (void)
 	hashiter iter;
 	Module *mod;
 
-	/* WARNING: This function must be reentrant */
 	_p11_debug ("forked");
 
 	_p11_lock ();
 
 		if (gl.modules) {
 			_p11_hash_iterate (gl.modules, &iter);
-			while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
-				if (mod->initialize_called) {
-					mod->initialize_called = 0;
-
-					/* WARNING: Reentrancy can occur here */
-					initialize_module_unlocked_reentrant (mod);
-				}
-			}
+			while (_p11_hash_next (&iter, NULL, (void **)&mod))
+				mod->initialize_called = 0;
 		}
 
 	_p11_unlock ();
