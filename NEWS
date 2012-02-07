@@ -1,3 +1,6 @@
+0.11
+ * Remove automatic reinitialization of PKCS#11 after fork
+
 0.10
  * Build fixes, for windows, gcc 4.6.1
 
