@@ -275,18 +275,29 @@ _p11_library_get_thread_local (void)
 	return local;
 }
 
+#ifdef __GNUC__
+__attribute__((constructor))
+#endif
 void
 _p11_library_init (void)
 {
 	_p11_debug_init ();
+	_p11_debug ("initializing library");
 	_p11_mutex_init (&_p11_mutex);
 	pthread_key_create (&thread_local, free);
 }
 
+#ifdef __GNUC__
+__attribute__((destructor))
+#endif
 void
 _p11_library_uninit (void)
 {
 	uninit_common ();
+
+	/* Some cleanup to pacify valgrind */
+	free (pthread_getspecific (thread_local));
+	pthread_setspecific (thread_local, NULL);
 
 	pthread_key_delete (thread_local);
 	_p11_mutex_uninit (&_p11_mutex);
