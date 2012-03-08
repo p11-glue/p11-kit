@@ -31,6 +31,7 @@ LT_INIT([dlopen disable-static])
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
+AC_USE_SYSTEM_EXTENSIONS
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
