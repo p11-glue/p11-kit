@@ -171,8 +171,6 @@ test_set_clear (CuTest *tc)
 
 	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
 
-	fprintf (stderr, "%p setting\n", value);
-
 	if (!_p11_hash_set (map, key, value))
 		CuFail (tc, "should not be reached");
 

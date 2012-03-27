@@ -64,7 +64,7 @@ next_entry (hashiter *iter)
 {
 	hashbucket *bucket = iter->next;
 	while (!bucket) {
-		if (iter->index > iter->map->num_buckets)
+		if (iter->index >= iter->map->num_buckets)
 			return NULL;
 		bucket = iter->map->buckets[iter->index++];
 	}
@@ -109,7 +109,7 @@ lookup_or_create_bucket (hashmap *map,
 	hash = map->hash_func (key);
 
 	/* scan linked list */
-	for (bucketp = &map->buckets[map->num_buckets & hash];
+	for (bucketp = &map->buckets[hash % map->num_buckets];
 	     *bucketp != NULL; bucketp = &(*bucketp)->next) {
 		if((*bucketp)->hashed == hash && map->equal_func ((*bucketp)->key, key))
 			break;
@@ -167,14 +167,13 @@ _p11_hash_set (hashmap *map,
 		/* check that the collision rate isn't too high */
 		if (map->num_items > map->num_buckets) {
 			num_buckets = map->num_buckets * 2 + 1;
-			new_buckets = (hashbucket **)calloc (sizeof (hashbucket *),
-			                                     num_buckets + 1);
+			new_buckets = (hashbucket **)calloc (sizeof (hashbucket *), num_buckets);
 
 			/* Ignore failures, maybe we can expand later */
 			if(new_buckets) {
 				_p11_hash_iterate (map, &iter);
 				while ((bucket = next_entry (&iter)) != NULL) {
-					unsigned int i = bucket->hashed & num_buckets;
+					unsigned int i = bucket->hashed % num_buckets;
 					bucket->next = new_buckets[i];
 					new_buckets[i] = bucket;
 				}
@@ -276,8 +275,7 @@ _p11_hash_create (hash_hash_func hash_func,
 		map->value_destroy_func = value_destroy_func;
 
 		map->num_buckets = 9;
-		map->buckets = (hashbucket **)calloc (sizeof (hashbucket *),
-		                                       map->num_buckets + 1);
+		map->buckets = (hashbucket **)calloc (sizeof (hashbucket *), map->num_buckets);
 		if (!map->buckets) {
 			free (map);
 			return NULL;
