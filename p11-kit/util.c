@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011 Collabora Ltd
+ * Copyright (c) 2012 Stef Walter
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +32,7 @@
  *
  *
  * CONTRIBUTORS
- *  Stef Walter <stef@memberwebs.com>
+ *  Stef Walter <stef@thewalter.net>
  */
 
 #include "config.h"
@@ -246,6 +247,14 @@ _p11_kit_default_message (CK_RV rv)
 	}
 }
 
+static void
+uninit_common (void)
+{
+	_p11_debug ("uninitializing library");
+
+	_p11_set_progname_unlocked (NULL);
+}
+
 #ifdef OS_UNIX
 
 static pthread_key_t thread_local = 0;
@@ -277,8 +286,45 @@ _p11_library_init (void)
 void
 _p11_library_uninit (void)
 {
+	uninit_common ();
+
 	pthread_key_delete (thread_local);
 	_p11_mutex_uninit (&_p11_mutex);
+}
+
+#if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
+extern char *program_invocation_short_name;
+#endif
+
+#if defined (HAVE___PROGNAME) && !HAVE_DECL___PROGNAME
+extern char *__progname;
+#endif
+
+static char *
+get_default_progname (void)
+{
+	const char *name;
+
+#if defined (HAVE_GETPROGNAME)
+	name = getprogname();
+#elif defined (HAVE_GETEXECNAME)
+	const char *p;
+	name = getexecname();
+	p = strrchr (name ? name : "", '/');
+	if (p != NULL)
+		name = p + 1;
+#elif defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+	name = program_invocation_short_name;
+#elif defined (HAVE___PROGNAME)
+	name = __progname;
+#else
+	#error No way to retrieve program name from p11-kit library
+#endif
+
+	if (name == NULL)
+		return NULL;
+
+	return strdup (name);
 }
 
 #endif /* OS_UNIX */
@@ -331,7 +377,7 @@ _p11_library_uninit (void)
 {
 	LPVOID data;
 
-	_p11_debug ("uninitializing library");
+	uninit_common ();
 
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		data = TlsGetValue (thread_local);
@@ -376,4 +422,69 @@ DllMain (HINSTANCE instance,
 	return TRUE;
 }
 
+extern char **__argv;
+
+static char *
+get_default_progname (void)
+{
+	const char *name;
+	const char *p;
+	char *progname;
+	size_t length;
+
+	name = __argv[0];
+	if (name == NULL)
+		return NULL;
+
+	p = strrchr (name, '\\');
+	if (p != NULL)
+		name = p + 1;
+
+	progname = strdup (name);
+	length = strlen (progname);
+	if (length > 4 && _stricmp(progname + (length - 4), ".exe"))
+		progname[length - 4] = '\0';
+
+	return progname;
+}
+
 #endif /* OS_WIN32 */
+
+/* This is the progname that we think of this process as. */
+char *_p11_my_progname = NULL;
+
+/**
+ * p11_kit_set_progname:
+ * @progname: the program base name
+ *
+ * Set the program base name that is used by the <literal>enable-in</literal>
+ * and <literal>disable-in</literal> module configuration options.
+ *
+ * Normally this is automatically calculated from the program's argument list.
+ * You would usually call this before initializing p11-kit modules.
+ */
+void
+p11_kit_set_progname (const char *progname)
+{
+	_p11_library_init_once ();
+
+	_p11_lock ();
+	_p11_set_progname_unlocked (progname);
+	_p11_unlock ();
+}
+
+void
+_p11_set_progname_unlocked (const char *progname)
+{
+	/* We can be called with NULL, to cleanup memory usage */
+	free (_p11_my_progname);
+	_p11_my_progname = progname ? strdup (progname) : NULL;
+}
+
+const char *
+_p11_get_progname_unlocked (void)
+{
+	if (_p11_my_progname == NULL)
+		_p11_my_progname = get_default_progname ();
+	return _p11_my_progname;
+}

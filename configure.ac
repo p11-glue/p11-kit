@@ -6,6 +6,8 @@ AC_INIT([p11-kit],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
 
+AC_USE_SYSTEM_EXTENSIONS
+
 # ------------------------------------------------------------------------------
 # p11-kit libtool versioning
 # CURRENT : REVISION : AGE
@@ -31,7 +33,6 @@ LT_INIT([dlopen disable-static])
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
-AC_USE_SYSTEM_EXTENSIONS
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
@@ -66,6 +67,15 @@ if test "$os_unix" = "yes"; then
 		[AC_MSG_ERROR([could not find dlopen])])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_HEADERS([err.h])
+	AC_CHECK_FUNCS([getprogname getexecname])
+
+	# Check if these are declared and/or available to link against
+	AC_CHECK_DECLS([program_invocation_short_name])
+	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *program_invocation_short_name; void main() { }])],
+		[AC_DEFINE(HAVE_PROGRAM_INVOCATION_SHORT_NAME, [1], [Whether program_invocation_short_name available])])
+	AC_CHECK_DECLS([__progname])
+	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *__progname; void main() { }])],
+		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
 fi
 
 # ------------------------------------------------------------------------------

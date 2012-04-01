@@ -77,6 +77,8 @@ temp.txt
 /tests/p11-test
 /tests/pin-test
 /tests/print-messages
+/tests/print-progname
+/tests/progname-test
 /tests/ptr-array-test
 /tests/conf-test
 /tests/uri-test

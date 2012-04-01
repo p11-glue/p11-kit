@@ -13,6 +13,7 @@ LDADD = \
 CHECK_PROGS = \
 	hash-test \
 	ptr-array-test \
+	progname-test \
 	conf-test \
 	uri-test \
 	pin-test \
@@ -28,6 +29,7 @@ conf_test_SOURCES = conf-test.c $(cutestfiles)
 hash_test_SOURCES = hash-test.c $(cutestfiles)
 pin_test_SOURCES = pin-test.c $(cutestfiles)
 ptr_array_test_SOURCES = ptr-array-test.c $(cutestfiles)
+progname_test_SOURCES = progname-test.c $(cutestfiles)
 test_init_SOURCES = \
 	test-init.c \
 	mock-module.c mock-module.h $(cutestfiles)

@@ -92,4 +92,8 @@ void        _p11_kit_clear_message                              (void);
 
 void        _p11_kit_default_message                            (CK_RV rv);
 
+const char * _p11_get_progname_unlocked                         (void);
+
+void        _p11_set_progname_unlocked                          (const char *progname);
+
 #endif /* __P11_KIT_PRIVATE_H__ */

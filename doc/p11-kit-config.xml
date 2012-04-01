@@ -140,7 +140,34 @@ critical: yes
 					<para>This argument is optional and defaults to <literal>no</literal>.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term>enable-in:</term>
+				<listitem>
+					<para>A comma and/or space separated list of names of programs that
+					this module should only be loaded in. The module will not be loaded
+					for other programs using p11-kit. The base name of the process executable
+					should be used here, for example
+					<literal>seahorse, ssh</literal>.</para>
+					<para>This is not a security feature. The argument is optional. If
+					not present, then any process will load the module.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>disable-in:</term>
+				<listitem>
+					<para>A comma and/or space separated list of names of programs that
+					this module should not be loaded in. The module will be loaded for any
+					other programs using p11-kit. The base name of the process
+					executable should be used here, for example
+					<literal>firefox, thunderbird-bin</literal>.</para>
+					<para>This is not a security feature. The argument is optional. If
+					not present, then any process will load the module.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
+
+		<para>Do not specify both <literal>enable-in</literal> and <literal>disable-in</literal>
+		for the same module.</para>
 
 		<para>Other fields may be present, but it is recommended that field names
 		that are not specified in this document start with a <literal>x-</literal>

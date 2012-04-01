@@ -47,6 +47,7 @@
 #include <sys/types.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <limits.h>
@@ -336,6 +337,61 @@ expand_module_path (const char *filename)
 	return path;
 }
 
+static int
+is_list_delimiter (char ch)
+{
+	return ch == ',' ||  isspace (ch);
+}
+
+static int
+is_string_in_list (const char *list,
+                   const char *string)
+{
+	const char *where;
+
+	where = strstr (list, string);
+	if (where == NULL)
+		return 0;
+
+	/* Has to be at beginning/end of string, and delimiter before/after */
+	if (where != list && !is_list_delimiter (*(where - 1)))
+		return 0;
+
+	where += strlen (string);
+	return (*where == '\0' || is_list_delimiter (*where));
+}
+
+static int
+is_module_enabled_unlocked (const char *name,
+                            hashmap *config)
+{
+	const char *progname;
+	const char *enable_in;
+	const char *disable_in;
+	int enable;
+
+	enable_in = _p11_hash_get (config, "enable-in");
+	disable_in = _p11_hash_get (config, "disable-in");
+
+	/* Defaults to enabled if neither of these are set */
+	if (!enable_in && !disable_in)
+		return 1;
+
+	progname = _p11_get_progname_unlocked ();
+	if (enable_in && disable_in)
+		_p11_message ("module '%s' has both enable-in and disable-in options", name);
+	if (enable_in)
+		enable = (progname != NULL && is_string_in_list (enable_in, progname));
+	else if (disable_in)
+		enable = (progname == NULL || !is_string_in_list (disable_in, progname));
+
+	_p11_debug ("%s module '%s' running in '%s'",
+	            enable ? "enabled" : "disabled",
+	            name,
+	            progname ? progname : "(null)");
+	return enable;
+}
+
 static CK_RV
 take_config_and_load_module_unlocked (char **name, hashmap **config)
 {
@@ -348,6 +404,9 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	assert (*name);
 	assert (config);
 	assert (*config);
+
+	if (!is_module_enabled_unlocked (*name, *config))
+		return CKR_OK;
 
 	module_filename = _p11_hash_get (*config, "module");
 	if (module_filename == NULL) {
@@ -832,8 +891,22 @@ _p11_kit_registered_modules_unlocked (void)
 	if (result) {
 		_p11_hash_iterate (gl.modules, &iter);
 		while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
-			if (mod->ref_count && mod->name)
+
+			/*
+			 * We don't include unreferenced modules. We don't include
+			 * modules that have been initialized but aren't in the
+			 * registry. These have a NULL name.
+			 *
+			 * In addition we check again that the module isn't disabled
+			 * using enable-in or disable-in. This is because a caller
+			 * can change the progname we recognize the process as after
+			 * having initialized. This is a corner case, but want to make
+			 * sure to cover it.
+			 */
+			if (mod->ref_count && mod->name &&
+			    is_module_enabled_unlocked (mod->name, mod->config)) {
 				result[i++] = mod->funcs;
+			}
 		}
 	}
 
