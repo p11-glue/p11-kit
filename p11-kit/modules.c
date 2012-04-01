@@ -440,6 +440,13 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 		return rv;
 	}
 
+	/*
+	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
+	 * 'x-init-reserved' setting in the config. This only works with specific
+	 * PKCS#11 modules, and is non-standard use of that field.
+	 */
+	mod->init_args.pReserved = _p11_hash_get (mod->config, "x-init-reserved");
+
 	prev = _p11_hash_get (gl.modules, mod->funcs);
 
 	/* If same module was loaded previously, just take over config */
@@ -463,12 +470,6 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 		}
 
 	}
-	/*
-	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
-	 * 'x-init-reserved' setting in the config. This only works with specific
-	 * PKCS#11 modules, and is non-standard use of that field.
-	 */
-	mod->init_args.pReserved = _p11_hash_get (mod->config, "x-init-reserved");
 
 	return CKR_OK;
 }
