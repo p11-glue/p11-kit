@@ -50,7 +50,7 @@ mock_one_la_SOURCES = \
 	mock-module-ep.c
 
 mock_one_la_LIBADD = \
-	$(top_srcdir)/p11-kit/libp11-kit-compat.la
+	$(top_builddir)/p11-kit/libp11-kit-compat.la
 
 mock_one_la_LDFLAGS = \
 	-module -avoid-version -rpath /nowhere \
@@ -58,9 +58,11 @@ mock_one_la_LDFLAGS = \
 
 mock_two_la_SOURCES = $(mock_one_la_SOURCES)
 mock_two_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_two_la_LIBADD = $(mock_one_la_LIBADD)
 
 mock_three_la_SOURCES = $(mock_one_la_SOURCES)
 mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_three_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST = \
 	cutest \

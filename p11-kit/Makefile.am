@@ -58,10 +58,10 @@ libp11_kit_testable_la_LDFLAGS = \
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 
 libp11_kit_testable_la_CFLAGS = \
-	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_builddir)/tests/files/system-pkcs11.conf"\" \
-	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_builddir)/tests/files/system-modules"\" \
-	-DP11_USER_CONFIG_FILE=\""$(abs_top_builddir)/tests/files/user-pkcs11.conf"\" \
-	-DP11_USER_CONFIG_MODULES=\""$(abs_top_builddir)/tests/files/user-modules"\" \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/system-pkcs11.conf"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/system-modules"\" \
+	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/user-pkcs11.conf"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/user-modules"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
 	$(NULL)
 

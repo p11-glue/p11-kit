@@ -734,7 +734,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 		while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered */
-			if (!mod->name)
+			if (mod->name == NULL || !is_module_enabled_unlocked (mod->name, mod->config))
 				continue;
 
 			rv = initialize_module_unlocked_reentrant (mod);
@@ -1000,7 +1000,7 @@ p11_kit_registered_name_to_module (const char *name)
 
 		if (gl.modules) {
 			mod = find_module_for_name_unlocked (name);
-			if (mod)
+			if (mod != NULL && is_module_enabled_unlocked (name, mod->config))
 				module = mod->funcs;
 		}
 
