@@ -3,11 +3,6 @@ NULL =
 INCLUDES = \
 	-I$(top_srcdir) \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
-	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
-	-DP11_SYSTEM_CONFIG_MODULES=\""$(p11_system_config_modules)"\" \
-	-DP11_USER_CONFIG_FILE=\""$(p11_user_config_file)"\" \
-	-DP11_USER_CONFIG_MODULES=\""$(p11_user_config_modules)"\" \
-	-DP11_MODULE_PATH=\""$(p11_module_path)"\" \
 	$(NULL)
 
 incdir = $(includedir)/p11-kit-1/p11-kit
@@ -36,8 +31,13 @@ MODULE_SRCS = \
 lib_LTLIBRARIES = \
 	libp11-kit.la
 
-noinst_LTLIBRARIES = \
-	libp11-kit-testable.la
+libp11_kit_la_CFLAGS = \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(p11_system_config_modules)"\" \
+	-DP11_USER_CONFIG_FILE=\""$(p11_user_config_file)"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(p11_user_config_modules)"\" \
+	-DP11_MODULE_PATH=\""$(p11_module_path)"\" \
+	$(NULL)
 
 libp11_kit_la_LDFLAGS = \
 	-no-undefined \
@@ -48,10 +48,25 @@ libp11_kit_la_SOURCES = $(MODULE_SRCS)
 
 libp11_kit_la_LIBADD = $(LTLIBINTL)
 
+noinst_LTLIBRARIES = \
+	libp11-kit-testable.la \
+	libp11-kit-compat.la
+
 libp11_kit_testable_la_LDFLAGS = \
 	-no-undefined
 
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
+
+libp11_kit_testable_la_CFLAGS = \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_builddir)/tests/files/system-pkcs11.conf"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_builddir)/tests/files/system-modules"\" \
+	-DP11_USER_CONFIG_FILE=\""$(abs_top_builddir)/tests/files/user-pkcs11.conf"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(abs_top_builddir)/tests/files/user-modules"\" \
+	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
+	$(NULL)
+
+libp11_kit_compat_la_SOURCES = \
+	compat.c compat.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc

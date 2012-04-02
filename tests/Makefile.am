@@ -17,7 +17,8 @@ CHECK_PROGS = \
 	conf-test \
 	uri-test \
 	pin-test \
-	test-init
+	test-init \
+	test-modules
 
 noinst_PROGRAMS = \
 	print-messages \
@@ -30,13 +31,36 @@ hash_test_SOURCES = hash-test.c $(cutestfiles)
 pin_test_SOURCES = pin-test.c $(cutestfiles)
 ptr_array_test_SOURCES = ptr-array-test.c $(cutestfiles)
 progname_test_SOURCES = progname-test.c $(cutestfiles)
-test_init_SOURCES = \
-	test-init.c \
-	mock-module.c mock-module.h $(cutestfiles)
+test_init_SOURCES = test-init.c $(cutestfiles) \
+	mock-module.c mock-module.h
+test_init_CFLAGS = $(AM_CFLAGS)
+test_modules_SOURCES = test-modules.c $(cutestfiles)
 
 uri_test_SOURCES = uri-test.c $(cutestfiles)
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
+
+noinst_LTLIBRARIES = \
+	mock-one.la \
+	mock-two.la \
+	mock-three.la
+
+mock_one_la_SOURCES = \
+	mock-module.c mock-module.h \
+	mock-module-ep.c
+
+mock_one_la_LIBADD = \
+	$(top_srcdir)/p11-kit/libp11-kit-compat.la
+
+mock_one_la_LDFLAGS = \
+	-module -avoid-version -rpath /nowhere \
+	-no-undefined -export-symbols-regex 'C_GetFunctionList'
+
+mock_two_la_SOURCES = $(mock_one_la_SOURCES)
+mock_two_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+
+mock_three_la_SOURCES = $(mock_one_la_SOURCES)
+mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 
 EXTRA_DIST = \
 	cutest \

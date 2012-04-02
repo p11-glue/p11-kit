@@ -262,17 +262,17 @@ test_load_modules_merge (CuTest *tc)
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-one.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user1");
 
 	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-two.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
 	config = _p11_hash_get (configs, "three");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-three.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user3");
 
 	_p11_hash_free (configs);
@@ -294,12 +294,12 @@ test_load_modules_user_none (CuTest *tc)
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-one.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
 	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-two.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
 	config = _p11_hash_get (configs, "three");
@@ -332,7 +332,7 @@ test_load_modules_user_only (CuTest *tc)
 
 	config = _p11_hash_get (configs, "three");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-three");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-three.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user3");
 
 	_p11_hash_free (configs);
@@ -354,12 +354,12 @@ test_load_modules_no_user (CuTest *tc)
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-one");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-one.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
 	config = _p11_hash_get (configs, "two");
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "/path/to/module-two");
+	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), "mock-two.la");
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
 
 	config = _p11_hash_get (configs, "three");

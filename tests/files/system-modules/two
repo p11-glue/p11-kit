@@ -1,3 +1,3 @@
 
-module: /path/to/module-two
+module: mock-two.so
 setting: system2
