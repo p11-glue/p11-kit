@@ -57,7 +57,7 @@
  * @short_description: PIN Callbacks
  *
  * Applications can register a callback which will be called to provide a
- * password associated with a given pin file.
+ * password associated with a given pin source.
  *
  * PKCS\#11 URIs can contain a 'pin-source' attribute. The value of this attribute
  * is application dependent, but often references a file containing a PIN to
@@ -433,6 +433,11 @@ p11_kit_pin_request (const char *pin_source, P11KitUri *pin_uri,
  * a file with that name. This can be used to enable the normal PKCS\#11 URI
  * behavior described in the RFC.
  *
+ * If @pin_flags contains the %P11_KIT_PIN_FLAGS_RETRY flag, then this
+ * callback will always return %NULL. This is to prevent endless loops
+ * where an application is expecting to interact with a prompter, but
+ * instead is interacting with this callback reading a file over and over.
+ *
  * This callback is not registered by default. To register it use code like
  * the following:
  *
@@ -441,8 +446,8 @@ p11_kit_pin_request (const char *pin_source, P11KitUri *pin_uri,
  *                                NULL, NULL);
  * </programlisting></informalexample>
  *
- * Returns: A referenced PIN with the pinfile contents, or %NULL if the file
- *    could not be read.
+ * Returns: a referenced PIN with the pinfile contents, or %NULL if the file
+ *          could not be read
  */
 P11KitPin*
 p11_kit_pin_file_callback (const char *pin_source,
@@ -521,16 +526,16 @@ struct p11_kit_pin {
  * @value: the value of the PIN
  * @length: the length of @value
  *
- * Create a new P11KitPin with the given PIN value. The exactly @length bytes
- * from @value are used. Null terminated strings, or encodings are not
- * considered.
+ * Create a new P11KitPin with the given PIN value. This function is
+ * usually used from within registered PIN callbacks.
  *
- * A copy of the @value will be made.
+ * Exactly @length bytes from @value are used. Null terminated strings,
+ * or encodings are not considered. A copy of the @value will be made.
  *
  * Returns: The newly allocated P11KitPin, which should be freed with
- *     p11_kit_pin_unref() when no longer needed.
+ *          p11_kit_pin_unref() when no longer needed.
  */
-P11KitPin*
+P11KitPin *
 p11_kit_pin_new (const unsigned char *value, size_t length)
 {
 	unsigned char *copy;
@@ -552,15 +557,16 @@ p11_kit_pin_new (const unsigned char *value, size_t length)
  * @value: the value of the PIN
  *
  * Create a new P11KitPin for the given null-terminated string, such as a
- * password. The PIN will consist of the string not including the null terminator.
- * String encoding is not considered.
+ * password. This function is usually used from within registered
+ * PIN callbacks.
  *
- * A copy of the @value will be made.
+ * The PIN will consist of the string not including the null terminator.
+ * String encoding is not considered. A copy of the @value will be made.
  *
  * Returns: The newly allocated P11KitPin, which should be freed with
  *     p11_kit_pin_unref() when no longer needed.
  */
-P11KitPin*
+P11KitPin *
 p11_kit_pin_new_for_string (const char *value)
 {
 	return p11_kit_pin_new ((const unsigned char *)value, strlen (value));
@@ -572,8 +578,11 @@ p11_kit_pin_new_for_string (const char *value)
  * @length: the length of @buffer
  * @destroy: if not %NULL, then called when PIN is destroyed.
  *
- * Create a new P11KitPin which will use @buffer for the PIN value. The buffer
- * will not be copied. String encodings and null characters are not considered.
+ * Create a new P11KitPin which will use @buffer for the PIN value.
+ * This function is usually used from within registered PIN callbacks.
+ *
+ * The buffer will not be copied. String encodings and null characters
+ * are not considered.
  *
  * When the last reference to this PIN is lost, then the @destroy callback
  * function will be called passing @buffer as an argument. This allows the
@@ -587,9 +596,9 @@ p11_kit_pin_new_for_string (const char *value)
  * </programlisting></informalexample>
  *
  * Returns: The newly allocated P11KitPin, which should be freed with
- *     p11_kit_pin_unref() when no longer needed.
+ *          p11_kit_pin_unref() when no longer needed.
  */
-P11KitPin*
+P11KitPin *
 p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
                             p11_kit_pin_destroy_func destroy)
 {
@@ -621,7 +630,7 @@ p11_kit_pin_new_for_buffer (unsigned char *buffer, size_t length,
  *
  * Returns: the value for the PIN.
  */
-const unsigned char*
+const unsigned char *
 p11_kit_pin_get_value (P11KitPin *pin, size_t *length)
 {
 	if (length)
@@ -653,7 +662,7 @@ p11_kit_pin_get_length (P11KitPin *pin)
  *
  * Returns: the @pin pointer, for convenience sake.
  */
-P11KitPin*
+P11KitPin *
 p11_kit_pin_ref (P11KitPin *pin)
 {
 	_p11_lock ();
