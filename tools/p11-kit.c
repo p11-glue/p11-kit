@@ -34,7 +34,7 @@
 
 #include "config.h"
 
-#include "compat.h"
+#include "common/compat.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -146,7 +146,7 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 	X(CKF_LOGIN_REQUIRED, "login-required");
 	X(CKF_USER_PIN_INITIALIZED, "user-pin-initialized");
 	X(CKF_RESTORE_KEY_NOT_NEEDED, "restore-key-not-needed");
-	X(CKF_CLOCK_ON_TOKEN, "clock-on-tokne");
+	X(CKF_CLOCK_ON_TOKEN, "clock-on-token");
 	X(CKF_PROTECTED_AUTHENTICATION_PATH, "protected-authentication-path");
 	X(CKF_DUAL_CRYPTO_OPERATIONS, "dual-crypto-operations");
 	X(CKF_TOKEN_INITIALIZED, "token-initialized");

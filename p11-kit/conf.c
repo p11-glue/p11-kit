@@ -37,11 +37,11 @@
 
 #include "config.h"
 
-#include "compat.h"
 #include "conf.h"
 #define DEBUG_FLAG DEBUG_CONF
 #include "debug.h"
 #include "private.h"
+#include "util.h"
 
 #include <sys/param.h>
 #include <sys/stat.h>

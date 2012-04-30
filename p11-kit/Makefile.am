@@ -15,7 +15,6 @@ inc_HEADERS = \
 
 MODULE_SRCS = \
 	util.c util.h \
-	compat.c compat.h \
 	conf.c conf.h \
 	debug.c debug.h \
 	hashmap.c hashmap.h \
@@ -66,7 +65,7 @@ libp11_kit_testable_la_CFLAGS = \
 	$(NULL)
 
 libp11_kit_compat_la_SOURCES = \
-	compat.c compat.h
+	util.c util.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc

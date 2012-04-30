@@ -303,6 +303,19 @@ _p11_library_uninit (void)
 	_p11_mutex_uninit (&_p11_mutex);
 }
 
+void
+_p11_mutex_init (mutex_t *mutex)
+{
+	pthread_mutexattr_t attr;
+	int ret;
+
+	pthread_mutexattr_init (&attr);
+	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+	ret = pthread_mutex_init (mutex, &attr);
+	assert (ret == 0);
+	pthread_mutexattr_destroy (&attr);
+}
+
 #if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 extern char *program_invocation_short_name;
 #endif
@@ -396,6 +409,59 @@ _p11_library_uninit (void)
 		TlsFree (thread_local);
 	}
 	_p11_mutex_uninit (&_p11_mutex);
+}
+
+const char *
+_p11_module_error (void)
+{
+	DWORD code = GetLastError();
+	p11_local *local;
+	LPVOID msg_buf;
+
+	local = _p11_library_get_thread_local ();
+
+	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	                FORMAT_MESSAGE_FROM_SYSTEM |
+	                FORMAT_MESSAGE_IGNORE_INSERTS,
+	                NULL, code,
+	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                (LPSTR)&msg_buf, 0, NULL);
+
+	if (local->last_error)
+		LocalFree (local->last_error);
+	local->last_error = msg_buf;
+
+	return msg_buf;
+}
+
+int
+_p11_thread_create (thread_t *thread,
+               thread_routine routine,
+               void *arg)
+{
+	assert (thread);
+
+	*thread = CreateThread (NULL, 0,
+	                        (LPTHREAD_START_ROUTINE)routine,
+	                        arg, 0, NULL);
+
+	if (*thread == NULL)
+		return GetLastError ();
+
+	return 0;
+}
+
+int
+_p11_thread_join (thread_t thread)
+{
+	DWORD res;
+
+	res = WaitForSingleObject (thread, INFINITE);
+	if (res == WAIT_FAILED)
+		return GetLastError ();
+
+	CloseHandle (thread);
+	return 0;
 }
 
 BOOL WINAPI

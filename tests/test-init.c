@@ -44,8 +44,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "p11-kit/compat.h"
 #include "p11-kit/p11-kit.h"
+#include "p11-kit/util.h"
 
 #include "mock-module.h"
 

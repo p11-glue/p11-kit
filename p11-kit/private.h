@@ -36,7 +36,7 @@
 #define __P11_KIT_PRIVATE_H__
 
 #include "pkcs11.h"
-#include "compat.h"
+#include "util.h"
 
 extern mutex_t _p11_mutex;
 

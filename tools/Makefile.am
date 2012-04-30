@@ -8,7 +8,8 @@ bin_PROGRAMS = \
 	p11-kit
 
 p11_kit_SOURCES = \
-	compat.c compat.h \
+	$(top_srcdir)/common/compat.c \
+	$(top_srcdir)/common/compat.h \
 	p11-kit.c
 
 p11_kit_LDADD = \

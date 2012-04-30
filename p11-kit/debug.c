@@ -36,7 +36,6 @@
 
 #include "config.h"
 
-#include "compat.h"
 #include "debug.h"
 
 #include <assert.h>

@@ -37,8 +37,119 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include "config.h"
+
 #include <sys/types.h>
 
 void* _p11_realloc (void *memory, size_t length);
+
+/* -----------------------------------------------------------------------------
+ * WIN32
+ */
+
+#ifdef OS_WIN32
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x500
+#endif
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x500
+#endif
+
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+
+/* Oh ... my ... god */
+#undef CreateMutex
+
+typedef CRITICAL_SECTION mutex_t;
+
+typedef HANDLE thread_t;
+
+#define _p11_mutex_init(m) \
+	(InitializeCriticalSection (m))
+#define _p11_mutex_lock(m) \
+	(EnterCriticalSection (m))
+#define _p11_mutex_unlock(m) \
+	(LeaveCriticalSection (m))
+#define _p11_mutex_uninit(m) \
+	(DeleteCriticalSection (m))
+
+typedef void * (*thread_routine) (void *arg);
+
+int _p11_thread_create (thread_t *thread, thread_routine, void *arg);
+
+int _p11_thread_join (thread_t thread);
+
+#define _p11_thread_self() \
+	(GetCurrentThread ())
+
+typedef HMODULE dl_module_t;
+
+#define _p11_module_open(f) \
+	(LoadLibrary (f))
+#define _p11_module_close(d) \
+	(FreeLibrary (d))
+#define _p11_module_symbol(d, s) \
+	((void *)GetProcAddress ((d), (s)))
+
+const char *    _p11_module_error       (void);
+
+#define _p11_sleep_ms(ms) \
+	(Sleep (ms))
+
+#endif /* OS_WIN32 */
+
+/* ----------------------------------------------------------------------------
+ * UNIX
+ */
+
+#ifdef OS_UNIX
+
+#include <pthread.h>
+#include <dlfcn.h>
+#include <time.h>
+
+typedef pthread_mutex_t mutex_t;
+
+void        _p11_mutex_init          (mutex_t *mutex);
+
+#define _p11_mutex_lock(m) \
+	(pthread_mutex_lock (m))
+#define _p11_mutex_unlock(m) \
+	(pthread_mutex_unlock (m))
+#define _p11_mutex_uninit(m) \
+	(pthread_mutex_destroy(m))
+
+typedef pthread_t thread_t;
+
+typedef void * (*thread_routine) (void *arg);
+
+#define _p11_thread_create(t, r, a) \
+	(pthread_create ((t), NULL, (r), (a)))
+#define _p11_thread_join(t) \
+	(pthread_join ((t), NULL))
+#define _p11_thread_self(m) \
+	(pthread_self ())
+
+typedef void * dl_module_t;
+
+#define _p11_module_open(f) \
+	(dlopen ((f), RTLD_LOCAL | RTLD_NOW))
+#define _p11_module_close(d) \
+	(dlclose(d))
+#define _p11_module_error() \
+	(dlerror ())
+#define _p11_module_symbol(d, s) \
+	(dlsym ((d), (s)))
+
+#define _p11_sleep_ms(ms) \
+	do { int _ms = (ms); \
+	struct timespec _ts = { _ms / 1000, (_ms % 1000) * 1000 * 1000 }; \
+	nanosleep (&_ts, NULL); \
+	} while(0)
+
+#endif /* OS_UNIX */
 
 #endif /* __UTIL_H__ */

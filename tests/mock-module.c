@@ -38,7 +38,7 @@
 #include "pkcs11.h"
 #include "mock-module.h"
 
-#include "p11-kit/compat.h"
+#include "p11-kit/util.h"
 
 #include <stdarg.h>
 #include <stdio.h>
