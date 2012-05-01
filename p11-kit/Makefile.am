@@ -2,6 +2,7 @@ NULL =
 
 INCLUDES = \
 	-I$(top_srcdir) \
+	-I$(top_srcdir)/common \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(NULL)
 
@@ -25,6 +26,8 @@ MODULE_SRCS = \
 	ptr-array.c ptr-array.h \
 	messages.c \
 	uri.c \
+	$(top_srcdir)/common/compat.c \
+	$(top_srcdir)/common/compat.h \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \
@@ -65,7 +68,9 @@ libp11_kit_testable_la_CFLAGS = \
 	$(NULL)
 
 libp11_kit_compat_la_SOURCES = \
-	util.c util.h
+	util.c util.h \
+	$(top_srcdir)/common/compat.c \
+	$(top_srcdir)/common/compat.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc

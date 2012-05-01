@@ -32,10 +32,14 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef __ERR_H__
-#define __ERR_H__
+#ifndef __COMPAT_H__
+#define __COMPAT_H__
 
 #include "config.h"
+
+#ifndef HAVE_GETPROGNAME
+const char * getprogname (void);
+#endif
 
 #ifdef HAVE_ERR_H
 #include <err.h>
@@ -60,4 +64,4 @@ void vwarnx (const char *fmt, va_list ap);
 
 #endif /* !HAVE_ERR_H */
 
-#endif /* __ERR_H__ */
+#endif /* __COMPAT_H__ */

@@ -34,7 +34,7 @@
 
 #include "config.h"
 
-#include "common/compat.h"
+#include "compat.h"
 
 #include <assert.h>
 #include <ctype.h>

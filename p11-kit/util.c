@@ -37,6 +37,7 @@
 
 #include "config.h"
 
+#include "compat.h"
 #define DEBUG_FLAG DEBUG_LIB
 #include "debug.h"
 #include "p11-kit.h"
@@ -316,41 +317,6 @@ _p11_mutex_init (mutex_t *mutex)
 	pthread_mutexattr_destroy (&attr);
 }
 
-#if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
-extern char *program_invocation_short_name;
-#endif
-
-#if defined (HAVE___PROGNAME) && !HAVE_DECL___PROGNAME
-extern char *__progname;
-#endif
-
-static char *
-get_default_progname (void)
-{
-	const char *name;
-
-#if defined (HAVE_GETPROGNAME)
-	name = getprogname();
-#elif defined (HAVE_GETEXECNAME)
-	const char *p;
-	name = getexecname();
-	p = strrchr (name ? name : "", '/');
-	if (p != NULL)
-		name = p + 1;
-#elif defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME)
-	name = program_invocation_short_name;
-#elif defined (HAVE___PROGNAME)
-	name = __progname;
-#else
-	#error No way to retrieve program name from p11-kit library
-#endif
-
-	if (name == NULL)
-		return NULL;
-
-	return strdup (name);
-}
-
 #endif /* OS_UNIX */
 
 #ifdef OS_WIN32
@@ -562,6 +528,6 @@ const char *
 _p11_get_progname_unlocked (void)
 {
 	if (_p11_my_progname == NULL)
-		_p11_my_progname = get_default_progname ();
+		_p11_set_progname_unlocked (getprogname ());
 	return _p11_my_progname;
 }

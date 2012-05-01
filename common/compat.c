@@ -36,39 +36,80 @@
 
 #include "compat.h"
 
+#ifndef HAVE_GETPROGNAME
+
+#ifdef OS_UNIX
+
+#if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
+extern char *program_invocation_short_name;
+#endif
+
+#if defined (HAVE___PROGNAME) && !HAVE_DECL___PROGNAME
+extern char *__progname;
+#endif
+
+const char *
+getprogname (void)
+{
+	const char *name;
+
+#if defined (HAVE_GETEXECNAME)
+	const char *p;
+	name = getexecname();
+	p = strrchr (name ? name : "", '/');
+	if (p != NULL)
+		name = p + 1;
+#elif defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+	name = program_invocation_short_name;
+#elif defined (HAVE___PROGNAME)
+	name = __progname;
+#else
+	#error No way to retrieve short program name
+#endif
+
+	return name;
+}
+
+#else /* OS_WIN32 */
+
+extern char **__argv;
+static char prognamebuf[256];
+
+const char *
+getprogname (void)
+{
+	const char *name;
+	const char *p;
+	size_t length;
+
+	name = __argv[0];
+	if (name == NULL)
+		return NULL;
+
+	p = strrchr (name, '\\');
+	if (p != NULL)
+		name = p + 1;
+
+	length = sizeof (prognamebuf) - 1;
+	strncpy (prognamebuf, name, length);
+	prognamebuf[length] = 0;
+	length = strlen (prognamebuf);
+	if (length > 4 && _stricmp (prognamebuf + (length - 4), ".exe"))
+		prognamebuf[length - 4] = '\0';
+
+	return prognamebuf;
+}
+
+#endif /* OS_WIN32 */
+
+#endif /* HAVE_GETPROGNAME */
+
 #ifndef HAVE_ERR_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-
-static const char *
-calc_prog_name (void)
-{
-	static char prognamebuf[256];
-	static int prepared = 0;
-
-	if(!prepared)
-	{
-		const char* beg = strrchr(__argv[0], '\\');
-		const char* temp = strrchr(__argv[0], '/');
-		beg = (beg > temp) ? beg : temp;
-		beg = (beg) ? beg + 1 : __argv[0];
-
-		temp = strrchr(__argv[0], '.');
-		temp = (temp > beg) ? temp : __argv[0] + strlen(__argv[0]);
-
-		if((temp - beg) > 255)
-			temp = beg + 255;
-
-		strncpy(prognamebuf, beg, temp - beg);
-		prognamebuf[temp - beg] = 0;
-		prepared = 1;
-	}
-
-	return prognamebuf;
-}
 
 static FILE *err_file; /* file to use for error output */
 
