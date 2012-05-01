@@ -190,6 +190,7 @@ _p11_message (const char* msg, ...)
 	if (print_messages)
 		fprintf (stderr, "p11-kit: %s\n", buffer);
 
+	_p11_debug_message (DEBUG_LIB, "message: %s", buffer);
 	store_message_buffer (buffer, length);
 }
 

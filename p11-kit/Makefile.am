@@ -68,6 +68,8 @@ libp11_kit_testable_la_CFLAGS = \
 	$(NULL)
 
 libp11_kit_compat_la_SOURCES = \
+	debug.c debug.h \
+	messages.c \
 	util.c util.h \
 	$(top_srcdir)/common/compat.c \
 	$(top_srcdir)/common/compat.h
