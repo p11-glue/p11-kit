@@ -4,7 +4,8 @@ INCLUDES = \
 	-I$(top_srcdir)/common \
 	-I$(top_srcdir)/p11-kit \
 	-I$(srcdir)/cutest \
-	-DSRCDIR=\"$(srcdir)\" \
+	-DSRCDIR=\"$(abs_srcdir)\" \
+	-DBUILDDIR=\"$(abs_builddir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API
 
 LDADD = \

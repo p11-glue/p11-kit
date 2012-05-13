@@ -130,12 +130,11 @@ create_mutex (CK_VOID_PTR_PTR mut)
 {
 	mutex_t *pmutex;
 
-	if (mut == NULL)
-		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (mut != NULL, CKR_ARGUMENTS_BAD);
 
 	pmutex = malloc (sizeof (mutex_t));
-	if (!pmutex)
-		return CKR_HOST_MEMORY;
+	return_val_if_fail (pmutex != NULL, CKR_HOST_MEMORY);
+
 	_p11_mutex_init (pmutex);
 	*mut = pmutex;
 	return CKR_OK;
@@ -146,8 +145,7 @@ destroy_mutex (CK_VOID_PTR mut)
 {
 	mutex_t *pmutex = mut;
 
-	if (mut == NULL)
-		return CKR_MUTEX_BAD;
+	return_val_if_fail (mut != NULL, CKR_MUTEX_BAD);
 
 	_p11_mutex_uninit (pmutex);
 	free (pmutex);
@@ -159,8 +157,7 @@ lock_mutex (CK_VOID_PTR mut)
 {
 	mutex_t *pmutex = mut;
 
-	if (mut == NULL)
-		return CKR_MUTEX_BAD;
+	return_val_if_fail (mut != NULL, CKR_MUTEX_BAD);
 
 	_p11_mutex_lock (pmutex);
 	return CKR_OK;
@@ -171,8 +168,7 @@ unlock_mutex (CK_VOID_PTR mut)
 {
 	mutex_t *pmutex = mut;
 
-	if (mut == NULL)
-		return CKR_MUTEX_BAD;
+	return_val_if_fail (mut != NULL, CKR_MUTEX_BAD);
 
 	_p11_mutex_unlock (pmutex);
 	return CKR_OK;
@@ -183,7 +179,7 @@ free_module_unlocked (void *data)
 {
 	Module *mod = data;
 
-	assert (mod);
+	assert (mod != NULL);
 
 	/* Module must be finalized */
 	assert (mod->initialize_called == 0);
@@ -201,14 +197,13 @@ free_module_unlocked (void *data)
 	free (mod);
 }
 
-static Module*
+static Module *
 alloc_module_unlocked (void)
 {
 	Module *mod;
 
 	mod = calloc (1, sizeof (Module));
-	if (!mod)
-		return NULL;
+	return_val_if_fail (mod != NULL, NULL);
 
 	mod->init_args.CreateMutex = create_mutex;
 	mod->init_args.DestroyMutex = destroy_mutex;
@@ -238,16 +233,15 @@ build_path (const char *dir, const char *filename)
 	assert (filename);
 
 	len = snprintf (NULL, 0, "%s/%s", dir, filename) + 1;
-	if (len <= 0)
-		return NULL;
+	return_val_if_fail (len > 0, NULL);
 
 #ifdef PATH_MAX
 	if (len > PATH_MAX)
 		return NULL;
 #endif
 
-	if (!(path = malloc (len)))
-		return NULL;
+	path = malloc (len);
+	return_val_if_fail (path != NULL, NULL);
 
 	sprintf (path, "%s/%s", dir, filename);
 
@@ -295,8 +289,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 	CK_RV rv;
 
 	mod = alloc_module_unlocked ();
-	if (!mod)
-		return CKR_HOST_MEMORY;
+	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
 
 	rv = dlopen_and_get_function_list (mod, path);
 	if (rv != CKR_OK) {
@@ -313,8 +306,7 @@ load_module_from_file_unlocked (const char *path, Module **result)
 		mod = prev;
 
 	} else if (!_p11_hash_set (gl.modules, mod->funcs, mod)) {
-		free_module_unlocked (mod);
-		return CKR_HOST_MEMORY;
+		return_val_if_reached (CKR_HOST_MEMORY);
 	}
 
 	if (result)
@@ -415,18 +407,14 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	}
 
 	path = expand_module_path (module_filename);
-	if (!path)
-		return CKR_HOST_MEMORY;
+	return_val_if_fail (path != NULL, CKR_HOST_MEMORY);
 
 	/* The hash map will take ownership of the variable */
-	if (!_p11_hash_set (*config, "module", path)) {
-		free (path);
-		return CKR_HOST_MEMORY;
-	}
+	if (!_p11_hash_set (*config, "module", path))
+		return_val_if_reached (CKR_HOST_MEMORY);
 
 	mod = alloc_module_unlocked ();
-	if (!mod)
-		return CKR_HOST_MEMORY;
+	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
 
 	/* Take ownership of thes evariables */
 	mod->config = *config;
@@ -464,11 +452,8 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 
 	/* Add this new module to our hash table */
 	} else {
-		if (!_p11_hash_set (gl.modules, mod->funcs, mod)) {
-			free_module_unlocked (mod);
-			return CKR_HOST_MEMORY;
-		}
-
+		if (!_p11_hash_set (gl.modules, mod->funcs, mod))
+			return_val_if_reached (CKR_HOST_MEMORY);
 	}
 
 	return CKR_OK;
@@ -492,14 +477,14 @@ load_registered_modules_unlocked (void)
 	/* Load the global configuration files */
 	config = _p11_conf_load_globals (P11_SYSTEM_CONFIG_FILE, P11_USER_CONFIG_FILE, &mode);
 	if (config == NULL)
-		return (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+		return CKR_GENERAL_ERROR;
 
 	assert (mode != CONF_USER_INVALID);
 
 	configs = _p11_conf_load_modules (mode, P11_SYSTEM_CONFIG_MODULES,
 	                                  P11_USER_CONFIG_MODULES);
 	if (configs == NULL) {
-		rv = (errno == ENOMEM) ? CKR_HOST_MEMORY : CKR_GENERAL_ERROR;
+		rv = CKR_GENERAL_ERROR;
 		_p11_hash_free (config);
 		return rv;
 	}
@@ -514,7 +499,7 @@ load_registered_modules_unlocked (void)
 	_p11_hash_iterate (configs, &iter);
 	while (_p11_hash_next (&iter, &key, NULL)) {
 		if (!_p11_hash_steal (configs, key, (void**)&name, (void**)&config))
-			assert (0 && "not reached");
+			assert_not_reached ();
 
 		/* Is this a critical module, should abort loading of others? */
 		critical = _p11_conf_parse_boolean (_p11_hash_get (config, "critical"), 0);
@@ -626,11 +611,11 @@ init_globals_unlocked (void)
 {
 	static int once = 0;
 
-	if (!gl.modules)
+	if (!gl.modules) {
 		gl.modules = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal,
 		                          NULL, free_module_unlocked);
-	if (!gl.modules)
-		return CKR_HOST_MEMORY;
+		return_val_if_fail (gl.modules != NULL, CKR_HOST_MEMORY);
+	}
 
 	if (once)
 		return CKR_OK;
@@ -890,9 +875,10 @@ _p11_kit_registered_modules_unlocked (void)
 	hashiter iter;
 	int i = 0;
 
-	if (gl.modules)
+	if (gl.modules) {
 		result = calloc (_p11_hash_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST_PTR));
-	if (result) {
+		return_val_if_fail (result != NULL, NULL);
+
 		_p11_hash_iterate (gl.modules, &iter);
 		while (_p11_hash_next (&iter, NULL, (void **)&mod)) {
 
@@ -966,6 +952,8 @@ p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module)
 	Module *mod;
 	char *name = NULL;
 
+	return_val_if_fail (module != NULL, NULL);
+
 	_p11_library_init_once ();
 
 	_p11_lock ();
@@ -996,6 +984,8 @@ p11_kit_registered_name_to_module (const char *name)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
 	Module *mod;
+
+	return_val_if_fail (name != NULL, NULL);
 
 	_p11_lock ();
 
@@ -1031,6 +1021,8 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 	Module *mod = NULL;
 	char *option = NULL;
 	hashmap *config = NULL;
+
+	return_val_if_fail (field != NULL, NULL);
 
 	_p11_library_init_once ();
 
@@ -1094,6 +1086,8 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 	Module *allocated = NULL;
 	Module *mod;
 	CK_RV rv = CKR_OK;
+
+	return_val_if_fail (module != NULL, CKR_ARGUMENTS_BAD);
 
 	_p11_library_init_once ();
 
@@ -1180,6 +1174,8 @@ p11_kit_finalize_module (CK_FUNCTION_LIST_PTR module)
 	Module *mod;
 	CK_RV rv = CKR_OK;
 
+	return_val_if_fail (module != NULL, CKR_ARGUMENTS_BAD);
+
 	_p11_library_init_once ();
 
 	/* WARNING: This function must be reentrant for the same arguments */
@@ -1245,6 +1241,9 @@ p11_kit_load_initialize_module (const char *module_path,
 {
 	Module *mod;
 	CK_RV rv = CKR_OK;
+
+	return_val_if_fail (module_path != NULL, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (module != NULL, CKR_ARGUMENTS_BAD);
 
 	_p11_library_init_once ();
 

@@ -132,10 +132,7 @@ strconcat (const char *first,
 	va_end (va);
 
 	at = result = malloc (length + 1);
-	if (!result) {
-		errno = ENOMEM;
-		return NULL;
-	}
+	return_val_if_fail (result != NULL, NULL);
 
 	va_start (va, first);
 
@@ -172,8 +169,7 @@ read_config_file (const char* filename, int flags)
 		    (error == ENOENT || error == ENOTDIR)) {
 			_p11_debug ("config file does not exist");
 			config = strdup ("\n");
-			if (!config)
-				errno = ENOMEM;
+			return_val_if_fail (config != NULL, NULL);
 			return config;
 		}
 		_p11_message ("couldn't open config file: %s: %s", filename,
@@ -192,8 +188,9 @@ read_config_file (const char* filename, int flags)
 		return NULL;
 	}
 
-	if ((config = (char*)malloc (len + 2)) == NULL) {
-		_p11_message ("out of memory");
+	config = malloc (len + 2);
+	if (config == NULL) {
+		_p11_message ("config file is too large to read into memory: %lu", len);
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -231,24 +228,11 @@ _p11_conf_merge_defaults (hashmap *map, hashmap *defaults)
 		if (_p11_hash_get (map, key))
 			continue;
 		key = strdup (key);
-		if (key == NULL) {
-			errno = ENOMEM;
-			return -1;
-		}
+		return_val_if_fail (key != NULL, -1);
 		value = strdup (value);
-		if (value == NULL) {
-			free (key);
-			errno = ENOMEM;
-			return -1;
-		}
-		if (!_p11_hash_set (map, key, value)) {
-			free (key);
-			free (value);
-			errno = ENOMEM;
-			return -1;
-		}
-		key = NULL;
-		value = NULL;
+		return_val_if_fail (key != NULL, -1);
+		if (!_p11_hash_set (map, key, value))
+			return_val_if_reached (-1);
 	}
 
 	return 0;
@@ -275,11 +259,8 @@ _p11_conf_parse_file (const char* filename, int flags)
 		return NULL;
 
 	map = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, free, free);
-	if (map == NULL) {
-		free (data);
-		errno = ENOMEM;
-		return NULL;
-	}
+	return_val_if_fail (map != NULL, NULL);
+
 	next = data;
 
 	/* Go through lines and process them */
@@ -308,25 +289,15 @@ _p11_conf_parse_file (const char* filename, int flags)
 		value = strtrim (value);
 
 		name = strdup (name);
-		if (!name) {
-			error = ENOMEM;
-			break;
-		}
+		return_val_if_fail (name != NULL, NULL);
+
 		value = strdup (value);
-		if (!value) {
-			free (name);
-			error = ENOMEM;
-			break;
-		}
+		return_val_if_fail (value != NULL, NULL);
 
 		_p11_debug ("config value: %s: %s", name, value);
 
-		if (!_p11_hash_set (map, name, value)) {
-			free (name);
-			free (value);
-			error = ENOMEM;
-			break;
-		}
+		if (!_p11_hash_set (map, name, value))
+			return_val_if_reached (NULL);
 	}
 
 	free (data);
@@ -504,12 +475,10 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 	prev = _p11_hash_get (configs, name);
 	if (prev == NULL) {
 		key = strdup (name);
-		if (key == NULL)
-			error = ENOMEM;
-		else if (!_p11_hash_set (configs, key, config))
-			error = errno;
-		else
-			config = NULL;
+		return_val_if_fail (key != NULL, -1);
+		if (!_p11_hash_set (configs, key, config))
+			return_val_if_reached (-1);
+		config = NULL;
 	} else {
 		if (_p11_conf_merge_defaults (prev, config) < 0)
 			error = errno;
@@ -554,10 +523,7 @@ load_configs_from_directory (const char *directory, hashmap *configs)
 	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir(dir)) != NULL) {
 		path = strconcat (directory, "/", dp->d_name, NULL);
-		if (!path) {
-			error = ENOMEM;
-			break;
-		}
+		return_val_if_fail (path != NULL, -1);
 
 		is_dir = 0;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE

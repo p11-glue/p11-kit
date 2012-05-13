@@ -257,10 +257,7 @@ initialize_mappings_unlocked_reentrant (void)
 			rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
 			if (rv == CKR_OK && count) {
 				slots = calloc (sizeof (CK_SLOT_ID), count);
-				if (!slots)
-					rv = CKR_HOST_MEMORY;
-				else
-					rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
+				rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
 			}
 
 		_p11_lock ();
@@ -270,12 +267,10 @@ initialize_mappings_unlocked_reentrant (void)
 			break;
 		}
 
-		mappings = _p11_realloc (mappings, sizeof (Mapping) * (n_mappings + count));
-		if (!mappings) {
-			free (slots);
-			rv = CKR_HOST_MEMORY;
-			break;
-		}
+		return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
+
+		mappings = realloc (mappings, sizeof (Mapping) * (n_mappings + count));
+		return_val_if_fail (mappings != NULL, CKR_HOST_MEMORY);
 
 		/* And now add a mapping for each of those slots */
 		for (i = 0; i < count; ++i) {
@@ -342,8 +337,7 @@ proxy_C_GetInfo (CK_INFO_PTR info)
 
 	_p11_library_init_once ();
 
-	if (info == NULL)
-		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
 
 	_p11_lock ();
 
@@ -370,8 +364,7 @@ proxy_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	/* Can be called before C_Initialize */
 
-	if (!list)
-		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (list != NULL, CKR_ARGUMENTS_BAD);
 	*list = &proxy_function_list;
 	return CKR_OK;
 }
@@ -386,8 +379,7 @@ proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 	CK_RV rv = CKR_OK;
 	int i;
 
-	if (!count)
-		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (count != NULL, CKR_ARGUMENTS_BAD);
 
 	_p11_lock ();
 
@@ -503,8 +495,7 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 	Mapping map;
 	CK_RV rv;
 
-	if (handle == NULL)
-		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (handle != NULL, CKR_ARGUMENTS_BAD);
 
 	rv = map_slot_to_real (&id, &map);
 	if (rv != CKR_OK)

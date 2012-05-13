@@ -41,8 +41,6 @@
 
 #include <sys/types.h>
 
-void* _p11_realloc (void *memory, size_t length);
-
 /* -----------------------------------------------------------------------------
  * WIN32
  */

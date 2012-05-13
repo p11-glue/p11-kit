@@ -1120,7 +1120,15 @@ test_uri_pin_source (CuTest *tc)
 	uri = p11_kit_uri_new ();
 	CuAssertPtrNotNull (tc, uri);
 
-	p11_kit_uri_set_pin_source (uri, "|my-pin-file");
+	p11_kit_uri_set_pin_source (uri, "|my-pin-source");
+
+	pin_source = p11_kit_uri_get_pin_source (uri);
+	CuAssertStrEquals (tc, "|my-pin-source", pin_source);
+
+	pin_source = p11_kit_uri_get_pinfile (uri);
+	CuAssertStrEquals (tc, "|my-pin-source", pin_source);
+
+	p11_kit_uri_set_pinfile (uri, "|my-pin-file");
 
 	pin_source = p11_kit_uri_get_pin_source (uri);
 	CuAssertStrEquals (tc, "|my-pin-file", pin_source);
@@ -1149,7 +1157,7 @@ static void
 test_uri_message (CuTest *tc)
 {
 	CuAssertTrue (tc, p11_kit_uri_message (P11_KIT_URI_OK) == NULL);
-	CuAssertPtrNotNull (tc, p11_kit_uri_message (P11_KIT_URI_NO_MEMORY));
+	CuAssertPtrNotNull (tc, p11_kit_uri_message (P11_KIT_URI_UNEXPECTED));
 	CuAssertPtrNotNull (tc, p11_kit_uri_message (-555555));
 }
 

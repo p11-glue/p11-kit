@@ -152,7 +152,8 @@ mock_C_Finalize__threaded_race (CK_VOID_PTR reserved)
 	_p11_mutex_unlock (&race_mutex);
 
 	_p11_sleep_ms (100);
-	return CKR_OK;}
+	return CKR_OK;
+}
 
 static void *
 initialization_thread (void *data)
@@ -223,6 +224,69 @@ test_threaded_initialization (CuTest *tc)
 	CuAssertIntEquals (tc, 1, finalization_count);
 }
 
+static CK_RV
+mock_C_Initialize__test_mutexes (CK_VOID_PTR args)
+{
+	CK_C_INITIALIZE_ARGS_PTR init_args;
+	void *mutex = NULL;
+	CK_RV rv;
+
+	assert (args != NULL);
+	init_args = args;
+
+	rv = (init_args->CreateMutex) (&mutex);
+	assert (rv == CKR_OK);
+
+	rv = (init_args->LockMutex) (mutex);
+	assert (rv == CKR_OK);
+
+	rv = (init_args->UnlockMutex) (mutex);
+	assert (rv == CKR_OK);
+
+	rv = (init_args->DestroyMutex) (mutex);
+	assert (rv == CKR_OK);
+
+	return CKR_OK;
+}
+
+static void
+test_mutexes (CuTest *tc)
+{
+	CK_RV rv;
+
+	/* Build up our own function list */
+	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
+	module.C_Initialize = mock_C_Initialize__test_mutexes;
+
+	rv = p11_kit_initialize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = p11_kit_finalize_module (&module);
+	CuAssertTrue (tc, rv == CKR_OK);
+}
+
+static void
+test_load_and_initialize (CuTest *tc)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_INFO info;
+	CK_RV rv;
+	int ret;
+
+	rv = p11_kit_load_initialize_module (BUILDDIR "/.libs/mock-one.so", &module);
+	CuAssertTrue (tc, rv == CKR_OK);
+	CuAssertTrue (tc, module != NULL);
+
+	rv = (module->C_GetInfo) (&info);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	ret = memcmp (info.manufacturerID, "MOCK MANUFACTURER              ", 32);
+	CuAssertTrue (tc, ret == 0);
+
+	rv = p11_kit_finalize_module (module);
+	CuAssertTrue (tc, ret == CKR_OK);
+}
+
 int
 main (void)
 {
@@ -240,6 +304,8 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_recursive_initialization);
 	SUITE_ADD_TEST (suite, test_threaded_initialization);
+	SUITE_ADD_TEST (suite, test_mutexes);
+	SUITE_ADD_TEST (suite, test_load_and_initialize);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

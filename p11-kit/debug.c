@@ -59,6 +59,7 @@ static struct DebugKey debug_keys[] = {
 };
 
 static int debug_inited = 0;
+static int debug_strict = 0;
 
 /* global variable exported in debug.h */
 int _p11_debug_current_flags = ~0;
@@ -71,6 +72,10 @@ parse_environ_flags (void)
 	const char *p;
 	const char *q;
 	int i;
+
+	env = getenv ("P11_KIT_STRICT");
+	if (env && env[0] != '\0')
+		debug_strict = 1;
 
 	env = getenv ("P11_KIT_DEBUG");
 	if (!env)
@@ -129,4 +134,18 @@ _p11_debug_message (int flag,
 		va_end (args);
 		fprintf (stderr, "(p11-kit:%d) %s\n", getpid(), buffer);
 	}
+}
+
+void
+_p11_debug_precond (const char *format,
+                    ...)
+{
+	va_list va;
+
+	va_start (va, format);
+	vfprintf (stderr, format, va);
+	va_end (va);
+
+	if (debug_strict)
+		abort ();
 }

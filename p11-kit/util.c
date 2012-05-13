@@ -74,15 +74,6 @@ pthread_once_t _p11_once;
 
 static int print_messages = 1;
 
-void*
-_p11_realloc (void *memory, size_t length)
-{
-	void *allocated = realloc (memory, length);
-	if (!allocated)
-		free (memory);
-	return allocated;
-}
-
 /**
  * p11_kit_space_strlen:
  * @string: Pointer to string block
