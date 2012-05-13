@@ -1,6 +1,7 @@
 
 INCLUDES = \
 	-I$(top_srcdir) \
+	-I$(top_srcdir)/common \
 	-I$(top_srcdir)/p11-kit \
 	-I$(srcdir)/cutest \
 	-DSRCDIR=\"$(srcdir)\" \

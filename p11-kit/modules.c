@@ -525,14 +525,17 @@ load_registered_modules_unlocked (void)
 		 * These variables will be cleared if ownership is transeferred
 		 * by the above function call.
 		 */
-		free (name);
 		_p11_hash_free (config);
 
 		if (critical && rv != CKR_OK) {
-			_p11_message ("aborting initializationg because module '%s' was marked as critical");
+			_p11_message ("aborting initialization because module '%s' was marked as critical",
+			              name);
 			_p11_hash_free (configs);
+			free (name);
 			return rv;
 		}
+
+		free (name);
 	}
 
 	_p11_hash_free (configs);

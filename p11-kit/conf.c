@@ -111,8 +111,13 @@ strequal (const char *one, const char *two)
 	return strcmp (one, two) == 0;
 }
 
-static char*
-strconcat (const char *first, ...)
+static char *
+strconcat (const char *first,
+           ...) GNUC_NULL_TERMINATED;
+
+static char *
+strconcat (const char *first,
+           ...)
 {
 	size_t length = 0;
 	const char *arg;
@@ -646,7 +651,7 @@ _p11_conf_parse_boolean (const char *string,
 		return 0;
 	} else {
 		_p11_message ("invalid setting '%s' defaulting to '%s'",
-		              default_value ? "yes" : "no");
+		              string, default_value ? "yes" : "no");
 		return default_value;
 	}
 }

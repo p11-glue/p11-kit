@@ -35,6 +35,8 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include "compat.h"
+
 /* Please keep this enum in sync with keys in debug.c */
 typedef enum {
 	DEBUG_LIB = 1 << 1,
@@ -49,7 +51,7 @@ void              _p11_debug_init                (void);
 
 void              _p11_debug_message             (int flag,
                                                   const char *format,
-                                                  ...);
+                                                  ...) GNUC_PRINTF (2, 3);
 
 #endif /* DEBUG_H */
 

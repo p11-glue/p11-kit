@@ -35,6 +35,7 @@
 #ifndef __P11_KIT_PRIVATE_H__
 #define __P11_KIT_PRIVATE_H__
 
+#include "compat.h"
 #include "pkcs11.h"
 #include "util.h"
 
@@ -53,7 +54,8 @@ typedef struct {
 
 #define       _p11_unlock()  _p11_mutex_unlock (&_p11_mutex);
 
-void          _p11_message                                      (const char* msg, ...);
+void          _p11_message                                      (const char* msg,
+                                                                 ...) GNUC_PRINTF (1, 2);
 
 p11_local *   _p11_library_get_thread_local                     (void);
 

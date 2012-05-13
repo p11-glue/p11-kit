@@ -37,6 +37,18 @@
 
 #include "config.h"
 
+#if !defined(__cplusplus) && (__GNUC__ > 2)
+#define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
+#else
+#define GNUC_PRINTF(x, y)
+#endif
+
+#if __GNUC__ >= 4
+#define GNUC_NULL_TERMINATED __attribute__((__sentinel__))
+#else
+#define GNUC_NULL_TERMINATED
+#endif
+
 #ifndef HAVE_GETPROGNAME
 const char * getprogname (void);
 #endif
@@ -49,17 +61,17 @@ const char * getprogname (void);
 #include <stdarg.h>
 void err_set_file (void *fp);
 void err_set_exit (void (*ef)(int));
-void err (int eval, const char *fmt, ...);
+void err (int eval, const char *fmt, ...) GNUC_PRINTF (2, 3);
 void verr (int eval, const char *fmt, va_list ap);
-void errc (int eval, int code, const char *fmt, ...);
+void errc (int eval, int code, const char *fmt, ...) GNUC_PRINTF (3, 4);
 void verrc (int eval, int code, const char *fmt, va_list ap);
-void errx (int eval, const char *fmt, ...);
+void errx (int eval, const char *fmt, ...) GNUC_PRINTF (2, 3);
 void verrx (int eval, const char *fmt, va_list ap);
-void warn (const char *fmt, ...);
+void warn (const char *fmt, ...) GNUC_PRINTF (1, 2);
 void vwarn (const char *fmt, va_list ap);
-void warnc (int code, const char *fmt, ...);
+void warnc (int code, const char *fmt, ...) GNUC_PRINTF (2, 3);
 void vwarnc (int code, const char *fmt, va_list ap);
-void warnx (const char *fmt, ...);
+void warnx (const char *fmt, ...) GNUC_PRINTF (1, 2);
 void vwarnx (const char *fmt, va_list ap);
 
 #endif /* !HAVE_ERR_H */
