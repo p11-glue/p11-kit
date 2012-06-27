@@ -710,6 +710,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 {
 	Module *mod;
 	hashiter iter;
+	int critical;
 	CK_RV rv;
 
 	rv = init_globals_unlocked ();
@@ -727,10 +728,17 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 
 			rv = initialize_module_unlocked_reentrant (mod);
 
+			/*
+			 * Module failed to initialize. If this is a critical module,
+			 * then this, should abort loading of others.
+			 */
 			if (rv != CKR_OK) {
-				_p11_debug ("failed to initialize module: %s: %s",
-				       mod->name, p11_kit_strerror (rv));
-				break;
+				critical = _p11_conf_parse_boolean (_p11_hash_get (mod->config, "critical"), 0);
+				if (critical) {
+					_p11_debug ("failed to initialize module: %s: %s",
+					            mod->name, p11_kit_strerror (rv));
+					break;
+				}
 			}
 		}
 	}
