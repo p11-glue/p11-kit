@@ -245,7 +245,7 @@ main (int argc, char *argv[])
 	operation oper = NULL;
 	int opt;
 
-	while ((opt = getopt (argc, argv, "lv")) != -1) {
+	while ((opt = getopt (argc, argv, "hlv")) != -1) {
 		switch (opt) {
 		case 'l':
 			if (oper != NULL)
