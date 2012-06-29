@@ -429,6 +429,8 @@ p11_kit_pin_request (const char *pin_source,
  * where an application is expecting to interact with a prompter, but
  * instead is interacting with this callback reading a file over and over.
  *
+ * This callback fail on larger than 4 Kilobytes.
+ *
  * This callback is not registered by default. To register it use code like
  * the following:
  *
@@ -447,6 +449,7 @@ p11_kit_pin_file_callback (const char *pin_source,
                            P11KitPinFlags pin_flags,
                            void *callback_data)
 {
+	const size_t block = 1024;
 	unsigned char *buffer;
 	unsigned char *memory;
 	size_t used, allocated;
@@ -469,15 +472,18 @@ p11_kit_pin_file_callback (const char *pin_source,
 	allocated = 0;
 
 	for (;;) {
-		if (used + 256 > allocated) {
-			memory = realloc (buffer, used + 1024);
+		if (used + block > 4096) {
+			error = EOVERFLOW;
+			break;
+		}
+		if (used + block > allocated) {
+			memory = realloc (buffer, used + block);
 			if (memory == NULL) {
-				free (buffer);
 				error = ENOMEM;
 				break;
 			}
 			buffer = memory;
-			allocated = used + 1024;
+			allocated = used + block;
 		}
 
 		res = read (fd, buffer + used, allocated - used);
@@ -485,8 +491,6 @@ p11_kit_pin_file_callback (const char *pin_source,
 			if (errno == EAGAIN)
 				continue;
 			error = errno;
-			free (buffer);
-			buffer = NULL;
 			error = errno;
 			break;
 		} else if (res == 0) {
@@ -496,7 +500,8 @@ p11_kit_pin_file_callback (const char *pin_source,
 		}
 	}
 
-	if (buffer == NULL) {
+	if (error != 0) {
+		free (buffer);
 		errno = error;
 		return NULL;
 	}

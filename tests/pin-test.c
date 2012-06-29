@@ -254,6 +254,31 @@ test_pin_file (CuTest *tc)
 }
 
 static void
+test_pin_file_large (CuTest *tc)
+{
+	P11KitUri *uri;
+	P11KitPin *pin;
+	int error;
+
+	uri = p11_kit_uri_new ();
+
+	p11_kit_pin_register_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
+	                               NULL, NULL);
+
+	pin = p11_kit_pin_request (SRCDIR "/files/test-pinfile-large", uri, "The token",
+	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
+
+	error = errno;
+	CuAssertPtrEquals (tc, NULL, pin);
+	CuAssertIntEquals (tc, EOVERFLOW, error);
+
+	p11_kit_pin_unregister_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
+	                                 NULL);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_pin_ref_unref (CuTest *tc)
 {
 	P11KitPin *pin;
@@ -283,6 +308,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_pin_register_duplicate);
 	SUITE_ADD_TEST (suite, test_pin_register_fallback);
 	SUITE_ADD_TEST (suite, test_pin_file);
+	SUITE_ADD_TEST (suite, test_pin_file_large);
 	SUITE_ADD_TEST (suite, test_pin_ref_unref);
 
 	CuSuiteRun (suite);
