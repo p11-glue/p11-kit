@@ -36,6 +36,9 @@
 
 #include "compat.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifndef HAVE_GETPROGNAME
 
 #ifdef OS_UNIX
@@ -166,7 +169,7 @@ verrc (int eval,
 {
 	if (err_file == 0)
 		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", calc_prog_name());
+	fprintf(err_file, "%s: ", getprogname ());
 	if (fmt != NULL) {
 		vfprintf(err_file, fmt, ap);
 		fprintf(err_file, ": ");
@@ -193,7 +196,7 @@ verrx (int eval,
 {
 	if (err_file == 0)
 		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", calc_prog_name());
+	fprintf(err_file, "%s: ", getprogname ());
 	if (fmt != NULL)
 		vfprintf(err_file, fmt, ap);
 	fprintf(err_file, "\n");
@@ -235,7 +238,7 @@ vwarnc (int code,
 {
 	if (err_file == 0)
 		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", calc_prog_name());
+	fprintf(err_file, "%s: ", getprogname ());
 	if (fmt != NULL)
 	{
 		vfprintf(err_file, fmt, ap);
@@ -260,7 +263,7 @@ vwarnx (const char *fmt,
 {
 	if(err_file == 0)
 		err_set_file((FILE*)0);
-	fprintf(err_file, "%s: ", calc_prog_name());
+	fprintf(err_file, "%s: ", getprogname ());
 	if(fmt != NULL)
 		vfprintf(err_file, fmt, ap);
 	fprintf(err_file, "\n");

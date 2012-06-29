@@ -457,32 +457,6 @@ DllMain (HINSTANCE instance,
 	return TRUE;
 }
 
-extern char **__argv;
-
-static char *
-get_default_progname (void)
-{
-	const char *name;
-	const char *p;
-	char *progname;
-	size_t length;
-
-	name = __argv[0];
-	if (name == NULL)
-		return NULL;
-
-	p = strrchr (name, '\\');
-	if (p != NULL)
-		name = p + 1;
-
-	progname = strdup (name);
-	length = strlen (progname);
-	if (length > 4 && _stricmp(progname + (length - 4), ".exe"))
-		progname[length - 4] = '\0';
-
-	return progname;
-}
-
 #endif /* OS_WIN32 */
 
 /* This is the progname that we think of this process as. */

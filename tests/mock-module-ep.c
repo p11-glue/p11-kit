@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#define CRYPTOKI_EXPORTS 1
 #include "pkcs11.h"
 #include "mock-module.h"
 

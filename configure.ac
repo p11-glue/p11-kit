@@ -78,6 +78,8 @@ if test "$os_unix" = "yes"; then
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
 fi
 
+AC_CHECK_LIB(intl, dgettext)
+
 # ------------------------------------------------------------------------------
 # PKCS#11 Directories
 
