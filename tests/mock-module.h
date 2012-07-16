@@ -26,7 +26,7 @@
 
 #include "pkcs11.h"
 
-CK_FUNCTION_LIST    mock_module_no_slots;
+extern CK_FUNCTION_LIST    mock_module_no_slots;
 
 void        mock_module_init                              (void);
 
