@@ -458,6 +458,46 @@ finished:
 	return result;
 }
 
+static char *
+calc_name_from_filename (const char *fname)
+{
+	/* We eventually want to settle on .module */
+	static const char *suffix = ".module";
+	static size_t suffix_len = 7;
+	const char *c = fname;
+	size_t fname_len;
+	size_t name_len;
+	char *name;
+
+	assert (fname);
+
+	/* Make sure the filename starts with an alphanumeric */
+	if (!isalnum(*c))
+		return NULL;
+	++c;
+
+	/* Only allow alnum, _, -, and . */
+	while (*c) {
+		if (!isalnum(*c) && *c != '_' && *c != '-' && *c != '.')
+			return NULL;
+		++c;
+	}
+
+	/* Make sure we have one of the suffixes */
+	fname_len = strlen (fname);
+	if (suffix_len >= fname_len)
+		return NULL;
+	name_len = (fname_len - suffix_len);
+	if (strcmp (fname + name_len, suffix) != 0)
+		return NULL;
+
+	name = malloc (name_len + 1);
+	return_val_if_fail (name != NULL, NULL);
+	memcpy (name, fname, name_len);
+	name[name_len] = 0;
+	return name;
+}
+
 static int
 load_config_from_file (const char *configfile, const char *name, hashmap *configs)
 {
@@ -468,20 +508,28 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 
 	assert (configfile);
 
-	config = _p11_conf_parse_file (configfile, 0);
-	if (!config)
-		return -1;
-
-	prev = _p11_hash_get (configs, name);
-	if (prev == NULL) {
+	key = calc_name_from_filename (name);
+	if (key == NULL) {
+		_p11_message ("invalid config filename, will be ignored in the future: %s", configfile);
 		key = strdup (name);
 		return_val_if_fail (key != NULL, -1);
+	}
+
+	config = _p11_conf_parse_file (configfile, 0);
+	if (!config) {
+		free (key);
+		return -1;
+	}
+
+	prev = _p11_hash_get (configs, key);
+	if (prev == NULL) {
 		if (!_p11_hash_set (configs, key, config))
 			return_val_if_reached (-1);
 		config = NULL;
 	} else {
 		if (_p11_conf_merge_defaults (prev, config) < 0)
 			error = errno;
+		free (key);
 	}
 
 	/* If still set */

@@ -246,6 +246,15 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 	_p11_hash_free (config);
 }
 
+static int
+assert_msg_contains (const char *msg,
+                     const char *text)
+{
+	if (msg == NULL)
+		return 0;
+	return strstr (msg, text) ? 1 : 0;
+}
+
 static void
 test_load_modules_merge (CuTest *tc)
 {
@@ -258,14 +267,14 @@ test_load_modules_merge (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-one.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user1");
 
-	config = _p11_hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two.badname");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-two.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
@@ -290,14 +299,14 @@ test_load_modules_user_none (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-one.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
-	config = _p11_hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two.badname");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-two.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");
@@ -327,7 +336,7 @@ test_load_modules_user_only (CuTest *tc)
 	CuAssertStrEquals (tc, _p11_hash_get (config, "module"), NULL);
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "user1");
 
-	config = _p11_hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two.badname");
 	CuAssertPtrEquals (tc, NULL, config);
 
 	config = _p11_hash_get (configs, "three");
@@ -350,14 +359,14 @@ test_load_modules_no_user (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/non-existant");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-one.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system1");
 
-	config = _p11_hash_get (configs, "two");
+	config = _p11_hash_get (configs, "two.badname");
 	CuAssertPtrNotNull (tc, config);
 	CuAssertStrEquals (tc, "mock-two.so", _p11_hash_get (config, "module"));
 	CuAssertStrEquals (tc, _p11_hash_get (config, "setting"), "system2");

@@ -113,8 +113,11 @@ critical: yes
 		<title>Module Configuration</title>
 
 		<para>Each configured PKCS#11 module has its own config file. These files
-		can be <link linkend="config-locations">placed in various locations</link>.
-		Most importantly each config file specifies the path of the PKCS#11 module to
+		can be <link linkend="config-locations">placed in various locations</link>.</para>
+		<para>The filename of the configuration file may consist of upper and lowercase letters
+		underscore, comma, dash and dots. The first characters needs to be an alphanumeric,
+		the filename should end with a <literal>.module</literal> extension.</para>
+		<para>Most importantly each config file specifies the path of the PKCS#11 module to
 		load. A module config file has the following fields:</para>
 
 		<variablelist>

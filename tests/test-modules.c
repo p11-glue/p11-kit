@@ -142,7 +142,7 @@ test_disable (CuTest *tc)
 	 */
 
 	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two") != NULL);
+	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two.badname") != NULL);
 	finalize_and_free_modules (tc, modules);
 
 	/*
@@ -155,7 +155,7 @@ test_disable (CuTest *tc)
 	p11_kit_set_progname ("test-disable");
 
 	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two") == NULL);
+	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two.badname") == NULL);
 	finalize_and_free_modules (tc, modules);
 
 	p11_kit_set_progname (NULL);
