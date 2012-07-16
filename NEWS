@@ -1,3 +1,17 @@
+0.13
+ * Don't allow reading of PIN files larger than 4096 bytes
+ * If a module is not marked as critical then ignore init failure
+ * Use preconditions to check for input problems and out of memory
+ * Add enable-in and disable-in options to module config
+ * Fix the flags in pin.h
+ * Use gcc extensions to check varargs during compile
+ * Fix crasher when a duplicate module is present
+ * Fix broken hashmap behavior
+ * Testing fixes
+ * Win32 build fixes
+ * 'p11-kit -h' now works
+ * Documentation fixes
+
 0.12
  * Build fix
 
