@@ -137,12 +137,12 @@ test_disable (CuTest *tc)
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
 	/*
-	 * The module two should be present, as we don't match any prognames
+	 * The module four should be present, as we don't match any prognames
 	 * that it has disabled.
 	 */
 
 	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two.badname") != NULL);
+	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") != NULL);
 	finalize_and_free_modules (tc, modules);
 
 	/*
@@ -155,7 +155,7 @@ test_disable (CuTest *tc)
 	p11_kit_set_progname ("test-disable");
 
 	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two.badname") == NULL);
+	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") == NULL);
 	finalize_and_free_modules (tc, modules);
 
 	p11_kit_set_progname (NULL);

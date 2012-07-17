@@ -1,0 +1,3 @@
+
+module: mock-four.dll
+disable-in: test-disable, test-other

@@ -45,7 +45,8 @@ TESTS = $(CHECK_PROGS:=$(EXEEXT))
 noinst_LTLIBRARIES = \
 	mock-one.la \
 	mock-two.la \
-	mock-three.la
+	mock-three.la \
+	mock-four.la
 
 mock_one_la_SOURCES = \
 	mock-module.c mock-module.h \
@@ -65,6 +66,10 @@ mock_two_la_LIBADD = $(mock_one_la_LIBADD)
 mock_three_la_SOURCES = $(mock_one_la_SOURCES)
 mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_three_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_four_la_SOURCES = $(mock_one_la_SOURCES)
+mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_four_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST = \
 	cutest \

@@ -3,5 +3,3 @@
 
 module: mock-two.so
 setting: system2
-
-disable-in: test-disable, test-other

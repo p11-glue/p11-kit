@@ -1,0 +1,3 @@
+
+module: mock-four.so
+disable-in: test-disable, test-other
