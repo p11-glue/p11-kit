@@ -1,0 +1,5 @@
+# This module doesn't have a .module extension, but p11-kit doesn't yet
+# enforce the naming, just warns, so it should still be loaded
+
+module: mock-two.dll
+setting: system2

@@ -1,0 +1,5 @@
+
+module: mock-three.dll
+setting: user3
+
+enable-in: test-enable

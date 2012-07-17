@@ -270,6 +270,10 @@ AC_SUBST(GENHTML)
 P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
 AC_SUBST(P11KIT_LT_RELEASE)
 
+eval SHLEXT=$shrext_cmds
+AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
+AC_SUBST(SHLEXT)
+
 AC_CONFIG_FILES([Makefile
 	doc/Makefile
 	doc/version.xml

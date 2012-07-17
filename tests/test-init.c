@@ -273,7 +273,7 @@ test_load_and_initialize (CuTest *tc)
 	CK_RV rv;
 	int ret;
 
-	rv = p11_kit_load_initialize_module (BUILDDIR "/.libs/mock-one.so", &module);
+	rv = p11_kit_load_initialize_module (BUILDDIR "/.libs/mock-one" SHLEXT, &module);
 	CuAssertTrue (tc, rv == CKR_OK);
 	CuAssertTrue (tc, module != NULL);
 

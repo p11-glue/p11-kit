@@ -59,6 +59,18 @@ libp11_kit_testable_la_LDFLAGS = \
 
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 
+if OS_WIN32
+
+libp11_kit_testable_la_CFLAGS = \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/system-pkcs11.conf"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/system-modules/win32"\" \
+	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/user-pkcs11.conf"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/user-modules/win32"\" \
+	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
+	$(NULL)
+
+else
+
 libp11_kit_testable_la_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/system-pkcs11.conf"\" \
 	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/system-modules"\" \
@@ -66,6 +78,8 @@ libp11_kit_testable_la_CFLAGS = \
 	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/user-modules"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
 	$(NULL)
+
+endif
 
 libp11_kit_compat_la_SOURCES = \
 	debug.c debug.h \
