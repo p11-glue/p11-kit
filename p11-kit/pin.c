@@ -473,7 +473,7 @@ p11_kit_pin_file_callback (const char *pin_source,
 
 	for (;;) {
 		if (used + block > 4096) {
-			error = EOVERFLOW;
+			error = EFBIG;
 			break;
 		}
 		if (used + block > allocated) {

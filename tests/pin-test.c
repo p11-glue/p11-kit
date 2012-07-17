@@ -270,7 +270,7 @@ test_pin_file_large (CuTest *tc)
 
 	error = errno;
 	CuAssertPtrEquals (tc, NULL, pin);
-	CuAssertIntEquals (tc, EOVERFLOW, error);
+	CuAssertIntEquals (tc, EFBIG, error);
 
 	p11_kit_pin_unregister_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
 	                                 NULL);
