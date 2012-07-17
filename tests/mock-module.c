@@ -890,5 +890,9 @@ CK_FUNCTION_LIST mock_module_no_slots = {
 void
 mock_module_init (void)
 {
-	_p11_mutex_init (&init_mutex);
+	static int initialized = 0;
+	if (!initialized) {
+		_p11_mutex_init (&init_mutex);
+		initialized = 1;
+	}
 }

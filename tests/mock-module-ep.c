@@ -44,6 +44,7 @@ __declspec(dllexport)
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
+	mock_module_init ();
 	if (list == NULL)
 		return CKR_ARGUMENTS_BAD;
 	*list = &mock_module_no_slots;
