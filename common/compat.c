@@ -82,7 +82,7 @@ const char *
 getprogname (void)
 {
 	const char *name;
-	const char *p;
+	const char *p, *p2;
 	size_t length;
 
 	name = __argv[0];
@@ -90,6 +90,9 @@ getprogname (void)
 		return NULL;
 
 	p = strrchr (name, '\\');
+	p2 = strrchr (name, '/');
+	if (p2 > p)
+		p = p2;
 	if (p != NULL)
 		name = p + 1;
 
@@ -97,7 +100,7 @@ getprogname (void)
 	strncpy (prognamebuf, name, length);
 	prognamebuf[length] = 0;
 	length = strlen (prognamebuf);
-	if (length > 4 && _stricmp (prognamebuf + (length - 4), ".exe"))
+	if (length > 4 && _stricmp (prognamebuf + (length - 4), ".exe") == 0)
 		prognamebuf[length - 4] = '\0';
 
 	return prognamebuf;
