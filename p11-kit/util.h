@@ -65,6 +65,8 @@ typedef CRITICAL_SECTION mutex_t;
 
 typedef HANDLE thread_t;
 
+typedef DWORD thread_id_t;
+
 #define _p11_mutex_init(m) \
 	(InitializeCriticalSection (m))
 #define _p11_mutex_lock(m) \
@@ -80,8 +82,9 @@ int _p11_thread_create (thread_t *thread, thread_routine, void *arg);
 
 int _p11_thread_join (thread_t thread);
 
-#define _p11_thread_self() \
-	(GetCurrentThread ())
+/* Returns a thread_id_t */
+#define _p11_thread_id_self() \
+	(GetCurrentThreadId ())
 
 typedef HMODULE dl_module_t;
 
@@ -122,13 +125,15 @@ void        _p11_mutex_init          (mutex_t *mutex);
 
 typedef pthread_t thread_t;
 
+typedef pthread_t thread_id_t;
+
 typedef void * (*thread_routine) (void *arg);
 
 #define _p11_thread_create(t, r, a) \
 	(pthread_create ((t), NULL, (r), (a)))
 #define _p11_thread_join(t) \
 	(pthread_join ((t), NULL))
-#define _p11_thread_self(m) \
+#define _p11_thread_id_self(m) \
 	(pthread_self ())
 
 typedef void * dl_module_t;

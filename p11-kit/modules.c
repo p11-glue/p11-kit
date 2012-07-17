@@ -109,7 +109,7 @@ typedef struct _Module {
 	/* Initialization, mutex must be held */
 	mutex_t initialize_mutex;
 	int initialize_called;
-	thread_t initialize_thread;
+	thread_id_t initialize_thread;
 } Module;
 
 /*
@@ -531,10 +531,10 @@ static CK_RV
 initialize_module_unlocked_reentrant (Module *mod)
 {
 	CK_RV rv = CKR_OK;
-	thread_t self;
+	thread_id_t self;
 	assert (mod);
 
-	self = _p11_thread_self ();
+	self = _p11_thread_id_self ();
 
 	if (mod->initialize_thread == self) {
 		_p11_message ("p11-kit initialization called recursively");
