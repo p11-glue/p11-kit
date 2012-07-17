@@ -329,7 +329,7 @@ test_load_modules_user_only (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertPtrEquals (tc, NULL, (void *)p11_kit_message ());
 
 	config = _p11_hash_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
