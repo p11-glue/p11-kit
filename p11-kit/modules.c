@@ -360,7 +360,7 @@ is_module_enabled_unlocked (const char *name,
 	const char *progname;
 	const char *enable_in;
 	const char *disable_in;
-	int enable;
+	int enable = 0;
 
 	enable_in = _p11_hash_get (config, "enable-in");
 	disable_in = _p11_hash_get (config, "disable-in");
