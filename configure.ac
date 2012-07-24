@@ -193,7 +193,8 @@ if test "$GCC" = "yes"; then
 		-Wall -Wstrict-prototypes -Wmissing-declarations \
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
 		-Wdeclaration-after-statement -Wformat=2 -Winit-self \
-		-Waggregate-return -Wno-missing-format-attribute"
+		-Waggregate-return -Wno-missing-format-attribute \
+		-fno-strict-aliasing"
 
 	for option in -Wmissing-include-dirs -Wundef; do
 		SAVE_CFLAGS="$CFLAGS"
