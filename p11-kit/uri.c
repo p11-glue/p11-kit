@@ -206,7 +206,7 @@ url_decode (const char *value, const char *end,
 }
 
 static char*
-url_encode (const unsigned char *value, const unsigned char *end, size_t *length)
+url_encode (const unsigned char *value, const unsigned char *end, size_t *length, int force)
 {
 	char *p;
 	char *result;
@@ -222,7 +222,7 @@ url_encode (const unsigned char *value, const unsigned char *end, size_t *length
 	while (value != end) {
 
 		/* These characters we let through verbatim */
-		if (*value && (isalnum (*value) || strchr ("_-.", *value) != NULL)) {
+		if (*value && !force && (isalnum (*value) || strchr ("_-.", *value) != NULL)) {
 			*(p++) = *(value++);
 
 		/* All others get encoded */
@@ -822,12 +822,12 @@ format_raw_string (char **string, size_t *length, int *is_first,
 static int
 format_encode_string (char **string, size_t *length, int *is_first,
                       const char *name, const unsigned char *value,
-                      size_t n_value)
+                      size_t n_value, int force)
 {
 	char *encoded;
 	int ret;
 
-	encoded = url_encode (value, value + n_value, NULL);
+	encoded = url_encode (value, value + n_value, NULL, force);
 	return_val_if_fail (encoded != NULL, 0);
 
 	ret = format_raw_string (string, length, is_first, name, encoded);
@@ -848,19 +848,21 @@ format_struct_string (char **string, size_t *length, int *is_first,
 		return 1;
 
 	len = p11_kit_space_strlen (value, value_max);
-	return format_encode_string (string, length, is_first, name, value, len);
+	return format_encode_string (string, length, is_first, name, value, len, 0);
 }
 
 static int
 format_attribute_string (char **string, size_t *length, int *is_first,
-                         const char *name, CK_ATTRIBUTE_PTR attr)
+                         const char *name, CK_ATTRIBUTE_PTR attr,
+                         int force)
 {
 	/* Not set */;
 	if (attr == NULL)
 		return 1;
 
 	return format_encode_string (string, length, is_first, name,
-	                             attr->pValue, attr->ulValueLen);
+	                             attr->pValue, attr->ulValueLen,
+	                             force);
 }
 
 static int
@@ -988,9 +990,11 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 
 	if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT) {
 		if (!format_attribute_string (&result, &length, &is_first, "id",
-		                              p11_kit_uri_get_attribute (uri, CKA_ID)) ||
+		                              p11_kit_uri_get_attribute (uri, CKA_ID),
+		                              1) ||
 		    !format_attribute_string (&result, &length, &is_first, "object",
-		                              p11_kit_uri_get_attribute (uri, CKA_LABEL))) {
+		                              p11_kit_uri_get_attribute (uri, CKA_LABEL),
+		                              0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
@@ -1003,7 +1007,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	if (uri->pin_source) {
 		if (!format_encode_string (&result, &length, &is_first, "pin-source",
 		                           (const unsigned char*)uri->pin_source,
-		                           strlen (uri->pin_source))) {
+		                           strlen (uri->pin_source), 0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}

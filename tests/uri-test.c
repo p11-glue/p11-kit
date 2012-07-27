@@ -510,7 +510,7 @@ test_uri_build_with_attributes (CuTest *tc)
 
 	CuAssertTrue (tc, strstr (string, "object=The%20Label") != NULL);
 	CuAssertTrue (tc, strstr (string, "object-type=data") != NULL);
-	CuAssertTrue (tc, strstr (string, "id=HELLO") != NULL);
+	CuAssertTrue (tc, strstr (string, "id=%48%45%4c%4c%4f") != NULL);
 
 	free (string);
 	p11_kit_uri_free (uri);
