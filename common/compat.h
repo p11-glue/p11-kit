@@ -76,4 +76,8 @@ void vwarnx (const char *fmt, va_list ap);
 
 #endif /* !HAVE_ERR_H */
 
+#ifdef	HAVE_ERRNO_H
+#include <errno.h>
+#endif	/* HAVE_ERRNO_H */
+
 #endif /* __COMPAT_H__ */
