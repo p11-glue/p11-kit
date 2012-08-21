@@ -73,8 +73,13 @@ if test "$os_unix" = "yes"; then
 
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])
-	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *program_invocation_short_name; void main() { }])],
-		[AC_DEFINE(HAVE_PROGRAM_INVOCATION_SHORT_NAME, [1], [Whether program_invocation_short_name available])])
+	AC_MSG_CHECKING([whether program_invocation_short_name is available])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <argp.h>]],
+                                  [[program_invocation_short_name = "test";]])],
+		       [AC_DEFINE([HAVE_PROGRAM_INVOCATION_SHORT_NAME], [1],
+				  [Whether program_invocation_short_name available]),
+			AC_MSG_RESULT([yes])],
+		       [AC_MSG_RESULT([no])])
 	AC_CHECK_DECLS([__progname])
 	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *__progname; void main() { }])],
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
