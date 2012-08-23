@@ -45,6 +45,7 @@ enum {
 	P11_DEBUG_PROXY = 1 << 4,
 	P11_DEBUG_TRUST = 1 << 5,
 	P11_DEBUG_TOOL = 1 << 6,
+	P11_DEBUG_RPC = 1 << 7,
 };
 
 extern int        p11_debug_current_flags;

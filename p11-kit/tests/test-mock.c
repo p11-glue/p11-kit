@@ -55,8 +55,14 @@ test_get_info (void)
 	module = setup_mock_module (NULL);
 
 	rv = (module->C_GetInfo) (&info);
-	assert (rv == CKR_OK);
-	assert (memcmp (&info, &MOCK_INFO, sizeof (CK_INFO)) == 0);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (MOCK_INFO.cryptokiVersion.major, info.cryptokiVersion.major);
+	assert_num_eq (MOCK_INFO.cryptokiVersion.minor, info.cryptokiVersion.minor);
+	assert (memcmp (MOCK_INFO.manufacturerID, info.manufacturerID, sizeof (info.manufacturerID)) == 0);
+	assert_num_eq (MOCK_INFO.flags, info.flags);
+	assert (memcmp (MOCK_INFO.libraryDescription, info.libraryDescription, sizeof (info.libraryDescription)) == 0);
+	assert_num_eq (MOCK_INFO.libraryVersion.major, info.libraryVersion.major);
+	assert_num_eq (MOCK_INFO.libraryVersion.minor, info.libraryVersion.minor);
 
 	teardown_mock_module (module);
 }

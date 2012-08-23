@@ -26,6 +26,7 @@ CHECK_PROGS = \
 	test-deprecated \
 	test-proxy \
 	test-iter \
+	test-rpc \
 	$(NULL)
 
 if WITH_FFI

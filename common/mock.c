@@ -458,6 +458,13 @@ mock_C_Initialize__fails (CK_VOID_PTR init_args)
 }
 
 CK_RV
+mock_X_Initialize__fails (CK_X_FUNCTION_LIST *self,
+                          CK_VOID_PTR init_args)
+{
+	return mock_C_Initialize__fails (init_args);
+}
+
+CK_RV
 mock_C_Finalize (CK_VOID_PTR reserved)
 {
 	return_val_if_fail (pkcs11_initialized, CKR_CRYPTOKI_NOT_INITIALIZED);

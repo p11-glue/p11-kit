@@ -59,6 +59,8 @@ IGNORE_HFILES= \
 	pkcs11x.h \
 	private.h \
 	proxy.h \
+	rpc.h \
+	rpc-message.h \
 	util.h \
 	virtual.h \
 	array.h \

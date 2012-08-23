@@ -133,6 +133,9 @@ CK_RV        mock_C_Initialize__fails                    (CK_VOID_PTR init_args)
 CK_RV        mock_X_Initialize                           (CK_X_FUNCTION_LIST *self,
                                                           CK_VOID_PTR init_args);
 
+CK_RV        mock_X_Initialize__fails                    (CK_X_FUNCTION_LIST *self,
+                                                          CK_VOID_PTR init_args);
+
 CK_RV        mock_C_Finalize                             (CK_VOID_PTR reserved);
 
 CK_RV        mock_X_Finalize                             (CK_X_FUNCTION_LIST *self,
