@@ -116,6 +116,14 @@ p11_message_quiet (void)
 	p11_unlock ();
 }
 
+void
+p11_message_loud (void)
+{
+	p11_lock ();
+	print_messages = true;
+	p11_unlock ();
+}
+
 const char*
 p11_message_last (void)
 {

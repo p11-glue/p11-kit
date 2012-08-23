@@ -60,6 +60,8 @@ void          p11_message_clear            (void);
 
 void          p11_message_quiet            (void);
 
+void          p11_message_loud             (void);
+
 #ifdef OS_WIN32
 
 /* No implementation, because done by DllMain */
