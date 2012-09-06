@@ -3,7 +3,7 @@
 
 # This setting controls whether to load user configuration from the
 # ~/.pkcs11 directory. Possible values:
-#    none: No user configuration (default)
-#    merge: Merge the user configuration over the system configuration
+#    none: No user configuration
+#    merge: Merge the user config over the system configuration (default)
 #    only: Only user configuration, ignore system configuration
 user-config: merge

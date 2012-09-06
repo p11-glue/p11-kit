@@ -401,7 +401,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 		goto finished;
 
 	/* Whether we should use or override from user directory */
-	mode = user_config_mode (config, CONF_USER_NONE);
+	mode = user_config_mode (config, CONF_USER_MERGE);
 	if (mode == CONF_USER_INVALID) {
 		error = EINVAL;
 		goto finished;
