@@ -1,3 +1,11 @@
+0.14
+ * Change default for user-config to merge
+ * Always URI-encode the 'id' attribute in PKCS#11 URIs
+ * Expect a .module extension on module configs
+ * Windows compatibility fixes
+ * Testing fixes
+ * Build fixes
+
 0.13
  * Don't allow reading of PIN files larger than 4096 bytes
  * If a module is not marked as critical then ignore init failure
