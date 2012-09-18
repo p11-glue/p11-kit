@@ -733,11 +733,13 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 			 * then this, should abort loading of others.
 			 */
 			if (rv != CKR_OK) {
+				_p11_message ("failed to initialize module: %s: %s",
+				              mod->name, p11_kit_strerror (rv));
+
 				critical = _p11_conf_parse_boolean (_p11_hash_get (mod->config, "critical"), 0);
-				if (critical) {
-					_p11_debug ("failed to initialize module: %s: %s",
-					            mod->name, p11_kit_strerror (rv));
-					break;
+				if (!critical) {
+					_p11_debug ("ignoring failure, non-critical module: %s", mod->name);
+					rv = CKR_OK;
 				}
 			}
 		}
