@@ -69,9 +69,6 @@ typedef struct _Session {
 	CK_SLOT_ID wrap_slot;
 } Session;
 
-/* Forward declaration */
-static CK_FUNCTION_LIST proxy_function_list;
-
 /*
  * Shared data between threads, protected by the mutex, a structure so
  * we can audit thread safety easier.
@@ -365,7 +362,7 @@ proxy_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 	/* Can be called before C_Initialize */
 
 	return_val_if_fail (list != NULL, CKR_ARGUMENTS_BAD);
-	*list = &proxy_function_list;
+	*list = &_p11_proxy_function_list;
 	return CKR_OK;
 }
 
@@ -1312,7 +1309,7 @@ proxy_C_GenerateRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR random_data,
  * MODULE ENTRY POINT
  */
 
-static CK_FUNCTION_LIST proxy_function_list = {
+CK_FUNCTION_LIST _p11_proxy_function_list = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
 	proxy_C_Initialize,
 	proxy_C_Finalize,

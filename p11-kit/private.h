@@ -73,6 +73,7 @@ extern pthread_once_t _p11_once;
 
 #endif /* !OS_WIN32 */
 
+extern CK_FUNCTION_LIST _p11_proxy_function_list;
 
 void        _p11_library_init                                   (void);
 

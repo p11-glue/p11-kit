@@ -553,13 +553,19 @@ initialize_module_unlocked_reentrant (Module *mod)
 	_p11_unlock ();
 
 	if (!mod->initialize_called) {
-
-		_p11_debug ("C_Initialize: calling");
-
 		assert (mod->funcs);
-		rv = mod->funcs->C_Initialize (&mod->init_args);
 
-		_p11_debug ("C_Initialize: result: %lu", rv);
+		if (mod->funcs == &_p11_proxy_function_list) {
+			_p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
+			rv = CKR_FUNCTION_FAILED;
+
+		} else {
+			_p11_debug ("C_Initialize: calling");
+
+			rv = mod->funcs->C_Initialize (&mod->init_args);
+
+			_p11_debug ("C_Initialize: result: %lu", rv);
+		}
 
 		/* Module was initialized and C_Finalize should be called */
 		if (rv == CKR_OK)
