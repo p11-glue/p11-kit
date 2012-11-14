@@ -171,6 +171,13 @@ read_config_file (const char* filename, int flags)
 			config = strdup ("\n");
 			return_val_if_fail (config != NULL, NULL);
 			return config;
+
+		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
+		           (error == EPERM || error == EACCES)) {
+			_p11_debug ("config file is inaccessible");
+			config = strdup ("\n");
+			return_val_if_fail (config != NULL, NULL);
+			return config;
 		}
 		_p11_message ("couldn't open config file: %s: %s", filename,
 		              strerror (error));
@@ -386,6 +393,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 	hashmap *result = NULL;
 	char *path = NULL;
 	int error = 0;
+	int flags;
 	int mode;
 
 	/*
@@ -414,8 +422,9 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 			goto finished;
 		}
 
-		/* Load up the user configuration */
-		uconfig = _p11_conf_parse_file (path, CONF_IGNORE_MISSING);
+		/* Load up the user configuration, ignore selinux denying us access */
+		flags = CONF_IGNORE_MISSING | CONF_IGNORE_ACCESS_DENIED;
+		uconfig = _p11_conf_parse_file (path, flags);
 		if (!uconfig) {
 			error = errno;
 			goto finished;
@@ -499,7 +508,10 @@ calc_name_from_filename (const char *fname)
 }
 
 static int
-load_config_from_file (const char *configfile, const char *name, hashmap *configs)
+load_config_from_file (const char *configfile,
+                       const char *name,
+                       hashmap *configs,
+                       int flags)
 {
 	hashmap *config;
 	hashmap *prev;
@@ -515,7 +527,7 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 		return_val_if_fail (key != NULL, -1);
 	}
 
-	config = _p11_conf_parse_file (configfile, 0);
+	config = _p11_conf_parse_file (configfile, flags);
 	if (!config) {
 		free (key);
 		return -1;
@@ -544,7 +556,9 @@ load_config_from_file (const char *configfile, const char *name, hashmap *config
 }
 
 static int
-load_configs_from_directory (const char *directory, hashmap *configs)
+load_configs_from_directory (const char *directory,
+                             hashmap *configs,
+                             int flags)
 {
 	struct dirent *dp;
 	struct stat st;
@@ -560,8 +574,15 @@ load_configs_from_directory (const char *directory, hashmap *configs)
 	dir = opendir (directory);
 	if (!dir) {
 		error = errno;
-		if (errno == ENOENT || errno == ENOTDIR)
+		if ((flags & CONF_IGNORE_MISSING) &&
+		    (errno == ENOENT || errno == ENOTDIR)) {
+			_p11_debug ("module configs do not exist");
 			return 0;
+		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
+		           (errno == EPERM || errno == EACCES)) {
+			_p11_debug ("couldn't list inacessible module configs");
+			return 0;
+		}
 		_p11_message ("couldn't list directory: %s: %s", directory,
 		              strerror (error));
 		errno = error;
@@ -589,7 +610,7 @@ load_configs_from_directory (const char *directory, hashmap *configs)
 			is_dir = S_ISDIR (st.st_mode);
 		}
 
-		if (!is_dir && load_config_from_file (path, dp->d_name, configs) < 0) {
+		if (!is_dir && load_config_from_file (path, dp->d_name, configs, flags) < 0) {
 			error = errno;
 			free (path);
 			break;
@@ -615,6 +636,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	hashmap *configs;
 	char *path;
 	int error = 0;
+	int flags;
 
 	/* A hash table of name -> config */
 	configs = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal,
@@ -622,10 +644,11 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 
 	/* Load each user config first, if user config is allowed */
 	if (mode != CONF_USER_NONE) {
+		flags = CONF_IGNORE_MISSING | CONF_IGNORE_ACCESS_DENIED;
 		path = expand_user_path (user_dir);
 		if (!path)
 			error = errno;
-		else if (load_configs_from_directory (path, configs) < 0)
+		else if (load_configs_from_directory (path, configs, flags) < 0)
 			error = errno;
 		free (path);
 		if (error != 0) {
@@ -641,7 +664,8 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	 * loaded above (in the user configs) then they're loaded here.
 	 */
 	if (mode != CONF_USER_ONLY) {
-		if (load_configs_from_directory (system_dir, configs) < 0) {
+		flags = CONF_IGNORE_MISSING;
+		if (load_configs_from_directory (system_dir, configs, flags) < 0) {
 			error = errno;
 			_p11_hash_free (configs);
 			errno = error;

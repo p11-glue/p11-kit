@@ -40,6 +40,7 @@
 
 enum {
 	CONF_IGNORE_MISSING = 0x01,
+	CONF_IGNORE_ACCESS_DENIED = 0x02,
 };
 
 enum {
