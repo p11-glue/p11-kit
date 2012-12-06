@@ -1,0 +1,8 @@
+
+CUTEST_CFLAGS = \
+	-I$(top_srcdir)/build/cutest \
+	-DSRCDIR=\"$(abs_srcdir)\" \
+	-DBUILDDIR=\"$(abs_builddir)\" \
+	-DP11_KIT_FUTURE_UNSTABLE_API
+
+CUTEST_LIBS = $(top_builddir)/build/libcutest.la

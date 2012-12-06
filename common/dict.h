@@ -33,18 +33,18 @@
  * Author: Stef Waler <stefw@collabora.co.uk>
  */
 
-#ifndef HASHMAP_H_
-#define HASHMAP_H_
+#ifndef P11_DICT_H_
+#define P11_DICT_H_
 
 #include <sys/types.h>
 
 /*
  * ARGUMENT DOCUMENTATION
  *
- * map: The hashmap
+ * dict: The dict
  * key: Pointer to the key value
  * val: Pointer to the value
- * iter: A hashmap iterator
+ * iter: A dict iterator
  */
 
 
@@ -52,122 +52,127 @@
  * TYPES
  */
 
-/* Abstract type for hash maps. */
-typedef struct _hashmap hashmap;
+/* Abstract type for dicts. */
+typedef struct _p11_dict p11_dict;
 
 /* Type for scanning hash tables.  */
-typedef struct _hashiter {
-	hashmap *map;
-	struct _hashbucket *next;
+typedef struct _p11_dictiter {
+	p11_dict *dict;
+	struct _p11_dictbucket *next;
 	unsigned int index;
-} hashiter;
+} p11_dictiter;
 
-typedef unsigned int (*hash_hash_func)        (const void *data);
+typedef unsigned int (*p11_dict_hasher)        (const void *data);
 
-typedef int          (*hash_equal_func)       (const void *one,
-                                                   const void *two);
+typedef int          (*p11_dict_equals)        (const void *one,
+                                                const void *two);
 
-typedef void         (*hash_destroy_func)     (void *data);
+#ifndef P11_DESTROYER_DEFINED
+#define P11_DESTROYER_DEFINED
+
+typedef void         (*p11_destroyer)          (void *data);
+
+#endif
 
 /* -----------------------------------------------------------------------------
  * MAIN
  */
 
 /*
- * _p11_hash_create : Create a hash table
+ * p11_dict_create : Create a hash table
  * - returns an allocated hashtable
  */
-hashmap*           _p11_hash_create            (hash_hash_func hash_func,
-                                                hash_equal_func equal_func,
-                                                hash_destroy_func key_destroy_func,
-                                                hash_destroy_func value_destroy_func);
+p11_dict *          p11_dict_new               (p11_dict_hasher hasher,
+                                                p11_dict_equals equals,
+                                                p11_destroyer key_destroyer,
+                                                p11_destroyer value_destroyer);
 
 /*
- * _p11_hash_free : Free a hash table
+ * p11_dict_free : Free a hash table
  */
-void               _p11_hash_free              (hashmap *map);
+void                p11_dict_free              (p11_dict *dict);
 
 /*
- * _p11_hash_size: Number of values in hash table
+ *  p11_dict_size: Number of values in hash table
  * - returns the number of entries in hash table
  */
-unsigned int       _p11_hash_size              (hashmap *map);
+unsigned int        p11_dict_size              (p11_dict *dict);
 
 /*
- * _p11_hash_get: Retrieves a value from the hash table
+ *  p11_dict_get: Retrieves a value from the hash table
  * - returns the value of the entry
  */
-void*              _p11_hash_get               (hashmap *map,
+void*               p11_dict_get               (p11_dict *dict,
                                                 const void *key);
 
 /*
- * _p11_hash_set: Set a value in the hash table
+ *  p11_dict_set: Set a value in the hash table
  * - returns 1 if the entry was added properly
  */
-int                _p11_hash_set               (hashmap *map,
+int                 p11_dict_set               (p11_dict *dict,
                                                 void *key,
                                                 void *value);
 
 /*
- * _p11_hash_remove: Remove a value from the hash table
+ *  p11_dict_remove: Remove a value from the hash table
  * - returns 1 if the entry was found
  */
-int                _p11_hash_remove            (hashmap *map,
+int                 p11_dict_remove            (p11_dict *dict,
                                                 const void *key);
 
 /*
- * _p11_hash_steal: Remove a value from the hash table without calling
+ *  p11_dict_steal: Remove a value from the hash table without calling
  * destroy funcs
  * - returns 1 if the entry was found
  */
-int                _p11_hash_steal             (hashmap *map,
+int                 p11_dict_steal             (p11_dict *dict,
                                                 const void *key,
                                                 void **stolen_key,
                                                 void **stolen_value);
 
 /*
- * _p11_hash_iterate: Start enumerating through the hash table
+ *  p11_dict_iterate: Start enumerating through the hash table
  * - returns a hash iterator
  */
-void               _p11_hash_iterate           (hashmap *map,
-                                                hashiter *iter);
+void                p11_dict_iterate           (p11_dict *dict,
+                                                p11_dictiter *iter);
 
 /*
- * _p11_hash_next: Enumerate through hash table
+ *  p11_dict_next: Enumerate through hash table
  * - sets key and value to key and/or value
  * - returns whether there was another entry
  */
-int                _p11_hash_next              (hashiter *iter,
+int                 p11_dict_next              (p11_dictiter *iter,
                                                 void **key,
                                                 void **value);
 
 /*
- * _p11_hash_clear: Clear all values from has htable.
+ *  p11_dict_clear: Clear all values from has htable.
  */
-void               _p11_hash_clear             (hashmap *map);
+void                p11_dict_clear             (p11_dict *dict);
 
 /* -----------------------------------------------------------------------------
- * HASH FUNCTIONS
+ * KEY FUNCTIONS
  */
 
-unsigned int       _p11_hash_string_hash       (const void *string);
+unsigned int        p11_dict_str_hash          (const void *string);
 
-int                _p11_hash_string_equal      (const void *string_one,
+int                 p11_dict_str_equal         (const void *string_one,
                                                 const void *string_two);
 
-unsigned int       _p11_hash_ulongptr_hash     (const void *to_ulong);
+unsigned int        p11_dict_ulongptr_hash     (const void *to_ulong);
 
-int                _p11_hash_ulongptr_equal    (const void *ulong_one,
+int                 p11_dict_ulongptr_equal    (const void *ulong_one,
                                                 const void *ulong_two);
 
-unsigned int       _p11_hash_intptr_hash       (const void *to_int);
+unsigned int        p11_dict_intptr_hash       (const void *to_int);
 
-int                _p11_hash_intptr_equal      (const void *int_one,
+int                 p11_dict_intptr_equal      (const void *int_one,
                                                 const void *int_two);
 
-unsigned int       _p11_hash_direct_hash       (const void *ptr);
+unsigned int        p11_dict_direct_hash       (const void *ptr);
 
-int                _p11_hash_direct_equal      (const void *ptr_one,
+int                 p11_dict_direct_equal      (const void *ptr_one,
                                                 const void *ptr_two);
 
-#endif  /* __HASHMAP_H__ */
+#endif  /* __P11_DICT_H__ */

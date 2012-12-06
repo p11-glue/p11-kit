@@ -37,6 +37,8 @@
 
 #include <sys/types.h>
 
+#include "library.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +47,6 @@
 #include <unistd.h>
 
 #include "p11-kit/p11-kit.h"
-#include "p11-kit/util.h"
 
 #include "mock-module.h"
 
@@ -125,7 +126,7 @@ test_recursive_initialization (CuTest *tc)
 	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
 }
 
-static mutex_t race_mutex;
+static p11_mutex_t race_mutex;
 static int initialization_count = 0;
 static int finalization_count = 0;
 
@@ -135,11 +136,11 @@ static CK_RV
 mock_C_Initialize__threaded_race (CK_VOID_PTR init_args)
 {
 	/* Atomically increment value */
-	_p11_mutex_lock (&race_mutex);
+	p11_mutex_lock (&race_mutex);
 	initialization_count += 1;
-	_p11_mutex_unlock (&race_mutex);
+	p11_mutex_unlock (&race_mutex);
 
-	_p11_sleep_ms (100);
+	p11_sleep_ms (100);
 	return CKR_OK;
 }
 
@@ -147,11 +148,11 @@ static CK_RV
 mock_C_Finalize__threaded_race (CK_VOID_PTR reserved)
 {
 	/* Atomically increment value */
-	_p11_mutex_lock (&race_mutex);
+	p11_mutex_lock (&race_mutex);
 	finalization_count += 1;
-	_p11_mutex_unlock (&race_mutex);
+	p11_mutex_unlock (&race_mutex);
 
-	_p11_sleep_ms (100);
+	p11_sleep_ms (100);
 	return CKR_OK;
 }
 
@@ -183,7 +184,7 @@ static void
 test_threaded_initialization (CuTest *tc)
 {
 	static const int num_threads = 2;
-	thread_t threads[num_threads];
+	p11_thread_t threads[num_threads];
 	int ret;
 	int i;
 
@@ -196,25 +197,25 @@ test_threaded_initialization (CuTest *tc)
 	finalization_count = 0;
 
 	for (i = 0; i < num_threads; i++) {
-		ret = _p11_thread_create (&threads[i], initialization_thread, tc);
+		ret = p11_thread_create (&threads[i], initialization_thread, tc);
 		CuAssertIntEquals (tc, 0, ret);
 		CuAssertTrue (tc, threads[i] != 0);
 	}
 
 	for (i = 0; i < num_threads; i++) {
-		ret = _p11_thread_join (threads[i]);
+		ret = p11_thread_join (threads[i]);
 		CuAssertIntEquals (tc, 0, ret);
 		threads[i] = 0;
 	}
 
 	for (i = 0; i < num_threads; i++) {
-		ret = _p11_thread_create (&threads[i], finalization_thread, tc);
+		ret = p11_thread_create (&threads[i], finalization_thread, tc);
 		CuAssertIntEquals (tc, 0, ret);
 		CuAssertTrue (tc, threads[i] != 0);
 	}
 
 	for (i = 0; i < num_threads; i++) {
-		ret = _p11_thread_join (threads[i]);
+		ret = p11_thread_join (threads[i]);
 		CuAssertIntEquals (tc, 0, ret);
 		threads[i] = 0;
 	}
@@ -294,9 +295,9 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	_p11_mutex_init (&race_mutex);
+	p11_mutex_init (&race_mutex);
 	mock_module_init ();
-	_p11_library_init ();
+	p11_library_init ();
 
 #ifdef OS_UNIX
 	SUITE_ADD_TEST (suite, test_fork_initialization);

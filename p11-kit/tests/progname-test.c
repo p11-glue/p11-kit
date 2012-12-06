@@ -35,6 +35,8 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include "library.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -70,19 +72,7 @@ test_progname_set (CuTest *tc)
 }
 
 /* Defined in util.c */
-extern char *_p11_my_progname;
-
-static void
-test_progname_uninit_clears (CuTest *tc)
-{
-	_p11_set_progname_unlocked ("love-generation");
-	CuAssertStrEquals (tc, "love-generation", _p11_my_progname);
-
-	/* Inititialize should clear above variable */
-	_p11_library_uninit ();
-
-	CuAssertPtrEquals (tc, NULL, _p11_my_progname);
-}
+extern char p11_my_progname[];
 
 int
 main (void)
@@ -91,13 +81,10 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	_p11_library_init ();
+	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_progname_default);
 	SUITE_ADD_TEST (suite, test_progname_set);
-
-	/* This test should be last, as it uninitializes the library */
-	SUITE_ADD_TEST (suite, test_progname_uninit_clears);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

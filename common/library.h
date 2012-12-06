@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Collabora Ltd.
+ * Copyright (c) 2011 Collabora Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,33 +29,52 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Waler <stefw@collabora.co.uk>
+ *
+ * CONTRIBUTORS
+ *  Stef Walter <stef@memberwebs.com>
  */
 
-#ifndef __PTR_ARRAY_H__
-#define __PTR_ARRAY_H__
+#ifndef P11_LIBRARY_H_
+#define P11_LIBRARY_H_
+
+#include "config.h"
+#include "compat.h"
 
 #include <sys/types.h>
 
-typedef struct ptr_array ptr_array_t;
+extern p11_mutex_t p11_library_mutex;
 
-typedef void         (*ptr_array_destroy_func)         (void *data);
+#define       p11_lock()                   p11_mutex_lock (&p11_library_mutex);
 
-ptr_array_t*         _p11_ptr_array_create             (ptr_array_destroy_func destroy_func);
+#define       p11_unlock()                 p11_mutex_unlock (&p11_library_mutex);
 
-void                 _p11_ptr_array_free               (ptr_array_t *array);
+void          p11_message                  (const char* msg,
+                                            ...) GNUC_PRINTF (1, 2);
 
-unsigned int         _p11_ptr_array_count              (ptr_array_t *array);
+void          p11_message_store            (const char* msg,
+                                            size_t length);
 
-int                  _p11_ptr_array_add                (ptr_array_t *array,
-                                                        void *value);
+const char *  p11_message_last             (void);
 
-void                 _p11_ptr_array_remove             (ptr_array_t *array,
-                                                        unsigned int index);
+void          p11_message_clear            (void);
 
-void*                _p11_ptr_array_at                 (ptr_array_t *array,
-                                                        unsigned int index);
+void          p11_message_quiet            (void);
 
-void**               _p11_ptr_array_snapshot           (ptr_array_t *array);
+#ifdef OS_WIN32
 
-#endif  /* __PTR_ARRAY_H__ */
+/* No implementation, because done by DllMain */
+#define       p11_library_init_once()
+
+#else /* !OS_WIN32 */
+extern pthread_once_t p11_library_once;
+
+#define       p11_library_init_once() \
+	pthread_once (&p11_library_once, p11_library_init);
+
+#endif /* !OS_WIN32 */
+
+void          p11_library_init             (void);
+
+void          p11_library_uninit           (void);
+
+#endif /* P11_LIBRARY_H_ */

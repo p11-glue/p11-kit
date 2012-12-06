@@ -51,10 +51,10 @@ struct DebugKey {
 };
 
 static struct DebugKey debug_keys[] = {
-	{ "lib", DEBUG_LIB },
-	{ "conf", DEBUG_CONF },
-	{ "uri", DEBUG_URI },
-	{ "proxy", DEBUG_PROXY },
+	{ "lib", P11_DEBUG_LIB },
+	{ "conf", P11_DEBUG_CONF },
+	{ "uri", P11_DEBUG_URI },
+	{ "proxy", P11_DEBUG_PROXY },
 	{ 0, }
 };
 
@@ -62,7 +62,7 @@ static int debug_inited = 0;
 static int debug_strict = 0;
 
 /* global variable exported in debug.h */
-int _p11_debug_current_flags = ~0;
+int p11_debug_current_flags = ~0;
 
 static int
 parse_environ_flags (void)
@@ -114,20 +114,20 @@ parse_environ_flags (void)
 }
 
 void
-_p11_debug_init (void)
+p11_debug_init (void)
 {
-	_p11_debug_current_flags = parse_environ_flags ();
+	p11_debug_current_flags = parse_environ_flags ();
 	debug_inited = 1;
 }
 
 void
-_p11_debug_message (int flag,
+p11_debug_message (int flag,
                     const char *format, ...)
 {
 	char buffer[512];
 	va_list args;
 
-	if (flag & _p11_debug_current_flags) {
+	if (flag & p11_debug_current_flags) {
 		va_start (args, format);
 		vsnprintf (buffer, sizeof (buffer), format, args);
 		buffer[sizeof (buffer) -1] = 0;
@@ -137,7 +137,7 @@ _p11_debug_message (int flag,
 }
 
 void
-_p11_debug_precond (const char *format,
+p11_debug_precond (const char *format,
                     ...)
 {
 	va_list va;

@@ -29,33 +29,38 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ * Author: Stef Waler <stefw@collabora.co.uk>
  */
 
-#ifndef __P11_KIT_PRIVATE_H__
-#define __P11_KIT_PRIVATE_H__
+#ifndef __P11_ARRAY_H__
+#define __P11_ARRAY_H__
 
-#include "compat.h"
-#include "pkcs11.h"
+#include <sys/types.h>
 
-extern CK_FUNCTION_LIST _p11_proxy_function_list;
+#ifndef P11_DESTROYER_DEFINED
+#define P11_DESTROYER_DEFINED
 
-CK_FUNCTION_LIST_PTR_PTR   _p11_kit_registered_modules_unlocked (void);
+typedef void         (*p11_destroyer)          (void *data);
 
-CK_RV       _p11_kit_initialize_registered_unlocked_reentrant   (void);
+#endif
 
-CK_RV       _p11_kit_finalize_registered_unlocked_reentrant     (void);
+typedef struct _p11_array {
+	void **elem;
+	unsigned int num;
 
-void        _p11_kit_proxy_after_fork                           (void);
+	/* private */
+	unsigned int allocated;
+	p11_destroyer destroyer;
+} p11_array;
 
-CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
-                                                                 const char *user_conf,
-                                                                 int *user_mode);
+p11_array *          p11_array_new                (p11_destroyer destroyer);
 
-void        _p11_kit_default_message                            (CK_RV rv);
+void                 p11_array_free               (p11_array *array);
 
-const char * _p11_get_progname_unlocked                         (void);
+int                  p11_array_push               (p11_array *array,
+                                                   void *value);
 
-void        _p11_set_progname_unlocked                          (const char *progname);
+void                 p11_array_remove             (p11_array *array,
+                                                   unsigned int index);
 
-#endif /* __P11_KIT_PRIVATE_H__ */
+#endif  /* __P11_ARRAY_H__ */

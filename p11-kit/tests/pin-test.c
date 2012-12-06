@@ -35,6 +35,8 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include "library.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -300,7 +302,7 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	_p11_library_init ();
+	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_pin_register_unregister);
 	SUITE_ADD_TEST (suite, test_pin_read);

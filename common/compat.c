@@ -36,6 +36,7 @@
 
 #include "compat.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -109,6 +110,80 @@ getprogname (void)
 #endif /* OS_WIN32 */
 
 #endif /* HAVE_GETPROGNAME */
+
+#ifdef OS_UNIX
+
+void
+p11_mutex_init (p11_mutex_t *mutex)
+{
+	pthread_mutexattr_t attr;
+	int ret;
+
+	pthread_mutexattr_init (&attr);
+	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+	ret = pthread_mutex_init (mutex, &attr);
+	assert (ret == 0);
+	pthread_mutexattr_destroy (&attr);
+}
+
+#endif /* OS_UNIX */
+
+#ifdef OS_WIN32
+
+const char *
+p11_module_error (void)
+{
+	DWORD code = GetLastError();
+	p11_local *local;
+	LPVOID msg_buf;
+
+	local = p11_library_get_thread_local ();
+
+	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	                FORMAT_MESSAGE_FROM_SYSTEM |
+	                FORMAT_MESSAGE_IGNORE_INSERTS,
+	                NULL, code,
+	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                (LPSTR)&msg_buf, 0, NULL);
+
+	if (local->last_error)
+		LocalFree (local->last_error);
+	local->last_error = msg_buf;
+
+	return msg_buf;
+}
+
+int
+p11_thread_create (p11_thread_t *thread,
+                   p11_thread_routine routine,
+                   void *arg)
+{
+	assert (thread);
+
+	*thread = CreateThread (NULL, 0,
+	                        (LPTHREAD_START_ROUTINE)routine,
+	                        arg, 0, NULL);
+
+	if (*thread == NULL)
+		return GetLastError ();
+
+	return 0;
+}
+
+int
+p11_thread_join (p11_thread_t thread)
+{
+	DWORD res;
+
+	res = WaitForSingleObject (thread, INFINITE);
+	if (res == WAIT_FAILED)
+		return GetLastError ();
+
+	CloseHandle (thread);
+	return 0;
+}
+
+#endif /* OS_WIN32 */
 
 #ifndef HAVE_ERR_H
 
@@ -273,3 +348,23 @@ vwarnx (const char *fmt,
 }
 
 #endif /* HAVE_ERR_H */
+
+#ifndef HAVE_MEMDUP
+
+void *
+memdup (void *data,
+        size_t length)
+{
+	void *dup;
+
+	if (!data)
+		return NULL;
+
+	dup = malloc (length);
+	if (dup != NULL)
+		memcpy (dup, data, length);
+
+	return dup;
+}
+
+#endif /* HAVE_MEMDUP */

@@ -40,9 +40,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "library.h"
 #include "p11-kit.h"
 #include "private.h"
-#include "hashmap.h"
+#include "dict.h"
 
 static CK_FUNCTION_LIST_PTR_PTR
 initialize_and_get_modules (CuTest *tc)
@@ -73,32 +74,32 @@ static void
 test_no_duplicates (CuTest *tc)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
-	hashmap *paths;
-	hashmap *funcs;
+	p11_dict *paths;
+	p11_dict *funcs;
 	char *path;
 	int i;
 
 	modules = initialize_and_get_modules (tc);
-	paths = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, NULL, NULL);
-	funcs = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, NULL, NULL);
+	paths = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
+	funcs = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
 
 	/* The loaded modules should not contain duplicates */
 	for (i = 0; modules[i] != NULL; i++) {
 		path = p11_kit_registered_option (modules[i], "module");
 
-		if (_p11_hash_get (funcs, modules[i]))
+		if (p11_dict_get (funcs, modules[i]))
 			CuAssert (tc, "found duplicate function list pointer", 0);
-		if (_p11_hash_get (paths, path))
+		if (p11_dict_get (paths, path))
 			CuAssert (tc, "found duplicate path name", 0);
 
-		if (!_p11_hash_set (funcs, modules[i], ""))
+		if (!p11_dict_set (funcs, modules[i], ""))
 			CuAssert (tc, "shouldn't be reached", 0);
-		if (!_p11_hash_set (paths, path, ""))
+		if (!p11_dict_set (paths, path, ""))
 			CuAssert (tc, "shouldn't be reached", 0);
 	}
 
-	_p11_hash_free (paths);
-	_p11_hash_free (funcs);
+	p11_dict_free (paths);
+	p11_dict_free (funcs);
 	finalize_and_free_modules (tc, modules);
 }
 
@@ -225,7 +226,7 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	_p11_library_init ();
+	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_no_duplicates);
 	SUITE_ADD_TEST (suite, test_disable);

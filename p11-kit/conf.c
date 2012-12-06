@@ -38,10 +38,10 @@
 #include "config.h"
 
 #include "conf.h"
-#define DEBUG_FLAG DEBUG_CONF
+#define P11_DEBUG_FLAG P11_DEBUG_CONF
 #include "debug.h"
+#include "library.h"
 #include "private.h"
-#include "util.h"
 
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -167,20 +167,20 @@ read_config_file (const char* filename, int flags)
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&
 		    (error == ENOENT || error == ENOTDIR)) {
-			_p11_debug ("config file does not exist");
+			p11_debug ("config file does not exist");
 			config = strdup ("\n");
 			return_val_if_fail (config != NULL, NULL);
 			return config;
 
 		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
 		           (error == EPERM || error == EACCES)) {
-			_p11_debug ("config file is inaccessible");
+			p11_debug ("config file is inaccessible");
 			config = strdup ("\n");
 			return_val_if_fail (config != NULL, NULL);
 			return config;
 		}
-		_p11_message ("couldn't open config file: %s: %s", filename,
-		              strerror (error));
+		p11_message ("couldn't open config file: %s: %s", filename,
+		             strerror (error));
 		errno = error;
 		return NULL;
 	}
@@ -190,14 +190,14 @@ read_config_file (const char* filename, int flags)
 	    (len = ftell (f)) == -1 ||
 	    fseek (f, 0, SEEK_SET) == -1) {
 		error = errno;
-		_p11_message ("couldn't seek config file: %s", filename);
+		p11_message ("couldn't seek config file: %s", filename);
 		errno = error;
 		return NULL;
 	}
 
 	config = malloc (len + 2);
 	if (config == NULL) {
-		_p11_message ("config file is too large to read into memory: %lu", len);
+		p11_message ("config file is too large to read into memory: %lu", len);
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -205,7 +205,7 @@ read_config_file (const char* filename, int flags)
 	/* And read in one block */
 	if (fread (config, 1, len, f) != len) {
 		error = errno;
-		_p11_message ("couldn't read config file: %s", filename);
+		p11_message ("couldn't read config file: %s", filename);
 		errno = error;
 		return NULL;
 	}
@@ -223,34 +223,35 @@ read_config_file (const char* filename, int flags)
 }
 
 int
-_p11_conf_merge_defaults (hashmap *map, hashmap *defaults)
+_p11_conf_merge_defaults (p11_dict *map,
+                          p11_dict *defaults)
 {
-	hashiter iter;
+	p11_dictiter iter;
 	void *key;
 	void *value;
 
-	_p11_hash_iterate (defaults, &iter);
-	while (_p11_hash_next (&iter, &key, &value)) {
+	p11_dict_iterate (defaults, &iter);
+	while (p11_dict_next (&iter, &key, &value)) {
 		/* Only override if not set */
-		if (_p11_hash_get (map, key))
+		if (p11_dict_get (map, key))
 			continue;
 		key = strdup (key);
 		return_val_if_fail (key != NULL, -1);
 		value = strdup (value);
 		return_val_if_fail (key != NULL, -1);
-		if (!_p11_hash_set (map, key, value))
+		if (!p11_dict_set (map, key, value))
 			return_val_if_reached (-1);
 	}
 
 	return 0;
 }
 
-hashmap *
+p11_dict *
 _p11_conf_parse_file (const char* filename, int flags)
 {
 	char *name;
 	char *value;
-	hashmap *map = NULL;
+	p11_dict *map = NULL;
 	char *data;
 	char *next;
 	char *end;
@@ -258,14 +259,14 @@ _p11_conf_parse_file (const char* filename, int flags)
 
 	assert (filename);
 
-	_p11_debug ("reading config file: %s", filename);
+	p11_debug ("reading config file: %s", filename);
 
 	/* Adds an extra newline to end of file */
 	data = read_config_file (filename, flags);
 	if (!data)
 		return NULL;
 
-	map = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal, free, free);
+	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 	return_val_if_fail (map != NULL, NULL);
 
 	next = data;
@@ -283,7 +284,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 		/* Look for the break between name: value on the same line */
 		value = name + strcspn (name, ":");
 		if (!*value) {
-			_p11_message ("%s: invalid config line: %s", filename, name);
+			p11_message ("%s: invalid config line: %s", filename, name);
 			error = EINVAL;
 			break;
 		}
@@ -301,16 +302,16 @@ _p11_conf_parse_file (const char* filename, int flags)
 		value = strdup (value);
 		return_val_if_fail (value != NULL, NULL);
 
-		_p11_debug ("config value: %s: %s", name, value);
+		p11_debug ("config value: %s: %s", name, value);
 
-		if (!_p11_hash_set (map, name, value))
+		if (!p11_dict_set (map, name, value))
 			return_val_if_reached (NULL);
 	}
 
 	free (data);
 
 	if (error != 0) {
-		_p11_hash_free (map);
+		p11_dict_free (map);
 		map = NULL;
 		errno = error;
 	}
@@ -339,8 +340,8 @@ expand_user_path (const char *path)
 		pwd = getpwuid (getuid ());
 		if (!pwd) {
 			error = errno;
-			_p11_message ("couldn't lookup home directory for user %d: %s",
-			              getuid (), strerror (errno));
+			p11_message ("couldn't lookup home directory for user %d: %s",
+			             getuid (), strerror (errno));
 			errno = error;
 			return NULL;
 		}
@@ -362,12 +363,13 @@ expand_user_path (const char *path)
 }
 
 static int
-user_config_mode (hashmap *config, int defmode)
+user_config_mode (p11_dict *config,
+                  int defmode)
 {
 	const char *mode;
 
 	/* Whether we should use or override from user directory */
-	mode = _p11_hash_get (config, "user-config");
+	mode = p11_dict_get (config, "user-config");
 	if (mode == NULL) {
 		return defmode;
 	} else if (strequal (mode, "none")) {
@@ -379,18 +381,18 @@ user_config_mode (hashmap *config, int defmode)
 	} else if (strequal (mode, "override")) {
 		return CONF_USER_ONLY;
 	} else {
-		_p11_message ("invalid mode for 'user-config': %s", mode);
+		p11_message ("invalid mode for 'user-config': %s", mode);
 		return CONF_USER_INVALID;
 	}
 }
 
-hashmap *
+p11_dict *
 _p11_conf_load_globals (const char *system_conf, const char *user_conf,
                         int *user_mode)
 {
-	hashmap *config = NULL;
-	hashmap *uconfig = NULL;
-	hashmap *result = NULL;
+	p11_dict *config = NULL;
+	p11_dict *uconfig = NULL;
+	p11_dict *result = NULL;
 	char *path = NULL;
 	int error = 0;
 	int flags;
@@ -447,7 +449,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 		/* If user config valid at all, then replace system with what we have */
 		if (mode != CONF_USER_NONE) {
-			_p11_hash_free (config);
+			p11_dict_free (config);
 			config = uconfig;
 			uconfig = NULL;
 		}
@@ -461,8 +463,8 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 finished:
 	free (path);
-	_p11_hash_free (config);
-	_p11_hash_free (uconfig);
+	p11_dict_free (config);
+	p11_dict_free (uconfig);
 	errno = error;
 	return result;
 }
@@ -510,11 +512,11 @@ calc_name_from_filename (const char *fname)
 static int
 load_config_from_file (const char *configfile,
                        const char *name,
-                       hashmap *configs,
+                       p11_dict *configs,
                        int flags)
 {
-	hashmap *config;
-	hashmap *prev;
+	p11_dict *config;
+	p11_dict *prev;
 	char *key;
 	int error = 0;
 
@@ -522,7 +524,7 @@ load_config_from_file (const char *configfile,
 
 	key = calc_name_from_filename (name);
 	if (key == NULL) {
-		_p11_message ("invalid config filename, will be ignored in the future: %s", configfile);
+		p11_message ("invalid config filename, will be ignored in the future: %s", configfile);
 		key = strdup (name);
 		return_val_if_fail (key != NULL, -1);
 	}
@@ -533,9 +535,9 @@ load_config_from_file (const char *configfile,
 		return -1;
 	}
 
-	prev = _p11_hash_get (configs, key);
+	prev = p11_dict_get (configs, key);
 	if (prev == NULL) {
-		if (!_p11_hash_set (configs, key, config))
+		if (!p11_dict_set (configs, key, config))
 			return_val_if_reached (-1);
 		config = NULL;
 	} else {
@@ -545,7 +547,7 @@ load_config_from_file (const char *configfile,
 	}
 
 	/* If still set */
-	_p11_hash_free (config);
+	p11_dict_free (config);
 
 	if (error) {
 		errno = error;
@@ -557,7 +559,7 @@ load_config_from_file (const char *configfile,
 
 static int
 load_configs_from_directory (const char *directory,
-                             hashmap *configs,
+                             p11_dict *configs,
                              int flags)
 {
 	struct dirent *dp;
@@ -568,7 +570,7 @@ load_configs_from_directory (const char *directory,
 	char *path;
 	int count = 0;
 
-	_p11_debug ("loading module configs in: %s", directory);
+	p11_debug ("loading module configs in: %s", directory);
 
 	/* First we load all the modules */
 	dir = opendir (directory);
@@ -576,15 +578,15 @@ load_configs_from_directory (const char *directory,
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&
 		    (errno == ENOENT || errno == ENOTDIR)) {
-			_p11_debug ("module configs do not exist");
+			p11_debug ("module configs do not exist");
 			return 0;
 		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
 		           (errno == EPERM || errno == EACCES)) {
-			_p11_debug ("couldn't list inacessible module configs");
+			p11_debug ("couldn't list inacessible module configs");
 			return 0;
 		}
-		_p11_message ("couldn't list directory: %s: %s", directory,
-		              strerror (error));
+		p11_message ("couldn't list directory: %s: %s", directory,
+		             strerror (error));
 		errno = error;
 		return -1;
 	}
@@ -603,7 +605,7 @@ load_configs_from_directory (const char *directory,
 		{
 			if (stat (path, &st) < 0) {
 				error = errno;
-				_p11_message ("couldn't stat path: %s", path);
+				p11_message ("couldn't stat path: %s", path);
 				free (path);
 				break;
 			}
@@ -630,17 +632,17 @@ load_configs_from_directory (const char *directory,
 	return count;
 }
 
-hashmap *
+p11_dict *
 _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 {
-	hashmap *configs;
+	p11_dict *configs;
 	char *path;
 	int error = 0;
 	int flags;
 
 	/* A hash table of name -> config */
-	configs = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal,
-	                            free, (hash_destroy_func)_p11_hash_free);
+	configs = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal,
+	                        free, (p11_destroyer)p11_dict_free);
 
 	/* Load each user config first, if user config is allowed */
 	if (mode != CONF_USER_NONE) {
@@ -652,7 +654,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 			error = errno;
 		free (path);
 		if (error != 0) {
-			_p11_hash_free (configs);
+			p11_dict_free (configs);
 			errno = error;
 			return NULL;
 		}
@@ -667,7 +669,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 		flags = CONF_IGNORE_MISSING;
 		if (load_configs_from_directory (system_dir, configs, flags) < 0) {
 			error = errno;
-			_p11_hash_free (configs);
+			p11_dict_free (configs);
 			errno = error;
 			return NULL;
 		}
@@ -688,8 +690,8 @@ _p11_conf_parse_boolean (const char *string,
 	} else if (strcmp (string, "no") == 0) {
 		return 0;
 	} else {
-		_p11_message ("invalid setting '%s' defaulting to '%s'",
-		              string, default_value ? "yes" : "no");
+		p11_message ("invalid setting '%s' defaulting to '%s'",
+		             string, default_value ? "yes" : "no");
 		return default_value;
 	}
 }

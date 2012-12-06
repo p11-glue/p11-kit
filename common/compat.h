@@ -37,6 +37,8 @@
 
 #include "config.h"
 
+#include <sys/types.h>
+
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
 #else
@@ -52,6 +54,120 @@
 #ifndef HAVE_GETPROGNAME
 const char * getprogname (void);
 #endif
+
+/* -----------------------------------------------------------------------------
+ * WIN32
+ */
+
+#ifdef OS_WIN32
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x500
+#endif
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x500
+#endif
+
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+
+/* Oh ... my ... god */
+#undef CreateMutex
+
+typedef CRITICAL_SECTION p11_mutex_t;
+
+typedef HANDLE p11_thread_t;
+
+typedef DWORD p11_thread_id_t;
+
+#define p11_mutex_init(m) \
+	(InitializeCriticalSection (m))
+#define p11_mutex_lock(m) \
+	(EnterCriticalSection (m))
+#define p11_mutex_unlock(m) \
+	(LeaveCriticalSection (m))
+#define p11_mutex_uninit(m) \
+	(DeleteCriticalSection (m))
+
+typedef void * (*p11_thread_routine) (void *arg);
+
+int p11_thread_create (thread_t *thread, thread_routine, void *arg);
+
+int p11_thread_join (thread_t thread);
+
+/* Returns a thread_id_t */
+#define p11_thread_id_self() \
+	(GetCurrentThreadId ())
+
+typedef HMODULE dl_module_t;
+
+#define p11_module_open(f) \
+	(LoadLibrary (f))
+#define p11_module_close(d) \
+	(FreeLibrary (d))
+#define p11_module_symbol(d, s) \
+	((void *)GetProcAddress ((d), (s)))
+
+const char *    p11_module_error       (void);
+
+#define p11_sleep_ms(ms) \
+	(Sleep (ms))
+
+#endif /* OS_WIN32 */
+
+/* ----------------------------------------------------------------------------
+ * UNIX
+ */
+
+#ifdef OS_UNIX
+
+#include <pthread.h>
+#include <dlfcn.h>
+#include <time.h>
+
+typedef pthread_mutex_t p11_mutex_t;
+
+void        p11_mutex_init          (p11_mutex_t *mutex);
+
+#define p11_mutex_lock(m) \
+	(pthread_mutex_lock (m))
+#define p11_mutex_unlock(m) \
+	(pthread_mutex_unlock (m))
+#define p11_mutex_uninit(m) \
+	(pthread_mutex_destroy(m))
+
+typedef pthread_t p11_thread_t;
+
+typedef pthread_t p11_thread_id_t;
+
+typedef void * (*p11_thread_routine) (void *arg);
+
+#define p11_thread_create(t, r, a) \
+	(pthread_create ((t), NULL, (r), (a)))
+#define p11_thread_join(t) \
+	(pthread_join ((t), NULL))
+#define p11_thread_id_self(m) \
+	(pthread_self ())
+
+typedef void * dl_module_t;
+
+#define p11_module_open(f) \
+	(dlopen ((f), RTLD_LOCAL | RTLD_NOW))
+#define p11_module_close(d) \
+	(dlclose(d))
+#define p11_module_error() \
+	(dlerror ())
+#define p11_module_symbol(d, s) \
+	(dlsym ((d), (s)))
+
+#define p11_sleep_ms(ms) \
+	do { int _ms = (ms); \
+	struct timespec _ts = { _ms / 1000, (_ms % 1000) * 1000 * 1000 }; \
+	nanosleep (&_ts, NULL); \
+	} while(0)
+
+#endif /* OS_UNIX */
 
 #ifdef HAVE_ERR_H
 #include <err.h>
@@ -79,5 +195,12 @@ void vwarnx (const char *fmt, va_list ap);
 #ifdef	HAVE_ERRNO_H
 #include <errno.h>
 #endif	/* HAVE_ERRNO_H */
+
+#ifndef HAVE_MEMDUP
+
+void *     memdup           (void *data,
+                             size_t length);
+
+#endif /* HAVE_MEMDUP */
 
 #endif /* __COMPAT_H__ */

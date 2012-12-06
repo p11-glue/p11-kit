@@ -32,20 +32,13 @@
 
 #include "config.h"
 
-#include "ptr-array.h"
+#include "array.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-struct ptr_array {
-	void **memory;
-	unsigned int length;
-	unsigned int allocated;
-	ptr_array_destroy_func destroy;
-};
-
 static int
-maybe_expand_array (ptr_array_t *array,
+maybe_expand_array (p11_array *array,
                     unsigned int length)
 {
 	unsigned int new_allocated;
@@ -58,97 +51,69 @@ maybe_expand_array (ptr_array_t *array,
 	if (new_allocated < length)
 		new_allocated = length;
 
-	new_memory = realloc (array->memory, new_allocated * sizeof (void*));
+	new_memory = realloc (array->elem, new_allocated * sizeof (void*));
 	if (new_memory == NULL)
 		return 0;
 
-	array->memory = new_memory;
+	array->elem = new_memory;
 	array->allocated = new_allocated;
 	return 1;
 }
 
-ptr_array_t *
-_p11_ptr_array_create (ptr_array_destroy_func destroy_func)
+p11_array *
+p11_array_new (p11_destroyer destroyer)
 {
-	ptr_array_t *array;
+	p11_array *array;
 
-	array = calloc (1, sizeof (ptr_array_t));
+	array = calloc (1, sizeof (p11_array));
 	if (array == NULL)
 		return NULL;
 
 	if (!maybe_expand_array (array, 2)) {
-		_p11_ptr_array_free (array);
+		p11_array_free (array);
 		return NULL;
 	}
 
-	array->destroy = destroy_func;
+	array->destroyer = destroyer;
 	return array;
 }
 
 void
-_p11_ptr_array_free (ptr_array_t *array)
+p11_array_free (p11_array *array)
 {
 	unsigned int i;
 
 	if (array == NULL)
 		return;
 
-	if (array->destroy) {
-		for (i = 0; i < array->length; i++)
-			(array->destroy) (array->memory[i]);
+	if (array->destroyer) {
+		for (i = 0; i < array->num; i++)
+			(array->destroyer) (array->elem[i]);
 	}
 
-	free (array->memory);
+	free (array->elem);
 	free (array);
 }
 
-unsigned int
-_p11_ptr_array_count (ptr_array_t *array)
-{
-	return array->length;
-}
-
 int
-_p11_ptr_array_add (ptr_array_t *array,
-                    void *value)
+p11_array_push (p11_array *array,
+                void *value)
 {
-	if (!maybe_expand_array (array, array->length + 1))
+	if (!maybe_expand_array (array, array->num + 1))
 		return 0;
 
-	array->memory[array->length] = value;
-	array->length++;
+	array->elem[array->num] = value;
+	array->num++;
 	return 1;
 }
 
 void
-_p11_ptr_array_remove (ptr_array_t *array,
-                       unsigned int index)
+p11_array_remove (p11_array *array,
+                  unsigned int index)
 {
-	if (array->destroy)
-		(array->destroy) (array->memory[index]);
-	memmove (array->memory + index, array->memory + index + 1,
-	         (array->length - (index + 1)) * sizeof (void*));
-	array->length--;
-}
-
-void *
-_p11_ptr_array_at (ptr_array_t *array,
-                   unsigned int index)
-{
-	return array->memory[index];
-}
-
-void **
-_p11_ptr_array_snapshot (ptr_array_t *array)
-{
-	void **snapshot;
-	size_t bytes;
-
-	bytes = array->length * sizeof (void*);
-	snapshot = malloc (bytes);
-	if (!snapshot)
-		return NULL;
-
-	memcpy (snapshot, array->memory, bytes);
-	return snapshot;
+	if (array->destroyer)
+		(array->destroyer) (array->elem[index]);
+	memmove (array->elem + index, array->elem + index + 1,
+	         (array->num - (index + 1)) * sizeof (void*));
+	array->num--;
 }

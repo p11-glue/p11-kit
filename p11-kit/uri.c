@@ -34,12 +34,12 @@
 
 #include "config.h"
 
-#define DEBUG_FLAG DEBUG_URI
+#define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
+#include "library.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "uri.h"
-#include "util.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -1419,7 +1419,7 @@ p11_kit_uri_message (int code)
 	case P11_KIT_URI_NOT_FOUND:
 		return "The URI component was not found";
 	default:
-		_p11_debug ("unknown error code: %d", code);
+		p11_debug ("unknown error code: %d", code);
 		return "Unknown error";
 	}
 }

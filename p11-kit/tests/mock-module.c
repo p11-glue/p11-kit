@@ -34,11 +34,11 @@
 
 #include "config.h"
 
+#include "library.h"
 #define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
-#include "mock-module.h"
 
-#include "p11-kit/util.h"
+#include "mock-module.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -50,7 +50,7 @@
  */
 
 /* Various mutexes */
-static mutex_t init_mutex;
+static p11_mutex_t init_mutex;
 
 /* Whether we've been initialized, and on what process id it happened */
 static int pkcs11_initialized = 0;
@@ -97,7 +97,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 
 	debug (("C_Initialize: enter"));
 
-	_p11_mutex_lock (&init_mutex);
+	p11_mutex_lock (&init_mutex);
 
 		if (init_args != NULL) {
 			int supplied_ok;
@@ -148,7 +148,7 @@ done:
 			pkcs11_initialized_pid = 0;
 		}
 
-	_p11_mutex_unlock (&init_mutex);
+	p11_mutex_unlock (&init_mutex);
 
 	debug (("C_Initialize: %d", ret));
 	return ret;
@@ -161,13 +161,13 @@ mock_C_Finalize (CK_VOID_PTR reserved)
 	return_val_if_fail (pkcs11_initialized != 0, CKR_CRYPTOKI_NOT_INITIALIZED);
 	return_val_if_fail (reserved == NULL, CKR_ARGUMENTS_BAD);
 
-	_p11_mutex_lock (&init_mutex);
+	p11_mutex_lock (&init_mutex);
 
 		/* This should stop all other calls in */
 		pkcs11_initialized = 0;
 		pkcs11_initialized_pid = 0;
 
-	_p11_mutex_unlock (&init_mutex);
+	p11_mutex_unlock (&init_mutex);
 
 	debug (("C_Finalize: %d", CKR_OK));
 	return CKR_OK;
@@ -892,7 +892,7 @@ mock_module_init (void)
 {
 	static int initialized = 0;
 	if (!initialized) {
-		_p11_mutex_init (&init_mutex);
+		p11_mutex_init (&init_mutex);
 		initialized = 1;
 	}
 }

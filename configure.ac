@@ -22,7 +22,7 @@ P11KIT_AGE=0
 # ------------------------------------------------------------------------------
 
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIR([build/m4])
 AM_INIT_AUTOMAKE([1.10])
 AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])
@@ -282,13 +282,16 @@ AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
 AC_SUBST(SHLEXT)
 
 AC_CONFIG_FILES([Makefile
+	build/Makefile
+	common/Makefile
+	common/tests/Makefile
 	doc/Makefile
 	doc/version.xml
 	po/Makefile.in
 	p11-kit/Makefile
+	p11-kit/tests/Makefile
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
-	tests/Makefile
 	tools/Makefile
 ])
 AC_OUTPUT

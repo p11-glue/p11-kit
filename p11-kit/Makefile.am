@@ -1,8 +1,12 @@
 NULL =
 
+SUBDIRS = . tests
+
+COMMON = $(top_srcdir)/common
+
 INCLUDES = \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/common \
+	-I$(COMMON) \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(NULL)
 
@@ -15,19 +19,24 @@ inc_HEADERS = \
 	pkcs11.h
 
 MODULE_SRCS = \
-	util.c util.h \
+	util.c \
 	conf.c conf.h \
-	debug.c debug.h \
-	hashmap.c hashmap.h \
 	modules.c \
 	pin.c \
 	proxy.c \
 	private.h \
-	ptr-array.c ptr-array.h \
 	messages.c \
 	uri.c \
-	$(top_srcdir)/common/compat.c \
-	$(top_srcdir)/common/compat.h \
+	$(COMMON)/array.c \
+	$(COMMON)/array.h \
+	$(COMMON)/compat.c \
+	$(COMMON)/compat.h \
+	$(COMMON)/debug.c \
+	$(COMMON)/debug.h \
+	$(COMMON)/dict.c \
+	$(COMMON)/dict.h \
+	$(COMMON)/library.c \
+	$(COMMON)/library.h \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \
@@ -62,31 +71,34 @@ libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
 if OS_WIN32
 
 libp11_kit_testable_la_CFLAGS = \
-	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/system-pkcs11.conf"\" \
-	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/system-modules/win32"\" \
-	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/user-pkcs11.conf"\" \
-	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/user-modules/win32"\" \
-	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/system-pkcs11.conf"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/system-modules/win32"\" \
+	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules/win32"\" \
+	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
 	$(NULL)
 
 else
 
 libp11_kit_testable_la_CFLAGS = \
-	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/system-pkcs11.conf"\" \
-	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/system-modules"\" \
-	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/tests/files/user-pkcs11.conf"\" \
-	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/tests/files/user-modules"\" \
-	-DP11_MODULE_PATH=\""$(abs_top_builddir)/tests/.libs"\" \
+	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/system-pkcs11.conf"\" \
+	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/system-modules"\" \
+	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
+	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules"\" \
+	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
 	$(NULL)
 
 endif
 
 libp11_kit_compat_la_SOURCES = \
-	debug.c debug.h \
 	messages.c \
-	util.c util.h \
-	$(top_srcdir)/common/compat.c \
-	$(top_srcdir)/common/compat.h
+	$(COMMON)/compat.c \
+	$(COMMON)/compat.h \
+	$(COMMON)/debug.c \
+	$(COMMON)/debug.h \
+	$(COMMON)/library.c \
+	$(COMMON)/library.h \
+	$(NULL)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc

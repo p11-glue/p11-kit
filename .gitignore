@@ -20,7 +20,6 @@
 .project
 .cproject
 .settings
-m4/*.m4
 
 ABOUT-NLS
 aclocal.m4
@@ -45,6 +44,17 @@ Makefile.in
 missing
 stamp-h1
 temp.txt
+
+/*/tests/test-*
+!/*/tests/test-*.c
+/*/tests/frob-*
+!/*/tests/frob-*.c
+
+/build/m4/*.m4
+/build/coverage
+/build/coverage.info
+
+/common/tests/hash-test
 
 /doc/html
 /doc/p11-kit-decl-list.txt
@@ -71,19 +81,13 @@ temp.txt
 /po/remove-potcdate.sed
 /po/Makevars.template
 
-/tests/coverage
-/tests/coverage.info
-/tests/hash-test
-/tests/p11-test
-/tests/pin-test
-/tests/print-messages
-/tests/print-progname
-/tests/progname-test
-/tests/ptr-array-test
-/tests/conf-test
-/tests/uri-test
-/tests/test-*
-!/tests/test-*.c
+/p11-kit/tests/p11-test
+/p11-kit/tests/pin-test
+/p11-kit/tests/print-messages
+/p11-kit/tests/print-progname
+/p11-kit/tests/progname-test
+/p11-kit/tests/conf-test
+/p11-kit/tests/uri-test
 
 /tools/p11-kit
 

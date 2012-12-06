@@ -38,29 +38,17 @@
 #include "config.h"
 
 #include "compat.h"
-#define DEBUG_FLAG DEBUG_LIB
+#define P11_DEBUG_FLAG P11_DEBUG_LIB
 #include "debug.h"
+#include "library.h"
 #include "p11-kit.h"
 #include "private.h"
-#include "util.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/*
- * This is the mutex that protects the global data of this library
- * and the pkcs11 proxy module. Note that we *never* call into our
- * underlying pkcs11 modules while holding this mutex. Therefore it
- * doesn't have to be recursive and we can keep things simple.
- */
-mutex_t _p11_mutex;
-
-#ifdef OS_UNIX
-pthread_once_t _p11_once;
-#endif
 
 /**
  * SECTION:p11-kit-future
@@ -71,8 +59,6 @@ pthread_once_t _p11_once;
  * this will be included in the next release. To use this API you must define a
  * MACRO. See the p11-kit.h header for more details.
  */
-
-static int print_messages = 1;
 
 /**
  * p11_kit_space_strlen:
@@ -146,45 +132,6 @@ p11_kit_space_strdup (const unsigned char *string, size_t max_length)
 	return result;
 }
 
-static void
-store_message_buffer (const char* msg, size_t length)
-{
-	p11_local *local;
-
-	if (length > P11_MAX_MESSAGE - 1)
-		length = P11_MAX_MESSAGE - 1;
-
-	local = _p11_library_get_thread_local ();
-	if (local != NULL) {
-		memcpy (local->message, msg, length);
-		local->message[length] = 0;
-	}
-}
-
-void
-_p11_message (const char* msg, ...)
-{
-	char buffer[P11_MAX_MESSAGE];
-	va_list va;
-	size_t length;
-
-	va_start (va, msg);
-	length = vsnprintf (buffer, P11_MAX_MESSAGE - 1, msg, va);
-	va_end (va);
-
-	/* Was it truncated? */
-	if (length > P11_MAX_MESSAGE - 1)
-		length = P11_MAX_MESSAGE - 1;
-	buffer[length] = 0;
-
-	/* If printing is not disabled, just print out */
-	if (print_messages)
-		fprintf (stderr, "p11-kit: %s\n", buffer);
-
-	_p11_debug_message (DEBUG_LIB, "message: %s", buffer);
-	store_message_buffer (buffer, length);
-}
-
 /**
  * p11_kit_be_quiet:
  *
@@ -194,9 +141,7 @@ _p11_message (const char* msg, ...)
 void
 p11_kit_be_quiet (void)
 {
-	_p11_lock ();
-	print_messages = 0;
-	_p11_unlock ();
+	p11_message_quiet ();
 }
 
 /**
@@ -215,18 +160,7 @@ p11_kit_be_quiet (void)
 const char*
 p11_kit_message (void)
 {
-	p11_local *local;
-	local = _p11_library_get_thread_local ();
-	return local && local->message[0] ? local->message : NULL;
-}
-
-void
-_p11_kit_clear_message (void)
-{
-	p11_local *local;
-	local = _p11_library_get_thread_local ();
-	if (local != NULL)
-		local->message[0] = 0;
+	return p11_message_last ();
 }
 
 void
@@ -236,231 +170,12 @@ _p11_kit_default_message (CK_RV rv)
 
 	if (rv != CKR_OK) {
 		msg = p11_kit_strerror (rv);
-		store_message_buffer (msg, strlen (msg));
+		p11_message_store (msg, strlen (msg));
 	}
 }
-
-static void
-uninit_common (void)
-{
-	_p11_debug ("uninitializing library");
-
-	_p11_set_progname_unlocked (NULL);
-}
-
-#ifdef OS_UNIX
-
-static pthread_key_t thread_local = 0;
-
-p11_local *
-_p11_library_get_thread_local (void)
-{
-	p11_local *local;
-
-	_p11_library_init_once ();
-
-	local = pthread_getspecific (thread_local);
-	if (local == NULL) {
-		local = calloc (1, sizeof (p11_local));
-		pthread_setspecific (thread_local, local);
-	}
-
-	return local;
-}
-
-#ifdef __GNUC__
-__attribute__((constructor))
-#endif
-void
-_p11_library_init (void)
-{
-	_p11_debug_init ();
-	_p11_debug ("initializing library");
-	_p11_mutex_init (&_p11_mutex);
-	pthread_key_create (&thread_local, free);
-}
-
-#ifdef __GNUC__
-__attribute__((destructor))
-#endif
-void
-_p11_library_uninit (void)
-{
-	uninit_common ();
-
-	/* Some cleanup to pacify valgrind */
-	free (pthread_getspecific (thread_local));
-	pthread_setspecific (thread_local, NULL);
-
-	pthread_key_delete (thread_local);
-	_p11_mutex_uninit (&_p11_mutex);
-}
-
-void
-_p11_mutex_init (mutex_t *mutex)
-{
-	pthread_mutexattr_t attr;
-	int ret;
-
-	pthread_mutexattr_init (&attr);
-	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
-	ret = pthread_mutex_init (mutex, &attr);
-	assert (ret == 0);
-	pthread_mutexattr_destroy (&attr);
-}
-
-#endif /* OS_UNIX */
-
-#ifdef OS_WIN32
-
-static DWORD thread_local = TLS_OUT_OF_INDEXES;
-
-BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
-
-p11_local *
-_p11_library_get_thread_local (void)
-{
-	LPVOID data;
-
-	if (thread_local == TLS_OUT_OF_INDEXES)
-		return NULL;
-
-	data = TlsGetValue (thread_local);
-	if (data == NULL) {
-		data = LocalAlloc (LPTR, sizeof (p11_local));
-		TlsSetValue (thread_local, data);
-	}
-
-	return (p11_local *)data;
-}
-
-void
-_p11_library_init (void)
-{
-	_p11_debug_init ();
-	_p11_debug ("initializing library");
-	_p11_mutex_init (&_p11_mutex);
-	thread_local = TlsAlloc ();
-}
-
-static void
-free_tls_value (LPVOID data)
-{
-	p11_local *local = data;
-	if (local == NULL)
-		return;
-	if (local->last_error)
-		LocalFree (local->last_error);
-	LocalFree (data);
-}
-
-void
-_p11_library_uninit (void)
-{
-	LPVOID data;
-
-	uninit_common ();
-
-	if (thread_local != TLS_OUT_OF_INDEXES) {
-		data = TlsGetValue (thread_local);
-		free_tls_value (data);
-		TlsFree (thread_local);
-	}
-	_p11_mutex_uninit (&_p11_mutex);
-}
-
-const char *
-_p11_module_error (void)
-{
-	DWORD code = GetLastError();
-	p11_local *local;
-	LPVOID msg_buf;
-
-	local = _p11_library_get_thread_local ();
-
-	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
-	                FORMAT_MESSAGE_FROM_SYSTEM |
-	                FORMAT_MESSAGE_IGNORE_INSERTS,
-	                NULL, code,
-	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-	                (LPSTR)&msg_buf, 0, NULL);
-
-	if (local->last_error)
-		LocalFree (local->last_error);
-	local->last_error = msg_buf;
-
-	return msg_buf;
-}
-
-int
-_p11_thread_create (thread_t *thread,
-               thread_routine routine,
-               void *arg)
-{
-	assert (thread);
-
-	*thread = CreateThread (NULL, 0,
-	                        (LPTHREAD_START_ROUTINE)routine,
-	                        arg, 0, NULL);
-
-	if (*thread == NULL)
-		return GetLastError ();
-
-	return 0;
-}
-
-int
-_p11_thread_join (thread_t thread)
-{
-	DWORD res;
-
-	res = WaitForSingleObject (thread, INFINITE);
-	if (res == WAIT_FAILED)
-		return GetLastError ();
-
-	CloseHandle (thread);
-	return 0;
-}
-
-BOOL WINAPI
-DllMain (HINSTANCE instance,
-         DWORD reason,
-         LPVOID reserved)
-{
-	LPVOID data;
-
-	switch (reason) {
-	case DLL_PROCESS_ATTACH:
-		_p11_library_init ();
-		if (thread_local == TLS_OUT_OF_INDEXES) {
-			_p11_debug ("couldn't setup tls");
-			return FALSE;
-		}
-		break;
-
-	case DLL_THREAD_DETACH:
-		if (thread_local != TLS_OUT_OF_INDEXES) {
-			_p11_debug ("thread stopped, freeing tls");
-			data = TlsGetValue (thread_local);
-			free_tls_value (data);
-		}
-		break;
-
-	case DLL_PROCESS_DETACH:
-		_p11_library_uninit ();
-		break;
-
-	default:
-		break;
-	}
-
-	return TRUE;
-}
-
-#endif /* OS_WIN32 */
 
 /* This is the progname that we think of this process as. */
-char *_p11_my_progname = NULL;
+char p11_my_progname[256] = { 0, };
 
 /**
  * p11_kit_set_progname:
@@ -475,25 +190,30 @@ char *_p11_my_progname = NULL;
 void
 p11_kit_set_progname (const char *progname)
 {
-	_p11_library_init_once ();
+	p11_library_init_once ();
 
-	_p11_lock ();
+	p11_lock ();
 	_p11_set_progname_unlocked (progname);
-	_p11_unlock ();
+	p11_unlock ();
 }
 
 void
 _p11_set_progname_unlocked (const char *progname)
 {
-	/* We can be called with NULL, to cleanup memory usage */
-	free (_p11_my_progname);
-	_p11_my_progname = progname ? strdup (progname) : NULL;
+	/* We can be called with NULL */
+	if (progname == NULL)
+		progname = "";
+
+	strncpy (p11_my_progname, progname, sizeof (p11_my_progname));
+	p11_my_progname[sizeof (p11_my_progname) - 1] = 0;
 }
 
 const char *
 _p11_get_progname_unlocked (void)
 {
-	if (_p11_my_progname == NULL)
+	if (p11_my_progname[0] == '\0')
 		_p11_set_progname_unlocked (getprogname ());
-	return _p11_my_progname;
+	if (p11_my_progname[0] == '\0')
+		return NULL;
+	return p11_my_progname;
 }

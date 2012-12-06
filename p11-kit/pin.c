@@ -34,15 +34,15 @@
 
 #include "config.h"
 
-#define DEBUG_FLAG DEBUG_PIN
+#define P11_DEBUG_FLAG P11_DEBUG_PIN
 #include "debug.h"
-#include "hashmap.h"
+#include "dict.h"
+#include "library.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "pin.h"
 #include "private.h"
-#include "ptr-array.h"
-#include "util.h"
+#include "array.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -145,7 +145,7 @@ typedef struct _PinCallback {
  * we can audit thread safety easier.
  */
 static struct _Shared {
-	hashmap *pin_sources;
+	p11_dict *pin_sources;
 } gl = { NULL };
 
 static void*
@@ -174,29 +174,29 @@ static int
 register_callback_unlocked (const char *pin_source,
                             PinCallback *cb)
 {
-	ptr_array_t *callbacks = NULL;
+	p11_array *callbacks = NULL;
 	char *name;
 
 	name = strdup (pin_source);
 	return_val_if_fail (name != NULL, -1);
 
 	if (gl.pin_sources == NULL) {
-		gl.pin_sources = _p11_hash_create (_p11_hash_string_hash, _p11_hash_string_equal,
-		                                   free, (hash_destroy_func)_p11_ptr_array_free);
+		gl.pin_sources = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal,
+		                               free, (p11_destroyer)p11_array_free);
 		return_val_if_fail (gl.pin_sources != NULL, -1);
 	}
 
 	if (gl.pin_sources != NULL)
-		callbacks = _p11_hash_get (gl.pin_sources, name);
+		callbacks = p11_dict_get (gl.pin_sources, name);
 
 	if (callbacks == NULL) {
-		callbacks = _p11_ptr_array_create (unref_pin_callback);
+		callbacks = p11_array_new (unref_pin_callback);
 		return_val_if_fail (callbacks != NULL, -1);
-		if (!_p11_hash_set (gl.pin_sources, name, callbacks))
+		if (!p11_dict_set (gl.pin_sources, name, callbacks))
 			return_val_if_reached (-1);
 	}
 
-	if (_p11_ptr_array_add (callbacks, cb) < 0)
+	if (p11_array_push (callbacks, cb) < 0)
 		return_val_if_reached (-1);
 
 	return 0;
@@ -240,11 +240,11 @@ p11_kit_pin_register_callback (const char *pin_source,
 	cb->user_data = callback_data;
 	cb->destroy = callback_destroy;
 
-	_p11_lock ();
+	p11_lock ();
 
 	ret = register_callback_unlocked (pin_source, cb);
 
-	_p11_unlock ();
+	p11_unlock ();
 
 	return ret;
 }
@@ -266,37 +266,37 @@ p11_kit_pin_unregister_callback (const char *pin_source,
                                  void *callback_data)
 {
 	PinCallback *cb;
-	ptr_array_t *callbacks;
+	p11_array *callbacks;
 	unsigned int i;
 
 	return_if_fail (pin_source != NULL);
 	return_if_fail (callback != NULL);
 
-	_p11_lock ();
+	p11_lock ();
 
 		if (gl.pin_sources) {
-			callbacks = _p11_hash_get (gl.pin_sources, pin_source);
+			callbacks = p11_dict_get (gl.pin_sources, pin_source);
 			if (callbacks) {
-				for (i = 0; i < _p11_ptr_array_count (callbacks); i++) {
-					cb = _p11_ptr_array_at (callbacks, i);
+				for (i = 0; i < callbacks->num; i++) {
+					cb = callbacks->elem[i];
 					if (cb->func == callback && cb->user_data == callback_data) {
-						_p11_ptr_array_remove (callbacks, i);
+						p11_array_remove (callbacks, i);
 						break;
 					}
 				}
 
-				if (_p11_ptr_array_count (callbacks) == 0)
-					_p11_hash_remove (gl.pin_sources, pin_source);
+				if (callbacks->num == 0)
+					p11_dict_remove (gl.pin_sources, pin_source);
 			}
 
 			/* When there are no more pin sources, get rid of the hash table */
-			if (_p11_hash_size (gl.pin_sources) == 0) {
-				_p11_hash_free (gl.pin_sources);
+			if (p11_dict_size (gl.pin_sources) == 0) {
+				p11_dict_free (gl.pin_sources);
 				gl.pin_sources = NULL;
 			}
 		}
 
-	_p11_unlock ();
+	p11_unlock ();
 }
 
 /**
@@ -338,31 +338,31 @@ p11_kit_pin_request (const char *pin_source,
 {
 	PinCallback **snapshot = NULL;
 	unsigned int snapshot_count = 0;
-	ptr_array_t *callbacks;
+	p11_array *callbacks;
 	P11KitPin *pin;
 	unsigned int i;
 
 	return_val_if_fail (pin_source != NULL, NULL);
 
-	_p11_lock ();
+	p11_lock ();
 
 		/* Find and ref the pin source data */
 		if (gl.pin_sources) {
-			callbacks = _p11_hash_get (gl.pin_sources, pin_source);
+			callbacks = p11_dict_get (gl.pin_sources, pin_source);
 
 			/* If we didn't find any snapshots try the global ones */
 			if (callbacks == NULL)
-				callbacks = _p11_hash_get (gl.pin_sources, P11_KIT_PIN_FALLBACK);
+				callbacks = p11_dict_get (gl.pin_sources, P11_KIT_PIN_FALLBACK);
 
 			if (callbacks != NULL) {
-				snapshot = (PinCallback**)_p11_ptr_array_snapshot (callbacks);
-				snapshot_count = _p11_ptr_array_count (callbacks);
-				for (i = 0; i < snapshot_count; i++)
+				snapshot = memdup (callbacks->elem, sizeof (void *) * callbacks->num);
+				snapshot_count = callbacks->num;
+				for (i = 0; snapshot && i < snapshot_count; i++)
 					ref_pin_callback (snapshot[i]);
 			}
 		}
 
-	_p11_unlock ();
+	p11_unlock ();
 
 	if (snapshot == NULL)
 		return NULL;
@@ -372,11 +372,11 @@ p11_kit_pin_request (const char *pin_source,
 		                               snapshot[i - 1]->user_data);
 	}
 
-	_p11_lock ();
+	p11_lock ();
 		for (i = 0; i < snapshot_count; i++)
 			unref_pin_callback (snapshot[i]);
 		free (snapshot);
-	_p11_unlock ();
+	p11_unlock ();
 
 	return pin;
 }
@@ -666,11 +666,11 @@ p11_kit_pin_get_length (P11KitPin *pin)
 P11KitPin *
 p11_kit_pin_ref (P11KitPin *pin)
 {
-	_p11_lock ();
+	p11_lock ();
 
 		pin->ref_count++;
 
-	_p11_unlock ();
+	p11_unlock ();
 
 	return pin;
 }
@@ -687,12 +687,12 @@ p11_kit_pin_unref (P11KitPin *pin)
 {
 	int last = 0;
 
-	_p11_lock ();
+	p11_lock ();
 
 		last = (pin->ref_count == 1);
 		pin->ref_count--;
 
-	_p11_unlock ();
+	p11_unlock ();
 
 	if (last) {
 		if (pin->destroy)

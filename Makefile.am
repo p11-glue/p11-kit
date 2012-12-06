@@ -1,12 +1,13 @@
 
 SUBDIRS = \
+	build \
+	common \
 	p11-kit \
 	tools \
-	tests \
 	doc \
 	po
 
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I build/m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
@@ -28,12 +29,12 @@ dist-hook:
 
 if WITH_COVERAGE
 coverage:
-	mkdir -p tests/coverage
+	mkdir -p build/coverage
 	$(LCOV) --directory . --zerocounters
 	$(MAKE) check
-	$(LCOV) --directory . --capture --output-file tests/coverage.info
-	$(GENHTML) --output-directory tests/coverage tests/coverage.info
-	@echo "file://$(abs_top_builddir)/tests/coverage/index.html"
+	$(LCOV) --directory . --capture --output-file build/coverage.info
+	$(GENHTML) --output-directory build/coverage build/coverage.info
+	@echo "file://$(abs_top_builddir)/build/coverage/index.html"
 endif
 
 if ENABLE_GTK_DOC

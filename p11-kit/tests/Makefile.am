@@ -1,20 +1,18 @@
 
+include $(top_srcdir)/build/Makefile.tests
+
 INCLUDES = \
 	-I$(top_srcdir) \
+	-I$(srcdir)/.. \
 	-I$(top_srcdir)/common \
-	-I$(top_srcdir)/p11-kit \
-	-I$(srcdir)/cutest \
-	-DSRCDIR=\"$(abs_srcdir)\" \
-	-DBUILDDIR=\"$(abs_builddir)\" \
-	-DP11_KIT_FUTURE_UNSTABLE_API
+	$(CUTEST_CFLAGS)
 
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit-testable.la \
+	$(CUTEST_LIBS) \
 	$(LTLIBINTL)
 
 CHECK_PROGS = \
-	hash-test \
-	ptr-array-test \
 	progname-test \
 	conf-test \
 	uri-test \
@@ -26,19 +24,9 @@ noinst_PROGRAMS = \
 	print-messages \
 	$(CHECK_PROGS)
 
-cutestfiles = cutest/CuTest.c cutest/CuTest.h
-
-conf_test_SOURCES = conf-test.c $(cutestfiles)
-hash_test_SOURCES = hash-test.c $(cutestfiles)
-pin_test_SOURCES = pin-test.c $(cutestfiles)
-ptr_array_test_SOURCES = ptr-array-test.c $(cutestfiles)
-progname_test_SOURCES = progname-test.c $(cutestfiles)
-test_init_SOURCES = test-init.c $(cutestfiles) \
+test_init_SOURCES = test-init.c \
 	mock-module.c mock-module.h
 test_init_CFLAGS = $(AM_CFLAGS)
-test_modules_SOURCES = test-modules.c $(cutestfiles)
-
-uri_test_SOURCES = uri-test.c $(cutestfiles)
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
 
@@ -72,5 +60,4 @@ mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST = \
-	cutest \
 	files
