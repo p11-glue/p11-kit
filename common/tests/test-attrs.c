@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include "attrs.h"
+#include "debug.h"
 
 static void
 test_count (CuTest *tc)
@@ -485,6 +486,9 @@ main (void)
 	CuString *output = CuStringNew ();
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
+
+	setenv ("P11_KIT_STRICT", "1", 1);
+	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_count);
 	SUITE_ADD_TEST (suite, test_build_one);
