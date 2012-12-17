@@ -42,6 +42,7 @@
 #include "module.h"
 #include "parser.h"
 #include "pkcs11.h"
+#include "pkcs11x.h"
 #include "token.h"
 
 #include <sys/stat.h>
@@ -193,15 +194,40 @@ loader_load_paths (p11_token *token,
 	return total;
 }
 
+static int
+load_builtin_objects (p11_token *token)
+{
+	CK_OBJECT_CLASS builtin = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+	const char *vlabel = "Trust Anchor Roots";
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
+	CK_ATTRIBUTE *attrs;
+
+	CK_ATTRIBUTE klass = { CKA_CLASS, &builtin, sizeof (builtin) };
+	CK_ATTRIBUTE tok = { CKA_TOKEN, &vtrue, sizeof (vtrue) };
+	CK_ATTRIBUTE priv = { CKA_PRIVATE, &vfalse, sizeof (vfalse) };
+	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &vfalse, sizeof (vfalse) };
+	CK_ATTRIBUTE label = { CKA_LABEL, (void *)vlabel, strlen (vlabel) };
+
+	attrs = p11_attrs_build (NULL, &klass, &tok, &priv, &modifiable, &label, NULL);
+	return_val_if_fail (attrs != NULL, 0);
+
+	on_parser_object (attrs, token);
+	return 1;
+}
+
 int
 p11_token_load (p11_token *token)
 {
+	int builtins;
 	int anchors;
 	int other;
 
 	if (token->loaded)
 		return 0;
 	token->loaded = 1;
+
+	builtins = load_builtin_objects (token);
 
 	anchors = loader_load_paths (token, token->anchor_paths, P11_PARSE_FLAG_ANCHOR);
 	if (anchors < 0)
@@ -211,7 +237,7 @@ p11_token_load (p11_token *token)
 	if (other < 0)
 		return other;
 
-	return anchors + other;
+	return anchors + builtins + other;
 }
 
 p11_dict *

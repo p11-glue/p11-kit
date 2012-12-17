@@ -72,11 +72,11 @@ test_token_load (CuTest *cu)
 	setup (cu);
 
 	count = p11_token_load (test.token);
-	CuAssertIntEquals (cu, 4, count);
+	CuAssertIntEquals (cu, 5, count);
 
-	/* A certificate and trust object for each parsed object */
+	/* A certificate and trust object for each parsed object + builtin */
 	objects = p11_token_objects (test.token);
-	CuAssertIntEquals (cu, count * 2, p11_dict_size (objects));
+	CuAssertIntEquals (cu, ((count - 1) * 2) + 1, p11_dict_size (objects));
 
 	teardown (cu);
 }

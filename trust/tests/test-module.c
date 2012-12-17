@@ -306,6 +306,32 @@ test_find_certificates (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_find_builtin (CuTest *cu)
+{
+	CK_OBJECT_CLASS klass = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
+
+	CK_ATTRIBUTE match[] = {
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
+		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
+		{ CKA_INVALID, }
+	};
+
+	CK_OBJECT_HANDLE objects[16];
+	CK_ULONG count;
+
+	setup (cu);
+
+	count = find_objects (cu, match, objects, 16);
+	CuAssertIntEquals (cu, 1, count);
+
+	teardown (cu);
+}
+
 int
 main (void)
 {
@@ -318,6 +344,7 @@ main (void)
 	/* p11_message_quiet (); */
 
 	SUITE_ADD_TEST (suite, test_find_certificates);
+	SUITE_ADD_TEST (suite, test_find_builtin);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

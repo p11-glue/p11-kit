@@ -63,7 +63,10 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 
 	<para>The trust policy module is a drop in replacement for the
 	<literal>libnssckbi.so</literal> module and thus works out of
-	the box with NSS. The module may be used to replace the
+	the box with NSS. The trust policy module provides NSS style
+	PKCS#11 trust objects for NSS to retrieve.</para>
+
+ 	<para>The module may be used to replace the
 	<literal>libnssckbi.so</literal> file via an distribution
 	specific alternatives mechanism or otherwise.</para>
 
