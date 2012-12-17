@@ -14,6 +14,8 @@ prepare-certs:
 		-setalias "Custom Label"
 	cp -v cacert-ca.der $(TRUST)/certificates
 	cp -v cacert-ca.der $(TRUST)/files
+	openssl x509 -in redhat-newca.der -inform DER -out $(TRUST)/files/distrusted.pem \
+		-addreject clientAuth -setalias "Red Hat Is the CA"
 	cp -v self-server.der $(TRUST)/files
 	cp -v self-signed-with-eku.der $(TRUST)/certificates
 	cp -v self-signed-with-ku.der $(TRUST)/certificates

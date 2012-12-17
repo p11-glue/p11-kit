@@ -183,6 +183,20 @@ test_parse_openssl_trusted (CuTest *cu)
 }
 
 static void
+test_parse_distrusted (CuTest *cu)
+{
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem",
+	                      0, on_parse_object, cu);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	teardown (cu);
+}
+
+static void
 test_parse_anchor (CuTest *cu)
 {
 	CK_ATTRIBUTE *attrs;
@@ -372,6 +386,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
+	SUITE_ADD_TEST (suite, test_parse_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
 	SUITE_ADD_TEST (suite, test_parse_no_sink);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);
