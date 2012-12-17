@@ -47,6 +47,14 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 			<term>X.509 certificates</term>
 			<listitem><para>X.509 certificates in raw DER format.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term>OpenSSL trust certificates</term>
+			<listitem><para>OpenSSL specific certificates in PEM format
+			that contain trust information. These have a
+			<literal>TRUSTED CERTIFICATE</literal> PEM header. Both
+			trust policy and blacklist information can be loaded
+			from these files.</para></listitem>
+		</varlistentry>
 	</variablelist>
 </section>
 

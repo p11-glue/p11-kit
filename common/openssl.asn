@@ -1,0 +1,28 @@
+
+OPENSSL { }
+
+DEFINITIONS IMPLICIT TAGS ::=
+
+BEGIN
+
+-- This module contains structures specific to OpenSSL
+
+CertAux ::= SEQUENCE {
+      trust                     SEQUENCE OF OBJECT IDENTIFIER OPTIONAL,
+      reject                    [0] SEQUENCE OF OBJECT IDENTIFIER OPTIONAL,
+      alias                     UTF8String OPTIONAL,
+      keyid                     OCTET STRING OPTIONAL,
+      other                     [1] SEQUENCE OF AlgorithmIdentifier OPTIONAL
+}
+
+-- Dependencies brought in from other modules
+
+AlgorithmIdentifier  ::=  SEQUENCE  {
+     algorithm               OBJECT IDENTIFIER,
+     parameters              ANY DEFINED BY algorithm OPTIONAL
+}
+
+UTF8String ::= [UNIVERSAL 12] IMPLICIT OCTET STRING
+        -- The content of this type conforms to RFC 2279.
+
+END

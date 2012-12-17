@@ -9,6 +9,9 @@ prepare-certs:
 	cp -v cacert3.der $(TRUST)/anchors
 	cp -v cacert3.der $(TRUST)/files
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
+	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted.pem \
+		-addtrust clientAuth -addtrust serverAuth -addreject emailProtection \
+		-setalias "Custom Label"
 	cp -v cacert-ca.der $(TRUST)/certificates
 	cp -v cacert-ca.der $(TRUST)/files
 	cp -v self-server.der $(TRUST)/files

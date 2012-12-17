@@ -44,6 +44,7 @@
 #include "debug.h"
 #include "library.h"
 #include "parser.h"
+#include "pkcs11x.h"
 #include "test-data.h"
 
 struct {
@@ -127,6 +128,56 @@ test_parse_pem_certificate (CuTest *cu)
 
 	attr = p11_attrs_find (attrs, CKA_TRUSTED);
 	CuAssertPtrEquals (cu, NULL, attr);
+
+	teardown (cu);
+}
+
+static void
+test_parse_openssl_trusted (CuTest *cu)
+{
+	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED;
+	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
+	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_TRUST_SERVER_AUTH, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_CLIENT_AUTH, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_EMAIL_PROTECTION, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_CODE_SIGNING, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_IPSEC_TUNNEL, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_IPSEC_USER, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_TIME_STAMPING, &unknown, sizeof (unknown) },
+		{ CKA_INVALID, }
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *attr;
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3-trusted.pem",
+	                      0, on_parse_object, cu);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate and a trust object */
+	CuAssertIntEquals (cu, 2, test.objects->num);
+
+	attrs = test.objects->elem[0];
+	test_check_cacert3_ca (cu, attrs, NULL);
+
+	attr = p11_attrs_find (attrs, CKA_TRUSTED);
+	CuAssertPtrEquals (cu, NULL, attr);
+
+	attrs = test.objects->elem[1];
+	CuAssertTrue (cu, p11_attrs_match (attrs, expected));
 
 	teardown (cu);
 }
@@ -320,6 +371,7 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
+	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
 	SUITE_ADD_TEST (suite, test_parse_no_sink);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);

@@ -58,10 +58,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "openssl.asn.h"
 #include "pkix.asn.h"
 
 struct _p11_parser {
 	node_asn *pkix_definitions;
+	node_asn *openssl_definitions;
 	p11_parser_sink sink;
 	void *sink_data;
 	const char *probable_label;
@@ -89,6 +91,9 @@ decode_asn1 (p11_parser *parser,
 
 	if (strncmp (struct_name, "PKIX1.", 6) == 0) {
 		definitions = parser->pkix_definitions;
+
+	} else if (strncmp (struct_name, "OPENSSL.", 8) == 0) {
+		definitions = parser->openssl_definitions;
 
 	} else {
 		p11_debug_precond ("unknown prefix for element: %s", struct_name);
@@ -138,11 +143,11 @@ id_generate (p11_parser *parser,
 
 static CK_ATTRIBUTE *
 build_object (p11_parser *parser,
-              CK_ATTRIBUTE *attrs,
               CK_OBJECT_CLASS vclass,
               CK_BYTE *vid,
               const char *explicit_label)
 {
+	CK_ATTRIBUTE *attrs = NULL;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 	const char *vlabel;
@@ -566,11 +571,12 @@ calc_element (node_asn *el,
 
 static CK_ATTRIBUTE *
 build_x509_certificate (p11_parser *parser,
-                        CK_ATTRIBUTE *attrs,
+                        CK_BYTE *vid,
                         node_asn *cert,
                         const unsigned char *data,
                         size_t length)
 {
+	CK_ATTRIBUTE *attrs;
 	CK_CERTIFICATE_TYPE vx509 = CKC_X_509;
 	CK_BYTE vchecksum[3];
 
@@ -617,6 +623,9 @@ build_x509_certificate (p11_parser *parser,
 		subject.type = CKA_INVALID;
 	if (!calc_element (cert, data, length, "tbsCertificate.serialNumber", &serial_number))
 		serial_number.type = CKA_INVALID;
+
+	attrs = build_object (parser, CKO_CERTIFICATE, vid, NULL);
+	return_val_if_fail (attrs != NULL, NULL);
 
 	return p11_attrs_build (attrs, &certificate_type, &certificate_category,
 	                        &check_value, &trusted, &start_date, &end_date,
@@ -828,11 +837,13 @@ has_eku (p11_dict *ekus,
 
 static CK_ATTRIBUTE *
 build_nss_trust_object (p11_parser *parser,
-                        CK_ATTRIBUTE *attrs,
+                        CK_BYTE *vid,
                         node_asn *cert,
                         const unsigned char *data,
                         size_t length)
 {
+	CK_ATTRIBUTE *attrs = NULL;
+
 	CK_BYTE vsha1_hash[P11_CHECKSUM_SHA1_LENGTH];
 	CK_BYTE vmd5_hash[P11_CHECKSUM_MD5_LENGTH];
 	CK_BBOOL vfalse = CK_FALSE;
@@ -920,6 +931,9 @@ build_nss_trust_object (p11_parser *parser,
 	vtime_stamping = has_eku (ekus, P11_EKU_TIME_STAMPING) ? value : unknown;
 	p11_dict_free (ekus);
 
+	attrs = build_object (parser, CKO_NETSCAPE_TRUST, vid, NULL);
+	return_val_if_fail (attrs != NULL, NULL);
+
 	return p11_attrs_build (attrs, &subject, &issuer, &serial_number, &md5_hash, &sha1_hash,
 	                        &digital_signature, &non_repudiation, &key_encipherment,
 	                        &data_encipherment, &key_agreement, &key_cert_sign, &crl_sign,
@@ -930,51 +944,13 @@ build_nss_trust_object (p11_parser *parser,
 }
 
 static int
-sink_nss_trust_object (p11_parser *parser,
-                       CK_BYTE *vid,
-                       node_asn *cert,
-                       const unsigned char *data,
-                       size_t length)
-{
-	CK_ATTRIBUTE *attrs = NULL;
-
-	attrs = build_object (parser, attrs, CKO_NETSCAPE_TRUST, vid, NULL);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-
-	attrs = build_nss_trust_object (parser, attrs, cert, data, length);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-
-	sink_object (parser, attrs);
-	return P11_PARSE_SUCCESS;
-}
-
-static int
-sink_x509_certificate (p11_parser *parser,
-                       CK_BYTE *vid,
-                       node_asn *cert,
-                       const unsigned char *data,
-                       size_t length)
-{
-	CK_ATTRIBUTE *attrs = NULL;
-
-	attrs = build_object (parser, attrs, CKO_CERTIFICATE, vid, NULL);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-
-	attrs = build_x509_certificate (parser, attrs, cert, data, length);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-
-	sink_object (parser, attrs);
-	return P11_PARSE_SUCCESS;
-}
-
-static int
 parse_der_x509_certificate (p11_parser *parser,
                             const unsigned char *data,
                             size_t length)
 {
 	CK_BYTE vid[ID_LENGTH];
+	CK_ATTRIBUTE *attrs;
 	node_asn *cert;
-	int ret;
 
 	cert = decode_asn1 (parser, "PKIX1.Certificate", data, length, NULL);
 	if (cert == NULL)
@@ -983,13 +959,196 @@ parse_der_x509_certificate (p11_parser *parser,
 	/* The CKA_ID links related objects */
 	id_generate (parser, vid);
 
-	ret = sink_x509_certificate (parser, vid, cert, data, length);
-	return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+	attrs = build_x509_certificate (parser, vid, cert, data, length);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	sink_object (parser, attrs);
 
-	ret = sink_nss_trust_object (parser, vid, cert, data, length);
-	return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+	attrs = build_nss_trust_object (parser, vid, cert, data, length);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	sink_object (parser, attrs);
 
 	asn1_delete_structure (&cert);
+	return P11_PARSE_SUCCESS;
+}
+
+static ssize_t
+calc_der_length (const unsigned char *data,
+                 size_t length)
+{
+	unsigned char cls;
+	int counter = 0;
+	int cb, len;
+	unsigned long tag;
+
+	if (asn1_get_tag_der (data, length, &cls, &cb, &tag) == ASN1_SUCCESS) {
+		counter += cb;
+		len = asn1_get_length_der (data + cb, length - cb, &cb);
+		counter += cb;
+		if (len >= 0) {
+			len += counter;
+			if (length >= len)
+				return len;
+		}
+	}
+
+	return -1;
+}
+
+static CK_ATTRIBUTE *
+overlay_cert_aux_on_nss_trust_object (p11_parser *parser,
+                                      CK_ATTRIBUTE *attrs,
+                                      node_asn *aux)
+{
+	CK_TRUST vserver_auth = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vclient_auth = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vcode_signing = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vemail_protection = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vipsec_end_system = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vipsec_tunnel = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vipsec_user = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST vtime_stamping = CKT_NETSCAPE_TRUST_UNKNOWN;
+
+	CK_ATTRIBUTE server_auth = { CKA_TRUST_SERVER_AUTH, &vserver_auth, sizeof (vserver_auth) };
+	CK_ATTRIBUTE client_auth = { CKA_TRUST_CLIENT_AUTH, &vclient_auth, sizeof (vclient_auth) };
+	CK_ATTRIBUTE code_signing = { CKA_TRUST_CODE_SIGNING, &vcode_signing, sizeof (vcode_signing) };
+	CK_ATTRIBUTE email_protection = { CKA_TRUST_EMAIL_PROTECTION, &vemail_protection, sizeof (vemail_protection) };
+	CK_ATTRIBUTE ipsec_end_system = { CKA_TRUST_IPSEC_END_SYSTEM, &vipsec_end_system, sizeof (vipsec_end_system) };
+	CK_ATTRIBUTE ipsec_tunnel = { CKA_TRUST_IPSEC_TUNNEL, &vipsec_tunnel, sizeof (vipsec_tunnel) };
+	CK_ATTRIBUTE ipsec_user = { CKA_TRUST_IPSEC_USER, &vipsec_user, sizeof (vipsec_user) };
+	CK_ATTRIBUTE time_stamping = { CKA_TRUST_TIME_STAMPING, &vtime_stamping, sizeof (vtime_stamping) };
+
+	CK_ULONG trust;
+	char field[256];
+	char oid[256];
+	int len;
+	int ret;
+	int i;
+	int j;
+
+	/* The various CertAux SEQ's we look at for trust information */
+	struct {
+		const char *field;
+		CK_ULONG trust;
+	} trust_fields[] = {
+		{ "trust", (parser->flags & P11_PARSE_FLAG_ANCHOR) ? CKT_NETSCAPE_TRUSTED_DELEGATOR : CKT_NETSCAPE_TRUSTED },
+		{ "reject", CKT_NETSCAPE_UNTRUSTED },
+		{ NULL, }
+	};
+
+	/* Various accept/reject usages */
+	for (i = 0; trust_fields[i].field != NULL; i++) {
+		for (j = 1; ; j++) {
+			if (snprintf (field, sizeof (field), "%s.?%u", trust_fields[i].field, j) < 0)
+				return_val_if_reached (NULL);
+			len = sizeof (oid) - 1;
+			ret = asn1_read_value (aux, field, oid, &len);
+
+			/* No more extensions */
+			if (ret == ASN1_ELEMENT_NOT_FOUND)
+				break;
+
+			/* A really, really long extension oid, not interested */
+			else if (ret == ASN1_MEM_ERROR)
+				continue;
+
+			return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+			trust = trust_fields[i].trust;
+
+			if (strcmp (oid, P11_EKU_SERVER_AUTH) == 0)
+				vserver_auth = trust;
+			else if (strcmp (oid, P11_EKU_CLIENT_AUTH) == 0)
+				vclient_auth = trust;
+			else if (strcmp (oid, P11_EKU_CODE_SIGNING) == 0)
+				vcode_signing = trust;
+			else if (strcmp (oid, P11_EKU_EMAIL) == 0)
+				vemail_protection = trust;
+			else if (strcmp (oid, P11_EKU_IPSEC_END_SYSTEM) == 0)
+				vipsec_end_system = trust;
+			else if (strcmp (oid, P11_EKU_IPSEC_TUNNEL) == 0)
+				vipsec_tunnel = trust;
+			else if (strcmp (oid, P11_EKU_IPSEC_USER) == 0)
+				vipsec_user = trust;
+			else if (strcmp (oid, P11_EKU_TIME_STAMPING) == 0)
+				vtime_stamping = trust;
+		}
+	}
+
+	return p11_attrs_build (attrs, &server_auth, &client_auth, &code_signing,
+	                        &email_protection, &ipsec_end_system, &ipsec_tunnel,
+	                        &ipsec_user, &time_stamping, NULL);
+}
+
+static int
+parse_openssl_trusted_certificate (p11_parser *parser,
+                                   const unsigned char *data,
+                                   size_t length)
+{
+	CK_ATTRIBUTE *attrs;
+	CK_BYTE vid[ID_LENGTH];
+	const char *old_label = NULL;
+	char *label = NULL;
+	node_asn *cert;
+	node_asn *aux;
+	ssize_t cert_len;
+	int len;
+	int ret;
+
+	/*
+	 * This OpenSSL format is a wierd. It's just two DER structures
+	 * placed end to end without any wrapping SEQ. So calculate the
+	 * length of the first DER TLV we see and try to parse that as
+	 * the X.509 certificate.
+	 */
+
+	cert_len = calc_der_length (data, length);
+	if (cert_len <= 0)
+		return P11_PARSE_UNRECOGNIZED;
+
+	cert = decode_asn1 (parser, "PKIX1.Certificate", data, cert_len, NULL);
+	if (cert == NULL)
+		return P11_PARSE_UNRECOGNIZED;
+
+	aux = decode_asn1 (parser, "OPENSSL.CertAux", data + cert_len, length - cert_len, NULL);
+	if (aux == NULL) {
+		asn1_delete_structure (&cert);
+		return P11_PARSE_UNRECOGNIZED;
+	}
+
+	/* Pull the label out of the CertAux */
+	len = 0;
+	ret = asn1_read_value (aux, "alias", NULL, &len);
+	if (ret != ASN1_ELEMENT_NOT_FOUND) {
+		return_val_if_fail (ret == ASN1_MEM_ERROR, P11_PARSE_FAILURE);
+		label = calloc (len + 1, 1);
+		return_val_if_fail (label != NULL, P11_PARSE_FAILURE);
+		ret = asn1_read_value (aux, "alias", label, &len);
+		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+		old_label = parser->probable_label;
+		parser->probable_label = label;
+	}
+
+	/* The CKA_ID links related objects */
+	id_generate (parser, vid);
+
+	attrs = build_x509_certificate (parser, vid, cert, data, cert_len);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	sink_object (parser, attrs);
+
+	attrs = build_nss_trust_object (parser, vid, cert, data, cert_len);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	attrs = overlay_cert_aux_on_nss_trust_object (parser, attrs, aux);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	sink_object (parser, attrs);
+
+	asn1_delete_structure (&cert);
+	asn1_delete_structure (&aux);
+
+	if (label) {
+		parser->probable_label = old_label;
+		free (label);
+	}
+
 	return P11_PARSE_SUCCESS;
 }
 
@@ -1004,6 +1163,9 @@ on_pem_block (const char *type,
 
 	if (strcmp (type, "CERTIFICATE") == 0) {
 		ret = parse_der_x509_certificate (parser, contents, length);
+
+	} else if (strcmp (type, "TRUSTED CERTIFICATE") == 0) {
+		ret = parse_openssl_trusted_certificate (parser, contents, length);
 
 	} else {
 		p11_debug ("Saw unsupported or unrecognized PEM block of type %s", type);
@@ -1039,22 +1201,24 @@ p11_parser *
 p11_parser_new (void)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *definitions = NULL;
-	p11_parser *parser;
+	p11_parser parser = { 0, };
 	int ret;
 
-	ret = asn1_array2tree (pkix_asn1_tab, &definitions, message);
+	ret = asn1_array2tree (pkix_asn1_tab, &parser.pkix_definitions, message);
 	if (ret != ASN1_SUCCESS) {
 		p11_debug_precond ("failed to load pkix_asn1_tab in %s: %d %s",
 		                   __func__, ret, message);
 		return NULL;
 	}
 
-	parser = calloc (1, sizeof (p11_parser));
-	return_val_if_fail (parser != NULL, NULL);
+	ret = asn1_array2tree (openssl_asn1_tab, &parser.openssl_definitions, message);
+	if (ret != ASN1_SUCCESS) {
+		p11_debug_precond ("failed to load openssl_asn1_tab in %s: %d %s",
+		                   __func__, ret, message);
+		return NULL;
+	}
 
-	parser->pkix_definitions = definitions;
-	return parser;
+	return memdup (&parser, sizeof (parser));
 }
 
 void
