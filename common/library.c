@@ -159,16 +159,22 @@ _p11_library_get_thread_local (void)
 	return local;
 }
 
+void
+p11_library_init_impl (void)
+{
+	p11_debug_init ();
+	p11_debug ("initializing library");
+	p11_mutex_init (&p11_library_mutex);
+	pthread_key_create (&thread_local, free);
+}
+
 #ifdef __GNUC__
 __attribute__((constructor))
 #endif
 void
 p11_library_init (void)
 {
-	p11_debug_init ();
-	p11_debug ("initializing library");
-	p11_mutex_init (&p11_library_mutex);
-	pthread_key_create (&thread_local, free);
+	p11_library_init_once ();
 }
 
 #ifdef __GNUC__

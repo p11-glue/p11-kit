@@ -66,10 +66,12 @@ void          p11_message_quiet            (void);
 #define       p11_library_init_once()
 
 #else /* !OS_WIN32 */
-extern pthread_once_t p11_library_once;
+extern        pthread_once_t               p11_library_once;
 
 #define       p11_library_init_once() \
-	pthread_once (&p11_library_once, p11_library_init);
+	pthread_once (&p11_library_once, p11_library_init_impl);
+
+void          p11_library_init_impl        (void);
 
 #endif /* !OS_WIN32 */
 
