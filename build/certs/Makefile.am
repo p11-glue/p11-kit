@@ -8,6 +8,7 @@ TRUST = $(top_srcdir)/trust/tests
 prepare-certs:
 	cp -v cacert3.der $(TRUST)/anchors
 	cp -v cacert3.der $(TRUST)/files
+	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
 	cp -v cacert-ca.der $(TRUST)/certificates
 	cp -v cacert-ca.der $(TRUST)/files
 	cp -v self-server.der $(TRUST)/files

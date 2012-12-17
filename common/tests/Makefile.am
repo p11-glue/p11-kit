@@ -12,9 +12,6 @@ INCLUDES = \
 	$(CUTEST_CFLAGS)
 
 LDADD = \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
-	$(CUTEST_LIBS) \
 	$(NULL)
 
 CHECK_PROGS = \
@@ -33,11 +30,13 @@ if WITH_ASN1
 
 LDADD += \
 	$(top_builddir)/common/libp11-data.la \
-	$(LIBTASN1_LIBS)
+	$(LIBTASN1_LIBS) \
 	$(NULL)
 
 CHECK_PROGS += \
-	test-checksum
+	test-checksum \
+	test-pem \
+	$(NULL)
 
 noinst_PROGRAMS += \
 	frob-ku \
@@ -46,3 +45,8 @@ noinst_PROGRAMS += \
 	$(NULL)
 
 endif # WITH_ASN1
+
+LDADD += \
+	$(top_builddir)/common/libp11-library.la \
+	$(top_builddir)/common/libp11-compat.la \
+	$(CUTEST_LIBS)

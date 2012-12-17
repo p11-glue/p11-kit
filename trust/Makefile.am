@@ -30,7 +30,8 @@ p11_kit_trust_la_LIBADD = \
 	$(top_builddir)/common/libp11-data.la \
 	$(top_builddir)/common/libp11-library.la \
 	$(top_builddir)/common/libp11-compat.la \
-	$(LIBTASN1_LIBS)
+	$(LIBTASN1_LIBS) \
+	$(NULL)
 
 p11_kit_trust_la_LDFLAGS = \
 	-no-undefined -module -avoid-version \

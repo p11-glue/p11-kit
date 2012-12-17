@@ -42,6 +42,7 @@
 #include "library.h"
 #include "module.h"
 #include "parser.h"
+#include "pem.h"
 #include "pkcs11x.h"
 
 #include <libtasn1.h>
@@ -992,7 +993,44 @@ parse_der_x509_certificate (p11_parser *parser,
 	return P11_PARSE_SUCCESS;
 }
 
+static void
+on_pem_block (const char *type,
+              const unsigned char *contents,
+              size_t length,
+              void *user_data)
+{
+	p11_parser *parser = user_data;
+	int ret;
+
+	if (strcmp (type, "CERTIFICATE") == 0) {
+		ret = parse_der_x509_certificate (parser, contents, length);
+
+	} else {
+		p11_debug ("Saw unsupported or unrecognized PEM block of type %s", type);
+		ret = P11_PARSE_SUCCESS;
+	}
+
+	if (ret != P11_PARSE_SUCCESS)
+		p11_message ("Couldn't parse PEM block of type %s", type);
+}
+
+static int
+parse_pem_certificates (p11_parser *parser,
+                        const unsigned char *data,
+                        size_t length)
+{
+	int num;
+
+	num = p11_pem_parse ((const char *)data, length, on_pem_block, parser);
+
+	if (num == 0)
+		return P11_PARSE_UNRECOGNIZED;
+
+	return P11_PARSE_SUCCESS;
+}
+
 static parser_func all_parsers[] = {
+	parse_pem_certificates,
 	parse_der_x509_certificate,
 	NULL,
 };

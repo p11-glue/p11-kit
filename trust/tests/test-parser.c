@@ -107,6 +107,31 @@ test_parse_der_certificate (CuTest *cu)
 }
 
 static void
+test_parse_pem_certificate (CuTest *cu)
+{
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *attr;
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.pem",
+	                      0, on_parse_object, cu);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate and a trust object */
+	CuAssertIntEquals (cu, 2, test.objects->num);
+
+	attrs = test.objects->elem[0];
+	test_check_cacert3_ca (cu, attrs, NULL);
+
+	attr = p11_attrs_find (attrs, CKA_TRUSTED);
+	CuAssertPtrEquals (cu, NULL, attr);
+
+	teardown (cu);
+}
+
+static void
 test_parse_anchor (CuTest *cu)
 {
 	CK_ATTRIBUTE *attrs;
@@ -294,6 +319,7 @@ main (void)
 	p11_message_quiet ();
 
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
+	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
 	SUITE_ADD_TEST (suite, test_parse_no_sink);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);

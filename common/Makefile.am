@@ -39,7 +39,9 @@ noinst_LTLIBRARIES += \
 	$(NULL)
 
 libp11_data_la_SOURCES = \
+	base64.c base64.h \
 	checksum.c checksum.h \
+	pem.c pem.h \
 	pkix.asn pkix.asn.h \
 	$(NULL)
 
