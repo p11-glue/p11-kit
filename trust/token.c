@@ -36,6 +36,7 @@
 
 #include "attrs.h"
 #include "compat.h"
+#define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "errno.h"
 #include "library.h"
@@ -89,7 +90,17 @@ loader_load_file (p11_token *token,
 	ret = p11_parse_file (token->parser, filename, flags,
 	                      on_parser_object, token);
 
-	return ret == P11_PARSE_SUCCESS ? 1 : 0;
+	switch (ret) {
+	case P11_PARSE_SUCCESS:
+		p11_debug ("loaded: %s", filename);
+		return 1;
+	case P11_PARSE_UNRECOGNIZED:
+		p11_debug ("skipped: %s", filename);
+		return 0;
+	default:
+		p11_debug ("failed to parse: %s", filename);
+		return 0;
+	}
 }
 
 static int
@@ -122,7 +133,7 @@ loader_load_directory (p11_token *token,
 
 		} else if (!S_ISDIR (sb.st_mode)) {
 			ret = loader_load_file (token, path, &sb, flags);
-			return_val_if_fail (ret > 0, ret);
+			return_val_if_fail (ret >= 0, ret);
 			total += ret;
 		}
 
@@ -167,6 +178,8 @@ loader_load_paths (p11_token *token,
 	int total = 0;
 	char *path;
 	int ret;
+
+	p11_debug ("loading paths: %s", paths);
 
 	while (paths) {
 		pos = strchr (paths, ':');
