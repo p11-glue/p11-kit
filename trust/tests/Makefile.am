@@ -33,6 +33,7 @@ CHECK_PROGS = \
 	$(NULL)
 
 noinst_PROGRAMS = \
+	frob-token \
 	$(CHECK_PROGS)
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
