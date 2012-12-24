@@ -280,6 +280,8 @@ initialize_mappings_unlocked_reentrant (void)
 		free (slots);
 	}
 
+	free (funcss);
+
 	/* Another thread raced us here due to above reentrancy */
 	if (gl.mappings) {
 		free (mappings);
