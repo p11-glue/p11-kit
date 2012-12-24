@@ -500,6 +500,8 @@ p11_kit_pin_file_callback (const char *pin_source,
 		}
 	}
 
+	close (fd);
+
 	if (error != 0) {
 		free (buffer);
 		errno = error;
