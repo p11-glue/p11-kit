@@ -35,94 +35,100 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include "attrs.h"
+#include "test-data.h"
+
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "attrs.h"
-#include "test-data.h"
+void
+test_check_object_msg (CuTest *cu,
+                       const char *file,
+                       int line,
+                       CK_ATTRIBUTE *attrs,
+                       CK_OBJECT_CLASS klass,
+                       const char *label)
+{
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
+		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ label ? CKA_LABEL : CKA_INVALID, (void *)label, label ? strlen (label) : 0 },
+		{ CKA_INVALID },
+	};
+
+	test_check_attrs_msg (cu, file, line, expected, attrs);
+}
 
 void
-test_check_object (CuTest *cu,
-                   CK_ATTRIBUTE *attrs,
-                   CK_OBJECT_CLASS klass,
-                   const char *label)
+test_check_cacert3_ca_msg (CuTest *cu,
+                           const char *file,
+                           int line,
+                           CK_ATTRIBUTE_PTR attrs,
+                           const char *label)
 {
-	CK_BBOOL val;
-	CK_ULONG ulong;
+	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+	CK_ULONG category = 0; /* TODO: Implement */
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_CHECK_VALUE, "\xad\x7c\x3f", 3 },
+		{ CKA_START_DATE, "20110523", 8 },
+		{ CKA_END_DATE, "20210520", 8, },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_INVALID },
+	};
+
+	test_check_object_msg (cu, file, line, attrs, CKO_CERTIFICATE, label);
+	test_check_attrs_msg (cu, file, line, expected, attrs);
+}
+
+void
+test_check_attrs_msg (CuTest *cu,
+                      const char *file,
+                      int line,
+                      CK_ATTRIBUTE *expected,
+                      CK_ATTRIBUTE *attrs)
+{
 	CK_ATTRIBUTE *attr;
 
-	if (!p11_attrs_find_bool (attrs, CKA_TOKEN, &val))
-		CuFail (cu, "missing CKA_TOKEN");
-	CuAssertIntEquals (cu, CK_TRUE, val);
-
-	if (!p11_attrs_find_bool (attrs, CKA_PRIVATE, &val))
-		CuFail (cu, "missing CKA_PRIVATE");
-	CuAssertIntEquals (cu, CK_FALSE, val);
-
-	if (!p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val))
-		CuFail (cu, "missing CKA_MODIFIABLE");
-	CuAssertIntEquals (cu, CK_FALSE, val);
-
-	if (!p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong))
-		CuFail (cu, "missing CKA_CLASS");
-	CuAssertIntEquals (cu, klass, ulong);
-
-	if (label) {
-		attr = p11_attrs_find_valid (attrs, CKA_LABEL);
-		CuAssertPtrNotNull (cu, attr);
-		CuAssertTrue (cu, p11_attr_match_value (attr, label, -1));
+	while (!p11_attrs_is_empty (expected)) {
+		attr = p11_attrs_find (attrs, expected->type);
+		test_check_attr_msg (cu, file, line, expected, attr);
+		expected++;
 	}
 }
 
 void
-test_check_cacert3_ca (CuTest *cu,
-                      CK_ATTRIBUTE *attrs,
-                      const char *label)
+test_check_attr_msg (CuTest *cu,
+                     const char *file,
+                     int line,
+                     CK_ATTRIBUTE *expected,
+                     CK_ATTRIBUTE *attr)
 {
-	CK_ATTRIBUTE *attr;
-	CK_ULONG ulong;
+	char *message;
+	assert (expected != NULL);
 
-	test_check_object (cu, attrs, CKO_CERTIFICATE, label);
+	if (attr == NULL) {
+		asprintf (&message, "expected %s but found NULL",
+		          p11_attr_to_string (expected));
+		CuFail_Line (cu, file, line, "attribute does not match", message);
+	}
 
-	if (!p11_attrs_find_ulong (attrs, CKA_CERTIFICATE_TYPE, &ulong))
-		CuFail (cu, "missing CKA_CERTIFICATE_TYPE");
-	CuAssertIntEquals (cu, CKC_X_509, ulong);
-
-	/* TODO: Implement */
-	if (!p11_attrs_find_ulong (attrs, CKA_CERTIFICATE_CATEGORY, &ulong))
-		CuFail (cu, "missing CKA_CERTIFICATE_CATEGORY");
-	CuAssertIntEquals (cu, 0, ulong);
-
-	attr = p11_attrs_find (attrs, CKA_VALUE);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, test_cacert3_ca_der,
-	                                        sizeof (test_cacert3_ca_der)));
-
-	attr = p11_attrs_find_valid (attrs, CKA_CHECK_VALUE);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, "\xad\x7c\x3f", 3));
-
-	attr = p11_attrs_find (attrs, CKA_START_DATE);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, "20110523", -1));
-
-	attr = p11_attrs_find_valid (attrs, CKA_END_DATE);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, "20210520", -1));
-
-	attr = p11_attrs_find (attrs, CKA_SUBJECT);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, test_cacert3_ca_subject,
-	                                        sizeof (test_cacert3_ca_subject)));
-
-	attr = p11_attrs_find (attrs, CKA_ISSUER);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, test_cacert3_ca_issuer,
-	                                        sizeof (test_cacert3_ca_issuer)));
-
-	attr = p11_attrs_find (attrs, CKA_SERIAL_NUMBER);
-	CuAssertPtrNotNull (cu, attr);
-	CuAssertTrue (cu, p11_attr_match_value (attr, test_cacert3_ca_serial,
-	                                        sizeof (test_cacert3_ca_serial)));
+	if (!p11_attr_equal (attr, expected)) {
+		asprintf (&message, "expected %s but found %s",
+		          p11_attr_to_string (expected),
+		          p11_attr_to_string (attr));
+		CuFail_Line (cu, file, line, "attribute does not match", message);
+	}
 }

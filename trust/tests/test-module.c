@@ -153,7 +153,7 @@ check_trust_object_equiv (CuTest *cu,
 	rv = test.module->C_GetAttributeValue (test.session, trust, equiv, 6);
 	CuAssertTrue (cu, rv == CKR_OK);
 
-	CuAssertTrue (cu, p11_attrs_match (cert, equiv));
+	test_check_attrs (cu, equiv, cert);
 }
 
 static void
@@ -220,7 +220,6 @@ check_certificate (CuTest *cu,
 	unsigned char serial[128];
 	unsigned char id[128];
 	CK_CERTIFICATE_TYPE type;
-	CK_BBOOL val;
 	CK_BYTE check[3];
 	CK_DATE start;
 	CK_DATE end;
@@ -256,9 +255,15 @@ check_certificate (CuTest *cu,
 	/* If this is the cacert3 certificate, check its values */
 	if (memcmp (value, test_cacert3_ca_der, sizeof (test_cacert3_ca_der)) == 0) {
 		CK_BBOOL trusted;
+		CK_BBOOL vtrue = CK_TRUE;
 
 		CK_ATTRIBUTE anchor[] = {
 			{ CKA_TRUSTED, &trusted, sizeof (trusted) },
+			{ CKA_INVALID, },
+		};
+
+		CK_ATTRIBUTE check[] = {
+			{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 			{ CKA_INVALID, },
 		};
 
@@ -269,9 +274,7 @@ check_certificate (CuTest *cu,
 		CuAssertTrue (cu, rv == CKR_OK);
 
 		/* It lives in the trusted directory */
-		if (!p11_attrs_find_bool (anchor, CKA_TRUSTED, &val))
-			CuFail (cu, "missing CKA_TRUSTED");
-		CuAssertIntEquals (cu, CK_TRUE, val);
+		test_check_attrs (cu, check, anchor);
 
 	/* Other certificates, we can't check the values */
 	} else {

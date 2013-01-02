@@ -37,14 +37,42 @@
 #ifndef TEST_DATA_H_
 #define TEST_DATA_H_
 
-void      test_check_object            (CuTest *cu,
+#define   test_check_object(cu, attrs, klass, label) \
+	test_check_object_msg (cu, __FILE__, __LINE__, attrs, klass, label)
+
+void      test_check_object_msg        (CuTest *cu,
+                                        const char *file,
+                                        int line,
                                         CK_ATTRIBUTE *attrs,
                                         CK_OBJECT_CLASS klass,
                                         const char *label);
 
-void      test_check_cacert3_ca        (CuTest *cu,
+#define   test_check_cacert3_ca(cu, attrs, label) \
+	test_check_cacert3_ca_msg (cu, __FILE__, __LINE__, attrs, label)
+
+void      test_check_cacert3_ca_msg    (CuTest *cu,
+                                        const char *file,
+                                        int line,
                                         CK_ATTRIBUTE *attrs,
                                         const char *label);
+
+#define   test_check_attrs(cu, expected, attrs) \
+	test_check_attrs_msg (cu, __FILE__, __LINE__, expected, attrs)
+
+void      test_check_attrs_msg         (CuTest *cu,
+                                        const char *file,
+                                        int line,
+                                        CK_ATTRIBUTE *expected,
+                                        CK_ATTRIBUTE *attrs);
+
+#define   test_check_attr(cu, expected, attr) \
+	test_check_attr_msg (cu, __FILE__, __LINE__, expected, attr)
+
+void      test_check_attr_msg          (CuTest *cu,
+                                        const char *file,
+                                        int line,
+                                        CK_ATTRIBUTE *expected,
+                                        CK_ATTRIBUTE *attr);
 
 static const unsigned char test_cacert3_ca_der[] = {
 	0x30, 0x82, 0x07, 0x59, 0x30, 0x82, 0x05, 0x41, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x03, 0x0a,

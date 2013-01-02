@@ -177,7 +177,7 @@ test_parse_openssl_trusted (CuTest *cu)
 	CuAssertPtrEquals (cu, NULL, attr);
 
 	attrs = test.objects->elem[1];
-	CuAssertTrue (cu, p11_attrs_match (attrs, expected));
+	test_check_attrs (cu, expected, attrs);
 
 	teardown (cu);
 }
@@ -200,7 +200,9 @@ static void
 test_parse_anchor (CuTest *cu)
 {
 	CK_ATTRIBUTE *attrs;
-	CK_BBOOL val;
+	CK_ATTRIBUTE *attr;
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
 	int ret;
 
 	setup (cu);
@@ -215,9 +217,8 @@ test_parse_anchor (CuTest *cu)
 	attrs = test.objects->elem[0];
 	test_check_cacert3_ca (cu, attrs, NULL);
 
-	if (!p11_attrs_find_bool (attrs, CKA_TRUSTED, &val))
-		CuFail (cu, "missing CKA_TRUSTED");
-	CuAssertIntEquals (cu, CK_TRUE, val);
+	attr = p11_attrs_find (attrs, CKA_TRUSTED);
+	test_check_attr (cu, &trusted, attr);
 
 	teardown (cu);
 }
