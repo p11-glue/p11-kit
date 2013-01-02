@@ -16,12 +16,13 @@ inc_HEADERS = \
 	p11-kit.h \
 	pin.h \
 	uri.h \
-	pkcs11.h
+	$(NULL)
 
 MODULE_SRCS = \
 	util.c \
 	conf.c conf.h \
 	modules.c \
+	pkcs11.h \
 	pin.c \
 	proxy.c \
 	private.h \
