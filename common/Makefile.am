@@ -41,6 +41,7 @@ noinst_LTLIBRARIES += \
 libp11_data_la_SOURCES = \
 	base64.c base64.h \
 	checksum.c checksum.h \
+	oid.c oid.h \
 	openssl.asn openssl.asn.h \
 	pem.c pem.h \
 	pkix.asn pkix.asn.h \

@@ -12,6 +12,7 @@ INCLUDES = \
 MODULE_SRCS = \
 	parser.c parser.h \
 	module.c module.h \
+	mozilla.c mozilla.h \
 	session.c session.h \
 	token.c token.h \
 	$(NULL)

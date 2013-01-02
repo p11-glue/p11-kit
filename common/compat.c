@@ -255,7 +255,7 @@ strnstr (const char *s,
 #ifndef HAVE_MEMDUP
 
 void *
-memdup (void *data,
+memdup (const void *data,
         size_t length)
 {
 	void *dup;

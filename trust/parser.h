@@ -32,6 +32,7 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
+#include "array.h"
 #include "dict.h"
 #include "pkcs11.h"
 
@@ -50,27 +51,6 @@ enum {
 };
 
 #define       P11_PARSER_FIRST_HANDLE    0xA0000000UL
-
-#define P11_EKU_SERVER_AUTH "1.3.6.1.5.5.7.3.1"
-#define P11_EKU_CLIENT_AUTH "1.3.6.1.5.5.7.3.2"
-#define P11_EKU_CODE_SIGNING "1.3.6.1.5.5.7.3.3"
-#define P11_EKU_EMAIL "1.3.6.1.5.5.7.3.4"
-#define P11_EKU_IPSEC_END_SYSTEM "1.3.6.1.5.5.7.3.5"
-#define P11_EKU_IPSEC_TUNNEL "1.3.6.1.5.5.7.3.6"
-#define P11_EKU_IPSEC_USER "1.3.6.1.5.5.7.3.7"
-#define P11_EKU_TIME_STAMPING "1.3.6.1.5.5.7.3.8"
-
-enum {
-	P11_KU_DIGITAL_SIGNATURE = 128,
-	P11_KU_NON_REPUDIATION = 64,
-	P11_KU_KEY_ENCIPHERMENT = 32,
-	P11_KU_DATA_ENCIPHERMENT = 16,
-	P11_KU_KEY_AGREEMENT = 8,
-	P11_KU_KEY_CERT_SIGN = 4,
-	P11_KU_CRL_SIGN = 2,
-	P11_KU_ENCIPHER_ONLY = 1,
-	P11_KU_DECIPHER_ONLY = 32768,
-};
 
 typedef struct _p11_parser p11_parser;
 
@@ -100,9 +80,20 @@ int           p11_parse_key_usage            (p11_parser *parser,
                                               size_t length,
                                               unsigned int *ku);
 
-int           p11_parse_extended_key_usage   (p11_parser *parser,
+p11_dict *    p11_parse_extended_key_usage   (p11_parser *parser,
                                               const unsigned char *data,
-                                              size_t length,
-                                              p11_dict *ekus);
+                                              size_t length);
+
+/* Functions used for retrieving parsing information */
+
+int                     p11_parsing_get_flags        (p11_parser *parser);
+
+CK_ATTRIBUTE *          p11_parsing_get_certificate  (p11_parser *parser,
+                                                      p11_array *parsing);
+
+unsigned char *         p11_parsing_get_extension    (p11_parser *parser,
+                                                      p11_array *parsing,
+                                                      const unsigned char *oid,
+                                                      size_t *length);
 
 #endif

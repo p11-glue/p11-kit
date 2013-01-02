@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "array.h"
 #include "attrs.h"
 #include "checksum.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
@@ -41,6 +42,8 @@
 #include "dict.h"
 #include "library.h"
 #include "module.h"
+#include "mozilla.h"
+#include "oid.h"
 #include "parser.h"
 #include "pem.h"
 #include "pkcs11x.h"
@@ -68,6 +71,12 @@ struct _p11_parser {
 	void *sink_data;
 	const char *probable_label;
 	int flags;
+
+	/* Parsing state */
+	p11_array *parsing;
+	node_asn *cert_asn;
+	const unsigned char *cert_der;
+	size_t cert_len;
 };
 
 typedef int (* parser_func)   (p11_parser *parser,
@@ -122,13 +131,55 @@ decode_asn1 (p11_parser *parser,
 }
 
 static void
-sink_object (p11_parser *parser,
-             CK_ATTRIBUTE *attrs)
+begin_parsing (p11_parser *parser,
+               node_asn *cert_asn,
+               const unsigned char *cert_der,
+               size_t cert_len)
 {
-	if (parser->sink)
-		(parser->sink) (attrs, parser->sink_data);
-	else
-		p11_attrs_free (attrs);
+	return_if_fail (parser->parsing == NULL);
+	return_if_fail (parser->cert_asn == NULL);
+	return_if_fail (parser->cert_der == NULL);
+
+	parser->parsing = p11_array_new (NULL);
+
+	/*
+	 * We make note of these for later looking up certificate
+	 * extensions. See p11_parsed_find_extension().
+	 */
+	parser->cert_asn = cert_asn;
+	parser->cert_der = cert_der;
+	parser->cert_len = cert_len;
+}
+
+static void
+finish_parsing (p11_parser *parser,
+                node_asn *cert_asn)
+{
+	CK_ATTRIBUTE *attrs;
+	int i;
+
+	return_if_fail (parser->parsing != NULL);
+
+	/* This is a double check */
+	return_if_fail (parser->cert_asn == cert_asn);
+
+	/* Call all the hooks for generating further objects */
+	p11_mozilla_build_trust_object (parser, parser->parsing);
+
+	for (i = 0; i < parser->parsing->num; i++) {
+		attrs = parser->parsing->elem[i];
+		if (parser->sink)
+			(parser->sink) (attrs, parser->sink_data);
+		else
+			p11_attrs_free (attrs);
+	}
+
+	p11_array_free (parser->parsing);
+
+	parser->parsing = NULL;
+	parser->cert_asn = NULL;
+	parser->cert_der = NULL;
+	parser->cert_len = 0;
 }
 
 #define ID_LENGTH P11_CHECKSUM_SHA1_LENGTH
@@ -627,46 +678,54 @@ build_x509_certificate (p11_parser *parser,
 	attrs = build_object (parser, CKO_CERTIFICATE, vid, NULL);
 	return_val_if_fail (attrs != NULL, NULL);
 
-	return p11_attrs_build (attrs, &certificate_type, &certificate_category,
-	                        &check_value, &trusted, &start_date, &end_date,
-	                        &subject, &issuer, &serial_number, &value,
-	                        NULL);
+	attrs = p11_attrs_build (attrs, &certificate_type, &certificate_category,
+	                         &check_value, &trusted, &start_date, &end_date,
+	                         &subject, &issuer, &serial_number, &value,
+	                         NULL);
+	return_val_if_fail (attrs != NULL, NULL);
+
+	if (!p11_array_push (parser->parsing, attrs))
+		return_val_if_reached (NULL);
+
+	return attrs;
 }
 
 static unsigned char *
-find_extension (node_asn *cert,
-                const char *extension_oid,
-                size_t *length)
+find_cert_extension (node_asn *cert,
+                     const unsigned char *der,
+                     size_t der_len,
+                     const unsigned char *oid,
+                     size_t *length)
 {
-	unsigned char *data = NULL;
 	char field[128];
-	char oid[128];
-	int len;
+	char *value;
+	int start;
+	int end;
 	int ret;
+	int len;
 	int i;
 
-	assert (extension_oid != NULL);
-	assert (strlen (extension_oid) < sizeof (oid));
+	assert (oid != NULL);
+	assert (length != NULL);
 
 	for (i = 1; ; i++) {
 		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnID", i) < 0)
 			return_val_if_reached (NULL);
 
-		len = sizeof (oid) - 1;
-		ret = asn1_read_value (cert, field, oid, &len);
+		ret = asn1_der_decoding_startEnd (cert, der, der_len, field, &start, &end);
 
 		/* No more extensions */
 		if (ret == ASN1_ELEMENT_NOT_FOUND)
 			break;
 
-		/* A really, really long extension oid, not looking for it */
-		else if (ret == ASN1_MEM_ERROR)
-			continue;
-
 		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
+		/* Make sure it's a straightforward oid with certain assumptions */
+		if (!p11_oid_simple (der + start, (end - start) + 1))
+			continue;
+
 		/* The one we're lookin for? */
-		if (strcmp (oid, extension_oid) != 0)
+		if (!p11_oid_equal (der + start, oid))
 			continue;
 
 		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnValue", i) < 0)
@@ -676,17 +735,95 @@ find_extension (node_asn *cert,
 		ret = asn1_read_value (cert, field, NULL, &len);
 		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
 
-		data = malloc (len);
-		return_val_if_fail (data != NULL, NULL);
+		value = malloc (len);
+		return_val_if_fail (value != NULL, NULL);
 
-		ret = asn1_read_value (cert, field, data, &len);
+		ret = asn1_read_value (cert, field, value, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
 		*length = len;
-		break;
+		return (unsigned char *)value;
 	}
 
-	return data;
+	return NULL;
+}
+
+static CK_ATTRIBUTE *
+match_parsing_object (p11_parser *parser,
+                      CK_ATTRIBUTE *match)
+{
+	CK_ATTRIBUTE *attrs;
+	int i;
+
+	for (i = 0; i < parser->parsing->num; i++) {
+		attrs = parser->parsing->elem[i];
+		if (p11_attrs_match (attrs, match))
+			return attrs;
+	}
+
+	return NULL;
+}
+
+unsigned char *
+p11_parsing_get_extension (p11_parser *parser,
+                           p11_array *parsing,
+                           const unsigned char *oid,
+                           size_t *length)
+{
+	CK_OBJECT_CLASS klass = CKO_X_CERTIFICATE_EXTENSION;
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *attr;
+
+	CK_ATTRIBUTE match[] = {
+	                        { CKA_OBJECT_ID, (void *)oid, p11_oid_length (oid) },
+	                        { CKA_CLASS, &klass, sizeof (klass) },
+	                        { CKA_INVALID },
+	};
+
+	return_val_if_fail (parser != NULL, NULL);
+	return_val_if_fail (parser->parsing == parsing, NULL);
+	return_val_if_fail (length != NULL, NULL);
+	return_val_if_fail (oid != NULL, NULL);
+
+	attrs = match_parsing_object (parser, match);
+	if (attrs != NULL) {
+		attr = p11_attrs_find (attrs, CKA_VALUE);
+		return_val_if_fail (attr != NULL, NULL);
+
+		*length = attr->ulValueLen;
+		return memdup (attr->pValue, attr->ulValueLen);
+
+	/* Couldn't find a parsed extension, so look in the current certificate */
+	} else if (parser->cert_asn) {
+		return find_cert_extension (parser->cert_asn, parser->cert_der,
+		                            parser->cert_len, oid, length);
+	}
+
+	return NULL;
+}
+
+int
+p11_parsing_get_flags (p11_parser *parser)
+{
+	return_val_if_fail (parser != NULL, 0);
+	return parser->flags;
+}
+
+CK_ATTRIBUTE *
+p11_parsing_get_certificate (p11_parser *parser,
+                             p11_array *parsing)
+{
+	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
+
+	CK_ATTRIBUTE match[] = {
+	                        { CKA_CLASS, &klass, sizeof (klass) },
+	                        { CKA_INVALID },
+	};
+
+	return_val_if_fail (parser != NULL, NULL);
+	return_val_if_fail (parser->parsing == parsing, NULL);
+
+	return match_parsing_object (parser, match);
 }
 
 int
@@ -717,230 +854,50 @@ p11_parse_key_usage (p11_parser *parser,
 	return P11_PARSE_SUCCESS;
 }
 
-static unsigned int
-decode_ku (p11_parser *parser,
-           node_asn *cert)
-{
-	unsigned char *data;
-	size_t length;
-	unsigned int ku;
-
-	/*
-	 * If the certificate extension was missing, then *all* key
-	 * usages are to be set. If the extension was invalid, then
-	 * fail safe to none of the key usages.
-	 */
-
-	data = find_extension (cert, "2.5.29.15", &length);
-
-	if (!data)
-		return ~0U;
-
-	if (p11_parse_key_usage (parser, data, length, &ku) != P11_PARSE_SUCCESS) {
-		p11_message ("invalid key usage certificate extension");
-		ku = 0U;
-	}
-
-	free (data);
-
-	return ku;
-}
-
-int
+p11_dict *
 p11_parse_extended_key_usage (p11_parser *parser,
-                              const unsigned char *data,
-                              size_t length,
-                              p11_dict *ekus)
+                              const unsigned char *eku_der,
+                              size_t eku_len)
 {
 	node_asn *ext;
 	char field[128];
-	char *eku;
-	int len;
+	unsigned char *eku;
+	p11_dict *ekus;
+	int start;
+	int end;
 	int ret;
 	int i;
 
-	ext = decode_asn1 (parser, "PKIX1.ExtKeyUsageSyntax", data, length, NULL);
+	ext = decode_asn1 (parser, "PKIX1.ExtKeyUsageSyntax", eku_der, eku_len, NULL);
 	if (ext == NULL)
-		return P11_PARSE_UNRECOGNIZED;
+		return NULL;
+
+	ekus = p11_dict_new (p11_oid_hash, p11_oid_equal, free, NULL);
 
 	for (i = 1; ; i++) {
 		if (snprintf (field, sizeof (field), "?%u", i) < 0)
-			return_val_if_reached (P11_PARSE_FAILURE);
+			return_val_if_reached (NULL);
 
-		len = 0;
-		ret = asn1_read_value (ext, field, NULL, &len);
+		ret = asn1_der_decoding_startEnd (ext, eku_der, eku_len, field, &start, &end);
 		if (ret == ASN1_ELEMENT_NOT_FOUND)
 			break;
 
-		return_val_if_fail (ret == ASN1_MEM_ERROR, P11_PARSE_FAILURE);
+		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
-		eku = malloc (len + 1);
-		return_val_if_fail (eku != NULL, P11_PARSE_FAILURE);
+		/* Make sure it's a simple OID with certain assumptions */
+		if (!p11_oid_simple (eku_der + start, (end - start) + 1))
+			continue;
 
-		ret = asn1_read_value (ext, field, eku, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+		eku = memdup (eku_der + start, (end - start) + 1);
+		return_val_if_fail (eku != NULL, NULL);
 
 		if (!p11_dict_set (ekus, eku, eku))
-			return_val_if_reached (P11_PARSE_FAILURE);
+			return_val_if_reached (NULL);
 	}
 
 	asn1_delete_structure (&ext);
 
-	return P11_PARSE_SUCCESS;
-
-}
-
-static p11_dict *
-decode_eku (p11_parser *parser,
-            node_asn *cert)
-{
-	unsigned char *data;
-	p11_dict *ekus;
-	char *eku;
-	size_t length;
-
-	ekus = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-	return_val_if_fail (ekus != NULL, NULL);
-
-	/*
-	 * If the certificate extension was missing, then *all* extended key
-	 * usages are to be set. If the extension was invalid, then
-	 * fail safe to none of the extended key usages.
-	 */
-
-	data = find_extension (cert, "2.5.29.37", &length);
-	if (data) {
-		if (p11_parse_extended_key_usage (parser, data, length, ekus) != P11_PARSE_SUCCESS) {
-			p11_message ("invalid extended key usage certificate extension");
-			p11_dict_free (ekus);
-			ekus = NULL;
-		}
-	} else {
-		/* A star means anything to has_eku() */
-		eku = strdup ("*");
-		if (!eku || !p11_dict_set (ekus, eku, eku))
-			return_val_if_reached (NULL);
-	}
-
-	free (data);
-
 	return ekus;
-}
-
-static int
-has_eku (p11_dict *ekus,
-         const char *eku)
-{
-	return ekus != NULL && /* If a "*" present, then any thing allowed */
-	       (p11_dict_get (ekus, eku) || p11_dict_get (ekus, "*"));
-}
-
-static CK_ATTRIBUTE *
-build_nss_trust_object (p11_parser *parser,
-                        CK_BYTE *vid,
-                        node_asn *cert,
-                        const unsigned char *data,
-                        size_t length)
-{
-	CK_ATTRIBUTE *attrs = NULL;
-
-	CK_BYTE vsha1_hash[P11_CHECKSUM_SHA1_LENGTH];
-	CK_BYTE vmd5_hash[P11_CHECKSUM_MD5_LENGTH];
-	CK_BBOOL vfalse = CK_FALSE;
-
-	CK_TRUST vdigital_signature;
-	CK_TRUST vnon_repudiation;
-	CK_TRUST vkey_encipherment;
-	CK_TRUST vdata_encipherment;
-	CK_TRUST vkey_agreement;
-	CK_TRUST vkey_cert_sign;
-	CK_TRUST vcrl_sign;
-
-	CK_TRUST vserver_auth;
-	CK_TRUST vclient_auth;
-	CK_TRUST vcode_signing;
-	CK_TRUST vemail_protection;
-	CK_TRUST vipsec_end_system;
-	CK_TRUST vipsec_tunnel;
-	CK_TRUST vipsec_user;
-	CK_TRUST vtime_stamping;
-
-	CK_ATTRIBUTE subject = { CKA_SUBJECT, };
-	CK_ATTRIBUTE issuer = { CKA_ISSUER, };
-	CK_ATTRIBUTE serial_number = { CKA_SERIAL_NUMBER, };
-
-	CK_ATTRIBUTE md5_hash = { CKA_CERT_MD5_HASH, vmd5_hash, sizeof (vmd5_hash) };
-	CK_ATTRIBUTE sha1_hash = { CKA_CERT_SHA1_HASH, vsha1_hash, sizeof (vsha1_hash) };
-
-	CK_ATTRIBUTE digital_signature = { CKA_TRUST_DIGITAL_SIGNATURE, &vdigital_signature, sizeof (vdigital_signature) };
-	CK_ATTRIBUTE non_repudiation = { CKA_TRUST_NON_REPUDIATION, &vnon_repudiation, sizeof (vnon_repudiation) };
-	CK_ATTRIBUTE key_encipherment = { CKA_TRUST_KEY_ENCIPHERMENT, &vkey_encipherment, sizeof (vkey_encipherment) };
-	CK_ATTRIBUTE data_encipherment = { CKA_TRUST_DATA_ENCIPHERMENT, &vdata_encipherment, sizeof (vdata_encipherment) };
-	CK_ATTRIBUTE key_agreement = { CKA_TRUST_KEY_AGREEMENT, &vkey_agreement, sizeof (vkey_agreement) };
-	CK_ATTRIBUTE key_cert_sign = { CKA_TRUST_KEY_CERT_SIGN, &vkey_cert_sign, sizeof (vkey_cert_sign) };
-	CK_ATTRIBUTE crl_sign = { CKA_TRUST_CRL_SIGN, &vcrl_sign, sizeof (vcrl_sign) };
-
-	CK_ATTRIBUTE server_auth = { CKA_TRUST_SERVER_AUTH, &vserver_auth, sizeof (vserver_auth) };
-	CK_ATTRIBUTE client_auth = { CKA_TRUST_CLIENT_AUTH, &vclient_auth, sizeof (vclient_auth) };
-	CK_ATTRIBUTE code_signing = { CKA_TRUST_CODE_SIGNING, &vcode_signing, sizeof (vcode_signing) };
-	CK_ATTRIBUTE email_protection = { CKA_TRUST_EMAIL_PROTECTION, &vemail_protection, sizeof (vemail_protection) };
-	CK_ATTRIBUTE ipsec_end_system = { CKA_TRUST_IPSEC_END_SYSTEM, &vipsec_end_system, sizeof (vipsec_end_system) };
-	CK_ATTRIBUTE ipsec_tunnel = { CKA_TRUST_IPSEC_TUNNEL, &vipsec_tunnel, sizeof (vipsec_tunnel) };
-	CK_ATTRIBUTE ipsec_user = { CKA_TRUST_IPSEC_USER, &vipsec_user, sizeof (vipsec_user) };
-	CK_ATTRIBUTE time_stamping = { CKA_TRUST_TIME_STAMPING, &vtime_stamping, sizeof (vtime_stamping) };
-
-	CK_ATTRIBUTE step_up_approved = { CKA_TRUST_STEP_UP_APPROVED, &vfalse, sizeof (vfalse) };
-
-	p11_dict *ekus;
-	unsigned int ku;
-	CK_TRUST value;
-	CK_TRUST unknown;
-
-	if (!calc_element (cert, data, length, "tbsCertificate.issuer.rdnSequence", &issuer))
-		issuer.type = CKA_INVALID;
-	if (!calc_element (cert, data, length, "tbsCertificate.subject.rdnSequence", &subject))
-		subject.type = CKA_INVALID;
-	if (!calc_element (cert, data, length, "tbsCertificate.serialNumber", &serial_number))
-		serial_number.type = CKA_INVALID;
-
-	p11_checksum_md5 (vmd5_hash, data, length, NULL);
-	p11_checksum_sha1 (vsha1_hash, data, length, NULL);
-
-	unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
-	if (parser->flags & P11_PARSE_FLAG_ANCHOR)
-		value = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-	else
-		value = CKT_NETSCAPE_TRUSTED;
-
-	ku = decode_ku (parser, cert);
-	vdigital_signature = (ku & P11_KU_DIGITAL_SIGNATURE) ? value : unknown;
-	vnon_repudiation = (ku & P11_KU_NON_REPUDIATION) ? value : unknown;
-	vkey_encipherment = (ku & P11_KU_KEY_ENCIPHERMENT) ? value : unknown;
-	vkey_agreement = (ku & P11_KU_KEY_AGREEMENT) ? value : unknown;
-	vkey_cert_sign = (ku & P11_KU_KEY_CERT_SIGN) ? value : unknown;
-	vcrl_sign = (ku & P11_KU_CRL_SIGN) ? value : unknown;
-
-	ekus = decode_eku (parser, cert);
-	vserver_auth = has_eku (ekus, P11_EKU_SERVER_AUTH) ? value : unknown;
-	vclient_auth = has_eku (ekus, P11_EKU_CLIENT_AUTH) ? value : unknown;
-	vcode_signing = has_eku (ekus, P11_EKU_CODE_SIGNING) ? value : unknown;
-	vemail_protection = has_eku (ekus, P11_EKU_EMAIL) ? value : unknown;
-	vipsec_end_system = has_eku (ekus, P11_EKU_IPSEC_END_SYSTEM) ? value : unknown;
-	vipsec_tunnel = has_eku (ekus, P11_EKU_IPSEC_TUNNEL) ? value : unknown;
-	vipsec_user = has_eku (ekus, P11_EKU_IPSEC_USER) ? value : unknown;
-	vtime_stamping = has_eku (ekus, P11_EKU_TIME_STAMPING) ? value : unknown;
-	p11_dict_free (ekus);
-
-	attrs = build_object (parser, CKO_NETSCAPE_TRUST, vid, NULL);
-	return_val_if_fail (attrs != NULL, NULL);
-
-	return p11_attrs_build (attrs, &subject, &issuer, &serial_number, &md5_hash, &sha1_hash,
-	                        &digital_signature, &non_repudiation, &key_encipherment,
-	                        &data_encipherment, &key_agreement, &key_cert_sign, &crl_sign,
-	                        &server_auth, &client_auth, &code_signing, &email_protection,
-	                        &ipsec_end_system, &ipsec_tunnel, &ipsec_user, &time_stamping,
-	                        &step_up_approved, NULL);
-
 }
 
 static int
@@ -956,17 +913,15 @@ parse_der_x509_certificate (p11_parser *parser,
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
+	begin_parsing (parser, cert, data, length);
+
 	/* The CKA_ID links related objects */
 	id_generate (parser, vid);
 
 	attrs = build_x509_certificate (parser, vid, cert, data, length);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-	sink_object (parser, attrs);
 
-	attrs = build_nss_trust_object (parser, vid, cert, data, length);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-	sink_object (parser, attrs);
-
+	finish_parsing (parser, cert);
 	asn1_delete_structure (&cert);
 	return P11_PARSE_SUCCESS;
 }
@@ -994,88 +949,219 @@ calc_der_length (const unsigned char *data,
 	return -1;
 }
 
-static CK_ATTRIBUTE *
-overlay_cert_aux_on_nss_trust_object (p11_parser *parser,
-                                      CK_ATTRIBUTE *attrs,
-                                      node_asn *aux)
+static int
+build_stapled_extension (p11_parser *parser,
+                         CK_ATTRIBUTE *cert,
+                         const unsigned char *oid_der,
+                         CK_BBOOL vcritical,
+                         const unsigned char *ext_der,
+                         size_t ext_len)
 {
-	CK_TRUST vserver_auth = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vclient_auth = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vcode_signing = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vemail_protection = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vipsec_end_system = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vipsec_tunnel = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vipsec_user = CKT_NETSCAPE_TRUST_UNKNOWN;
-	CK_TRUST vtime_stamping = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_ATTRIBUTE critical = { CKA_X_CRITICAL, &vcritical, sizeof (vcritical) };
+	CK_ATTRIBUTE oid = { CKA_OBJECT_ID, (void *)oid_der, p11_oid_length (oid_der) };
+	CK_ATTRIBUTE value = { CKA_VALUE, (void *)ext_der, ext_len };
+	CK_ATTRIBUTE invalid = { CKA_INVALID, };
 
-	CK_ATTRIBUTE server_auth = { CKA_TRUST_SERVER_AUTH, &vserver_auth, sizeof (vserver_auth) };
-	CK_ATTRIBUTE client_auth = { CKA_TRUST_CLIENT_AUTH, &vclient_auth, sizeof (vclient_auth) };
-	CK_ATTRIBUTE code_signing = { CKA_TRUST_CODE_SIGNING, &vcode_signing, sizeof (vcode_signing) };
-	CK_ATTRIBUTE email_protection = { CKA_TRUST_EMAIL_PROTECTION, &vemail_protection, sizeof (vemail_protection) };
-	CK_ATTRIBUTE ipsec_end_system = { CKA_TRUST_IPSEC_END_SYSTEM, &vipsec_end_system, sizeof (vipsec_end_system) };
-	CK_ATTRIBUTE ipsec_tunnel = { CKA_TRUST_IPSEC_TUNNEL, &vipsec_tunnel, sizeof (vipsec_tunnel) };
-	CK_ATTRIBUTE ipsec_user = { CKA_TRUST_IPSEC_USER, &vipsec_user, sizeof (vipsec_user) };
-	CK_ATTRIBUTE time_stamping = { CKA_TRUST_TIME_STAMPING, &vtime_stamping, sizeof (vtime_stamping) };
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *id;
+	CK_ATTRIBUTE *label;
 
-	CK_ULONG trust;
-	char field[256];
-	char oid[256];
+	attrs = build_object (parser, CKO_X_CERTIFICATE_EXTENSION, NULL, NULL);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+
+	id = p11_attrs_find (cert, CKA_ID);
+	if (id == NULL)
+		id = &invalid;
+	label = p11_attrs_find (cert, CKA_LABEL);
+	if (id == NULL)
+		label = &invalid;
+
+	attrs = p11_attrs_build (attrs, id, label, &oid, &critical, &value, NULL);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+
+	if (!p11_array_push (parser->parsing, attrs))
+		return_val_if_reached (P11_PARSE_FAILURE);
+
+	return P11_PARSE_SUCCESS;
+}
+
+static p11_dict *
+load_seq_of_oid_str (node_asn *node,
+                     const char *seqof)
+{
+	p11_dict *oids;
+	char field[128];
+	char *oid;
 	int len;
 	int ret;
 	int i;
-	int j;
 
-	/* The various CertAux SEQ's we look at for trust information */
-	struct {
-		const char *field;
-		CK_ULONG trust;
-	} trust_fields[] = {
-		{ "trust", (parser->flags & P11_PARSE_FLAG_ANCHOR) ? CKT_NETSCAPE_TRUSTED_DELEGATOR : CKT_NETSCAPE_TRUSTED },
-		{ "reject", CKT_NETSCAPE_UNTRUSTED },
-		{ NULL, }
-	};
+	oids = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
 
-	/* Various accept/reject usages */
-	for (i = 0; trust_fields[i].field != NULL; i++) {
-		for (j = 1; ; j++) {
-			if (snprintf (field, sizeof (field), "%s.?%u", trust_fields[i].field, j) < 0)
-				return_val_if_reached (NULL);
-			len = sizeof (oid) - 1;
-			ret = asn1_read_value (aux, field, oid, &len);
+	for (i = 1; ; i++) {
+		if (snprintf (field, sizeof (field), "%s.?%u", seqof, i) < 0)
+			return_val_if_reached (NULL);
 
-			/* No more extensions */
-			if (ret == ASN1_ELEMENT_NOT_FOUND)
-				break;
+		len = 0;
+		ret = asn1_read_value (node, field, NULL, &len);
+		if (ret == ASN1_ELEMENT_NOT_FOUND)
+			break;
 
-			/* A really, really long extension oid, not interested */
-			else if (ret == ASN1_MEM_ERROR)
-				continue;
+		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
 
-			return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-			trust = trust_fields[i].trust;
+		oid = malloc (len + 1);
+		return_val_if_fail (oid != NULL, NULL);
 
-			if (strcmp (oid, P11_EKU_SERVER_AUTH) == 0)
-				vserver_auth = trust;
-			else if (strcmp (oid, P11_EKU_CLIENT_AUTH) == 0)
-				vclient_auth = trust;
-			else if (strcmp (oid, P11_EKU_CODE_SIGNING) == 0)
-				vcode_signing = trust;
-			else if (strcmp (oid, P11_EKU_EMAIL) == 0)
-				vemail_protection = trust;
-			else if (strcmp (oid, P11_EKU_IPSEC_END_SYSTEM) == 0)
-				vipsec_end_system = trust;
-			else if (strcmp (oid, P11_EKU_IPSEC_TUNNEL) == 0)
-				vipsec_tunnel = trust;
-			else if (strcmp (oid, P11_EKU_IPSEC_USER) == 0)
-				vipsec_user = trust;
-			else if (strcmp (oid, P11_EKU_TIME_STAMPING) == 0)
-				vtime_stamping = trust;
-		}
+		ret = asn1_read_value (node, field, oid, &len);
+		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+		if (!p11_dict_set (oids, oid, oid))
+			return_val_if_reached (NULL);
 	}
 
-	return p11_attrs_build (attrs, &server_auth, &client_auth, &code_signing,
-	                        &email_protection, &ipsec_end_system, &ipsec_tunnel,
-	                        &ipsec_user, &time_stamping, NULL);
+	return oids;
+}
+
+static int
+build_eku_extension (p11_parser *parser,
+                     CK_ATTRIBUTE *cert,
+                     const unsigned char *oid,
+                     CK_BBOOL critical,
+                     p11_dict *oid_strs)
+{
+	p11_dictiter iter;
+	node_asn *dest;
+	int count = 0;
+	void *value;
+	char *der;
+	int len;
+	int ret;
+
+	ret = asn1_create_element (parser->pkix_definitions, "PKIX1.ExtKeyUsageSyntax", &dest);
+	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+	p11_dict_iterate (oid_strs, &iter);
+	while (p11_dict_next (&iter, NULL, &value)) {
+		ret = asn1_write_value (dest, "", "NEW", 1);
+		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+		ret = asn1_write_value (dest, "?LAST", value, -1);
+		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+		count++;
+	}
+
+	/*
+	 * If no oids have been written, then we have to put some sort of
+	 * value, due to the way that ExtendedKeyUsage is defined in RFC 5280.
+	 * There must be at least one purpose. This is important since *not*
+	 * having an ExtendedKeyUsage is very different than having one without
+	 * certain usages.
+	 */
+
+	if (count == 0) {
+		ret = asn1_write_value (dest, "", "NEW", 1);
+		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+		ret = asn1_write_value (dest, "?LAST", P11_OID_RESERVED_PURPOSE_STR, -1);
+		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+	}
+
+	len = 0;
+	ret = asn1_der_coding (dest, "", NULL, &len, NULL);
+	return_val_if_fail (ret == ASN1_MEM_ERROR, P11_PARSE_FAILURE);
+
+	der = malloc (len);
+	return_val_if_fail (der != NULL, P11_PARSE_FAILURE);
+
+	ret = asn1_der_coding (dest, "", der, &len, NULL);
+	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+	ret = build_stapled_extension (parser, cert, oid, critical,
+	                               (unsigned char *)der, len);
+
+	free (der);
+	asn1_delete_structure (&dest);
+
+	return ret;
+}
+
+static int
+build_cert_aux_extensions (p11_parser *parser,
+                           CK_ATTRIBUTE *cert,
+                           node_asn *aux,
+                           const unsigned char *aux_der,
+                           size_t aux_len)
+{
+	p11_dict *trust = NULL;
+	p11_dict *reject = NULL;
+	p11_dictiter iter;
+	void *key;
+	int start;
+	int end;
+	int ret;
+	int num;
+
+	ret = asn1_number_of_elements (aux, "trust", &num);
+	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, P11_PARSE_FAILURE);
+	if (ret == ASN1_SUCCESS)
+		trust = load_seq_of_oid_str (aux, "trust");
+
+	ret = asn1_number_of_elements (aux, "reject", &num);
+	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, P11_PARSE_FAILURE);
+	if (ret == ASN1_SUCCESS)
+		reject = load_seq_of_oid_str (aux, "reject");
+
+	/* Remove all rejected oids from the trust set */
+	if (trust && reject) {
+		p11_dict_iterate (reject, &iter);
+		while (p11_dict_next (&iter, &key, NULL))
+			p11_dict_remove (trust, key);
+	}
+
+	/*
+	 * The trust field becomes a standard ExtKeyUsageSyntax.
+	 *
+	 * critical: require that this is enforced
+	 */
+
+	if (trust) {
+		ret = build_eku_extension (parser, cert, P11_OID_EXTENDED_KEY_USAGE, CK_TRUE, trust);
+		return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+	}
+
+	/*
+	 * For the reject field we use a custom defined extension. See oid.h for
+	 * more details. It uses ExtKeyUsageSyntax structure.
+	 *
+	 * non-critical: non-standard, and also covered by trusts
+	 */
+
+	if (reject && p11_dict_size (reject) > 0) {
+		ret = build_eku_extension (parser, cert, P11_OID_OPENSSL_REJECT, CK_FALSE, reject);
+		return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+	}
+
+	p11_dict_free (trust);
+	p11_dict_free (reject);
+
+	/*
+	 * For the keyid field we use the SubjectKeyIdentifier extension. It
+	 * is already in the correct form, an OCTET STRING.
+	 *
+	 * non-critical: as recommended in RFC 5280
+	 */
+
+	ret = asn1_der_decoding_startEnd (aux, aux_der, aux_len, "keyid", &start, &end);
+	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, P11_PARSE_FAILURE);
+
+	if (ret == ASN1_SUCCESS) {
+		ret = build_stapled_extension (parser, cert, P11_OID_SUBJECT_KEY_IDENTIFIER, CK_FALSE,
+		                               aux_der + start, (end - start) + 1);
+		return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+	}
+
+	return P11_PARSE_SUCCESS;
 }
 
 static int
@@ -1114,6 +1200,8 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 		return P11_PARSE_UNRECOGNIZED;
 	}
 
+	begin_parsing (parser, cert, data, cert_len);
+
 	/* Pull the label out of the CertAux */
 	len = 0;
 	ret = asn1_read_value (aux, "alias", NULL, &len);
@@ -1133,13 +1221,11 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 
 	attrs = build_x509_certificate (parser, vid, cert, data, cert_len);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-	sink_object (parser, attrs);
 
-	attrs = build_nss_trust_object (parser, vid, cert, data, cert_len);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-	attrs = overlay_cert_aux_on_nss_trust_object (parser, attrs, aux);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
-	sink_object (parser, attrs);
+	ret = build_cert_aux_extensions (parser, attrs, aux, data + cert_len, length - cert_len);
+	return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
+
+	finish_parsing (parser, cert);
 
 	asn1_delete_structure (&cert);
 	asn1_delete_structure (&aux);
@@ -1252,6 +1338,12 @@ p11_parse_memory (p11_parser *parser,
 	parser->sink = sink;
 	parser->sink_data = sink_data;
 	parser->flags = flags;
+
+	/* Expected that state is cleaned via finish_parsing () */
+	parser->parsing = NULL;
+	parser->cert_asn = NULL;
+	parser->cert_der = NULL;
+	parser->cert_len = 0;
 
 	for (i = 0; all_parsers[i] != NULL; i++) {
 		ret = (all_parsers[i]) (parser, data, length);

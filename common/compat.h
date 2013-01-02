@@ -183,7 +183,7 @@ char *     strnstr          (const char *s,
 
 #ifndef HAVE_MEMDUP
 
-void *     memdup           (void *data,
+void *     memdup           (const void *data,
                              size_t length);
 
 #endif /* HAVE_MEMDUP */

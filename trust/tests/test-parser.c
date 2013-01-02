@@ -43,6 +43,7 @@
 #include "attrs.h"
 #include "debug.h"
 #include "library.h"
+#include "oid.h"
 #include "parser.h"
 #include "pkcs11x.h"
 #include "test-data.h"
@@ -138,9 +139,30 @@ test_parse_openssl_trusted (CuTest *cu)
 	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED;
 	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
 	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
+	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
 
-	CK_ATTRIBUTE expected[] = {
+	CK_ATTRIBUTE eku_extension[] = {
 		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
+		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
+		{ CKA_X_CRITICAL, &vtrue, sizeof (vtrue) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE reject_extension[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
+		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
+		{ CKA_X_CRITICAL, &vfalse, sizeof (vfalse) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE nss_trust[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
 		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
 		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
@@ -154,6 +176,13 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_TRUST_IPSEC_TUNNEL, &unknown, sizeof (unknown) },
 		{ CKA_TRUST_IPSEC_USER, &unknown, sizeof (unknown) },
 		{ CKA_TRUST_TIME_STAMPING, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_DIGITAL_SIGNATURE, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_NON_REPUDIATION, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_KEY_ENCIPHERMENT, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_DATA_ENCIPHERMENT, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_KEY_AGREEMENT, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_KEY_CERT_SIGN, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_CRL_SIGN, &trusted, sizeof (trusted) },
 		{ CKA_INVALID, }
 	};
 
@@ -167,8 +196,8 @@ test_parse_openssl_trusted (CuTest *cu)
 	                      0, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
-	/* Should have gotten certificate and a trust object */
-	CuAssertIntEquals (cu, 2, test.objects->num);
+	/* Should have gotten certificate, two stapled extensions, and a trust object */
+	CuAssertIntEquals (cu, 4, test.objects->num);
 
 	attrs = test.objects->elem[0];
 	test_check_cacert3_ca (cu, attrs, NULL);
@@ -177,7 +206,94 @@ test_parse_openssl_trusted (CuTest *cu)
 	CuAssertPtrEquals (cu, NULL, attr);
 
 	attrs = test.objects->elem[1];
-	test_check_attrs (cu, expected, attrs);
+	test_check_attrs (cu, eku_extension, attrs);
+
+	attrs = test.objects->elem[2];
+	test_check_attrs (cu, reject_extension, attrs);
+
+	attrs = test.objects->elem[3];
+	test_check_attrs (cu, nss_trust, attrs);
+
+	teardown (cu);
+}
+
+static void
+test_parse_with_key_usage (CuTest *cu)
+{
+	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED;
+	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
+	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
+	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+	CK_ULONG category = 0; /* TODO: Implement */
+
+	CK_ATTRIBUTE certificate[] = {
+		{ CKA_CLASS, &klass, sizeof (klass), },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
+		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_LABEL, "self-signed-with-ku.der", 23 },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_CHECK_VALUE, "d/\x9c", 3 },
+		{ CKA_START_DATE, "20121211", 8 },
+		{ CKA_END_DATE, "20130110", 8, },
+		{ CKA_ISSUER, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
+		{ CKA_SUBJECT, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
+		{ CKA_SERIAL_NUMBER, "\x02\x02\x03x", 4 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE nss_trust[] = {
+		{ CKA_LABEL, "self-signed-with-ku.der", 23 },
+		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
+		{ CKA_CERT_SHA1_HASH, "d/\x9c=\xbc\x9a\x7f\x91\xc7wT\t`\x86\xe2\x8e\x8f\xa8J\x12", 20 },
+		{ CKA_CERT_MD5_HASH, "\xb1N=\x16\x12?dz\x97\x81""By/\xcc\x97\x82", 16 },
+		{ CKA_ISSUER, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
+		{ CKA_SUBJECT, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
+		{ CKA_SERIAL_NUMBER, "\x02\x02\x03x", 4 },
+		{ CKA_TRUST_SERVER_AUTH, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_CLIENT_AUTH, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_EMAIL_PROTECTION, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_CODE_SIGNING, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_IPSEC_TUNNEL, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_IPSEC_USER, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_TIME_STAMPING, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_DIGITAL_SIGNATURE, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_NON_REPUDIATION, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_KEY_ENCIPHERMENT, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_DATA_ENCIPHERMENT, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_KEY_AGREEMENT, &unknown, sizeof (unknown) },
+		{ CKA_TRUST_KEY_CERT_SIGN, &trusted, sizeof (trusted) },
+		{ CKA_TRUST_CRL_SIGN, &unknown, sizeof (unknown) },
+		{ CKA_INVALID, }
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *attr;
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/self-signed-with-ku.der",
+	                      0, on_parse_object, cu);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate, two stapled extensions, and a trust object */
+	CuAssertIntEquals (cu, 2, test.objects->num);
+
+	attrs = test.objects->elem[0];
+	test_check_attrs (cu, certificate, attrs);
+
+	attr = p11_attrs_find (attrs, CKA_TRUSTED);
+	CuAssertPtrEquals (cu, NULL, attr);
+
+	attrs = test.objects->elem[1];
+	test_check_attrs (cu, nss_trust, attrs);
 
 	teardown (cu);
 }
@@ -269,14 +385,14 @@ test_parse_unrecognized (CuTest *cu)
 struct {
 	const char *eku;
 	size_t length;
-	const char *expected[16];
+	const unsigned char *expected[16];
 } extended_key_usage_fixtures[] = {
 	{ test_eku_server_and_client, sizeof (test_eku_server_and_client),
-	  { P11_EKU_CLIENT_AUTH, P11_EKU_SERVER_AUTH, NULL }, },
+	  { P11_OID_CLIENT_AUTH, P11_OID_SERVER_AUTH, NULL }, },
 	{ test_eku_none, sizeof (test_eku_none),
 	  { NULL, }, },
 	{ test_eku_client_email_and_timestamp, sizeof (test_eku_client_email_and_timestamp),
-	  { P11_EKU_CLIENT_AUTH, P11_EKU_EMAIL, P11_EKU_TIME_STAMPING }, },
+	  { P11_OID_CLIENT_AUTH, P11_OID_EMAIL_PROTECTION, P11_OID_TIME_STAMPING }, },
 	{ NULL },
 };
 
@@ -285,17 +401,14 @@ test_parse_extended_key_usage (CuTest *cu)
 {
 	p11_dict *ekus;
 	int i, j;
-	int ret;
 
 	setup (cu);
 
 	for (i = 0; extended_key_usage_fixtures[i].eku != NULL; i++) {
-		ekus = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-
-		ret = p11_parse_extended_key_usage (test.parser,
-		                                    (const unsigned char *)extended_key_usage_fixtures[i].eku,
-		                                    extended_key_usage_fixtures[i].length, ekus);
-		CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+		ekus = p11_parse_extended_key_usage (test.parser,
+		                                     (const unsigned char *)extended_key_usage_fixtures[i].eku,
+		                                     extended_key_usage_fixtures[i].length);
+		CuAssertPtrNotNull (cu, ekus);
 
 		for (j = 0; extended_key_usage_fixtures[i].expected[j] != NULL; j++)
 			CuAssertTrue (cu, p11_dict_get (ekus, extended_key_usage_fixtures[i].expected[j]) != NULL);
@@ -311,16 +424,11 @@ static void
 test_bad_extended_key_usage (CuTest *cu)
 {
 	p11_dict *ekus;
-	int ret;
 
 	setup (cu);
 
-	ekus = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-
-	ret = p11_parse_extended_key_usage (test.parser, (const unsigned char *)"blah", 4, ekus);
-	CuAssertIntEquals (cu, P11_PARSE_UNRECOGNIZED, ret);
-
-	p11_dict_free (ekus);
+	ekus = p11_parse_extended_key_usage (test.parser, (const unsigned char *)"blah", 4);
+	CuAssertPtrEquals (cu, NULL, ekus);
 
 	teardown (cu);
 }
@@ -384,18 +492,19 @@ main (void)
 	p11_debug_init ();
 	p11_message_quiet ();
 
+	SUITE_ADD_TEST (suite, test_bad_extended_key_usage);
+	SUITE_ADD_TEST (suite, test_parse_extended_key_usage);
+	SUITE_ADD_TEST (suite, test_bad_key_usage);
+	SUITE_ADD_TEST (suite, test_parse_key_usage);
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
+	SUITE_ADD_TEST (suite, test_parse_with_key_usage);
 	SUITE_ADD_TEST (suite, test_parse_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
 	SUITE_ADD_TEST (suite, test_parse_no_sink);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);
 	SUITE_ADD_TEST (suite, test_parse_unrecognized);
-	SUITE_ADD_TEST (suite, test_bad_extended_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_extended_key_usage);
-	SUITE_ADD_TEST (suite, test_bad_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_key_usage);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

@@ -70,7 +70,7 @@ void
 test_check_cacert3_ca_msg (CuTest *cu,
                            const char *file,
                            int line,
-                           CK_ATTRIBUTE_PTR attrs,
+                           CK_ATTRIBUTE *attrs,
                            const char *label)
 {
 	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
@@ -132,3 +132,10 @@ test_check_attr_msg (CuTest *cu,
 		CuFail_Line (cu, file, line, "attribute does not match", message);
 	}
 }
+
+void
+test_fail_attrs_match (CuTest *cu,
+                       const char *file,
+                       const char *line,
+                       CK_ATTRIBUTE *expect,
+                       CK_ATTRIBUTE *attrs);

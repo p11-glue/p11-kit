@@ -36,12 +36,14 @@ LDADD += \
 CHECK_PROGS += \
 	test-checksum \
 	test-pem \
+	test-oid \
 	$(NULL)
 
 noinst_PROGRAMS += \
 	frob-ku \
 	frob-eku \
 	frob-cert \
+	frob-oid \
 	$(NULL)
 
 endif # WITH_ASN1
