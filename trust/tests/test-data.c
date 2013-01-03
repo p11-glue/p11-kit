@@ -74,7 +74,7 @@ test_check_cacert3_ca_msg (CuTest *cu,
                            const char *label)
 {
 	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
-	CK_ULONG category = 0; /* TODO: Implement */
+	CK_ULONG category = 2; /* authority */
 
 	CK_ATTRIBUTE expected[] = {
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
@@ -91,6 +91,22 @@ test_check_cacert3_ca_msg (CuTest *cu,
 
 	test_check_object_msg (cu, file, line, attrs, CKO_CERTIFICATE, label);
 	test_check_attrs_msg (cu, file, line, expected, attrs);
+}
+
+void
+test_check_id_msg (CuTest *cu,
+                   const char *file,
+                   int line,
+                   CK_ATTRIBUTE *expected,
+                   CK_ATTRIBUTE *attr)
+{
+	CK_ATTRIBUTE *one;
+	CK_ATTRIBUTE *two;
+
+	one = p11_attrs_find (expected, CKA_ID);
+	two = p11_attrs_find (attr, CKA_ID);
+
+	test_check_attr_msg (cu, file, line, one, two);
 }
 
 void

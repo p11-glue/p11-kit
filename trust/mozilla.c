@@ -53,12 +53,12 @@
 static CK_ATTRIBUTE *
 update_ku (p11_parser *parser,
            p11_array *parsing,
-           CK_ATTRIBUTE *object)
+           CK_ATTRIBUTE *object,
+           CK_TRUST present)
 {
-	unsigned char *data;
+	unsigned char *data = NULL;
 	unsigned int ku = 0;
 	size_t length;
-	CK_TRUST present;
 	CK_TRUST defawlt;
 	CK_ULONG i;
 
@@ -78,22 +78,20 @@ update_ku (p11_parser *parser,
 
 	CK_ATTRIBUTE attrs[sizeof (ku_attribute_map)];
 
-	if (p11_parsing_get_flags (parser) & P11_PARSE_FLAG_ANCHOR)
-		present = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-	else
-		present = CKT_NETSCAPE_TRUSTED;
 	defawlt = present;
 
-	data = p11_parsing_get_extension (parser, parsing, P11_OID_KEY_USAGE, &length);
-
-	/*
-	 * If the certificate extension was missing, then *all* key
-	 * usages are to be set. If the extension was invalid, then
-	 * fail safe to none of the key usages.
-	 */
+	/* If blacklisted, don't even bother looking at extensions */
+	if (present != CKT_NETSCAPE_UNTRUSTED)
+		data = p11_parsing_get_extension (parser, parsing, P11_OID_KEY_USAGE, &length);
 
 	if (data) {
+		/*
+		 * If the certificate extension was missing, then *all* key
+		 * usages are to be set. If the extension was invalid, then
+		 * fail safe to none of the key usages.
+		 */
 		defawlt = CKT_NETSCAPE_TRUST_UNKNOWN;
+
 		if (p11_parse_key_usage (parser, data, length, &ku) != P11_PARSE_SUCCESS)
 			p11_message ("invalid key usage certificate extension");
 		free (data);
@@ -116,12 +114,12 @@ update_ku (p11_parser *parser,
 static CK_ATTRIBUTE *
 update_eku (p11_parser *parser,
             p11_array *parsing,
-            CK_ATTRIBUTE *object)
+            CK_ATTRIBUTE *object,
+            CK_TRUST trust)
 {
-	CK_TRUST trust;
 	CK_TRUST defawlt;
 	CK_TRUST distrust;
-	unsigned char *data;
+	unsigned char *data = NULL;
 	p11_dict *ekus = NULL;
 	p11_dict *reject = NULL;
 	size_t length;
@@ -145,28 +143,24 @@ update_eku (p11_parser *parser,
 
 	CK_ATTRIBUTE attrs[sizeof (eku_attribute_map)];
 
-	/* The value set if an eku is present */
-	if (p11_parsing_get_flags (parser) & P11_PARSE_FLAG_ANCHOR)
-		trust = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-	else
-		trust= CKT_NETSCAPE_TRUSTED;
-
 	/* The value set if an eku is not present, adjusted below */
 	defawlt = trust;
 
 	/* The value set if an eku is explictly rejected */
 	distrust = CKT_NETSCAPE_UNTRUSTED;
 
-	/*
-	 * If the certificate extension was missing, then *all* extended key
-	 * usages are to be set. If the extension was invalid, then
-	 * fail safe to none of the extended key usages.
-	 */
-
-	data = p11_parsing_get_extension (parser, parsing, P11_OID_EXTENDED_KEY_USAGE, &length);
+	/* If blacklisted, don't even bother looking at extensions */
+	if (trust != CKT_NETSCAPE_UNTRUSTED)
+		data = p11_parsing_get_extension (parser, parsing, P11_OID_EXTENDED_KEY_USAGE, &length);
 
 	if (data) {
+		/*
+		 * If the certificate extension was missing, then *all* extended key
+		 * usages are to be set. If the extension was invalid, then
+		 * fail safe to none of the extended key usages.
+		 */
 		defawlt = CKT_NETSCAPE_TRUST_UNKNOWN;
+
 		ekus = p11_parse_extended_key_usage (parser, data, length);
 		if (ekus == NULL)
 			p11_message ("invalid extended key usage certificate extension");
@@ -208,6 +202,9 @@ build_nss_trust_object (p11_parser *parser,
                         CK_ATTRIBUTE *cert)
 {
 	CK_ATTRIBUTE *object = NULL;
+	CK_TRUST trust;
+	CK_ULONG category;
+	CK_BBOOL bval;
 
 	CK_OBJECT_CLASS vclass = CKO_NETSCAPE_TRUST;
 	CK_BYTE vsha1_hash[P11_CHECKSUM_SHA1_LENGTH];
@@ -259,10 +256,23 @@ build_nss_trust_object (p11_parser *parser,
 	                          &step_up_approved, NULL);
 	return_val_if_fail (object != NULL, NULL);
 
-	object = update_ku (parser, parsing, object);
+	/* Calculate the default trust */
+	trust = CKT_NETSCAPE_TRUST_UNKNOWN;
+
+	if (p11_attrs_find_bool (cert, CKA_TRUSTED, &bval) && bval) {
+		if (p11_attrs_find_ulong (cert, CKA_CERTIFICATE_CATEGORY, &category) && category == 2)
+			trust = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+		else
+			trust = CKT_NETSCAPE_TRUSTED;
+	}
+
+	if (p11_attrs_find_bool (cert, CKA_X_DISTRUSTED, &bval) && bval)
+		trust = CKT_NETSCAPE_UNTRUSTED;
+
+	object = update_ku (parser, parsing, object, trust);
 	return_val_if_fail (object != NULL, NULL);
 
-	object = update_eku (parser, parsing, object);
+	object = update_eku (parser, parsing, object, trust);
 	return_val_if_fail (object != NULL, NULL);
 
 	if (!p11_array_push (parsing, object))

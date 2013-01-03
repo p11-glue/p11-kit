@@ -105,8 +105,7 @@ static const unsigned char P11_OID_EXTENDED_KEY_USAGE[] =
  * The normal X.509 model is to only *include* the extended key
  * usages that are to be allowed (ie: a whitelist). It's not clear
  * exactly how valid and useful the reject per extended key usage
- * model is. In fact, it appears that openssl does not use this
- * information.
+ * model is.
  *
  * However in order to parse openssl trust policy information and
  * be able to write it back out in the same way, we define a custom
@@ -196,10 +195,10 @@ static const unsigned char P11_OID_TIME_STAMPING[] =
  * be a place holder when no other purposes are defined.
  *
  * In theory such a certificate should be blacklisted. But in reality
- * OpenSSL supports such empty sets of purposes. RFC 5280 requires at
- * least one purpose in an ExtendedKeyUsage.
+ * many implementations use such empty sets of purposes. RFC 5280 requires
+ * at least one purpose in an ExtendedKeyUsage.
  *
- * This purpose should never be used or checked.
+ * Obviously this purpose should never be checked against.
  */
 static const unsigned char P11_OID_RESERVED_PURPOSE[] =
 	{ 0x06, 0x0a, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x99, 0x77, 0x06, 0x0a, 0x10 };

@@ -86,8 +86,9 @@ on_parse_object (CK_ATTRIBUTE *attrs,
 static void
 test_parse_der_certificate (CuTest *cu)
 {
-	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
+	CK_BBOOL bval;
 	int ret;
 
 	setup (cu);
@@ -99,11 +100,19 @@ test_parse_der_certificate (CuTest *cu)
 	/* Should have gotten certificate and a trust object */
 	CuAssertIntEquals (cu, 2, test.objects->num);
 
-	attrs = test.objects->elem[0];
-	test_check_cacert3_ca (cu, attrs, NULL);
+	cert = test.objects->elem[0];
+	test_check_cacert3_ca (cu, cert, NULL);
 
-	attr = p11_attrs_find (attrs, CKA_TRUSTED);
-	CuAssertPtrEquals (cu, NULL, attr);
+	if (!p11_attrs_find_bool (cert, CKA_TRUSTED, &bval))
+		CuFail (cu, "missing CKA_TRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
+
+	if (!p11_attrs_find_bool (cert, CKA_X_DISTRUSTED, &bval))
+		CuFail (cu, "missing CKA_X_DISTRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
+
+	object = test.objects->elem[1];
+	test_check_id (cu, cert, object);
 
 	teardown (cu);
 }
@@ -111,8 +120,9 @@ test_parse_der_certificate (CuTest *cu)
 static void
 test_parse_pem_certificate (CuTest *cu)
 {
-	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
+	CK_BBOOL bval;
 	int ret;
 
 	setup (cu);
@@ -124,11 +134,19 @@ test_parse_pem_certificate (CuTest *cu)
 	/* Should have gotten certificate and a trust object */
 	CuAssertIntEquals (cu, 2, test.objects->num);
 
-	attrs = test.objects->elem[0];
-	test_check_cacert3_ca (cu, attrs, NULL);
+	cert = test.objects->elem[0];
+	test_check_cacert3_ca (cu, cert, NULL);
 
-	attr = p11_attrs_find (attrs, CKA_TRUSTED);
-	CuAssertPtrEquals (cu, NULL, attr);
+	if (!p11_attrs_find_bool (cert, CKA_TRUSTED, &bval))
+		CuFail (cu, "missing CKA_TRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
+
+	if (!p11_attrs_find_bool (cert, CKA_X_DISTRUSTED, &bval))
+		CuFail (cu, "missing CKA_X_DISTRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
+
+	object = test.objects->elem[1];
+	test_check_id (cu, cert, object);
 
 	teardown (cu);
 }
@@ -136,7 +154,7 @@ test_parse_pem_certificate (CuTest *cu)
 static void
 test_parse_openssl_trusted (CuTest *cu)
 {
-	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED;
+	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED_DELEGATOR;
 	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
 	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
 	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
@@ -149,6 +167,8 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
 		{ CKA_X_CRITICAL, &vtrue, sizeof (vtrue) },
+		{ CKA_VALUE, "\x30\x14\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01\x06\x08\x2b\x06"
+			"\x01\x05\x05\x07\x03\x02", 22 },
 		{ CKA_INVALID },
 	};
 
@@ -157,6 +177,7 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
 		{ CKA_X_CRITICAL, &vfalse, sizeof (vfalse) },
+		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 12 },
 		{ CKA_INVALID },
 	};
 
@@ -186,33 +207,149 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_INVALID, }
 	};
 
-	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
+	CK_BBOOL bval;
 	int ret;
 
 	setup (cu);
 
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3-trusted.pem",
-	                      0, on_parse_object, cu);
+	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate, two stapled extensions, and a trust object */
 	CuAssertIntEquals (cu, 4, test.objects->num);
 
-	attrs = test.objects->elem[0];
-	test_check_cacert3_ca (cu, attrs, NULL);
+	cert = test.objects->elem[0];
+	test_check_cacert3_ca (cu, cert, NULL);
 
-	attr = p11_attrs_find (attrs, CKA_TRUSTED);
-	CuAssertPtrEquals (cu, NULL, attr);
+	if (!p11_attrs_find_bool (cert, CKA_TRUSTED, &bval))
+		CuFail (cu, "missing CKA_TRUSTED");
+	CuAssertIntEquals (cu, CK_TRUE, bval);
 
-	attrs = test.objects->elem[1];
-	test_check_attrs (cu, eku_extension, attrs);
+	if (!p11_attrs_find_bool (cert, CKA_X_DISTRUSTED, &bval))
+		CuFail (cu, "missing CKA_X_DISTRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
 
-	attrs = test.objects->elem[2];
-	test_check_attrs (cu, reject_extension, attrs);
+	object = test.objects->elem[1];
+	test_check_attrs (cu, eku_extension, object);
+	test_check_id (cu, cert, object);
 
-	attrs = test.objects->elem[3];
-	test_check_attrs (cu, nss_trust, attrs);
+	object = test.objects->elem[2];
+	test_check_attrs (cu, reject_extension, object);
+	test_check_id (cu, cert, object);
+
+	object = test.objects->elem[3];
+	test_check_attrs (cu, nss_trust, object);
+	test_check_id (cu, cert, object);
+
+	teardown (cu);
+}
+
+static void
+test_parse_openssl_distrusted (CuTest *cu)
+{
+	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
+	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
+	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
+	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+	CK_ULONG category = 2; /* authority */
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BBOOL vfalse = CK_FALSE;
+
+	CK_ATTRIBUTE certificate[] = {
+		{ CKA_CLASS, &klass, sizeof (klass), },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
+		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_CHECK_VALUE, "\xe9z}", 3 },
+		{ CKA_START_DATE, "20090916", 8 },
+		{ CKA_END_DATE, "20190914", 8, },
+		{ CKA_SERIAL_NUMBER, "\x02\x01\x01", 3 },
+		{ CKA_TRUSTED, &vfalse, sizeof (vfalse) },
+		{ CKA_X_DISTRUSTED, &vtrue, sizeof (vtrue) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE eku_extension[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
+		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
+		{ CKA_X_CRITICAL, &vtrue, sizeof (vtrue) },
+		{ CKA_VALUE, "\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x10", 14 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE reject_extension[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
+		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
+		{ CKA_X_CRITICAL, &vfalse, sizeof (vfalse) },
+		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 12 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE nss_trust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
+		{ CKA_CERT_SHA1_HASH, "\xe9z}\xe3\x82""7\xa0U\xb1k\xfe\xffo.\x03\x15*\xba\xb9\x90", 20 },
+		{ CKA_CERT_MD5_HASH, "\xda\xb4<\xe7;QK\x1a\xe5\xeau\xa1\xc9 \xdf""B", 16 },
+		{ CKA_SERIAL_NUMBER, "\x02\x01\x01", 3 },
+		{ CKA_TRUST_SERVER_AUTH, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_CLIENT_AUTH, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_EMAIL_PROTECTION, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_CODE_SIGNING, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_IPSEC_TUNNEL, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_IPSEC_USER, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_TIME_STAMPING, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_DIGITAL_SIGNATURE, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_NON_REPUDIATION, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_KEY_ENCIPHERMENT, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_DATA_ENCIPHERMENT, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_KEY_AGREEMENT, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_KEY_CERT_SIGN, &distrusted, sizeof (distrusted) },
+		{ CKA_TRUST_CRL_SIGN, &distrusted, sizeof (distrusted) },
+		{ CKA_INVALID, }
+	};
+
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
+	int ret;
+
+	setup (cu);
+
+	/*
+	 * OpenSSL style is to litter the blacklist in with the anchors,
+	 * so we parse this as an anchor, but expect it to be blacklisted
+	 */
+	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem",
+	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate, one stapled extensions, and a trust object */
+	CuAssertIntEquals (cu, 4, test.objects->num);
+
+	cert = test.objects->elem[0];
+	test_check_attrs (cu, certificate, cert);
+
+	object = test.objects->elem[1];
+	test_check_attrs (cu, eku_extension, object);
+	test_check_id (cu, cert, object);
+
+	object = test.objects->elem[2];
+	test_check_attrs (cu, reject_extension, object);
+	test_check_id (cu, cert, object);
+
+	object = test.objects->elem[3];
+	test_check_attrs (cu, nss_trust, object);
+	test_check_id (cu, cert, object);
 
 	teardown (cu);
 }
@@ -227,7 +364,7 @@ test_parse_with_key_usage (CuTest *cu)
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
-	CK_ULONG category = 0; /* TODO: Implement */
+	CK_ULONG category = 3; /* other entity */
 
 	CK_ATTRIBUTE certificate[] = {
 		{ CKA_CLASS, &klass, sizeof (klass), },
@@ -244,6 +381,8 @@ test_parse_with_key_usage (CuTest *cu)
 		{ CKA_ISSUER, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
 		{ CKA_SUBJECT, "0*1(0&\x06\x03U\x04\x03\x13\x1f""self-signed-with-ku.example.com", 44 },
 		{ CKA_SERIAL_NUMBER, "\x02\x02\x03x", 4 },
+		{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
+		{ CKA_X_DISTRUSTED, &vfalse, sizeof (vfalse) },
 		{ CKA_INVALID },
 	};
 
@@ -273,41 +412,34 @@ test_parse_with_key_usage (CuTest *cu)
 		{ CKA_INVALID, }
 	};
 
-	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
+	CK_BBOOL bval;
 	int ret;
 
 	setup (cu);
 
 	ret = p11_parse_file (test.parser, SRCDIR "/files/self-signed-with-ku.der",
-	                      0, on_parse_object, cu);
+	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
-	/* Should have gotten certificate, two stapled extensions, and a trust object */
+	/* Should have gotten certificate, and a trust object */
 	CuAssertIntEquals (cu, 2, test.objects->num);
 
-	attrs = test.objects->elem[0];
-	test_check_attrs (cu, certificate, attrs);
+	cert = test.objects->elem[0];
+	test_check_attrs (cu, certificate, cert);
 
-	attr = p11_attrs_find (attrs, CKA_TRUSTED);
-	CuAssertPtrEquals (cu, NULL, attr);
+	if (!p11_attrs_find_bool (cert, CKA_TRUSTED, &bval))
+		CuFail (cu, "missing CKA_TRUSTED");
+	CuAssertIntEquals (cu, CK_TRUE, bval);
 
-	attrs = test.objects->elem[1];
-	test_check_attrs (cu, nss_trust, attrs);
+	if (!p11_attrs_find_bool (cert, CKA_X_DISTRUSTED, &bval))
+		CuFail (cu, "missing CKA_X_DISTRUSTED");
+	CuAssertIntEquals (cu, CK_FALSE, bval);
 
-	teardown (cu);
-}
-
-static void
-test_parse_distrusted (CuTest *cu)
-{
-	int ret;
-
-	setup (cu);
-
-	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem",
-	                      0, on_parse_object, cu);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	object = test.objects->elem[1];
+	test_check_attrs (cu, nss_trust, object);
+	test_check_id (cu, cert, object);
 
 	teardown (cu);
 }
@@ -315,7 +447,8 @@ test_parse_distrusted (CuTest *cu)
 static void
 test_parse_anchor (CuTest *cu)
 {
-	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *cert;
+	CK_ATTRIBUTE *object;
 	CK_ATTRIBUTE *attr;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
@@ -330,11 +463,14 @@ test_parse_anchor (CuTest *cu)
 	/* Should have gotten a certificate and a trust object */
 	CuAssertIntEquals (cu, 2, test.objects->num);
 
-	attrs = test.objects->elem[0];
-	test_check_cacert3_ca (cu, attrs, NULL);
+	cert = test.objects->elem[0];
+	test_check_cacert3_ca (cu, cert, NULL);
 
-	attr = p11_attrs_find (attrs, CKA_TRUSTED);
+	attr = p11_attrs_find (cert, CKA_TRUSTED);
 	test_check_attr (cu, &trusted, attr);
+
+	object = test.objects->elem[1];
+	test_check_id (cu, cert, object);
 
 	teardown (cu);
 }
@@ -499,8 +635,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
+	SUITE_ADD_TEST (suite, test_parse_openssl_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_with_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
 	SUITE_ADD_TEST (suite, test_parse_no_sink);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);

@@ -48,6 +48,7 @@ enum {
 enum {
 	P11_PARSE_FLAG_NONE = 0,
 	P11_PARSE_FLAG_ANCHOR = 1 << 0,
+	P11_PARSE_FLAG_BLACKLIST = 1 << 1
 };
 
 #define       P11_PARSER_FIRST_HANDLE    0xA0000000UL
@@ -75,6 +76,11 @@ int           p11_parse_file       (p11_parser *parser,
                                     p11_parser_sink sink,
                                     void *sink_data);
 
+int           p11_parse_basic_constraints    (p11_parser *parser,
+                                              const unsigned char *data,
+                                              size_t length,
+                                              int *is_ca);
+
 int           p11_parse_key_usage            (p11_parser *parser,
                                               const unsigned char *data,
                                               size_t length,
@@ -86,8 +92,6 @@ p11_dict *    p11_parse_extended_key_usage   (p11_parser *parser,
 
 /* Functions used for retrieving parsing information */
 
-int                     p11_parsing_get_flags        (p11_parser *parser);
-
 CK_ATTRIBUTE *          p11_parsing_get_certificate  (p11_parser *parser,
                                                       p11_array *parsing);
 
@@ -95,5 +99,8 @@ unsigned char *         p11_parsing_get_extension    (p11_parser *parser,
                                                       p11_array *parsing,
                                                       const unsigned char *oid,
                                                       size_t *length);
+
+void                    p11_parsing_update_certificate  (p11_parser *parser,
+                                                         p11_array *parsing);
 
 #endif

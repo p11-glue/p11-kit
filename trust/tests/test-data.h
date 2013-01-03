@@ -74,6 +74,15 @@ void      test_check_attr_msg          (CuTest *cu,
                                         CK_ATTRIBUTE *expected,
                                         CK_ATTRIBUTE *attr);
 
+#define   test_check_id(cu, expected, attrs) \
+	test_check_id_msg (cu, __FILE__, __LINE__, expected, attrs)
+
+void      test_check_id_msg           (CuTest *cu,
+                                       const char *file,
+                                       int line,
+                                       CK_ATTRIBUTE *expected,
+                                       CK_ATTRIBUTE *attr);
+
 static const unsigned char test_cacert3_ca_der[] = {
 	0x30, 0x82, 0x07, 0x59, 0x30, 0x82, 0x05, 0x41, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x03, 0x0a,
 	0x41, 0x8a, 0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b, 0x05,
