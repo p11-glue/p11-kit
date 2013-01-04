@@ -129,6 +129,7 @@ static const unsigned char P11_OID_OPENSSL_REJECT[] =
  */
 static const unsigned char P11_OID_SERVER_AUTH[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01 };
+static const char P11_OID_SERVER_AUTH_STR[] = "1.3.6.1.5.5.7.3.1";
 
 /*
  * 1.3.6.1.5.5.7.3.2: Client Auth
@@ -137,6 +138,7 @@ static const unsigned char P11_OID_SERVER_AUTH[] =
  */
 static const unsigned char P11_OID_CLIENT_AUTH[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x02 };
+static const char P11_OID_CLIENT_AUTH_STR[] = "1.3.6.1.5.5.7.3.2";
 
 /*
  * 1.3.6.1.5.5.7.3.3: Code Signing
@@ -145,6 +147,7 @@ static const unsigned char P11_OID_CLIENT_AUTH[] =
  */
 static const unsigned char P11_OID_CODE_SIGNING[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x03 };
+static const char P11_OID_CODE_SIGNING_STR[] = "1.3.6.1.5.5.7.3.3";
 
 /*
  * 1.3.6.1.5.5.7.3.4: Email Protection
@@ -153,6 +156,7 @@ static const unsigned char P11_OID_CODE_SIGNING[] =
  */
 static const unsigned char P11_OID_EMAIL_PROTECTION[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x04 };
+static const char P11_OID_EMAIL_PROTECTION_STR[] = "1.3.6.1.5.5.7.3.4";
 
 /*
  * 1.3.6.1.5.5.7.3.5: IPSec End System
@@ -161,6 +165,7 @@ static const unsigned char P11_OID_EMAIL_PROTECTION[] =
  */
 static const unsigned char P11_OID_IPSEC_END_SYSTEM[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x05 };
+static const char P11_OID_IPSEC_END_SYSTEM_STR[] = "1.3.6.1.5.5.7.3.5";
 
 /*
  * 1.3.6.1.5.5.7.3.6: IPSec Tunnel
@@ -169,6 +174,7 @@ static const unsigned char P11_OID_IPSEC_END_SYSTEM[] =
  */
 static const unsigned char P11_OID_IPSEC_TUNNEL[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x06 };
+static const char P11_OID_IPSEC_TUNNEL_STR[] = "1.3.6.1.5.5.7.3.6";
 
 /*
  * 1.3.6.1.5.5.7.3.7: IPSec User
@@ -177,6 +183,7 @@ static const unsigned char P11_OID_IPSEC_TUNNEL[] =
  */
 static const unsigned char P11_OID_IPSEC_USER[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x07 };
+static const char P11_OID_IPSEC_USER_STR[] = "1.3.6.1.5.5.7.3.7";
 
 /*
  * 1.3.6.1.5.5.7.3.8: Time Stamping
@@ -185,7 +192,7 @@ static const unsigned char P11_OID_IPSEC_USER[] =
  */
 static const unsigned char P11_OID_TIME_STAMPING[] =
 	{ 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x08 };
-
+static const char P11_OID_TIME_STAMPING_STR[] = "1.3.6.1.5.5.7.3.8";
 /*
  * 1.3.6.1.4.1.3319.6.10.16: Reserved key purpose
  *
@@ -202,7 +209,6 @@ static const unsigned char P11_OID_TIME_STAMPING[] =
  */
 static const unsigned char P11_OID_RESERVED_PURPOSE[] =
 	{ 0x06, 0x0a, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x99, 0x77, 0x06, 0x0a, 0x10 };
-static const char P11_OID_RESERVED_PURPOSE_STR[] =
-	"1.3.6.1.4.1.3319.6.10.16";
+static const char P11_OID_RESERVED_PURPOSE_STR[] = "1.3.6.1.4.1.3319.6.10.16";
 
 #endif

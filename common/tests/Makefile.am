@@ -34,9 +34,11 @@ LDADD += \
 	$(NULL)
 
 CHECK_PROGS += \
+	test-asn1 \
 	test-checksum \
 	test-pem \
 	test-oid \
+	test-x509 \
 	$(NULL)
 
 noinst_PROGRAMS += \

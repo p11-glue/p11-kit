@@ -35,6 +35,7 @@
 #include "config.h"
 
 #include "array.h"
+#include "asn1.h"
 #include "attrs.h"
 #include "checksum.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
@@ -47,6 +48,7 @@
 #include "parser.h"
 #include "pem.h"
 #include "pkcs11x.h"
+#include "x509.h"
 
 #include <libtasn1.h>
 
@@ -61,12 +63,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "openssl.asn.h"
-#include "pkix.asn.h"
-
 struct _p11_parser {
-	node_asn *pkix_definitions;
-	node_asn *openssl_definitions;
+	p11_dict *asn1_defs;
+
+	/* Set during a parse */
 	p11_parser_sink sink;
 	void *sink_data;
 	const char *probable_label;
@@ -82,53 +82,6 @@ struct _p11_parser {
 typedef int (* parser_func)   (p11_parser *parser,
                                const unsigned char *data,
                                size_t length);
-
-static node_asn *
-decode_asn1 (p11_parser *parser,
-             const char *struct_name,
-             const unsigned char *data,
-             size_t length,
-             char *message)
-{
-	char msg[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	node_asn *definitions;
-	node_asn *el = NULL;
-	int ret;
-
-	if (message == NULL)
-		message = msg;
-
-	if (strncmp (struct_name, "PKIX1.", 6) == 0) {
-		definitions = parser->pkix_definitions;
-
-	} else if (strncmp (struct_name, "OPENSSL.", 8) == 0) {
-		definitions = parser->openssl_definitions;
-
-	} else {
-		p11_debug_precond ("unknown prefix for element: %s", struct_name);
-		return NULL;
-	}
-
-	ret = asn1_create_element (definitions, struct_name, &el);
-	if (ret != ASN1_SUCCESS) {
-		p11_debug_precond ("failed to create element %s at %s: %d",
-		                   struct_name, __func__, ret);
-		return NULL;
-	}
-
-	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-
-	/* asn1_der_decoding destroys the element if fails */
-	ret = asn1_der_decoding (&el, data, length, message);
-
-	if (ret != ASN1_SUCCESS) {
-		p11_debug ("couldn't parse %s: %s: %s",
-		           struct_name, asn1_strerror (ret), message);
-		return NULL;
-	}
-
-	return el;
-}
 
 static void
 begin_parsing (p11_parser *parser,
@@ -238,277 +191,6 @@ calc_check_value (const unsigned char *data,
 	memcpy (check_value, checksum, 3);
 }
 
-static int
-atoin (const char *p,
-       int digits)
-{
-	int ret = 0, base = 1;
-	while(--digits >= 0) {
-		if (p[digits] < '0' || p[digits] > '9')
-			return -1;
-		ret += (p[digits] - '0') * base;
-		base *= 10;
-	}
-	return ret;
-}
-
-static int
-two_to_four_digit_year (int year)
-{
-	time_t now;
-	struct tm tm;
-	int century, current;
-
-	return_val_if_fail (year >= 0 && year <= 99, -1);
-
-	/* Get the current year */
-	now = time (NULL);
-	return_val_if_fail (now >= 0, -1);
-	if (!gmtime_r (&now, &tm))
-		return_val_if_reached (-1);
-
-	current = (tm.tm_year % 100);
-	century = (tm.tm_year + 1900) - current;
-
-	/*
-	 * Check if it's within 40 years before the
-	 * current date.
-	 */
-	if (current < 40) {
-		if (year < current)
-			return century + year;
-		if (year > 100 - (40 - current))
-			return (century - 100) + year;
-	} else {
-		if (year < current && year > (current - 40))
-			return century + year;
-	}
-
-	/*
-	 * If it's after then adjust for overflows to
-	 * the next century.
-	 */
-	if (year < current)
-		return century + 100 + year;
-	else
-		return century + year;
-}
-
-static bool
-parse_utc_time (const char *time,
-                size_t n_time,
-                struct tm *when,
-                int *offset)
-{
-	const char *p, *e;
-	int year;
-
-	assert (when != NULL);
-	assert (time != NULL);
-	assert (offset != NULL);
-
-	/* YYMMDDhhmmss.ffff Z | +0000 */
-	if (n_time < 6 || n_time >= 28)
-		return false;
-
-	/* Reset everything to default legal values */
-	memset (when, 0, sizeof (*when));
-	*offset = 0;
-	when->tm_mday = 1;
-
-	/* Select the digits part of it */
-	p = time;
-	for (e = p; *e >= '0' && *e <= '9'; ++e);
-
-	if (p + 2 <= e) {
-		year = atoin (p, 2);
-		p += 2;
-
-		/*
-		 * 40 years in the past is our century. 60 years
-		 * in the future is the next century.
-		 */
-		when->tm_year = two_to_four_digit_year (year) - 1900;
-	}
-	if (p + 2 <= e) {
-		when->tm_mon = atoin (p, 2) - 1;
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_mday = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_hour = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_min = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_sec = atoin (p, 2);
-		p += 2;
-	}
-
-	if (when->tm_year < 0 || when->tm_year > 9999 ||
-	    when->tm_mon < 0 || when->tm_mon > 11 ||
-	    when->tm_mday < 1 || when->tm_mday > 31 ||
-	    when->tm_hour < 0 || when->tm_hour > 23 ||
-	    when->tm_min < 0 || when->tm_min > 59 ||
-	    when->tm_sec < 0 || when->tm_sec > 59)
-		return false;
-
-	/* Make sure all that got parsed */
-	if (p != e)
-		return false;
-
-	/* Now the remaining optional stuff */
-	e = time + n_time;
-
-	/* See if there's a fraction, and discard it if so */
-	if (p < e && *p == '.' && p + 5 <= e)
-		p += 5;
-
-	/* See if it's UTC */
-	if (p < e && *p == 'Z') {
-		p += 1;
-
-	/* See if it has a timezone */
-	} else if ((*p == '-' || *p == '+') && p + 3 <= e) {
-		int off, neg;
-
-		neg = *p == '-';
-		++p;
-
-		off = atoin (p, 2) * 3600;
-		if (off < 0 || off > 86400)
-			return false;
-		p += 2;
-
-		if (p + 2 <= e) {
-			off += atoin (p, 2) * 60;
-			p += 2;
-		}
-
-		/* Use TZ offset */
-		if (neg)
-			*offset = 0 - off;
-		else
-			*offset = off;
-	}
-
-	/* Make sure everything got parsed */
-	if (p != e)
-		return false;
-
-	return true;
-}
-
-static bool
-parse_general_time (const char *time,
-                    size_t n_time,
-                    struct tm *when,
-                    int *offset)
-{
-	const char *p, *e;
-
-	assert (time != NULL);
-	assert (when != NULL);
-	assert (offset != NULL);
-
-	/* YYYYMMDDhhmmss.ffff Z | +0000 */
-	if (n_time < 8 || n_time >= 30)
-		return false;
-
-	/* Reset everything to default legal values */
-	memset (when, 0, sizeof (*when));
-	*offset = 0;
-	when->tm_mday = 1;
-
-	/* Select the digits part of it */
-	p = time;
-	for (e = p; *e >= '0' && *e <= '9'; ++e);
-
-	if (p + 4 <= e) {
-		when->tm_year = atoin (p, 4) - 1900;
-		p += 4;
-	}
-	if (p + 2 <= e) {
-		when->tm_mon = atoin (p, 2) - 1;
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_mday = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_hour = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_min = atoin (p, 2);
-		p += 2;
-	}
-	if (p + 2 <= e) {
-		when->tm_sec = atoin (p, 2);
-		p += 2;
-	}
-
-	if (when->tm_year < 0 || when->tm_year > 9999 ||
-	    when->tm_mon < 0 || when->tm_mon > 11 ||
-	    when->tm_mday < 1 || when->tm_mday > 31 ||
-	    when->tm_hour < 0 || when->tm_hour > 23 ||
-	    when->tm_min < 0 || when->tm_min > 59 ||
-	    when->tm_sec < 0 || when->tm_sec > 59)
-		return false;
-
-	/* Make sure all that got parsed */
-	if (p != e)
-		return false;
-
-	/* Now the remaining optional stuff */
-	e = time + n_time;
-
-	/* See if there's a fraction, and discard it if so */
-	if (p < e && *p == '.' && p + 5 <= e)
-		p += 5;
-
-	/* See if it's UTC */
-	if (p < e && *p == 'Z') {
-		p += 1;
-
-	/* See if it has a timezone */
-	} else if ((*p == '-' || *p == '+') && p + 3 <= e) {
-		int off, neg;
-
-		neg = *p == '-';
-		++p;
-
-		off = atoin (p, 2) * 3600;
-		if (off < 0 || off > 86400)
-			return false;
-		p += 2;
-
-		if (p + 2 <= e) {
-			off += atoin (p, 2) * 60;
-			p += 2;
-		}
-
-		/* Use TZ offset */
-		if (neg)
-			*offset = 0 - off;
-		else
-			*offset = off;
-	}
-
-	/* Make sure everything got parsed */
-	if (p != e)
-		return false;
-
-	return true;
-}
-
 static bool
 calc_date (node_asn *cert,
            const char *field,
@@ -516,7 +198,6 @@ calc_date (node_asn *cert,
 {
 	node_asn *choice;
 	struct tm when;
-	int tz_offset;
 	char buf[64];
 	time_t timet;
 	char *sub;
@@ -536,35 +217,21 @@ calc_date (node_asn *cert,
 		len = sizeof (buf) - 1;
 		ret = asn1_read_value (cert, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
-		if (!parse_general_time (buf, len, &when, &tz_offset))
-			return_val_if_reached (false);
+		timet = p11_asn1_parse_general (buf, &when);
+		return_val_if_fail (timet >= 0, false);
 
 	} else if (strcmp (buf, "utcTime") == 0) {
 		len = sizeof (buf) - 1;
 		ret = asn1_read_value (cert, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
-		if (!parse_utc_time (buf, len - 1, &when, &tz_offset))
-			return_val_if_reached (false);
+		timet = p11_asn1_parse_utc (buf, &when);
+		return_val_if_fail (timet >= 0, false);
 
 	} else {
 		return_val_if_reached (false);
 	}
 
 	free (sub);
-
-	/* In order to work with 32 bit time_t. */
-	if (sizeof (time_t) <= 4 && when.tm_year >= 2038) {
-		timet = (time_t)2145914603;  /* 2037-12-31 23:23:23 */
-
-	/* Convert to seconds since epoch */
-	} else {
-		timet = timegm (&when);
-		return_val_if_fail (timet >= 0, false);
-		timet += tz_offset;
-	}
-
-	if (!gmtime_r (&timet, &when))
-		return_val_if_reached (false);
 
 	assert (sizeof (date->year) == 4);
 	snprintf ((char *)buf, 5, "%04d", 1900 + when.tm_year);
@@ -798,110 +465,6 @@ p11_parsing_get_certificate (p11_parser *parser,
 	return match_parsing_object (parser, match);
 }
 
-int
-p11_parse_basic_constraints (p11_parser *parser,
-                             const unsigned char *data,
-                             size_t length,
-                             int *is_ca)
-{
-	char buffer[8];
-	node_asn *ext;
-	int ret;
-	int len;
-
-	return_val_if_fail (is_ca != NULL, P11_PARSE_FAILURE);
-
-	ext = decode_asn1 (parser, "PKIX1.BasicConstraints", data, length, NULL);
-	return_val_if_fail (ext != NULL, P11_PARSE_UNRECOGNIZED);
-
-	len = sizeof (buffer);
-	ret = asn1_read_value (ext, "cA", buffer, &len);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
-
-	*is_ca = (strcmp (buffer, "TRUE") == 0);
-	asn1_delete_structure (&ext);
-
-	return P11_PARSE_SUCCESS;
-}
-
-int
-p11_parse_key_usage (p11_parser *parser,
-                     const unsigned char *data,
-                     size_t length,
-                     unsigned int *ku)
-{
-	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	unsigned char buf[2];
-	node_asn *ext;
-	int len;
-	int ret;
-
-	ext = decode_asn1 (parser, "PKIX1.KeyUsage", data, length, message);
-	if (ext == NULL)
-		return P11_PARSE_UNRECOGNIZED;
-
-	len = sizeof (buf);
-	ret = asn1_read_value (ext, "", buf, &len);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
-
-	/* A bit string, so combine into one set of flags */
-	*ku = buf[0] | (buf[1] << 8);
-
-	asn1_delete_structure (&ext);
-
-	return P11_PARSE_SUCCESS;
-}
-
-p11_dict *
-p11_parse_extended_key_usage (p11_parser *parser,
-                              const unsigned char *eku_der,
-                              size_t eku_len)
-{
-	node_asn *ext;
-	char field[128];
-	unsigned char *eku;
-	p11_dict *ekus;
-	int start;
-	int end;
-	int ret;
-	int i;
-
-	ext = decode_asn1 (parser, "PKIX1.ExtKeyUsageSyntax", eku_der, eku_len, NULL);
-	if (ext == NULL)
-		return NULL;
-
-	ekus = p11_dict_new (p11_oid_hash, p11_oid_equal, free, NULL);
-
-	for (i = 1; ; i++) {
-		if (snprintf (field, sizeof (field), "?%u", i) < 0)
-			return_val_if_reached (NULL);
-
-		ret = asn1_der_decoding_startEnd (ext, eku_der, eku_len, field, &start, &end);
-		if (ret == ASN1_ELEMENT_NOT_FOUND)
-			break;
-
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-
-		/* Make sure it's a simple OID with certain assumptions */
-		if (!p11_oid_simple (eku_der + start, (end - start) + 1))
-			continue;
-
-		/* If it's our reserved OID, then skip */
-		if (p11_oid_equal (eku_der + start, P11_OID_RESERVED_PURPOSE))
-			continue;
-
-		eku = memdup (eku_der + start, (end - start) + 1);
-		return_val_if_fail (eku != NULL, NULL);
-
-		if (!p11_dict_set (ekus, eku, eku))
-			return_val_if_reached (NULL);
-	}
-
-	asn1_delete_structure (&ext);
-
-	return ekus;
-}
-
 static int
 parse_der_x509_certificate (p11_parser *parser,
                             const unsigned char *data,
@@ -911,7 +474,7 @@ parse_der_x509_certificate (p11_parser *parser,
 	CK_ATTRIBUTE *attrs;
 	node_asn *cert;
 
-	cert = decode_asn1 (parser, "PKIX1.Certificate", data, length, NULL);
+	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, length, NULL);
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
@@ -926,29 +489,6 @@ parse_der_x509_certificate (p11_parser *parser,
 	finish_parsing (parser, cert);
 	asn1_delete_structure (&cert);
 	return P11_PARSE_SUCCESS;
-}
-
-static ssize_t
-calc_der_length (const unsigned char *data,
-                 size_t length)
-{
-	unsigned char cls;
-	int counter = 0;
-	int cb, len;
-	unsigned long tag;
-
-	if (asn1_get_tag_der (data, length, &cls, &cb, &tag) == ASN1_SUCCESS) {
-		counter += cb;
-		len = asn1_get_length_der (data + cb, length - cb, &cb);
-		counter += cb;
-		if (len >= 0) {
-			len += counter;
-			if (length >= len)
-				return len;
-		}
-	}
-
-	return -1;
 }
 
 static int
@@ -994,20 +534,12 @@ build_stapled_extension (p11_parser *parser,
                          CK_BBOOL critical,
                          node_asn *ext)
 {
-	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	char *der;
-	int len;
+	unsigned char *der;
+	size_t len;
 	int ret;
 
-	len = 0;
-	ret = asn1_der_coding (ext, "", NULL, &len, message);
-	return_val_if_fail (ret == ASN1_MEM_ERROR, P11_PARSE_FAILURE);
-
-	der = malloc (len);
+	der = p11_asn1_encode (ext, &len);
 	return_val_if_fail (der != NULL, P11_PARSE_FAILURE);
-
-	ret = asn1_der_coding (ext, "", der, &len, message);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
 
 	ret = build_der_extension (parser, cert, oid, critical, (unsigned char *)der, len);
 	free (der);
@@ -1065,8 +597,8 @@ build_eku_extension (p11_parser *parser,
 	void *value;
 	int ret;
 
-	ret = asn1_create_element (parser->pkix_definitions, "PKIX1.ExtKeyUsageSyntax", &dest);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+	dest = p11_asn1_create (parser->asn1_defs, "PKIX1.ExtKeyUsageSyntax");
+	return_val_if_fail (dest != NULL, P11_PARSE_FAILURE);
 
 	p11_dict_iterate (oid_strs, &iter);
 	while (p11_dict_next (&iter, NULL, &value)) {
@@ -1116,8 +648,8 @@ build_bc_extension (p11_parser *parser,
 	node_asn *ext;
 	int ret;
 
-	ret = asn1_create_element (parser->pkix_definitions, "PKIX1.BasicConstraints", &ext);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+	ext = p11_asn1_create (parser->asn1_defs, "PKIX1.BasicConstraints");
+	return_val_if_fail (ext != NULL, P11_PARSE_FAILURE);
 
 	/* FALSE is the default, so clear if not CA */
 	ret = asn1_write_value (ext, "cA", is_ca ? "TRUE" : NULL, is_ca ? -1 : 0);
@@ -1133,7 +665,7 @@ build_bc_extension (p11_parser *parser,
 	return ret;
 }
 
-static int
+static bool
 is_v1_x509_authority (CK_ATTRIBUTE *cert,
                       node_asn *node)
 {
@@ -1153,14 +685,14 @@ is_v1_x509_authority (CK_ATTRIBUTE *cert,
 		len = 1;
 	}
 
-	return_val_if_fail (ret == ASN1_SUCCESS, 0);
+	return_val_if_fail (ret == ASN1_SUCCESS, false);
 
 	/*
 	 * In X.509 version v1 is the integer zero. Two's complement
 	 * integer, but zero is easy to read.
 	 */
 	if (len != 1 || buffer[0] != 0)
-		return 0;
+		return false;
 
 	/* Must be self-signed, ie: same subject and issuer */
 	subject = p11_attrs_find (cert, CKA_SUBJECT);
@@ -1174,7 +706,7 @@ update_category (p11_parser *parser,
                  CK_ATTRIBUTE *cert)
 {
 	CK_ATTRIBUTE *category;
-	int is_ca = 0;
+	bool is_ca = 0;
 	unsigned char *data;
 	size_t length;
 	int ret;
@@ -1182,7 +714,7 @@ update_category (p11_parser *parser,
 	/* See if we have a basic constraints extension */
 	data = p11_parsing_get_extension (parser, parser->parsing, P11_OID_BASIC_CONSTRAINTS, &length);
 	if (data) {
-		if (!p11_parse_basic_constraints (parser, data, length, &is_ca))
+		if (!p11_x509_parse_basic_constraints (parser->asn1_defs, data, length, &is_ca))
 			p11_message ("invalid basic constraints certificate extension");
 		free (data);
 
@@ -1242,7 +774,7 @@ update_trust_and_distrust (p11_parser *parser,
 	/* See if we have a basic constraints extension */
 	data = p11_parsing_get_extension (parser, parser->parsing, P11_OID_EXTENDED_KEY_USAGE, &length);
 	if (data) {
-		ekus = p11_parse_extended_key_usage (parser, data, length);
+		ekus = p11_x509_parse_extended_key_usage (parser->asn1_defs, data, length);
 		if (ekus == NULL)
 			p11_message ("invalid extendend key usage certificate extension");
 		else if (p11_dict_size (ekus) == 0) {
@@ -1393,15 +925,15 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	 * the X.509 certificate.
 	 */
 
-	cert_len = calc_der_length (data, length);
+	cert_len = p11_asn1_tlv_length (data, length);
 	if (cert_len <= 0)
 		return P11_PARSE_UNRECOGNIZED;
 
-	cert = decode_asn1 (parser, "PKIX1.Certificate", data, cert_len, NULL);
+	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, cert_len, NULL);
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
-	aux = decode_asn1 (parser, "OPENSSL.CertAux", data + cert_len, length - cert_len, NULL);
+	aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len, length - cert_len, NULL);
 	if (aux == NULL) {
 		asn1_delete_structure (&cert);
 		return P11_PARSE_UNRECOGNIZED;
@@ -1493,23 +1025,10 @@ static parser_func all_parsers[] = {
 p11_parser *
 p11_parser_new (void)
 {
-	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
 	p11_parser parser = { 0, };
-	int ret;
 
-	ret = asn1_array2tree (pkix_asn1_tab, &parser.pkix_definitions, message);
-	if (ret != ASN1_SUCCESS) {
-		p11_debug_precond ("failed to load pkix_asn1_tab in %s: %d %s",
-		                   __func__, ret, message);
-		return NULL;
-	}
-
-	ret = asn1_array2tree (openssl_asn1_tab, &parser.openssl_definitions, message);
-	if (ret != ASN1_SUCCESS) {
-		p11_debug_precond ("failed to load openssl_asn1_tab in %s: %d %s",
-		                   __func__, ret, message);
-		return NULL;
-	}
+	parser.asn1_defs = p11_asn1_defs_load ();
+	return_val_if_fail (parser.asn1_defs != NULL, NULL);
 
 	return memdup (&parser, sizeof (parser));
 }
@@ -1520,7 +1039,7 @@ p11_parser_free (p11_parser *parser)
 	if (!parser)
 		return;
 
-	asn1_delete_structure (&parser->pkix_definitions);
+	p11_dict_free (parser->asn1_defs);
 	free (parser);
 }
 
@@ -1601,4 +1120,11 @@ p11_parse_file (p11_parser *parser,
 	close (fd);
 
 	return ret;
+}
+
+p11_dict *
+p11_parser_get_asn1_defs (p11_parser *parser)
+{
+	return_val_if_fail (parser != NULL, NULL);
+	return parser->asn1_defs;
 }

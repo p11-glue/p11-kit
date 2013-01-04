@@ -518,105 +518,6 @@ test_parse_unrecognized (CuTest *cu)
 	teardown (cu);
 }
 
-struct {
-	const char *eku;
-	size_t length;
-	const unsigned char *expected[16];
-} extended_key_usage_fixtures[] = {
-	{ test_eku_server_and_client, sizeof (test_eku_server_and_client),
-	  { P11_OID_CLIENT_AUTH, P11_OID_SERVER_AUTH, NULL }, },
-	{ test_eku_none, sizeof (test_eku_none),
-	  { NULL, }, },
-	{ test_eku_client_email_and_timestamp, sizeof (test_eku_client_email_and_timestamp),
-	  { P11_OID_CLIENT_AUTH, P11_OID_EMAIL_PROTECTION, P11_OID_TIME_STAMPING }, },
-	{ NULL },
-};
-
-static void
-test_parse_extended_key_usage (CuTest *cu)
-{
-	p11_dict *ekus;
-	int i, j;
-
-	setup (cu);
-
-	for (i = 0; extended_key_usage_fixtures[i].eku != NULL; i++) {
-		ekus = p11_parse_extended_key_usage (test.parser,
-		                                     (const unsigned char *)extended_key_usage_fixtures[i].eku,
-		                                     extended_key_usage_fixtures[i].length);
-		CuAssertPtrNotNull (cu, ekus);
-
-		for (j = 0; extended_key_usage_fixtures[i].expected[j] != NULL; j++)
-			CuAssertTrue (cu, p11_dict_get (ekus, extended_key_usage_fixtures[i].expected[j]) != NULL);
-		CuAssertIntEquals (cu, j, p11_dict_size (ekus));
-
-		p11_dict_free (ekus);
-	}
-
-	teardown (cu);
-}
-
-static void
-test_bad_extended_key_usage (CuTest *cu)
-{
-	p11_dict *ekus;
-
-	setup (cu);
-
-	ekus = p11_parse_extended_key_usage (test.parser, (const unsigned char *)"blah", 4);
-	CuAssertPtrEquals (cu, NULL, ekus);
-
-	teardown (cu);
-}
-
-struct {
-	const char *ku;
-	size_t length;
-	unsigned int expected;
-} key_usage_fixtures[] = {
-	{ test_ku_ds_and_np, sizeof (test_ku_ds_and_np), P11_KU_DIGITAL_SIGNATURE | P11_KU_NON_REPUDIATION },
-	{ test_ku_none, sizeof (test_ku_none), 0 },
-	{ test_ku_cert_crl_sign, sizeof (test_ku_cert_crl_sign), P11_KU_KEY_CERT_SIGN | P11_KU_CRL_SIGN },
-	{ NULL },
-};
-
-static void
-test_parse_key_usage (CuTest *cu)
-{
-	unsigned int ku;
-	int i;
-	int ret;
-
-	setup (cu);
-
-	for (i = 0; key_usage_fixtures[i].ku != NULL; i++) {
-		ku = 0;
-
-		ret = p11_parse_key_usage (test.parser,
-		                           (const unsigned char *)key_usage_fixtures[i].ku,
-		                           key_usage_fixtures[i].length, &ku);
-		CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
-
-		CuAssertIntEquals (cu, key_usage_fixtures[i].expected, ku);
-	}
-
-	teardown (cu);
-}
-
-static void
-test_bad_key_usage (CuTest *cu)
-{
-	unsigned int ku;
-	int ret;
-
-	setup (cu);
-
-	ret = p11_parse_key_usage (test.parser, (const unsigned char *)"blah", 4, &ku);
-	CuAssertIntEquals (cu, P11_PARSE_UNRECOGNIZED, ret);
-
-	teardown (cu);
-}
-
 int
 main (void)
 {
@@ -628,10 +529,6 @@ main (void)
 	p11_debug_init ();
 	p11_message_quiet ();
 
-	SUITE_ADD_TEST (suite, test_bad_extended_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_extended_key_usage);
-	SUITE_ADD_TEST (suite, test_bad_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_key_usage);
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);

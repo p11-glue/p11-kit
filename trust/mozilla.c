@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "asn1.h"
 #include "attrs.h"
 #include "checksum.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
@@ -43,6 +44,7 @@
 #include "mozilla.h"
 #include "oid.h"
 #include "parser.h"
+#include "x509.h"
 
 #include "pkcs11.h"
 #include "pkcs11x.h"
@@ -57,6 +59,7 @@ update_ku (p11_parser *parser,
            CK_TRUST present)
 {
 	unsigned char *data = NULL;
+	p11_dict *asn1_defs;
 	unsigned int ku = 0;
 	size_t length;
 	CK_TRUST defawlt;
@@ -92,7 +95,8 @@ update_ku (p11_parser *parser,
 		 */
 		defawlt = CKT_NETSCAPE_TRUST_UNKNOWN;
 
-		if (p11_parse_key_usage (parser, data, length, &ku) != P11_PARSE_SUCCESS)
+		asn1_defs = p11_parser_get_asn1_defs (parser);
+		if (!p11_x509_parse_key_usage (asn1_defs, data, length, &ku))
 			p11_message ("invalid key usage certificate extension");
 		free (data);
 	}
@@ -122,21 +126,22 @@ update_eku (p11_parser *parser,
 	unsigned char *data = NULL;
 	p11_dict *ekus = NULL;
 	p11_dict *reject = NULL;
+	p11_dict *asn1_defs;
 	size_t length;
 	CK_ULONG i;
 
 	struct {
 		CK_ATTRIBUTE_TYPE type;
-		const unsigned char *eku;
+		const char *eku;
 	} eku_attribute_map[] = {
-		{ CKA_TRUST_SERVER_AUTH, P11_OID_SERVER_AUTH },
-		{ CKA_TRUST_CLIENT_AUTH, P11_OID_CLIENT_AUTH },
-		{ CKA_TRUST_CODE_SIGNING, P11_OID_CODE_SIGNING },
-		{ CKA_TRUST_EMAIL_PROTECTION, P11_OID_EMAIL_PROTECTION },
-		{ CKA_TRUST_IPSEC_END_SYSTEM, P11_OID_IPSEC_END_SYSTEM },
-		{ CKA_TRUST_IPSEC_TUNNEL, P11_OID_IPSEC_TUNNEL },
-		{ CKA_TRUST_IPSEC_USER, P11_OID_IPSEC_USER },
-		{ CKA_TRUST_TIME_STAMPING, P11_OID_TIME_STAMPING },
+		{ CKA_TRUST_SERVER_AUTH, P11_OID_SERVER_AUTH_STR },
+		{ CKA_TRUST_CLIENT_AUTH, P11_OID_CLIENT_AUTH_STR },
+		{ CKA_TRUST_CODE_SIGNING, P11_OID_CODE_SIGNING_STR },
+		{ CKA_TRUST_EMAIL_PROTECTION, P11_OID_EMAIL_PROTECTION_STR },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, P11_OID_IPSEC_END_SYSTEM_STR },
+		{ CKA_TRUST_IPSEC_TUNNEL, P11_OID_IPSEC_TUNNEL_STR },
+		{ CKA_TRUST_IPSEC_USER, P11_OID_IPSEC_USER_STR },
+		{ CKA_TRUST_TIME_STAMPING, P11_OID_TIME_STAMPING_STR },
 		{ CKA_INVALID },
 	};
 
@@ -161,7 +166,8 @@ update_eku (p11_parser *parser,
 		 */
 		defawlt = CKT_NETSCAPE_TRUST_UNKNOWN;
 
-		ekus = p11_parse_extended_key_usage (parser, data, length);
+		asn1_defs = p11_parser_get_asn1_defs (parser);
+		ekus = p11_x509_parse_extended_key_usage (asn1_defs, data, length);
 		if (ekus == NULL)
 			p11_message ("invalid extended key usage certificate extension");
 		free (data);
@@ -169,7 +175,8 @@ update_eku (p11_parser *parser,
 
 	data = p11_parsing_get_extension (parser, parsing, P11_OID_OPENSSL_REJECT, &length);
 	if (data) {
-		reject = p11_parse_extended_key_usage (parser, data, length);
+		asn1_defs = p11_parser_get_asn1_defs (parser);
+		reject = p11_x509_parse_extended_key_usage (asn1_defs, data, length);
 		if (reject == NULL)
 			p11_message ("invalid reject key usage certificate extension");
 		free (data);

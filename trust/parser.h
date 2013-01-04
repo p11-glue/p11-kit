@@ -76,19 +76,7 @@ int           p11_parse_file       (p11_parser *parser,
                                     p11_parser_sink sink,
                                     void *sink_data);
 
-int           p11_parse_basic_constraints    (p11_parser *parser,
-                                              const unsigned char *data,
-                                              size_t length,
-                                              int *is_ca);
-
-int           p11_parse_key_usage            (p11_parser *parser,
-                                              const unsigned char *data,
-                                              size_t length,
-                                              unsigned int *ku);
-
-p11_dict *    p11_parse_extended_key_usage   (p11_parser *parser,
-                                              const unsigned char *data,
-                                              size_t length);
+p11_dict *    p11_parser_get_asn1_defs        (p11_parser *parser);
 
 /* Functions used for retrieving parsing information */
 
