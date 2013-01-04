@@ -35,10 +35,10 @@
 #include "array.h"
 #include "parser.h"
 
-#ifndef P11_MOZILLA_H_
-#define P11_MOZILLA_H_
+#ifndef P11_ADAPTER_H_
+#define P11_ADAPTER_H_
 
-void    p11_mozilla_build_trust_object      (p11_parser *parser,
+void    p11_adapter_build_objects           (p11_parser *parser,
                                              p11_array *parsing);
 
-#endif
+#endif /* P11_ADAPTER_H_ */

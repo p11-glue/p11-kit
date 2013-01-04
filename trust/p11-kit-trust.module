@@ -4,3 +4,6 @@ module: p11-kit-trust.so
 
 # The order in which this is loaded in the trust policy
 trust-policy: 1
+
+# This is for drop-in compatibilty with glib-networking and gcr
+x-trust-lookup: pkcs11:library-description=PKCS%2311%20Kit%20Trust%20Module

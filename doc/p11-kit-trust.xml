@@ -76,6 +76,17 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 	GUI or command line configuration.</para>
 </section>
 
+<section id="trust-glib-networking">
+	<title>Using the Trust Policy Module with glib-networking</title>
+
+	<para>The trust policy module can be used as a source of trust
+	information for glib-networking's <literal>gnutls-pkcs11</literal> backend.
+	The module provides PKCS#11 trust assertion objects as expected.</para>
+	
+	<para>The module should work by default if the <literal>gnutls-pkcs11</literal>
+	backend is selected as the glib-networking TLS backend.</para>
+</section>
+
 <section id="trust-disable">
 	<title>Disabling the Trust Policy Module</title>
 

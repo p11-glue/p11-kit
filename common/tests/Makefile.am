@@ -42,6 +42,7 @@ CHECK_PROGS += \
 	$(NULL)
 
 noinst_PROGRAMS += \
+	frob-cert \
 	frob-ku \
 	frob-eku \
 	frob-cert \

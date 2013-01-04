@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "adapter.h"
 #include "array.h"
 #include "asn1.h"
 #include "attrs.h"
@@ -43,7 +44,6 @@
 #include "dict.h"
 #include "library.h"
 #include "module.h"
-#include "mozilla.h"
 #include "oid.h"
 #include "parser.h"
 #include "pem.h"
@@ -120,7 +120,7 @@ finish_parsing (p11_parser *parser,
 	p11_parsing_update_certificate (parser, parser->parsing);
 
 	/* Call all the hooks for generating further objects */
-	p11_mozilla_build_trust_object (parser, parser->parsing);
+	p11_adapter_build_objects (parser, parser->parsing);
 
 	for (i = 0; i < parser->parsing->num; i++) {
 		attrs = parser->parsing->elem[i];
@@ -771,7 +771,6 @@ update_trust_and_distrust (p11_parser *parser,
 	trusted = (parser->flags & P11_PARSE_FLAG_ANCHOR) ? CK_TRUE : CK_FALSE;
 	distrusted = (parser->flags & P11_PARSE_FLAG_BLACKLIST) ? CK_TRUE : CK_FALSE;
 
-	/* See if we have a basic constraints extension */
 	data = p11_parsing_get_extension (parser, parser->parsing, P11_OID_EXTENDED_KEY_USAGE, &length);
 	if (data) {
 		ekus = p11_x509_parse_extended_key_usage (parser->asn1_defs, data, length);

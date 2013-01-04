@@ -87,7 +87,6 @@ enum {
 static const unsigned char P11_OID_BASIC_CONSTRAINTS[] =
 	{ 0x06, 0x03, 0x55, 0x1d, 0x13 };
 
-
 /*
  * 2.5.29.37: ExtendedKeyUsage
  *

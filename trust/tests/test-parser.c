@@ -159,6 +159,9 @@ test_parse_openssl_trusted (CuTest *cu)
 	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
 	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
 	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
+	CK_X_ASSERTION_TYPE anchored_certificate = CKT_X_ANCHORED_CERTIFICATE;
+	CK_X_ASSERTION_TYPE distrusted_certificate = CKT_X_DISTRUSTED_CERTIFICATE;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 
@@ -207,10 +210,49 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_INVALID, }
 	};
 
+	CK_ATTRIBUTE server_anchor[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_SERVER_AUTH_STR, strlen (P11_OID_SERVER_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE client_anchor[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_CLIENT_AUTH_STR, strlen (P11_OID_CLIENT_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE email_distrust[] = {
+		{ CKA_LABEL, "Custom Label", 12 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, strlen (P11_OID_EMAIL_PROTECTION_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *expected[] = {
+		NULL,
+		eku_extension,
+		reject_extension,
+		nss_trust,
+		email_distrust,
+		server_anchor,
+		client_anchor
+	};
+
 	CK_ATTRIBUTE *cert;
 	CK_ATTRIBUTE *object;
 	CK_BBOOL bval;
 	int ret;
+	int i;
 
 	setup (cu);
 
@@ -218,9 +260,16 @@ test_parse_openssl_trusted (CuTest *cu)
 	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
-	/* Should have gotten certificate, two stapled extensions, and a trust object */
-	CuAssertIntEquals (cu, 4, test.objects->num);
+	/*
+	 * Should have gotten:
+	 * - 1 certificate
+	 * - 2 stapled extensions
+	 * - 1 trust object
+	 * - 3 trust assertions
+	 */
+	CuAssertIntEquals (cu, 7, test.objects->num);
 
+	/* The certificate */
 	cert = test.objects->elem[0];
 	test_check_cacert3_ca (cu, cert, NULL);
 
@@ -232,17 +281,12 @@ test_parse_openssl_trusted (CuTest *cu)
 		CuFail (cu, "missing CKA_X_DISTRUSTED");
 	CuAssertIntEquals (cu, CK_FALSE, bval);
 
-	object = test.objects->elem[1];
-	test_check_attrs (cu, eku_extension, object);
-	test_check_id (cu, cert, object);
-
-	object = test.objects->elem[2];
-	test_check_attrs (cu, reject_extension, object);
-	test_check_id (cu, cert, object);
-
-	object = test.objects->elem[3];
-	test_check_attrs (cu, nss_trust, object);
-	test_check_id (cu, cert, object);
+	/* The other objects */
+	for (i = 1; i < 7; i++) {
+		object = test.objects->elem[i];
+		test_check_attrs (cu, expected[i], object);
+		test_check_id (cu, cert, object);
+	}
 
 	teardown (cu);
 }
@@ -254,6 +298,8 @@ test_parse_openssl_distrusted (CuTest *cu)
 	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
 	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
 	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
+	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
+	CK_X_ASSERTION_TYPE distrusted_certificate = CKT_X_DISTRUSTED_CERTIFICATE;
 	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
 	CK_ULONG category = 2; /* authority */
 	CK_BBOOL vtrue = CK_TRUE;
@@ -319,9 +365,122 @@ test_parse_openssl_distrusted (CuTest *cu)
 		{ CKA_INVALID, }
 	};
 
+	unsigned char red_hat_issuer[] = {
+		0x30, 0x81, 0x9d, 0x31, 0x0b, 0x30, 0x09, 0x06, 0x03, 0x55, 0x04, 0x06, 0x13, 0x02, 0x55, 0x53,
+		0x31, 0x17, 0x30, 0x15, 0x06, 0x03, 0x55, 0x04, 0x08, 0x13, 0x0e, 0x4e, 0x6f, 0x72, 0x74, 0x68,
+		0x20, 0x43, 0x61, 0x72, 0x6f, 0x6c, 0x69, 0x6e, 0x61, 0x31, 0x10, 0x30, 0x0e, 0x06, 0x03, 0x55,
+		0x04, 0x07, 0x13, 0x07, 0x52, 0x61, 0x6c, 0x65, 0x69, 0x67, 0x68, 0x31, 0x16, 0x30, 0x14, 0x06,
+		0x03, 0x55, 0x04, 0x0a, 0x13, 0x0d, 0x52, 0x65, 0x64, 0x20, 0x48, 0x61, 0x74, 0x2c, 0x20, 0x49,
+		0x6e, 0x63, 0x2e, 0x31, 0x0b, 0x30, 0x09, 0x06, 0x03, 0x55, 0x04, 0x0b, 0x13, 0x02, 0x49, 0x53,
+		0x31, 0x16, 0x30, 0x14, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x0d, 0x52, 0x65, 0x64, 0x20, 0x48,
+		0x61, 0x74, 0x20, 0x49, 0x53, 0x20, 0x43, 0x41, 0x31, 0x26, 0x30, 0x24, 0x06, 0x09, 0x2a, 0x86,
+		0x48, 0x86, 0xf7, 0x0d, 0x01, 0x09, 0x01, 0x16, 0x17, 0x73, 0x79, 0x73, 0x61, 0x64, 0x6d, 0x69,
+		0x6e, 0x2d, 0x72, 0x64, 0x75, 0x40, 0x72, 0x65, 0x64, 0x68, 0x61, 0x74, 0x2e, 0x63, 0x6f, 0x6d,
+	};
+
+	unsigned char red_hat_serial[] = {
+		0x02, 0x01, 0x01,
+	};
+
+	CK_ATTRIBUTE server_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_SERVER_AUTH_STR, strlen (P11_OID_SERVER_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE client_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_CLIENT_AUTH_STR, strlen (P11_OID_CLIENT_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE code_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_CODE_SIGNING_STR, strlen (P11_OID_CODE_SIGNING_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE email_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, strlen (P11_OID_EMAIL_PROTECTION_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_system_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_END_SYSTEM_STR, strlen (P11_OID_IPSEC_END_SYSTEM_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_tunnel_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_TUNNEL_STR, strlen (P11_OID_IPSEC_TUNNEL_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_user_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_USER_STR, strlen (P11_OID_IPSEC_USER_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE stamping_distrust[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_ISSUER, (void *)red_hat_issuer, sizeof (red_hat_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)red_hat_serial, sizeof (red_hat_serial) },
+		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_TIME_STAMPING_STR, strlen (P11_OID_TIME_STAMPING_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *expected[] = {
+		certificate,
+		eku_extension,
+		reject_extension,
+		nss_trust,
+		server_distrust,
+		client_distrust,
+		code_distrust,
+		email_distrust,
+		ipsec_system_distrust,
+		ipsec_tunnel_distrust,
+		ipsec_user_distrust,
+		stamping_distrust,
+	};
+
 	CK_ATTRIBUTE *cert;
 	CK_ATTRIBUTE *object;
 	int ret;
+	int i;
 
 	setup (cu);
 
@@ -333,23 +492,22 @@ test_parse_openssl_distrusted (CuTest *cu)
 	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
-	/* Should have gotten certificate, one stapled extensions, and a trust object */
-	CuAssertIntEquals (cu, 4, test.objects->num);
-
+	/*
+	 * Should have gotten:
+	 * - 1 certificate
+	 * - 2 stapled extensions
+	 * - 1 trust object
+	 * - 8 trust assertions
+	 */
+	CuAssertIntEquals (cu, 12, test.objects->num);
 	cert = test.objects->elem[0];
-	test_check_attrs (cu, certificate, cert);
 
-	object = test.objects->elem[1];
-	test_check_attrs (cu, eku_extension, object);
-	test_check_id (cu, cert, object);
-
-	object = test.objects->elem[2];
-	test_check_attrs (cu, reject_extension, object);
-	test_check_id (cu, cert, object);
-
-	object = test.objects->elem[3];
-	test_check_attrs (cu, nss_trust, object);
-	test_check_id (cu, cert, object);
+	/* The other objects */
+	for (i = 0; i < 12; i++) {
+		object = test.objects->elem[i];
+		test_check_attrs (cu, expected[i], object);
+		test_check_id (cu, cert, object);
+	}
 
 	teardown (cu);
 }
@@ -447,12 +605,129 @@ test_parse_with_key_usage (CuTest *cu)
 static void
 test_parse_anchor (CuTest *cu)
 {
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
+	CK_TRUST delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
+	CK_X_ASSERTION_TYPE anchored_certificate = CKT_X_ANCHORED_CERTIFICATE;
+
+	CK_ATTRIBUTE nss_trust[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
+		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_TRUST_SERVER_AUTH, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_CLIENT_AUTH, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_EMAIL_PROTECTION, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_CODE_SIGNING, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_IPSEC_TUNNEL, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_IPSEC_USER, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_TIME_STAMPING, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_DIGITAL_SIGNATURE, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_NON_REPUDIATION, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_KEY_ENCIPHERMENT, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_DATA_ENCIPHERMENT, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_KEY_AGREEMENT, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_KEY_CERT_SIGN, &delegator, sizeof (delegator) },
+		{ CKA_TRUST_CRL_SIGN, &delegator, sizeof (delegator) },
+		{ CKA_INVALID, }
+	};
+
+	CK_ATTRIBUTE server_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_SERVER_AUTH_STR, strlen (P11_OID_SERVER_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE client_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_CLIENT_AUTH_STR, strlen (P11_OID_CLIENT_AUTH_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE code_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_CODE_SIGNING_STR, strlen (P11_OID_CODE_SIGNING_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE email_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, strlen (P11_OID_EMAIL_PROTECTION_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_system_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_END_SYSTEM_STR, strlen (P11_OID_IPSEC_END_SYSTEM_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_tunnel_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_TUNNEL_STR, strlen (P11_OID_IPSEC_TUNNEL_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE ipsec_user_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_USER_STR, strlen (P11_OID_IPSEC_USER_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE stamping_anchor[] = {
+		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
+		{ CKA_X_PURPOSE, (void *)P11_OID_TIME_STAMPING_STR, strlen (P11_OID_TIME_STAMPING_STR) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *expected[] = {
+		NULL,
+		nss_trust,
+		server_anchor,
+		client_anchor,
+		code_anchor,
+		email_anchor,
+		ipsec_system_anchor,
+		ipsec_tunnel_anchor,
+		ipsec_user_anchor,
+		stamping_anchor,
+	};
+
 	CK_ATTRIBUTE *cert;
 	CK_ATTRIBUTE *object;
 	CK_ATTRIBUTE *attr;
-	CK_BBOOL vtrue = CK_TRUE;
-	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
 	int ret;
+	int i;
 
 	setup (cu);
 
@@ -460,17 +735,24 @@ test_parse_anchor (CuTest *cu)
 	                      P11_PARSE_FLAG_ANCHOR, on_parse_object, cu);
 	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
 
-	/* Should have gotten a certificate and a trust object */
-	CuAssertIntEquals (cu, 2, test.objects->num);
+	/*
+	 * Should have gotten:
+	 * - 1 certificate
+	 * - 1 trust object
+	 * - 8 trust assertions
+	 */
+	CuAssertIntEquals (cu, 10, test.objects->num);
 
 	cert = test.objects->elem[0];
 	test_check_cacert3_ca (cu, cert, NULL);
-
 	attr = p11_attrs_find (cert, CKA_TRUSTED);
 	test_check_attr (cu, &trusted, attr);
 
-	object = test.objects->elem[1];
-	test_check_id (cu, cert, object);
+	for (i = 1; i < 10; i++) {
+		object = test.objects->elem[i];
+		test_check_attrs (cu, expected[i], object);
+		test_check_id (cu, cert, object);
+	}
 
 	teardown (cu);
 }
