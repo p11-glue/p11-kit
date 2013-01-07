@@ -117,6 +117,12 @@
  */
 
 /**
+ * P11_KIT_URI_NO_MEMORY:
+ *
+ * Unexpected memory allocation failure result. Same as #P11_KIT_URI_UNEXPECTED.
+ */
+
+/**
  * P11_KIT_URI_SCHEME:
  *
  * String of URI scheme for PKCS\#11 URIs.
@@ -468,7 +474,6 @@ uri_take_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
  *
  * Returns: %P11_KIT_URI_OK if the attribute was successfully set.
  *     %P11_KIT_URI_NOT_FOUND if the attribute was not valid for a URI.
- *     %P11_KIT_URI_NO_MEMORY if allocation failed.
  */
 int
 p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
@@ -933,7 +938,6 @@ format_struct_version (char **string, size_t *length, int *is_first,
  * The resulting string should be freed with free().
  *
  * Returns: %P11_KIT_URI_OK if the URI was formatted successfully.
- *     %P11_KIT_URI_NO_MEMORY if memory allocation failed.
  */
 int
 p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
@@ -1276,7 +1280,6 @@ parse_extra_info (const char *name, const char *start, const char *end,
  * Returns: %P11_KIT_URI_OK if the URI was parsed successfully.
  *     %P11_KIT_URI_BAD_SCHEME if this was not a PKCS\#11 URI.
  *     %P11_KIT_URI_BAD_SYNTAX if the URI syntax was bad.
- *     %P11_KIT_URI_NO_MEMORY if memory allocation failed.
  *     %P11_KIT_URI_BAD_VERSION if a version number was bad.
  *     %P11_KIT_URI_BAD_ENCODING if the URI encoding was invalid.
  */

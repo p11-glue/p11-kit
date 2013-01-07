@@ -27,6 +27,7 @@ p11_kit_uri_format
 p11_kit_uri_parse
 p11_kit_uri_free
 p11_kit_uri_message
+P11_KIT_URI_NO_MEMORY
 </SECTION>
 
 <SECTION>
