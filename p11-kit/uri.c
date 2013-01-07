@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "attrs.h"
 #define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
 #include "library.h"
@@ -134,21 +135,11 @@
  * Length of %P11_KIT_URI_SCHEME.
  */
 
-static const CK_ATTRIBUTE_TYPE SUPPORTED_ATTRIBUTE_TYPES[] = {
-	CKA_CLASS,
-	CKA_LABEL,
-	CKA_ID
-};
-
-#define NUM_ATTRIBUTE_TYPES \
-	(sizeof (SUPPORTED_ATTRIBUTE_TYPES) / sizeof (SUPPORTED_ATTRIBUTE_TYPES[0]))
-
 struct p11_kit_uri {
 	int unrecognized;
 	CK_INFO module;
 	CK_TOKEN_INFO token;
-	CK_ATTRIBUTE attributes[NUM_ATTRIBUTE_TYPES];
-	CK_ULONG n_attributes;
+	CK_ATTRIBUTE *attrs;
 	char *pin_source;
 };
 
@@ -426,41 +417,12 @@ p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 CK_ATTRIBUTE_PTR
 p11_kit_uri_get_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 {
-	CK_ULONG i;
-
 	return_val_if_fail (uri != NULL, NULL);
 
-	for (i = 0; i < uri->n_attributes; i++) {
-		if (uri->attributes[i].type == attr_type)
-			return &uri->attributes[i];
-	}
+	if (uri->attrs == NULL)
+		return NULL;
 
-	return NULL;
-}
-
-static void
-uri_take_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
-{
-	CK_ULONG i;
-
-	assert (uri);
-	assert (attr);
-
-	/* Replace an attribute already set */
-	for (i = 0; i < uri->n_attributes; i++) {
-		if (uri->attributes[i].type == attr->type) {
-			free (uri->attributes[i].pValue);
-			memcpy (&uri->attributes[i], attr, sizeof (CK_ATTRIBUTE));
-			memset (attr, 0, sizeof (CK_ATTRIBUTE));
-			return;
-		}
-	}
-
-	/* Add one at the end */
-	assert (uri->n_attributes < NUM_ATTRIBUTE_TYPES);
-	memcpy (&uri->attributes[uri->n_attributes], attr, sizeof (CK_ATTRIBUTE));
-	memset (attr, 0, sizeof (CK_ATTRIBUTE));
-	uri->n_attributes++;
+	return p11_attrs_find (uri->attrs, attr_type);
 }
 
 /**
@@ -478,30 +440,11 @@ uri_take_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 int
 p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 {
-	CK_ATTRIBUTE copy;
-	CK_ULONG i;
-
-	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 
-	/* Make sure the attribute type is valid */
-	for (i = 0; i < NUM_ATTRIBUTE_TYPES; i++) {
-		if (SUPPORTED_ATTRIBUTE_TYPES[i] == attr->type)
-			break;
-	}
-	if (i == NUM_ATTRIBUTE_TYPES)
-		return P11_KIT_URI_NOT_FOUND;
+	uri->attrs = p11_attrs_buildn (uri->attrs, attr, 1);
+	return_val_if_fail (uri->attrs != NULL, P11_KIT_URI_UNEXPECTED);
 
-	memcpy (&copy, attr, sizeof (CK_ATTRIBUTE));
-
-	/* Duplicate the value */
-	if (attr->pValue && attr->ulValueLen && attr->ulValueLen != (CK_ULONG)-1) {
-		copy.pValue = malloc (attr->ulValueLen);
-		return_val_if_fail (copy.pValue != NULL, P11_KIT_URI_UNEXPECTED);
-		memcpy (copy.pValue, attr->pValue, attr->ulValueLen);
-	}
-
-	uri_take_attribute (uri, &copy);
 	return P11_KIT_URI_OK;
 }
 
@@ -520,44 +463,16 @@ p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 int
 p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 {
-	CK_ATTRIBUTE_PTR clear = NULL;
-	CK_ATTRIBUTE_PTR last;
-	CK_ULONG i;
-
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 
-	/* Make sure the attribute type is valid */
-	for (i = 0; i < NUM_ATTRIBUTE_TYPES; i++) {
-		if (SUPPORTED_ATTRIBUTE_TYPES[i] == attr_type)
-			break;
-	}
-	if (i == NUM_ATTRIBUTE_TYPES)
+	if (attr_type != CKA_CLASS &&
+	    attr_type != CKA_LABEL &&
+	    attr_type != CKA_ID)
 		return P11_KIT_URI_NOT_FOUND;
 
-	/* Cleanup the values in the attribute */
-	for (i = 0; i < uri->n_attributes; i++) {
-		if (uri->attributes[i].type == attr_type) {
-			clear = &uri->attributes[i];
-			free (uri->attributes[i].pValue);
-			break;
-		}
-	}
+	if (uri->attrs)
+		p11_attrs_remove (uri->attrs, attr_type);
 
-	/* A valid attribute, but not present */
-	if (clear == NULL)
-		return P11_KIT_URI_OK;
-
-	assert (uri->n_attributes > 0);
-	uri->n_attributes--;
-
-	/* If not the last attribute, then make last take its place */
-	last = &uri->attributes[uri->n_attributes];
-	if (clear != last) {
-		memcpy (clear, last, sizeof (CK_ATTRIBUTE));
-		clear = last;
-	}
-
-	memset (clear, 0, sizeof (CK_ATTRIBUTE));
 	return P11_KIT_URI_OK;
 }
 
@@ -575,11 +490,19 @@ p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 CK_ATTRIBUTE_PTR
 p11_kit_uri_get_attributes (P11KitUri *uri, CK_ULONG_PTR n_attrs)
 {
-	return_val_if_fail (uri != NULL, NULL);
-	return_val_if_fail (n_attrs != NULL, NULL);
+	static CK_ATTRIBUTE empty = { CKA_INVALID, NULL, 0UL };
 
-	*n_attrs = uri->n_attributes;
-	return uri->attributes;
+	return_val_if_fail (uri != NULL, NULL);
+
+	if (!uri->attrs) {
+		if (n_attrs)
+			*n_attrs = 0;
+		return &empty;
+	}
+
+	if (n_attrs)
+		*n_attrs = p11_attrs_count (uri->attrs);
+	return uri->attrs;
 }
 
 int
@@ -605,31 +528,10 @@ p11_kit_uri_set_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
 void
 p11_kit_uri_clear_attributes (P11KitUri *uri)
 {
-	CK_ULONG i;
-
 	return_if_fail (uri != NULL);
 
-	for (i = 0; i < uri->n_attributes; i++)
-		free (uri->attributes[i].pValue);
-	uri->n_attributes = 0;
-}
-
-
-static int
-match_attributes (CK_ATTRIBUTE_PTR one, CK_ATTRIBUTE_PTR two)
-{
-	assert (one);
-	assert (two);
-
-	if (one->type != two->type)
-		return 0;
-	if (one->ulValueLen != two->ulValueLen)
-		return 0;
-	if (one->pValue == two->pValue)
-		return 1;
-	if (!one->pValue || !two->pValue)
-		return 0;
-	return memcmp (one->pValue, two->pValue, one->ulValueLen) == 0;
+	p11_attrs_free (uri->attrs);
+	uri->attrs = NULL;
 }
 
 /**
@@ -651,7 +553,7 @@ int
 p11_kit_uri_match_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
                               CK_ULONG n_attrs)
 {
-	CK_ULONG j;
+	CK_ATTRIBUTE *attr;
 	CK_ULONG i;
 
 	return_val_if_fail (uri != NULL, 0);
@@ -660,14 +562,18 @@ p11_kit_uri_match_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
 	if (uri->unrecognized)
 		return 0;
 
-	for (i = 0; i < uri->n_attributes; i++) {
-		for (j = 0; j < n_attrs; ++j) {
-			if (uri->attributes[i].type == attrs[j].type) {
-				if (!match_attributes (&uri->attributes[i], &attrs[j]))
-					return 0;
-				break;
-			}
-		}
+	for (i = 0; i < n_attrs; i++) {
+		if (attrs[i].type != CKA_CLASS &&
+		    attrs[i].type != CKA_LABEL &&
+		    attrs[i].type != CKA_ID)
+			continue;
+		attr = NULL;
+		if (uri->attrs)
+			attr = p11_attrs_find (uri->attrs, attrs[i].type);
+		if (!attr)
+			continue;
+		if (!p11_attr_equal (attr, attrs + i))
+			return 0;
 	}
 
 	return 1;
@@ -935,9 +841,18 @@ format_struct_version (char **string, size_t *length, int *is_first,
  * URI. To format a URI containing all possible information use
  * %P11_KIT_URI_FOR_ANY
  *
+ * It's up to the caller to guarantee that the attributes set in @uri are
+ * those appropriate for inclusion in a URI, specifically:
+ * <literal>CKA_ID</literal>, <literal>CKA_LABEL</literal>
+ * and <literal>CKA_CLASS</literal>. The class must be one of
+ * <literal>CKO_DATA</literal>, <literal>CKO_SECRET_KEY</literal>,
+ * <literal>CKO_CERTIFICATE</literal>, <literal>CKO_PUBLIC_KEY</literal>,
+ * <literal>CKO_PRIVATE_KEY</literal>.
+ *
  * The resulting string should be freed with free().
  *
- * Returns: %P11_KIT_URI_OK if the URI was formatted successfully.
+ * Returns: %P11_KIT_URI_OK if the URI was formatted successfully,
+ *          %P11_KIT_URI_UNEXPECTED if the data in @uri is invalid for a URI.
  */
 int
 p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
@@ -1025,16 +940,16 @@ parse_string_attribute (const char *name, const char *start, const char *end,
                         P11KitUri *uri)
 {
 	unsigned char *value;
-	CK_ATTRIBUTE attr;
+	CK_ATTRIBUTE_TYPE type;
 	size_t length;
 	int ret;
 
 	assert (start <= end);
 
 	if (strcmp ("id", name) == 0)
-		attr.type = CKA_ID;
+		type = CKA_ID;
 	else if (strcmp ("object", name) == 0)
-		attr.type = CKA_LABEL;
+		type = CKA_LABEL;
 	else
 		return 0;
 
@@ -1042,9 +957,7 @@ parse_string_attribute (const char *name, const char *start, const char *end,
 	if (ret < 0)
 		return ret;
 
-	attr.pValue = value;
-	attr.ulValueLen = length;
-	uri_take_attribute (uri, &attr);
+	uri->attrs = p11_attrs_take (uri->attrs, type, value, length);
 	return 1;
 }
 
@@ -1092,7 +1005,7 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 	attr.ulValueLen = sizeof (klass);
 	attr.type = CKA_CLASS;
 
-	uri_take_attribute (uri, &attr);
+	uri->attrs = p11_attrs_build (uri->attrs, &attr, NULL);
 	return 1;
 }
 
@@ -1290,7 +1203,6 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	const char *spos, *epos;
 	char *key = NULL;
 	int ret;
-	int i;
 
 	assert (string);
 	assert (uri);
@@ -1311,11 +1223,8 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	/* Clear everything out */
 	memset (&uri->module, 0, sizeof (uri->module));
 	memset (&uri->token, 0, sizeof (uri->token));
-	for (i = 0; i < uri->n_attributes; ++i) {
-		free (uri->attributes[i].pValue);
-		memset (&uri->attributes[i], 0, sizeof (CK_ATTRIBUTE));
-	}
-	uri->n_attributes = 0;
+	p11_attrs_free (uri->attrs);
+	uri->attrs = NULL;
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->unrecognized = 0;
@@ -1376,14 +1285,10 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 void
 p11_kit_uri_free (P11KitUri *uri)
 {
-	int i;
-
 	if (!uri)
 		return;
 
-	for (i = 0; i < uri->n_attributes; ++i)
-		free (uri->attributes[i].pValue);
-
+	p11_attrs_free (uri->attrs);
 	free (uri->pin_source);
 	free (uri);
 }

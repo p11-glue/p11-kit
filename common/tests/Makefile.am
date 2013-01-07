@@ -20,6 +20,7 @@ LDADD = \
 CHECK_PROGS = \
 	test-dict \
 	test-array \
+	test-attrs \
 	$(NULL)
 
 noinst_PROGRAMS = \

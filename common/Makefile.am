@@ -18,6 +18,7 @@ libp11_compat_la_SOURCES = \
 	$(NULL)
 
 libp11_library_la_SOURCES = \
+	attrs.c attrs.h \
 	array.c array.h \
 	debug.c debug.h \
 	dict.c dict.h \

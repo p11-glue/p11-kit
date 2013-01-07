@@ -993,12 +993,14 @@ test_uri_get_set_attribute (CuTest *tc)
 	ret = p11_kit_uri_set_attribute (uri, &attr);
 	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
+	/* We can set other attributes */
 	attr.type = CKA_COLOR;
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_NOT_FOUND, ret);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
 
+	/* And get them too */
 	ptr = p11_kit_uri_get_attribute (uri, CKA_COLOR);
-	CuAssertPtrEquals (tc, NULL, ptr);
+	CuAssertPtrNotNull (tc, ptr);
 
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
 	CuAssertPtrNotNull (tc, ptr);
