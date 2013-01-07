@@ -35,6 +35,7 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -57,15 +58,40 @@ test_free_null (CuTest *tc)
 	_p11_hash_free (NULL);
 }
 
-static void
-destroy_key (void *data)
+typedef struct {
+	int value;
+	int freed;
+} Key;
+
+static unsigned int
+key_hash (const void *ptr)
 {
-	int *key = data;
-	*key = 1;
+	const Key *k = ptr;
+	assert (!k->freed);
+	return _p11_hash_intptr_hash (&k->value);
+}
+
+static int
+key_equal (const void *one,
+           const void *two)
+{
+	const Key *k1 = one;
+	const Key *k2 = two;
+	assert (!k1->freed);
+	assert (!k2->freed);
+	return _p11_hash_intptr_equal (&k1->value, &k2->value);
 }
 
 static void
-destroy_value (void *data)
+key_destroy (void *data)
+{
+	Key *k = data;
+	assert (!k->freed);
+	k->freed = 1;
+}
+
+static void
+value_destroy (void *data)
 {
 	int *value = data;
 	*value = 2;
@@ -75,16 +101,16 @@ static void
 test_free_destroys (CuTest *tc)
 {
 	hashmap *map;
-	int key = 0;
+	Key key = { 8, 0 };
 	int value = 0;
 
-	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (key_hash, key_equal, key_destroy, value_destroy);
 	CuAssertPtrNotNull (tc, map);
 	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 	_p11_hash_free (map);
 
-	CuAssertIntEquals (tc, 1, key);
+	CuAssertIntEquals (tc, 1, key.freed);
 	CuAssertIntEquals (tc, 2, value);
 }
 
@@ -186,36 +212,36 @@ static void
 test_remove_destroys (CuTest *tc)
 {
 	hashmap *map;
-	int key = 0;
+	Key key = { 8, 0 };
 	int value = 0;
 	int ret;
 
-	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (key_hash, key_equal, key_destroy, value_destroy);
 	CuAssertPtrNotNull (tc, map);
 	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
 	ret = _p11_hash_remove (map, &key);
 	CuAssertIntEquals (tc, ret, 1);
-	CuAssertIntEquals (tc, 1, key);
+	CuAssertIntEquals (tc, 1, key.freed);
 	CuAssertIntEquals (tc, 2, value);
 
 	/* should not be destroyed again */
-	key = 0;
+	key.freed = 0;
 	value = 0;
 
 	ret = _p11_hash_remove (map, &key);
 	CuAssertIntEquals (tc, ret, 0);
-	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 0, key.freed);
 	CuAssertIntEquals (tc, 0, value);
 
 	/* should not be destroyed again */
-	key = 0;
+	key.freed = 0;
 	value = 0;
 
 	_p11_hash_free (map);
 
-	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 0, key.freed);
 	CuAssertIntEquals (tc, 0, value);
 }
 
@@ -223,31 +249,63 @@ static void
 test_set_destroys (CuTest *tc)
 {
 	hashmap *map;
-	int key = 0;
-	int value = 0;
-	int value2 = 0;
+	Key key = { 8, 0 };
+	Key key2 = { 8, 0 };
+	int value, value2;
 	int ret;
 
-	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (key_hash, key_equal, key_destroy, value_destroy);
 	CuAssertPtrNotNull (tc, map);
 	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
-	ret = _p11_hash_set (map, &key, &value2);
+	key.freed = key2.freed = value = value2 = 0;
+
+	/* Setting same key and value, should not be destroyed */
+	ret = _p11_hash_set (map, &key, &value);
 	CuAssertIntEquals (tc, ret, 1);
-	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 0, key.freed);
+	CuAssertIntEquals (tc, 0, key2.freed);
+	CuAssertIntEquals (tc, 0, value);
+	CuAssertIntEquals (tc, 0, value2);
+
+	key.freed = key2.freed = value = value2 = 0;
+
+	/* Setting a new key same value, key should be destroyed */
+	ret = _p11_hash_set (map, &key2, &value);
+	CuAssertIntEquals (tc, ret, 1);
+	CuAssertIntEquals (tc, 1, key.freed);
+	CuAssertIntEquals (tc, 0, key2.freed);
+	CuAssertIntEquals (tc, 0, value);
+	CuAssertIntEquals (tc, 0, value2);
+
+	key.freed = key2.freed = value = value2 = 0;
+
+	/* Setting same key, new value, value should be destroyed */
+	ret = _p11_hash_set (map, &key2, &value2);
+	CuAssertIntEquals (tc, ret, 1);
+	CuAssertIntEquals (tc, 0, key.freed);
+	CuAssertIntEquals (tc, 0, key2.freed);
 	CuAssertIntEquals (tc, 2, value);
 	CuAssertIntEquals (tc, 0, value2);
 
-	key = 0;
-	value = 0;
-	value2 = 0;
+	key.freed = key2.freed = value = value2 = 0;
 
-	_p11_hash_free (map);
-
-	CuAssertIntEquals (tc, 1, key);
+	/* Setting new key new value, both should be destroyed */
+	ret = _p11_hash_set (map, &key, &value);
+	CuAssertIntEquals (tc, ret, 1);
+	CuAssertIntEquals (tc, 0, key.freed);
+	CuAssertIntEquals (tc, 1, key2.freed);
 	CuAssertIntEquals (tc, 0, value);
 	CuAssertIntEquals (tc, 2, value2);
+
+	key.freed = key2.freed = value = value2 = 0;
+
+	_p11_hash_free (map);
+	CuAssertIntEquals (tc, 1, key.freed);
+	CuAssertIntEquals (tc, 2, value);
+	CuAssertIntEquals (tc, 0, key2.freed);
+	CuAssertIntEquals (tc, 0, value2);
 }
 
 
@@ -255,33 +313,33 @@ static void
 test_clear_destroys (CuTest *tc)
 {
 	hashmap *map;
-	int key = 0;
+	Key key = { 18, 0 };
 	int value = 0;
 
-	map = _p11_hash_create (_p11_hash_direct_hash, _p11_hash_direct_equal, destroy_key, destroy_value);
+	map = _p11_hash_create (key_hash, key_equal, key_destroy, value_destroy);
 	CuAssertPtrNotNull (tc, map);
 	if (!_p11_hash_set (map, &key, &value))
 		CuFail (tc, "should not be reached");
 
 	_p11_hash_clear (map);
-	CuAssertIntEquals (tc, 1, key);
+	CuAssertIntEquals (tc, 1, key.freed);
 	CuAssertIntEquals (tc, 2, value);
 
 	/* should not be destroyed again */
-	key = 0;
+	key.freed = 0;
 	value = 0;
 
 	_p11_hash_clear (map);
-	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 0, key.freed);
 	CuAssertIntEquals (tc, 0, value);
 
 	/* should not be destroyed again */
-	key = 0;
+	key.freed = 0;
 	value = 0;
 
 	_p11_hash_free (map);
 
-	CuAssertIntEquals (tc, 0, key);
+	CuAssertIntEquals (tc, 0, key.freed);
 	CuAssertIntEquals (tc, 0, value);
 }
 

@@ -390,6 +390,7 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	Module *mod, *prev;
 	const char *module_filename;
 	char *path;
+	char *key;
 	CK_RV rv;
 
 	assert (name);
@@ -409,8 +410,11 @@ take_config_and_load_module_unlocked (char **name, hashmap **config)
 	path = expand_module_path (module_filename);
 	return_val_if_fail (path != NULL, CKR_HOST_MEMORY);
 
+	key = strdup ("module");
+	return_val_if_fail (key != NULL, CKR_HOST_MEMORY);
+
 	/* The hash map will take ownership of the variable */
-	if (!_p11_hash_set (*config, "module", path))
+	if (!_p11_hash_set (*config, key, path))
 		return_val_if_reached (CKR_HOST_MEMORY);
 
 	mod = alloc_module_unlocked ();

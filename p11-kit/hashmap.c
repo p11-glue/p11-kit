@@ -157,11 +157,16 @@ _p11_hash_set (hashmap *map,
 	bucketp = lookup_or_create_bucket (map, key, 1);
 	if(bucketp && *bucketp) {
 
+		/* Destroy the previous key */
+		if ((*bucketp)->key && (*bucketp)->key != key && map->key_destroy_func)
+			map->key_destroy_func ((*bucketp)->key);
+
 		/* Destroy the previous value */
-		if ((*bucketp)->value && map->value_destroy_func)
+		if ((*bucketp)->value && (*bucketp)->value != val && map->value_destroy_func)
 			map->value_destroy_func ((*bucketp)->value);
 
 		/* replace entry */
+		(*bucketp)->key = key;
 		(*bucketp)->value = val;
 
 		/* check that the collision rate isn't too high */
