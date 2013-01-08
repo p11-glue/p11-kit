@@ -11,20 +11,16 @@ INCLUDES = \
 	-I$(COMMON) \
 	$(CUTEST_CFLAGS)
 
-LDADD = $(CUTEST_LIBS)
+LDADD = \
+	$(top_builddir)/common/libp11-library.la \
+	$(top_builddir)/common/libp11-compat.la \
+	$(CUTEST_LIBS) \
+	$(NULL)
 
 CHECK_PROGS = \
 	test-dict \
 	test-array \
 	$(NULL)
-
-test_dict_SOURCES = \
-	test-dict.c \
-	$(COMMON)/dict.c
-
-test_array_SOURCES = \
-	test-array.c \
-	$(COMMON)/array.c
 
 noinst_PROGRAMS = \
 	$(CHECK_PROGS)

@@ -27,16 +27,6 @@ MODULE_SRCS = \
 	private.h \
 	messages.c \
 	uri.c \
-	$(COMMON)/array.c \
-	$(COMMON)/array.h \
-	$(COMMON)/compat.c \
-	$(COMMON)/compat.h \
-	$(COMMON)/debug.c \
-	$(COMMON)/debug.h \
-	$(COMMON)/dict.c \
-	$(COMMON)/dict.h \
-	$(COMMON)/library.c \
-	$(COMMON)/library.h \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \
@@ -57,16 +47,18 @@ libp11_kit_la_LDFLAGS = \
 
 libp11_kit_la_SOURCES = $(MODULE_SRCS)
 
-libp11_kit_la_LIBADD = $(LTLIBINTL)
+libp11_kit_la_LIBADD = \
+	$(LTLIBINTL) \
+	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-library.la \
+	$(NULL)
 
 noinst_LTLIBRARIES = \
-	libp11-kit-testable.la \
-	libp11-kit-compat.la
+	libp11-kit-testable.la
 
-libp11_kit_testable_la_LDFLAGS = \
-	-no-undefined
-
+libp11_kit_testable_la_LDFLAGS = -no-undefined
 libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
+libp11_kit_testable_la_LIBADD = $(libp11_kit_la_LIBADD)
 
 if OS_WIN32
 
@@ -89,16 +81,6 @@ libp11_kit_testable_la_CFLAGS = \
 	$(NULL)
 
 endif
-
-libp11_kit_compat_la_SOURCES = \
-	messages.c \
-	$(COMMON)/compat.c \
-	$(COMMON)/compat.h \
-	$(COMMON)/debug.c \
-	$(COMMON)/debug.h \
-	$(COMMON)/library.c \
-	$(COMMON)/library.h \
-	$(NULL)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit-1.pc

@@ -1,10 +1,12 @@
 
 include $(top_srcdir)/build/Makefile.tests
 
+COMMON = $(top_srcdir)/common
+
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
-	-I$(top_srcdir)/common \
+	-I$(COMMON) \
 	$(CUTEST_CFLAGS)
 
 LDADD = \
@@ -41,7 +43,9 @@ mock_one_la_SOURCES = \
 	mock-module-ep.c
 
 mock_one_la_LIBADD = \
-	$(top_builddir)/p11-kit/libp11-kit-compat.la
+	$(top_builddir)/common/libp11-library.la \
+	$(top_builddir)/common/libp11-compat.la \
+	$(NULL)
 
 mock_one_la_LDFLAGS = \
 	-module -avoid-version -rpath /nowhere \

@@ -1,3 +1,6 @@
+NULL =
+
+COMMON = $(top_srcdir)/common
 
 INCLUDES = \
 	-I$(top_srcdir) \
@@ -9,10 +12,11 @@ bin_PROGRAMS = \
 	p11-kit
 
 p11_kit_SOURCES = \
-	$(top_srcdir)/common/compat.c \
-	$(top_srcdir)/common/compat.h \
-	p11-kit.c
+	p11-kit.c \
+	$(NULL)
 
 p11_kit_LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit.la \
-	$(LTLIBINTL)
+	$(top_builddir)/common/libp11-compat.la \
+	$(LTLIBINTL) \
+	$(NULL)
