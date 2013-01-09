@@ -127,8 +127,7 @@
  * P11_KIT_PIN_FALLBACK:
  *
  * Used with p11_kit_pin_register_callback() to register a fallback callback.
- * This callback will be called if no other
- * String of URI scheme for PKCS\#11 URIs.
+ * This callback will be called if no other callback is registered for a 'pin-source'.
  */
 
 typedef struct _PinCallback {
@@ -429,17 +428,18 @@ p11_kit_pin_request (const char *pin_source,
  * where an application is expecting to interact with a prompter, but
  * instead is interacting with this callback reading a file over and over.
  *
- * This callback fail on larger than 4 Kilobytes.
+ * This callback fails on files larger than 4 Kilobytes.
  *
- * This callback is not registered by default. To register it use code like
- * the following:
+ * This callback is not registered by default. It may have security
+ * implications depending on the source of the PKCS\#11 URI and the PKCS\#11
+ * in use. To register it, use code like the following:
  *
  * <informalexample><programlisting>
  * p11_kit_pin_register_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
  *                                NULL, NULL);
  * </programlisting></informalexample>
  *
- * Returns: a referenced PIN with the pinfile contents, or %NULL if the file
+ * Returns: a referenced PIN with the file contents, or %NULL if the file
  *          could not be read
  */
 P11KitPin *
