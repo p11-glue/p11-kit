@@ -36,6 +36,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
+PKG_PROG_PKG_CONFIG
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
@@ -154,6 +155,35 @@ AS_IF([test "$with_libtasn1" != "no"], [
 ])
 
 AM_CONDITIONAL(WITH_ASN1, test "$with_libtasn1" = "yes")
+
+# --------------------------------------------------------------------
+# libffi
+
+AC_ARG_WITH([libffi],
+            AS_HELP_STRING([--without-libffi],
+                           [Don't use libffi for building closures]))
+
+if test "$with_libffi" != "no"; then
+	PKG_CHECK_MODULES(LIBFFI, [libffi >= 3.0.0])
+	AC_DEFINE_UNQUOTED(WITH_FFI, 1, [Use libffi for building closures])
+	AC_SUBST(LIBFFI_CFLAGS)
+	AC_SUBST(LIBFFI_LIBS)
+
+	SAVE_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $LIBFFI_CFLAGS"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <ffi.h>],
+	                  [ #if FFI_CLOSURES
+	                    #else
+	                    #error no closures
+	                    #endif
+	                  ])],
+	[], [AC_MSG_ERROR([the libffi on this system has no support for closures.])])
+	CFLAGS="$SAVE_CFLAGS"
+
+	with_libffi="yes"
+fi
+
+AM_CONDITIONAL(WITH_FFI, test "$with_libffi" = "yes")
 
 # --------------------------------------------------------------------
 # Trust Module
@@ -444,6 +474,7 @@ AC_MSG_NOTICE([build options:
     Load relative module paths from: $p11_module_path
 
     With libtasn1 dependency:        $with_libtasn1
+    With libffi:                     $with_libffi
 
     Build trust module:              $enable_trust_module
     Trust module paths:              $trust_status

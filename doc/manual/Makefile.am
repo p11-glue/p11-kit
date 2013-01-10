@@ -52,14 +52,15 @@ IGNORE_HFILES= \
 	conf.h \
 	debug.h \
 	dict.h \
-	mock-module.h \
+	mock.h \
 	pkcs11.h \
 	pkcs11x.h \
 	private.h \
 	util.h \
+	virtual.h \
 	array.h \
 	compat.h \
-	mock-module.h
+	$(NULL)
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

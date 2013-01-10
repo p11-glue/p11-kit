@@ -26,6 +26,13 @@ CHECK_PROGS = \
 	test-iter \
 	$(NULL)
 
+if WITH_FFI
+
+CHECK_PROGS += \
+	test-virtual
+
+endif
+
 noinst_PROGRAMS = \
 	print-messages \
 	$(CHECK_PROGS)

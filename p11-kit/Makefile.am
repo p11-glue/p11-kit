@@ -32,6 +32,7 @@ MODULE_SRCS = \
 	private.h \
 	messages.c \
 	uri.c \
+	virtual.c virtual.h \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES = \
@@ -44,6 +45,7 @@ libp11_kit_la_CFLAGS = \
 	-DP11_USER_CONFIG_FILE=\""$(p11_user_config_file)"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(p11_user_config_modules)"\" \
 	-DP11_MODULE_PATH=\""$(p11_module_path)"\" \
+	$(LIBFFI_CFLAGS) \
 	$(NULL)
 
 libp11_kit_la_LDFLAGS = \
@@ -54,9 +56,10 @@ libp11_kit_la_LDFLAGS = \
 libp11_kit_la_SOURCES = $(MODULE_SRCS)
 
 libp11_kit_la_LIBADD = \
-	$(LTLIBINTL) \
 	$(top_builddir)/common/libp11-common.la \
 	$(top_builddir)/common/libp11-library.la \
+	$(LIBFFI_LIBS) \
+	$(LTLIBINTL) \
 	$(NULL)
 
 noinst_LTLIBRARIES = \
@@ -75,6 +78,7 @@ libp11_kit_testable_la_CFLAGS = \
 	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules/win32"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
+	$(LIBFFI_CFLAGS) \
 	$(NULL)
 
 else
@@ -86,6 +90,7 @@ libp11_kit_testable_la_CFLAGS = \
 	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
+	$(LIBFFI_CFLAGS) \
 	$(NULL)
 
 endif
