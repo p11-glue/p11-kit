@@ -167,6 +167,32 @@ test_p11_array_remove_and_count (CuTest *tc)
 	p11_array_free (array);
 }
 
+static void
+test_p11_array_clear_destroys (CuTest *tc)
+{
+	p11_array *array;
+	int value = 0;
+
+	array = p11_array_new (destroy_value);
+	if (!p11_array_push (array, &value))
+		CuFail (tc, "should not be reached");
+
+	CuAssertIntEquals (tc, 1, array->num);
+
+	p11_array_clear (array);
+
+	CuAssertIntEquals (tc, 2, value);
+	CuAssertIntEquals (tc, 0, array->num);
+
+	/* should not be destroyed again */
+	value = 0;
+
+	p11_array_free (array);
+
+	CuAssertIntEquals (tc, 0, value);
+}
+
+
 int
 main (void)
 {
@@ -181,6 +207,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_p11_array_remove_and_count);
 	SUITE_ADD_TEST (suite, test_p11_array_free_null);
 	SUITE_ADD_TEST (suite, test_p11_array_free_destroys);
+	SUITE_ADD_TEST (suite, test_p11_array_clear_destroys);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

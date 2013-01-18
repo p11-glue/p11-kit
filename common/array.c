@@ -81,16 +81,10 @@ p11_array_new (p11_destroyer destroyer)
 void
 p11_array_free (p11_array *array)
 {
-	unsigned int i;
-
 	if (array == NULL)
 		return;
 
-	if (array->destroyer) {
-		for (i = 0; i < array->num; i++)
-			(array->destroyer) (array->elem[i]);
-	}
-
+	p11_array_clear (array);
 	free (array->elem);
 	free (array);
 }
@@ -116,4 +110,17 @@ p11_array_remove (p11_array *array,
 	memmove (array->elem + index, array->elem + index + 1,
 	         (array->num - (index + 1)) * sizeof (void*));
 	array->num--;
+}
+
+void
+p11_array_clear (p11_array *array)
+{
+	int i;
+
+	if (array->destroyer) {
+		for (i = 0; i < array->num; i++)
+			(array->destroyer) (array->elem[i]);
+	}
+
+	array->num = 0;
 }

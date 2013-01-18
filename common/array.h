@@ -63,4 +63,6 @@ bool                 p11_array_push               (p11_array *array,
 void                 p11_array_remove             (p11_array *array,
                                                    unsigned int index);
 
+void                 p11_array_clear              (p11_array *array);
+
 #endif  /* __P11_ARRAY_H__ */
