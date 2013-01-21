@@ -113,14 +113,38 @@ build_trust_object_ku (p11_parser *parser,
 	return p11_attrs_buildn (object, attrs, i);
 }
 
+static bool
+strv_to_dict (const char **array,
+              p11_dict **dict)
+{
+	int i;
+
+	if (!array) {
+		*dict = NULL;
+		return true;
+	}
+
+	*dict = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
+	return_val_if_fail (*dict != NULL, false);
+
+	for (i = 0; array[i] != NULL; i++) {
+		if (!p11_dict_set (*dict, (void *)array[i], (void *)array[i]))
+			return_val_if_reached (false);
+	}
+
+	return true;
+}
+
 static CK_ATTRIBUTE *
 build_trust_object_eku (p11_parser *parser,
                         p11_array *parsing,
                         CK_ATTRIBUTE *object,
                         CK_TRUST allow,
-                        p11_dict *purposes,
-                        p11_dict *rejects)
+                        const char **purposes,
+                        const char **rejects)
 {
+	p11_dict *dict_purp;
+	p11_dict *dict_rej;
 	CK_TRUST neutral;
 	CK_TRUST disallow;
 	CK_ULONG i;
@@ -142,6 +166,10 @@ build_trust_object_eku (p11_parser *parser,
 
 	CK_ATTRIBUTE attrs[sizeof (eku_attribute_map)];
 
+	if (!strv_to_dict (purposes, &dict_purp) ||
+	    !strv_to_dict (rejects, &dict_rej))
+		return_val_if_reached (NULL);
+
 	/* The neutral value is set if an purpose is not present */
 	if (allow == CKT_NETSCAPE_UNTRUSTED)
 		neutral = CKT_NETSCAPE_UNTRUSTED;
@@ -159,10 +187,10 @@ build_trust_object_eku (p11_parser *parser,
 
 	for (i = 0; eku_attribute_map[i].type != CKA_INVALID; i++) {
 		attrs[i].type = eku_attribute_map[i].type;
-		if (rejects && p11_dict_get (rejects, eku_attribute_map[i].oid)) {
+		if (dict_rej && p11_dict_get (dict_rej, eku_attribute_map[i].oid)) {
 			attrs[i].pValue = &disallow;
 			attrs[i].ulValueLen = sizeof (disallow);
-		} else if (purposes && p11_dict_get (purposes, eku_attribute_map[i].oid)) {
+		} else if (dict_purp && p11_dict_get (dict_purp, eku_attribute_map[i].oid)) {
 			attrs[i].pValue = &allow;
 			attrs[i].ulValueLen = sizeof (allow);
 		} else {
@@ -170,6 +198,9 @@ build_trust_object_eku (p11_parser *parser,
 			attrs[i].ulValueLen = sizeof (neutral);
 		}
 	}
+
+	p11_dict_free (dict_purp);
+	p11_dict_free (dict_rej);
 
 	return p11_attrs_buildn (object, attrs, i);
 }
@@ -181,8 +212,8 @@ build_nss_trust_object (p11_parser *parser,
                         CK_BBOOL trust,
                         CK_BBOOL distrust,
                         CK_BBOOL authority,
-                        p11_dict *purposes,
-                        p11_dict *rejects)
+                        const char **purposes,
+                        const char **rejects)
 {
 	CK_ATTRIBUTE *object = NULL;
 	CK_TRUST allow;
@@ -257,34 +288,12 @@ build_nss_trust_object (p11_parser *parser,
 		return_if_reached ();
 }
 
-static const char *
-yield_oid_from_vec (void **state)
-{
-	const char **oids = *state;
-	const char *ret = NULL;
-	if (*oids != NULL)
-		ret = *(oids++);
-	*state = oids;
-	return ret;
-}
-
-static const char *
-yield_oid_from_dict (void **state)
-{
-	p11_dictiter *iter = *state;
-	const char *ret = NULL;
-	if (iter && !p11_dict_next (iter, (void**)&ret, NULL))
-		*state = NULL;
-	return ret;
-}
-
 static void
 build_assertions (p11_parser *parser,
                   p11_array *parsing,
                   CK_ATTRIBUTE *cert,
                   CK_X_ASSERTION_TYPE type,
-                  const char * (oid_iter) (void **),
-                  void *oid_state)
+                  const char **oids)
 {
 	CK_OBJECT_CLASS assertion = CKO_X_TRUST_ASSERTION;
 	CK_BBOOL vtrue = CK_TRUE;
@@ -304,7 +313,7 @@ build_assertions (p11_parser *parser,
 	CK_ATTRIBUTE *label;
 	CK_ATTRIBUTE *id;
 	CK_ATTRIBUTE *object;
-	const char *oid_str;
+	int i;
 
 	label = p11_attrs_find (cert, CKA_LABEL);
 	if (label == NULL)
@@ -317,13 +326,9 @@ build_assertions (p11_parser *parser,
 
 	return_if_fail (id != NULL && issuer != NULL && serial != NULL && value != NULL);
 
-	for (;;) {
-		oid_str = (oid_iter) (&oid_state);
-		if (!oid_str)
-			break;
-
-		purpose.pValue = (void *)oid_str;
-		purpose.ulValueLen = strlen (oid_str);
+	for (i = 0; oids[i] != NULL; i++) {
+		purpose.pValue = (void *)oids[i];
+		purpose.ulValueLen = strlen (oids[i]);
 
 		object = p11_attrs_build (NULL, &klass, &token, &private, &modifiable,
 		                          id, label, &assertion_type, &purpose,
@@ -342,11 +347,9 @@ build_trust_assertions (p11_parser *parser,
                         CK_BBOOL trust,
                         CK_BBOOL distrust,
                         CK_BBOOL authority,
-                        p11_dict *purposes,
-                        p11_dict *rejects)
+                        const char **purposes,
+                        const char **rejects)
 {
-	p11_dictiter iter;
-
 	const char *all_purposes[] = {
 		P11_OID_SERVER_AUTH_STR,
 		P11_OID_CLIENT_AUTH_STR,
@@ -361,9 +364,8 @@ build_trust_assertions (p11_parser *parser,
 
 	/* Build assertions for anything that's explicitly rejected */
 	if (rejects) {
-		p11_dict_iterate (rejects, &iter);
-		build_assertions (parser, parsing, cert, CKT_X_DISTRUSTED_CERTIFICATE,
-		                  yield_oid_from_dict, &iter);
+		build_assertions (parser, parsing, cert,
+		                  CKT_X_DISTRUSTED_CERTIFICATE, rejects);
 	}
 
 	if (distrust) {
@@ -372,8 +374,8 @@ build_trust_assertions (p11_parser *parser,
 		 * for any purposes. So we just have to go wild and write out a bunch of
 		 * assertions for all our known purposes.
 		 */
-		build_assertions (parser, parsing, cert, CKT_X_DISTRUSTED_CERTIFICATE,
-		                  yield_oid_from_vec, all_purposes);
+		build_assertions (parser, parsing, cert,
+		                  CKT_X_DISTRUSTED_CERTIFICATE, all_purposes);
 	}
 
 	/*
@@ -384,13 +386,12 @@ build_trust_assertions (p11_parser *parser,
 	if (trust && authority) {
 		if (purposes) {
 			/* If purposes explicitly set, then anchor for those purposes */
-			p11_dict_iterate (purposes, &iter);
-			build_assertions (parser, parsing, cert, CKT_X_ANCHORED_CERTIFICATE,
-			                  yield_oid_from_dict, &iter);
+			build_assertions (parser, parsing, cert,
+			                  CKT_X_ANCHORED_CERTIFICATE, purposes);
 		} else {
 			/* If purposes not-explicitly set, then anchor for all known */
-			build_assertions (parser, parsing, cert, CKT_X_ANCHORED_CERTIFICATE,
-			                  yield_oid_from_vec, all_purposes);
+			build_assertions (parser, parsing, cert,
+			                  CKT_X_ANCHORED_CERTIFICATE, all_purposes);
 		}
 	}
 }
@@ -404,8 +405,10 @@ p11_adapter_build_objects (p11_parser *parser,
 	CK_BBOOL trust = CK_FALSE;
 	CK_BBOOL distrust = CK_FALSE;
 	CK_BBOOL authority = CK_FALSE;
-	p11_dict *purposes = NULL;
-	p11_dict *rejects = NULL;
+	p11_array *purposes = NULL;
+	p11_array *rejects = NULL;
+	const char **purposev;
+	const char **rejectv;
 	unsigned char *data;
 	p11_dict *defs;
 	size_t length;
@@ -431,7 +434,7 @@ p11_adapter_build_objects (p11_parser *parser,
 		if (data) {
 			defs = p11_parser_get_asn1_defs (parser);
 			purposes = p11_x509_parse_extended_key_usage (defs, data, length);
-			if (purposes  == NULL)
+			if (purposes == NULL)
 				p11_message ("invalid extended key usage certificate extension");
 			free (data);
 		}
@@ -446,11 +449,24 @@ p11_adapter_build_objects (p11_parser *parser,
 		}
 	}
 
-	build_nss_trust_object (parser, parsing, cert, trust, distrust,
-	                        authority, purposes, rejects);
-	build_trust_assertions (parser, parsing, cert, trust, distrust,
-	                        authority, purposes, rejects);
+	/* null-terminate these arrays and use as strv's */
+	purposev = rejectv = NULL;
+	if (rejects) {
+		if (!p11_array_push (rejects, NULL))
+			return_if_reached ();
+		rejectv = (const char **)rejects->elem;
+	}
+	if (purposes) {
+		if (!p11_array_push (purposes, NULL))
+			return_if_reached ();
+		purposev = (const char **)purposes->elem;
+	}
 
-	p11_dict_free (purposes);
-	p11_dict_free (rejects);
+	build_nss_trust_object (parser, parsing, cert, trust, distrust,
+	                        authority, purposev, rejectv);
+	build_trust_assertions (parser, parsing, cert, trust, distrust,
+	                        authority, purposev, rejectv);
+
+	p11_array_free (purposes);
+	p11_array_free (rejects);
 }

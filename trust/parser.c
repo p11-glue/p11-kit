@@ -336,64 +336,6 @@ build_x509_certificate (p11_parser *parser,
 	return attrs;
 }
 
-static unsigned char *
-find_cert_extension (node_asn *cert,
-                     const unsigned char *der,
-                     size_t der_len,
-                     const unsigned char *oid,
-                     size_t *length)
-{
-	char field[128];
-	char *value;
-	int start;
-	int end;
-	int ret;
-	int len;
-	int i;
-
-	assert (oid != NULL);
-	assert (length != NULL);
-
-	for (i = 1; ; i++) {
-		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnID", i) < 0)
-			return_val_if_reached (NULL);
-
-		ret = asn1_der_decoding_startEnd (cert, der, der_len, field, &start, &end);
-
-		/* No more extensions */
-		if (ret == ASN1_ELEMENT_NOT_FOUND)
-			break;
-
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-
-		/* Make sure it's a straightforward oid with certain assumptions */
-		if (!p11_oid_simple (der + start, (end - start) + 1))
-			continue;
-
-		/* The one we're lookin for? */
-		if (!p11_oid_equal (der + start, oid))
-			continue;
-
-		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnValue", i) < 0)
-			return_val_if_reached (NULL);
-
-		len = 0;
-		ret = asn1_read_value (cert, field, NULL, &len);
-		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
-
-		value = malloc (len);
-		return_val_if_fail (value != NULL, NULL);
-
-		ret = asn1_read_value (cert, field, value, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-
-		*length = len;
-		return (unsigned char *)value;
-	}
-
-	return NULL;
-}
-
 static CK_ATTRIBUTE *
 match_parsing_object (p11_parser *parser,
                       CK_ATTRIBUTE *match)
@@ -441,8 +383,9 @@ p11_parsing_get_extension (p11_parser *parser,
 
 	/* Couldn't find a parsed extension, so look in the current certificate */
 	} else if (parser->cert_asn) {
-		return find_cert_extension (parser->cert_asn, parser->cert_der,
-		                            parser->cert_len, oid, length);
+		return p11_x509_find_extension (parser->cert_asn, oid,
+		                                parser->cert_der, parser->cert_len,
+		                                length);
 	}
 
 	return NULL;
@@ -753,7 +696,7 @@ update_trust_and_distrust (p11_parser *parser,
 	CK_BBOOL distrusted;
 	unsigned char *data;
 	size_t length;
-	p11_dict *ekus;
+	p11_array *ekus;
 
 	/*
 	 * This function is called to update the CKA_TRUSTED and CKA_X_DISTRUSTED
@@ -776,12 +719,12 @@ update_trust_and_distrust (p11_parser *parser,
 		ekus = p11_x509_parse_extended_key_usage (parser->asn1_defs, data, length);
 		if (ekus == NULL)
 			p11_message ("invalid extendend key usage certificate extension");
-		else if (p11_dict_size (ekus) == 0) {
+		else if (ekus->num == 0) {
 			distrusted = CK_TRUE;
 			trusted = CK_FALSE;
 		}
 
-		p11_dict_free (ekus);
+		p11_array_free (ekus);
 		free (data);
 	}
 

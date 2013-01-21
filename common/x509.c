@@ -43,6 +43,65 @@
 #include <stdlib.h>
 #include <string.h>
 
+unsigned char *
+p11_x509_find_extension (node_asn *cert,
+                         const unsigned char *oid,
+                         const unsigned char *der,
+                         size_t der_len,
+                         size_t *ext_len)
+{
+	char field[128];
+	char *value;
+	int start;
+	int end;
+	int ret;
+	int len;
+	int i;
+
+	return_val_if_fail (cert != NULL, NULL);
+	return_val_if_fail (oid != NULL, NULL);
+	return_val_if_fail (ext_len != NULL, NULL);
+
+	for (i = 1; ; i++) {
+		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnID", i) < 0)
+			return_val_if_reached (NULL);
+
+		ret = asn1_der_decoding_startEnd (cert, der, der_len, field, &start, &end);
+
+		/* No more extensions */
+		if (ret == ASN1_ELEMENT_NOT_FOUND)
+			break;
+
+		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+		/* Make sure it's a straightforward oid with certain assumptions */
+		if (!p11_oid_simple (der + start, (end - start) + 1))
+			continue;
+
+		/* The one we're lookin for? */
+		if (!p11_oid_equal (der + start, oid))
+			continue;
+
+		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnValue", i) < 0)
+			return_val_if_reached (NULL);
+
+		len = 0;
+		ret = asn1_read_value (cert, field, NULL, &len);
+		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
+
+		value = malloc (len);
+		return_val_if_fail (value != NULL, NULL);
+
+		ret = asn1_read_value (cert, field, value, &len);
+		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+		*ext_len = len;
+		return (unsigned char *)value;
+	}
+
+	return NULL;
+}
+
 bool
 p11_x509_parse_basic_constraints (p11_dict *asn1_defs,
                                   const unsigned char *ext_der,
@@ -98,14 +157,14 @@ p11_x509_parse_key_usage (p11_dict *asn1_defs,
 	return true;
 }
 
-p11_dict *
+p11_array *
 p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
                                    const unsigned char *ext_der,
                                    size_t ext_len)
 {
 	node_asn *asn;
 	char field[128];
-	p11_dict *ekus;
+	p11_array *ekus;
 	char *eku;
 	int ret;
 	int len;
@@ -115,7 +174,7 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 	if (asn == NULL)
 		return NULL;
 
-	ekus = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
+	ekus = p11_array_new (free);
 
 	for (i = 1; ; i++) {
 		if (snprintf (field, sizeof (field), "?%u", i) < 0)
@@ -142,7 +201,7 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 			continue;
 		}
 
-		if (!p11_dict_set (ekus, eku, eku))
+		if (!p11_array_push (ekus, eku))
 			return_val_if_reached (NULL);
 	}
 
