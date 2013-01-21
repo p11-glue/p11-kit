@@ -58,4 +58,10 @@ const char * _p11_get_progname_unlocked                         (void);
 
 void        _p11_set_progname_unlocked                          (const char *progname);
 
+int          p11_match_uri_module_info                          (CK_INFO_PTR one,
+                                                                 CK_INFO_PTR two);
+
+int          p11_match_uri_token_info                           (CK_TOKEN_INFO_PTR one,
+                                                                 CK_TOKEN_INFO_PTR two);
+
 #endif /* __P11_KIT_PRIVATE_H__ */

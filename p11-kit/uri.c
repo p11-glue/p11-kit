@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "library.h"
 #include "pkcs11.h"
+#include "private.h"
 #include "p11-kit.h"
 #include "uri.h"
 
@@ -314,6 +315,20 @@ p11_kit_uri_get_module_info (P11KitUri *uri)
 	return &uri->module;
 }
 
+int
+p11_match_uri_module_info (CK_INFO_PTR one,
+                           CK_INFO_PTR two)
+{
+	return (match_struct_string (one->libraryDescription,
+	                             two->libraryDescription,
+	                             sizeof (one->libraryDescription)) &&
+	        match_struct_string (one->manufacturerID,
+	                             two->manufacturerID,
+	                             sizeof (one->manufacturerID)) &&
+	        match_struct_version (&one->libraryVersion,
+	                              &two->libraryVersion));
+}
+
 /**
  * p11_kit_uri_match_module_info:
  * @uri: the URI
@@ -337,14 +352,7 @@ p11_kit_uri_match_module_info (P11KitUri *uri, CK_INFO_PTR info)
 	if (uri->unrecognized)
 		return 0;
 
-	return (match_struct_string (uri->module.libraryDescription,
-	                             info->libraryDescription,
-	                             sizeof (info->libraryDescription)) &&
-	        match_struct_string (uri->module.manufacturerID,
-	                             info->manufacturerID,
-	                             sizeof (info->manufacturerID)) &&
-	        match_struct_version (&uri->module.libraryVersion,
-	                              &info->libraryVersion));
+	return p11_match_uri_module_info (&uri->module, info);
 }
 
 /**
@@ -368,6 +376,24 @@ p11_kit_uri_get_token_info (P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return &uri->token;
+}
+
+int
+p11_match_uri_token_info (CK_TOKEN_INFO_PTR one,
+                          CK_TOKEN_INFO_PTR two)
+{
+	return (match_struct_string (one->label,
+	                             two->label,
+	                             sizeof (one->label)) &&
+	        match_struct_string (one->manufacturerID,
+	                             two->manufacturerID,
+	                             sizeof (one->manufacturerID)) &&
+	        match_struct_string (one->model,
+	                             two->model,
+	                             sizeof (one->model)) &&
+	        match_struct_string (one->serialNumber,
+	                             two->serialNumber,
+	                             sizeof (one->serialNumber)));
 }
 
 /**
@@ -394,18 +420,7 @@ p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
 	if (uri->unrecognized)
 		return 0;
 
-	return (match_struct_string (uri->token.label,
-	                             token_info->label,
-	                             sizeof (token_info->label)) &&
-	        match_struct_string (uri->token.manufacturerID,
-	                             token_info->manufacturerID,
-	                             sizeof (token_info->manufacturerID)) &&
-	        match_struct_string (uri->token.model,
-	                             token_info->model,
-	                             sizeof (token_info->model)) &&
-	        match_struct_string (uri->token.serialNumber,
-	                             token_info->serialNumber,
-	                             sizeof (token_info->serialNumber)));
+	return p11_match_uri_token_info (&uri->token, token_info);
 }
 
 /**
