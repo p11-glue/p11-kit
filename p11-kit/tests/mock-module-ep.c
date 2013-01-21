@@ -49,6 +49,6 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 	mock_module_no_slots.C_GetFunctionList = C_GetFunctionList;
 	if (list == NULL)
 		return CKR_ARGUMENTS_BAD;
-	*list = &mock_module_no_slots;
+	*list = &mock_module;
 	return CKR_OK;
 }

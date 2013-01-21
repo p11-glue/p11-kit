@@ -13,6 +13,7 @@ INCLUDES = \
 incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
+	iter.h \
 	p11-kit.h \
 	pin.h \
 	uri.h \
@@ -21,6 +22,7 @@ inc_HEADERS = \
 MODULE_SRCS = \
 	util.c \
 	conf.c conf.h \
+	iter.c \
 	modules.c \
 	pkcs11.h \
 	pin.c \

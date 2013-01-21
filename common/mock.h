@@ -67,6 +67,7 @@ enum {
 	MOCK_SLOT_ONE_ID = 52,
 	MOCK_SLOT_TWO_ID = 134,
 
+	MOCK_DATA_OBJECT = 2,
 	MOCK_PRIVATE_KEY_CAPITALIZE = 3,
 	MOCK_PUBLIC_KEY_CAPITALIZE = 4,
 	MOCK_PRIVATE_KEY_PREFIX = 5,
@@ -109,6 +110,14 @@ CK_RV       mock_C_GetSlotList__no_tokens                 (CK_BBOOL token_presen
                                                            CK_SLOT_ID_PTR slot_list,
                                                            CK_ULONG_PTR count);
 
+CK_RV       mock_C_GetSlotList__fail_first                (CK_BBOOL token_present,
+                                                           CK_SLOT_ID_PTR slot_list,
+                                                           CK_ULONG_PTR count);
+
+CK_RV       mock_C_GetSlotList__fail_late                 (CK_BBOOL token_present,
+                                                           CK_SLOT_ID_PTR slot_list,
+                                                           CK_ULONG_PTR count);
+
 CK_RV       mock_C_GetSlotInfo                            (CK_SLOT_ID slot_id,
                                                            CK_SLOT_INFO_PTR info);
 
@@ -119,6 +128,9 @@ CK_RV       mock_C_GetTokenInfo                           (CK_SLOT_ID slot_id,
                                                            CK_TOKEN_INFO_PTR info);
 
 CK_RV       mock_C_GetTokenInfo__invalid_slotid           (CK_SLOT_ID slot_id,
+                                                           CK_TOKEN_INFO_PTR info);
+
+CK_RV       mock_C_GetTokenInfo_not_initialized           (CK_SLOT_ID slot_id,
                                                            CK_TOKEN_INFO_PTR info);
 
 CK_RV       mock_C_GetMechanismList                       (CK_SLOT_ID slot_id,
@@ -156,6 +168,12 @@ CK_RV       mock_C_WaitForSlotEvent__no_event             (CK_FLAGS flags,
                                                            CK_VOID_PTR reserved);
 
 CK_RV       mock_C_OpenSession__invalid_slotid            (CK_SLOT_ID slot_id,
+                                                           CK_FLAGS flags,
+                                                           CK_VOID_PTR user_data,
+                                                           CK_NOTIFY callback,
+                                                           CK_SESSION_HANDLE_PTR session);
+
+CK_RV       mock_C_OpenSession__fails                     (CK_SLOT_ID slot_id,
                                                            CK_FLAGS flags,
                                                            CK_VOID_PTR user_data,
                                                            CK_NOTIFY callback,
@@ -289,6 +307,16 @@ CK_RV       mock_C_GetAttributeValue__invalid_handle      (CK_SESSION_HANDLE ses
                                                            CK_ATTRIBUTE_PTR template,
                                                            CK_ULONG count);
 
+CK_RV       mock_C_GetAttributeValue__fail_first          (CK_SESSION_HANDLE session,
+                                                           CK_OBJECT_HANDLE object,
+                                                           CK_ATTRIBUTE_PTR template,
+                                                           CK_ULONG count);
+
+CK_RV       mock_C_GetAttributeValue__fail_late           (CK_SESSION_HANDLE session,
+                                                           CK_OBJECT_HANDLE object,
+                                                           CK_ATTRIBUTE_PTR template,
+                                                           CK_ULONG count);
+
 CK_RV       mock_C_SetAttributeValue                      (CK_SESSION_HANDLE session,
                                                            CK_OBJECT_HANDLE object,
                                                            CK_ATTRIBUTE_PTR template,
@@ -307,12 +335,21 @@ CK_RV       mock_C_FindObjectsInit__invalid_handle        (CK_SESSION_HANDLE ses
                                                            CK_ATTRIBUTE_PTR template,
                                                            CK_ULONG count);
 
+CK_RV       mock_C_FindObjectsInit__fails                 (CK_SESSION_HANDLE session,
+                                                           CK_ATTRIBUTE_PTR template,
+                                                           CK_ULONG count);
+
 CK_RV       mock_C_FindObjects                            (CK_SESSION_HANDLE session,
                                                            CK_OBJECT_HANDLE_PTR objects,
                                                            CK_ULONG max_object_count,
                                                            CK_ULONG_PTR object_count);
 
 CK_RV       mock_C_FindObjects__invalid_handle            (CK_SESSION_HANDLE session,
+                                                           CK_OBJECT_HANDLE_PTR objects,
+                                                           CK_ULONG max_count,
+                                                           CK_ULONG_PTR count);
+
+CK_RV       mock_C_FindObjects__fails                     (CK_SESSION_HANDLE session,
                                                            CK_OBJECT_HANDLE_PTR objects,
                                                            CK_ULONG max_count,
                                                            CK_ULONG_PTR count);

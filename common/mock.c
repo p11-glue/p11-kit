@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "debug.h"
 #include "library.h"
 #define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
@@ -220,7 +221,7 @@ mock_module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_LABEL, label, strlen (label) },
 			{ CKA_INVALID, NULL, 0 },
 		};
-		p11_dict_set (the_objects, handle_to_pointer (2), p11_attrs_dup (attrs));
+		p11_dict_set (the_objects, handle_to_pointer (MOCK_DATA_OBJECT), p11_attrs_dup (attrs));
 	}
 
 	/* Private capitalize key */
@@ -353,8 +354,6 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 	CK_RV ret = CKR_OK;
 	pid_t pid;
 
-	p11_debug ("C_Initialize: enter");
-
 	p11_mutex_lock (&init_mutex);
 
 		if (init_args != NULL) {
@@ -369,7 +368,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 			              (args->CreateMutex != NULL && args->DestroyMutex != NULL &&
 			               args->LockMutex != NULL && args->UnlockMutex != NULL);
 			if (!supplied_ok) {
-				p11_debug_precond ("p11-kit: invalid set of mutex calls supplied");
+				p11_debug_precond ("invalid set of mutex calls supplied\n");
 				ret = CKR_ARGUMENTS_BAD;
 				goto done;
 			}
@@ -379,7 +378,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 			 * We must be able to use our pthread functionality.
 			 */
 			if (!(args->flags & CKF_OS_LOCKING_OK)) {
-				p11_debug_precond ("p11-kit: can't do without os locking");
+				p11_debug_precond ("can't do without os locking\n");
 				ret = CKR_CANT_LOCK;
 				goto done;
 			}
@@ -390,7 +389,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 
 			/* This process has called C_Initialize already */
 			if (pid == pkcs11_initialized_pid) {
-				p11_debug_precond ("p11-kit: C_Initialize called twice for same process");
+				p11_debug_precond ("p11-kit: C_Initialize called twice for same process\n");
 				ret = CKR_CRYPTOKI_ALREADY_INITIALIZED;
 				goto done;
 			}
@@ -560,7 +559,25 @@ mock_C_GetSlotInfo (CK_SLOT_ID slot_id,
 }
 
 CK_RV
-mock_C_GetSlotInfo__invalid_slotid (CK_SLOT_ID slot_id,
+mock_C_GetSlotList__fail_first (CK_BBOOL token_present,
+                                CK_SLOT_ID_PTR slot_list,
+                                CK_ULONG_PTR count)
+{
+	return CKR_VENDOR_DEFINED;
+}
+
+CK_RV
+mock_C_GetSlotList__fail_late (CK_BBOOL token_present,
+                               CK_SLOT_ID_PTR slot_list,
+                               CK_ULONG_PTR count)
+{
+	if (!slot_list)
+		return mock_C_GetSlotList (token_present, slot_list, count);
+	return CKR_VENDOR_DEFINED;
+}
+
+CK_RV
+mock_C_GetSlotInfo__invalid_slotid (CK_SLOT_ID id,
                                     CK_SLOT_INFO_PTR info)
 {
 	return_val_if_fail (info, CKR_ARGUMENTS_BAD);
@@ -650,7 +667,26 @@ mock_C_GetMechanismList (CK_SLOT_ID slot_id,
 }
 
 CK_RV
-mock_C_GetMechanismList__invalid_slotid (CK_SLOT_ID slot_id,
+mock_C_GetTokenInfo_not_initialized (CK_SLOT_ID slot_id,
+                                     CK_TOKEN_INFO_PTR info)
+{
+	CK_RV rv;
+
+	rv = mock_C_GetTokenInfo (slot_id, info);
+	if (rv == CKR_OK)
+		info->flags &= ~ CKF_TOKEN_INITIALIZED;
+
+	return rv;
+}
+
+/*
+ * TWO mechanisms:
+ *  CKM_MOCK_CAPITALIZE
+ *  CKM_MOCK_PREFIX
+ */
+
+CK_RV
+mock_C_GetMechanismList__invalid_slotid (CK_SLOT_ID id,
                                          CK_MECHANISM_TYPE_PTR mechanism_list,
                                          CK_ULONG_PTR count)
 {
@@ -805,6 +841,18 @@ mock_C_OpenSession__invalid_slotid (CK_SLOT_ID slot_id,
 	return_val_if_fail (session, CKR_ARGUMENTS_BAD);
 
 	return CKR_SLOT_ID_INVALID;
+}
+
+CK_RV
+mock_C_OpenSession__fails (CK_SLOT_ID slot_id,
+                           CK_FLAGS flags,
+                           CK_VOID_PTR user_data,
+                           CK_NOTIFY callback,
+                           CK_SESSION_HANDLE_PTR session)
+{
+	return_val_if_fail (session, CKR_ARGUMENTS_BAD);
+
+	return CKR_DEVICE_ERROR;
 }
 
 CK_RV
@@ -1339,6 +1387,30 @@ mock_C_GetAttributeValue__invalid_handle (CK_SESSION_HANDLE session,
 }
 
 CK_RV
+mock_C_GetAttributeValue__fail_first (CK_SESSION_HANDLE session,
+                                      CK_OBJECT_HANDLE object,
+                                      CK_ATTRIBUTE_PTR template,
+                                      CK_ULONG count)
+{
+	return CKR_FUNCTION_REJECTED;
+}
+
+CK_RV
+mock_C_GetAttributeValue__fail_late (CK_SESSION_HANDLE session,
+                                     CK_OBJECT_HANDLE object,
+                                     CK_ATTRIBUTE_PTR template,
+                                     CK_ULONG count)
+{
+	CK_ULONG i;
+
+	for (i = 0; i < count; i++) {
+		if (template[i].pValue)
+			return CKR_FUNCTION_FAILED;
+	}
+	return mock_C_GetAttributeValue (session, object, template, count);
+}
+
+CK_RV
 mock_C_SetAttributeValue (CK_SESSION_HANDLE session,
                           CK_OBJECT_HANDLE object,
                           CK_ATTRIBUTE_PTR template,
@@ -1386,7 +1458,13 @@ enumerate_and_find_objects (CK_OBJECT_HANDLE object,
 	FindObjects *ctx = user_data;
 	CK_ATTRIBUTE *match;
 	CK_ATTRIBUTE *attr;
+	CK_BBOOL private;
 	CK_ULONG i;
+
+	if (!logged_in) {
+		if (p11_attrs_find_bool (attrs, CKA_PRIVATE, &private) && private)
+			return 1; /* Continue */
+	}
 
 	for (i = 0; i < ctx->count; ++i) {
 		match = ctx->template + i;
@@ -1450,6 +1528,14 @@ mock_C_FindObjectsInit__invalid_handle (CK_SESSION_HANDLE session,
 }
 
 CK_RV
+mock_C_FindObjectsInit__fails (CK_SESSION_HANDLE session,
+                               CK_ATTRIBUTE_PTR template,
+                               CK_ULONG count)
+{
+	return CKR_DEVICE_MEMORY;
+}
+
+CK_RV
 mock_C_FindObjects (CK_SESSION_HANDLE session,
                     CK_OBJECT_HANDLE_PTR objects,
                     CK_ULONG max_object_count,
@@ -1490,6 +1576,17 @@ mock_C_FindObjects__invalid_handle (CK_SESSION_HANDLE session,
 	return_val_if_fail (count, CKR_ARGUMENTS_BAD);
 
 	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_FindObjects__fails (CK_SESSION_HANDLE session,
+                           CK_OBJECT_HANDLE_PTR objects,
+                           CK_ULONG max_count,
+                           CK_ULONG_PTR count)
+{
+	return_val_if_fail (count, CKR_ARGUMENTS_BAD);
+
+	return CKR_DEVICE_REMOVED;
 }
 
 CK_RV

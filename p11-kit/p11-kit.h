@@ -88,6 +88,8 @@ void                     p11_kit_be_loud                   (void);
 
 const char*              p11_kit_message                   (void);
 
+typedef void          (* p11_kit_destroyer)                (void *data);
+
 #endif
 
 #ifdef __cplusplus

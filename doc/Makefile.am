@@ -69,6 +69,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	p11-kit-devel.xml \
 	p11-kit-trust.xml \
 	p11-kit.xml \
+	annotation-glossary.xml \
 	$(NULL)
 
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded

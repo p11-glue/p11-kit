@@ -23,7 +23,9 @@ CHECK_PROGS = \
 	uri-test \
 	pin-test \
 	test-init \
-	test-modules
+	test-modules \
+	test-iter \
+	$(NULL)
 
 noinst_PROGRAMS = \
 	print-messages \

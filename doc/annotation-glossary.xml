@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+          "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<glossary id="annotation-glossary">
+<title>Annotation Glossary</title>
+<glossdiv><title>A</title>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-allow-none"/>allow-none</glossterm>
+		<glossdef>
+			<para>NULL is ok, both for passing and for returning.</para>
+		</glossdef>
+	</glossentry>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-array"/>array</glossterm>
+		<glossdef>
+			<para>Parameter points to an array of items.</para>
+		</glossdef>
+	</glossentry>
+</glossdiv>
+<glossdiv><title>E</title>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-element-type"/>element-type</glossterm>
+		<glossdef>
+			<para>Generics and defining elements of containers and arrays.</para>
+		</glossdef>
+	</glossentry>
+</glossdiv>
+<glossdiv><title>I</title>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-inout"/>inout</glossterm>
+		<glossdef>
+			<para>Parameter for input and for returning results. Default is <acronym>transfer full</acronym>.</para>
+		</glossdef>
+	</glossentry>
+</glossdiv>
+<glossdiv><title>O</title>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-out"/>out</glossterm>
+		<glossdef>
+			<para>Parameter for returning results. Default is <acronym>transfer full</acronym>.</para>
+		</glossdef>
+	</glossentry>
+</glossdiv>
+<glossdiv><title>T</title>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-transfer full"/>transfer full</glossterm>
+		<glossdef>
+			<para>Free data after the code is done.</para>
+		</glossdef>
+	</glossentry>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-type"/>type</glossterm>
+		<glossdef>
+			<para>Override the parsed C type with given type</para>
+		</glossdef>
+	</glossentry>
+	<glossentry>
+		<glossterm><anchor id="annotation-glossterm-transfer none"/>transfer none</glossterm>
+		<glossdef>
+			<para>Don't free data after the code is done.</para>
+		</glossdef>
+	</glossentry>
+</glossdiv>
+</glossary>
