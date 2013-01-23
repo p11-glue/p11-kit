@@ -4,10 +4,12 @@
 # distributed in the tarballs
 
 TRUST = $(top_srcdir)/trust/tests
+TOOLS = $(top_srcdir)/tools/tests
 
 prepare-certs:
 	cp -v cacert3.der $(TRUST)/anchors
 	cp -v cacert3.der $(TRUST)/files
+	cp -v cacert3.der $(TOOLS)/files
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted.pem \
 		-addtrust clientAuth -addtrust serverAuth -addreject emailProtection \

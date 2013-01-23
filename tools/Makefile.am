@@ -1,5 +1,7 @@
 NULL =
 
+SUBDIRS = . tests
+
 COMMON = $(top_srcdir)/common
 
 INCLUDES = \
@@ -16,6 +18,7 @@ bin_PROGRAMS = \
 
 p11_kit_SOURCES = \
 	list.c \
+	save.c save.h \
 	tool.c tool.h \
 	$(NULL)
 
