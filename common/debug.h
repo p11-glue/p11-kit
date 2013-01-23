@@ -57,31 +57,31 @@ void              p11_debug_precond             (const char *format,
                                                  ...) GNUC_PRINTF (1, 2);
 
 #define assert_not_reached() \
-	(assert (0 && "this code should not be reached"))
+	(assert (false && "this code should not be reached"))
 
 #define return_val_if_fail(x, v) \
 	do { if (!(x)) { \
 	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
 	     return v; \
-	} } while (0)
+	} } while (false)
 
 #define return_if_fail(x) \
 	do { if (!(x)) { \
 	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
 	     return; \
-	} } while (0)
+	} } while (false)
 
 #define return_if_reached() \
 	do { \
 	     p11_debug_precond ("p11-kit: shouldn't be reached at %s\n", __func__); \
 	     return; \
-	} while (0)
+	} while (false)
 
 #define return_val_if_reached(v) \
 	do { \
 	     p11_debug_precond ("p11-kit: shouldn't be reached at %s\n", __func__); \
 	     return v; \
-	} while (0)
+	} while (false)
 
 #endif /* DEBUG_H */
 
@@ -119,10 +119,10 @@ void              p11_debug_precond             (const char *format,
 
 #undef p11_debug
 #define p11_debug(format, ...) \
-	do {} while (0)
+	do {} while (false)
 
 #undef p11_debugging
-#define p11_debugging 0
+#define p11_debugging (0)
 
 #endif /* !defined (WITH_DEBUG) */
 

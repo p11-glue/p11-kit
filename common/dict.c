@@ -33,6 +33,7 @@
 
 #include "config.h"
 
+#include "debug.h"
 #include "dict.h"
 
 #include <sys/types.h>
@@ -73,19 +74,19 @@ next_entry (p11_dictiter *iter)
 }
 
 
-int
+bool
 p11_dict_next (p11_dictiter *iter,
                void **key,
                void **value)
 {
 	dictbucket *bucket = next_entry (iter);
 	if (bucket == NULL)
-		return 0;
+		return false;
 	if (key)
 		*key = bucket->key;
 	if (value)
 		*value = bucket->value;
-	return 1;
+	return true;
 }
 
 void
@@ -100,7 +101,7 @@ p11_dict_iterate (p11_dict *dict,
 static dictbucket **
 lookup_or_create_bucket (p11_dict *dict,
                          const void *key,
-                         int create)
+                         bool create)
 {
 	dictbucket **bucketp;
 	unsigned int hash;
@@ -136,14 +137,14 @@ p11_dict_get (p11_dict *dict,
 {
 	dictbucket **bucketp;
 
-	bucketp = lookup_or_create_bucket (dict, key, 0);
+	bucketp = lookup_or_create_bucket (dict, key, false);
 	if (bucketp && *bucketp)
 		return (void*)((*bucketp)->value);
 	else
 		return NULL;
 }
 
-int
+bool
 p11_dict_set (p11_dict *dict,
               void *key,
               void *val)
@@ -154,7 +155,7 @@ p11_dict_set (p11_dict *dict,
 	dictbucket **new_buckets;
 	unsigned int num_buckets;
 
-	bucketp = lookup_or_create_bucket (dict, key, 1);
+	bucketp = lookup_or_create_bucket (dict, key, true);
 	if(bucketp && *bucketp) {
 
 		/* Destroy the previous key */
@@ -189,13 +190,13 @@ p11_dict_set (p11_dict *dict,
 			}
 		}
 
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return_val_if_reached (false);
 }
 
-int
+bool
 p11_dict_steal (p11_dict *dict,
                 const void *key,
                 void **stolen_key,
@@ -203,7 +204,7 @@ p11_dict_steal (p11_dict *dict,
 {
 	dictbucket **bucketp;
 
-	bucketp = lookup_or_create_bucket (dict, key, 0);
+	bucketp = lookup_or_create_bucket (dict, key, false);
 	if (bucketp && *bucketp) {
 		dictbucket *old = *bucketp;
 		*bucketp = (*bucketp)->next;
@@ -213,14 +214,14 @@ p11_dict_steal (p11_dict *dict,
 		if (stolen_value)
 			*stolen_value = old->value;
 		free (old);
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 
 }
 
-int
+bool
 p11_dict_remove (p11_dict *dict,
                  const void *key)
 {
@@ -228,13 +229,13 @@ p11_dict_remove (p11_dict *dict,
 	void *old_value;
 
 	if (!p11_dict_steal (dict, key, &old_key, &old_value))
-		return 0;
+		return false;
 
 	if (dict->key_destroy_func)
 		dict->key_destroy_func (old_key);
 	if (dict->value_destroy_func)
 		dict->value_destroy_func (old_value);
-	return 1;
+	return true;
 }
 
 void
@@ -335,7 +336,7 @@ p11_dict_str_hash (const void *string)
 	return hash;
 }
 
-int
+bool
 p11_dict_str_equal (const void *string_one,
                     const void *string_two)
 {
@@ -352,7 +353,7 @@ p11_dict_ulongptr_hash (const void *to_ulong)
 	return (unsigned int)*((unsigned long*)to_ulong);
 }
 
-int
+bool
 p11_dict_ulongptr_equal (const void *ulong_one,
                          const void *ulong_two)
 {
@@ -368,7 +369,7 @@ p11_dict_intptr_hash (const void *to_int)
 	return (unsigned int)*((int*)to_int);
 }
 
-int
+bool
 p11_dict_intptr_equal (const void *int_one,
                         const void *int_two)
 {
@@ -383,7 +384,7 @@ p11_dict_direct_hash (const void *ptr)
 	return (unsigned int)(size_t)ptr;
 }
 
-int
+bool
 p11_dict_direct_equal (const void *ptr_one,
                        const void *ptr_two)
 {

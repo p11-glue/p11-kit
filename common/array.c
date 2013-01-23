@@ -33,11 +33,12 @@
 #include "config.h"
 
 #include "array.h"
+#include "debug.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static int
+static bool
 maybe_expand_array (p11_array *array,
                     unsigned int length)
 {
@@ -45,19 +46,18 @@ maybe_expand_array (p11_array *array,
 	void **new_memory;
 
 	if (length <= array->allocated)
-		return 1;
+		return true;
 
 	new_allocated = array->allocated + 16;
 	if (new_allocated < length)
 		new_allocated = length;
 
 	new_memory = realloc (array->elem, new_allocated * sizeof (void*));
-	if (new_memory == NULL)
-		return 0;
+	return_val_if_fail (new_memory != NULL, false);
 
 	array->elem = new_memory;
 	array->allocated = new_allocated;
-	return 1;
+	return true;
 }
 
 p11_array *
@@ -95,16 +95,16 @@ p11_array_free (p11_array *array)
 	free (array);
 }
 
-int
+bool
 p11_array_push (p11_array *array,
                 void *value)
 {
 	if (!maybe_expand_array (array, array->num + 1))
-		return 0;
+		return_val_if_reached (false);
 
 	array->elem[array->num] = value;
 	array->num++;
-	return 1;
+	return true;
 }
 
 void

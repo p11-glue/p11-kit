@@ -58,8 +58,8 @@ static struct DebugKey debug_keys[] = {
 	{ 0, }
 };
 
-static int debug_inited = 0;
-static int debug_strict = 0;
+static bool debug_inited = false;
+static bool debug_strict = false;
 
 /* global variable exported in debug.h */
 int p11_debug_current_flags = ~0;
@@ -75,7 +75,7 @@ parse_environ_flags (void)
 
 	env = getenv ("P11_KIT_STRICT");
 	if (env && env[0] != '\0')
-		debug_strict = 1;
+		debug_strict = true;
 
 	env = getenv ("P11_KIT_DEBUG");
 	if (!env)
@@ -117,7 +117,7 @@ void
 p11_debug_init (void)
 {
 	p11_debug_current_flags = parse_environ_flags ();
-	debug_inited = 1;
+	debug_inited = true;
 }
 
 void

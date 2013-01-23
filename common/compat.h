@@ -39,6 +39,8 @@
 
 #include <sys/types.h>
 
+typedef enum { false, true } bool;
+
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
 #else
@@ -202,5 +204,11 @@ void *     memdup           (void *data,
                              size_t length);
 
 #endif /* HAVE_MEMDUP */
+
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+typedef enum { false, true } bool;
+#endif
 
 #endif /* __COMPAT_H__ */

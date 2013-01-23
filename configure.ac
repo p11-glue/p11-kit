@@ -68,7 +68,7 @@ if test "$os_unix" = "yes"; then
 	AC_SEARCH_LIBS([nanosleep], [rt], [],
 		[AC_MSG_ERROR([could not find nanosleep])])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
-	AC_CHECK_HEADERS([err.h errno.h])
+	AC_CHECK_HEADERS([err.h errno.h stdbool.h])
 	AC_CHECK_FUNCS([getprogname getexecname memdup])
 
 	# Check if these are declared and/or available to link against

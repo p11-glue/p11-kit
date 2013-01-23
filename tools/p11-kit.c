@@ -47,7 +47,7 @@
 #include "p11-kit/uri.h"
 
 typedef int (*operation) (int argc, char *argv[]);
-int verbose = 0;
+bool verbose = false;
 
 static void
 usage (void)
@@ -82,7 +82,7 @@ hex_encode (const unsigned char *data,
 	return result;
 }
 
-static int
+static bool
 is_ascii_string (const unsigned char *data,
                  size_t n_data)
 {
@@ -91,10 +91,10 @@ is_ascii_string (const unsigned char *data,
 	for (i = 0; i < n_data; i++) {
 		if (!isascii (data[i]) &&
 		    (data[i] < 0x20 && !isspace (data[i])))
-			return 0;
+			return false;
 	}
 
-	return 1;
+	return true;
 }
 
 static void
@@ -253,7 +253,7 @@ main (int argc, char *argv[])
 			oper = list_modules;
 			break;
 		case 'v':
-			verbose = 1;
+			verbose = true;
 			putenv ("P11_KIT_DEBUG=all");
 			break;
 		case 'h':

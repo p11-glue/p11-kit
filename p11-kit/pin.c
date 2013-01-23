@@ -170,7 +170,7 @@ unref_pin_callback (void *pointer)
 	}
 }
 
-static int
+static bool
 register_callback_unlocked (const char *pin_source,
                             PinCallback *cb)
 {
@@ -178,12 +178,12 @@ register_callback_unlocked (const char *pin_source,
 	char *name;
 
 	name = strdup (pin_source);
-	return_val_if_fail (name != NULL, -1);
+	return_val_if_fail (name != NULL, false);
 
 	if (gl.pin_sources == NULL) {
 		gl.pin_sources = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal,
 		                               free, (p11_destroyer)p11_array_free);
-		return_val_if_fail (gl.pin_sources != NULL, -1);
+		return_val_if_fail (gl.pin_sources != NULL, false);
 	}
 
 	if (gl.pin_sources != NULL)
@@ -191,15 +191,15 @@ register_callback_unlocked (const char *pin_source,
 
 	if (callbacks == NULL) {
 		callbacks = p11_array_new (unref_pin_callback);
-		return_val_if_fail (callbacks != NULL, -1);
+		return_val_if_fail (callbacks != NULL, false);
 		if (!p11_dict_set (gl.pin_sources, name, callbacks))
-			return_val_if_reached (-1);
+			return_val_if_reached (false);
 	}
 
-	if (p11_array_push (callbacks, cb) < 0)
-		return_val_if_reached (-1);
+	if (!p11_array_push (callbacks, cb))
+		return_val_if_reached (false);
 
-	return 0;
+	return true;
 }
 
 /**
@@ -227,7 +227,7 @@ p11_kit_pin_register_callback (const char *pin_source,
                                p11_kit_pin_destroy_func callback_destroy)
 {
 	PinCallback *cb;
-	int ret;
+	bool ret;
 
 	return_val_if_fail (pin_source != NULL, -1);
 	return_val_if_fail (callback != NULL, -1);
@@ -246,7 +246,7 @@ p11_kit_pin_register_callback (const char *pin_source,
 
 	p11_unlock ();
 
-	return ret;
+	return ret ? 0 : -1;
 }
 
 /**
@@ -685,7 +685,7 @@ p11_kit_pin_ref (P11KitPin *pin)
 void
 p11_kit_pin_unref (P11KitPin *pin)
 {
-	int last = 0;
+	bool last = false;
 
 	p11_lock ();
 

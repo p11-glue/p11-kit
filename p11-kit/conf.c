@@ -222,7 +222,7 @@ read_config_file (const char* filename, int flags)
 	return config;
 }
 
-int
+bool
 _p11_conf_merge_defaults (p11_dict *map,
                           p11_dict *defaults)
 {
@@ -236,14 +236,14 @@ _p11_conf_merge_defaults (p11_dict *map,
 		if (p11_dict_get (map, key))
 			continue;
 		key = strdup (key);
-		return_val_if_fail (key != NULL, -1);
+		return_val_if_fail (key != NULL, false);
 		value = strdup (value);
-		return_val_if_fail (key != NULL, -1);
+		return_val_if_fail (key != NULL, false);
 		if (!p11_dict_set (map, key, value))
-			return_val_if_reached (-1);
+			return_val_if_reached (false);
 	}
 
-	return 0;
+	return true;
 }
 
 p11_dict *
@@ -441,7 +441,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 		/* If merging, then supplement user config with system values */
 		if (mode == CONF_USER_MERGE) {
-			if (_p11_conf_merge_defaults (uconfig, config) < 0) {
+			if (!_p11_conf_merge_defaults (uconfig, config)) {
 				error = errno;
 				goto finished;
 			}
@@ -509,7 +509,7 @@ calc_name_from_filename (const char *fname)
 	return name;
 }
 
-static int
+static bool
 load_config_from_file (const char *configfile,
                        const char *name,
                        p11_dict *configs,
@@ -526,22 +526,22 @@ load_config_from_file (const char *configfile,
 	if (key == NULL) {
 		p11_message ("invalid config filename, will be ignored in the future: %s", configfile);
 		key = strdup (name);
-		return_val_if_fail (key != NULL, -1);
+		return_val_if_fail (key != NULL, false);
 	}
 
 	config = _p11_conf_parse_file (configfile, flags);
 	if (!config) {
 		free (key);
-		return -1;
+		return false;
 	}
 
 	prev = p11_dict_get (configs, key);
 	if (prev == NULL) {
 		if (!p11_dict_set (configs, key, config))
-			return_val_if_reached (-1);
+			return_val_if_reached (false);
 		config = NULL;
 	} else {
-		if (_p11_conf_merge_defaults (prev, config) < 0)
+		if (!_p11_conf_merge_defaults (prev, config))
 			error = errno;
 		free (key);
 	}
@@ -551,13 +551,13 @@ load_config_from_file (const char *configfile,
 
 	if (error) {
 		errno = error;
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
-static int
+static bool
 load_configs_from_directory (const char *directory,
                              p11_dict *configs,
                              int flags)
@@ -566,7 +566,7 @@ load_configs_from_directory (const char *directory,
 	struct stat st;
 	DIR *dir;
 	int error = 0;
-	int is_dir;
+	bool is_dir;
 	char *path;
 	int count = 0;
 
@@ -579,24 +579,24 @@ load_configs_from_directory (const char *directory,
 		if ((flags & CONF_IGNORE_MISSING) &&
 		    (errno == ENOENT || errno == ENOTDIR)) {
 			p11_debug ("module configs do not exist");
-			return 0;
+			return true;
 		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
 		           (errno == EPERM || errno == EACCES)) {
 			p11_debug ("couldn't list inacessible module configs");
-			return 0;
+			return true;
 		}
 		p11_message ("couldn't list directory: %s: %s", directory,
 		             strerror (error));
 		errno = error;
-		return -1;
+		return false;
 	}
 
 	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir(dir)) != NULL) {
 		path = strconcat (directory, "/", dp->d_name, NULL);
-		return_val_if_fail (path != NULL, -1);
+		return_val_if_fail (path != NULL, false);
 
-		is_dir = 0;
+		is_dir = false;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
 		if(dp->d_type != DT_UNKNOWN) {
 			is_dir = (dp->d_type == DT_DIR);
@@ -612,7 +612,7 @@ load_configs_from_directory (const char *directory,
 			is_dir = S_ISDIR (st.st_mode);
 		}
 
-		if (!is_dir && load_config_from_file (path, dp->d_name, configs, flags) < 0) {
+		if (!is_dir && !load_config_from_file (path, dp->d_name, configs, flags)) {
 			error = errno;
 			free (path);
 			break;
@@ -626,10 +626,10 @@ load_configs_from_directory (const char *directory,
 
 	if (error) {
 		errno = error;
-		return -1;
+		return false;
 	}
 
-	return count;
+	return true;
 }
 
 p11_dict *
@@ -650,7 +650,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 		path = expand_user_path (user_dir);
 		if (!path)
 			error = errno;
-		else if (load_configs_from_directory (path, configs, flags) < 0)
+		else if (!load_configs_from_directory (path, configs, flags))
 			error = errno;
 		free (path);
 		if (error != 0) {
@@ -667,7 +667,7 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	 */
 	if (mode != CONF_USER_ONLY) {
 		flags = CONF_IGNORE_MISSING;
-		if (load_configs_from_directory (system_dir, configs, flags) < 0) {
+		if (!load_configs_from_directory (system_dir, configs, flags)) {
 			error = errno;
 			p11_dict_free (configs);
 			errno = error;
@@ -678,17 +678,17 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	return configs;
 }
 
-int
+bool
 _p11_conf_parse_boolean (const char *string,
-                         int default_value)
+                         bool default_value)
 {
 	if (!string)
 		return default_value;
 
 	if (strcmp (string, "yes") == 0) {
-		return 1;
+		return true;
 	} else if (strcmp (string, "no") == 0) {
-		return 0;
+		return false;
 	} else {
 		p11_message ("invalid setting '%s' defaulting to '%s'",
 		             string, default_value ? "yes" : "no");

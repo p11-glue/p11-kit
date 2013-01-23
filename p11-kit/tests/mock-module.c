@@ -53,7 +53,7 @@
 static p11_mutex_t init_mutex;
 
 /* Whether we've been initialized, and on what process id it happened */
-static int pkcs11_initialized = 0;
+static bool pkcs11_initialized = false;
 static pid_t pkcs11_initialized_pid = 0;
 
 /* -----------------------------------------------------------------------------
@@ -141,10 +141,10 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 done:
 		/* Mark us as officially initialized */
 		if (ret == CKR_OK) {
-			pkcs11_initialized = 1;
+			pkcs11_initialized = true;
 			pkcs11_initialized_pid = pid;
 		} else if (ret != CKR_CRYPTOKI_ALREADY_INITIALIZED) {
-			pkcs11_initialized = 0;
+			pkcs11_initialized = false;
 			pkcs11_initialized_pid = 0;
 		}
 
@@ -158,13 +158,13 @@ CK_RV
 mock_C_Finalize (CK_VOID_PTR reserved)
 {
 	debug (("C_Finalize: enter"));
-	return_val_if_fail (pkcs11_initialized != 0, CKR_CRYPTOKI_NOT_INITIALIZED);
+	return_val_if_fail (pkcs11_initialized, CKR_CRYPTOKI_NOT_INITIALIZED);
 	return_val_if_fail (reserved == NULL, CKR_ARGUMENTS_BAD);
 
 	p11_mutex_lock (&init_mutex);
 
 		/* This should stop all other calls in */
-		pkcs11_initialized = 0;
+		pkcs11_initialized = false;
 		pkcs11_initialized_pid = 0;
 
 	p11_mutex_unlock (&init_mutex);
@@ -890,9 +890,9 @@ CK_FUNCTION_LIST mock_module_no_slots = {
 void
 mock_module_init (void)
 {
-	static int initialized = 0;
+	static bool initialized = false;
 	if (!initialized) {
 		p11_mutex_init (&init_mutex);
-		initialized = 1;
+		initialized = true;
 	}
 }

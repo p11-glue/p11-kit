@@ -109,7 +109,7 @@ typedef struct _Module {
 
 	/* Initialization, mutex must be held */
 	p11_mutex_t initialize_mutex;
-	int initialize_called;
+	bool initialize_called;
 	p11_thread_id_t initialize_thread;
 } Module;
 
@@ -183,7 +183,7 @@ free_module_unlocked (void *data)
 	assert (mod != NULL);
 
 	/* Module must be finalized */
-	assert (mod->initialize_called == 0);
+	assert (!mod->initialize_called);
 	assert (mod->initialize_thread == 0);
 
 	/* Module must have no outstanding references */
@@ -336,7 +336,7 @@ is_list_delimiter (char ch)
 	return ch == ',' ||  isspace (ch);
 }
 
-static int
+static bool
 is_string_in_list (const char *list,
                    const char *string)
 {
@@ -344,31 +344,31 @@ is_string_in_list (const char *list,
 
 	where = strstr (list, string);
 	if (where == NULL)
-		return 0;
+		return false;
 
 	/* Has to be at beginning/end of string, and delimiter before/after */
 	if (where != list && !is_list_delimiter (*(where - 1)))
-		return 0;
+		return false;
 
 	where += strlen (string);
 	return (*where == '\0' || is_list_delimiter (*where));
 }
 
-static int
+static bool
 is_module_enabled_unlocked (const char *name,
                             p11_dict *config)
 {
 	const char *progname;
 	const char *enable_in;
 	const char *disable_in;
-	int enable = 0;
+	bool enable = false;
 
 	enable_in = p11_dict_get (config, "enable-in");
 	disable_in = p11_dict_get (config, "disable-in");
 
 	/* Defaults to enabled if neither of these are set */
 	if (!enable_in && !disable_in)
-		return 1;
+		return true;
 
 	progname = _p11_get_progname_unlocked ();
 	if (enable_in && disable_in)
@@ -475,7 +475,7 @@ load_registered_modules_unlocked (void)
 	p11_dict *config;
 	int mode;
 	CK_RV rv;
-	int critical;
+	bool critical;
 
 	if (gl.config)
 		return CKR_OK;
@@ -508,7 +508,7 @@ load_registered_modules_unlocked (void)
 			assert_not_reached ();
 
 		/* Is this a critical module, should abort loading of others? */
-		critical = _p11_conf_parse_boolean (p11_dict_get (config, "critical"), 0);
+		critical = _p11_conf_parse_boolean (p11_dict_get (config, "critical"), false);
 
 		rv = take_config_and_load_module_unlocked (&name, &config);
 
@@ -575,7 +575,7 @@ initialize_module_unlocked_reentrant (Module *mod)
 
 		/* Module was initialized and C_Finalize should be called */
 		if (rv == CKR_OK)
-			mod->initialize_called = 1;
+			mod->initialize_called = true;
 
 		/* Module was already initialized, we don't call C_Finalize */
 		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
@@ -608,7 +608,7 @@ reinitialize_after_fork (void)
 		if (gl.modules) {
 			p11_dict_iterate (gl.modules, &iter);
 			while (p11_dict_next (&iter, NULL, (void **)&mod))
-				mod->initialize_called = 0;
+				mod->initialize_called = false;
 		}
 
 	p11_unlock ();
@@ -621,7 +621,7 @@ reinitialize_after_fork (void)
 static CK_RV
 init_globals_unlocked (void)
 {
-	static int once = 0;
+	static bool once = false;
 
 	if (!gl.modules) {
 		gl.modules = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal,
@@ -635,7 +635,7 @@ init_globals_unlocked (void)
 #ifdef OS_UNIX
 	pthread_atfork (NULL, NULL, reinitialize_after_fork);
 #endif
-	once = 1;
+	once = true;
 
 	return CKR_OK;
 }
@@ -689,7 +689,7 @@ finalize_module_unlocked_reentrant (Module *mod)
 		assert (mod->funcs);
 		mod->funcs->C_Finalize (NULL);
 
-		mod->initialize_called = 0;
+		mod->initialize_called = false;
 	}
 
 	p11_mutex_unlock (&mod->initialize_mutex);
@@ -748,7 +748,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 				p11_message ("failed to initialize module: %s: %s",
 				             mod->name, p11_kit_strerror (rv));
 
-				critical = _p11_conf_parse_boolean (p11_dict_get (mod->config, "critical"), 0);
+				critical = _p11_conf_parse_boolean (p11_dict_get (mod->config, "critical"), false);
 				if (!critical) {
 					p11_debug ("ignoring failure, non-critical module: %s", mod->name);
 					rv = CKR_OK;

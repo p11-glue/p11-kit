@@ -35,7 +35,7 @@
 #ifndef __P11_ARRAY_H__
 #define __P11_ARRAY_H__
 
-#include <sys/types.h>
+#include "compat.h"
 
 #ifndef P11_DESTROYER_DEFINED
 #define P11_DESTROYER_DEFINED
@@ -57,7 +57,7 @@ p11_array *          p11_array_new                (p11_destroyer destroyer);
 
 void                 p11_array_free               (p11_array *array);
 
-int                  p11_array_push               (p11_array *array,
+bool                 p11_array_push               (p11_array *array,
                                                    void *value);
 
 void                 p11_array_remove             (p11_array *array,

@@ -107,7 +107,7 @@ test_merge_defaults (CuTest *tc)
 	p11_dict_set (defaults, strdup ("two"), strdup ("default2"));
 	p11_dict_set (defaults, strdup ("three"), strdup ("default3"));
 
-	if (_p11_conf_merge_defaults (values, defaults) < 0)
+	if (!_p11_conf_merge_defaults (values, defaults))
 		CuFail (tc, "should not be reached");
 
 	p11_dict_free (defaults);
@@ -247,13 +247,11 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 	p11_dict_free (config);
 }
 
-static int
+static bool
 assert_msg_contains (const char *msg,
                      const char *text)
 {
-	if (msg == NULL)
-		return 0;
-	return strstr (msg, text) ? 1 : 0;
+	return (msg && strstr (msg, text)) ? true : false;
 }
 
 static void
@@ -378,6 +376,16 @@ test_load_modules_no_user (CuTest *tc)
 	p11_dict_free (configs);
 }
 
+static void
+test_parse_boolean (CuTest *tc)
+{
+	p11_message_quiet ();
+
+	CuAssertIntEquals (tc, true, _p11_conf_parse_boolean ("yes", false));
+	CuAssertIntEquals (tc, false, _p11_conf_parse_boolean ("no", true));
+	CuAssertIntEquals (tc, true, _p11_conf_parse_boolean ("!!!", true));
+}
+
 int
 main (void)
 {
@@ -402,6 +410,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_load_modules_no_user);
 	SUITE_ADD_TEST (suite, test_load_modules_user_only);
 	SUITE_ADD_TEST (suite, test_load_modules_user_none);
+	SUITE_ADD_TEST (suite, test_parse_boolean);
 
 	p11_kit_be_quiet ();
 

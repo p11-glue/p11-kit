@@ -56,7 +56,7 @@ p11_attrs_count (CK_ATTRIBUTE *attrs)
 	CK_ULONG count;
 
 	if (attrs == NULL)
-		return 0;
+		return 0UL;
 
 	for (count = 0; !p11_attrs_is_empty (attrs); count++, attrs++);
 
@@ -80,7 +80,7 @@ p11_attrs_free (void *attrs)
 static CK_ATTRIBUTE *
 attrs_build (CK_ATTRIBUTE *attrs,
              CK_ULONG count_to_add,
-             int copy,
+             bool copy,
              CK_ATTRIBUTE * (*generator) (void *),
              void *state)
 {
@@ -147,14 +147,14 @@ p11_attrs_build (CK_ATTRIBUTE *attrs,
 	CK_ULONG count;
 	va_list va;
 
-	count = 0;
+	count = 0UL;
 	va_start (va, attrs);
 	while (va_arg (va, CK_ATTRIBUTE *))
 		count++;
 	va_end (va);
 
 	va_start (va, attrs);
-	attrs = attrs_build (attrs, count, 1, vararg_generator, va);
+	attrs = attrs_build (attrs, count, true, vararg_generator, va);
 	va_end (va);
 
 	return attrs;
@@ -172,7 +172,7 @@ p11_attrs_buildn (CK_ATTRIBUTE *attrs,
                   CK_ATTRIBUTE *add,
                   CK_ULONG count)
 {
-	return attrs_build (attrs, count, 1, template_generator, &add);
+	return attrs_build (attrs, count, true, template_generator, &add);
 }
 
 CK_ATTRIBUTE *
@@ -183,7 +183,7 @@ p11_attrs_take (CK_ATTRIBUTE *attrs,
 {
 	CK_ATTRIBUTE attr = { type, value, length };
 	CK_ATTRIBUTE *add = &attr;
-	return attrs_build (attrs, 1, 0, template_generator, &add);
+	return attrs_build (attrs, 1, false, template_generator, &add);
 }
 
 CK_ATTRIBUTE *

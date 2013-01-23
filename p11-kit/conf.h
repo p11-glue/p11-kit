@@ -50,7 +50,7 @@ enum {
 	CONF_USER_ONLY
 };
 
-int           _p11_conf_merge_defaults       (p11_dict *config,
+bool          _p11_conf_merge_defaults       (p11_dict *config,
                                               p11_dict *defaults);
 
 /* Returns a hash of char *key -> char *value */
@@ -67,7 +67,7 @@ p11_dict * _p11_conf_load_modules         (int user_mode,
                                               const char *system_dir,
                                               const char *user_dir);
 
-int           _p11_conf_parse_boolean        (const char *string,
-                                              int default_value);
+bool          _p11_conf_parse_boolean        (const char *string,
+                                              bool default_value);
 
 #endif /* __CONF_H__ */

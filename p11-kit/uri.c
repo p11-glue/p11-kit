@@ -136,7 +136,7 @@
  */
 
 struct p11_kit_uri {
-	int unrecognized;
+	bool unrecognized;
 	CK_INFO module;
 	CK_TOKEN_INFO token;
 	CK_ATTRIBUTE *attrs;
@@ -202,8 +202,11 @@ url_decode (const char *value, const char *end,
 	return P11_KIT_URI_OK;
 }
 
-static char*
-url_encode (const unsigned char *value, const unsigned char *end, size_t *length, int force)
+static char *
+url_encode (const unsigned char *value,
+            const unsigned char *end,
+            size_t *length,
+            bool force)
 {
 	char *p;
 	char *result;
@@ -262,7 +265,7 @@ key_decode (const char *value, const char *end)
 	return key;
 }
 
-static int
+static bool
 match_struct_string (const unsigned char *inuri, const unsigned char *real,
                      size_t length)
 {
@@ -272,19 +275,19 @@ match_struct_string (const unsigned char *inuri, const unsigned char *real,
 
 	/* NULL matches anything */
 	if (inuri[0] == 0)
-		return 1;
+		return true;
 
-	return memcmp (inuri, real, length) == 0 ? 1 : 0;
+	return memcmp (inuri, real, length) == 0 ? true : false;
 }
 
-static int
+static bool
 match_struct_version (CK_VERSION_PTR inuri, CK_VERSION_PTR real)
 {
 	/* This matches anything */
 	if (inuri->major == (CK_BYTE)-1 && inuri->minor == (CK_BYTE)-1)
-		return 1;
+		return true;
 
-	return memcmp (inuri, real, sizeof (CK_VERSION));
+	return memcmp (inuri, real, sizeof (CK_VERSION)) == 0 ? true : false;
 }
 
 /**
@@ -594,7 +597,7 @@ void
 p11_kit_uri_set_unrecognized (P11KitUri *uri, int unrecognized)
 {
 	return_if_fail (uri != NULL);
-	uri->unrecognized = unrecognized;
+	uri->unrecognized = unrecognized ? true : false;
 }
 
 /**
@@ -700,22 +703,25 @@ p11_kit_uri_new (void)
 	return uri;
 }
 
-static int
-format_raw_string (char **string, size_t *length, int *is_first,
-                   const char *name, const char *value)
+static bool
+format_raw_string (char **string,
+                   size_t *length,
+                   bool *is_first,
+                   const char *name,
+                   const char *value)
 {
 	size_t namelen;
 	size_t vallen;
 
 	/* Not set */
 	if (!value)
-		return 1;
+		return true;
 
 	namelen = strlen (name);
 	vallen = strlen (value);
 
 	*string = realloc (*string, *length + namelen + vallen + 3);
-	return_val_if_fail (*string != NULL, 0);
+	return_val_if_fail (*string != NULL, false);
 
 	if (!*is_first)
 		(*string)[(*length)++] = ';';
@@ -725,21 +731,25 @@ format_raw_string (char **string, size_t *length, int *is_first,
 	memcpy ((*string) + *length, value, vallen);
 	*length += vallen;
 	(*string)[*length] = 0;
-	*is_first = 0;
+	*is_first = false;
 
-	return 1;
+	return true;
 }
 
-static int
-format_encode_string (char **string, size_t *length, int *is_first,
-                      const char *name, const unsigned char *value,
-                      size_t n_value, int force)
+static bool
+format_encode_string (char **string,
+                      size_t *length,
+                      bool *is_first,
+                      const char *name,
+                      const unsigned char *value,
+                      size_t n_value,
+                      bool force)
 {
 	char *encoded;
-	int ret;
+	bool ret;
 
 	encoded = url_encode (value, value + n_value, NULL, force);
-	return_val_if_fail (encoded != NULL, 0);
+	return_val_if_fail (encoded != NULL, false);
 
 	ret = format_raw_string (string, length, is_first, name, encoded);
 	free (encoded);
@@ -747,45 +757,54 @@ format_encode_string (char **string, size_t *length, int *is_first,
 }
 
 
-static int
-format_struct_string (char **string, size_t *length, int *is_first,
-                      const char *name, const unsigned char *value,
+static bool
+format_struct_string (char **string,
+                      size_t *length,
+                      bool *is_first,
+                      const char *name,
+                      const unsigned char *value,
                       size_t value_max)
 {
 	size_t len;
 
 	/* Not set */
 	if (!value[0])
-		return 1;
+		return true;
 
 	len = p11_kit_space_strlen (value, value_max);
-	return format_encode_string (string, length, is_first, name, value, len, 0);
+	return format_encode_string (string, length, is_first, name, value, len, false);
 }
 
-static int
-format_attribute_string (char **string, size_t *length, int *is_first,
-                         const char *name, CK_ATTRIBUTE_PTR attr,
-                         int force)
+static bool
+format_attribute_string (char **string,
+                         size_t *length,
+                         bool *is_first,
+                         const char *name,
+                         CK_ATTRIBUTE_PTR attr,
+                         bool force)
 {
 	/* Not set */;
 	if (attr == NULL)
-		return 1;
+		return true;
 
 	return format_encode_string (string, length, is_first, name,
 	                             attr->pValue, attr->ulValueLen,
 	                             force);
 }
 
-static int
-format_attribute_class (char **string, size_t *length, int *is_first,
-                        const char *name, CK_ATTRIBUTE_PTR attr)
+static bool
+format_attribute_class (char **string,
+                        size_t *length,
+                        bool *is_first,
+                        const char *name,
+                        CK_ATTRIBUTE_PTR attr)
 {
 	CK_OBJECT_CLASS klass;
 	const char *value;
 
 	/* Not set */;
 	if (attr == NULL)
-		return 1;
+		return true;
 
 	klass = *((CK_OBJECT_CLASS*)attr->pValue);
 	switch (klass) {
@@ -805,21 +824,24 @@ format_attribute_class (char **string, size_t *length, int *is_first,
 		value = "private";
 		break;
 	default:
-		return 1;
+		return true;
 	}
 
 	return format_raw_string (string, length, is_first, name, value);
 }
 
-static int
-format_struct_version (char **string, size_t *length, int *is_first,
-                       const char *name, CK_VERSION_PTR version)
+static bool
+format_struct_version (char **string,
+                       size_t *length,
+                       bool *is_first,
+                       const char *name,
+                       CK_VERSION_PTR version)
 {
 	char buffer[64];
 
 	/* Not set */
 	if (version->major == (CK_BYTE)-1 && version->minor == (CK_BYTE)-1)
-		return 1;
+		return true;
 
 	snprintf (buffer, sizeof (buffer), "%d.%d",
 	          (int)version->major, (int)version->minor);
@@ -859,7 +881,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 {
 	char *result = NULL;
 	size_t length = 0;
-	int is_first = 1;
+	bool is_first = true;
 
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 	return_val_if_fail (string != NULL, P11_KIT_URI_UNEXPECTED);
@@ -910,10 +932,10 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT) {
 		if (!format_attribute_string (&result, &length, &is_first, "id",
 		                              p11_kit_uri_get_attribute (uri, CKA_ID),
-		                              1) ||
+		                              true) ||
 		    !format_attribute_string (&result, &length, &is_first, "object",
 		                              p11_kit_uri_get_attribute (uri, CKA_LABEL),
-		                              0)) {
+		                              false)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
@@ -992,7 +1014,7 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 		klass = CKO_DATA;
 	else {
 		free (value);
-		uri->unrecognized = 1;
+		uri->unrecognized = true;
 		return 1;
 	}
 
@@ -1026,7 +1048,7 @@ parse_struct_info (unsigned char *where, size_t length, const char *start,
 	/* Too long, shouldn't match anything */
 	if (value_length > length) {
 		free (value);
-		uri->unrecognized = 1;
+		uri->unrecognized = true;
 		return 1;
 	}
 
@@ -1266,7 +1288,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		if (ret < 0)
 			return ret;
 		if (ret == 0)
-			uri->unrecognized = 1;
+			uri->unrecognized = true;
 
 		if (*spos == '\0')
 			break;

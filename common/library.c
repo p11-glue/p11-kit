@@ -65,7 +65,7 @@ p11_mutex_t p11_library_mutex;
 pthread_once_t p11_library_once;
 #endif
 
-static int print_messages = 1;
+static bool print_messages = true;
 
 void
 p11_message_store (const char* msg,
@@ -112,7 +112,7 @@ void
 p11_message_quiet (void)
 {
 	p11_lock ();
-	print_messages = 0;
+	print_messages = false;
 	p11_unlock ();
 }
 

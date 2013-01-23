@@ -210,18 +210,18 @@ test_uri_parse_with_bad_hex_encoding (CuTest *tc)
 	p11_kit_uri_free (uri);
 }
 
-static int
+static bool
 is_space_string (CK_UTF8CHAR_PTR string, CK_ULONG size, const char *check)
 {
 	size_t i, len = strlen (check);
 	if (len > size)
-		return 0;
+		return false;
 	if (memcmp (string, check, len) != 0)
-		return 0;
+		return false;
 	for (i = len; i < size; ++i)
 		if (string[i] != ' ')
-			return 0;
-	return 1;
+			return false;
+	return true;
 }
 
 static void
@@ -909,6 +909,36 @@ test_uri_match_module (CuTest *tc)
 }
 
 static void
+test_uri_match_version (CuTest *tc)
+{
+	CK_INFO info;
+	P11KitUri *uri;
+	int ret;
+
+	memset (&info, 0, sizeof (info));
+
+	uri = p11_kit_uri_new ();
+	CuAssertPtrNotNull (tc, uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:library-version=5.8", P11_KIT_URI_FOR_ANY, uri);
+	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+
+	info.libraryVersion.major = 5;
+	info.libraryVersion.minor = 8;
+
+	ret = p11_kit_uri_match_module_info (uri, &info);
+	CuAssertIntEquals (tc, 1, ret);
+
+	info.libraryVersion.major = 2;
+	info.libraryVersion.minor = 3;
+
+	ret = p11_kit_uri_match_module_info (uri, &info);
+	CuAssertIntEquals (tc, 0, ret);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_match_attributes (CuTest *tc)
 {
 	CK_ATTRIBUTE attrs[4];
@@ -1208,6 +1238,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_uri_get_set_unrecognized);
 	SUITE_ADD_TEST (suite, test_uri_match_token);
 	SUITE_ADD_TEST (suite, test_uri_match_module);
+	SUITE_ADD_TEST (suite, test_uri_match_version);
 	SUITE_ADD_TEST (suite, test_uri_match_attributes);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attribute);
 	SUITE_ADD_TEST (suite, test_uri_get_set_attributes);

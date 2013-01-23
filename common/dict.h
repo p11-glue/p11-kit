@@ -36,7 +36,7 @@
 #ifndef P11_DICT_H_
 #define P11_DICT_H_
 
-#include <sys/types.h>
+#include "compat.h"
 
 /*
  * ARGUMENT DOCUMENTATION
@@ -64,7 +64,7 @@ typedef struct _p11_dictiter {
 
 typedef unsigned int (*p11_dict_hasher)        (const void *data);
 
-typedef int          (*p11_dict_equals)        (const void *one,
+typedef bool         (*p11_dict_equals)        (const void *one,
                                                 const void *two);
 
 #ifndef P11_DESTROYER_DEFINED
@@ -107,25 +107,25 @@ void*               p11_dict_get               (p11_dict *dict,
 
 /*
  *  p11_dict_set: Set a value in the hash table
- * - returns 1 if the entry was added properly
+ * - returns true if the entry was added properly
  */
-int                 p11_dict_set               (p11_dict *dict,
+bool                p11_dict_set               (p11_dict *dict,
                                                 void *key,
                                                 void *value);
 
 /*
  *  p11_dict_remove: Remove a value from the hash table
- * - returns 1 if the entry was found
+ * - returns true if the entry was found
  */
-int                 p11_dict_remove            (p11_dict *dict,
+bool                p11_dict_remove            (p11_dict *dict,
                                                 const void *key);
 
 /*
  *  p11_dict_steal: Remove a value from the hash table without calling
  * destroy funcs
- * - returns 1 if the entry was found
+ * - returns true if the entry was found
  */
-int                 p11_dict_steal             (p11_dict *dict,
+bool                p11_dict_steal             (p11_dict *dict,
                                                 const void *key,
                                                 void **stolen_key,
                                                 void **stolen_value);
@@ -142,7 +142,7 @@ void                p11_dict_iterate           (p11_dict *dict,
  * - sets key and value to key and/or value
  * - returns whether there was another entry
  */
-int                 p11_dict_next              (p11_dictiter *iter,
+bool                p11_dict_next              (p11_dictiter *iter,
                                                 void **key,
                                                 void **value);
 
@@ -157,22 +157,22 @@ void                p11_dict_clear             (p11_dict *dict);
 
 unsigned int        p11_dict_str_hash          (const void *string);
 
-int                 p11_dict_str_equal         (const void *string_one,
+bool                p11_dict_str_equal         (const void *string_one,
                                                 const void *string_two);
 
 unsigned int        p11_dict_ulongptr_hash     (const void *to_ulong);
 
-int                 p11_dict_ulongptr_equal    (const void *ulong_one,
+bool                p11_dict_ulongptr_equal    (const void *ulong_one,
                                                 const void *ulong_two);
 
 unsigned int        p11_dict_intptr_hash       (const void *to_int);
 
-int                 p11_dict_intptr_equal      (const void *int_one,
+bool                p11_dict_intptr_equal      (const void *int_one,
                                                 const void *int_two);
 
 unsigned int        p11_dict_direct_hash       (const void *ptr);
 
-int                 p11_dict_direct_equal      (const void *ptr_one,
+bool                p11_dict_direct_equal      (const void *ptr_one,
                                                 const void *ptr_two);
 
 #endif  /* __P11_DICT_H__ */
