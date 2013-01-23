@@ -190,3 +190,65 @@ p11_b64_pton (const char *src,
 
 	return (tarindex);
 }
+
+int
+p11_b64_ntop (const unsigned char *src,
+              size_t srclength,
+              char *target,
+              size_t targsize,
+              int breakl)
+{
+	size_t len = 0;
+	unsigned char input[3];
+	unsigned char output[4];
+	size_t i;
+
+	while (srclength > 0) {
+		if (2 < srclength) {
+			input[0] = *src++;
+			input[1] = *src++;
+			input[2] = *src++;
+			srclength -= 3;
+
+			output[0] = input[0] >> 2;
+			output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
+			output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
+			output[3] = input[2] & 0x3f;
+
+		} else if (0 != srclength) {
+			/* Get what's left. */
+			input[0] = input[1] = input[2] = '\0';
+			for (i = 0; i < srclength; i++)
+				input[i] = *src++;
+
+			output[0] = input[0] >> 2;
+			output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
+			if (srclength == 1)
+				output[2] = 255;
+			else
+				output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
+			output[3] = 255;
+
+			srclength = 0;
+		}
+
+		for (i = 0; i < 4; i++) {
+			if (breakl && len % (breakl + 1) == 0) {
+				assert (len + 1 < targsize);
+				target[len++] = '\n';
+			}
+
+			assert(output[i] == 255 || output[i] < 64);
+			assert (len + 1 < targsize);
+
+			if (output[i] == 255)
+				target[len++] = Pad64;
+			else
+				target[len++] = Base64[output[i]];
+		}
+	}
+
+	assert (len < targsize);
+	target[len] = '\0';      /* Returned value doesn't count \0. */
+	return len;
+}

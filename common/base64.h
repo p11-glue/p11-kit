@@ -50,4 +50,10 @@ int            p11_b64_pton            (const char *src,
                                         unsigned char *target,
                                         size_t targsize);
 
+int            p11_b64_ntop            (const unsigned char *src,
+                                        size_t srclength,
+                                        char *target,
+                                        size_t targsize,
+                                        int breakl);
+
 #endif /* P11_BASE64_H_ */

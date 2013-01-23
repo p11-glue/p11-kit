@@ -129,7 +129,7 @@ typedef struct {
 	int input_index;
 	int output_index;
 	int parsed;
-} SuccessClosure;
+} Closure;
 
 static void
 on_parse_pem_success (const char *type,
@@ -137,7 +137,7 @@ on_parse_pem_success (const char *type,
                       size_t length,
                       void *user_data)
 {
-	SuccessClosure *cl = user_data;
+	Closure *cl = user_data;
 
 	CuAssertIntEquals (cl->cu, success_fixtures[cl->input_index].output[cl->output_index].length, length);
 	CuAssertTrue (cl->cu, memcmp (success_fixtures[cl->input_index].output[cl->output_index].data, contents,
@@ -150,7 +150,7 @@ on_parse_pem_success (const char *type,
 static void
 test_pem_success (CuTest *cu)
 {
-	SuccessClosure cl;
+	Closure cl;
 	int ret;
 	int i;
 	int j;
@@ -232,6 +232,113 @@ test_pem_failure (CuTest *cu)
 	}
 }
 
+typedef struct {
+	const char *input;
+	size_t length;
+	const char *type;
+	const char *output;
+} WriteFixture;
+
+typedef struct {
+	CuTest *cu;
+	WriteFixture *fixture;
+} WriteClosure;
+
+static WriteFixture write_fixtures[] = {
+	{
+	  "\x69\x83\x4d\x5e\xab\x21\x95\x5c\x42\x76\x8f\x10\x7c\xa7\x97\x87"
+	  "\x71\x94\xcd\xdf\xf2\x9f\x82\xd8\x21\x58\x10\xaf\x1e\x1a",
+	  30, "BLOCK1",
+	  "-----BEGIN BLOCK1-----\n"
+	  "aYNNXqshlVxCdo8QfKeXh3GUzd/yn4LYIVgQrx4a\n"
+	  "-----END BLOCK1-----\n",
+	},
+	{
+	  "\x50\x31\x31\x2d\x4b\x49\x54\x0a\x0a\x50\x72\x6f\x76\x69\x64\x65"
+	  "\x73\x20\x61\x20\x77\x61\x79\x20\x74\x6f\x20\x6c\x6f\x61\x64\x20"
+	  "\x61\x6e\x64\x20\x65\x6e\x75\x6d\x65\x72\x61\x74\x65\x20\x50\x4b"
+	  "\x43\x53\x23\x31\x31\x20\x6d\x6f\x64\x75\x6c\x65\x73\x2e\x20\x50"
+	  "\x72\x6f\x76\x69\x64\x65\x73\x20\x61\x20\x73\x74\x61\x6e\x64\x61"
+	  "\x72\x64\x0a\x63\x6f\x6e\x66\x69\x67\x75\x72\x61\x74\x69\x6f\x6e"
+	  "\x20\x73\x65\x74\x75\x70\x20\x66\x6f\x72\x20\x69\x6e\x73\x74\x61"
+	  "\x6c\x6c\x69\x6e\x67\x20\x50\x4b\x43\x53\x23\x31\x31\x20\x6d\x6f"
+	  "\x64\x75\x6c\x65\x73\x20\x69\x6e\x20\x73\x75\x63\x68\x20\x61\x20"
+	  "\x77\x61\x79\x20\x74\x68\x61\x74\x20\x74\x68\x65\x79\x27\x72\x65"
+	  "\x0a\x64\x69\x73\x63\x6f\x76\x65\x72\x61\x62\x6c\x65\x2e\x0a\x0a"
+	  "\x41\x6c\x73\x6f\x20\x73\x6f\x6c\x76\x65\x73\x20\x70\x72\x6f\x62"
+	  "\x6c\x65\x6d\x73\x20\x77\x69\x74\x68\x20\x63\x6f\x6f\x72\x64\x69"
+	  "\x6e\x61\x74\x69\x6e\x67\x20\x74\x68\x65\x20\x75\x73\x65\x20\x6f"
+	  "\x66\x20\x50\x4b\x43\x53\x23\x31\x31\x20\x62\x79\x20\x64\x69\x66"
+	  "\x66\x65\x72\x65\x6e\x74\x0a\x63\x6f\x6d\x70\x6f\x6e\x65\x6e\x74"
+	  "\x73\x20\x6f\x72\x20\x6c\x69\x62\x72\x61\x72\x69\x65\x73\x20\x6c"
+	  "\x69\x76\x69\x6e\x67\x20\x69\x6e\x20\x74\x68\x65\x20\x73\x61\x6d"
+	  "\x65\x20\x70\x72\x6f\x63\x65\x73\x73\x2e\x0a",
+	  299, "LONG TYPE WITH SPACES",
+	  "-----BEGIN LONG TYPE WITH SPACES-----\n"
+	  "UDExLUtJVAoKUHJvdmlkZXMgYSB3YXkgdG8gbG9hZCBhbmQgZW51bWVyYXRlIFBL\n"
+	  "Q1MjMTEgbW9kdWxlcy4gUHJvdmlkZXMgYSBzdGFuZGFyZApjb25maWd1cmF0aW9u\n"
+	  "IHNldHVwIGZvciBpbnN0YWxsaW5nIFBLQ1MjMTEgbW9kdWxlcyBpbiBzdWNoIGEg\n"
+	  "d2F5IHRoYXQgdGhleSdyZQpkaXNjb3ZlcmFibGUuCgpBbHNvIHNvbHZlcyBwcm9i\n"
+	  "bGVtcyB3aXRoIGNvb3JkaW5hdGluZyB0aGUgdXNlIG9mIFBLQ1MjMTEgYnkgZGlm\n"
+	  "ZmVyZW50CmNvbXBvbmVudHMgb3IgbGlicmFyaWVzIGxpdmluZyBpbiB0aGUgc2Ft\n"
+	  "ZSBwcm9jZXNzLgo=\n"
+	  "-----END LONG TYPE WITH SPACES-----\n"
+	},
+	{
+	  "\x69\x83\x4d\x5e\xab\x21\x95\x5c\x42\x76\x8f\x10\x7c\xa7\x97\x87"
+	  "\x71\x94\xcd\xdf\xf2\x9f\x82\xd8\x21\x58\x10\xaf",
+	  28, "BLOCK1",
+	  "-----BEGIN BLOCK1-----\n"
+	  "aYNNXqshlVxCdo8QfKeXh3GUzd/yn4LYIVgQrw==\n"
+	  "-----END BLOCK1-----\n",
+	},
+	{
+	  NULL,
+	}
+};
+
+static void
+on_parse_written (const char *type,
+                  const unsigned char *contents,
+                  size_t length,
+                  void *user_data)
+{
+	WriteClosure *cl = user_data;
+
+	CuAssertStrEquals (cl->cu, cl->fixture->type, type);
+	CuAssertIntEquals (cl->cu, cl->fixture->length, length);
+	CuAssertTrue (cl->cu, memcmp (contents, cl->fixture->input, length) == 0);
+}
+
+static void
+test_pem_write (CuTest *cu)
+{
+	WriteFixture *fixture;
+	WriteClosure cl;
+	size_t length;
+	char *output;
+	unsigned int count;
+	int i;
+
+	for (i = 0; write_fixtures[i].input != NULL; i++) {
+		fixture = write_fixtures + i;
+
+		output = p11_pem_write ((unsigned char *)fixture->input,
+		                        fixture->length,
+		                        fixture->type, &length);
+		CuAssertStrEquals (cu, fixture->output, output);
+		CuAssertIntEquals (cu, strlen (fixture->output), length);
+
+		cl.fixture = fixture;
+		cl.cu = cu;
+
+		count = p11_pem_parse (output, length, on_parse_written, &cl);
+		CuAssertIntEquals (cu, 1, count);
+
+		free (output);
+	}
+}
+
 int
 main (void)
 {
@@ -241,6 +348,7 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_pem_success);
 	SUITE_ADD_TEST (suite, test_pem_failure);
+	SUITE_ADD_TEST (suite, test_pem_write);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

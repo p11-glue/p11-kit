@@ -47,4 +47,9 @@ unsigned int   p11_pem_parse     (const char *input,
                                   p11_pem_sink sink,
                                   void *user_data);
 
+char *         p11_pem_write     (const unsigned char *contents,
+                                  size_t length,
+                                  const char *type,
+                                  size_t *pem_len);
+
 #endif /* P11_PEM_H_ */
