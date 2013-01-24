@@ -48,7 +48,7 @@
 
 #include "p11-kit/p11-kit.h"
 
-#include "mock-module.h"
+#include "mock.h"
 
 CK_FUNCTION_LIST module;
 
@@ -281,7 +281,7 @@ test_load_and_initialize (CuTest *tc)
 	rv = (module->C_GetInfo) (&info);
 	CuAssertTrue (tc, rv == CKR_OK);
 
-	ret = memcmp (info.manufacturerID, "MOCK MANUFACTURER              ", 32);
+	ret = memcmp (info.manufacturerID, "MOCK MANUFACTURER               ", 32);
 	CuAssertTrue (tc, ret == 0);
 
 	rv = p11_kit_finalize_module (module);

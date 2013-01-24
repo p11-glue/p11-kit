@@ -48,6 +48,9 @@ IGNORE_HFILES= \
 	conf.h \
 	debug.h \
 	dict.h \
+	mock-module.h \
+	pkcs11.h \
+	private.h \
 	util.h \
 	array.h \
 	compat.h \

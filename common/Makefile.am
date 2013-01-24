@@ -11,6 +11,7 @@ inc_HEADERS = \
 noinst_LTLIBRARIES = \
 	libp11-compat.la \
 	libp11-library.la \
+	libp11-mock.la \
 	$(NULL)
 
 libp11_compat_la_SOURCES = \
@@ -25,4 +26,8 @@ libp11_library_la_SOURCES = \
 	dict.c dict.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
+	$(NULL)
+
+libp11_mock_la_SOURCES = \
+	mock.c mock.h \
 	$(NULL)

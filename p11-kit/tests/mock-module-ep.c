@@ -36,7 +36,8 @@
 
 #define CRYPTOKI_EXPORTS 1
 #include "pkcs11.h"
-#include "mock-module.h"
+
+#include "mock.h"
 
 #ifdef OS_WIN32
 __declspec(dllexport)
@@ -45,6 +46,7 @@ CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	mock_module_init ();
+	mock_module_no_slots.C_GetFunctionList = C_GetFunctionList;
 	if (list == NULL)
 		return CKR_ARGUMENTS_BAD;
 	*list = &mock_module_no_slots;
