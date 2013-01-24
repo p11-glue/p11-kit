@@ -36,17 +36,18 @@
 #ifndef P11_ATTRS_H_
 #define P11_ATTRS_H_
 
+#include "compat.h"
 #include "pkcs11.h"
 
 #define CKA_INVALID ((CK_ULONG)-1)
 
-CK_ATTRIBUTE *      p11_attrs_dup           (CK_ATTRIBUTE *attrs);
+CK_ATTRIBUTE *      p11_attrs_dup           (const CK_ATTRIBUTE *attrs);
 
 CK_ATTRIBUTE *      p11_attrs_build         (CK_ATTRIBUTE *attrs,
                                              ...);
 
 CK_ATTRIBUTE *      p11_attrs_buildn        (CK_ATTRIBUTE *attrs,
-                                             CK_ATTRIBUTE *add,
+                                             const CK_ATTRIBUTE *add,
                                              CK_ULONG count);
 
 CK_ATTRIBUTE *      p11_attrs_take          (CK_ATTRIBUTE *attrs,
@@ -54,9 +55,9 @@ CK_ATTRIBUTE *      p11_attrs_take          (CK_ATTRIBUTE *attrs,
                                              CK_VOID_PTR value,
                                              CK_ULONG length);
 
-CK_BBOOL            p11_attrs_is_empty      (CK_ATTRIBUTE *attrs);
+bool                p11_attrs_is_empty      (const CK_ATTRIBUTE *attrs);
 
-CK_ULONG            p11_attrs_count         (CK_ATTRIBUTE *attrs);
+CK_ULONG            p11_attrs_count         (const CK_ATTRIBUTE *attrs);
 
 void                p11_attrs_free          (void *attrs);
 
@@ -67,20 +68,52 @@ CK_ATTRIBUTE *      p11_attrs_findn         (CK_ATTRIBUTE *attrs,
                                              CK_ULONG count,
                                              CK_ATTRIBUTE_TYPE type);
 
-CK_BBOOL            p11_attrs_remove        (CK_ATTRIBUTE *attrs,
+bool                p11_attrs_find_bool     (CK_ATTRIBUTE *attrs,
+                                             CK_ATTRIBUTE_TYPE type,
+                                             CK_BBOOL *value);
+
+bool                p11_attrs_findn_bool    (CK_ATTRIBUTE *attrs,
+                                             CK_ULONG count,
+                                             CK_ATTRIBUTE_TYPE type,
+                                             CK_BBOOL *value);
+
+bool                p11_attrs_find_ulong    (CK_ATTRIBUTE *attrs,
+                                             CK_ATTRIBUTE_TYPE type,
+                                             CK_ULONG *value);
+
+bool                p11_attrs_findn_ulong   (CK_ATTRIBUTE *attrs,
+                                             CK_ULONG count,
+                                             CK_ATTRIBUTE_TYPE type,
+                                             CK_ULONG *value);
+
+CK_ATTRIBUTE *      p11_attrs_find_valid    (CK_ATTRIBUTE *attrs,
                                              CK_ATTRIBUTE_TYPE type);
 
-CK_BBOOL            p11_attrs_match         (CK_ATTRIBUTE *attrs,
-                                             CK_ATTRIBUTE *match);
+CK_ATTRIBUTE *      p11_attrs_findn_valid   (CK_ATTRIBUTE *attrs,
+                                             CK_ULONG count,
+                                             CK_ATTRIBUTE_TYPE type);
 
-CK_BBOOL            p11_attrs_matchn        (CK_ATTRIBUTE *attrs,
-                                             CK_ATTRIBUTE *match,
+bool                p11_attrs_remove        (CK_ATTRIBUTE *attrs,
+                                             CK_ATTRIBUTE_TYPE type);
+
+bool                p11_attrs_match         (const CK_ATTRIBUTE *attrs,
+                                             const CK_ATTRIBUTE *match);
+
+bool                p11_attrs_matchn        (const CK_ATTRIBUTE *attrs,
+                                             const CK_ATTRIBUTE *match,
                                              CK_ULONG count);
 
-CK_BBOOL            p11_attr_equal          (CK_ATTRIBUTE *one,
-                                             CK_ATTRIBUTE *two);
+char *              p11_attrs_to_string     (const CK_ATTRIBUTE *attrs);
 
-CK_BBOOL            p11_attr_match_boolean  (CK_ATTRIBUTE *attr,
-                                             CK_BBOOL value);
+char *              p11_attr_to_string      (const CK_ATTRIBUTE *attr);
+
+bool                p11_attr_equal          (const void *one,
+                                             const void *two);
+
+unsigned int        p11_attr_hash           (const void *data);
+
+bool                p11_attr_match_value    (const CK_ATTRIBUTE *attr,
+                                             const void *value,
+                                             ssize_t length);
 
 #endif /* P11_ATTRS_H_ */

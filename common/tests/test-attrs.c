@@ -319,6 +319,52 @@ test_equal (CuTest *tc)
 }
 
 static void
+test_hash (CuTest *tc)
+{
+	char *data = "extra attribute";
+	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
+	CK_ATTRIBUTE null = { CKA_LABEL, NULL, 3 };
+	CK_ATTRIBUTE two = { CKA_VALUE, "yay", 3 };
+	CK_ATTRIBUTE other = { CKA_VALUE, data, 5 };
+	CK_ATTRIBUTE overflow = { CKA_VALUE, data, 5 };
+	CK_ATTRIBUTE content = { CKA_VALUE, "conte", 5 };
+	unsigned int hash;
+
+	hash = p11_attr_hash (&one);
+	CuAssertTrue (tc, hash != 0);
+
+	CuAssertTrue (tc, p11_attr_hash (&one) == hash);
+	CuAssertTrue (tc, p11_attr_hash (&two) != hash);
+	CuAssertTrue (tc, p11_attr_hash (&other) != hash);
+	CuAssertTrue (tc, p11_attr_hash (&overflow) != hash);
+	CuAssertTrue (tc, p11_attr_hash (&null) != hash);
+	CuAssertTrue (tc, p11_attr_hash (&content) != hash);
+}
+
+static void
+test_to_string (CuTest *tc)
+{
+	char *data = "extra attribute";
+	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, data, 5 },
+		{ CKA_INVALID },
+	};
+
+	char *string;
+
+
+	string = p11_attr_to_string (&one);
+	CuAssertStrEquals (tc, "{ CKA_LABEL = (3) \"yay\" }", string);
+	free (string);
+
+	string = p11_attrs_to_string (attrs);
+	CuAssertStrEquals (tc, "(2) [ { CKA_LABEL = (3) \"yay\" }, { CKA_VALUE = (5) NOT-PRINTED } ]", string);
+	free (string);
+}
+
+static void
 test_find (CuTest *tc)
 {
 	CK_BBOOL vtrue = CK_TRUE;
@@ -461,23 +507,65 @@ test_matchn (CuTest *tc)
 }
 
 static void
-test_match_boolean (CuTest *tc)
+test_find_bool (CuTest *tc)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
-	CK_ATTRIBUTE one = { CKA_LABEL, "\x01yy", 3 };
-	CK_ATTRIBUTE two = { CKA_LABEL, "\x00yy", 3 };
-	CK_ATTRIBUTE atrue = { CKA_TOKEN, &vtrue, sizeof (CK_BBOOL) };
-	CK_ATTRIBUTE afalse = { CKA_TOKEN, &vfalse, sizeof (CK_BBOOL) };
+	CK_BBOOL value;
 
-	CuAssertTrue (tc, p11_attr_match_boolean (&atrue, CK_TRUE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&atrue, CK_FALSE));
-	CuAssertTrue (tc, p11_attr_match_boolean (&afalse, CK_FALSE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&afalse, CK_TRUE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&one, CK_TRUE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&one, CK_FALSE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&two, CK_FALSE));
-	CuAssertTrue (tc, !p11_attr_match_boolean (&two, CK_TRUE));
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, "\x01yy", 3 },
+		{ CKA_VALUE, &vtrue, (CK_ULONG)-1 },
+		{ CKA_TOKEN, &vtrue, sizeof (CK_BBOOL) },
+		{ CKA_TOKEN, &vfalse, sizeof (CK_BBOOL) },
+		{ CKA_INVALID },
+	};
+
+	CuAssertTrue (tc, p11_attrs_find_bool (attrs, CKA_TOKEN, &value) && value == CK_TRUE);
+	CuAssertTrue (tc, !p11_attrs_find_bool (attrs, CKA_LABEL, &value));
+	CuAssertTrue (tc, !p11_attrs_find_bool (attrs, CKA_VALUE, &value));
+}
+
+static void
+test_find_ulong (CuTest *tc)
+{
+	CK_ULONG v33 = 33UL;
+	CK_ULONG v45 = 45UL;
+	CK_ULONG value;
+
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, &v33, 2 },
+		{ CKA_VALUE, &v45, (CK_ULONG)-1 },
+		{ CKA_BITS_PER_PIXEL, &v33, sizeof (CK_ULONG) },
+		{ CKA_BITS_PER_PIXEL, &v45, sizeof (CK_ULONG) },
+		{ CKA_INVALID },
+	};
+
+	CuAssertTrue (tc, p11_attrs_find_ulong (attrs, CKA_BITS_PER_PIXEL, &value) && value == v33);
+	CuAssertTrue (tc, !p11_attrs_find_ulong (attrs, CKA_LABEL, &value));
+	CuAssertTrue (tc, !p11_attrs_find_ulong (attrs, CKA_VALUE, &value));
+}
+
+static void
+test_find_valid (CuTest *tc)
+{
+	CK_ATTRIBUTE *attr;
+
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, "", (CK_ULONG)-1 },
+		{ CKA_LABEL, "test", 4 },
+		{ CKA_VALUE, NULL, 0 },
+		{ CKA_INVALID },
+	};
+
+	attr = p11_attrs_find_valid (attrs, CKA_LABEL);
+	CuAssertPtrEquals (tc, attrs + 1, attr);
+
+	attr = p11_attrs_find_valid (attrs, CKA_VALUE);
+	CuAssertPtrEquals (tc, attrs + 2, attr);
+
+	attr = p11_attrs_find_valid (attrs, CKA_TOKEN);
+	CuAssertPtrEquals (tc, NULL, attr);
 }
 
 int
@@ -489,6 +577,10 @@ main (void)
 
 	setenv ("P11_KIT_STRICT", "1", 1);
 	p11_debug_init ();
+
+	SUITE_ADD_TEST (suite, test_equal);
+	SUITE_ADD_TEST (suite, test_hash);
+	SUITE_ADD_TEST (suite, test_to_string);
 
 	SUITE_ADD_TEST (suite, test_count);
 	SUITE_ADD_TEST (suite, test_build_one);
@@ -505,10 +597,10 @@ main (void)
 	SUITE_ADD_TEST (suite, test_matchn);
 	SUITE_ADD_TEST (suite, test_find);
 	SUITE_ADD_TEST (suite, test_findn);
+	SUITE_ADD_TEST (suite, test_find_bool);
+	SUITE_ADD_TEST (suite, test_find_ulong);
+	SUITE_ADD_TEST (suite, test_find_valid);
 	SUITE_ADD_TEST (suite, test_remove);
-
-	SUITE_ADD_TEST (suite, test_match_boolean);
-	SUITE_ADD_TEST (suite, test_equal);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);
