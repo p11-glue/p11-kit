@@ -13,6 +13,7 @@
 
 	<xi:include href="p11-kit-config.xml"/>
 	<xi:include href="p11-kit-sharing.xml"/>
+	<xi:include href="p11-kit-trust.xml"/>
 
 	<chapter xml:id="tools">
 		<title>Command Line Tools</title>

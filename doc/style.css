@@ -99,10 +99,14 @@ DIV.toc DL {
 	margin-bottom: 0;
 }
 
-DIV.toc > DL > DT {
+DIV.book > DIV.toc > DL > DT {
 	margin-top: 1em;
 }
 
 DIV.toc DT {
 	margin-bottom: 0.3em;
+}
+
+TABLE.variablelist SPAN.term {
+	padding-right: 1em;
 }

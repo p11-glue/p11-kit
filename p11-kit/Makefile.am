@@ -24,6 +24,7 @@ MODULE_SRCS = \
 	modules.c \
 	pkcs11.h \
 	pin.c \
+	pkcs11.h \
 	proxy.c \
 	private.h \
 	messages.c \

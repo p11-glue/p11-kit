@@ -43,6 +43,7 @@ enum {
 	P11_DEBUG_CONF = 1 << 2,
 	P11_DEBUG_URI = 1 << 3,
 	P11_DEBUG_PROXY = 1 << 4,
+	P11_DEBUG_TRUST = 1 << 5,
 };
 
 extern int        p11_debug_current_flags;
@@ -82,6 +83,16 @@ void              p11_debug_precond             (const char *format,
 	     p11_debug_precond ("p11-kit: shouldn't be reached at %s\n", __func__); \
 	     return v; \
 	} while (false)
+
+#define warn_if_reached(v) \
+	do { \
+	     p11_debug_precond ("p11-kit: shouldn't be reached at %s\n", __func__); \
+	} while (false)
+
+#define warn_if_fail(x) \
+	do { if (!(x)) { \
+	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
+	} } while (false)
 
 #endif /* DEBUG_H */
 

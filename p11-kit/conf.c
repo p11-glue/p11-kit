@@ -111,43 +111,6 @@ strequal (const char *one, const char *two)
 	return strcmp (one, two) == 0;
 }
 
-static char *
-strconcat (const char *first,
-           ...) GNUC_NULL_TERMINATED;
-
-static char *
-strconcat (const char *first,
-           ...)
-{
-	size_t length = 0;
-	const char *arg;
-	char *result, *at;
-	va_list va;
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*))
-		length += strlen (arg);
-
-	va_end (va);
-
-	at = result = malloc (length + 1);
-	return_val_if_fail (result != NULL, NULL);
-
-	va_start (va, first);
-
-	for (arg = first; arg; arg = va_arg (va, const char*)) {
-		length = strlen (arg);
-		memcpy (at, arg, length);
-		at += length;
-	}
-
-	va_end (va);
-
-	*at = 0;
-	return result;
-}
-
 /* -----------------------------------------------------------------------------
  * CONFIG PARSER
  */

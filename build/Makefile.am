@@ -1,4 +1,6 @@
 
+SUBDIRS = certs
+
 EXTRA_DIST = \
 	cutest \
 	Makefile.tests

@@ -52,6 +52,7 @@ IGNORE_HFILES= \
 	dict.h \
 	mock-module.h \
 	pkcs11.h \
+	pkcs11x.h \
 	private.h \
 	util.h \
 	array.h \
@@ -66,6 +67,7 @@ HTML_IMAGES=
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
 content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	p11-kit-devel.xml \
+	p11-kit-trust.xml \
 	p11-kit.xml \
 	$(NULL)
 

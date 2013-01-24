@@ -57,6 +57,9 @@ esac
 AC_MSG_RESULT([$os_win32])
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "yes")
 
+AC_C_BIGENDIAN
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+
 # ------------------------------------------------------------------------------
 # Checks for libraries and headers
 
@@ -68,8 +71,8 @@ if test "$os_unix" = "yes"; then
 	AC_SEARCH_LIBS([nanosleep], [rt], [],
 		[AC_MSG_ERROR([could not find nanosleep])])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
-	AC_CHECK_HEADERS([err.h errno.h stdbool.h])
 	AC_CHECK_FUNCS([getprogname getexecname memdup])
+	AC_CHECK_FUNCS([getprogname getexecname strnstr memdup])
 
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])
@@ -118,6 +121,114 @@ AC_SUBST(p11_user_config)
 AC_SUBST(p11_user_config_file)
 AC_SUBST(p11_user_config_modules)
 AC_SUBST(p11_module_path)
+
+# --------------------------------------------------------------------
+# libtasn1 support
+
+AC_ARG_WITH([libtasn1],
+            AS_HELP_STRING([--without-libtasn1],
+                           [Disable dependency on libtasn1])
+)
+
+if test "$with_libtasn1" != "no"; then
+	PKG_CHECK_MODULES(LIBTASN1, libtasn1)
+	AC_SUBST(LIBTASN1_CFLAGS)
+	AC_SUBST(LIBTASN1_LIBS)
+	with_libtasn1="yes"
+fi
+
+AM_CONDITIONAL(WITH_ASN1, test "$with_libtasn1" = "yes")
+
+# --------------------------------------------------------------------
+# Trust Module
+
+AC_ARG_ENABLE([trust-module],
+              AS_HELP_STRING([--disable-trust-module],
+                             [Disable building the trust module])
+)
+
+AC_MSG_CHECKING([if trust module is enabled])
+
+if test "$enable_trust_module" != "no"; then
+	if test "$with_libtasn1" != "yes"; then
+		AC_MSG_ERROR([need --with-libtasn1 in order to use the trust module.])
+	fi
+	enable_trust_module="yes"
+fi
+
+AC_MSG_RESULT([$enable_trust_module])
+AM_CONDITIONAL(WITH_TRUST_MODULE, test "$enable_trust_module" = "yes")
+
+AC_ARG_WITH([system-anchors],
+            AS_HELP_STRING([--with-system-anchors=@<:@path@:>@]:
+                           [files or directories containing system CA anchors])
+)
+
+AC_MSG_CHECKING([location of system CA anchors])
+
+if test "$enable_trust_module" != "yes"; then
+	if test "$with_system_anchors" != ""; then
+		AC_MSG_ERROR([need --enable-trust-module in order to use system anchors.])
+	fi
+	with_system_anchors="no"
+fi
+
+# This option was disabled, no anchors
+if test "$with_system_anchors" = "no"; then
+	with_system_anchors=""
+	AC_MSG_RESULT([disabled])
+
+# Option was not set, try to detect
+elif test "$with_system_anchors" = ""; then
+	for f in /etc/pki/tls/certs/ca-bundle.crt \
+		/etc/ssl/certs/ca-certificates.crt \
+		/etc/ssl/ca-bundle.pem \
+		/etc/ssl/ca-bundle.crt; do
+		if test -f "$f"; then
+			with_system_anchors="$f"
+			break
+		fi
+	done
+
+	if test "$with_system_anchors" = ""; then
+		AC_MSG_ERROR([could not find. Use --with-system-anchors=path to set, or --without-system-anchors to disable])
+	fi
+
+	AC_MSG_RESULT($with_system_anchors)
+else
+	AC_MSG_RESULT($with_system_anchors)
+fi
+
+AC_DEFINE_UNQUOTED(SYSTEM_ANCHORS, ["$with_system_anchors"], [The system anchor paths])
+AC_SUBST(with_system_anchors)
+
+AC_ARG_WITH([system-certificates],
+            AS_HELP_STRING([--with-system-certificates=@<:@path@:>@]:
+                           [files or directories containing additional system certificates])
+)
+
+AC_MSG_CHECKING([location of additional system certificates])
+
+if test "$enable_trust_module" != "yes"; then
+	if test "$with_system_certificates" != ""; then
+		AC_MSG_ERROR([need --enable-trust-module in order to use additional system certificates.])
+	fi
+	with_system_certificates=""
+fi
+
+# This option was disabled, no additional certificates
+if test "$with_system_certificates" = "no"; then
+	with_system_certificates=""
+fi
+
+if test "$with_system_certificates" = ""; then
+	AC_MSG_RESULT([disabled])
+else
+	AC_MSG_RESULT($with_system_certificates)
+fi
+
+AC_DEFINE_UNQUOTED(SYSTEM_CERTIFICATES, ["$with_system_certificates"], [Additional system certificate paths])
+AC_SUBST(with_system_certificates)
 
 # --------------------------------------------------------------------
 # GTK Doc
@@ -287,12 +398,19 @@ AC_SUBST(GENHTML)
 P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
 AC_SUBST(P11KIT_LT_RELEASE)
 
+echo $PACKAGE_VERSION | tr '.' ' ' | while read major minor unused; do
+	AC_DEFINE_UNQUOTED(PACKAGE_MAJOR, $major, [Major version of package])
+	AC_DEFINE_UNQUOTED(PACKAGE_MINOR, $minor, [Minor version of package])
+	break
+done
+
 eval SHLEXT=$shrext_cmds
 AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
 AC_SUBST(SHLEXT)
 
 AC_CONFIG_FILES([Makefile
 	build/Makefile
+	build/certs/Makefile
 	common/Makefile
 	common/tests/Makefile
 	doc/Makefile
@@ -303,6 +421,8 @@ AC_CONFIG_FILES([Makefile
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
 	tools/Makefile
+	trust/Makefile
+	trust/tests/Makefile
 ])
 AC_OUTPUT
 
@@ -318,4 +438,10 @@ AC_MSG_NOTICE([build options:
     User global config:              $p11_user_config_file
     User module config directory:    $p11_user_config_modules
     Load relative module paths from: $p11_module_path
+
+    With libtasn1 dependency:        $with_libtasn1
+
+    Build trust module:              $enable_trust_module
+    System certificate anchor paths: $with_system_anchors
+    Other system certificate paths:  $with_system_certificates
 ])

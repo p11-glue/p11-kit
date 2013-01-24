@@ -1,0 +1,6 @@
+
+# This is a module config for the 'included' p11-kit trust module
+module: p11-kit-trust.so
+
+# The order in which this is loaded in the trust policy
+trust-policy: 1

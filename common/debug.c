@@ -55,6 +55,7 @@ static struct DebugKey debug_keys[] = {
 	{ "conf", P11_DEBUG_CONF },
 	{ "uri", P11_DEBUG_URI },
 	{ "proxy", P11_DEBUG_PROXY },
+	{ "trust", P11_DEBUG_TRUST },
 	{ 0, }
 };
 

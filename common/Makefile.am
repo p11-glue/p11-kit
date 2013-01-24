@@ -26,8 +26,13 @@ libp11_library_la_SOURCES = \
 	dict.c dict.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
-	pkix.asn pkix.asn.h \
 	$(NULL)
+
+libp11_mock_la_SOURCES = \
+	mock.c mock.h \
+	$(NULL)
+
+if WITH_ASN1
 
 noinst_LTLIBRARIES += \
 	libp11-data.la \
@@ -35,8 +40,10 @@ noinst_LTLIBRARIES += \
 
 libp11_data_la_SOURCES = \
 	checksum.c checksum.h \
+	pkix.asn pkix.asn.h \
 	$(NULL)
 
-libp11_mock_la_SOURCES = \
-	mock.c mock.h \
-	$(NULL)
+asn:
+	asn1Parser -o pkix.asn.h pkix.asn
+
+endif # WITH_ASN1

@@ -39,8 +39,6 @@
 
 #include <sys/types.h>
 
-typedef enum { false, true } bool;
-
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
 #else
@@ -175,6 +173,14 @@ typedef void * dl_module_t;
 #include <errno.h>
 #endif	/* HAVE_ERRNO_H */
 
+#ifndef HAVE_STRNSTR
+
+char *     strnstr          (const char *s,
+                             const char *find,
+                             size_t slen);
+
+#endif /* HAVE_STRNSTR */
+
 #ifndef HAVE_MEMDUP
 
 void *     memdup           (void *data,
@@ -187,5 +193,12 @@ void *     memdup           (void *data,
 #else
 typedef enum { false, true } bool;
 #endif
+
+#ifndef HAVE_STRCONCAT
+
+char *     strconcat        (const char *first,
+                             ...) GNUC_NULL_TERMINATED;
+
+#endif /* HAVE_STRCONCAT */
 
 #endif /* __COMPAT_H__ */

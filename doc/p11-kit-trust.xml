@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="trust">
+<title>Trust Policy Module</title>
+
+	<para>The trust module provides system certificate anchors, blacklists
+	and other trust policy to crypto libraries applications. This
+	information is exposed as PKCS#11 objects.</para>
+
+<section id="trust-files">
+	<title>Files loaded by the Module</title>
+
+	<para>The trust module loads certificates and trust policy information
+	from preconfigured directories and allows them to be looked up via
+	PKCS#11. The directories can be determined with using the following
+	commands:</para>
+
+	<itemizedlist>
+		<listitem>
+		<para>System Anchors: certificates in these locations
+		are automatically treated as certificate authority anchors
+		unless they contain information that prevents that. To check
+		which locations are being used, run the following command:</para>
+<programlisting>
+$ pkg-config --variable p11_system_anchors p11-kit-1
+/etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/anchors
+</programlisting>
+		</listitem>
+		<listitem>
+		<para>System Certificates: certificates in these locations
+		are not treated as anchors, but simply made available through
+		the module. To find out which directory is used, run the
+		following command:</para>
+<programlisting>
+$ pkg-config --variable p11_system_certificates p11-kit-1
+/etc/pki/tls/other-certs
+</programlisting>
+		</listitem>
+	</itemizedlist>
+
+	<para>Files in the following formats are supported for loading by the
+	trust policy module:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term>X.509 certificates</term>
+			<listitem><para>X.509 certificates in raw DER format.</para></listitem>
+		</varlistentry>
+	</variablelist>
+</section>
+
+<section id="trust-nss">
+	<title>Using the Trust Policy Module with NSS</title>
+
+	<para>The trust policy module is a drop in replacement for the
+	<literal>libnssckbi.so</literal> module and thus works out of
+	the box with NSS. The module may be used to replace the
+	<literal>libnssckbi.so</literal> file via an distribution
+	specific alternatives mechanism or otherwise.</para>
+
+	<para>Alternatively NSS applications like Firefox or Thunderbird
+	may be configured to use the trust policy module by adding
+	the <literal>p11-kit-trust.so</literal> PKCS#11 module via their
+	GUI or command line configuration.</para>
+</section>
+
+<section id="trust-disable">
+	<title>Disabling the Trust Policy Module</title>
+
+	<para>This module is installed and enabled by default. It may
+	be disabled in the following ways:</para>
+
+	<itemizedlist>
+		<listitem><para>Use the <option>--disable-trust-module</option>
+		during the <link linkend="devel-building-configure">p11-kit
+		build</link>.</para></listitem>
+		<listitem><para>Disable loading trust policy information
+		from this module by adding a file to <literal>/etc/pkcs11/modules</literal>
+		called <literal>p11-kit-trust.module</literal> containing a
+		<literal>trust-policy:</literal> line.</para></listitem>
+		<listitem><para>Disable this module completely by 
+		adding a file to <literal>/etc/pkcs11/modules</literal>
+		called <literal>p11-kit-trust.module</literal> containing a
+		<literal>enable-in:</literal> line.</para></listitem>
+	</itemizedlist>
+
+</section>
+
+</chapter>

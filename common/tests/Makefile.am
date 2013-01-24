@@ -14,12 +14,10 @@ INCLUDES = \
 LDADD = \
 	$(top_builddir)/common/libp11-library.la \
 	$(top_builddir)/common/libp11-compat.la \
-	$(top_builddir)/common/libp11-data.la \
 	$(CUTEST_LIBS) \
 	$(NULL)
 
 CHECK_PROGS = \
-	test-checksum \
 	test-dict \
 	test-array \
 	test-attrs \
@@ -30,3 +28,21 @@ noinst_PROGRAMS = \
 	$(CHECK_PROGS)
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
+
+if WITH_ASN1
+
+LDADD += \
+	$(top_builddir)/common/libp11-data.la \
+	$(LIBTASN1_LIBS)
+	$(NULL)
+
+CHECK_PROGS += \
+	test-checksum
+
+noinst_PROGRAMS += \
+	frob-ku \
+	frob-eku \
+	frob-cert \
+	$(NULL)
+
+endif # WITH_ASN1

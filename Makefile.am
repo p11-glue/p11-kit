@@ -1,8 +1,15 @@
 
+if WITH_TRUST_MODULE
+TRUST_DIR = trust
+else
+TRUST_DIR =
+endif
+
 SUBDIRS = \
 	build \
 	common \
 	p11-kit \
+	$(TRUST_DIR) \
 	tools \
 	doc \
 	po

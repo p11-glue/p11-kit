@@ -131,6 +131,8 @@ $ make install
 				<listitem><para><command>xsltproc</command> is required to build the command
 				manual pages. Use <literal>--enable-doc</literal> to control this
 				dependency.</para></listitem>
+				<listitem><para><command>libtasn1</command> is required to build the trust
+				module and code that interacts with certificates.</para></listitem>
 			</itemizedlist>
 
 		</section>
@@ -142,6 +144,10 @@ $ make install
 			supports these additional arguments:</para>
 
 			<variablelist>
+				<varlistentry>
+					<term><option>--disable-trust-module</option></term>
+					<listitem><para>Disables building of the trust policy module.</para></listitem>
+				</varlistentry>
 				<varlistentry>
 					<term><option>--disable-debug</option>, <option>--enable-debug</option></term>
 					<listitem><para>By default p11-kit is built with debug symbols assertions and
@@ -164,9 +170,27 @@ $ make install
 					compiler warnings become errors.</para></listitem>
 				</varlistentry>
 				<varlistentry>
+					<term><option>--with-libtasn1</option>, <option>--without-libtasn1</option></term>
+					<listitem><para>Build with a dependency on the libtasn1 library. This dependency
+					allows the trust policy module to be built as well as other code that interacts with
+					certificates.</para></listitem>
+				</varlistentry>
+				<varlistentry>
 					<term><option>--with-module-path</option></term>
 					<listitem><para>Specify the path to look for PKCS#11 modules which were
 					listed in a module config file with a relative path.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--with-system-anchors</option></term>
+					<listitem><para>Specify the files or directories to look for system
+					certificate anchors. Multiple files and/or directories are specified with
+					a <literal>:</literal> in between them.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--with-system-certificates</option></term>
+					<listitem><para>Specify the files or directories to look for other
+					non-anchor system certificates. Multiple files and/or directories are
+					specified with a <literal>:</literal> in between them.</para></listitem>
 				</varlistentry>
 				<varlistentry>
 					<term><option>--with-system-config</option></term>

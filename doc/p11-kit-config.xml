@@ -167,6 +167,16 @@ critical: yes
 					not present, then any process will load the module.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term>trust-policy</term>
+				<listitem>
+					<para>If this setting is present then this module is used to load
+					trust policy information such as certificate anchors and black lists.
+					The value should be an integer. Modules with a lower number are loaded
+					first. Trust policy information in modules loaded later overrides
+					those loaded first.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 
 		<para>Do not specify both <literal>enable-in</literal> and <literal>disable-in</literal>
