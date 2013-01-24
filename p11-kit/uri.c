@@ -35,6 +35,7 @@
 #include "config.h"
 
 #include "attrs.h"
+#include "buffer.h"
 #define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
 #include "library.h"
@@ -704,41 +705,27 @@ p11_kit_uri_new (void)
 }
 
 static bool
-format_raw_string (char **string,
-                   size_t *length,
+format_raw_string (p11_buffer *buffer,
                    bool *is_first,
                    const char *name,
                    const char *value)
 {
-	size_t namelen;
-	size_t vallen;
-
 	/* Not set */
 	if (!value)
 		return true;
 
-	namelen = strlen (name);
-	vallen = strlen (value);
-
-	*string = realloc (*string, *length + namelen + vallen + 3);
-	return_val_if_fail (*string != NULL, false);
-
 	if (!*is_first)
-		(*string)[(*length)++] = ';';
-	memcpy ((*string) + *length, name, namelen);
-	*length += namelen;
-	(*string)[(*length)++] = '=';
-	memcpy ((*string) + *length, value, vallen);
-	*length += vallen;
-	(*string)[*length] = 0;
+		p11_buffer_add (buffer, ";", 1);
+	p11_buffer_add (buffer, name, -1);
+	p11_buffer_add (buffer, "=", 1);
+	p11_buffer_add (buffer, value, -1);
 	*is_first = false;
 
-	return true;
+	return p11_buffer_ok (buffer);
 }
 
 static bool
-format_encode_string (char **string,
-                      size_t *length,
+format_encode_string (p11_buffer *buffer,
                       bool *is_first,
                       const char *name,
                       const unsigned char *value,
@@ -751,15 +738,14 @@ format_encode_string (char **string,
 	encoded = url_encode (value, value + n_value, NULL, force);
 	return_val_if_fail (encoded != NULL, false);
 
-	ret = format_raw_string (string, length, is_first, name, encoded);
+	ret = format_raw_string (buffer, is_first, name, encoded);
 	free (encoded);
 	return ret;
 }
 
 
 static bool
-format_struct_string (char **string,
-                      size_t *length,
+format_struct_string (p11_buffer *buffer,
                       bool *is_first,
                       const char *name,
                       const unsigned char *value,
@@ -772,12 +758,11 @@ format_struct_string (char **string,
 		return true;
 
 	len = p11_kit_space_strlen (value, value_max);
-	return format_encode_string (string, length, is_first, name, value, len, false);
+	return format_encode_string (buffer, is_first, name, value, len, false);
 }
 
 static bool
-format_attribute_string (char **string,
-                         size_t *length,
+format_attribute_string (p11_buffer *buffer,
                          bool *is_first,
                          const char *name,
                          CK_ATTRIBUTE_PTR attr,
@@ -787,14 +772,13 @@ format_attribute_string (char **string,
 	if (attr == NULL)
 		return true;
 
-	return format_encode_string (string, length, is_first, name,
+	return format_encode_string (buffer, is_first, name,
 	                             attr->pValue, attr->ulValueLen,
 	                             force);
 }
 
 static bool
-format_attribute_class (char **string,
-                        size_t *length,
+format_attribute_class (p11_buffer *buffer,
                         bool *is_first,
                         const char *name,
                         CK_ATTRIBUTE_PTR attr)
@@ -827,25 +811,24 @@ format_attribute_class (char **string,
 		return true;
 	}
 
-	return format_raw_string (string, length, is_first, name, value);
+	return format_raw_string (buffer, is_first, name, value);
 }
 
 static bool
-format_struct_version (char **string,
-                       size_t *length,
+format_struct_version (p11_buffer *buffer,
                        bool *is_first,
                        const char *name,
                        CK_VERSION_PTR version)
 {
-	char buffer[64];
+	char buf[64];
 
 	/* Not set */
 	if (version->major == (CK_BYTE)-1 && version->minor == (CK_BYTE)-1)
 		return true;
 
-	snprintf (buffer, sizeof (buffer), "%d.%d",
+	snprintf (buf, sizeof (buf), "%d.%d",
 	          (int)version->major, (int)version->minor);
-	return format_raw_string (string, length, is_first, name, buffer);
+	return format_raw_string (buffer, is_first, name, buf);
 }
 
 /**
@@ -879,26 +862,23 @@ format_struct_version (char **string,
 int
 p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 {
-	char *result = NULL;
-	size_t length = 0;
+	p11_buffer buffer;
 	bool is_first = true;
 
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 	return_val_if_fail (string != NULL, P11_KIT_URI_UNEXPECTED);
 
-	result = malloc (128);
-	return_val_if_fail (result != NULL, P11_KIT_URI_UNEXPECTED);
+	if (!p11_buffer_init_null (&buffer, 64))
+		return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 
-	length = P11_KIT_URI_SCHEME_LEN;
-	memcpy (result, P11_KIT_URI_SCHEME, length);
-	result[length] = ':';
-	result[++length] = 0;
+	p11_buffer_add (&buffer, P11_KIT_URI_SCHEME, P11_KIT_URI_SCHEME_LEN);
+	p11_buffer_add (&buffer, ":", 1);
 
 	if ((uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE) {
-		if (!format_struct_string (&result, &length, &is_first, "library-description",
+		if (!format_struct_string (&buffer, &is_first, "library-description",
 		                           uri->module.libraryDescription,
 		                           sizeof (uri->module.libraryDescription)) ||
-		    !format_struct_string (&result, &length, &is_first, "library-manufacturer",
+		    !format_struct_string (&buffer, &is_first, "library-manufacturer",
 		                           uri->module.manufacturerID,
 		                           sizeof (uri->module.manufacturerID))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
@@ -906,23 +886,23 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION) {
-		if (!format_struct_version (&result, &length, &is_first, "library-version",
+		if (!format_struct_version (&buffer, &is_first, "library-version",
 		                            &uri->module.libraryVersion)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN) {
-		if (!format_struct_string (&result, &length, &is_first, "model",
+		if (!format_struct_string (&buffer, &is_first, "model",
 		                           uri->token.model,
 		                           sizeof (uri->token.model)) ||
-		    !format_struct_string (&result, &length, &is_first, "manufacturer",
+		    !format_struct_string (&buffer, &is_first, "manufacturer",
 		                           uri->token.manufacturerID,
 		                           sizeof (uri->token.manufacturerID)) ||
-		    !format_struct_string (&result, &length, &is_first, "serial",
+		    !format_struct_string (&buffer, &is_first, "serial",
 		                           uri->token.serialNumber,
 		                           sizeof (uri->token.serialNumber)) ||
-		    !format_struct_string (&result, &length, &is_first, "token",
+		    !format_struct_string (&buffer, &is_first, "token",
 		                           uri->token.label,
 		                           sizeof (uri->token.label))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
@@ -930,30 +910,31 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT) {
-		if (!format_attribute_string (&result, &length, &is_first, "id",
+		if (!format_attribute_string (&buffer, &is_first, "id",
 		                              p11_kit_uri_get_attribute (uri, CKA_ID),
 		                              true) ||
-		    !format_attribute_string (&result, &length, &is_first, "object",
+		    !format_attribute_string (&buffer, &is_first, "object",
 		                              p11_kit_uri_get_attribute (uri, CKA_LABEL),
 		                              false)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
-		if (!format_attribute_class (&result, &length, &is_first, "object-type",
+		if (!format_attribute_class (&buffer, &is_first, "object-type",
 		                             p11_kit_uri_get_attribute (uri, CKA_CLASS))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
 	if (uri->pin_source) {
-		if (!format_encode_string (&result, &length, &is_first, "pin-source",
+		if (!format_encode_string (&buffer, &is_first, "pin-source",
 		                           (const unsigned char*)uri->pin_source,
 		                           strlen (uri->pin_source), 0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
-	*string = result;
+	return_val_if_fail (p11_buffer_ok (&buffer), P11_KIT_URI_UNEXPECTED);
+	*string = p11_buffer_steal (&buffer, NULL);
 	return P11_KIT_URI_OK;
 }
 

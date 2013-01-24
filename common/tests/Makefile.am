@@ -21,6 +21,7 @@ CHECK_PROGS = \
 	test-dict \
 	test-array \
 	test-attrs \
+	test-buffer \
 	$(NULL)
 
 noinst_PROGRAMS = \
