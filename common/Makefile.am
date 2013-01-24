@@ -26,6 +26,15 @@ libp11_library_la_SOURCES = \
 	dict.c dict.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
+	pkix.asn pkix.asn.h \
+	$(NULL)
+
+noinst_LTLIBRARIES += \
+	libp11-data.la \
+	$(NULL)
+
+libp11_data_la_SOURCES = \
+	checksum.c checksum.h \
 	$(NULL)
 
 libp11_mock_la_SOURCES = \

@@ -14,10 +14,12 @@ INCLUDES = \
 LDADD = \
 	$(top_builddir)/common/libp11-library.la \
 	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-data.la \
 	$(CUTEST_LIBS) \
 	$(NULL)
 
 CHECK_PROGS = \
+	test-checksum \
 	test-dict \
 	test-array \
 	test-attrs \

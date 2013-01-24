@@ -46,9 +46,9 @@ stamp-h1
 temp.txt
 
 /*/tests/test-*
-!/*/tests/test-*.c
+!/*/tests/test-*.[ch]
 /*/tests/frob-*
-!/*/tests/frob-*.c
+!/*/tests/frob-*.[ch]
 
 /build/m4/*.m4
 /build/coverage
