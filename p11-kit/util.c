@@ -142,6 +142,20 @@ void
 p11_kit_be_quiet (void)
 {
 	p11_message_quiet ();
+	p11_debug_init ();
+}
+
+/**
+ * p11_kit_be_loud:
+ *
+ * Tell the p11-kit library will print failure or warning messages to stderr.
+ * This is the default behavior, but can be changed using p11_kit_be_quiet().
+ */
+void
+p11_kit_be_loud (void)
+{
+	p11_message_loud ();
+	p11_debug_init ();
 }
 
 /**

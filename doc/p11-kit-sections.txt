@@ -84,5 +84,6 @@ p11_kit_uri_type_t
 <FILE>p11-kit-future</FILE>
 p11_kit_set_progname
 p11_kit_be_quiet
+p11_kit_be_loud
 p11_kit_message
 </SECTION>

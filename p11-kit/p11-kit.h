@@ -84,6 +84,8 @@ void                     p11_kit_set_progname              (const char *progname
 
 void                     p11_kit_be_quiet                  (void);
 
+void                     p11_kit_be_loud                   (void);
+
 const char*              p11_kit_message                   (void);
 
 #endif
