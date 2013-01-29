@@ -35,6 +35,7 @@
 #include "config.h"
 
 #include "compat.h"
+#include "debug.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -43,19 +44,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "p11-kit/p11-kit.h"
-#include "p11-kit/uri.h"
+#include "library.h"
+#include "p11-kit.h"
+#include "tool.h"
+#include "uri.h"
 
 typedef int (*operation) (int argc, char *argv[]);
 bool verbose = false;
-
-static void
-usage (void)
-{
-	fprintf (stderr, "usage: p11-kit [-v] -l\n");
-	fprintf (stderr, "       p11-kit -h\n");
-	exit (2);
-}
 
 static const char HEXC_LOWER[] = "0123456789abcdef";
 
@@ -106,7 +101,7 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 
 	rv = (module->C_GetTokenInfo) (slot_id, &info);
 	if (rv != CKR_OK) {
-		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
 		return;
 	}
 
@@ -173,7 +168,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 
 	rv = (module->C_GetInfo) (&info);
 	if (rv != CKR_OK) {
-		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
 		return;
 	}
 
@@ -194,7 +189,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 	count = sizeof (slot_list) / sizeof (slot_list[0]);
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
 	if (rv != CKR_OK) {
-		warnx ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
 		return;
 	}
 
@@ -203,7 +198,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 }
 
 static int
-list_modules (int argc, char *argv[])
+print_modules (void)
 {
 	CK_FUNCTION_LIST_PTR *module_list;
 	char *name;
@@ -211,13 +206,12 @@ list_modules (int argc, char *argv[])
 	CK_RV rv;
 	int i;
 
-	if (argc != 0)
-		usage ();
-
 	rv = p11_kit_initialize_registered ();
-	if (rv != CKR_OK)
-		errx (1, "couldn't initialize registered modules: %s",
-		      p11_kit_strerror (rv));
+	if (rv != CKR_OK) {
+		p11_message ("couldn't initialize registered modules: %s",
+		             p11_kit_strerror (rv));
+		return 1;
+	}
 
 	module_list = p11_kit_registered_modules ();
 	for (i = 0; module_list[i]; i++) {
@@ -225,8 +219,8 @@ list_modules (int argc, char *argv[])
 		path = p11_kit_registered_option (module_list[i], "module");
 
 		printf ("%s: %s\n",
-		        name ? name : "(null)",
-		        path ? path : "(null)");
+			name ? name : "(null)",
+			path ? path : "(null)");
 		print_module_info (module_list[i]);
 
 		free (name);
@@ -235,39 +229,64 @@ list_modules (int argc, char *argv[])
 	free (module_list);
 
 	p11_kit_finalize_registered ();
-
 	return 0;
 }
 
 int
-main (int argc, char *argv[])
+p11_tool_list_modules (int argc,
+                       char *argv[])
 {
-	operation oper = NULL;
 	int opt;
 
-	while ((opt = getopt (argc, argv, "hlv")) != -1) {
+	enum {
+		opt_verbose = 'v',
+		opt_quiet = 'q',
+		opt_list = 'l',
+		opt_help = 'h',
+	};
+
+	struct option options[] = {
+		{ "verbose", no_argument, NULL, opt_verbose },
+		{ "quiet", no_argument, NULL, opt_quiet },
+		{ "list", no_argument, NULL, opt_list },
+		{ "help", no_argument, NULL, opt_help },
+		{ 0 },
+	};
+
+	p11_tool_desc usages[] = {
+		{ 0, "usage: p11-kit list" },
+		{ opt_verbose, "show verbose debug output", },
+		{ opt_quiet, "supress command output", },
+		{ 0 },
+	};
+
+	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
-		case 'l':
-			if (oper != NULL)
-				usage ();
-			oper = list_modules;
+
+		/* Ignore these options, already handled */
+		case opt_verbose:
+		case opt_quiet:
+		case opt_list:
 			break;
-		case 'v':
-			verbose = true;
-			putenv ("P11_KIT_DEBUG=all");
-			break;
-		case 'h':
+
+		case opt_help:
+			p11_tool_usage (usages, options);
+			return 0;
 		case '?':
-			usage();
+			return 2;
+		default:
+			assert_not_reached ();
 			break;
 		}
 	}
 
-	if (!oper)
-		usage ();
-
 	argc -= optind;
 	argv += optind;
 
-	return (oper) (argc, argv);
+	if (argc != 0) {
+		p11_message ("extra arguments specified");
+		return 2;
+	}
+
+	return print_modules ();
 }
