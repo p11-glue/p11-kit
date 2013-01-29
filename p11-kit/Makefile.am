@@ -36,6 +36,7 @@ lib_LTLIBRARIES = \
 libp11_kit_la_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
 	-DP11_SYSTEM_CONFIG_MODULES=\""$(p11_system_config_modules)"\" \
+	-DP11_PACKAGE_CONFIG_MODULES=\""$(p11_package_config_modules)"\" \
 	-DP11_USER_CONFIG_FILE=\""$(p11_user_config_file)"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(p11_user_config_modules)"\" \
 	-DP11_MODULE_PATH=\""$(p11_module_path)"\" \
@@ -66,6 +67,7 @@ if OS_WIN32
 libp11_kit_testable_la_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/system-pkcs11.conf"\" \
 	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/system-modules/win32"\" \
+	-DP11_PACKAGE_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/package-modules/win32"\" \
 	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules/win32"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
@@ -76,6 +78,7 @@ else
 libp11_kit_testable_la_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/system-pkcs11.conf"\" \
 	-DP11_SYSTEM_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/system-modules"\" \
+	-DP11_PACKAGE_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/package-modules"\" \
 	-DP11_USER_CONFIG_FILE=\""$(abs_top_srcdir)/p11-kit/tests/files/user-pkcs11.conf"\" \
 	-DP11_USER_CONFIG_MODULES=\""$(abs_top_srcdir)/p11-kit/tests/files/user-modules"\" \
 	-DP11_MODULE_PATH=\""$(abs_top_builddir)/p11-kit/tests/.libs"\" \
@@ -96,3 +99,4 @@ EXTRA_DIST = \
 # Proxy module is actually same as library, so install a link
 install-exec-hook:
 	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.so` $(DESTDIR)$(libdir)/p11-kit-proxy.so
+	$(MKDIR_P) $(p11_package_config_modules)

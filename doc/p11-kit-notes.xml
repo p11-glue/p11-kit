@@ -26,8 +26,8 @@
 			can be determined by running:</para>
 
 			<programlisting>
-$ <command>pkg-config p11-kit-1 --variable p11_system_config_modules</command>
-/etc/pkcs11/modules</programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_configs</command>
+/usr/share/p11-kit/modules</programlisting>
 		</section>
 
 		<section id="notes-paths-modules">

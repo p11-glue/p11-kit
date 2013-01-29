@@ -63,7 +63,8 @@ p11_dict * _p11_conf_load_globals         (const char *system_conf,
                                               int *user_mode);
 
 /* Returns a hash of char* name -> hash_t *config */
-p11_dict * _p11_conf_load_modules         (int user_mode,
+p11_dict *    _p11_conf_load_modules         (int user_mode,
+                                              const char *package_dir,
                                               const char *system_dir,
                                               const char *user_dir);
 

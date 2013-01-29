@@ -487,7 +487,9 @@ load_registered_modules_unlocked (void)
 
 	assert (mode != CONF_USER_INVALID);
 
-	configs = _p11_conf_load_modules (mode, P11_SYSTEM_CONFIG_MODULES,
+	configs = _p11_conf_load_modules (mode,
+	                                  P11_PACKAGE_CONFIG_MODULES,
+	                                  P11_SYSTEM_CONFIG_MODULES,
 	                                  P11_USER_CONFIG_MODULES);
 	if (configs == NULL) {
 		rv = CKR_GENERAL_ERROR;

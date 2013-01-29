@@ -263,6 +263,7 @@ test_load_modules_merge (CuTest *tc)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
+	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
@@ -295,6 +296,7 @@ test_load_modules_user_none (CuTest *tc)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_NONE,
+	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
@@ -325,6 +327,7 @@ test_load_modules_user_only (CuTest *tc)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_ONLY,
+	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
@@ -355,6 +358,7 @@ test_load_modules_no_user (CuTest *tc)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
+	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/non-existant");
 	CuAssertPtrNotNull (tc, configs);

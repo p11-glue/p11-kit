@@ -633,7 +633,10 @@ load_configs_from_directory (const char *directory,
 }
 
 p11_dict *
-_p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
+_p11_conf_load_modules (int mode,
+                        const char *package_dir,
+                        const char *system_dir,
+                        const char *user_dir)
 {
 	p11_dict *configs;
 	char *path;
@@ -667,7 +670,8 @@ _p11_conf_load_modules (int mode, const char *system_dir, const char *user_dir)
 	 */
 	if (mode != CONF_USER_ONLY) {
 		flags = CONF_IGNORE_MISSING;
-		if (!load_configs_from_directory (system_dir, configs, flags)) {
+		if (!load_configs_from_directory (system_dir, configs, flags) ||
+		    !load_configs_from_directory (package_dir, configs, flags)) {
 			error = errno;
 			p11_dict_free (configs);
 			errno = error;

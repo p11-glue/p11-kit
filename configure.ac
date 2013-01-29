@@ -104,6 +104,7 @@ AC_ARG_WITH([module-path],
 p11_system_config=$system_config_dir
 p11_system_config_file=$p11_system_config/pkcs11.conf
 p11_system_config_modules=$p11_system_config/modules
+p11_package_config_modules='${pkgdatadir}/modules'
 p11_user_config="~/.pkcs11"
 p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
@@ -112,6 +113,7 @@ p11_module_path="$module_path"
 AC_SUBST(p11_system_config)
 AC_SUBST(p11_system_config_file)
 AC_SUBST(p11_system_config_modules)
+AC_SUBST(p11_package_config_modules)
 AC_SUBST(p11_user_config)
 AC_SUBST(p11_user_config_file)
 AC_SUBST(p11_user_config_modules)
@@ -303,6 +305,7 @@ AC_MSG_NOTICE([build options:
     Strict build:                    $strict_status
     System global config:            $p11_system_config_file
     System module config directory:  $p11_system_config_modules
+    Package module config directory: $p11_package_config_modules
     User global config:              $p11_user_config_file
     User module config directory:    $p11_user_config_modules
     Load relative module paths from: $p11_module_path
