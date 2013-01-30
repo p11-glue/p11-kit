@@ -110,3 +110,7 @@ DIV.toc DT {
 TABLE.variablelist SPAN.term {
 	padding-right: 1em;
 }
+
+DIV.cmdsynopsis {
+	font-family: monospace;
+}

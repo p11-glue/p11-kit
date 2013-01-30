@@ -118,5 +118,4 @@ CLEANFILES += \
 EXTRA_DIST += \
 	version.xml.in \
 	version.xml \
-	$(MAN_IN_FILES) \
 	$(NULL)

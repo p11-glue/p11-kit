@@ -53,4 +53,7 @@ void       p11_tool_usage             (const p11_tool_desc *usages,
 int        p11_tool_list_modules      (int argc,
                                        char *argv[]);
 
+int        p11_tool_extract           (int argc,
+                                       char **argv);
+
 #endif /* P11_TOOL_H_ */

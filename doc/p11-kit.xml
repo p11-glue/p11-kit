@@ -32,6 +32,10 @@
 	<cmdsynopsis>
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>p11-kit extract</command> <arg choice="plain">--filter=&lt;what&gt;</arg> 
+			<arg choice="plain">--format=&lt;type&gt;</arg> /path/to/destination
+	</cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1>
@@ -69,6 +73,97 @@ $ p11-kit list-modules
 
 	<para>The modules, information about them and the tokens present in
 	the PKCS#11 modules will be displayed.</para>
+
+</refsect1>
+
+<refsect1>
+	<title>Extract</title>
+
+	<para>Extract certificates from configured PKCS#11 modules.</para>
+
+<programlisting>
+$ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/directory
+</programlisting>
+
+	<para>You can specify the following options to control what to extract.
+	The <option>--filter</option> and <option>--format</option> arguments
+	should be specified. By default this command will not overwrite the
+	destination file or directory.</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--filter=&lt;what&gt;</option></term>
+			<listitem><para>Specifies what certificates to export.
+			You can specify the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>ca-anchors</option></term>
+					<listitem><para>Certificate anchors (default)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>blacklist</option></term>
+					<listitem><para>Blacklisted certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>certificates</option></term>
+					<listitem><para>All certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pkcs11:object=xx</option></term>
+					<listitem><para>A PKCS#11 URI</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--format=&lt;type&gt;</option></term>
+			<listitem><para>The format of the destination file or directory.
+			You can specify one of the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>x509-file</option></term>
+					<listitem><para>DER X.509 certificate file</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>x509-directory</option></term>
+					<listitem><para>directory of X.509 certificates</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--overwrite</option></term>
+			<listitem><para>Overwrite output file or directory.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--purpose=&lt;usage&gt;</option></term>
+			<listitem><para>Limit to certificates usable for the given purpose
+			You can specify one of the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>server-auth</option></term>
+					<listitem><para>For authenticating servers</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>client-auth</option></term>
+					<listitem><para>For authenticating clients</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>email</option></term>
+					<listitem><para>For email protection</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>code-signing</option></term>
+					<listitem><para>For authenticated signed code</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>1.2.3.4.5...</option></term>
+					<listitem><para>An arbitrary purpose OID</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para></listitem>
+		</varlistentry>
+	</variablelist>
 
 </refsect1>
 

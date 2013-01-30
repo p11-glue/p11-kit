@@ -55,6 +55,9 @@ struct {
 	int (*function) (int, char*[]);
 	const char *text;
 } commands[] = {
+#ifdef WITH_ASN1
+	{ "extract", p11_tool_extract, "Extract certificates" },
+#endif
 	{ "list-modules", p11_tool_list_modules, "List modules and tokens"},
 	{ 0, }
 };

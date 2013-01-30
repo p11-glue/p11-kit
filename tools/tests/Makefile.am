@@ -21,6 +21,7 @@ INCLUDES = \
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit.la \
 	$(top_builddir)/common/libp11-data.la \
+	$(top_builddir)/common/libp11-mock.la \
 	$(top_builddir)/common/libp11-library.la \
 	$(top_builddir)/common/libp11-compat.la \
 	$(builddir)/libtestcommon.la \
@@ -37,6 +38,8 @@ libtestcommon_la_SOURCES = \
 
 CHECK_PROGS = \
 	test-save \
+	test-extract \
+	test-x509 \
 	$(NULL)
 
 noinst_PROGRAMS = \
@@ -46,6 +49,18 @@ TESTS = $(CHECK_PROGS:=$(EXEEXT))
 
 test_save_SOURCES = \
 	test-save.c \
+	$(TOOLS)/save.c \
+	$(NULL)
+
+test_extract_SOURCES = \
+	test-extract.c \
+	$(TOOLS)/extract-info.c \
+	$(NULL)
+
+test_x509_SOURCES = \
+	test-x509.c \
+	$(TOOLS)/extract-info.c \
+	$(TOOLS)/extract-x509.c \
 	$(TOOLS)/save.c \
 	$(NULL)
 

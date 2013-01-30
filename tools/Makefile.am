@@ -18,8 +18,11 @@ bin_PROGRAMS = \
 
 p11_kit_SOURCES = \
 	list.c \
-	save.c save.h \
 	tool.c tool.h \
+	$(NULL)
+
+p11_kit_CFLAGS = \
+	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
 p11_kit_LDADD = \
@@ -28,3 +31,18 @@ p11_kit_LDADD = \
 	$(top_builddir)/common/libp11-compat.la \
 	$(LTLIBINTL) \
 	$(NULL)
+
+if WITH_ASN1
+
+p11_kit_LDADD += \
+	$(top_builddir)/common/libp11-data.la \
+	$(LIBTASN1_LIBS)
+
+p11_kit_SOURCES += \
+	extract.c extract.h \
+	extract-info.c \
+	extract-x509.c \
+	save.c save.h \
+	$(NULL)
+
+endif # WITH_ASN1
