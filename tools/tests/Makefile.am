@@ -37,10 +37,12 @@ libtestcommon_la_SOURCES = \
 	test.c test.h
 
 CHECK_PROGS = \
+	test-utf8 \
 	test-save \
 	test-extract \
 	test-x509 \
 	test-pem \
+	test-openssl \
 	$(NULL)
 
 noinst_PROGRAMS = \
@@ -70,6 +72,19 @@ test_pem_SOURCES = \
 	$(TOOLS)/extract-info.c \
 	$(TOOLS)/extract-pem.c \
 	$(TOOLS)/save.c \
+	$(NULL)
+
+test_openssl_SOURCES = \
+	test-openssl.c \
+	$(TOOLS)/extract-info.c \
+	$(TOOLS)/extract-openssl.c \
+	$(TOOLS)/save.c \
+	$(TOOLS)/utf8.c \
+	$(NULL)
+
+test_utf8_SOURCES = \
+	test-utf8.c \
+	$(TOOLS)/utf8.c \
 	$(NULL)
 
 endif # WITH_ASN1

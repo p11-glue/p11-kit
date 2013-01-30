@@ -136,6 +136,14 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 					<term><option>pem-directory</option></term>
 					<listitem><para>Directory PEM files each containing one certifiacte</para></listitem>
 				</varlistentry>
+				<varlistentry>
+					<term><option>openssl-bundle</option></term>
+					<listitem><para>OpenSSL specific PEM bundle of certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>openssl-directory</option></term>
+					<listitem><para>Directory of OpenSSL specific PEM files</para></listitem>
+				</varlistentry>
 			</variablelist>
 			</para></listitem>
 		</varlistentry>

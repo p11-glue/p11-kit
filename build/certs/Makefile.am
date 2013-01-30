@@ -16,6 +16,15 @@ prepare-certs:
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted.pem \
 		-addtrust clientAuth -addtrust serverAuth -addreject emailProtection \
 		-setalias "Custom Label"
+	cp $(TRUST)/files/cacert3-trusted.pem $(TOOLS)/files/cacert3-trusted-client-server-alias.pem
+	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3-trusted-alias.pem \
+		-setalias "Custom Label"
+	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3-distrust-all.pem \
+		-addreject serverAuth -addreject clientAuth -addreject codeSigning \
+		-addreject emailProtection -addreject ipsecEndSystem -addreject ipsecTunnel \
+		-addreject ipsecUser -addreject timeStamping
+	cat $(TOOLS)/files/cacert3-trusted-client-server-alias.pem \
+		$(TOOLS)/files/cacert3-trusted-alias.pem > $(TOOLS)/files/cacert3-trusted-multiple.pem
 	cp -v cacert-ca.der $(TRUST)/certificates
 	cp -v cacert-ca.der $(TRUST)/files
 	openssl x509 -in redhat-newca.der -inform DER -out $(TRUST)/files/distrusted.pem \

@@ -177,6 +177,8 @@ format_argument (const char *optarg,
 		{ "x509-directory", p11_extract_x509_directory, },
 		{ "pem-bundle", p11_extract_pem_bundle, },
 		{ "pem-directory", p11_extract_pem_directory },
+		{ "openssl-bundle", p11_extract_openssl_bundle },
+		{ "openssl-directory", p11_extract_openssl_directory },
 		{ NULL },
 	};
 
@@ -283,6 +285,8 @@ limit_purposes_if_necessary (p11_extract_info *ex,
 	 */
 
 	static p11_extract_func format_supports_purposes[] = {
+		p11_extract_openssl_bundle,
+		p11_extract_openssl_directory,
 		NULL
 	};
 
