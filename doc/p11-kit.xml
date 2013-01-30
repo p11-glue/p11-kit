@@ -128,6 +128,14 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 					<term><option>x509-directory</option></term>
 					<listitem><para>directory of X.509 certificates</para></listitem>
 				</varlistentry>
+				<varlistentry>
+					<term><option>pem-bundle</option></term>
+					<listitem><para>File containing one or more certificate PEM blocks</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pem-directory</option></term>
+					<listitem><para>Directory PEM files each containing one certifiacte</para></listitem>
+				</varlistentry>
 			</variablelist>
 			</para></listitem>
 		</varlistentry>

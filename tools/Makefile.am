@@ -41,6 +41,7 @@ p11_kit_LDADD += \
 p11_kit_SOURCES += \
 	extract.c extract.h \
 	extract-info.c \
+	extract-pem.c \
 	extract-x509.c \
 	save.c save.h \
 	$(NULL)

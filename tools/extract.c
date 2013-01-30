@@ -175,6 +175,8 @@ format_argument (const char *optarg,
 	} formats[] = {
 		{ "x509-file", p11_extract_x509_file, },
 		{ "x509-directory", p11_extract_x509_directory, },
+		{ "pem-bundle", p11_extract_pem_bundle, },
+		{ "pem-directory", p11_extract_pem_directory },
 		{ NULL },
 	};
 

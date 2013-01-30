@@ -11,6 +11,8 @@ prepare-certs:
 	cp -v cacert3.der $(TRUST)/files
 	cp -v cacert3.der $(TOOLS)/files
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
+	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3.pem
+	cat $(TOOLS)/files/cacert3.pem $(TOOLS)/files/cacert3.pem > $(TOOLS)/files/cacert3-twice.pem
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted.pem \
 		-addtrust clientAuth -addtrust serverAuth -addreject emailProtection \
 		-setalias "Custom Label"

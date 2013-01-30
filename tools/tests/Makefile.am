@@ -40,6 +40,7 @@ CHECK_PROGS = \
 	test-save \
 	test-extract \
 	test-x509 \
+	test-pem \
 	$(NULL)
 
 noinst_PROGRAMS = \
@@ -61,6 +62,13 @@ test_x509_SOURCES = \
 	test-x509.c \
 	$(TOOLS)/extract-info.c \
 	$(TOOLS)/extract-x509.c \
+	$(TOOLS)/save.c \
+	$(NULL)
+
+test_pem_SOURCES = \
+	test-pem.c \
+	$(TOOLS)/extract-info.c \
+	$(TOOLS)/extract-pem.c \
 	$(TOOLS)/save.c \
 	$(NULL)
 
