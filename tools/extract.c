@@ -177,6 +177,7 @@ format_argument (const char *optarg,
 		{ "x509-directory", p11_extract_x509_directory, },
 		{ "pem-bundle", p11_extract_pem_bundle, },
 		{ "pem-directory", p11_extract_pem_directory },
+		{ "java-cacerts", p11_extract_jks_cacerts },
 		{ "openssl-bundle", p11_extract_openssl_bundle },
 		{ "openssl-directory", p11_extract_openssl_directory },
 		{ NULL },
@@ -359,7 +360,8 @@ p11_tool_extract (int argc,
 		  "  pem-bundle        file containing multiple PEM blocks\n"
 		  "  pem-directory     directory of PEM files\n"
 		  "  openssl-bundle    OpenSSL specific PEM bundle\n"
-		  "  openssl-directory directory of OpenSSL specific files",
+		  "  openssl-directory directory of OpenSSL specific files\n"
+		  "  java-cacerts      java keystore cacerts file",
 		  "type"
 		},
 		{ opt_purpose,

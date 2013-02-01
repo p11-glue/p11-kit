@@ -41,11 +41,11 @@ p11_kit_LDADD += \
 p11_kit_SOURCES += \
 	extract.c extract.h \
 	extract-info.c \
+	extract-jks.c \
 	extract-openssl.c \
 	extract-pem.c \
 	extract-x509.c \
 	save.c save.h \
-	utf8.c utf8.h \
 	$(NULL)
 
 endif # WITH_ASN1

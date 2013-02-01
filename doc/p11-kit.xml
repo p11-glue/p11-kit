@@ -144,6 +144,10 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 					<term><option>openssl-directory</option></term>
 					<listitem><para>Directory of OpenSSL specific PEM files</para></listitem>
 				</varlistentry>
+				<varlistentry>
+					<term><option>java-cacerts</option></term>
+					<listitem><para>Java keystore 'cacerts' certificate bundle</para></listitem>
+				</varlistentry>
 			</variablelist>
 			</para></listitem>
 		</varlistentry>
