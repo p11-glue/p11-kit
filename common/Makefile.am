@@ -46,6 +46,7 @@ libp11_data_la_SOURCES = \
 	openssl.asn openssl.asn.h \
 	pem.c pem.h \
 	pkix.asn pkix.asn.h \
+	utf8.c utf8.h \
 	x509.c x509.h \
 	$(NULL)
 

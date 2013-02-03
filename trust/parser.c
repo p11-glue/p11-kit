@@ -69,7 +69,7 @@ struct _p11_parser {
 	/* Set during a parse */
 	p11_parser_sink sink;
 	void *sink_data;
-	const char *probable_label;
+	const char *basename;
 	int flags;
 
 	/* Parsing state */
@@ -152,12 +152,11 @@ static CK_ATTRIBUTE *
 build_object (p11_parser *parser,
               CK_OBJECT_CLASS vclass,
               CK_BYTE *vid,
-              const char *explicit_label)
+              const char *vlabel)
 {
 	CK_ATTRIBUTE *attrs = NULL;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
-	const char *vlabel;
 
 	CK_ATTRIBUTE klass = { CKA_CLASS, &vclass, sizeof (vclass) };
 	CK_ATTRIBUTE token = { CKA_TOKEN, &vtrue, sizeof (vtrue) };
@@ -166,7 +165,8 @@ build_object (p11_parser *parser,
 	CK_ATTRIBUTE id = { CKA_ID, vid, ID_LENGTH };
 	CK_ATTRIBUTE label = { CKA_LABEL, };
 
-	vlabel = explicit_label ? (char *)explicit_label : parser->probable_label;
+	if (!vlabel)
+		vlabel = parser->basename;
 	if (vlabel) {
 		label.pValue = (void *)vlabel;
 		label.ulValueLen = strlen (vlabel);
@@ -277,6 +277,7 @@ build_x509_certificate (p11_parser *parser,
 	CK_ATTRIBUTE *attrs;
 	CK_CERTIFICATE_TYPE vx509 = CKC_X_509;
 	CK_BYTE vchecksum[3];
+	char *label;
 
 	CK_DATE vstart;
 	CK_DATE vend;
@@ -321,8 +322,18 @@ build_x509_certificate (p11_parser *parser,
 	if (!calc_element (cert, data, length, "tbsCertificate.serialNumber", &serial_number))
 		serial_number.type = CKA_INVALID;
 
-	attrs = build_object (parser, CKO_CERTIFICATE, vid, NULL);
+	label = p11_x509_lookup_dn_name (parser->cert_asn, "tbsCertificate.subject",
+	                                 parser->cert_der, parser->cert_len, P11_OID_CN);
+	if (!label)
+		label = p11_x509_lookup_dn_name (parser->cert_asn, "tbsCertificate.subject",
+		                                 parser->cert_der, parser->cert_len, P11_OID_OU);
+	if (!label)
+		label = p11_x509_lookup_dn_name (parser->cert_asn, "tbsCertificate.subject",
+		                                 parser->cert_der, parser->cert_len, P11_OID_O);
+
+	attrs = build_object (parser, CKO_CERTIFICATE, vid, label);
 	return_val_if_fail (attrs != NULL, NULL);
+	free (label);
 
 	attrs = p11_attrs_build (attrs, &certificate_type, &certificate_category,
 	                         &check_value, &trusted, &distrusted, &start_date, &end_date,
@@ -852,7 +863,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 {
 	CK_ATTRIBUTE *attrs;
 	CK_BYTE vid[ID_LENGTH];
-	const char *old_label = NULL;
+	CK_ATTRIBUTE *attr;
 	char *label = NULL;
 	node_asn *cert;
 	node_asn *aux;
@@ -883,6 +894,12 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 
 	begin_parsing (parser, cert, data, cert_len);
 
+	/* The CKA_ID links related objects */
+	id_generate (parser, vid);
+
+	attrs = build_x509_certificate (parser, vid, cert, data, cert_len);
+	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+
 	/* Pull the label out of the CertAux */
 	len = 0;
 	ret = asn1_read_value (aux, "alias", NULL, &len);
@@ -893,15 +910,12 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 		ret = asn1_read_value (aux, "alias", label, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
 
-		old_label = parser->probable_label;
-		parser->probable_label = label;
+		attr = p11_attrs_find (attrs, CKA_LABEL);
+		assert (attr != NULL);
+		free (attr->pValue);
+		attr->pValue = label;
+		attr->ulValueLen = strlen (label);
 	}
-
-	/* The CKA_ID links related objects */
-	id_generate (parser, vid);
-
-	attrs = build_x509_certificate (parser, vid, cert, data, cert_len);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
 	ret = build_openssl_extensions (parser, attrs, aux, data + cert_len, length - cert_len);
 	return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
@@ -910,11 +924,6 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 
 	asn1_delete_structure (&cert);
 	asn1_delete_structure (&aux);
-
-	if (label) {
-		parser->probable_label = old_label;
-		free (label);
-	}
 
 	return P11_PARSE_SUCCESS;
 }
@@ -1002,7 +1011,7 @@ p11_parse_memory (p11_parser *parser,
 	return_val_if_fail (parser->sink == NULL, P11_PARSE_FAILURE);
 
 	base = basename (filename);
-	parser->probable_label = base;
+	parser->basename = base;
 	parser->sink = sink;
 	parser->sink_data = sink_data;
 	parser->flags = flags;
@@ -1019,7 +1028,7 @@ p11_parse_memory (p11_parser *parser,
 			break;
 	}
 
-	parser->probable_label = NULL;
+	parser->basename = NULL;
 	parser->sink = NULL;
 	parser->sink_data = NULL;
 	parser->flags = 0;

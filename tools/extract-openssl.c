@@ -59,7 +59,7 @@
 /* These functions are declared with a global scope for testing */
 
 void        p11_openssl_canon_string           (char *str,
-                                                long *len);
+                                                size_t *len);
 
 bool        p11_openssl_canon_string_der       (p11_buffer *der);
 
@@ -356,7 +356,7 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 
 void
 p11_openssl_canon_string (char *str,
-                          long *len)
+                          size_t *len)
 {
 	bool nsp;
 	bool sp;
@@ -394,64 +394,24 @@ p11_openssl_canon_string (char *str,
 bool
 p11_openssl_canon_string_der (p11_buffer *der)
 {
-	unsigned char *input = der->data;
-	int input_len = der->len;
-	unsigned char *output;
-	unsigned long tag;
-	unsigned char cls;
-	size_t conv_len;
-	int tag_len;
-	int len_len;
-	void *octets;
-	long octet_len;
+	char *string;
+	size_t length;
 	int output_len;
-	void *conv = NULL;
+	int len_len;
+	bool unknown_string;
+	unsigned char *output;
 	int len;
-	int ret;
 
-	ret = asn1_get_tag_der (input, input_len, &cls, &tag_len, &tag);
-	return_val_if_fail (ret == ASN1_SUCCESS, false);
-
-	octet_len = asn1_get_length_der (input + tag_len, input_len - tag_len, &len_len);
-	return_val_if_fail (octet_len >= 0, false);
-	return_val_if_fail (tag_len + len_len + octet_len == input_len, false);
-
-	octets = input + tag_len + len_len;
-
-	/* The following strings are the ones we normalize */
-	switch (tag) {
-	case 12: /* UTF8String */
-	case 18: /* NumericString */
-	case 22: /* IA5String */
-	case 20: /* TeletexString */
-	case 19: /* PrintableString */
-		if (!p11_utf8_validate (octets, octet_len))
-			return false;
-		break;
-
-	case 28: /* UniversalString */
-		octets = conv = p11_utf8_for_ucs4be (octets, octet_len, &conv_len);
-		if (conv == NULL)
-			return false;
-		octet_len = conv_len;
-		break;
-
-	case 30: /* BMPString */
-		octets = conv = p11_utf8_for_ucs2be (octets, octet_len, &conv_len);
-		if (conv == NULL)
-			return false;
-		octet_len = conv_len;
-		break;
+	string = p11_x509_parse_directory_string (der->data, der->len, &unknown_string, &length);
 
 	/* Just pass through all the non-string types */
-	default:
-		return true;
-	}
+	if (string == NULL)
+		return unknown_string;
 
-	p11_openssl_canon_string (octets, &octet_len);
+	p11_openssl_canon_string (string, &length);
 
-	asn1_length_der (octet_len, NULL, &len_len);
-	output_len = 1 + len_len + octet_len;
+	asn1_length_der (length, NULL, &len_len);
+	output_len = 1 + len_len + length;
 
 	if (!p11_buffer_reset (der, output_len))
 		return_val_if_reached (false);
@@ -461,10 +421,10 @@ p11_openssl_canon_string_der (p11_buffer *der)
 
 	output[0] = 12; /* UTF8String */
 	len = output_len - 1;
-	asn1_octet_der (octets, octet_len, output + 1, &len);
+	asn1_octet_der ((unsigned char *)string, length, output + 1, &len);
 	assert (len == output_len - 1);
 
-	free (conv);
+	free (string);
 	return true;
 }
 

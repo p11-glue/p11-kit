@@ -38,6 +38,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "oid.h"
+#include "utf8.h"
 #include "x509.h"
 
 #include <stdlib.h>
@@ -208,4 +209,139 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 	asn1_delete_structure (&asn);
 
 	return ekus;
+}
+
+char *
+p11_x509_parse_directory_string (const unsigned char *input,
+                                 size_t input_len,
+                                 bool *unknown_string,
+                                 size_t *string_len)
+{
+	unsigned long tag;
+	unsigned char cls;
+	int tag_len;
+	int len_len;
+	const void *octets;
+	long octet_len;
+	int ret;
+
+	ret = asn1_get_tag_der (input, input_len, &cls, &tag_len, &tag);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	octet_len = asn1_get_length_der (input + tag_len, input_len - tag_len, &len_len);
+	return_val_if_fail (octet_len >= 0, false);
+	return_val_if_fail (tag_len + len_len + octet_len == input_len, NULL);
+
+	octets = input + tag_len + len_len;
+
+	if (unknown_string)
+		*unknown_string = false;
+
+	/* The following strings are the ones we normalize */
+	switch (tag) {
+	case 12: /* UTF8String */
+	case 18: /* NumericString */
+	case 22: /* IA5String */
+	case 20: /* TeletexString */
+	case 19: /* PrintableString */
+		if (!p11_utf8_validate (octets, octet_len))
+			return NULL;
+		if (string_len)
+			*string_len = octet_len;
+		return strndup (octets, octet_len);
+
+	case 28: /* UniversalString */
+		return p11_utf8_for_ucs4be (octets, octet_len, string_len);
+
+	case 30: /* BMPString */
+		return p11_utf8_for_ucs2be (octets, octet_len, string_len);
+
+	/* Just pass through all the non-string types */
+	default:
+		if (unknown_string)
+			*unknown_string = true;
+		return NULL;
+	}
+
+}
+
+char *
+p11_x509_parse_dn_name (p11_dict *asn_defs,
+                        const unsigned char *der,
+                        size_t der_len,
+                        const unsigned char *oid)
+{
+	node_asn *asn;
+	char *part;
+
+	asn = p11_asn1_decode (asn_defs, "PKIX1.Name", der, der_len, NULL);
+	if (asn == NULL)
+		return NULL;
+
+	part = p11_x509_lookup_dn_name (asn, NULL, der, der_len, oid);
+	asn1_delete_structure (&asn);
+	return part;
+}
+
+char *
+p11_x509_lookup_dn_name (node_asn *asn,
+                         const char *dn_field,
+                         const unsigned char *der,
+                         size_t der_len,
+                         const unsigned char *oid)
+{
+	unsigned char *value;
+	char field[128];
+	int value_len;
+	char *part;
+	int i, j;
+	int start;
+	int end;
+	int ret;
+
+	for (i = 1; true; i++) {
+		for (j = 1; true; j++) {
+			snprintf (field, sizeof (field), "%s%srdnSequence.?%d.?%d.type",
+			          dn_field, dn_field ? "." : "", i, j);
+
+			ret = asn1_der_decoding_startEnd (asn, der, der_len, field, &start, &end);
+
+			/* No more dns */
+			if (ret == ASN1_ELEMENT_NOT_FOUND)
+				break;
+
+			return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+			/* Make sure it's a straightforward oid with certain assumptions */
+			if (!p11_oid_simple (der + start, (end - start) + 1))
+				continue;
+
+			/* The one we're lookin for? */
+			if (!p11_oid_equal (der + start, oid))
+				continue;
+
+			snprintf (field, sizeof (field), "%s%srdnSequence.?%d.?%d.value",
+			          dn_field, dn_field ? "." : "", i, j);
+
+			value_len = 0;
+			ret = asn1_read_value (asn, field, NULL, &value_len);
+			return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
+
+			value = malloc (value_len + 1);
+			return_val_if_fail (value != NULL, NULL);
+
+			ret = asn1_read_value (asn, field, value, &value_len);
+			return_val_if_fail (ret == ASN1_SUCCESS, false);
+
+			part = p11_x509_parse_directory_string (value, value_len, NULL, NULL);
+			free (value);
+
+			return part;
+		}
+
+		if (j == 1)
+			break;
+	}
+
+	return NULL;
 }

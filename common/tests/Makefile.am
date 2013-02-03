@@ -38,6 +38,7 @@ CHECK_PROGS += \
 	test-checksum \
 	test-pem \
 	test-oid \
+	test-utf8 \
 	test-x509 \
 	$(NULL)
 

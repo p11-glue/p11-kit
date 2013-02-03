@@ -60,4 +60,20 @@ p11_array *      p11_x509_parse_extended_key_usage  (p11_dict *asn1_defs,
                                                      const unsigned char *ext_der,
                                                      size_t ext_len);
 
+char *           p11_x509_parse_dn_name             (p11_dict *asn_defs,
+                                                     const unsigned char *der,
+                                                     size_t der_len,
+                                                     const unsigned char *oid);
+
+char *           p11_x509_lookup_dn_name            (node_asn *asn,
+                                                     const char *dn_field,
+                                                     const unsigned char *der,
+                                                     size_t der_len,
+                                                     const unsigned char *oid);
+
+char *           p11_x509_parse_directory_string    (const unsigned char *input,
+                                                     size_t input_len,
+                                                     bool *unknown_string,
+                                                     size_t *string_len);
+
 #endif /* P11_X509_H_ */

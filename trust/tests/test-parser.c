@@ -530,7 +530,7 @@ test_parse_with_key_usage (CuTest *cu)
 		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
 		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
 		{ CKA_CLASS, &klass, sizeof (klass) },
-		{ CKA_LABEL, "self-signed-with-ku.der", 23 },
+		{ CKA_LABEL, "self-signed-with-ku.example.com", 31 },
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
 		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
 		{ CKA_CHECK_VALUE, "d/\x9c", 3 },
@@ -545,7 +545,7 @@ test_parse_with_key_usage (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE nss_trust[] = {
-		{ CKA_LABEL, "self-signed-with-ku.der", 23 },
+		{ CKA_LABEL, "self-signed-with-ku.example.com", 31 },
 		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
 		{ CKA_CERT_SHA1_HASH, "d/\x9c=\xbc\x9a\x7f\x91\xc7wT\t`\x86\xe2\x8e\x8f\xa8J\x12", 20 },
 		{ CKA_CERT_MD5_HASH, "\xb1N=\x16\x12?dz\x97\x81""By/\xcc\x97\x82", 16 },
@@ -613,7 +613,7 @@ test_parse_anchor (CuTest *cu)
 	CK_X_ASSERTION_TYPE anchored_certificate = CKT_X_ANCHORED_CERTIFICATE;
 
 	CK_ATTRIBUTE nss_trust[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_object, sizeof (trust_object), },
 		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
@@ -639,7 +639,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE server_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -648,7 +648,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE client_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -657,7 +657,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE code_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -666,7 +666,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE email_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -675,7 +675,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE ipsec_system_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -684,7 +684,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE ipsec_tunnel_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -693,7 +693,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE ipsec_user_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },
@@ -702,7 +702,7 @@ test_parse_anchor (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE stamping_anchor[] = {
-		{ CKA_LABEL, "cacert3.der", 11 },
+		{ CKA_LABEL, "CAcert Class 3 Root", 19 },
 		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_X_ASSERTION_TYPE, &anchored_certificate, sizeof (anchored_certificate) },

@@ -48,6 +48,24 @@ bool           p11_oid_equal   (const void *oid_one,
 int            p11_oid_length  (const unsigned char *oid);
 
 /*
+ * 2.5.4.3: CN or commonName
+ */
+static const unsigned char P11_OID_CN[] =
+	{ 0x06, 0x03, 0x55, 0x04, 0x03, };
+
+/*
+ * 2.5.4.10: O or organization
+ */
+static const unsigned char P11_OID_O[] =
+	{ 0x06, 0x03, 0x55, 0x04, 0x0a, };
+
+/*
+ * 2.5.4.11: OU or organizationalUnit
+ */
+static const unsigned char P11_OID_OU[] =
+	{ 0x06, 0x03, 0x55, 0x04, 0x0b, };
+
+/*
  * Our support of certificate extensions and so on is not limited to what is
  * listed here. This is simply the OIDs used by the parsing code that generates
  * backwards compatible PKCS#11 objects for NSS and the like.

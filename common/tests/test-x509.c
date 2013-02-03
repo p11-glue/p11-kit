@@ -44,6 +44,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
+
 struct {
 	p11_dict *asn1_defs;
 } test;
@@ -335,6 +337,83 @@ test_parse_extension_not_found (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_directory_string (CuTest *tc)
+{
+	struct {
+		unsigned char input[100];
+		int input_len;
+		char *output;
+		int output_len;
+	} fixtures[] = {
+		/* UTF8String */
+		{ { 0x0c, 0x0f, 0xc3, 0x84, ' ', 'U', 'T', 'F', '8', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', }, 17,
+		  "\xc3\x84 UTF8 string ", 15,
+		},
+
+		/* NumericString */
+		{ { 0x12, 0x04, '0', '1', '2', '3', }, 6,
+		  "0123", 4,
+		},
+
+		/* IA5String */
+		{ { 0x16, 0x04, ' ', 'A', 'B', ' ', }, 6,
+		  " AB ", 4
+		},
+
+		/* TeletexString */
+		{ { 0x14, 0x07, 'A', ' ', ' ', 'n', 'i', 'c', 'e' }, 9,
+		  "A  nice", 7
+		},
+
+		/* PrintableString */
+		{ { 0x13, 0x07, 'A', ' ', ' ', 'n', 'i', 'c', 'e' }, 9,
+		  "A  nice", 7,
+		},
+
+		/* UniversalString */
+		{ { 0x1c, 0x14, 0x00, 0x00, 0x00, 'F', 0x00, 0x00, 0x00, 'u',
+		    0x00, 0x00, 0x00, 'n', 0x00, 0x00, 0x00, ' ', 0x00, 0x01, 0x03, 0x19, }, 22,
+		  "Fun \xf0\x90\x8c\x99", 8
+		},
+
+		/* BMPString */
+		{ { 0x1e, 0x0a, 0x00, 'V', 0x00, 0xF6, 0x00, 'g', 0x00, 'e', 0x00, 'l' }, 12,
+		  "V\xc3\xb6gel", 6
+		},
+	};
+
+	char *string;
+	bool unknown;
+	size_t length;
+	int i;
+
+	for (i = 0; i < ELEMS (fixtures); i++) {
+		string = p11_x509_parse_directory_string (fixtures[i].input,
+		                                          fixtures[i].input_len,
+		                                          &unknown, &length);
+		CuAssertPtrNotNull (tc, string);
+		CuAssertIntEquals (tc, false, unknown);
+
+		CuAssertIntEquals (tc, fixtures[i].output_len, length);
+		CuAssertStrEquals (tc, fixtures[i].output, string);
+	}
+}
+
+static void
+test_directory_string_unknown (CuTest *tc)
+{
+	/* Not a valid choice in DirectoryString */
+	unsigned char input[] = { 0x05, 0x07, 'A', ' ', ' ', 'n', 'i', 'c', 'e' };
+	char *string;
+	bool unknown = false;
+	size_t length;
+
+	string = p11_x509_parse_directory_string (input, sizeof (input), &unknown, &length);
+	CuAssertPtrEquals (tc, NULL, string);
+	CuAssertIntEquals (tc, true, unknown);
+}
+
 int
 main (void)
 {
@@ -349,6 +428,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_key_usage);
 	SUITE_ADD_TEST (suite, test_parse_extension);
 	SUITE_ADD_TEST (suite, test_parse_extension_not_found);
+	SUITE_ADD_TEST (suite, test_directory_string);
+	SUITE_ADD_TEST (suite, test_directory_string_unknown);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

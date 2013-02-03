@@ -373,7 +373,7 @@ test_file_without (CuTest *tc)
 }
 
 /* From extract-openssl.c */
-void p11_openssl_canon_string (char *str, long *len);
+void p11_openssl_canon_string (char *str, size_t *len);
 
 static void
 test_canon_string (CuTest *tc)
@@ -392,21 +392,23 @@ test_canon_string (CuTest *tc)
 	};
 
 	char *str;
-	long len;
-	long out;
+	size_t len;
+	size_t out;
 	int i;
 
 	for (i = 0; i < ELEMS (fixtures); i++) {
-		len = fixtures[i].input_len;
-		if (len < 0)
+		if (fixtures[i].input_len < 0)
 			len = strlen (fixtures[i].input);
+		else
+			len = fixtures[i].input_len;
 		str = strndup (fixtures[i].input, len);
 
 		p11_openssl_canon_string (str, &len);
 
-		out = fixtures[i].output_len;
-		if (out < 0)
+		if (fixtures[i].output_len < 0)
 			out = strlen (fixtures[i].output);
+		else
+			out = fixtures[i].output_len;
 		CuAssertIntEquals (tc, out, len);
 		CuAssertStrEquals (tc, fixtures[i].output, str);
 
