@@ -91,5 +91,6 @@ temp.txt
 /p11-kit/tests/uri-test
 
 /tools/p11-kit
+/tools/p11-kit-extract-trust
 
 /p11-kit-?.?

@@ -58,6 +58,29 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 
 	</section>
 
+	<section id="devel-commands">
+		<title>Customizing installed commands</title>
+
+		<para>The <literal>p11-kit</literal> tool provides a
+		<literal>extract-trust</literal> command which extracts trust
+		policy information such as certificate anchors and so on
+		into files for use with libraries that cannot read this trust
+		information directly.</para>
+
+		<para>In order to be useful the <literal>extract-trust</literal>
+		command needs to be customized per distribution or site. You can
+		find this file in at <literal>tools/p11-kit-trust-extract.in</literal>
+		in the p11-kit source code.</para>
+
+		<para>The command is implemented as a simple script which
+		performs the various <literal>p11-kit extract</literal> commands
+		necessary to extract the information.</para>
+
+		<para>Using this script as a standard way to extract this
+		information allows for consistency between distributions and ease
+		of system administration.</para>
+	</section>
+
 	<section id="devel-building">
 		<title>Compiling p11-kit from Source</title>
 		<para>This describes how to compiling the p11-kit package from

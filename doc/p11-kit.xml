@@ -188,6 +188,25 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 </refsect1>
 
 <refsect1>
+	<title>Extract Trust</title>
+
+	<para>Extract standard trust information files.</para>
+
+<programlisting>
+$ p11-kit extract-trust
+</programlisting>
+
+	<para>OpenSSL, GnuTLS and Java cannot currently read trust information
+	directly from the trust policy module. This command extracts trust
+	information such as certificate anchors for use by these libraries.</para>
+
+	<para>What this command does, and where it extracts the files is
+	distribution or site specific. Packagers or administrators are expected
+	customize this command.</para>
+
+</refsect1>
+
+<refsect1>
   <title>Bugs</title>
   <para>
     Please send bug reports to either the distribution bug tracker

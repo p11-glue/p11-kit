@@ -48,4 +48,8 @@ p11_kit_SOURCES += \
 	save.c save.h \
 	$(NULL)
 
+externaldir = $(pkgdatadir)
+external_SCRIPTS = \
+	p11-kit-extract-trust
+
 endif # WITH_ASN1

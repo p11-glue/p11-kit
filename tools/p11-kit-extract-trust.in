@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# This script is a placeholder designed to be replaced when this software
+# has been customized for distribution.
+
+echo "WARNING: This placeholder extract-trust command has not been customized"
+echo "by your distribution or administrator. Extracting trust infromation to"
+echo "the following example locations:"
+echo
+echo "  ~/extract-trust-example/openssl-bundle.pem"
+echo "  ~/extract-trust-example/server-auth-bundle.pem"
+echo "  ~/extract-trust-example/cacerts"
+
+DEST=~/extract-trust-example
+
+# These are nested autoconf variables
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+mkdir -p $DEST
+
+@bindir@/p11-kit extract --format=openssl-bundle --filter=ca-anchors \
+	--overwrite $DEST/openssl-bundle.pem
+@bindir@/p11-kit extract --format=pem-bundle --filter=ca-anchors --overwrite \
+	--purpose server-auth $DEST/server-auth-bundle.pem
+@bindir@/p11-kit extract --format=java-cacerts --filter=ca-anchors --overwrite \
+	--purpose server-auth $DEST/cacerts
