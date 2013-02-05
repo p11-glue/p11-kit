@@ -1,3 +1,17 @@
+0.15.1 (unstable)
+ * Fix some memory leaks
+ * Add a location for packages to drop module configs
+ * Documentation updates and fixes
+ * Add command line tool manual page
+ * Remove unused err() function and friends
+ * Move more code into common/ directory and refactor
+ * Add a system trust policy module
+ * Refactor how the p11-kit command line tool works
+ * Add p11-kit extract and extract-trust commands
+ * Don't complain if we cannot access ~/.pkcs11/pkcs11.conf
+ * Refuse to load the p11-kit-proxy.so as a registered module
+ * Don't fail initialization if last initialized module fails
+
 0.14
  * Change default for user-config to merge
  * Always URI-encode the 'id' attribute in PKCS#11 URIs
