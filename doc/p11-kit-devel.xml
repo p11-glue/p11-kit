@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="devel">
+	<title>Building, Packaging, and Contributing to p11-kit</title>
+
+	<section id="devel-links">
+		<title>Helpful Resources</title>
+
+		<para>Use the following to find more information about
+		contributing to p11-kit beyond what's in this manual:</para>
+
+		<itemizedlist>
+			<listitem><para><ulink href="http://p11-glue.freedesktop.org/p11-kit.html">Website</ulink></para></listitem>
+			<listitem><para><ulink href="mail:p11-glue@lists.freedesktop.org">Mailing list</ulink></para></listitem>
+			<listitem><para><ulink href="https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit">Bugzilla</ulink></para></listitem>
+		</itemizedlist>
+	</section>
+
+	<section id="devel-paths">
+		<title>Packaging PKCS#11 module configs</title>
+
+		<para>Developers or packagers of PKCS#11 modules need to install various
+		files into specific locations so that p11-kit will recognize and load the
+		module correctly.</para>
+
+		<para>You should use <literal>pkg-config</literal> as described below
+		to determine configuration paths. p11-kit installs a
+		<literal>pkg-config</literal> file called <literal>p11-kit-1.pc</literal>.
+		This file contains all the information about the various paths that p11-kit
+		looks for files at.</para>
+
+		<section id="devel-paths-config">
+			<title>Path to place module configuration</title>
+
+			<para>As described in the <link linkend="config-module">module configuration</link>
+			documentation, each PKCS#11 module should install a config file describing
+			that module. These config files should be installed to a specific directory which
+			can be determined by running:</para>
+
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_configs</command>
+/usr/share/p11-kit/modules</programlisting>
+		</section>
+
+		<section id="devel-paths-modules">
+			<title>Default path for modules with relative paths</title>
+
+			<para>If a <link linkend="config-module">module configuration</link>
+			contains a relative path in its <literal>module:</literal> setting,
+			then that module will be loaded from the default module path. This
+			path can be determined by running:</para>
+
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting>
+		</section>
+
+	</section>
+
+	<section id="devel-building">
+		<title>Compiling p11-kit from Source</title>
+		<para>This describes how to compiling the p11-kit package from
+		source code. This is normally only necessary for those wishing to
+		contribute to the project or package p11-kit.</para>
+
+		<para>You can download
+		<ulink href="http://p11-glue.freedesktop.org/releases/">tarballs
+		of the releases</ulink> of p11-kit or
+		<ulink href="http://cgit.freedesktop.org/p11-glue/p11-kit/">check
+		out the source code from git</ulink>. This documentation will not
+		go into all the details of how to get your development environment
+		set up and instead focus on the what's unique to compiling p11-kit.</para>
+
+		<section id="devel-building-unix">
+			<title>Building on UNIX</title>
+			<para>p11-kit uses the standard GNU build system, using autoconf for package
+			configuration and resolving portability issues, automake for building makefiles
+			that comply with the GNU Coding Standards, and libtool for building shared
+			libraries on multiple platforms. The normal sequence for compiling and
+			installing the p11-kit library is thus:</para>
+
+			<informalexample>
+<programlisting>
+$ ./configure --prefix=/path/to/prefix ...
+$ make
+$ make install
+</programlisting>
+			</informalexample>
+
+			<para>If you've checked out the source code from git, then the
+			<command>configure</command> script does not yet exist. So use
+			the following instead:</para>
+
+			<informalexample>
+<programlisting>
+$ ./autogen.sh --prefix=/path/to/prefix ...
+$ make
+$ make install
+</programlisting>
+			</informalexample>
+
+			<para>The standard options provided by GNU autoconf may be passed to the configure
+			script. Please see the autoconf documentation or run <literal>./configure --help</literal>
+			for information about the standard options. In particular you probably want to adjust
+			the <literal>--prefix=/xxx</literal> argument depending on your system and development
+			environment.</para>
+		</section>
+
+		<section id="devel-building-dependencies">
+			<title>Optional Dependencies</title>
+
+			<para>On a modern GNU Linux system, p11-kit has no required dependencies other
+			than the standard C library. However on older UNIX systems, some of the following
+			may be required.</para>
+
+			<itemizedlist>
+				<listitem><para><command>gettext</command> is required if your system doesn't
+				have the <literal>gettext()</literal> functionality for handling message
+				translation databases. This can be provided by the libintl library from
+				the <ulink href="http://www.gnu.org/software/gettext">GNU gettext
+				package</ulink>.</para></listitem>
+				<listitem><para><command>pthread</command> is required if your (ancient) system
+				doesn't have this included in the base system. How this is provided is platform
+				specific.</para></listitem>
+			</itemizedlist>
+
+			<para>In addition p11-kit has several optional dependencies. If these are not available
+			during the build, then certain features will be disabled.</para>
+
+			<itemizedlist>
+				<listitem><para><command>gtk-doc</command> is required to build the reference
+				manual. Use <literal>--enable-doc</literal> to control this
+				dependency.</para></listitem>
+				<listitem><para><command>xsltproc</command> is required to build the command
+				manual pages. Use <literal>--enable-doc</literal> to control this
+				dependency.</para></listitem>
+			</itemizedlist>
+
+		</section>
+
+		<section id="devel-building-configure">
+			<title>Extra Configuration Options</title>
+
+			<para>In addition to the normal options, the configure script in the p11-kit library
+			supports these additional arguments:</para>
+
+			<variablelist>
+				<varlistentry>
+					<term><option>--disable-debug</option>, <option>--enable-debug</option></term>
+					<listitem><para>By default p11-kit is built with debug symbols assertions and
+					and precondition checks. Enabling the debug option configures even more
+					detailed debug build, including disabling optimization. Disabling the debug
+					option is not recommended, as it disables all assertions, preconditions and
+					internal consistency checks, although it may result it a slightly faster
+					library.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--enable-doc</option></term>
+					<listitem><para>Enables building of the documentation and command line manual.
+					The documentation is built in the <literal>doc/html/</literal> directory of
+					the build. Requires the <literal>gtk-doc</literal> and <literal>xsltproc</literal>
+					dependencies.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--enable-strict</option></term>
+					<listitem><para>Enables strict checks during building of p11-kit. All
+					compiler warnings become errors.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--with-module-path</option></term>
+					<listitem><para>Specify the path to look for PKCS#11 modules which were
+					listed in a module config file with a relative path.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--with-system-config</option></term>
+					<listitem><para>Specify the path to look for p11-kit config files. This
+					usually defaults to something like <literal>/etc/pkcs11</literal></para></listitem>
+				</varlistentry>
+			</variablelist>
+			<para></para>
+		</section>
+	</section>
+
+	<section id="devel-building-style">
+		<title>Coding Style</title>
+
+		<para>We use a code style similar to the linux kernel. Use tabs
+		to indent and spaces to align/wrap beyond the indentation level.</para>
+
+		<para>We don't try to guarantee completely robust and problem free
+		behavior in cases where the caller or system isn't behaving. We
+		consider these to be outside of our control:</para>
+
+		<itemizedlist>
+			<listitem><para>Broken input from callers. We use preconditions
+			to check input and immediately return. We don't try to provide
+			error codes for all the various ways callers can screw
+			around.</para></listitem>
+
+			<listitem>
+			<para>Out of memory. It is pretty much impossible to handle out
+			of memory errors correctly. Handling them alongside other errors
+			is naive and broken. We don't try to guarantee library state
+			(such as locks or memory leaks) when memory allocation fails.</para>
+			<para>We do check the results from all memory allocations, but
+			treat them as unexpected conditions. As a nod to the behavior
+			of callers of this library, we don't abort on memory allocation
+			failures. We use preconditions with somewhat sane results.</para>
+			<para>Exception: when reading files or allocating potentially
+			unbounded amounts of memory, we should respond robustly to memory
+			allocation failures.</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>These unexpected conditions indicate a bug either in p11-kit or
+		in the system. All bets are off once this occurs.</para>
+
+		<para>Use the <literal>return_val_xxx()</literal> precondition macros to
+		check for unexpected conditions.</para>
+
+	</section>
+</chapter>

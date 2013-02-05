@@ -130,7 +130,7 @@ critical: yes
 					This can be used in the user configs to override loading of a module
 					specified in the system configuration.</para>
 					<para>If this is a relative path, then the module will be loaded
-					from the <link linkend="notes-paths-modules">default module directory</link>.</para>
+					from the <link linkend="devel-paths-modules">default module directory</link>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -220,7 +220,7 @@ critical: yes
 
 		<para>The default system config file and module directory can be changed
 		when building p11-kit. Always
-		<link linkend="notes-paths">lookup these paths</link> using
+		<link linkend="devel-paths">lookup these paths</link> using
 		<literal>pkg-config</literal>.</para>
 	</section>
 </chapter>
