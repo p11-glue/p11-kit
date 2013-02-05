@@ -171,29 +171,6 @@ typedef void * dl_module_t;
 
 #endif /* OS_UNIX */
 
-#ifdef HAVE_ERR_H
-#include <err.h>
-
-#else /* !HAVE_ERR_H */
-
-#include <stdarg.h>
-void err_set_file (void *fp);
-void err_set_exit (void (*ef)(int));
-void err (int eval, const char *fmt, ...) GNUC_PRINTF (2, 3);
-void verr (int eval, const char *fmt, va_list ap);
-void errc (int eval, int code, const char *fmt, ...) GNUC_PRINTF (3, 4);
-void verrc (int eval, int code, const char *fmt, va_list ap);
-void errx (int eval, const char *fmt, ...) GNUC_PRINTF (2, 3);
-void verrx (int eval, const char *fmt, va_list ap);
-void warn (const char *fmt, ...) GNUC_PRINTF (1, 2);
-void vwarn (const char *fmt, va_list ap);
-void warnc (int code, const char *fmt, ...) GNUC_PRINTF (2, 3);
-void vwarnc (int code, const char *fmt, va_list ap);
-void warnx (const char *fmt, ...) GNUC_PRINTF (1, 2);
-void vwarnx (const char *fmt, va_list ap);
-
-#endif /* !HAVE_ERR_H */
-
 #ifdef	HAVE_ERRNO_H
 #include <errno.h>
 #endif	/* HAVE_ERRNO_H */
