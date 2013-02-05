@@ -15,6 +15,11 @@
 	<xi:include href="p11-kit-sharing.xml"/>
 	<xi:include href="p11-kit-notes.xml"/>
 
+	<chapter xml:id="tools">
+		<title>Command Line Tools</title>
+		<xi:include href="p11-kit.xml"/>
+	</chapter>
+
 	<chapter xml:id="reference">
 		<title>Reference</title>
 		<xi:include href="xml/p11-kit.xml"/>

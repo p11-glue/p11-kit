@@ -1,40 +1,94 @@
-<?xml version="1.0"?>
-<article xml:id="index" xmlns="http://docbook.org/ns/docbook" version="5.0">
+<?xml version='1.0'?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+        "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
-	<articleinfo>
-		<title>P11 Kit</title>
-		<releaseinfo>
-			Work in Progress
-		</releaseinfo>
+<refentry id="p11-kit">
 
-		<authorgroup>
+<refentryinfo>
+	<title>p11-kit</title>
+	<productname>p11-kit</productname>
+	<authorgroup>
 		<author>
+			<contrib>Maintainer</contrib>
 			<firstname>Stef</firstname>
 			<surname>Walter</surname>
-			<affiliation>
-				<orgname>Collabora Ltd.</orgname>
-				<address>
-					<email>stefw@collabora.co.uk</email>
-				</address>
-			</affiliation>
+			<email>stef@thewalter.net</email>
 		</author>
-		</authorgroup>
+	</authorgroup>
+</refentryinfo>
 
-		<copyright>
-			<year>2011</year>
-			<holder>Collabora Ltd.</holder>
-		</copyright>
+<refmeta>
+	<refentrytitle>p11-kit</refentrytitle>
+	<manvolnum>8</manvolnum>
+	<refmiscinfo class="manual">System Commands</refmiscinfo>
+</refmeta>
 
-	</articleinfo>
+<refnamediv>
+	<refname>p11-kit</refname>
+	<refpurpose>Tool for operating on configured PKCS#11 modules</refpurpose>
+</refnamediv>
 
-	<xi:include href="p11-kit-multiple-problem.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-		<xi:fallback/>
-	</xi:include>
-	<xi:include href="p11-kit-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-		<xi:fallback/>
-	</xi:include>
-	<xi:include href="p11-kit-notes.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-		<xi:fallback/>
-	</xi:include>
+<refsynopsisdiv>
+	<cmdsynopsis>
+		<command>p11-kit list-modules</command>
+	</cmdsynopsis>
+</refsynopsisdiv>
 
-</article>
+<refsect1>
+	<title>Description</title>
+	<para><command>p11-kit</command> is a command line tool that
+	can be used to perform operations on PKCS#11 modules configured on the
+	system.</para>
+
+	<para>See the various sub commands below. The following global options
+	can be used:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>-v, --verbose</option></term>
+			<listitem><para>Run in verbose mode with debug
+			output.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>-q, --quiet</option></term>
+			<listitem><para>Run in quiet mode without warning or
+			failure messages.</para></listitem>
+		</varlistentry>
+	</variablelist>
+
+</refsect1>
+
+<refsect1>
+	<title>List Modules</title>
+
+	<para>List system configured PKCS#11 modules.</para>
+
+	<informalexample>
+<programlisting>
+$ p11-kit list-modules
+</programlisting>
+	</informalexample>
+
+	<para>The modules, information about them and the tokens present in
+	the PKCS#11 modules will be displayed.</para>
+
+</refsect1>
+
+<refsect1>
+  <title>Bugs</title>
+  <para>
+    Please send bug reports to either the distribution bug tracker
+    or the upstream bug tracker at
+    <ulink url="https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit">https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit</ulink>.
+  </para>
+</refsect1>
+
+<refsect1>
+  <title>See also</title>
+  <para>
+    Further details available in the p11-kit online documentation at
+    <ulink url="http://p11-glue.freedesktop.org/doc/p11-kit/">http://p11-glue.freedesktop.org/doc/p11-kit/</ulink>.
+  </para>
+</refsect1>
+
+</refentry>

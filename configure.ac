@@ -127,6 +127,7 @@ AC_PATH_PROG([GTKDOC_CHECK],[gtkdoc-check])
 AC_PATH_PROGS([GTKDOC_REBASE],[gtkdoc-rebase],[true])
 AC_PATH_PROG([GTKDOC_MKPDF],[gtkdoc-mkpdf])
 AC_PATH_PROG([GTKDOC_SCAN],[gtkdoc-scan])
+AC_PATH_PROG([XSLTPROC], [xsltproc])
 
 dnl for overriding the documentation installation directory
 AC_ARG_WITH([html-dir],
@@ -144,6 +145,9 @@ AC_ARG_ENABLE([doc],
 if test x$enable_doc = xyes; then
 	if test -z "$GTKDOC_SCAN"; then
 		AC_MSG_ERROR([gtk-doc not installed and --enable-doc requested])
+	fi
+	if test -z "$XSLTPROC"; then
+		AC_MSG_ERROR([the xsltproc command was not found and --enable-doc requested])
 	fi
 	doc_status="yes (manual, gtk-doc reference)"
 else

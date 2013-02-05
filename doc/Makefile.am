@@ -1,5 +1,7 @@
 abs_top_builddir = @abs_top_builddir@
 
+NULL =
+
 # We require automake 1.6 at least.
 AUTOMAKE_OPTIONS = 1.6
 
@@ -80,6 +82,35 @@ GTKDOC_LIBS=
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make
 
+if ENABLE_GTK_DOC
+man8_MANS = \
+	p11-kit.8
+
+XSLTPROC_FLAGS = \
+        --nonet \
+        --stringparam man.output.quietly 1 \
+        --stringparam funcsynopsis.style ansi \
+        --stringparam man.th.extra1.suppress 1 \
+        --stringparam man.authors.section.enabled 0 \
+        --stringparam man.copyright.section.enabled 0
+
+.xml.8:
+	$(AM_V_GEN) $(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+
+else # ENABLE_GTK_DOC
+
+man8_MANS =
+
+endif # ENABLE_GTK_DOC
+
+MAN_IN_FILES = $(man8_MANS:.8=.xml)
+
+CLEANFILES += \
+	$(man8_MANS) \
+	$(NULL)
+
 EXTRA_DIST += \
 	version.xml.in \
-	version.xml
+	version.xml \
+	$(MAN_IN_FILES) \
+	$(NULL)
