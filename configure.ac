@@ -131,7 +131,7 @@ AC_ARG_WITH([libtasn1],
 )
 
 if test "$with_libtasn1" != "no"; then
-	PKG_CHECK_MODULES(LIBTASN1, libtasn1)
+	PKG_CHECK_MODULES(LIBTASN1, libtasn1 >= 2.14)
 	AC_SUBST(LIBTASN1_CFLAGS)
 	AC_SUBST(LIBTASN1_LIBS)
 	with_libtasn1="yes"
