@@ -63,11 +63,9 @@
 
 	<para>List system configured PKCS#11 modules.</para>
 
-	<informalexample>
 <programlisting>
 $ p11-kit list-modules
 </programlisting>
-	</informalexample>
 
 	<para>The modules, information about them and the tokens present in
 	the PKCS#11 modules will be displayed.</para>

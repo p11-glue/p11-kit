@@ -72,6 +72,12 @@ DIV.refsynopsisdiv {
 	margin-bottom: 3em !important;
 }
 
+H1 {
+	position: relative;
+	left: -1em;
+	font-weight: normal !important;
+}
+
 H2 {
 	position: relative;
 	left: -1em;
@@ -82,4 +88,21 @@ H3 {
 	position: relative;
 	left: -1em;
 	font-weight: normal !important;
+}
+
+CODE.option {
+	white-space: nowrap;
+}
+
+DIV.toc DL {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+DIV.toc > DL > DT {
+	margin-top: 1em;
+}
+
+DIV.toc DT {
+	margin-bottom: 0.3em;
 }

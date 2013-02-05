@@ -80,25 +80,21 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 			libraries on multiple platforms. The normal sequence for compiling and
 			installing the p11-kit library is thus:</para>
 
-			<informalexample>
 <programlisting>
 $ ./configure --prefix=/path/to/prefix ...
 $ make
 $ make install
 </programlisting>
-			</informalexample>
 
 			<para>If you've checked out the source code from git, then the
 			<command>configure</command> script does not yet exist. So use
 			the following instead:</para>
 
-			<informalexample>
 <programlisting>
 $ ./autogen.sh --prefix=/path/to/prefix ...
 $ make
 $ make install
 </programlisting>
-			</informalexample>
 
 			<para>The standard options provided by GNU autoconf may be passed to the configure
 			script. Please see the autoconf documentation or run <literal>./configure --help</literal>
