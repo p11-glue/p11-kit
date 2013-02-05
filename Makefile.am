@@ -10,7 +10,7 @@ SUBDIRS = \
 ACLOCAL_AMFLAGS = -I build/m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
-	--enable-gtk-doc \
+	--enable-doc \
 	--disable-coverage
 
 dist-hook:
