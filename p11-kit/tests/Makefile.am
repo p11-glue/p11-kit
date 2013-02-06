@@ -23,13 +23,17 @@ CHECK_PROGS = \
 	pin-test \
 	test-init \
 	test-modules \
+	test-deprecated \
+	test-proxy \
 	test-iter \
 	$(NULL)
 
 if WITH_FFI
 
 CHECK_PROGS += \
-	test-virtual
+	test-virtual \
+	test-managed \
+	$(NULL)
 
 endif
 
@@ -75,4 +79,6 @@ mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST = \
-	files
+	files \
+	test-mock.c \
+	$(NULL)

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="sharing">
+	<title>Proxy Module</title>
+
+	<para>When an application is aware of the fact that coordination
+	is necessary between multiple consumers of a PKCS#11 module, and wants
+	to load standard configured PKCS#11 modules, it can link to
+	<literal>p11-kit</literal> and use the functions there to provide this
+	functionality.</para>
+
+	<para>However most current consumers of PKCS#11 are ignorant of
+	this problem, and do not link to p11-kit. In order to solve this
+	multiple initialization problem for all applications,
+	<literal>p11-kit</literal> provides a proxy compatibility
+	module.</para>
+
+	<para>This proxy module acts like a normal PKCS#11 module, but
+	internally loads a preconfigured set of PKCS#11 modules and
+	manages their features as described earlier. Each slot in the configured modules
+	is exposed as a slot of the <literal>p11-kit</literal> proxy module. The proxy
+	module is then used as a normal PKCS#11 module would be. It can be loaded by
+	crypto libraries like NSS and behaves as expected.</para>
+
+	<para>The <literal>C_GetFunctionList</literal> exported entry point of the
+	proxy module returns a new managed PKCS#11 module each time it is called. These
+	managed instances are released when the proxy module is unloaded.</para>
+</chapter>

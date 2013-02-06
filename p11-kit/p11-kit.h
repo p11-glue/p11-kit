@@ -36,6 +36,7 @@
 #define __P11_KIT_H__
 
 #include "p11-kit/pkcs11.h"
+#include "deprecated.h"
 
 /*
  * If the caller is using the PKCS#11 GNU calling convention, then we cater
@@ -50,45 +51,63 @@ typedef struct ck_function_list* CK_FUNCTION_LIST_PTR;
 extern "C" {
 #endif
 
-CK_RV                    p11_kit_initialize_registered     (void);
+enum {
+	P11_KIT_MODULE_UNMANAGED = 1 << 0,
+	P11_KIT_MODULE_CRITICAL = 1 << 1,
+};
 
-CK_RV                    p11_kit_finalize_registered       (void);
+typedef void        (* p11_kit_destroyer)                   (void *data);
 
-CK_FUNCTION_LIST_PTR*    p11_kit_registered_modules        (void);
+CK_FUNCTION_LIST **    p11_kit_modules_load                 (const char *reserved,
+                                                             int flags);
 
-char*                    p11_kit_registered_module_to_name (CK_FUNCTION_LIST_PTR module);
+CK_RV                  p11_kit_modules_initialize           (CK_FUNCTION_LIST **modules,
+                                                             p11_kit_destroyer failure_callback);
 
-CK_FUNCTION_LIST_PTR     p11_kit_registered_name_to_module (const char *name);
+CK_FUNCTION_LIST **    p11_kit_modules_load_and_initialize  (int flags);
 
-char*                    p11_kit_registered_option         (CK_FUNCTION_LIST_PTR module,
-                                                            const char *field);
+CK_RV                  p11_kit_modules_finalize             (CK_FUNCTION_LIST **modules);
 
-CK_RV                    p11_kit_initialize_module         (CK_FUNCTION_LIST_PTR module);
+void                   p11_kit_modules_release              (CK_FUNCTION_LIST **modules);
 
-CK_RV                    p11_kit_finalize_module           (CK_FUNCTION_LIST_PTR module);
+void                   p11_kit_modules_finalize_and_release (CK_FUNCTION_LIST **modules);
 
-CK_RV                    p11_kit_load_initialize_module    (const char *module_path,
-                                                            CK_FUNCTION_LIST_PTR *module);
+CK_FUNCTION_LIST *     p11_kit_module_for_name              (CK_FUNCTION_LIST **modules,
+                                                             const char *name);
 
-const char*              p11_kit_strerror                  (CK_RV rv);
+char *                 p11_kit_module_get_name              (CK_FUNCTION_LIST *module);
 
-size_t                   p11_kit_space_strlen              (const unsigned char *string,
-                                                            size_t max_length);
+int                    p11_kit_module_get_flags             (CK_FUNCTION_LIST *module);
 
-char*                    p11_kit_space_strdup              (const unsigned char *string,
-                                                            size_t max_length);
+CK_FUNCTION_LIST *     p11_kit_module_load                  (const char *module_path,
+                                                             int flags);
+
+CK_RV                  p11_kit_module_initialize            (CK_FUNCTION_LIST *module);
+
+CK_RV                  p11_kit_module_finalize              (CK_FUNCTION_LIST *module);
+
+void                   p11_kit_module_release               (CK_FUNCTION_LIST *module);
+
+char *                 p11_kit_config_option                (CK_FUNCTION_LIST *module,
+                                                             const char *option);
+
+const char*            p11_kit_strerror                     (CK_RV rv);
+
+size_t                 p11_kit_space_strlen                 (const unsigned char *string,
+                                                             size_t max_length);
+
+char*                  p11_kit_space_strdup                 (const unsigned char *string,
+                                                             size_t max_length);
 
 #ifdef P11_KIT_FUTURE_UNSTABLE_API
 
-void                     p11_kit_set_progname              (const char *progname);
+void                   p11_kit_set_progname                 (const char *progname);
 
-void                     p11_kit_be_quiet                  (void);
+void                   p11_kit_be_quiet                     (void);
 
-void                     p11_kit_be_loud                   (void);
+void                   p11_kit_be_loud                      (void);
 
-const char*              p11_kit_message                   (void);
-
-typedef void          (* p11_kit_destroyer)                (void *data);
+const char *           p11_kit_message                      (void);
 
 #endif
 

@@ -203,20 +203,15 @@ print_modules (void)
 	CK_FUNCTION_LIST_PTR *module_list;
 	char *name;
 	char *path;
-	CK_RV rv;
 	int i;
 
-	rv = p11_kit_initialize_registered ();
-	if (rv != CKR_OK) {
-		p11_message ("couldn't initialize registered modules: %s",
-		             p11_kit_strerror (rv));
+	module_list = p11_kit_modules_load_and_initialize (0);
+	if (!module_list)
 		return 1;
-	}
 
-	module_list = p11_kit_registered_modules ();
 	for (i = 0; module_list[i]; i++) {
-		name = p11_kit_registered_module_to_name (module_list[i]);
-		path = p11_kit_registered_option (module_list[i], "module");
+		name = p11_kit_module_get_name (module_list[i]);
+		path = p11_kit_config_option (module_list[i], "module");
 
 		printf ("%s: %s\n",
 			name ? name : "(null)",
@@ -226,9 +221,8 @@ print_modules (void)
 		free (name);
 		free (path);
 	}
-	free (module_list);
 
-	p11_kit_finalize_registered ();
+	p11_kit_modules_finalize_and_release (module_list);
 	return 0;
 }
 

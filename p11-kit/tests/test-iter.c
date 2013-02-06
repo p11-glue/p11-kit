@@ -52,13 +52,10 @@ static CK_FUNCTION_LIST_PTR_PTR
 initialize_and_get_modules (CuTest *tc)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
-	CK_RV rv;
 
 	p11_message_quiet ();
 
-	rv = p11_kit_initialize_registered ();
-	CuAssertIntEquals (tc, CKR_OK, rv);
-	modules = p11_kit_registered_modules ();
+	modules = p11_kit_modules_load_and_initialize (0);
 	CuAssertTrue (tc, modules != NULL && modules[0] != NULL);
 
 	p11_message_loud ();
@@ -70,11 +67,8 @@ static void
 finalize_and_free_modules (CuTest *tc,
                            CK_FUNCTION_LIST_PTR_PTR modules)
 {
-	CK_RV rv;
-
-	free (modules);
-	rv = p11_kit_finalize_registered ();
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	p11_kit_modules_finalize (modules);
+	p11_kit_modules_release (modules);
 }
 
 static int
@@ -282,7 +276,8 @@ test_with_session (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	rv = mock_C_OpenSession (MOCK_SLOT_ONE_ID, CKF_SERIAL_SESSION, NULL, NULL, &session);
@@ -323,7 +318,7 @@ test_with_session (CuTest *tc)
 	rv = mock_module.C_CloseSession (session);
 	CuAssertTrue (tc, rv == CKR_OK);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -337,7 +332,8 @@ test_with_slot (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	iter = p11_kit_iter_new (NULL);
@@ -369,7 +365,7 @@ test_with_slot (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = (mock_module.C_Finalize) (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -382,7 +378,8 @@ test_with_module (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	iter = p11_kit_iter_new (NULL);
@@ -411,7 +408,7 @@ test_with_module (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -422,7 +419,8 @@ test_keep_session (CuTest *tc)
 	P11KitIter *iter;
 	CK_RV rv;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	iter = p11_kit_iter_new (NULL);
@@ -438,7 +436,7 @@ test_keep_session (CuTest *tc)
 	rv = mock_module.C_CloseSession (session);
 	CuAssertTrue (tc, rv == CKR_OK);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -750,7 +748,8 @@ test_getslotlist_fail_first (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -770,7 +769,7 @@ test_getslotlist_fail_first (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -782,7 +781,8 @@ test_getslotlist_fail_late (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -802,7 +802,7 @@ test_getslotlist_fail_late (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -814,7 +814,8 @@ test_open_session_fail (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -834,7 +835,7 @@ test_open_session_fail (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -846,7 +847,8 @@ test_find_init_fail (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -866,7 +868,7 @@ test_find_init_fail (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -878,7 +880,8 @@ test_find_objects_fail (CuTest *tc)
 	CK_RV rv;
 	int at;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -898,7 +901,7 @@ test_find_objects_fail (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -972,7 +975,8 @@ test_load_attributes_none (CuTest *tc)
 	CK_ATTRIBUTE *attrs;
 	CK_RV rv;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -991,7 +995,7 @@ test_load_attributes_none (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -1004,7 +1008,8 @@ test_load_attributes_fail_first (CuTest *tc)
 	CK_ATTRIBUTE *attrs;
 	CK_RV rv;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -1024,7 +1029,7 @@ test_load_attributes_fail_first (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 
@@ -1037,7 +1042,8 @@ test_load_attributes_fail_late (CuTest *tc)
 	CK_ATTRIBUTE *attrs;
 	CK_RV rv;
 
-	rv = p11_kit_initialize_module (&mock_module);
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
@@ -1057,7 +1063,7 @@ test_load_attributes_fail_late (CuTest *tc)
 
 	p11_kit_iter_free (iter);
 
-	rv = p11_kit_finalize_module (&mock_module);
+	rv = mock_module.C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 }
 

@@ -245,6 +245,12 @@ p11_dl_error (void)
 	return msg_buf;
 }
 
+void
+p11_dl_close (void *dl)
+{
+	FreeLibrary (dl);
+}
+
 int
 p11_thread_create (p11_thread_t *thread,
                    p11_thread_routine routine,

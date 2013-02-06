@@ -42,52 +42,52 @@
 		loosely coupled, backwards compatible, and flexible way.</para>
 	</section>
 
-	<section xml:id="sharing-initialize">
-		<title>Solution: p11-kit</title>
+	<section xml:id="sharing-managed">
+		<title>Managed modules</title>
 
-		<para><literal>p11-kit</literal> provides functions to
-		coordinate initialization and finalization of any PKCS#11
-		module. A module may be initialized any number of times using
-		the p11_kit_initialize_module() function. The first time that
-		p11_kit_initialize_module() is called for a module, that module's
-		C_Initialize function is used. Later invocations for the same
-		module cause p11-kit to increment an internal initialization
-		count, rather than calling C_Initialize again.</para>
+		<para><literal>p11-kit</literal> wraps PKCS#11 modules to manage
+		them and customize their functionality so that they are able
+		to be shared between multiple callers in the same process.</para>
 
-		<para>The p11_kit_finalize_module() is used to finalize a module.
-		Each time it is called it decrements the internal initialization
-		count for that module. When the internal initialization count
-		reaches zero, the module's C_Finalize function is called.</para>
+		<para>Each caller that uses the
+		<link linkend="p11-kit-modules-load"><function>p11_kit_modules_load()</function></link>
+		or <link linkend="p11-kit-module-load"><function>p11_kit_module_load()</function></link>
+		function gets independent wrapped PKCS#11 module(s). This is unless a caller
+		or module configuration specifies that a module should be used in an
+		unmanaged fashion.</para>
 
-		<para>This is done in a thread-safe manner. These functions can
-		be used on modules that the consumer loads themselves.</para>
-	</section>
+		<para>When modules are managed, the following aspects are wrapped and
+		coordinated:</para>
 
-	<section xml:id="sharing-module">
-		<title>Solution: proxy module</title>
+		<itemizedlist>
+		<listitem>
+			<para>Calls to <literal>C_Initialize</literal> and
+			<literal>C_Finalize</literal> can be called by multiple
+			callers.</para>
 
-		<para>When an application is aware of the fact that coordination
-		is necessary between multiple consumers of a PKCS#11 module, it
-		can link to p11-kit and use the functions there to provide
-		this coordination.</para>
+			<para>The first time that the managed module
+			<literal>C_Initialize</literal> is called, the PKCS#11 module's actual
+			<literal>C_Initialize</literal> function is called. Subsequent calls by
+			other callers will cause <literal>p11-kit</literal> to increment an
+			internal initialization count, rather than calling
+			<literal>C_Initialize</literal> again.</para>
 
-		<para>However most current consumers of PKCS#11 are ignorant of
-		this problem, and do not link to p11-kit. In order to solve this
-		multiple initialization problem for all applications,
-		<literal>p11-kit</literal> provides a proxy compatibility
-		module.</para>
+			<para>Multiple callers can call the managed
+			<literal>C_Initialize</literal> function concurrently from different
+			threads and <literal>p11-kit</literal> will guarantee that this managed
+			in a thread-safe manner.</para>
+		</listitem>
+		<listitem>
+			<para>When the managed module <literal>C_Finalize</literal> is used
+			to finalize a module, each time it is called it decrements the internal
+			initialization count for that module. When the internal initialization
+			count reaches zero, the module's actual <literal>C_Finalize</literal>
+			function is called.</para>
 
-		<para>This proxy module acts like a normal PKCS#11 module, but
-		internally loads a preconfigured set of PKCS#11 modules and
-		coordinates their initialization and finalization. Each slot
-		in the configured modules is exposed as a slot of the
-		<literal>p11-kit</literal> proxy module. The proxy module is
-		then used as a normal PKCS#11 module would be. It can be loaded by
-		crypto libraries like NSS and behaves as expected.</para>
-
-		<para>The proxy module bends the PKCS#11 rules slightly. It does
-		not return the <literal>CKR_CRYPTOKI_ALREADY_INITIALIZED</literal>
-		error code as specified in PKCS#11. However this is a small
-		price to pay for this compatibility.</para>
+			<para>Multiple callers can call the managed <literal>C_Finalize</literal>
+			function concurrently from different threads and <literal>p11-kit</literal>
+			will guarantee that this managed in a thread-safe manner.</para>
+		</listitem>
+		</itemizedlist>
 	</section>
 </chapter>

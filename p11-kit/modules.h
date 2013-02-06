@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Collabora Ltd.
+ * Copyright (c) 2013 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,33 +29,23 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ * Author: Stef Walter <stefw@redhat.com>
  */
 
-#ifndef __P11_KIT_PRIVATE_H__
-#define __P11_KIT_PRIVATE_H__
+#ifndef __P11_MODULES_H__
+#define __P11_MODULES_H__
 
-#include "compat.h"
 #include "pkcs11.h"
 
-extern CK_FUNCTION_LIST _p11_proxy_function_list;
+CK_RV      p11_modules_load_inlock_reentrant         (int flags,
+                                                      CK_FUNCTION_LIST_PTR **results);
 
-void        _p11_kit_proxy_after_fork                           (void);
+CK_RV      p11_modules_release_inlock_reentrant      (CK_FUNCTION_LIST_PTR *modules);
 
-CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
-                                                                 const char *user_conf,
-                                                                 int *user_mode);
+CK_RV      p11_module_load_inlock_reentrant          (CK_FUNCTION_LIST_PTR module,
+                                                      int flags,
+                                                      CK_FUNCTION_LIST_PTR *result);
 
-void        _p11_kit_default_message                            (CK_RV rv);
+CK_RV      p11_module_release_inlock_reentrant       (CK_FUNCTION_LIST_PTR module);
 
-const char * _p11_get_progname_unlocked                         (void);
-
-void        _p11_set_progname_unlocked                          (const char *progname);
-
-int          p11_match_uri_module_info                          (CK_INFO_PTR one,
-                                                                 CK_INFO_PTR two);
-
-int          p11_match_uri_token_info                           (CK_TOKEN_INFO_PTR one,
-                                                                 CK_TOKEN_INFO_PTR two);
-
-#endif /* __P11_KIT_PRIVATE_H__ */
+#endif /* __P11_MODULES_H__ */

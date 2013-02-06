@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Collabora Ltd.
+ * Copyright (c) 2013 Red Hat Inc
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,33 +29,66 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ * Author: Stef Walter <stefw@redhat.com>
  */
 
-#ifndef __P11_KIT_PRIVATE_H__
-#define __P11_KIT_PRIVATE_H__
+#define CRYPTOKI_EXPORTS
 
-#include "compat.h"
+#include "config.h"
+#include "CuTest.h"
+
+#include "library.h"
 #include "pkcs11.h"
+#include "p11-kit.h"
 
-extern CK_FUNCTION_LIST _p11_proxy_function_list;
+#include <sys/types.h>
 
-void        _p11_kit_proxy_after_fork                           (void);
+#include <assert.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 
-CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
-                                                                 const char *user_conf,
-                                                                 int *user_mode);
+/* This is the proxy module entry point in proxy.c, and linked to this test */
+CK_RV C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list);
 
-void        _p11_kit_default_message                            (CK_RV rv);
+static void
+test_initialize_finalize (CuTest *tc)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_RV rv;
 
-const char * _p11_get_progname_unlocked                         (void);
+	rv = C_GetFunctionList (&proxy);
+	CuAssertTrue (tc, rv == CKR_OK);
 
-void        _p11_set_progname_unlocked                          (const char *progname);
+	rv = proxy->C_Initialize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
 
-int          p11_match_uri_module_info                          (CK_INFO_PTR one,
-                                                                 CK_INFO_PTR two);
+	rv = proxy->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+}
 
-int          p11_match_uri_token_info                           (CK_TOKEN_INFO_PTR one,
-                                                                 CK_TOKEN_INFO_PTR two);
+int
+main (void)
+{
+	CuString *output = CuStringNew ();
+	CuSuite* suite = CuSuiteNew ();
+	int ret;
 
-#endif /* __P11_KIT_PRIVATE_H__ */
+	putenv ("P11_KIT_STRICT=1");
+	p11_library_init ();
+	p11_kit_be_quiet ();
+
+	SUITE_ADD_TEST (suite, test_initialize_finalize);
+
+	CuSuiteRun (suite);
+	CuSuiteSummary (suite, output);
+	CuSuiteDetails (suite, output);
+	printf ("%s\n", output->buffer);
+	ret = suite->failCount;
+	CuSuiteDelete (suite);
+	CuStringDelete (output);
+	return ret;
+}

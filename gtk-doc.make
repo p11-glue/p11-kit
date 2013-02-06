@@ -116,7 +116,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	fi
 	@touch scan-build.stamp
 
-$(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt: scan-build.stamp
+$(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 	@true
 
 #### xml ####

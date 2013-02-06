@@ -183,8 +183,8 @@ mock_module_take_object (CK_SLOT_ID slot_id,
 		return_if_reached ();
 }
 
-void
-mock_module_reset_objects (CK_SLOT_ID slot_id)
+static void
+module_reset_objects (CK_SLOT_ID slot_id)
 {
 	return_if_fail (slot_id == MOCK_SLOT_ONE_ID);
 
@@ -291,6 +291,44 @@ mock_module_reset_objects (CK_SLOT_ID slot_id)
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_PUBLIC_KEY_PREFIX), p11_attrs_dup (attrs));
 
 	}
+}
+
+static void
+module_finalize (void)
+{
+	p11_mutex_lock (&init_mutex);
+
+		/* This should stop all other calls in */
+		pkcs11_initialized = false;
+		pkcs11_initialized_pid = 0;
+
+		if (the_objects)
+			p11_dict_free (the_objects);
+		the_objects = NULL;
+
+		if (the_sessions)
+			p11_dict_free (the_sessions);
+		the_sessions = NULL;
+		logged_in = false;
+		the_user_type = 0;
+
+		free (the_pin);
+		the_pin = NULL;
+		n_the_pin = 0;
+
+	p11_mutex_unlock (&init_mutex);
+}
+
+bool
+mock_module_initialized (void)
+{
+	return pkcs11_initialized;
+}
+void
+mock_module_reset (void)
+{
+	module_finalize ();
+	module_reset_objects (MOCK_SLOT_ONE_ID);
 
 }
 
@@ -389,7 +427,7 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 		                             p11_dict_direct_equal,
 		                             NULL, free_session);
 
-		mock_module_reset_objects (MOCK_SLOT_ONE_ID);
+		module_reset_objects (MOCK_SLOT_ONE_ID);
 
 done:
 		/* Mark us as officially initialized */
@@ -425,24 +463,7 @@ mock_C_Finalize (CK_VOID_PTR reserved)
 	return_val_if_fail (pkcs11_initialized, CKR_CRYPTOKI_NOT_INITIALIZED);
 	return_val_if_fail (reserved == NULL, CKR_ARGUMENTS_BAD);
 
-	p11_mutex_lock (&init_mutex);
-
-		/* This should stop all other calls in */
-		pkcs11_initialized = false;
-		pkcs11_initialized_pid = 0;
-
-		p11_dict_free (the_objects);
-		the_objects = NULL;
-
-		p11_dict_free (the_sessions);
-		the_sessions = NULL;
-		logged_in = false;
-		the_user_type = 0;
-
-		free (the_pin);
-
-	p11_mutex_unlock (&init_mutex);
-
+	module_finalize ();
 	return CKR_OK;
 }
 

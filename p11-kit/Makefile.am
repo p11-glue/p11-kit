@@ -14,6 +14,7 @@ INCLUDES = \
 incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
+	deprecated.h \
 	iter.h \
 	p11-kit.h \
 	pin.h \
@@ -24,7 +25,7 @@ MODULE_SRCS = \
 	util.c \
 	conf.c conf.h \
 	iter.c \
-	modules.c \
+	modules.c modules.h \
 	pkcs11.h \
 	pin.c \
 	pkcs11.h \
@@ -103,7 +104,9 @@ example_DATA = pkcs11.conf.example
 
 EXTRA_DIST = \
 	p11-kit-1.pc.in \
-	pkcs11.conf.example.in
+	pkcs11.conf.example.in \
+	docs.h \
+	$(NULL)
 
 # Proxy module is actually same as library, so install a link
 install-exec-hook:

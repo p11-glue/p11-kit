@@ -32,6 +32,8 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
+#define P11_KIT_DISABLE_DEPRECATED
+
 #include "config.h"
 #include "CuTest.h"
 
@@ -66,11 +68,10 @@ setup (CuTest *tc)
 {
 	CK_RV rv;
 
+	mock_module_reset ();
 	memcpy (&test.module, &mock_module, sizeof (CK_FUNCTION_LIST));
-	rv = p11_kit_initialize_module (&test.module);
+	rv = test.module.C_Initialize (NULL);
 	CuAssertIntEquals (tc, CKR_OK, rv);
-
-	mock_module_reset_objects (MOCK_SLOT_ONE_ID);
 
 	test.iter = p11_kit_iter_new (NULL);
 
@@ -93,7 +94,7 @@ teardown (CuTest *tc)
 	p11_extract_info_cleanup (&test.ex);
 	p11_kit_iter_free (test.iter);
 
-	rv = p11_kit_finalize_module (&test.module);
+	rv = test.module.C_Finalize (NULL);
 	CuAssertIntEquals (tc, CKR_OK, rv);
 }
 

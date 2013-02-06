@@ -135,12 +135,12 @@ typedef HMODULE dl_module_t;
 
 #define p11_dl_open(f) \
 	(LoadLibrary (f))
-#define p11_dl_close(d) \
-	(FreeLibrary (d))
 #define p11_dl_symbol(d, s) \
 	((void *)GetProcAddress ((d), (s)))
 
 char *    p11_dl_error       (void);
+
+void      p11_dl_close       (void * dl);
 
 #define p11_sleep_ms(ms) \
 	(Sleep (ms))

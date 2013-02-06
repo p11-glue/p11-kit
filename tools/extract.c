@@ -231,7 +231,7 @@ limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
 
 	/* TODO: This logic will move once we merge our p11-kit managed code */
 	for (i = 0, out = 0; modules[i] != NULL; i++) {
-		string = p11_kit_registered_option (modules[i], "trust-policy");
+		string = p11_kit_config_option (modules[i], "trust-policy");
 		if (string && strcmp (string, "yes") == 0)
 			modules[out++] = modules[i];
 		else if (string && strcmp (string, "no") != 0)
@@ -305,7 +305,6 @@ p11_tool_extract (int argc,
 	CK_ATTRIBUTE *match;
 	P11KitUri *uri;
 	int opt = 0;
-	CK_RV rv;
 	int ret;
 
 	enum {
@@ -435,13 +434,10 @@ p11_tool_extract (int argc,
 	if (uri && p11_kit_uri_any_unrecognized (uri))
 		p11_message ("uri contained unrecognized components, nothing will be extracted");
 
-	rv = p11_kit_initialize_registered ();
-	if (rv != CKR_OK) {
-		p11_message ("couldn't initialize registered modules: %s", p11_kit_strerror (rv));
+	modules = p11_kit_modules_load_and_initialize (0);
+	if (!modules)
 		return 1;
-	}
 
-	modules = p11_kit_registered_modules ();
 	limit_modules_if_necessary (modules, ex.flags);
 
 	iter = p11_kit_iter_new (uri);
@@ -456,8 +452,9 @@ p11_tool_extract (int argc,
 	p11_extract_info_cleanup (&ex);
 	p11_kit_iter_free (iter);
 	p11_kit_uri_free (uri);
-	free (modules);
 
-	p11_kit_finalize_registered ();
+	p11_kit_modules_finalize (modules);
+	p11_kit_modules_release (modules);
+
 	return ret;
 }

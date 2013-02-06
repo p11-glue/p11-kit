@@ -13,6 +13,7 @@
 
 	<xi:include href="p11-kit-config.xml"/>
 	<xi:include href="p11-kit-sharing.xml"/>
+	<xi:include href="p11-kit-proxy.xml"/>
 	<xi:include href="p11-kit-trust.xml"/>
 
 	<chapter xml:id="tools">
@@ -28,6 +29,7 @@
 		<xi:include href="xml/p11-kit-pin.xml"/>
 		<xi:include href="xml/p11-kit-util.xml"/>
 		<xi:include href="xml/p11-kit-future.xml"/>
+		<xi:include href="xml/p11-kit-deprecated.xml"/>
 
 		<index id="api-index-full">
 			<title>API Index</title>

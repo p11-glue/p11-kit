@@ -102,7 +102,10 @@ dump_trust_module (const char *path)
 
 	CK_ULONG count = p11_attrs_count (template);
 
-	rv = p11_kit_load_initialize_module (path, &module);
+	module = p11_kit_module_load (path, 0);
+	return_val_if_fail (module != NULL, 1);
+
+	rv = p11_kit_module_initialize (module);
 	return_val_if_fail (rv == CKR_OK, 1);
 
 	iter = p11_kit_iter_new (NULL);
@@ -120,7 +123,8 @@ dump_trust_module (const char *path)
 
 	return_val_if_fail (rv == CKR_CANCEL, 1);
 
-	p11_kit_finalize_module (module);
+	p11_kit_module_finalize (module);
+	p11_kit_module_release (module);
 
 	return 0;
 }
@@ -152,10 +156,16 @@ compare_trust_modules (const char *path1,
 		{ CKA_INVALID, }
 	};
 
-	rv = p11_kit_load_initialize_module (path1, &module1);
+	module1 = p11_kit_module_load (path1, 0);
+	return_val_if_fail (module1 != NULL, 1);
+
+	rv = p11_kit_module_initialize (module1);
 	return_val_if_fail (rv == CKR_OK, 1);
 
-	rv = p11_kit_load_initialize_module (path2, &module2);
+	module2 = p11_kit_module_load (path2, 0);
+	return_val_if_fail (module2 != NULL, 1);
+
+	rv = p11_kit_module_initialize (module2);
 	return_val_if_fail (rv == CKR_OK, 1);
 
 	iter = p11_kit_iter_new (NULL);
@@ -185,8 +195,11 @@ compare_trust_modules (const char *path1,
 	}
 
 	return_val_if_fail (rv == CKR_CANCEL, 1);
-	p11_kit_finalize_module (module1);
-	p11_kit_finalize_module (module2);
+	p11_kit_module_finalize (module1);
+	p11_kit_module_release (module1);
+
+	p11_kit_module_finalize (module2);
+	p11_kit_module_release (module2);
 
 	return 0;
 }

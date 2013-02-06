@@ -108,10 +108,12 @@ void         mock_module_enumerate_objects               (CK_SESSION_HANDLE sess
 void         mock_module_add_object                      (CK_SLOT_ID slot_id,
                                                           const CK_ATTRIBUTE *attrs);
 
+void         mock_module_reset                           (void);
+
+bool         mock_module_initialized                     (void);
+
 void         mock_module_take_object                     (CK_SLOT_ID slot_id,
                                                           CK_ATTRIBUTE *attrs);
-
-void         mock_module_reset_objects                   (CK_SLOT_ID slot_id);
 
 CK_RV        mock_C_Initialize                           (CK_VOID_PTR init_args);
 
