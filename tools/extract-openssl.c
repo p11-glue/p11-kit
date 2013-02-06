@@ -613,6 +613,7 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			 * conflicts with something we've already written out.
 			 */
 
+			ret = true;
 			linkname = symlink_for_subject_hash (ex);
 			if (file && linkname) {
 				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
@@ -620,12 +621,16 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			}
 
 			linkname = symlink_for_subject_old_hash (ex);
-			if (file && linkname) {
+			if (ret && file && linkname) {
 				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
 				free (linkname);
 			}
 
-			ret = p11_save_write_and_finish (file, pem, length);
+			if (ret)
+				ret = p11_save_write_and_finish (file, pem, length);
+			else
+				p11_save_finish_file (file, false);
+
 			free (name);
 			free (pem);
 		}

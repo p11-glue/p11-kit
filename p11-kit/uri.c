@@ -1236,7 +1236,6 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		return P11_KIT_URI_BAD_SCHEME;
 
 	string = epos + 1;
-	ret = -1;
 
 	/* Clear everything out */
 	memset (&uri->module, 0, sizeof (uri->module));

@@ -55,7 +55,8 @@ void              p11_debug_message             (int flag,
                                                  ...) GNUC_PRINTF (2, 3);
 
 void              p11_debug_precond             (const char *format,
-                                                 ...) GNUC_PRINTF (1, 2);
+                                                 ...) GNUC_PRINTF (1, 2)
+                                                 CLANG_ANALYZER_NORETURN;
 
 #define assert_not_reached() \
 	(assert (false && "this code should not be reached"))

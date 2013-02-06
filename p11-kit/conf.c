@@ -169,6 +169,7 @@ read_config_file (const char* filename, int flags)
 	if (fread (config, 1, len, f) != len) {
 		error = errno;
 		p11_message ("couldn't read config file: %s", filename);
+		free (config);
 		errno = error;
 		return NULL;
 	}
@@ -559,7 +560,6 @@ load_configs_from_directory (const char *directory,
 		path = strconcat (directory, "/", dp->d_name, NULL);
 		return_val_if_fail (path != NULL, false);
 
-		is_dir = false;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
 		if(dp->d_type != DT_UNKNOWN) {
 			is_dir = (dp->d_type == DT_DIR);

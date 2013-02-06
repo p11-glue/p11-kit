@@ -117,7 +117,7 @@ p11_tool_usage (const p11_tool_desc *usages,
 			len = printf ("  --%s", long_name);
 		else
 			len = printf ("  -%c", (int)short_name);
-		if (longopt->has_arg)
+		if (longopt && longopt->has_arg)
 			len += printf ("%s<%s>",
 			               long_name ? "=" : " ",
 			               usages[i].arg ? usages[i].arg : "...");
@@ -241,7 +241,6 @@ main (int argc, char *argv[])
 	 */
 
 	for (in = 1, out = 1; in < argc; in++, out++) {
-		skip = false;
 
 		/* Already seen the command, keep the arguments */
 		if (command) {

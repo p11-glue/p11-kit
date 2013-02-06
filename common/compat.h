@@ -51,6 +51,19 @@
 #define GNUC_NULL_TERMINATED
 #endif
 
+/* For detecting clang features */
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
+#ifndef CLANG_ANALYZER_NORETURN
+#if __has_feature(attribute_analyzer_noreturn)
+#define CLANG_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
+#else
+#define CLANG_ANALYZER_NORETURN
+#endif
+#endif
+
 #ifndef HAVE_GETPROGNAME
 const char * getprogname (void);
 #endif

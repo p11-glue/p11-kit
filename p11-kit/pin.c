@@ -194,11 +194,13 @@ register_callback_unlocked (const char *pin_source,
 		return_val_if_fail (callbacks != NULL, false);
 		if (!p11_dict_set (gl.pin_sources, name, callbacks))
 			return_val_if_reached (false);
+		name = NULL;
 	}
 
 	if (!p11_array_push (callbacks, cb))
 		return_val_if_reached (false);
 
+	free (name);
 	return true;
 }
 
@@ -490,7 +492,6 @@ p11_kit_pin_file_callback (const char *pin_source,
 		if (res < 0) {
 			if (errno == EAGAIN)
 				continue;
-			error = errno;
 			error = errno;
 			break;
 		} else if (res == 0) {

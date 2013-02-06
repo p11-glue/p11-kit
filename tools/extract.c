@@ -238,6 +238,9 @@ limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
 	/* Count the number of modules */
 	for (out = 0; modules[out] != NULL; out++);
 
+	if (out == 0)
+		return;
+
 	order = malloc (sizeof (*order) * out);
 	return_if_fail (order != NULL);
 
