@@ -79,6 +79,8 @@ void          p11_library_init_impl        (void);
 
 void          p11_library_init             (void);
 
+void          p11_library_thread_cleanup   (void);
+
 void          p11_library_uninit           (void);
 
 #endif /* P11_LIBRARY_H_ */

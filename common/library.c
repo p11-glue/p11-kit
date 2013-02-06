@@ -176,18 +176,12 @@ p11_library_init_impl (void)
 	pthread_key_create (&thread_local, free);
 }
 
-#ifdef __GNUC__
-__attribute__((constructor))
-#endif
 void
 p11_library_init (void)
 {
 	p11_library_init_once ();
 }
 
-#ifdef __GNUC__
-__attribute__((destructor))
-#endif
 void
 p11_library_uninit (void)
 {
@@ -233,17 +227,21 @@ p11_library_init (void)
 	p11_debug ("initializing library");
 	p11_mutex_init (&p11_library_mutex);
 	thread_local = TlsAlloc ();
+	if (thread_local == TLS_OUT_OF_INDEXES)
+		p11_debug ("couldn't setup tls");
 }
 
-static void
-free_tls_value (LPVOID data)
+void
+p11_library_thread_cleanup (void)
 {
 	p11_local *local = data;
-	if (local == NULL)
-		return;
-	if (local->last_error)
-		LocalFree (local->last_error);
-	LocalFree (data);
+	if (thread_local != TLS_OUT_OF_INDEXES) {
+		p11_debug ("thread stopped, freeing tls");
+		local = TlsGetValue (thread_local);
+		if (local->last_error)
+			LocalFree (local->last_error);
+		LocalFree (local);
+	}
 }
 
 void
@@ -259,42 +257,6 @@ p11_library_uninit (void)
 		TlsFree (thread_local);
 	}
 	_p11_mutex_uninit (&p11_library_mutex);
-}
-
-
-BOOL WINAPI
-DllMain (HINSTANCE instance,
-         DWORD reason,
-         LPVOID reserved)
-{
-	LPVOID data;
-
-	switch (reason) {
-	case DLL_PROCESS_ATTACH:
-		p11_library_init ();
-		if (thread_local == TLS_OUT_OF_INDEXES) {
-			p11_debug ("couldn't setup tls");
-			return FALSE;
-		}
-		break;
-
-	case DLL_THREAD_DETACH:
-		if (thread_local != TLS_OUT_OF_INDEXES) {
-			p11_debug ("thread stopped, freeing tls");
-			data = TlsGetValue (thread_local);
-			free_tls_value (data);
-		}
-		break;
-
-	case DLL_PROCESS_DETACH:
-		p11_library_uninit ();
-		break;
-
-	default:
-		break;
-	}
-
-	return TRUE;
 }
 
 #endif /* OS_WIN32 */

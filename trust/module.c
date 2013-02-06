@@ -1506,6 +1506,7 @@ __declspec(dllexport)
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
+	p11_library_init_once ();
 	return sys_C_GetFunctionList (list);
 }
 
@@ -1515,3 +1516,57 @@ p11_module_next_id (void)
 	static CK_ULONG unique = 0x10;
 	return (unique)++;
 }
+
+#ifdef OS_UNIX
+
+void p11_trust_module_init (void);
+
+void p11_trust_module_fini (void);
+
+#ifdef __GNUC__
+__attribute__((constructor))
+#endif
+void
+p11_trust_module_init (void)
+{
+	p11_library_init_once ();
+}
+
+#ifdef __GNUC__
+__attribute__((destructor))
+#endif
+void
+p11_trust_module_fini (void)
+{
+	p11_library_uninit ();
+}
+
+#endif /* OS_UNIX */
+
+#ifdef OS_WIN32
+
+BOOL WINAPI
+DllMain (HINSTANCE instance,
+         DWORD reason,
+         LPVOID reserved)
+{
+	LPVOID data;
+
+	switch (reason) {
+	case DLL_PROCESS_ATTACH:
+		p11_library_init ();
+		break;
+	case DLL_THREAD_DETACH:
+		p11_library_thread_cleanup ();
+		break;
+	case DLL_PROCESS_DETACH:
+		p11_library_uninit ();
+		break;
+	default:
+		break;
+	}
+
+	return TRUE;
+}
+
+#endif /* OS_WIN32 */
