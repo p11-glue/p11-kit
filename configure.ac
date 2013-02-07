@@ -58,7 +58,6 @@ AC_MSG_RESULT([$os_win32])
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "yes")
 
 AC_C_BIGENDIAN
-AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
 # ------------------------------------------------------------------------------
 # Checks for libraries and headers
@@ -130,13 +129,15 @@ AC_ARG_WITH([libtasn1],
                            [Disable dependency on libtasn1])
 )
 
-if test "$with_libtasn1" != "no"; then
-	PKG_CHECK_MODULES(LIBTASN1, libtasn1 >= 2.14)
+AS_IF([test "$with_libtasn1" != "no"], [
+	PKG_CHECK_MODULES([LIBTASN1], [libtasn1 >= 2.14], [],
+		[AC_MSG_ERROR([libtasn1 not found. Building without it results in significant loss of functionality. To proceed use --without-libtasn1])]
+	)
 	AC_SUBST(LIBTASN1_CFLAGS)
 	AC_SUBST(LIBTASN1_LIBS)
 	with_libtasn1="yes"
 	AC_DEFINE_UNQUOTED(WITH_ASN1, 1, [Build with libtasn1 and certificate support])
-fi
+])
 
 AM_CONDITIONAL(WITH_ASN1, test "$with_libtasn1" = "yes")
 
@@ -149,16 +150,19 @@ AC_ARG_ENABLE([trust-module],
 )
 
 AC_MSG_CHECKING([if trust module is enabled])
+AS_IF([test "$with_libtasn1" != "yes"], [
+	AS_IF([test "$enable_trust_module" = "yes"], [
+		AC_MSG_ERROR([--with-libtasn1 is needed in order to build the trust module])
+	])
+	AS_IF([test "$enable_trust_module" != "no"], [
+		AC_MSG_WARN([--with-libtasn1 is needed in order to build the trust module, disabling])
+	])
+	enable_trust_module="no"
+])
 
-if test "$enable_trust_module" != "no"; then
-	if test "$with_libtasn1" != "yes"; then
-		AC_MSG_ERROR([need --with-libtasn1 in order to use the trust module.])
-	fi
-	enable_trust_module="yes"
-fi
-
-AC_MSG_RESULT([$enable_trust_module])
+AS_IF(test "$enable_trust_module" != "no"], [enable_trust_module="yes"])
 AM_CONDITIONAL(WITH_TRUST_MODULE, test "$enable_trust_module" = "yes")
+AC_MSG_RESULT([$enable_trust_module])
 
 AC_ARG_WITH([system-anchors],
             AS_HELP_STRING([--with-system-anchors=@<:@path@:>@]:
