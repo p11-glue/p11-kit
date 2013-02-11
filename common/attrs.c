@@ -158,7 +158,7 @@ p11_attrs_build (CK_ATTRIBUTE *attrs,
 	va_end (va);
 
 	va_start (va, attrs);
-	attrs = attrs_build (attrs, count, true, vararg_generator, va);
+	attrs = attrs_build (attrs, count, true, vararg_generator, &va);
 	va_end (va);
 
 	return attrs;
