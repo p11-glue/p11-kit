@@ -165,7 +165,6 @@ p11_asn1_encode (node_asn *asn,
                  size_t *der_len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	struct asn1_data_node data = { NULL, };
 	unsigned char *der;
 	int len;
 	int ret;
@@ -184,9 +183,7 @@ p11_asn1_encode (node_asn *asn,
 	}
 
 	if (ret != ASN1_SUCCESS) {
-		asn1_read_node_value (asn, &data);
-		p11_debug_precond ("failed to encode %s: %s\n",
-		                   data.name ? data.name : "(unknown)", message);
+		p11_debug_precond ("failed to encode: %s\n", message);
 		return NULL;
 	}
 
