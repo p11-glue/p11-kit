@@ -1,3 +1,9 @@
+0.15.2 (unstable)
+ * Add German and Finish translations
+ * Better define the libtasn1 dependency
+ * Crasher and bug fixes
+ * Build fixes
+
 0.15.1 (unstable)
  * Fix some memory leaks
  * Add a location for packages to drop module configs
