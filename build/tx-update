@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -euf
+
+TX_PROJECT="p11-kit"
+TX_HOST="https://www.transifex.com"
+TX_RESOURCE="$TX_PROJECT.master"
+
+fail()
+{
+	echo "tx-update: $@" >&2
+	exit 2
+}
+
+tx_langs()
+(
+	cd .tx/$TX_RESOURCE
+	ls | sed 's/_translation//'
+)
+
+lingua_langs()
+{
+	cat po/LINGUAS | while read lang extra; do
+		case $lang in \
+		\#*) ;;
+		en) ;;
+		*) echo -n "$lang "
+		esac
+	done
+}
+
+if [ ! -d po ]; then
+	fail "run this script in the top level project directory"
+fi
+
+if [ ! -d .tx ]; then
+	tx init --host=$TX_HOST
+	tx set --source -r $TX_RESOURCE -l en po/$TX_PROJECT.pot
+fi
+
+# Push source to server
+tx push -s
+
+# Pull from the server
+tx pull -a
+
+pull_again="no"
+
+# Update LINGUAS
+for lang in $(tx_langs); do
+	if ! grep -qw $lang po/LINGUAS; then
+		echo $lang >> po/LINGUAS
+		pull_again="yes"
+	fi
+done
+
+# Setup associations
+for lang in $(lingua_langs); do
+	if [ ! -f "po/$lang.po" ]; then
+		tx set -r $TX_RESOURCE -l $lang po/$lang.po
+		pull_again="yes"
+	fi
+done
+
+# Pull and get all translations
+if [ "$pull_again" = "yes" ]; then
+	tx pull
+fi

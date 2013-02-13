@@ -1,0 +1,345 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Collabora Ltd.
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Yuri Chornoivan <yurchor@ukr.net>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: p11-kit\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
+"glue\n"
+"POT-Creation-Date: 2013-02-12 16:23+0100\n"
+"PO-Revision-Date: 2012-03-08 08:34+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
+"Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: p11-kit/messages.c:78
+msgid "The operation was cancelled"
+msgstr "Дію було скасовано"
+
+#: p11-kit/messages.c:81
+msgid "Insufficient memory available"
+msgstr "Недостатній об’єм пам’яті"
+
+#: p11-kit/messages.c:83
+msgid "The specified slot ID is not valid"
+msgstr "Вказаний ідентифікатор слоту не є коректним"
+
+#: p11-kit/messages.c:85
+msgid "Internal error"
+msgstr "Внутрішня помилка"
+
+#: p11-kit/messages.c:87
+msgid "The operation failed"
+msgstr "Не вдалося виконати дію"
+
+#: p11-kit/messages.c:89
+msgid "Invalid arguments"
+msgstr "Некоректні параметри"
+
+#: p11-kit/messages.c:91
+msgid "The module cannot create needed threads"
+msgstr "Модулеві не вдалося створити потрібні потоки обробки"
+
+#: p11-kit/messages.c:93
+msgid "The module cannot lock data properly"
+msgstr "Модулеві не вдалося заблокувати дані належним чином"
+
+#: p11-kit/messages.c:95
+msgid "The field is read-only"
+msgstr "Поле є придатним лише для читання"
+
+#: p11-kit/messages.c:97
+msgid "The field is sensitive and cannot be revealed"
+msgstr "Дані поля є конфіденційними, їх не можна розголошувати"
+
+#: p11-kit/messages.c:99
+msgid "The field is invalid or does not exist"
+msgstr "Вказано некоректну назву поля, такого поля не існує"
+
+#: p11-kit/messages.c:101
+msgid "Invalid value for field"
+msgstr "Некоректне значення поля"
+
+#: p11-kit/messages.c:103
+msgid "The data is not valid or unrecognized"
+msgstr "Дані є некоректними або непридатними до розпізнавання"
+
+#: p11-kit/messages.c:105
+msgid "The data is too long"
+msgstr "Дані є занадто об’ємними"
+
+#: p11-kit/messages.c:107
+msgid "An error occurred on the device"
+msgstr "На пристрої сталася помилка"
+
+#: p11-kit/messages.c:109
+msgid "Insufficient memory available on the device"
+msgstr "На пристрої недостатньо пам’яті"
+
+#: p11-kit/messages.c:111
+msgid "The device was removed or unplugged"
+msgstr "Пристрій було вилучено або від’єднано"
+
+#: p11-kit/messages.c:113
+msgid "The encrypted data is not valid or unrecognized"
+msgstr "Зашифровані дані є некоректними або непридатними до розпізнавання"
+
+#: p11-kit/messages.c:115
+msgid "The encrypted data is too long"
+msgstr "Зашифровані дані є занадто об’ємними"
+
+#: p11-kit/messages.c:117
+msgid "This operation is not supported"
+msgstr "Підтримки цієї дії не передбачено"
+
+#: p11-kit/messages.c:119
+msgid "The key is missing or invalid"
+msgstr "Не вказано ключа або вказано некоректний ключ"
+
+#: p11-kit/messages.c:121
+msgid "The key is the wrong size"
+msgstr "Розмір ключа є помилковим"
+
+#: p11-kit/messages.c:123
+msgid "The key is of the wrong type"
+msgstr "Тип ключа є помилковим"
+
+#: p11-kit/messages.c:125
+msgid "No key is needed"
+msgstr "Ключ не потрібен"
+
+#: p11-kit/messages.c:127
+msgid "The key is different than before"
+msgstr "Значення ключа відрізняється від попереднього"
+
+#: p11-kit/messages.c:129
+msgid "A key is needed"
+msgstr "Потрібен ключ"
+
+#: p11-kit/messages.c:131
+msgid "Cannot include the key in the digest"
+msgstr "Не можна включати ключ до контрольної суми"
+
+#: p11-kit/messages.c:133
+msgid "This operation cannot be done with this key"
+msgstr "Цю дію над цим ключем виконати неможливо"
+
+#: p11-kit/messages.c:135
+msgid "The key cannot be wrapped"
+msgstr "Ключ не може бути загорнуто"
+
+#: p11-kit/messages.c:137
+msgid "Cannot export this key"
+msgstr "Експортування цього ключа неможливе"
+
+#: p11-kit/messages.c:139
+msgid "The crypto mechanism is invalid or unrecognized"
+msgstr "Некоректний або непридатний механізм шифрування"
+
+#: p11-kit/messages.c:141
+msgid "The crypto mechanism has an invalid argument"
+msgstr "Механізмові шифрування передано некоректний аргумент"
+
+#: p11-kit/messages.c:143
+msgid "The object is missing or invalid"
+msgstr "Не вказано об’єкт або вказано некоректний об’єкт"
+
+#: p11-kit/messages.c:145
+msgid "Another operation is already taking place"
+msgstr "Вже виконується інша дія"
+
+#: p11-kit/messages.c:147
+msgid "No operation is taking place"
+msgstr "Не виконується жодної дії"
+
+#: p11-kit/messages.c:149
+msgid "The password or PIN is incorrect"
+msgstr "Помилковий пароль або PIN-код"
+
+#: p11-kit/messages.c:151
+msgid "The password or PIN is invalid"
+msgstr "Некоректний пароль або PIN-код"
+
+#: p11-kit/messages.c:153
+msgid "The password or PIN is of an invalid length"
+msgstr "Довжина пароля або PIN-коду є некоректною"
+
+#: p11-kit/messages.c:155
+msgid "The password or PIN has expired"
+msgstr "Строк дії пароля або PIN-коду вичерпано"
+
+#: p11-kit/messages.c:157
+msgid "The password or PIN is locked"
+msgstr "Пароль або PIN-код заблоковано"
+
+#: p11-kit/messages.c:159
+msgid "The session is closed"
+msgstr "Сеанс закрито"
+
+#: p11-kit/messages.c:161
+msgid "Too many sessions are active"
+msgstr "У активному режимі працює забагато сеансів"
+
+#: p11-kit/messages.c:163
+msgid "The session is invalid"
+msgstr "Некоректний сеанс"
+
+#: p11-kit/messages.c:165
+msgid "The session is read-only"
+msgstr "Сеанс у режимі лише читання"
+
+#: p11-kit/messages.c:167
+msgid "An open session exists"
+msgstr "Виявлено відкритий сеанс"
+
+#: p11-kit/messages.c:169
+msgid "A read-only session exists"
+msgstr "Виявлено сеанс роботи у режимі лише читання"
+
+#: p11-kit/messages.c:171
+msgid "An administrator session exists"
+msgstr "Виявлено сеанс роботи від імені адміністратора"
+
+#: p11-kit/messages.c:173
+msgid "The signature is bad or corrupted"
+msgstr "Помилковий або пошкоджений підпис"
+
+#: p11-kit/messages.c:175
+msgid "The signature is unrecognized or corrupted"
+msgstr "Підпис непридатний до розпізнавання або підпис пошкоджено"
+
+#: p11-kit/messages.c:177
+msgid "Certain required fields are missing"
+msgstr "Деякі з полів, які мало бути заповнено, є порожніми"
+
+#: p11-kit/messages.c:179
+msgid "Certain fields have invalid values"
+msgstr "У деяких з полів містяться некоректні значення"
+
+#: p11-kit/messages.c:181
+msgid "The device is not present or unplugged"
+msgstr "Пристрою не виявлено або пристрій було від’єднано"
+
+#: p11-kit/messages.c:183
+msgid "The device is invalid or unrecognizable"
+msgstr "Пристрій є некоректним або непридатним до розпізнавання"
+
+#: p11-kit/messages.c:185
+msgid "The device is write protected"
+msgstr "Пристрій захищено від запису"
+
+#: p11-kit/messages.c:187
+msgid "Cannot import because the key is invalid"
+msgstr "Не вдалося імпортувати, оскільки ключ є некоректним"
+
+#: p11-kit/messages.c:189
+msgid "Cannot import because the key is of the wrong size"
+msgstr "Не вдалося імпортувати, оскільки ключ має помилковий розмір"
+
+#: p11-kit/messages.c:191
+msgid "Cannot import because the key is of the wrong type"
+msgstr "Не вдалося імпортувати, оскільки ключ належить до помилкового типу"
+
+#: p11-kit/messages.c:193
+msgid "You are already logged in"
+msgstr "Ви вже увійшли до облікового запису"
+
+#: p11-kit/messages.c:195
+msgid "No user has logged in"
+msgstr "До системи не увійшов жоден користувач"
+
+#: p11-kit/messages.c:197
+msgid "The user's password or PIN is not set"
+msgstr "Не встановлено пароль або PIN-код користувача"
+
+#: p11-kit/messages.c:199
+msgid "The user is of an invalid type"
+msgstr "Запис користувача належить до некоректного типу"
+
+#: p11-kit/messages.c:201
+msgid "Another user is already logged in"
+msgstr "До системи вже увійшов інший користувач"
+
+#: p11-kit/messages.c:203
+msgid "Too many users of different types are logged in"
+msgstr "До системи увійшло надто багато користувачів різних типів"
+
+#: p11-kit/messages.c:205
+msgid "Cannot import an invalid key"
+msgstr "Імпортування некоректних ключів неможливе"
+
+#: p11-kit/messages.c:207
+msgid "Cannot import a key of the wrong size"
+msgstr "Імпортування ключів з помилковими розмірами неможливе"
+
+#: p11-kit/messages.c:209
+msgid "Cannot export because the key is invalid"
+msgstr "Не вдалося експортувати, оскільки ключ є некоректним"
+
+#: p11-kit/messages.c:211
+msgid "Cannot export because the key is of the wrong size"
+msgstr "Не вдалося експортувати, оскільки ключ має помилковий розмір"
+
+#: p11-kit/messages.c:213
+msgid "Cannot export because the key is of the wrong type"
+msgstr "Не вдалося експортувати, оскільки ключ належить до помилкового типу"
+
+#: p11-kit/messages.c:215
+msgid "Unable to initialize the random number generator"
+msgstr "Не вдалося ініціалізувати засіб створення псевдовипадкових чисел"
+
+#: p11-kit/messages.c:217
+msgid "No random number generator available"
+msgstr "Не виявлено жодного доступного засобу створення псевдовипадкових чисел"
+
+#: p11-kit/messages.c:219
+msgid "The crypto mechanism has an invalid parameter"
+msgstr "Механізмові шифрування передано некоректний параметр"
+
+#: p11-kit/messages.c:221
+msgid "Not enough space to store the result"
+msgstr "Недостатньо простору для зберігання результату"
+
+#: p11-kit/messages.c:223
+msgid "The saved state is invalid"
+msgstr "Збережений стан є некоректним"
+
+#: p11-kit/messages.c:225
+msgid "The information is sensitive and cannot be revealed"
+msgstr "Дані є конфіденційними, їх не можна розголошувати"
+
+#: p11-kit/messages.c:227
+msgid "The state cannot be saved"
+msgstr "Не вдалося зберегти стан"
+
+#: p11-kit/messages.c:229
+msgid "The module has not been initialized"
+msgstr "Модуль ще не було інціалізовано"
+
+#: p11-kit/messages.c:231
+msgid "The module has already been initialized"
+msgstr "Модуль вже було ініціалізовано"
+
+#: p11-kit/messages.c:233
+msgid "Cannot lock data"
+msgstr "Не вдалося заблокувати дані"
+
+#: p11-kit/messages.c:235
+msgid "The data cannot be locked"
+msgstr "Не вдалося заблокувати дані"
+
+#: p11-kit/messages.c:237
+msgid "The signature request was rejected by the user"
+msgstr "Користувач відмовив у задоволенні запиту щодо підписування"
+
+#: p11-kit/messages.c:240
+msgid "Unknown error"
+msgstr "Невідома помилка"

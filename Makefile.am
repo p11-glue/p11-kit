@@ -57,3 +57,6 @@ upload-release: $(DIST_ARCHIVES)
 EXTRA_DIST = \
 	config.rpath \
 	HACKING
+
+transifex:
+	sh build/tx-update

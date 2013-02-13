@@ -3,345 +3,344 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
-# Eerik Uusi-Illikainen https://launchpad.net/~ekiuusi-4, 2012.
-# Jiri Grönroos <jiri.gronroos@iki.fi>, 2012.
-# Timo Jyrinki <timo.jyrinki@iki.fi>, 2012.
+# Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
 "glue\n"
 "POT-Creation-Date: 2013-02-12 16:23+0100\n"
-"PO-Revision-Date: 2013-02-13 17:07+0000\n"
-"Last-Translator: Stef Walter <stefwalter@gmail.com>\n"
-"Language-Team: Finnish (http://www.transifex.com/projects/p/freedesktop/"
-"language/fi/)\n"
-"Language: fi\n"
+"PO-Revision-Date: 2013-02-10 17:38+0000\n"
+"Last-Translator: Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>\n"
+"Language-Team: Latvian (http://www.transifex.com/projects/p/freedesktop/"
+"language/lv/)\n"
+"Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
+"2);\n"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr "Toiminto keskeytettiin"
+msgstr "Darbība tika atcelta"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr "Muisti ei riitÃ¤"
+msgstr "Nav pietiekami daudz brīvas atmiņas"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr "Annettu lohkotunniste ei ole kelvollinen"
+msgstr "Norādītais slota ID nav derīgs"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr "SisÃ¤inen virhe"
+msgstr "Iekšēja kļūda"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr "Toiminto epÃ¤onnistui"
+msgstr "Darbība cieta neveiksmi"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr "VirheellisiÃ¤ argumentteja"
+msgstr "Nederīgi parametri"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr "Moduuli ei voi luoda vaadittavia sÃ¤ikeitÃ¤"
+msgstr "Modulis nevar izveidot vajadzīgos pavedienus"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr "Moduuli ei voi lukita tietoa kunnolla"
+msgstr "Modulis nevar noslēgt datu īpašību"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr "KenttÃ¤ on vain luettavissa"
+msgstr "Lauks ir tikai lasāms"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr "KenttÃ¤ on arkaluonteinen eikÃ¤ sitÃ¤ voida paljastaa"
+msgstr "Lauks ir sensitīvs un to nevar atklāt"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr "KenttÃ¤ on virheellinen tai sitÃ¤ ei ole olemassa"
+msgstr "Lauks ir nederīgs vai arī neeksistē"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr "KentÃ¤n arvo on virheellinen"
+msgstr "Nederīga vērtība vai lauks"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr "Tieto ei ole kelvollista tai sitÃ¤ ei voida tunnistaa"
+msgstr "Dati nav derīgi vai arī nav atpazīti"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr "Tieto on liian pitkÃ¤"
+msgstr "Pārāk daudz datu"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr "Tapahtui virhe laitteella"
+msgstr "Uz ierīces gadījās kļūda"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Laitteen muistimÃ¤Ã¤rÃ¤ liian vÃ¤hÃ¤inen"
+msgstr "Uz ierīces nepietiek brīvās atmiņas"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr "Laite poistettiin tai irrotettiin"
+msgstr "Ierīce tika izņemta vai atvienota"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr "Salattu tieto ei ole kelvollista tai sitÃ¤ ei voida tunnistaa"
+msgstr "Šifrētie dati nav derīgi vai nav atpazīti"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr "Salattu tieto on liian pitkÃ¤"
+msgstr "Šifrētie dati ir pārāk daudz"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr "TÃ¤mÃ¤ toiminto ei ole tuettu"
+msgstr "Darbība nav atbalstīta"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr "Avain puuttuu tai on virheellinen"
+msgstr "Trūkst vai nav derīga atslēga"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr "Avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Atslēgai ir nepareizs izmērs"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr "Avain on vÃ¤Ã¤rÃ¤Ã¤ tyyppiÃ¤"
+msgstr "Atslēgai ir nepareizs tips"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr "Avainta ei vaadita"
+msgstr "Atslēgas nav vajadzīgas"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr "Avain on eri kuin aikaisempi"
+msgstr "Atslēga ir citādāka, kā iepriekš"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr "Avain vaaditaan"
+msgstr "Ir nepieciešama atslēga"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "Avainta ei voi sisÃ¤llyttÃ¤Ã¤ tiivisteeseen"
+msgstr "Īssavilkumā nevar iekļaut atslēgu"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr "TÃ¤tÃ¤ toimintoa ei voi tehdÃ¤ tÃ¤llÃ¤ avaimella"
+msgstr "Ar šo atslēgu nevar izpildīt šo darbību"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr "Avainta ei voi rivittÃ¤Ã¤"
+msgstr "Atslēgu nevar ietīt"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr "TÃ¤tÃ¤ avainta ei voi viedÃ¤"
+msgstr "Nevar eksportēt šo atslēgu"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "Salausmekanismi on virheellinen tai sitÃ¤ ei voida tunnistaa"
+msgstr "Šifrēšanas mehānisms ir nederīgs vai nav atpazīts"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr "Salausmekanismissa on virheellinen argumentti"
+msgstr "Šifrēšanas mehānismam ir nederīgi parametri"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr "Kohde puuttuu tai on virheellinen"
+msgstr "Trūkst objekta, vai arī tas ir nederīgs"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr "Toinen toiminto on jo kÃ¤ynnissÃ¤"
+msgstr "Jau notiek cita darbība"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr "YhtÃ¤Ã¤n toimintoa ei ole kÃ¤ynnissÃ¤"
+msgstr "Pašlaik nenotiek neviena darbība"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr "Salasana tai PIN-koodi on vÃ¤Ã¤rÃ¤"
+msgstr "Parole vai PIN nav pareiza"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr "Salasana tai PIN-koodi on virheellinen"
+msgstr "Parole vai PIN nav derīga"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr "Salasanan tai PIN-koodin pituus on virheellinen"
+msgstr "Parolei vai PIN ir nederīgs garums"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr "Salasana tai PIN-koodi on vanhentunut"
+msgstr "Parolei vai PIN ir beidzies termiņš"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr "Salasana tai PIN-koodin on lukittu"
+msgstr "Parole vai PIN ir bloķēta"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr "Istunto on suljettu"
+msgstr "Sesija ir aizvērta"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr "Liian monta aktiivista istuntoa"
+msgstr "Ir pārāk daudz aktīvu sesiju"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr "Istunto on virheellinen"
+msgstr "Sesija nav derīga"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr "Istunto on vain luettavissa"
+msgstr "Sesija ir tikai lasāma"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr "Avoin istunto on olemassa"
+msgstr "Eksistē atvērta sesija"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr "Lukutilassa oleva istunto on olemassa"
+msgstr "Eksistē tikai lasāma sesija"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr "YllÃ¤pitÃ¤jÃ¤n istunto on olemassa"
+msgstr "Eksistē administratora sesija"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr "Allekirjoitus on virheellinen tai vioittunut"
+msgstr "Paraksts ir slikts vai bojāts"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr "Allekirjoitusta ei voida tunnistaa tai se on vioittunut"
+msgstr "Paraksts ir neatpazīts vai bojāts"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr "Jotkut vaadituista kentistÃ¤ puuttuvat"
+msgstr "Trūkst noteikti pieprasītie lauki"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr "Jotkin kentÃ¤t sisÃ¤ltÃ¤vÃ¤t virheellisia arvoja"
+msgstr "Noteiktiem laukiem ir nederīgas vērtības"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr "Laite ei ole saatavilla tai se on irrotettu"
+msgstr "Ierīce nav pievienota"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr "Laite on virheellinen tai sitÃ¤ ei voida tunnistaa"
+msgstr "Ierīce ir nederīga vai nav atpazīta"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr "Laite on kirjoitussuojattu"
+msgstr "Ierīcē nevar rakstīt"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr "Tuonti epÃ¤onnistui koska avain on virheellinen"
+msgstr "Nevar importēt, jo atslēga nav derīga"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr "Tuonti epÃ¤onnistui koska avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Nevar importēt, jo atslēgai ir nepareizs izmērs"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr "Tuonti epÃ¤onnistui koska avain on vÃ¤Ã¤rÃ¤Ã¤ tyyppiÃ¤"
+msgstr "Nevar importēt, jo atslēgai ir nepareizs tips"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr "Olet jo kirjautuneena sisÃ¤Ã¤n"
+msgstr "Jūs jau esat ierakstījies"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr "KÃ¤yttÃ¤jiÃ¤ ei ole kirjautuneena sisÃ¤Ã¤n"
+msgstr "Neviens lietotājs nav ierakstījies"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr "KÃ¤yttÃ¤jÃ¤n salasanaa tai PIN-koodia ei ole asetettu"
+msgstr "Lietotāja parole vai PIN nav iestatīta"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr "KÃ¤yttÃ¤jÃ¤ on vÃ¤Ã¤rÃ¤n tyyppinen"
+msgstr "Lietotājam ir nederīgs tips"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr "Toinen kÃ¤yttÃ¤jÃ¤ on jo kirjautunut sisÃ¤Ã¤n"
+msgstr "Kāds cits lietotājs jau ir ierakstījies"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr "Liian monta eri tyyppistÃ¤ kÃ¤yttÃ¤jÃ¤Ã¤ on kirjautuneena sisÃ¤Ã¤n"
+msgstr "Ir ierakstījušies pārāk daudz dažādu veidu lietotāji"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr "VirheellistÃ¤ avainta ei voida tuoda"
+msgstr "Nevar importēt nederīgu atslēgu"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "VÃ¤Ã¤rÃ¤n kokoista avainta ei voida tuoda"
+msgstr "Nevar eksportēt, jo atslēgai ir nepareizs izmērs"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr "Vienti ei onnistu koska avain on virheellinen"
+msgstr "Nevar eksportēt, jo atslēga ir nederīga"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Vienti ei onnistu koska avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Nevar eksportēt, jo atslēgai ir nepareizs izmērs"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr "Vienti ei onnistu koska avain on vÃ¤Ã¤rÃ¤n tyyppinen"
+msgstr "Nevar eksportēt, jo atslēgai ir nepareizs tips"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr "Satunnaislukugeneraattoria ei voida alustaa"
+msgstr "Nevar inicializēt nejaušo skaitļu ģeneratoru"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr "Satunnaislukugeneraattoria ei ole saatavilla"
+msgstr "Nav pieejams nejaušo skaitļu ģenerators"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr "Salausmekanismin parametri on virheellinen"
+msgstr "Šifrēšanas mehānismam ir nederīgs parametrs"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr "Liian vÃ¤hÃ¤n tilaa tulosten tallentamiseen"
+msgstr "Nepietiek vietas, lai saglabātu rezultātu"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr "Tallennettu tila on virheellinen"
+msgstr "Saglabātais stāvoklis nav derīgs"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr "Tieto on luottamuksellista eikÃ¤ sitÃ¤ voida paljastaa"
+msgstr "Informācija ir sensitīva un to nevar atklāt"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr "Tilaa ei voida tallentaa"
+msgstr "Stāvokli nevar saglabāt"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr "Moduulia ei ole alustettu"
+msgstr "Modulis nav inicializēts"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr "Moduuli on jo alustettu"
+msgstr "Modulis jau ir inicializēts"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr "Tietoa ei voida lukita"
+msgstr "Nevar noslēgt datus"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr "Tietoa ei voida lukita"
+msgstr "Datus nevar noslēgt"
 
 #: p11-kit/messages.c:237
 msgid "The signature request was rejected by the user"
-msgstr "KÃ¤yttÃ¤jÃ¤ ei hyvÃ¤ksynyt allekirjoituspyyntÃ¶Ã¤"
+msgstr "Lietotājs noraidīja paraksta pieprasījumu"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr "Tuntematon virhe"
+msgstr "Nezināma kļūda"
