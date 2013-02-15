@@ -44,6 +44,7 @@
 #include "message.h"
 #include "p11-kit.h"
 #include "private.h"
+#include "proxy.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -258,6 +259,7 @@ __attribute__((destructor))
 void
 _p11_kit_fini (void)
 {
+	p11_proxy_module_cleanup ();
 	p11_library_uninit ();
 }
 
@@ -280,6 +282,7 @@ DllMain (HINSTANCE instance,
 		p11_library_thread_cleanup ();
 		break;
 	case DLL_PROCESS_DETACH:
+		p11_proxy_module_cleanup ();
 		p11_library_uninit ();
 		break;
 	default:

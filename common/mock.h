@@ -87,6 +87,17 @@ enum {
 
 	MOCK_SLOT_ONE_ID = 52,
 	MOCK_SLOT_TWO_ID = 134,
+
+	MOCK_SLOTS_PRESENT = 1,
+	MOCK_SLOTS_ALL = 2,
+};
+
+static const CK_INFO MOCK_INFO = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
+	"MOCK MANUFACTURER               ",
+	0,
+	"MOCK LIBRARY                    ",
+	{ 45, 145 }
 };
 
 extern       CK_FUNCTION_LIST                            mock_module;

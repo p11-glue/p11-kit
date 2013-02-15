@@ -29,7 +29,7 @@ MODULE_SRCS = \
 	pkcs11.h \
 	pin.c \
 	pkcs11.h \
-	proxy.c \
+	proxy.c proxy.h \
 	private.h \
 	messages.c \
 	uri.c \

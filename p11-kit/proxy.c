@@ -35,6 +35,7 @@
 
 #include "config.h"
 
+#include "compat.h"
 #define P11_DEBUG_FLAG P11_DEBUG_PROXY
 #define CRYPTOKI_EXPORTS
 
@@ -44,8 +45,11 @@
 #include "message.h"
 #include "modules.h"
 #include "pkcs11.h"
+#include "pkcs11x.h"
 #include "p11-kit.h"
 #include "private.h"
+#include "proxy.h"
+#include "virtual.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -77,11 +81,19 @@ typedef struct {
 	Mapping *mappings;
 	unsigned int n_mappings;
 	p11_dict *sessions;
-	CK_ULONG last_handle;
-	CK_FUNCTION_LIST_PTR *modules;
+	CK_FUNCTION_LIST **modules;
 } Proxy;
 
-static Proxy *px = NULL;
+typedef struct _State {
+	p11_virtual virt;
+	struct _State *next;
+	CK_FUNCTION_LIST *wrapped;
+	CK_ULONG last_handle;
+	Proxy *px;
+} State;
+
+static State *all_instances = NULL;
+static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, FIRST_HANDLE, NULL };
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
@@ -93,10 +105,12 @@ static Proxy *px = NULL;
  */
 
 static CK_RV
-map_slot_unlocked (CK_SLOT_ID slot, Mapping *mapping)
+map_slot_unlocked (Proxy *px,
+                   CK_SLOT_ID slot,
+                   Mapping *mapping)
 {
 	assert (px != NULL);
-	assert (mapping);
+	assert (mapping != NULL);
 
 	if (slot < MAPPING_OFFSET)
 		return CKR_SLOT_ID_INVALID;
@@ -112,18 +126,21 @@ map_slot_unlocked (CK_SLOT_ID slot, Mapping *mapping)
 }
 
 static CK_RV
-map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
+map_slot_to_real (Proxy *px,
+                  CK_SLOT_ID_PTR slot,
+                  Mapping *mapping)
 {
 	CK_RV rv;
 
-	assert (mapping);
+	assert (px != NULL);
+	assert (mapping != NULL);
 
 	p11_lock ();
 
 		if (!px)
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		else
-			rv = map_slot_unlocked (*slot, mapping);
+			rv = map_slot_unlocked (px, *slot, mapping);
 		if (rv == CKR_OK)
 			*slot = mapping->real_slot;
 
@@ -133,13 +150,17 @@ map_slot_to_real (CK_SLOT_ID_PTR slot, Mapping *mapping)
 }
 
 static CK_RV
-map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *session)
+map_session_to_real (Proxy *px,
+                     CK_SESSION_HANDLE_PTR handle,
+                     Mapping *mapping,
+                     Session *session)
 {
 	CK_RV rv = CKR_OK;
 	Session *sess;
 
-	assert (handle);
-	assert (mapping);
+	assert (px != NULL);
+	assert (handle != NULL);
+	assert (mapping != NULL);
 
 	p11_lock ();
 
@@ -150,7 +171,7 @@ map_session_to_real (CK_SESSION_HANDLE_PTR handle, Mapping *mapping, Session *se
 			sess = p11_dict_get (px->sessions, handle);
 			if (sess != NULL) {
 				*handle = sess->real_session;
-				rv = map_slot_unlocked (sess->wrap_slot, mapping);
+				rv = map_slot_unlocked (px, sess->wrap_slot, mapping);
 				if (session != NULL)
 					memcpy (session, sess, sizeof (Session));
 			} else {
@@ -175,9 +196,11 @@ proxy_free (Proxy *py)
 }
 
 void
-_p11_kit_proxy_after_fork (void)
+p11_proxy_after_fork (void)
 {
-	Proxy *py;
+	p11_array *array;
+	State *state;
+	unsigned int i;
 
 	/*
 	 * After a fork the callers are supposed to call C_Initialize and all.
@@ -185,24 +208,33 @@ _p11_kit_proxy_after_fork (void)
 	 * up any mappings and all
 	 */
 
+	array = p11_array_new (NULL);
+
 	p11_lock ();
 
-		py = px;
-		px = NULL;
+		if (global.px)
+			p11_array_push (array, global.px);
+		global.px = NULL;
+
+		for (state = all_instances; state != NULL; state = state->next) {
+			if (state->px)
+				p11_array_push (array, state->px);
+			state->px = NULL;
+		}
 
 	p11_unlock ();
 
-	if (py) {
-		p11_kit_modules_release (py->modules);
-		py->modules = NULL;
-		proxy_free (py);
-	}
+	for (i = 0; i < array->num; i++)
+		proxy_free (array->elem[i]);
+	p11_array_free (array);
 }
 
 static CK_RV
-proxy_C_Finalize (CK_VOID_PTR reserved)
+proxy_C_Finalize (CK_X_FUNCTION_LIST *self,
+                  CK_VOID_PTR reserved)
 {
 	Proxy *py = NULL;
+	State *state = (State *)self;
 	CK_RV rv = CKR_OK;
 
 	p11_debug ("in");
@@ -215,11 +247,11 @@ proxy_C_Finalize (CK_VOID_PTR reserved)
 	} else {
 		p11_lock ();
 
-			if (!px) {
+			if (!state->px) {
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-			} else if (px->refs-- == 1) {
-				py = px;
-				px = NULL;
+			} else if (state->px->refs-- == 1) {
+				py = state->px;
+				state->px = NULL;
 			}
 
 		p11_unlock ();
@@ -312,8 +344,10 @@ proxy_create (Proxy **res)
 }
 
 static CK_RV
-proxy_C_Initialize (CK_VOID_PTR init_args)
+proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
+                    CK_VOID_PTR init_args)
 {
+	State *state = (State *)self;
 	bool initialize = false;
 	Proxy *py;
 	CK_RV rv;
@@ -326,10 +360,10 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 
 	p11_lock ();
 
-		if (px == NULL)
+		if (state->px == NULL)
 			initialize = true;
 		else
-			px->refs++;
+			state->px->refs++;
 
 	p11_unlock ();
 
@@ -346,8 +380,8 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 
 	p11_lock ();
 
-		if (px == NULL) {
-			px = py;
+		if (state->px == NULL) {
+			state->px = py;
 			py = NULL;
 		}
 
@@ -359,8 +393,10 @@ proxy_C_Initialize (CK_VOID_PTR init_args)
 }
 
 static CK_RV
-proxy_C_GetInfo (CK_INFO_PTR info)
+proxy_C_GetInfo (CK_X_FUNCTION_LIST *self,
+                 CK_INFO_PTR info)
 {
+	State *state = (State *)self;
 	CK_RV rv = CKR_OK;
 
 	p11_library_init_once ();
@@ -369,7 +405,7 @@ proxy_C_GetInfo (CK_INFO_PTR info)
 
 	p11_lock ();
 
-		if (!px)
+		if (!state->px)
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
 	p11_unlock ();
@@ -377,6 +413,7 @@ proxy_C_GetInfo (CK_INFO_PTR info)
 	if (rv != CKR_OK)
 		return rv;
 
+	memset (info, 0, sizeof (CK_INFO));
 	info->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
 	info->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
 	info->libraryVersion.major = LIBRARY_VERSION_MAJOR;
@@ -388,19 +425,12 @@ proxy_C_GetInfo (CK_INFO_PTR info)
 }
 
 static CK_RV
-proxy_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
+proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
+                     CK_BBOOL token_present,
+                     CK_SLOT_ID_PTR slot_list,
+                     CK_ULONG_PTR count)
 {
-	/* Can be called before C_Initialize */
-
-	return_val_if_fail (list != NULL, CKR_ARGUMENTS_BAD);
-	*list = &_p11_proxy_function_list;
-	return CKR_OK;
-}
-
-static CK_RV
-proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
-                       CK_ULONG_PTR count)
-{
+	State *state = (State *)self;
 	CK_SLOT_INFO info;
 	Mapping *mapping;
 	CK_ULONG index;
@@ -411,14 +441,14 @@ proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 
 	p11_lock ();
 
-		if (!px->mappings) {
+		if (!state->px) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			index = 0;
 
 			/* Go through and build up a map */
-			for (i = 0; i < px->n_mappings; ++i) {
-				mapping = &px->mappings[i];
+			for (i = 0; i < state->px->n_mappings; ++i) {
+				mapping = &state->px->mappings[i];
 
 				/* Skip ones without a token if requested */
 				if (token_present) {
@@ -448,84 +478,109 @@ proxy_C_GetSlotList (CK_BBOOL token_present, CK_SLOT_ID_PTR slot_list,
 }
 
 static CK_RV
-proxy_C_GetSlotInfo (CK_SLOT_ID id, CK_SLOT_INFO_PTR info)
+proxy_C_GetSlotInfo (CK_X_FUNCTION_LIST *self,
+                     CK_SLOT_ID id,
+                     CK_SLOT_INFO_PTR info)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetSlotInfo) (id, info);
 }
 
 static CK_RV
-proxy_C_GetTokenInfo (CK_SLOT_ID id, CK_TOKEN_INFO_PTR info)
+proxy_C_GetTokenInfo (CK_X_FUNCTION_LIST *self,
+                      CK_SLOT_ID id,
+                      CK_TOKEN_INFO_PTR info)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetTokenInfo) (id, info);
 }
 
 static CK_RV
-proxy_C_GetMechanismList (CK_SLOT_ID id, CK_MECHANISM_TYPE_PTR mechanism_list,
+proxy_C_GetMechanismList (CK_X_FUNCTION_LIST *self,
+                          CK_SLOT_ID id,
+                          CK_MECHANISM_TYPE_PTR mechanism_list,
                           CK_ULONG_PTR count)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetMechanismList) (id, mechanism_list, count);
 }
 
 static CK_RV
-proxy_C_GetMechanismInfo (CK_SLOT_ID id, CK_MECHANISM_TYPE type,
+proxy_C_GetMechanismInfo (CK_X_FUNCTION_LIST *self,
+                          CK_SLOT_ID id,
+                          CK_MECHANISM_TYPE type,
                           CK_MECHANISM_INFO_PTR info)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetMechanismInfo) (id, type, info);
 }
 
 static CK_RV
-proxy_C_InitToken (CK_SLOT_ID id, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len, CK_UTF8CHAR_PTR label)
+proxy_C_InitToken (CK_X_FUNCTION_LIST *self,
+                   CK_SLOT_ID id,
+                   CK_UTF8CHAR_PTR pin,
+                   CK_ULONG pin_len,
+                   CK_UTF8CHAR_PTR label)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_InitToken) (id, pin, pin_len, label);
 }
 
 static CK_RV
-proxy_C_WaitForSlotEvent (CK_FLAGS flags, CK_SLOT_ID_PTR slot, CK_VOID_PTR reserved)
+proxy_C_WaitForSlotEvent (CK_X_FUNCTION_LIST *self,
+                          CK_FLAGS flags,
+                          CK_SLOT_ID_PTR slot,
+                          CK_VOID_PTR reserved)
 {
 	return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 static CK_RV
-proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
-                     CK_NOTIFY callback, CK_SESSION_HANDLE_PTR handle)
+proxy_C_OpenSession (CK_X_FUNCTION_LIST *self,
+                     CK_SLOT_ID id,
+                     CK_FLAGS flags,
+                     CK_VOID_PTR user_data,
+                     CK_NOTIFY callback,
+                     CK_SESSION_HANDLE_PTR handle)
 {
+	State *state = (State *)self;
 	Session *sess;
 	Mapping map;
 	CK_RV rv;
 
 	return_val_if_fail (handle != NULL, CKR_ARGUMENTS_BAD);
 
-	rv = map_slot_to_real (&id, &map);
+	rv = map_slot_to_real (state->px, &id, &map);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -534,7 +589,7 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 	if (rv == CKR_OK) {
 		p11_lock ();
 
-			if (!px) {
+			if (!state->px) {
 				/*
 				 * The underlying module should have returned an error, so this
 				 * code should never be reached with properly behaving modules.
@@ -547,8 +602,8 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 				sess = calloc (1, sizeof (Session));
 				sess->wrap_slot = map.wrap_slot;
 				sess->real_session = *handle;
-				sess->wrap_session = ++px->last_handle; /* TODO: Handle wrapping, and then collisions */
-				p11_dict_set (px->sessions, &sess->wrap_session, sess);
+				sess->wrap_session = ++state->last_handle; /* TODO: Handle wrapping, and then collisions */
+				p11_dict_set (state->px->sessions, &sess->wrap_session, sess);
 				*handle = sess->wrap_session;
 			}
 
@@ -559,14 +614,16 @@ proxy_C_OpenSession (CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR user_data,
 }
 
 static CK_RV
-proxy_C_CloseSession (CK_SESSION_HANDLE handle)
+proxy_C_CloseSession (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle)
 {
+	State *state = (State *)self;
 	CK_SESSION_HANDLE key;
 	Mapping map;
 	CK_RV rv;
 
 	key = handle;
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	rv = (map.funcs->C_CloseSession) (handle);
@@ -574,8 +631,8 @@ proxy_C_CloseSession (CK_SESSION_HANDLE handle)
 	if (rv == CKR_OK) {
 		p11_lock ();
 
-			if (px)
-				p11_dict_remove (px->sessions, &key);
+			if (state->px)
+				p11_dict_remove (state->px->sessions, &key);
 
 		p11_unlock ();
 	}
@@ -584,8 +641,10 @@ proxy_C_CloseSession (CK_SESSION_HANDLE handle)
 }
 
 static CK_RV
-proxy_C_CloseAllSessions (CK_SLOT_ID id)
+proxy_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
+                          CK_SLOT_ID id)
 {
+	State *state = (State *)self;
 	CK_SESSION_HANDLE_PTR to_close;
 	CK_RV rv = CKR_OK;
 	Session *sess;
@@ -594,15 +653,15 @@ proxy_C_CloseAllSessions (CK_SLOT_ID id)
 
 	p11_lock ();
 
-		if (!px) {
+		if (!state->px) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
-			assert (px->sessions);
-			to_close = calloc (sizeof (CK_SESSION_HANDLE), p11_dict_size (px->sessions));
+			assert (state->px->sessions != NULL);
+			to_close = calloc (sizeof (CK_SESSION_HANDLE), p11_dict_size (state->px->sessions));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {
-				p11_dict_iterate (px->sessions, &iter);
+				p11_dict_iterate (state->px->sessions, &iter);
 				count = 0;
 				while (p11_dict_next (&iter, NULL, (void**)&sess)) {
 					if (sess->wrap_slot == id && to_close)
@@ -617,46 +676,53 @@ proxy_C_CloseAllSessions (CK_SLOT_ID id)
 		return rv;
 
 	for (i = 0; i < count; ++i)
-		proxy_C_CloseSession (to_close[i]);
+		proxy_C_CloseSession (self, to_close[i]);
 
 	free (to_close);
 	return CKR_OK;
 }
 
 static CK_RV
-proxy_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
+proxy_C_GetFunctionStatus (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetFunctionStatus) (handle);
 }
 
 static CK_RV
-proxy_C_CancelFunction (CK_SESSION_HANDLE handle)
+proxy_C_CancelFunction (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE handle)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_CancelFunction) (handle);
 }
 
 static CK_RV
-proxy_C_GetSessionInfo (CK_SESSION_HANDLE handle, CK_SESSION_INFO_PTR info)
+proxy_C_GetSessionInfo (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE handle,
+                        CK_SESSION_INFO_PTR info)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
 	if (info == NULL)
 		return CKR_ARGUMENTS_BAD;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -668,12 +734,16 @@ proxy_C_GetSessionInfo (CK_SESSION_HANDLE handle, CK_SESSION_INFO_PTR info)
 }
 
 static CK_RV
-proxy_C_InitPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len)
+proxy_C_InitPIN (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE handle,
+                 CK_UTF8CHAR_PTR pin,
+                 CK_ULONG pin_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -681,13 +751,18 @@ proxy_C_InitPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len
 }
 
 static CK_RV
-proxy_C_SetPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR old_pin, CK_ULONG old_pin_len,
-                CK_UTF8CHAR_PTR new_pin, CK_ULONG new_pin_len)
+proxy_C_SetPIN (CK_X_FUNCTION_LIST *self,
+                CK_SESSION_HANDLE handle,
+                CK_UTF8CHAR_PTR old_pin,
+                CK_ULONG old_pin_len,
+                CK_UTF8CHAR_PTR new_pin,
+                CK_ULONG new_pin_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -695,39 +770,51 @@ proxy_C_SetPIN (CK_SESSION_HANDLE handle, CK_UTF8CHAR_PTR old_pin, CK_ULONG old_
 }
 
 static CK_RV
-proxy_C_GetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state, CK_ULONG_PTR operation_state_len)
+proxy_C_GetOperationState (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_BYTE_PTR operation_state,
+                           CK_ULONG_PTR operation_state_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetOperationState) (handle, operation_state, operation_state_len);
 }
 
 static CK_RV
-proxy_C_SetOperationState (CK_SESSION_HANDLE handle, CK_BYTE_PTR operation_state,
-                           CK_ULONG operation_state_len, CK_OBJECT_HANDLE encryption_key,
+proxy_C_SetOperationState (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_BYTE_PTR operation_state,
+                           CK_ULONG operation_state_len,
+                           CK_OBJECT_HANDLE encryption_key,
                            CK_OBJECT_HANDLE authentication_key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SetOperationState) (handle, operation_state, operation_state_len, encryption_key, authentication_key);
 }
 
 static CK_RV
-proxy_C_Login (CK_SESSION_HANDLE handle, CK_USER_TYPE user_type,
-               CK_UTF8CHAR_PTR pin, CK_ULONG pin_len)
+proxy_C_Login (CK_X_FUNCTION_LIST *self,
+               CK_SESSION_HANDLE handle,
+               CK_USER_TYPE user_type,
+               CK_UTF8CHAR_PTR pin,
+               CK_ULONG pin_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -735,25 +822,31 @@ proxy_C_Login (CK_SESSION_HANDLE handle, CK_USER_TYPE user_type,
 }
 
 static CK_RV
-proxy_C_Logout (CK_SESSION_HANDLE handle)
+proxy_C_Logout (CK_X_FUNCTION_LIST *self,
+                CK_SESSION_HANDLE handle)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_Logout) (handle);
 }
 
 static CK_RV
-proxy_C_CreateObject (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
-                      CK_ULONG count, CK_OBJECT_HANDLE_PTR new_object)
+proxy_C_CreateObject (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle,
+                      CK_ATTRIBUTE_PTR template,
+                      CK_ULONG count,
+                      CK_OBJECT_HANDLE_PTR new_object)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -761,592 +854,1447 @@ proxy_C_CreateObject (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
 }
 
 static CK_RV
-proxy_C_CopyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
-                    CK_ATTRIBUTE_PTR template, CK_ULONG count,
+proxy_C_CopyObject (CK_X_FUNCTION_LIST *self,
+                    CK_SESSION_HANDLE handle,
+                    CK_OBJECT_HANDLE object,
+                    CK_ATTRIBUTE_PTR template,
+                    CK_ULONG count,
                     CK_OBJECT_HANDLE_PTR new_object)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_CopyObject) (handle, object, template, count, new_object);
 }
 
 static CK_RV
-proxy_C_DestroyObject (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object)
+proxy_C_DestroyObject (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE handle,
+                       CK_OBJECT_HANDLE object)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DestroyObject) (handle, object);
 }
 
 static CK_RV
-proxy_C_GetObjectSize (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
+proxy_C_GetObjectSize (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE handle,
+                       CK_OBJECT_HANDLE object,
                        CK_ULONG_PTR size)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetObjectSize) (handle, object, size);
 }
 
 static CK_RV
-proxy_C_GetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
-                           CK_ATTRIBUTE_PTR template, CK_ULONG count)
+proxy_C_GetAttributeValue (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_OBJECT_HANDLE object,
+                           CK_ATTRIBUTE_PTR template,
+                           CK_ULONG count)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GetAttributeValue) (handle, object, template, count);
 }
 
 static CK_RV
-proxy_C_SetAttributeValue (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE object,
-                           CK_ATTRIBUTE_PTR template, CK_ULONG count)
+proxy_C_SetAttributeValue (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_OBJECT_HANDLE object,
+                           CK_ATTRIBUTE_PTR template,
+                           CK_ULONG count)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SetAttributeValue) (handle, object, template, count);
 }
 
 static CK_RV
-proxy_C_FindObjectsInit (CK_SESSION_HANDLE handle, CK_ATTRIBUTE_PTR template,
+proxy_C_FindObjectsInit (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE handle,
+                         CK_ATTRIBUTE_PTR template,
                          CK_ULONG count)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_FindObjectsInit) (handle, template, count);
 }
 
 static CK_RV
-proxy_C_FindObjects (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE_PTR objects,
-                     CK_ULONG max_count, CK_ULONG_PTR count)
+proxy_C_FindObjects (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_OBJECT_HANDLE_PTR objects,
+                     CK_ULONG max_count,
+                     CK_ULONG_PTR count)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_FindObjects) (handle, objects, max_count, count);
 }
 
 static CK_RV
-proxy_C_FindObjectsFinal (CK_SESSION_HANDLE handle)
+proxy_C_FindObjectsFinal (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE handle)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_FindObjectsFinal) (handle);
 }
 
 static CK_RV
-proxy_C_EncryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_EncryptInit (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_MECHANISM_PTR mechanism,
                      CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_EncryptInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_Encrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
-                 CK_BYTE_PTR encrypted_data, CK_ULONG_PTR encrypted_data_len)
+proxy_C_Encrypt (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE handle,
+                 CK_BYTE_PTR input,
+                 CK_ULONG input_len,
+                 CK_BYTE_PTR encrypted_data,
+                 CK_ULONG_PTR encrypted_data_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_Encrypt) (handle, data, data_len, encrypted_data, encrypted_data_len);
+	return (map.funcs->C_Encrypt) (handle, input, input_len, encrypted_data, encrypted_data_len);
 }
 
 static CK_RV
-proxy_C_EncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
-                       CK_ULONG part_len, CK_BYTE_PTR encrypted_part,
+proxy_C_EncryptUpdate (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR part,
+                       CK_ULONG part_len,
+                       CK_BYTE_PTR encrypted_part,
                        CK_ULONG_PTR encrypted_part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_EncryptUpdate) (handle, part, part_len, encrypted_part, encrypted_part_len);
 }
 
 static CK_RV
-proxy_C_EncryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
+proxy_C_EncryptFinal (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR last_part,
                       CK_ULONG_PTR last_part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_EncryptFinal) (handle, last_part, last_part_len);
 }
 
 static CK_RV
-proxy_C_DecryptInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_DecryptInit (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_MECHANISM_PTR mechanism,
                      CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DecryptInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_Decrypt (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_data,
-                 CK_ULONG enc_data_len, CK_BYTE_PTR data, CK_ULONG_PTR data_len)
+proxy_C_Decrypt (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE handle,
+                 CK_BYTE_PTR enc_data,
+                 CK_ULONG enc_data_len,
+                 CK_BYTE_PTR output,
+                 CK_ULONG_PTR output_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_Decrypt) (handle, enc_data, enc_data_len, data, data_len);
+	return (map.funcs->C_Decrypt) (handle, enc_data, enc_data_len, output, output_len);
 }
 
 static CK_RV
-proxy_C_DecryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
-                       CK_ULONG enc_part_len, CK_BYTE_PTR part, CK_ULONG_PTR part_len)
+proxy_C_DecryptUpdate (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR enc_part,
+                       CK_ULONG enc_part_len,
+                       CK_BYTE_PTR part,
+                       CK_ULONG_PTR part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DecryptUpdate) (handle, enc_part, enc_part_len, part, part_len);
 }
 
 static CK_RV
-proxy_C_DecryptFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR last_part,
+proxy_C_DecryptFinal (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR last_part,
                       CK_ULONG_PTR last_part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DecryptFinal) (handle, last_part, last_part_len);
 }
 
 static CK_RV
-proxy_C_DigestInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism)
+proxy_C_DigestInit (CK_X_FUNCTION_LIST *self,
+                    CK_SESSION_HANDLE handle,
+                    CK_MECHANISM_PTR mechanism)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DigestInit) (handle, mechanism);
 }
 
 static CK_RV
-proxy_C_Digest (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
-                CK_BYTE_PTR digest, CK_ULONG_PTR digest_len)
+proxy_C_Digest (CK_X_FUNCTION_LIST *self,
+                CK_SESSION_HANDLE handle,
+                CK_BYTE_PTR input,
+                CK_ULONG input_len,
+                CK_BYTE_PTR digest,
+                CK_ULONG_PTR digest_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_Digest) (handle, data, data_len, digest, digest_len);
+	return (map.funcs->C_Digest) (handle, input, input_len, digest, digest_len);
 }
 
 static CK_RV
-proxy_C_DigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_DigestUpdate (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR part,
+                      CK_ULONG part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DigestUpdate) (handle, part, part_len);
 }
 
 static CK_RV
-proxy_C_DigestKey (CK_SESSION_HANDLE handle, CK_OBJECT_HANDLE key)
+proxy_C_DigestKey (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE handle,
+                   CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DigestKey) (handle, key);
 }
 
 static CK_RV
-proxy_C_DigestFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR digest,
+proxy_C_DigestFinal (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_BYTE_PTR digest,
                      CK_ULONG_PTR digest_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DigestFinal) (handle, digest, digest_len);
 }
 
 static CK_RV
-proxy_C_SignInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_SignInit (CK_X_FUNCTION_LIST *self,
+                  CK_SESSION_HANDLE handle,
+                  CK_MECHANISM_PTR mechanism,
                   CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SignInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_Sign (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
-              CK_BYTE_PTR signature, CK_ULONG_PTR signature_len)
+proxy_C_Sign (CK_X_FUNCTION_LIST *self,
+              CK_SESSION_HANDLE handle,
+              CK_BYTE_PTR input,
+              CK_ULONG input_len,
+              CK_BYTE_PTR signature,
+              CK_ULONG_PTR signature_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_Sign) (handle, data, data_len, signature, signature_len);
+	return (map.funcs->C_Sign) (handle, input, input_len, signature, signature_len);
 }
 
 static CK_RV
-proxy_C_SignUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_SignUpdate (CK_X_FUNCTION_LIST *self,
+                    CK_SESSION_HANDLE handle,
+                    CK_BYTE_PTR part,
+                    CK_ULONG part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SignUpdate) (handle, part, part_len);
 }
 
 static CK_RV
-proxy_C_SignFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
+proxy_C_SignFinal (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE handle,
+                   CK_BYTE_PTR signature,
                    CK_ULONG_PTR signature_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SignFinal) (handle, signature, signature_len);
 }
 
 static CK_RV
-proxy_C_SignRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_SignRecoverInit (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE handle,
+                         CK_MECHANISM_PTR mechanism,
                          CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SignRecoverInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_SignRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
-                     CK_BYTE_PTR signature, CK_ULONG_PTR signature_len)
+proxy_C_SignRecover (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_BYTE_PTR input,
+                     CK_ULONG input_len,
+                     CK_BYTE_PTR signature,
+                     CK_ULONG_PTR signature_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_SignRecover) (handle, data, data_len, signature, signature_len);
+	return (map.funcs->C_SignRecover) (handle, input, input_len, signature, signature_len);
 }
 
 static CK_RV
-proxy_C_VerifyInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_VerifyInit (CK_X_FUNCTION_LIST *self,
+                    CK_SESSION_HANDLE handle,
+                    CK_MECHANISM_PTR mechanism,
                     CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_VerifyInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_Verify (CK_SESSION_HANDLE handle, CK_BYTE_PTR data, CK_ULONG data_len,
-                CK_BYTE_PTR signature, CK_ULONG signature_len)
+proxy_C_Verify (CK_X_FUNCTION_LIST *self,
+                CK_SESSION_HANDLE handle,
+                CK_BYTE_PTR input,
+                CK_ULONG input_len,
+                CK_BYTE_PTR signature,
+                CK_ULONG signature_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_Verify) (handle, data, data_len, signature, signature_len);
+	return (map.funcs->C_Verify) (handle, input, input_len, signature, signature_len);
 }
 
 static CK_RV
-proxy_C_VerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part, CK_ULONG part_len)
+proxy_C_VerifyUpdate (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR part,
+                      CK_ULONG part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_VerifyUpdate) (handle, part, part_len);
 }
 
 static CK_RV
-proxy_C_VerifyFinal (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
+proxy_C_VerifyFinal (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_BYTE_PTR signature,
                      CK_ULONG signature_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_VerifyFinal) (handle, signature, signature_len);
 }
 
 static CK_RV
-proxy_C_VerifyRecoverInit (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
+proxy_C_VerifyRecoverInit (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_MECHANISM_PTR mechanism,
                            CK_OBJECT_HANDLE key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_VerifyRecoverInit) (handle, mechanism, key);
 }
 
 static CK_RV
-proxy_C_VerifyRecover (CK_SESSION_HANDLE handle, CK_BYTE_PTR signature,
-                       CK_ULONG signature_len, CK_BYTE_PTR data, CK_ULONG_PTR data_len)
+proxy_C_VerifyRecover (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR signature,
+                       CK_ULONG signature_len,
+                       CK_BYTE_PTR output,
+                       CK_ULONG_PTR output_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
-	return (map.funcs->C_VerifyRecover) (handle, signature, signature_len, data, data_len);
+	return (map.funcs->C_VerifyRecover) (handle, signature, signature_len, output, output_len);
 }
 
 static CK_RV
-proxy_C_DigestEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
-                             CK_ULONG part_len, CK_BYTE_PTR enc_part,
+proxy_C_DigestEncryptUpdate (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE handle,
+                             CK_BYTE_PTR part,
+                             CK_ULONG part_len,
+                             CK_BYTE_PTR enc_part,
                              CK_ULONG_PTR enc_part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DigestEncryptUpdate) (handle, part, part_len, enc_part, enc_part_len);
 }
 
 static CK_RV
-proxy_C_DecryptDigestUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
-                             CK_ULONG enc_part_len, CK_BYTE_PTR part,
+proxy_C_DecryptDigestUpdate (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE handle,
+                             CK_BYTE_PTR enc_part,
+                             CK_ULONG enc_part_len,
+                             CK_BYTE_PTR part,
                              CK_ULONG_PTR part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DecryptDigestUpdate) (handle, enc_part, enc_part_len, part, part_len);
 }
 
 static CK_RV
-proxy_C_SignEncryptUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR part,
-                           CK_ULONG part_len, CK_BYTE_PTR enc_part,
+proxy_C_SignEncryptUpdate (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE handle,
+                           CK_BYTE_PTR part,
+                           CK_ULONG part_len,
+                           CK_BYTE_PTR enc_part,
                            CK_ULONG_PTR enc_part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SignEncryptUpdate) (handle, part, part_len, enc_part, enc_part_len);
 }
 
 static CK_RV
-proxy_C_DecryptVerifyUpdate (CK_SESSION_HANDLE handle, CK_BYTE_PTR enc_part,
-                             CK_ULONG enc_part_len, CK_BYTE_PTR part,
+proxy_C_DecryptVerifyUpdate (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE handle,
+                             CK_BYTE_PTR enc_part,
+                             CK_ULONG enc_part_len,
+                             CK_BYTE_PTR part,
                              CK_ULONG_PTR part_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DecryptVerifyUpdate) (handle, enc_part, enc_part_len, part, part_len);
 }
 
 static CK_RV
-proxy_C_GenerateKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
-                     CK_ATTRIBUTE_PTR template, CK_ULONG count,
+proxy_C_GenerateKey (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE handle,
+                     CK_MECHANISM_PTR mechanism,
+                     CK_ATTRIBUTE_PTR template,
+                     CK_ULONG count,
                      CK_OBJECT_HANDLE_PTR key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GenerateKey) (handle, mechanism, template, count, key);
 }
 
 static CK_RV
-proxy_C_GenerateKeyPair (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
-                         CK_ATTRIBUTE_PTR pub_template, CK_ULONG pub_count,
-                         CK_ATTRIBUTE_PTR priv_template, CK_ULONG priv_count,
-                         CK_OBJECT_HANDLE_PTR pub_key, CK_OBJECT_HANDLE_PTR priv_key)
+proxy_C_GenerateKeyPair (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE handle,
+                         CK_MECHANISM_PTR mechanism,
+                         CK_ATTRIBUTE_PTR pub_template,
+                         CK_ULONG pub_count,
+                         CK_ATTRIBUTE_PTR priv_template,
+                         CK_ULONG priv_count,
+                         CK_OBJECT_HANDLE_PTR pub_key,
+                         CK_OBJECT_HANDLE_PTR priv_key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GenerateKeyPair) (handle, mechanism, pub_template, pub_count, priv_template, priv_count, pub_key, priv_key);
 }
 
 static CK_RV
-proxy_C_WrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
-                 CK_OBJECT_HANDLE wrapping_key, CK_OBJECT_HANDLE key,
-                 CK_BYTE_PTR wrapped_key, CK_ULONG_PTR wrapped_key_len)
+proxy_C_WrapKey (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE handle,
+                 CK_MECHANISM_PTR mechanism,
+                 CK_OBJECT_HANDLE wrapping_key,
+                 CK_OBJECT_HANDLE key,
+                 CK_BYTE_PTR wrapped_key,
+                 CK_ULONG_PTR wrapped_key_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_WrapKey) (handle, mechanism, wrapping_key, key, wrapped_key, wrapped_key_len);
 }
 
 static CK_RV
-proxy_C_UnwrapKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
-                   CK_OBJECT_HANDLE unwrapping_key, CK_BYTE_PTR wrapped_key,
-                   CK_ULONG wrapped_key_len, CK_ATTRIBUTE_PTR template,
-                   CK_ULONG count, CK_OBJECT_HANDLE_PTR key)
+proxy_C_UnwrapKey (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE handle,
+                   CK_MECHANISM_PTR mechanism,
+                   CK_OBJECT_HANDLE unwrapping_key,
+                   CK_BYTE_PTR wrapped_key,
+                   CK_ULONG wrapped_key_len,
+                   CK_ATTRIBUTE_PTR template,
+                   CK_ULONG count,
+                   CK_OBJECT_HANDLE_PTR key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_UnwrapKey) (handle, mechanism, unwrapping_key, wrapped_key, wrapped_key_len, template, count, key);
 }
 
 static CK_RV
-proxy_C_DeriveKey (CK_SESSION_HANDLE handle, CK_MECHANISM_PTR mechanism,
-                   CK_OBJECT_HANDLE base_key, CK_ATTRIBUTE_PTR template,
-                   CK_ULONG count, CK_OBJECT_HANDLE_PTR key)
+proxy_C_DeriveKey (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE handle,
+                   CK_MECHANISM_PTR mechanism,
+                   CK_OBJECT_HANDLE base_key,
+                   CK_ATTRIBUTE_PTR template,
+                   CK_ULONG count,
+                   CK_OBJECT_HANDLE_PTR key)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_DeriveKey) (handle, mechanism, base_key, template, count, key);
 }
 
 static CK_RV
-proxy_C_SeedRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR seed, CK_ULONG seed_len)
+proxy_C_SeedRandom (CK_X_FUNCTION_LIST *self,
+                    CK_SESSION_HANDLE handle,
+                    CK_BYTE_PTR seed,
+                    CK_ULONG seed_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_SeedRandom) (handle, seed, seed_len);
 }
 
 static CK_RV
-proxy_C_GenerateRandom (CK_SESSION_HANDLE handle, CK_BYTE_PTR random_data,
-                          CK_ULONG random_len)
+proxy_C_GenerateRandom (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE handle,
+                        CK_BYTE_PTR random_data,
+                        CK_ULONG random_len)
 {
+	State *state = (State *)self;
 	Mapping map;
 	CK_RV rv;
 
-	rv = map_session_to_real (&handle, &map, NULL);
+	rv = map_session_to_real (state->px, &handle, &map, NULL);
 	if (rv != CKR_OK)
 		return rv;
 	return (map.funcs->C_GenerateRandom) (handle, random_data, random_len);
 }
 
 /* --------------------------------------------------------------------
+ * Global module functions
+ */
+
+static CK_FUNCTION_LIST module_functions;
+
+static CK_RV
+module_C_Initialize (CK_VOID_PTR init_args)
+{
+	return proxy_C_Initialize (&global.virt.funcs, init_args);
+}
+
+static CK_RV
+module_C_Finalize (CK_VOID_PTR reserved)
+{
+	return proxy_C_Finalize (&global.virt.funcs, reserved);
+}
+
+static CK_RV
+module_C_GetInfo (CK_INFO_PTR info)
+{
+	return proxy_C_GetInfo (&global.virt.funcs, info);
+}
+
+static CK_RV
+module_C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
+{
+	return_val_if_fail (list != NULL, CKR_ARGUMENTS_BAD);
+	*list = &module_functions;
+	return CKR_OK;
+}
+
+static CK_RV
+module_C_GetSlotList (CK_BBOOL token_present,
+                      CK_SLOT_ID_PTR slot_list,
+                      CK_ULONG_PTR count)
+{
+	return proxy_C_GetSlotList (&global.virt.funcs, token_present, slot_list, count);
+}
+
+static CK_RV
+module_C_GetSlotInfo (CK_SLOT_ID id,
+                      CK_SLOT_INFO_PTR info)
+{
+	return proxy_C_GetSlotInfo (&global.virt.funcs, id, info);
+}
+
+static CK_RV
+module_C_GetTokenInfo (CK_SLOT_ID id,
+                       CK_TOKEN_INFO_PTR info)
+{
+	return proxy_C_GetTokenInfo (&global.virt.funcs, id, info);
+}
+
+static CK_RV
+module_C_GetMechanismList (CK_SLOT_ID id,
+                           CK_MECHANISM_TYPE_PTR mechanism_list,
+                           CK_ULONG_PTR count)
+{
+	return proxy_C_GetMechanismList (&global.virt.funcs, id, mechanism_list, count);
+}
+
+static CK_RV
+module_C_GetMechanismInfo (CK_SLOT_ID id,
+                           CK_MECHANISM_TYPE type,
+                           CK_MECHANISM_INFO_PTR info)
+{
+	return proxy_C_GetMechanismInfo (&global.virt.funcs, id, type, info);
+}
+
+static CK_RV
+module_C_InitToken (CK_SLOT_ID id,
+                    CK_UTF8CHAR_PTR pin,
+                    CK_ULONG pin_len,
+                    CK_UTF8CHAR_PTR label)
+{
+	return proxy_C_InitToken (&global.virt.funcs, id, pin, pin_len, label);
+}
+
+static CK_RV
+module_C_WaitForSlotEvent (CK_FLAGS flags,
+                           CK_SLOT_ID_PTR slot,
+                           CK_VOID_PTR reserved)
+{
+	return proxy_C_WaitForSlotEvent (&global.virt.funcs, flags, slot, reserved);
+}
+
+static CK_RV
+module_C_OpenSession (CK_SLOT_ID id,
+                      CK_FLAGS flags,
+                      CK_VOID_PTR user_data,
+                      CK_NOTIFY callback,
+                      CK_SESSION_HANDLE_PTR handle)
+{
+	return proxy_C_OpenSession (&global.virt.funcs, id, flags, user_data, callback,
+	                            handle);
+}
+
+static CK_RV
+module_C_CloseSession (CK_SESSION_HANDLE handle)
+{
+	return proxy_C_CloseSession (&global.virt.funcs, handle);
+}
+
+static CK_RV
+module_C_CloseAllSessions (CK_SLOT_ID id)
+{
+	return proxy_C_CloseAllSessions (&global.virt.funcs, id);
+}
+
+static CK_RV
+module_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
+{
+	return proxy_C_GetFunctionStatus (&global.virt.funcs, handle);
+}
+
+static CK_RV
+module_C_CancelFunction (CK_SESSION_HANDLE handle)
+{
+	return proxy_C_CancelFunction (&global.virt.funcs, handle);
+}
+
+static CK_RV
+module_C_GetSessionInfo (CK_SESSION_HANDLE handle,
+                         CK_SESSION_INFO_PTR info)
+{
+	return proxy_C_GetSessionInfo (&global.virt.funcs, handle, info);
+}
+
+static CK_RV
+module_C_InitPIN (CK_SESSION_HANDLE handle,
+                  CK_UTF8CHAR_PTR pin,
+                  CK_ULONG pin_len)
+{
+	return proxy_C_InitPIN (&global.virt.funcs, handle, pin, pin_len);
+}
+
+static CK_RV
+module_C_SetPIN (CK_SESSION_HANDLE handle,
+                 CK_UTF8CHAR_PTR old_pin,
+                 CK_ULONG old_pin_len,
+                 CK_UTF8CHAR_PTR new_pin,
+                 CK_ULONG new_pin_len)
+{
+	return proxy_C_SetPIN (&global.virt.funcs, handle, old_pin, old_pin_len, new_pin,
+	                       new_pin_len);
+}
+
+static CK_RV
+module_C_GetOperationState (CK_SESSION_HANDLE handle,
+                            CK_BYTE_PTR operation_state,
+                            CK_ULONG_PTR operation_state_len)
+{
+	return proxy_C_GetOperationState (&global.virt.funcs, handle, operation_state,
+	                                  operation_state_len);
+}
+
+static CK_RV
+module_C_SetOperationState (CK_SESSION_HANDLE handle,
+                            CK_BYTE_PTR operation_state,
+                            CK_ULONG operation_state_len,
+                            CK_OBJECT_HANDLE encryption_key,
+                            CK_OBJECT_HANDLE authentication_key)
+{
+	return proxy_C_SetOperationState (&global.virt.funcs, handle, operation_state,
+	                                  operation_state_len, encryption_key,
+	                                  authentication_key);
+}
+
+static CK_RV
+module_C_Login (CK_SESSION_HANDLE handle,
+                CK_USER_TYPE user_type,
+                CK_UTF8CHAR_PTR pin,
+                CK_ULONG pin_len)
+{
+	return proxy_C_Login (&global.virt.funcs, handle, user_type, pin, pin_len);
+}
+
+static CK_RV
+module_C_Logout (CK_SESSION_HANDLE handle)
+{
+	return proxy_C_Logout (&global.virt.funcs, handle);
+}
+
+static CK_RV
+module_C_CreateObject (CK_SESSION_HANDLE handle,
+                       CK_ATTRIBUTE_PTR template,
+                       CK_ULONG count,
+                       CK_OBJECT_HANDLE_PTR new_object)
+{
+	return proxy_C_CreateObject (&global.virt.funcs, handle, template, count,
+	                             new_object);
+}
+
+static CK_RV
+module_C_CopyObject (CK_SESSION_HANDLE handle,
+                     CK_OBJECT_HANDLE object,
+                     CK_ATTRIBUTE_PTR template,
+                     CK_ULONG count,
+                     CK_OBJECT_HANDLE_PTR new_object)
+{
+	return proxy_C_CopyObject (&global.virt.funcs, handle, object, template, count,
+	                           new_object);
+}
+
+static CK_RV
+module_C_DestroyObject (CK_SESSION_HANDLE handle,
+                        CK_OBJECT_HANDLE object)
+{
+	return proxy_C_DestroyObject (&global.virt.funcs, handle, object);
+}
+
+static CK_RV
+module_C_GetObjectSize (CK_SESSION_HANDLE handle,
+                        CK_OBJECT_HANDLE object,
+                        CK_ULONG_PTR size)
+{
+	return proxy_C_GetObjectSize (&global.virt.funcs, handle, object, size);
+}
+
+static CK_RV
+module_C_GetAttributeValue (CK_SESSION_HANDLE handle,
+                            CK_OBJECT_HANDLE object,
+                            CK_ATTRIBUTE_PTR template,
+                            CK_ULONG count)
+{
+	return proxy_C_GetAttributeValue (&global.virt.funcs, handle, object, template,
+	                                  count);
+}
+
+static CK_RV
+module_C_SetAttributeValue (CK_SESSION_HANDLE handle,
+                            CK_OBJECT_HANDLE object,
+                            CK_ATTRIBUTE_PTR template,
+                            CK_ULONG count)
+{
+	return proxy_C_SetAttributeValue (&global.virt.funcs, handle, object, template,
+	                                  count);
+}
+
+static CK_RV
+module_C_FindObjectsInit (CK_SESSION_HANDLE handle,
+                          CK_ATTRIBUTE_PTR template,
+                          CK_ULONG count)
+{
+	return proxy_C_FindObjectsInit (&global.virt.funcs, handle, template, count);
+}
+
+static CK_RV
+module_C_FindObjects (CK_SESSION_HANDLE handle,
+                      CK_OBJECT_HANDLE_PTR objects,
+                      CK_ULONG max_count,
+                      CK_ULONG_PTR count)
+{
+	return proxy_C_FindObjects (&global.virt.funcs, handle, objects, max_count, count);
+}
+
+static CK_RV
+module_C_FindObjectsFinal (CK_SESSION_HANDLE handle)
+{
+	return proxy_C_FindObjectsFinal (&global.virt.funcs, handle);
+}
+
+static CK_RV
+module_C_EncryptInit (CK_SESSION_HANDLE handle,
+                      CK_MECHANISM_PTR mechanism,
+                      CK_OBJECT_HANDLE key)
+{
+	return proxy_C_EncryptInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_Encrypt (CK_SESSION_HANDLE handle,
+                  CK_BYTE_PTR data,
+                  CK_ULONG data_len,
+                  CK_BYTE_PTR encrypted_data,
+                  CK_ULONG_PTR encrypted_data_len)
+{
+	return proxy_C_Encrypt (&global.virt.funcs, handle, data, data_len,
+	                        encrypted_data, encrypted_data_len);
+}
+
+static CK_RV
+module_C_EncryptUpdate (CK_SESSION_HANDLE handle,
+                        CK_BYTE_PTR part,
+                        CK_ULONG part_len,
+                        CK_BYTE_PTR encrypted_part,
+                        CK_ULONG_PTR encrypted_part_len)
+{
+	return proxy_C_EncryptUpdate (&global.virt.funcs, handle, part, part_len,
+	                              encrypted_part, encrypted_part_len);
+}
+
+static CK_RV
+module_C_EncryptFinal (CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR last_part,
+                       CK_ULONG_PTR last_part_len)
+{
+	return proxy_C_EncryptFinal (&global.virt.funcs, handle, last_part, last_part_len);
+}
+
+static CK_RV
+module_C_DecryptInit (CK_SESSION_HANDLE handle,
+                      CK_MECHANISM_PTR mechanism,
+                      CK_OBJECT_HANDLE key)
+{
+	return proxy_C_DecryptInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_Decrypt (CK_SESSION_HANDLE handle,
+                  CK_BYTE_PTR enc_data,
+                  CK_ULONG enc_data_len,
+                  CK_BYTE_PTR data,
+                  CK_ULONG_PTR data_len)
+{
+	return proxy_C_Decrypt (&global.virt.funcs, handle, enc_data, enc_data_len,
+	                        data, data_len);
+}
+
+static CK_RV
+module_C_DecryptUpdate (CK_SESSION_HANDLE handle,
+                        CK_BYTE_PTR enc_part,
+                        CK_ULONG enc_part_len,
+                        CK_BYTE_PTR part,
+                        CK_ULONG_PTR part_len)
+{
+	return proxy_C_DecryptUpdate (&global.virt.funcs, handle, enc_part, enc_part_len,
+	                              part, part_len);
+}
+
+static CK_RV
+module_C_DecryptFinal (CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR last_part,
+                       CK_ULONG_PTR last_part_len)
+{
+	return proxy_C_DecryptFinal (&global.virt.funcs, handle, last_part, last_part_len);
+}
+
+static CK_RV
+module_C_DigestInit (CK_SESSION_HANDLE handle,
+                     CK_MECHANISM_PTR mechanism)
+{
+	return proxy_C_DigestInit (&global.virt.funcs, handle, mechanism);
+}
+
+static CK_RV
+module_C_Digest (CK_SESSION_HANDLE handle,
+                 CK_BYTE_PTR data,
+                 CK_ULONG data_len,
+                 CK_BYTE_PTR digest,
+                 CK_ULONG_PTR digest_len)
+{
+	return proxy_C_Digest (&global.virt.funcs, handle, data, data_len, digest,
+	                       digest_len);
+}
+
+static CK_RV
+module_C_DigestUpdate (CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR part,
+                       CK_ULONG part_len)
+{
+	return proxy_C_DigestUpdate (&global.virt.funcs, handle, part, part_len);
+}
+
+static CK_RV
+module_C_DigestKey (CK_SESSION_HANDLE handle,
+                    CK_OBJECT_HANDLE key)
+{
+	return proxy_C_DigestKey (&global.virt.funcs, handle, key);
+}
+
+static CK_RV
+module_C_DigestFinal (CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR digest,
+                      CK_ULONG_PTR digest_len)
+{
+	return proxy_C_DigestFinal (&global.virt.funcs, handle, digest, digest_len);
+}
+
+static CK_RV
+module_C_SignInit (CK_SESSION_HANDLE handle,
+                   CK_MECHANISM_PTR mechanism,
+                   CK_OBJECT_HANDLE key)
+{
+	return proxy_C_SignInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_Sign (CK_SESSION_HANDLE handle,
+               CK_BYTE_PTR data,
+               CK_ULONG data_len,
+               CK_BYTE_PTR signature,
+               CK_ULONG_PTR signature_len)
+{
+	return proxy_C_Sign (&global.virt.funcs, handle, data, data_len, signature,
+	                     signature_len);
+}
+
+static CK_RV
+module_C_SignUpdate (CK_SESSION_HANDLE handle,
+                     CK_BYTE_PTR part,
+                     CK_ULONG part_len)
+{
+	return proxy_C_SignUpdate (&global.virt.funcs, handle, part, part_len);
+}
+
+static CK_RV
+module_C_SignFinal (CK_SESSION_HANDLE handle,
+                    CK_BYTE_PTR signature,
+                    CK_ULONG_PTR signature_len)
+{
+	return proxy_C_SignFinal (&global.virt.funcs, handle, signature, signature_len);
+}
+
+static CK_RV
+module_C_SignRecoverInit (CK_SESSION_HANDLE handle,
+                          CK_MECHANISM_PTR mechanism,
+                          CK_OBJECT_HANDLE key)
+{
+	return proxy_C_SignRecoverInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_SignRecover (CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR data,
+                      CK_ULONG data_len,
+                      CK_BYTE_PTR signature,
+                      CK_ULONG_PTR signature_len)
+{
+	return proxy_C_SignRecover (&global.virt.funcs, handle, data, data_len,
+	                            signature, signature_len);
+}
+
+static CK_RV
+module_C_VerifyInit (CK_SESSION_HANDLE handle,
+                     CK_MECHANISM_PTR mechanism,
+                     CK_OBJECT_HANDLE key)
+{
+	return proxy_C_VerifyInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_Verify (CK_SESSION_HANDLE handle,
+                 CK_BYTE_PTR data,
+                 CK_ULONG data_len,
+                 CK_BYTE_PTR signature,
+                 CK_ULONG signature_len)
+{
+	return proxy_C_Verify (&global.virt.funcs, handle, data, data_len, signature,
+	                       signature_len);
+}
+
+static CK_RV
+module_C_VerifyUpdate (CK_SESSION_HANDLE handle,
+                       CK_BYTE_PTR part,
+                       CK_ULONG part_len)
+{
+	return proxy_C_VerifyUpdate (&global.virt.funcs, handle, part, part_len);
+}
+
+static CK_RV
+module_C_VerifyFinal (CK_SESSION_HANDLE handle,
+                      CK_BYTE_PTR signature,
+                      CK_ULONG signature_len)
+{
+	return proxy_C_VerifyFinal (&global.virt.funcs, handle, signature, signature_len);
+}
+
+static CK_RV
+module_C_VerifyRecoverInit (CK_SESSION_HANDLE handle,
+                            CK_MECHANISM_PTR mechanism,
+                            CK_OBJECT_HANDLE key)
+{
+	return proxy_C_VerifyRecoverInit (&global.virt.funcs, handle, mechanism, key);
+}
+
+static CK_RV
+module_C_VerifyRecover (CK_SESSION_HANDLE handle,
+                        CK_BYTE_PTR signature,
+                        CK_ULONG signature_len,
+                        CK_BYTE_PTR data,
+                        CK_ULONG_PTR data_len)
+{
+	return proxy_C_VerifyRecover (&global.virt.funcs, handle, signature, signature_len,
+	                              data, data_len);
+}
+
+static CK_RV
+module_C_DigestEncryptUpdate (CK_SESSION_HANDLE handle,
+                              CK_BYTE_PTR part,
+                              CK_ULONG part_len,
+                              CK_BYTE_PTR enc_part,
+                              CK_ULONG_PTR enc_part_len)
+{
+	return proxy_C_DigestEncryptUpdate (&global.virt.funcs, handle, part, part_len,
+	                                    enc_part, enc_part_len);
+}
+
+static CK_RV
+module_C_DecryptDigestUpdate (CK_SESSION_HANDLE handle,
+                              CK_BYTE_PTR enc_part,
+                              CK_ULONG enc_part_len,
+                              CK_BYTE_PTR part,
+                              CK_ULONG_PTR part_len)
+{
+	return proxy_C_DecryptDigestUpdate (&global.virt.funcs, handle, enc_part,
+	                                    enc_part_len, part, part_len);
+}
+
+static CK_RV
+module_C_SignEncryptUpdate (CK_SESSION_HANDLE handle,
+                            CK_BYTE_PTR part,
+                            CK_ULONG part_len,
+                            CK_BYTE_PTR enc_part,
+                            CK_ULONG_PTR enc_part_len)
+{
+	return proxy_C_SignEncryptUpdate (&global.virt.funcs, handle, part, part_len,
+	                                  enc_part, enc_part_len);
+}
+
+static CK_RV
+module_C_DecryptVerifyUpdate (CK_SESSION_HANDLE handle,
+                              CK_BYTE_PTR enc_part,
+                              CK_ULONG enc_part_len,
+                              CK_BYTE_PTR part,
+                              CK_ULONG_PTR part_len)
+{
+	return proxy_C_DecryptVerifyUpdate (&global.virt.funcs, handle, enc_part,
+	                                    enc_part_len, part, part_len);
+}
+
+static CK_RV
+module_C_GenerateKey (CK_SESSION_HANDLE handle,
+                      CK_MECHANISM_PTR mechanism,
+                      CK_ATTRIBUTE_PTR template,
+                      CK_ULONG count,
+                      CK_OBJECT_HANDLE_PTR key)
+{
+	return proxy_C_GenerateKey (&global.virt.funcs, handle, mechanism, template, count,
+	                            key);
+}
+
+static CK_RV
+module_C_GenerateKeyPair (CK_SESSION_HANDLE handle,
+                          CK_MECHANISM_PTR mechanism,
+                          CK_ATTRIBUTE_PTR pub_template,
+                          CK_ULONG pub_count,
+                          CK_ATTRIBUTE_PTR priv_template,
+                          CK_ULONG priv_count,
+                          CK_OBJECT_HANDLE_PTR pub_key,
+                          CK_OBJECT_HANDLE_PTR priv_key)
+{
+	return proxy_C_GenerateKeyPair (&global.virt.funcs, handle, mechanism, pub_template,
+	                                pub_count, priv_template, priv_count,
+	                                pub_key, priv_key);
+}
+
+static CK_RV
+module_C_WrapKey (CK_SESSION_HANDLE handle,
+                  CK_MECHANISM_PTR mechanism,
+                  CK_OBJECT_HANDLE wrapping_key,
+                  CK_OBJECT_HANDLE key,
+                  CK_BYTE_PTR wrapped_key,
+                  CK_ULONG_PTR wrapped_key_len)
+{
+	return proxy_C_WrapKey (&global.virt.funcs, handle, mechanism, wrapping_key,
+	                        key, wrapped_key, wrapped_key_len);
+}
+
+static CK_RV
+module_C_UnwrapKey (CK_SESSION_HANDLE handle,
+                    CK_MECHANISM_PTR mechanism,
+                    CK_OBJECT_HANDLE unwrapping_key,
+                    CK_BYTE_PTR wrapped_key,
+                    CK_ULONG wrapped_key_len,
+                    CK_ATTRIBUTE_PTR template,
+                    CK_ULONG count,
+                    CK_OBJECT_HANDLE_PTR key)
+{
+	return proxy_C_UnwrapKey (&global.virt.funcs, handle, mechanism, unwrapping_key,
+	                          wrapped_key, wrapped_key_len, template,
+	                          count, key);
+}
+
+static CK_RV
+module_C_DeriveKey (CK_SESSION_HANDLE handle,
+                    CK_MECHANISM_PTR mechanism,
+                    CK_OBJECT_HANDLE base_key,
+                    CK_ATTRIBUTE_PTR template,
+                    CK_ULONG count,
+                    CK_OBJECT_HANDLE_PTR key)
+{
+	return proxy_C_DeriveKey (&global.virt.funcs, handle, mechanism, base_key,
+	                          template, count, key);
+}
+
+static CK_RV
+module_C_SeedRandom (CK_SESSION_HANDLE handle,
+                     CK_BYTE_PTR seed,
+                     CK_ULONG seed_len)
+{
+	return proxy_C_SeedRandom (&global.virt.funcs, handle, seed, seed_len);
+}
+
+static CK_RV
+module_C_GenerateRandom (CK_SESSION_HANDLE handle,
+                         CK_BYTE_PTR random_data,
+                         CK_ULONG random_len)
+{
+	return proxy_C_GenerateRandom (&global.virt.funcs, handle, random_data, random_len);
+}
+
+/* --------------------------------------------------------------------
  * MODULE ENTRY POINT
  */
 
-CK_FUNCTION_LIST _p11_proxy_function_list = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+static CK_FUNCTION_LIST module_functions = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
+	module_C_Initialize,
+	module_C_Finalize,
+	module_C_GetInfo,
+	module_C_GetFunctionList,
+	module_C_GetSlotList,
+	module_C_GetSlotInfo,
+	module_C_GetTokenInfo,
+	module_C_GetMechanismList,
+	module_C_GetMechanismInfo,
+	module_C_InitToken,
+	module_C_InitPIN,
+	module_C_SetPIN,
+	module_C_OpenSession,
+	module_C_CloseSession,
+	module_C_CloseAllSessions,
+	module_C_GetSessionInfo,
+	module_C_GetOperationState,
+	module_C_SetOperationState,
+	module_C_Login,
+	module_C_Logout,
+	module_C_CreateObject,
+	module_C_CopyObject,
+	module_C_DestroyObject,
+	module_C_GetObjectSize,
+	module_C_GetAttributeValue,
+	module_C_SetAttributeValue,
+	module_C_FindObjectsInit,
+	module_C_FindObjects,
+	module_C_FindObjectsFinal,
+	module_C_EncryptInit,
+	module_C_Encrypt,
+	module_C_EncryptUpdate,
+	module_C_EncryptFinal,
+	module_C_DecryptInit,
+	module_C_Decrypt,
+	module_C_DecryptUpdate,
+	module_C_DecryptFinal,
+	module_C_DigestInit,
+	module_C_Digest,
+	module_C_DigestUpdate,
+	module_C_DigestKey,
+	module_C_DigestFinal,
+	module_C_SignInit,
+	module_C_Sign,
+	module_C_SignUpdate,
+	module_C_SignFinal,
+	module_C_SignRecoverInit,
+	module_C_SignRecover,
+	module_C_VerifyInit,
+	module_C_Verify,
+	module_C_VerifyUpdate,
+	module_C_VerifyFinal,
+	module_C_VerifyRecoverInit,
+	module_C_VerifyRecover,
+	module_C_DigestEncryptUpdate,
+	module_C_DecryptDigestUpdate,
+	module_C_SignEncryptUpdate,
+	module_C_DecryptVerifyUpdate,
+	module_C_GenerateKey,
+	module_C_GenerateKeyPair,
+	module_C_WrapKey,
+	module_C_UnwrapKey,
+	module_C_DeriveKey,
+	module_C_SeedRandom,
+	module_C_GenerateRandom,
+	module_C_GetFunctionStatus,
+	module_C_CancelFunction,
+	module_C_WaitForSlotEvent
+};
+
+static CK_X_FUNCTION_LIST proxy_functions = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR  },
 	proxy_C_Initialize,
 	proxy_C_Finalize,
 	proxy_C_GetInfo,
-	proxy_C_GetFunctionList,
 	proxy_C_GetSlotList,
 	proxy_C_GetSlotInfo,
 	proxy_C_GetTokenInfo,
@@ -1408,18 +2356,73 @@ CK_FUNCTION_LIST _p11_proxy_function_list = {
 	proxy_C_DeriveKey,
 	proxy_C_SeedRandom,
 	proxy_C_GenerateRandom,
-	proxy_C_GetFunctionStatus,
-	proxy_C_CancelFunction,
-	proxy_C_WaitForSlotEvent
+	proxy_C_WaitForSlotEvent,
 };
 
 #ifdef OS_WIN32
 __declspec(dllexport)
 #endif
-
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
+	CK_FUNCTION_LIST_PTR module = NULL;
+	State *state;
+	CK_RV rv = CKR_OK;
+
 	p11_library_init_once ();
-	return proxy_C_GetFunctionList (list);
+	p11_lock ();
+
+	if (p11_virtual_can_wrap ()) {
+		state = calloc (1, sizeof (State));
+		if (!state) {
+			rv = CKR_HOST_MEMORY;
+
+		} else {
+			p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
+			state->last_handle = FIRST_HANDLE;
+
+			module = p11_virtual_wrap (&state->virt, free);
+			if (module == NULL) {
+				rv = CKR_GENERAL_ERROR;
+
+			} else {
+				state->wrapped = module;
+				state->next = all_instances;
+				all_instances = state;
+			}
+		}
+	}
+
+	if (rv == CKR_OK) {
+		if (module == NULL)
+			module = &module_functions;
+
+		/* We use this as a check below */
+		module->C_WaitForSlotEvent = module_C_WaitForSlotEvent;
+		*list = module;
+	}
+
+	p11_unlock ();
+
+	return rv;
+}
+
+void
+p11_proxy_module_cleanup (void)
+{
+	State *state, *next;
+
+	state = all_instances;
+	all_instances = NULL;
+
+	for (; state != NULL; state = next) {
+		next = state->next;
+		p11_virtual_unwrap (state->wrapped);
+	}
+}
+
+bool
+p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
+{
+	return (module->C_WaitForSlotEvent == module_C_WaitForSlotEvent);
 }

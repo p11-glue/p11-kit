@@ -474,15 +474,6 @@ mock_X_Finalize (CK_X_FUNCTION_LIST *self,
 	return mock_C_Finalize (reserved);
 }
 
-static const CK_INFO MOCK_INFO = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
-	"MOCK MANUFACTURER               ",
-	0,
-	"MOCK LIBRARY                    ",
-	{ 45, 145 }
-};
-
-
 CK_RV
 mock_C_GetInfo (CK_INFO_PTR info)
 {

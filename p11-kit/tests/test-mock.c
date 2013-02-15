@@ -51,24 +51,12 @@ test_get_info (CuTest *tc)
 	CK_FUNCTION_LIST_PTR module;
 	CK_INFO info;
 	CK_RV rv;
-	char *string;
 
 	module = setup_mock_module (tc, NULL);
 
 	rv = (module->C_GetInfo) (&info);
 	CuAssertTrue (tc, rv == CKR_OK);
-
-	CuAssertIntEquals (tc, CRYPTOKI_VERSION_MAJOR, info.cryptokiVersion.major);
-	CuAssertIntEquals (tc, CRYPTOKI_VERSION_MINOR, info.cryptokiVersion.minor);
-	string = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
-	CuAssertStrEquals (tc, "MOCK MANUFACTURER", string);
-	free (string);
-	string = p11_kit_space_strdup (info.libraryDescription, sizeof (info.libraryDescription));
-	CuAssertStrEquals (tc, "MOCK LIBRARY", string);
-	free (string);
-	CuAssertIntEquals (tc, 0, info.flags);
-	CuAssertIntEquals (tc, 45, info.libraryVersion.major);
-	CuAssertIntEquals (tc, 145, info.libraryVersion.minor);
+	CuAssertTrue (tc, memcmp (&info, &MOCK_INFO, sizeof (CK_INFO)) == 0);
 
 	teardown_mock_module (tc, module);
 }
@@ -86,21 +74,21 @@ test_get_slot_list (CuTest *tc)
 	/* Normal module has 2 slots, one with token present */
 	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
 	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertIntEquals (tc, 1, count);
+	CuAssertIntEquals (tc, MOCK_SLOTS_PRESENT, count);
 	rv = (module->C_GetSlotList) (CK_FALSE, NULL, &count);
 	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertIntEquals (tc, 2, count);
+	CuAssertIntEquals (tc, MOCK_SLOTS_ALL, count);
 
 	count = 8;
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
 	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertIntEquals (tc, 1, count);
+	CuAssertIntEquals (tc, MOCK_SLOTS_PRESENT, count);
 	CuAssertIntEquals (tc, MOCK_SLOT_ONE_ID, slot_list[0]);
 
 	count = 8;
 	rv = (module->C_GetSlotList) (CK_FALSE, slot_list, &count);
 	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertIntEquals (tc, 2, count);
+	CuAssertIntEquals (tc, MOCK_SLOTS_ALL, count);
 	CuAssertIntEquals (tc, MOCK_SLOT_ONE_ID, slot_list[0]);
 	CuAssertIntEquals (tc, MOCK_SLOT_TWO_ID, slot_list[1]);
 
@@ -278,6 +266,10 @@ test_wait_for_slot_event (CuTest *tc)
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot;
 	CK_RV rv;
+
+#ifdef MOCK_SKIP_WAIT_TEST
+	return;
+#endif
 
 	module = setup_mock_module (tc, NULL);
 

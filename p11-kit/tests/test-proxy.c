@@ -38,8 +38,10 @@
 #include "CuTest.h"
 
 #include "library.h"
-#include "pkcs11.h"
+#include "mock.h"
 #include "p11-kit.h"
+#include "pkcs11.h"
+#include "proxy.h"
 
 #include <sys/types.h>
 
@@ -54,6 +56,11 @@
 /* This is the proxy module entry point in proxy.c, and linked to this test */
 CK_RV C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list);
 
+static CK_SLOT_ID mock_slot_one_id;
+static CK_SLOT_ID mock_slot_two_id;
+static CK_ULONG mock_slots_present;
+static CK_ULONG mock_slots_all;
+
 static void
 test_initialize_finalize (CuTest *tc)
 {
@@ -63,12 +70,116 @@ test_initialize_finalize (CuTest *tc)
 	rv = C_GetFunctionList (&proxy);
 	CuAssertTrue (tc, rv == CKR_OK);
 
+	CuAssertTrue (tc, p11_proxy_module_check (proxy));
+
 	rv = proxy->C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
+
+	p11_proxy_module_cleanup ();
 }
+
+static void
+test_initialize_multiple (CuTest *tc)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_RV rv;
+
+	rv = C_GetFunctionList (&proxy);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	CuAssertTrue (tc, p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = proxy->C_Initialize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = proxy->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = proxy->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = proxy->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_CRYPTOKI_NOT_INITIALIZED);
+
+	p11_proxy_module_cleanup ();
+}
+
+static CK_FUNCTION_LIST_PTR
+setup_mock_module (CuTest *tc,
+                   CK_SESSION_HANDLE *session)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_SLOT_ID slots[32];
+	CK_RV rv;
+
+	rv = C_GetFunctionList (&proxy);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	CuAssertTrue (tc, p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	mock_slots_all = 32;
+	rv = proxy->C_GetSlotList (CK_FALSE, slots, &mock_slots_all);
+	CuAssertTrue (tc, rv == CKR_OK);
+	CuAssertTrue (tc, mock_slots_all >= 2);
+
+	/* Assume this is the slot we want to deal with */
+	mock_slot_one_id = slots[0];
+	mock_slot_two_id = slots[1];
+
+	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &mock_slots_present);
+	CuAssertTrue (tc, rv == CKR_OK);
+	CuAssertTrue (tc, mock_slots_present > 1);
+
+	if (session) {
+		rv = (proxy->C_OpenSession) (mock_slot_one_id,
+		                             CKF_RW_SESSION | CKF_SERIAL_SESSION,
+		                             NULL, NULL, session);
+		CuAssertTrue (tc, rv == CKR_OK);
+	}
+
+	return proxy;
+}
+
+static void
+teardown_mock_module (CuTest *tc,
+                      CK_FUNCTION_LIST_PTR module)
+{
+	CK_RV rv;
+
+	rv = module->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_OK);
+}
+
+/*
+ * We redefine the mock module slot id so that the tests in test-mock.c
+ * use the proxy mapped slot id rather than the hard coded one
+ */
+#define MOCK_SLOT_ONE_ID mock_slot_one_id
+#define MOCK_SLOT_TWO_ID mock_slot_two_id
+#define MOCK_SLOTS_PRESENT mock_slots_present
+#define MOCK_SLOTS_ALL mock_slots_all
+#define MOCK_INFO mock_info
+#define MOCK_SKIP_WAIT_TEST
+
+static const CK_INFO mock_info = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
+	"PKCS#11 Kit                     ",
+	0,
+	"PKCS#11 Kit Proxy Module        ",
+	{ 1, 1 }
+};
+
+/* Bring in all the mock module tests */
+#include "test-mock.c"
 
 int
 main (void)
@@ -82,6 +193,9 @@ main (void)
 	p11_kit_be_quiet ();
 
 	SUITE_ADD_TEST (suite, test_initialize_finalize);
+	SUITE_ADD_TEST (suite, test_initialize_multiple);
+
+	test_mock_add_tests (suite);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

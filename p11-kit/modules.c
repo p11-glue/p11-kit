@@ -49,6 +49,7 @@
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"
+#include "proxy.h"
 #include "virtual.h"
 
 #include <sys/stat.h>
@@ -335,7 +336,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 		return rv;
 	}
 
-	if (mod->funcs == &_p11_proxy_function_list) {
+	if (p11_proxy_module_check (funcs)) {
 		p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
 		return CKR_FUNCTION_FAILED;
 	}
@@ -679,7 +680,7 @@ reinitialize_after_fork (void)
 
 	p11_unlock ();
 
-	_p11_kit_proxy_after_fork ();
+	p11_proxy_after_fork ();
 }
 
 #endif /* OS_UNIX */

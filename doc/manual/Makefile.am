@@ -57,6 +57,7 @@ IGNORE_HFILES= \
 	pkcs11.h \
 	pkcs11x.h \
 	private.h \
+	proxy.h \
 	util.h \
 	virtual.h \
 	array.h \
