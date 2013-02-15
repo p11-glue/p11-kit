@@ -838,7 +838,7 @@ format_attribute_type (p11_buffer *buffer,
 	X (CKA_BASE)
 	X (CKA_PRIME_BITS)
 	/* X (CKA_SUBPRIME_BITS) */
-	/* X (CKA_SUB_PRIME_BITS) */
+	X (CKA_SUB_PRIME_BITS)
 	X (CKA_VALUE_BITS)
 	X (CKA_VALUE_LEN)
 	X (CKA_EXTRACTABLE)
