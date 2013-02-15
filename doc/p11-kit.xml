@@ -217,7 +217,10 @@ $ p11-kit extract-trust
 
 <refsect1>
   <title>See also</title>
-  <para>
+    <simplelist type="inline">
+        <member><citerefentry><refentrytitle>pkcs11.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></member>
+    </simplelist>
+    <para>
     Further details available in the p11-kit online documentation at
     <ulink url="http://p11-glue.freedesktop.org/doc/p11-kit/">http://p11-glue.freedesktop.org/doc/p11-kit/</ulink>.
   </para>

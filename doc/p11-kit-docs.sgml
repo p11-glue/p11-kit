@@ -16,8 +16,9 @@
 	<xi:include href="p11-kit-trust.xml"/>
 
 	<chapter xml:id="tools">
-		<title>Command Line Tools</title>
+		<title>Manual Pages</title>
 		<xi:include href="p11-kit.xml"/>
+		<xi:include href="pkcs11.conf.xml"/>
 	</chapter>
 
 	<chapter xml:id="reference">

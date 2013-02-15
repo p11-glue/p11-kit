@@ -73,6 +73,7 @@ temp.txt
 /doc/tmpl/
 /doc/version.xml
 /doc/xml/
+/doc/*.5
 /doc/*.8
 
 /p11-kit/p11-kit.pc

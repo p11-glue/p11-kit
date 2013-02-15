@@ -89,8 +89,8 @@ GTKDOC_LIBS=
 include $(top_srcdir)/gtk-doc.make
 
 if ENABLE_GTK_DOC
-man8_MANS = \
-	p11-kit.8
+man8_MANS = p11-kit.8
+man5_MANS = pkcs11.conf.5
 
 XSLTPROC_FLAGS = \
         --nonet \
@@ -100,22 +100,33 @@ XSLTPROC_FLAGS = \
         --stringparam man.authors.section.enabled 0 \
         --stringparam man.copyright.section.enabled 0
 
+XSLTPROC_MAN = \
+	$(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
+
+.xml.5:
+	$(AM_V_GEN) $(XSLTPROC_MAN) $<
 .xml.8:
-	$(AM_V_GEN) $(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+	$(AM_V_GEN) $(XSLTPROC_MAN) $<
 
 else # ENABLE_GTK_DOC
 
+man5_MANS =
 man8_MANS =
 
 endif # ENABLE_GTK_DOC
 
-MAN_IN_FILES = $(man8_MANS:.8=.xml)
+MAN_IN_FILES = \
+	$(man8_MANS:.8=.xml) \
+	$(man5_MANS:.5=.xml) \
+	$(NULL)
 
 CLEANFILES += \
+	$(man5_MANS) \
 	$(man8_MANS) \
 	$(NULL)
 
 EXTRA_DIST += \
+	$(MAN_IN_FILES) \
 	version.xml.in \
 	version.xml \
 	$(NULL)
