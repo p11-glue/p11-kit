@@ -33,6 +33,7 @@ if WITH_FFI
 CHECK_PROGS += \
 	test-virtual \
 	test-managed \
+	test-log \
 	$(NULL)
 
 endif

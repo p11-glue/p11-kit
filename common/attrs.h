@@ -36,6 +36,7 @@
 #ifndef P11_ATTRS_H_
 #define P11_ATTRS_H_
 
+#include "buffer.h"
 #include "compat.h"
 #include "pkcs11.h"
 
@@ -112,7 +113,15 @@ bool                p11_attrs_matchn        (const CK_ATTRIBUTE *attrs,
 char *              p11_attrs_to_string     (const CK_ATTRIBUTE *attrs,
                                              int count);
 
+void                p11_attrs_format        (p11_buffer *buffer,
+                                             const CK_ATTRIBUTE *attrs,
+                                             int count);
+
 char *              p11_attr_to_string      (const CK_ATTRIBUTE *attr,
+                                             CK_OBJECT_CLASS klass);
+
+void                p11_attr_format         (p11_buffer *buffer,
+                                             const CK_ATTRIBUTE *attr,
                                              CK_OBJECT_CLASS klass);
 
 bool                p11_attr_equal          (const void *one,

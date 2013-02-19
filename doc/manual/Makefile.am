@@ -52,6 +52,7 @@ IGNORE_HFILES= \
 	conf.h \
 	debug.h \
 	dict.h \
+	log.h \
 	mock.h \
 	modules.h \
 	pkcs11.h \

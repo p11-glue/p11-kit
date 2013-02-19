@@ -66,7 +66,7 @@ test_get_slot_list (CuTest *tc)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot_list[8];
-	CK_ULONG count;
+	CK_ULONG count = 0;
 	CK_RV rv;
 
 	module = setup_mock_module (tc, NULL);
@@ -185,7 +185,7 @@ test_get_mechanism_list (CuTest *tc)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_MECHANISM_TYPE mechs[8];
-	CK_ULONG count;
+	CK_ULONG count = 0;
 	CK_RV rv;
 
 	module = setup_mock_module (tc, NULL);

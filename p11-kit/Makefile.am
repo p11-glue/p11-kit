@@ -25,6 +25,7 @@ MODULE_SRCS = \
 	util.c \
 	conf.c conf.h \
 	iter.c \
+	log.c log.h \
 	modules.c modules.h \
 	pkcs11.h \
 	pin.c \

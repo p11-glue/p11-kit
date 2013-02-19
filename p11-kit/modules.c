@@ -43,6 +43,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "library.h"
+#include "log.h"
 #include "message.h"
 #include "modules.h"
 #include "path.h"
@@ -1662,15 +1663,12 @@ managed_create_inlock (Module *mod)
 
 static bool
 lookup_managed_option (Module *mod,
+                       bool supported,
                        const char *option,
                        bool def_value)
 {
 	const char *string;
-	bool supported;
 	bool value;
-
-	/* Whether managed stuff is supported or not */
-	supported = p11_virtual_can_wrap ();
 
 	string = module_get_option_inlock (NULL, option);
 	if (!string)
@@ -1684,13 +1682,21 @@ lookup_managed_option (Module *mod,
 	value = _p11_conf_parse_boolean (string, def_value);
 
 	if (!supported && value != supported) {
-		/*
-		 * This is because libffi dependency was not built. The libffi dependency
-		 * is highly recommended and building without it results in a large loss
-		 * of functionality.
-		 */
-		p11_message ("the '%s' option for module '%s' is not supported on this system",
-		             option, mod->name);
+		if (!p11_virtual_can_wrap ()) {
+			/*
+			 * This is because libffi dependency was not built. The libffi dependency
+			 * is highly recommended and building without it results in a large loss
+			 * of functionality.
+			 */
+			p11_message ("the '%s' option for module '%s' is not supported on this system",
+			             option, mod->name);
+		} else {
+			/*
+			 * This is because the module is running in unmanaged mode, so turn off the
+			 */
+			p11_message ("the '%s' option for module '%s' is only supported for managed modules",
+			             option, mod->name);
+		}
 		return false;
 	}
 
@@ -1755,18 +1761,28 @@ prepare_module_inlock_reentrant (Module *mod,
 	p11_destroyer destroyer;
 	p11_virtual *virt;
 	bool is_managed;
+	bool with_log;
 
 	assert (module != NULL);
 
-	if (flags & P11_KIT_MODULE_UNMANAGED)
+	if (flags & P11_KIT_MODULE_UNMANAGED) {
 		is_managed = false;
-	else
-		is_managed = lookup_managed_option (mod, "managed", true);
+		with_log = false;
+	} else {
+		is_managed = lookup_managed_option (mod, p11_virtual_can_wrap (), "managed", true);
+		with_log = lookup_managed_option (mod, is_managed, "log-calls", false);
+	}
 
 	if (is_managed) {
 		virt = managed_create_inlock (mod);
 		return_val_if_fail (virt != NULL, CKR_HOST_MEMORY);
 		destroyer = managed_free_inlock;
+
+		/* Add the logger if configured */
+		if (p11_log_force || with_log) {
+			virt = p11_log_subclass (virt, destroyer);
+			destroyer = p11_log_release;
+		}
 
 		*module = p11_virtual_wrap (virt, destroyer);
 		return_val_if_fail (*module != NULL, CKR_GENERAL_ERROR);

@@ -94,6 +94,11 @@
 			<literal>C_CloseAllSessions</literal> function to be used without closing
 			sessions for other callers of the same PKCS#11 module.</para>
 		</listitem>
+		<listitem>
+			<para>Managed modules have ability to log PKCS#11 method calls for debugging
+			purposes. See the <link linkend="option-log-calls"><literal>log-calls = yes</literal></link>
+			module configuration option.</para>
+		</listitem>
 		</itemizedlist>
 	</section>
 </chapter>

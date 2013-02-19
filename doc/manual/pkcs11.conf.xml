@@ -157,6 +157,15 @@ x-custom : text
 			of trust policy information such as certificate anchors and black lists.</para>
 		</listitem>
 	</varlistentry>
+	<varlistentry id="option-log-calls">
+		<term>log-calls:</term>
+		<listitem>
+			<para>Set to <literal>yes</literal> to write a log to stderr of all the
+			calls into the module. This is only supported for managed modules.</para>
+
+			<para>This argument is optonal and defaults to <literal>no</literal>.</para>
+		</listitem>
+	</varlistentry>
 	</variablelist>
 
 	<para>Do not specify both <literal>enable-in</literal> and <literal>disable-in</literal>
@@ -194,6 +203,16 @@ x-custom : text
 			module.</para>
 
 			<para>This argument is optonal.</para>
+		</listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>log-calls:</term>
+		<listitem>
+			<para>Set to <literal>yes</literal> to write a log to stderr of all the
+			calls into all configured modules. This is only supported for managed
+			modules.</para>
+
+			<para>This argument is optional.</para>
 		</listitem>
 	</varlistentry>
 	</variablelist>

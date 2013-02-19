@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2012, Redhat Inc.
- * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2013, Red Hat Inc.
+ *
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,53 +31,23 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ *
+ * CONTRIBUTORS
+ *  Stef Walter <stef@thewalter.net>
  */
 
-#ifndef P11_CONSTANTS_H_
-#define P11_CONSTANTS_H_
+#ifndef P11_LOG_H_
+#define P11_LOG_H_
 
-#include "compat.h"
-#include "dict.h"
-#include "pkcs11.h"
+#include "virtual.h"
 
-typedef struct {
-	CK_ULONG value;
-	const char *name;
-	const char *nick;
-} p11_constant;
+p11_virtual *           p11_log_subclass         (p11_virtual *lower,
+                                                  p11_destroyer destroyer);
 
-const char *        p11_constant_name      (const p11_constant *constants,
-                                            CK_ULONG value);
+void                    p11_log_release          (void *logger);
 
-const char *        p11_constant_nick      (const p11_constant *constants,
-                                            CK_ULONG type);
+extern bool             p11_log_force;
 
-p11_dict *          p11_constant_reverse   (bool nick);
+extern bool             p11_log_output;
 
-CK_ULONG            p11_constant_resolve   (p11_dict *table,
-                                            const char *string);
-
-extern const p11_constant    p11_constant_types[];
-
-extern const p11_constant    p11_constant_classes[];
-
-extern const p11_constant    p11_constant_trusts[];
-
-extern const p11_constant    p11_constant_certs[];
-
-extern const p11_constant    p11_constant_keys[];
-
-extern const p11_constant    p11_constant_asserts[];
-
-extern const p11_constant    p11_constant_categories[];
-
-extern const p11_constant    p11_constant_mechanisms[];
-
-extern const p11_constant    p11_constant_states[];
-
-extern const p11_constant    p11_constant_users[];
-
-extern const p11_constant    p11_constant_returns[];
-
-#endif /* P11_CONSTANTS_H_ */
+#endif /* P11_LOG_H_ */
