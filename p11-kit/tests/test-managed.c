@@ -105,15 +105,33 @@ test_initialize_finalize (CuTest *tc)
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
 
-	module = setup_mock_module (tc, NULL);
+	p11_lock ();
+
+	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
+	CuAssertTrue (tc, rv == CKR_OK);
+	CuAssertPtrNotNull (tc, module);
+	CuAssertTrue (tc, p11_virtual_is_wrapper (module));
+
+	p11_unlock ();
 
 	rv = module->C_Initialize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
+	rv = module->C_Initialize (NULL);
+	CuAssertTrue (tc, rv == CKR_CRYPTOKI_ALREADY_INITIALIZED);
+
 	rv = module->C_Finalize (NULL);
 	CuAssertTrue (tc, rv == CKR_OK);
 
-	teardown_mock_module (tc, module);
+	rv = module->C_Finalize (NULL);
+	CuAssertTrue (tc, rv == CKR_CRYPTOKI_NOT_INITIALIZED);
+
+	p11_lock ();
+
+	rv = p11_module_release_inlock_reentrant (module);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	p11_unlock ();
 }
 
 static void
@@ -137,6 +155,47 @@ test_initialize_fail (CuTest *tc)
 	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
 }
 
+static void
+test_separate_close_all_sessions (CuTest *tc)
+{
+	CK_FUNCTION_LIST *first;
+	CK_FUNCTION_LIST *second;
+	CK_SESSION_HANDLE s1;
+	CK_SESSION_HANDLE s2;
+	CK_SESSION_INFO info;
+	CK_RV rv;
+
+	first = setup_mock_module (tc, &s1);
+	second = setup_mock_module (tc, &s2);
+
+	rv = first->C_GetSessionInfo (s1, &info);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = second->C_GetSessionInfo (s2, &info);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	first->C_CloseAllSessions (MOCK_SLOT_ONE_ID);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = first->C_GetSessionInfo (s1, &info);
+	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+
+	rv = second->C_GetSessionInfo (s2, &info);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	second->C_CloseAllSessions (MOCK_SLOT_ONE_ID);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	rv = first->C_GetSessionInfo (s1, &info);
+	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+
+	rv = second->C_GetSessionInfo (s2, &info);
+	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+
+	teardown_mock_module (tc, first);
+	teardown_mock_module (tc, second);
+}
+
 /* Bring in all the mock module tests */
 #include "test-mock.c"
 
@@ -153,6 +212,7 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_initialize_finalize);
 	SUITE_ADD_TEST (suite, test_initialize_fail);
+	SUITE_ADD_TEST (suite, test_separate_close_all_sessions);
 	test_mock_add_tests (suite);
 
 	p11_kit_be_quiet ();

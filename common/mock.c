@@ -1048,7 +1048,7 @@ mock_C_GetSessionInfo (CK_SESSION_HANDLE session,
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
 
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
-	if (!session)
+	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 
 	if (logged_in) {

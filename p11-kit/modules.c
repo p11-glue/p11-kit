@@ -170,6 +170,8 @@ typedef struct _Module {
 typedef struct {
 	p11_virtual virt;
 	Module *mod;
+	bool initialized;
+	p11_dict *sessions;
 } Managed;
 
 /*
@@ -1408,13 +1410,31 @@ static CK_RV
 managed_C_Initialize (CK_X_FUNCTION_LIST *self,
                       CK_VOID_PTR init_args)
 {
-	Module *mod = ((Managed *)self)->mod;
+	Managed *managed = ((Managed *)self);
+	p11_dict *sessions;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	rv = initialize_module_inlock_reentrant (mod);
+	if (managed->initialized) {
+		rv = CKR_CRYPTOKI_ALREADY_INITIALIZED;
+
+	} else {
+		sessions = p11_dict_new (p11_dict_ulongptr_hash,
+		                         p11_dict_ulongptr_equal,
+		                         free, free);
+		if (!sessions)
+			rv = CKR_HOST_MEMORY;
+		else
+			rv = initialize_module_inlock_reentrant (managed->mod);
+		if (rv == CKR_OK) {
+			managed->sessions = sessions;
+			managed->initialized = true;
+		} else {
+			p11_dict_free (sessions);
+		}
+	}
 
 	p11_unlock ();
 	p11_debug ("out: %lu", rv);
@@ -1423,21 +1443,192 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 }
 
 static CK_RV
+managed_track_session_inlock (p11_dict *sessions,
+                              CK_SLOT_ID slot_id,
+                              CK_SESSION_HANDLE session)
+{
+	void *key;
+	void *value;
+
+	key = memdup (&session, sizeof (CK_SESSION_HANDLE));
+	return_val_if_fail (key != NULL, CKR_HOST_MEMORY);
+
+	value = memdup (&slot_id, sizeof (CK_SESSION_HANDLE));
+	return_val_if_fail (value != NULL, CKR_HOST_MEMORY);
+
+	if (!p11_dict_set (sessions, key, value))
+		return_val_if_reached (CKR_HOST_MEMORY);
+
+	return CKR_OK;
+}
+
+static void
+managed_untrack_session_inlock (p11_dict *sessions,
+                                CK_SESSION_HANDLE session)
+{
+	p11_dict_remove (sessions, &session);
+}
+
+static CK_SESSION_HANDLE *
+managed_steal_sessions_inlock (p11_dict *sessions,
+                        bool matching_slot_id,
+                        CK_SLOT_ID slot_id,
+                        int *count)
+{
+	CK_SESSION_HANDLE *stolen;
+	CK_SESSION_HANDLE *key;
+	CK_SLOT_ID *value;
+	p11_dictiter iter;
+	int at, i;
+
+	assert (sessions != NULL);
+	assert (count != NULL);
+
+	stolen = calloc (p11_dict_size (sessions), sizeof (CK_SESSION_HANDLE));
+	return_val_if_fail (stolen != NULL, NULL);
+
+	at = 0;
+	p11_dict_iterate (sessions, &iter);
+	while (p11_dict_next (&iter, (void **)&key, (void **)&value)) {
+		if (!matching_slot_id || slot_id == *value)
+			stolen[at++] = *key;
+	}
+
+	/* Removed them all, clear the whole array */
+	if (at == p11_dict_size (sessions)) {
+		p11_dict_clear (sessions);
+
+	/* Only removed some, go through and remove those */
+	} else {
+		for (i = 0; i < at; i++) {
+			if (!p11_dict_remove (sessions, stolen + at))
+				assert_not_reached ();
+		}
+	}
+
+	*count = at;
+	return stolen;
+}
+
+static void
+managed_close_sessions (CK_X_FUNCTION_LIST *funcs,
+                        CK_SESSION_HANDLE *stolen,
+                        int count)
+{
+	CK_RV rv;
+	int i;
+
+	for (i = 0; i < count; i++) {
+		rv = funcs->C_CloseSession (funcs, stolen[i]);
+		if (rv != CKR_OK)
+			p11_message ("couldn't close session: %s", p11_kit_strerror (rv));
+	}
+}
+
+static CK_RV
 managed_C_Finalize (CK_X_FUNCTION_LIST *self,
                     CK_VOID_PTR reserved)
 {
-	Module *mod = ((Managed *)self)->mod;
+	Managed *managed = ((Managed *)self);
+	CK_SESSION_HANDLE *sessions;
+	int count;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	rv = finalize_module_inlock_reentrant (mod);
+	if (!managed->initialized) {
+		rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+
+	} else {
+		sessions = managed_steal_sessions_inlock (managed->sessions, false, 0, &count);
+
+		if (sessions && count) {
+			/* WARNING: reentrancy can occur here */
+			p11_unlock ();
+			managed_close_sessions (&managed->mod->virt.funcs, sessions, count);
+			p11_lock ();
+		}
+
+		free (sessions);
+
+		/* WARNING: reentrancy can occur here */
+		rv = finalize_module_inlock_reentrant (managed->mod);
+
+		if (rv == CKR_OK) {
+			managed->initialized = false;
+			p11_dict_free (managed->sessions);
+			managed->sessions = NULL;
+		}
+	}
 
 	p11_unlock ();
 	p11_debug ("out: %lu", rv);
 
 	return rv;
+}
+
+static CK_RV
+managed_C_OpenSession (CK_X_FUNCTION_LIST *self,
+                       CK_SLOT_ID slot_id,
+                       CK_FLAGS flags,
+                       CK_VOID_PTR application,
+                       CK_NOTIFY notify,
+                       CK_SESSION_HANDLE_PTR session)
+{
+	Managed *managed = ((Managed *)self);
+	CK_RV rv;
+
+	return_val_if_fail (session != NULL, CKR_ARGUMENTS_BAD);
+
+	self = &managed->mod->virt.funcs;
+	rv = self->C_OpenSession (self, slot_id, flags, application, notify, session);
+
+	if (rv == CKR_OK) {
+		p11_lock ();
+		rv = managed_track_session_inlock (managed->sessions, slot_id, *session);
+		p11_unlock ();
+	}
+
+	return rv;
+}
+
+static CK_RV
+managed_C_CloseSession (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE session)
+{
+	Managed *managed = ((Managed *)self);
+	CK_RV rv;
+
+	self = &managed->mod->virt.funcs;
+	rv = self->C_CloseSession (self, session);
+
+	if (rv == CKR_OK) {
+		p11_lock ();
+		managed_untrack_session_inlock (managed->sessions, session);
+		p11_unlock ();
+	}
+
+	return rv;
+}
+
+static CK_RV
+managed_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
+                            CK_SLOT_ID slot_id)
+{
+	Managed *managed = ((Managed *)self);
+	CK_SESSION_HANDLE *stolen;
+	int count;
+
+	p11_lock ();
+	stolen = managed_steal_sessions_inlock (managed->sessions, true, slot_id, &count);
+	p11_unlock ();
+
+	self = &managed->mod->virt.funcs;
+	managed_close_sessions (self, stolen, count);
+	free (stolen);
+
+	return stolen ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 static void
@@ -1460,6 +1651,9 @@ managed_create_inlock (Module *mod)
 	                  &mod->virt, NULL);
 	managed->virt.funcs.C_Initialize = managed_C_Initialize;
 	managed->virt.funcs.C_Finalize = managed_C_Finalize;
+	managed->virt.funcs.C_CloseAllSessions = managed_C_CloseAllSessions;
+	managed->virt.funcs.C_CloseSession = managed_C_CloseSession;
+	managed->virt.funcs.C_OpenSession = managed_C_OpenSession;
 	managed->mod = mod;
 	mod->ref_count++;
 

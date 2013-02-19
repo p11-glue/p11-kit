@@ -88,6 +88,12 @@
 			function concurrently from different threads and <literal>p11-kit</literal>
 			will guarantee that this managed in a thread-safe manner.</para>
 		</listitem>
+		<listitem>
+			<para>Call to <literal>C_CloseAllSessions</literal> only close the
+			sessions that the caller of the managed module has opened. This allows the
+			<literal>C_CloseAllSessions</literal> function to be used without closing
+			sessions for other callers of the same PKCS#11 module.</para>
+		</listitem>
 		</itemizedlist>
 	</section>
 </chapter>

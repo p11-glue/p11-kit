@@ -152,7 +152,14 @@ test_recursive_initialization (CuTest *tc)
 	p11_unlock ();
 
 	rv = p11_kit_module_initialize (recursive_managed);
-	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
+	CuAssertIntEquals (tc, CKR_FUNCTION_FAILED, rv);
+
+	p11_lock ();
+
+	rv = p11_module_release_inlock_reentrant (recursive_managed);
+	CuAssertTrue (tc, rv == CKR_OK);
+
+	p11_unlock ();
 
 	p11_kit_be_loud ();
 }
