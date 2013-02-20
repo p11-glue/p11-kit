@@ -190,7 +190,7 @@ free_module_unlocked (void *data)
 	assert (mod->ref_count == 0);
 
 	if (mod->dl_module)
-		p11_module_close (mod->dl_module);
+		p11_dl_close (mod->dl_module);
 
 	p11_mutex_uninit (&mod->initialize_mutex);
 	p11_dict_free (mod->config);
@@ -253,21 +253,26 @@ static CK_RV
 dlopen_and_get_function_list (Module *mod, const char *path)
 {
 	CK_C_GetFunctionList gfl;
+	char *error;
 	CK_RV rv;
 
 	assert (mod);
 	assert (path);
 
-	mod->dl_module = p11_module_open (path);
+	mod->dl_module = p11_dl_open (path);
 	if (mod->dl_module == NULL) {
-		p11_message ("couldn't load module: %s: %s", path, p11_module_error ());
+		error = p11_dl_error ();
+		p11_message ("couldn't load module: %s: %s", path, error);
+		free (error);
 		return CKR_GENERAL_ERROR;
 	}
 
-	gfl = p11_module_symbol (mod->dl_module, "C_GetFunctionList");
+	gfl = p11_dl_symbol (mod->dl_module, "C_GetFunctionList");
 	if (!gfl) {
+		error = p11_dl_error ();
 		p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
-		             path, p11_module_error ());
+		             path, error);
+		free (error);
 		return CKR_GENERAL_ERROR;
 	}
 

@@ -127,18 +127,22 @@ p11_mutex_init (p11_mutex_t *mutex)
 	pthread_mutexattr_destroy (&attr);
 }
 
+char *
+p11_dl_error (void)
+{
+	const char *msg = dlerror ();
+	return msg ? strdup (msg) : NULL;
+}
+
 #endif /* OS_UNIX */
 
 #ifdef OS_WIN32
 
-const char *
-p11_module_error (void)
+char *
+p11_dl_error (void)
 {
 	DWORD code = GetLastError();
-	p11_local *local;
 	LPVOID msg_buf;
-
-	local = p11_library_get_thread_local ();
 
 	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	                FORMAT_MESSAGE_FROM_SYSTEM |
@@ -146,10 +150,6 @@ p11_module_error (void)
 	                NULL, code,
 	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 	                (LPSTR)&msg_buf, 0, NULL);
-
-	if (local->last_error)
-		LocalFree (local->last_error);
-	local->last_error = msg_buf;
 
 	return msg_buf;
 }

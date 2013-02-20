@@ -115,14 +115,14 @@ int p11_thread_join (thread_t thread);
 
 typedef HMODULE dl_module_t;
 
-#define p11_module_open(f) \
+#define p11_dl_open(f) \
 	(LoadLibrary (f))
-#define p11_module_close(d) \
+#define p11_dl_close(d) \
 	(FreeLibrary (d))
-#define p11_module_symbol(d, s) \
+#define p11_dl_symbol(d, s) \
 	((void *)GetProcAddress ((d), (s)))
 
-const char *    p11_module_error       (void);
+char *    p11_dl_error       (void);
 
 #define p11_sleep_ms(ms) \
 	(Sleep (ms))
@@ -165,14 +165,14 @@ typedef void * (*p11_thread_routine) (void *arg);
 
 typedef void * dl_module_t;
 
-#define p11_module_open(f) \
+#define p11_dl_open(f) \
 	(dlopen ((f), RTLD_LOCAL | RTLD_NOW))
-#define p11_module_close(d) \
-	(dlclose(d))
-#define p11_module_error() \
-	(dlerror ())
-#define p11_module_symbol(d, s) \
+#define p11_dl_close \
+	dlclose
+#define p11_dl_symbol(d, s) \
 	(dlsym ((d), (s)))
+
+char * p11_dl_error (void);
 
 #define p11_sleep_ms(ms) \
 	do { int _ms = (ms); \
