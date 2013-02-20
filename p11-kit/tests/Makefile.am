@@ -29,20 +29,24 @@ CHECK_PROGS = \
 	test-rpc \
 	$(NULL)
 
+noinst_PROGRAMS = \
+	print-messages \
+	frob-setuid \
+	$(CHECK_PROGS)
+
 if WITH_FFI
 
 CHECK_PROGS += \
 	test-virtual \
 	test-managed \
 	test-log \
+	test-transport \
 	$(NULL)
 
-endif
+noinst_PROGRAMS += \
+	frob-server
 
-noinst_PROGRAMS = \
-	print-messages \
-	frob-setuid \
-	$(CHECK_PROGS)
+endif
 
 TESTS = $(CHECK_PROGS)
 
@@ -67,7 +71,9 @@ mock_one_la_LDFLAGS = \
 	-module -avoid-version -rpath /nowhere \
 	-no-undefined -export-symbols-regex 'C_GetFunctionList'
 
-mock_two_la_SOURCES = $(mock_one_la_SOURCES)
+mock_two_la_SOURCES = \
+	mock-module-ep2.c
+
 mock_two_la_CFLAGS = $(mock_one_la_CFLAGS)
 mock_two_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_two_la_LIBADD = $(mock_one_la_LIBADD)
@@ -78,6 +84,7 @@ mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_three_la_LIBADD = $(mock_one_la_LIBADD)
 
 mock_four_la_SOURCES = $(mock_one_la_SOURCES)
+mock_four_la_CFLAGS = $(mock_one_la_CFLAGS)
 mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
 

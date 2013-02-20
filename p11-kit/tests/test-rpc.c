@@ -47,6 +47,7 @@
 #include "virtual.h"
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -350,15 +351,17 @@ test_byte_array_static (void)
 }
 
 static p11_virtual base;
-static bool rpc_initialized = false;
+static pid_t rpc_initialized = 0;
 
 static CK_RV
 rpc_initialize (p11_rpc_client_vtable *vtable,
                 void *init_reserved)
 {
+	pid_t pid = getpid ();
+
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_eq (false, rpc_initialized);
-	rpc_initialized = true;
+	assert_num_cmp (pid, !=, rpc_initialized);
+	rpc_initialized = pid;
 
 	return CKR_OK;
 }
@@ -367,8 +370,10 @@ static CK_RV
 rpc_initialize_fails (p11_rpc_client_vtable *vtable,
                       void *init_reserved)
 {
+	pid_t pid = getpid ();
+
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_eq (false, rpc_initialized);
+	assert_num_cmp (pid, !=, rpc_initialized);
 	return CKR_FUNCTION_FAILED;
 }
 
@@ -376,8 +381,10 @@ static CK_RV
 rpc_initialize_device_removed (p11_rpc_client_vtable *vtable,
                                void *init_reserved)
 {
+	pid_t pid = getpid ();
+
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_eq (false, rpc_initialized);
+	assert_num_cmp (pid, !=, rpc_initialized);
 	return CKR_DEVICE_REMOVED;
 }
 
@@ -401,21 +408,24 @@ static void
 rpc_finalize (p11_rpc_client_vtable *vtable,
               void *fini_reserved)
 {
+	pid_t pid = getpid ();
+
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_eq (true, rpc_initialized);
-	rpc_initialized = false;
+	assert_num_cmp (pid, ==, rpc_initialized);
+	rpc_initialized = 0;
 }
 
 static void
 test_initialize (void)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport, rpc_finalize };
+	pid_t pid = getpid ();
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
 
 	/* Build up our own function list */
-	rpc_initialized = false;
+	rpc_initialized = 0;
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -423,11 +433,11 @@ test_initialize (void)
 
 	rv = mixin.funcs.C_Initialize (&mixin.funcs, NULL);
 	assert (rv == CKR_OK);
-	assert_num_eq (true, rpc_initialized);
+	assert_num_eq (pid, rpc_initialized);
 
 	rv = mixin.funcs.C_Finalize (&mixin.funcs, NULL);
 	assert (rv == CKR_OK);
-	assert_num_eq (false, rpc_initialized);
+	assert_num_cmp (pid, !=, rpc_initialized);
 
 	p11_virtual_uninit (&mixin);
 }
@@ -442,7 +452,7 @@ test_not_initialized (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	rpc_initialized = false;
+	rpc_initialized = 0;
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -463,7 +473,7 @@ test_initialize_fails_on_client (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	rpc_initialized = false;
+	rpc_initialized = 0;
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -471,7 +481,7 @@ test_initialize_fails_on_client (void)
 
 	rv = (mixin.funcs.C_Initialize) (&mixin.funcs, NULL);
 	assert (rv == CKR_FUNCTION_FAILED);
-	assert_num_eq (false, rpc_initialized);
+	assert_num_eq (0, rpc_initialized);
 
 	p11_virtual_uninit (&mixin);
 }
@@ -493,7 +503,7 @@ test_transport_fails (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	rpc_initialized = false;
+	rpc_initialized = 0;
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -501,7 +511,7 @@ test_transport_fails (void)
 
 	rv = (mixin.funcs.C_Initialize) (&mixin.funcs, NULL);
 	assert (rv == CKR_FUNCTION_REJECTED);
-	assert_num_eq (false, rpc_initialized);
+	assert_num_eq (0, rpc_initialized);
 
 	p11_virtual_uninit (&mixin);
 }
@@ -523,7 +533,7 @@ test_initialize_fails_on_server (void)
 
 	rv = (mixin.funcs.C_Initialize) (&mixin.funcs, NULL);
 	assert (rv == CKR_FUNCTION_FAILED);
-	assert_num_eq (false, rpc_initialized);
+	assert_num_eq (0, rpc_initialized);
 
 	p11_virtual_uninit (&mixin);
 }
@@ -555,7 +565,7 @@ test_transport_bad_parse (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	rpc_initialized = false;
+	rpc_initialized = 0;
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -886,6 +896,116 @@ test_get_slot_list_no_device (void)
 	teardown_mock_module (rpc_module);
 }
 
+static void *
+invoke_in_thread (void *arg)
+{
+	CK_FUNCTION_LIST *rpc_module = arg;
+	CK_INFO info;
+	CK_RV rv;
+
+	rv = (rpc_module->C_GetInfo) (&info);
+	assert_num_eq (rv, CKR_OK);
+
+	assert (memcmp (info.manufacturerID, MOCK_INFO.manufacturerID,
+	                sizeof (info.manufacturerID)) == 0);
+
+	return NULL;
+}
+
+static p11_mutex_t delay_mutex;
+
+static CK_RV
+delayed_C_GetInfo (CK_INFO_PTR info)
+{
+	CK_RV rv;
+
+	p11_sleep_ms (rand () % 100);
+
+	p11_mutex_lock (&delay_mutex);
+	rv = mock_C_GetInfo (info);
+	p11_mutex_unlock (&delay_mutex);
+
+	return rv;
+}
+
+static void
+test_simultaneous_functions (void)
+{
+	CK_FUNCTION_LIST real_module;
+	CK_FUNCTION_LIST *rpc_module;
+	const int num_threads = 128;
+	p11_thread_t threads[num_threads];
+	int i, ret;
+
+	p11_mutex_init (&delay_mutex);
+
+	memcpy (&real_module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
+	real_module.C_GetInfo = delayed_C_GetInfo;
+
+	rpc_module = setup_test_rpc_module (&test_normal_vtable,
+	                                    &real_module, NULL);
+
+	/* Make the invoked function (above) wait */
+	p11_mutex_lock (&delay_mutex);
+
+	for (i = 0; i < num_threads; i++) {
+		ret = p11_thread_create (threads + i, invoke_in_thread, rpc_module);
+		assert_num_eq (0, ret);
+	}
+
+	/* Let the invoked functions return */
+	p11_mutex_unlock (&delay_mutex);
+
+	for (i = 0; i < num_threads; i++)
+		p11_thread_join (threads[i]);
+
+	teardown_mock_module (rpc_module);
+	p11_mutex_uninit (&delay_mutex);
+}
+
+static void
+test_fork_and_reinitialize (void)
+{
+	CK_FUNCTION_LIST *rpc_module;
+	CK_INFO info;
+	int status;
+	CK_RV rv;
+	pid_t pid;
+	int i;
+
+	rpc_module = setup_test_rpc_module (&test_normal_vtable,
+	                                    &mock_module_no_slots, NULL);
+
+	pid = fork ();
+	assert_num_cmp (pid, >=, 0);
+
+	/* The child */
+	if (pid == 0) {
+		rv = (rpc_module->C_Initialize) (NULL);
+		assert_num_eq (CKR_OK, rv);
+
+		for (i = 0; i < 32; i++) {
+			rv = (rpc_module->C_GetInfo) (&info);
+			assert_num_eq (CKR_OK, rv);
+		}
+
+		rv = (rpc_module->C_Finalize) (NULL);
+		assert_num_eq (CKR_OK, rv);
+
+		_exit (66);
+	}
+
+	for (i = 0; i < 128; i++) {
+		rv = (rpc_module->C_GetInfo) (&info);
+		assert_num_eq (CKR_OK, rv);
+	}
+
+	assert_num_eq (waitpid (pid, &status, 0), pid);
+	assert_num_eq (WEXITSTATUS (status), 66);
+
+	teardown_mock_module (rpc_module);
+}
+
 #include "test-mock.c"
 
 int
@@ -932,6 +1052,8 @@ main (int argc,
 	p11_test (test_transport_bad_contents, "/rpc/transport-bad-contents");
 	p11_test (test_get_info_stand_in, "/rpc/get-info-stand-in");
 	p11_test (test_get_slot_list_no_device, "/rpc/get-slot-list-no-device");
+	p11_test (test_simultaneous_functions, "/rpc/simultaneous-functions");
+	p11_test (test_fork_and_reinitialize, "/rpc/fork-and-reinitialize");
 
 	test_mock_add_tests ("/rpc");
 

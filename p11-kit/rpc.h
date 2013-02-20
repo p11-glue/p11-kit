@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Stefan Walter
+ * Copyright (C) 2013 Stefan Walter
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +33,8 @@
  * Author: Stef Walter <stefw@gnome.org>
  */
 
-#ifndef __P11_KIT_RPC_H__
-#define __P11_KIT_RPC_H__
+#ifndef __P11_RPC_H__
+#define __P11_RPC_H__
 
 #include "pkcs11.h"
 #include "buffer.h"
@@ -53,8 +54,6 @@ struct _p11_rpc_client_vtable {
 
 	void        (* disconnect)    (p11_rpc_client_vtable *vtable,
 	                               void *fini_reserved);
-
-	void *reserved[16];
 };
 
 bool                   p11_rpc_client_init         (p11_virtual *virt,
@@ -66,4 +65,31 @@ bool                   p11_rpc_server_handle       (CK_X_FUNCTION_LIST *funcs,
 
 extern CK_MECHANISM_TYPE *  p11_rpc_mechanisms_override_supported;
 
-#endif /* __P11_KIT_RPC_H__ */
+typedef struct _p11_rpc_transport p11_rpc_transport;
+
+p11_rpc_transport *    p11_rpc_transport_new       (p11_virtual *virt,
+                                                    const char *remote,
+                                                    const char *name);
+
+void                   p11_rpc_transport_free      (void *transport);
+
+typedef enum {
+	P11_RPC_OK,
+	P11_RPC_EOF,
+	P11_RPC_AGAIN,
+	P11_RPC_ERROR
+} p11_rpc_status;
+
+p11_rpc_status         p11_rpc_transport_read      (int fd,
+                                                    size_t *state,
+                                                    int *call_code,
+                                                    p11_buffer *options,
+                                                    p11_buffer *buffer);
+
+p11_rpc_status         p11_rpc_transport_write     (int fd,
+                                                    size_t *state,
+                                                    int call_code,
+                                                    p11_buffer *options,
+                                                    p11_buffer *buffer);
+
+#endif /* __P11_RPC_H__ */

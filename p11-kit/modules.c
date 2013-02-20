@@ -51,6 +51,7 @@
 #include "p11-kit.h"
 #include "private.h"
 #include "proxy.h"
+#include "rpc.h"
 #include "virtual.h"
 
 #include <sys/stat.h>
@@ -391,6 +392,36 @@ load_module_from_file_inlock (const char *name,
 	return CKR_OK;
 }
 
+static CK_RV
+setup_module_for_remote_inlock (const char *name,
+                                const char *remote,
+                                Module **result)
+{
+	p11_rpc_transport *rpc;
+	Module *mod;
+
+	p11_debug ("remoting module %s using: %s", name, remote);
+
+	mod = alloc_module_unlocked ();
+	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
+
+	rpc = p11_rpc_transport_new (&mod->virt, remote, name);
+	if (rpc == NULL) {
+		free_module_unlocked (mod);
+		return CKR_DEVICE_ERROR;
+	}
+
+	mod->loaded_module = rpc;
+	mod->loaded_destroy = p11_rpc_transport_free;
+
+	/* This takes ownership of the module */
+	if (!p11_dict_set (gl.modules, mod, mod))
+		return_val_if_reached (CKR_HOST_MEMORY);
+
+	*result = mod;
+	return CKR_OK;
+}
+
 static int
 is_list_delimiter (char ch)
 {
@@ -452,6 +483,7 @@ take_config_and_load_module_inlock (char **name,
                                     bool critical)
 {
 	const char *filename;
+	const char *remote;
 	Module *mod;
 	CK_RV rv;
 
@@ -463,15 +495,30 @@ take_config_and_load_module_inlock (char **name,
 	if (!is_module_enabled_unlocked (*name, *config))
 		return CKR_OK;
 
-	filename = p11_dict_get (*config, "module");
-	if (filename == NULL) {
-		p11_debug ("no module path for module, skipping: %s", *name);
-		return CKR_OK;
-	}
+	remote = p11_dict_get (*config, "remote");
+	if (remote != NULL) {
+		rv = setup_module_for_remote_inlock (*name, remote, &mod);
+		if (rv != CKR_OK)
+			return rv;
 
-	rv = load_module_from_file_inlock (*name, filename, &mod);
-	if (rv != CKR_OK)
-		return CKR_OK;
+	} else {
+		filename = p11_dict_get (*config, "module");
+		if (filename == NULL) {
+			p11_debug ("no module path for module, skipping: %s", *name);
+			return CKR_OK;
+		}
+
+		rv = load_module_from_file_inlock (*name, filename, &mod);
+		if (rv != CKR_OK)
+			return CKR_OK;
+
+		/*
+		 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
+		 * 'x-init-reserved' setting in the config. This only works with specific
+		 * PKCS#11 modules, and is non-standard use of that field.
+		 */
+		mod->init_args.pReserved = p11_dict_get (*config, "x-init-reserved");
+	}
 
 	/* Take ownership of thes evariables */
 	p11_dict_free (mod->config);
@@ -481,13 +528,6 @@ take_config_and_load_module_inlock (char **name,
 	mod->name = *name;
 	*name = NULL;
 	mod->critical = critical;
-
-	/*
-	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
-	 * 'x-init-reserved' setting in the config. This only works with specific
-	 * PKCS#11 modules, and is non-standard use of that field.
-	 */
-	mod->init_args.pReserved = p11_dict_get (mod->config, "x-init-reserved");
 
 	return CKR_OK;
 }

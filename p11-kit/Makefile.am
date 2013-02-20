@@ -36,8 +36,9 @@ MODULE_SRCS = \
 	proxy.c proxy.h \
 	private.h \
 	messages.c \
+	rpc-transport.c rpc.h \
 	rpc-message.c rpc-message.h \
-	rpc-client.c rpc-server.c rpc.h \
+	rpc-client.c rpc-server.c \
 	uri.c \
 	virtual.c virtual.h \
 	$(inc_HEADERS)
