@@ -325,4 +325,11 @@ int         strerror_r      (int errnum,
 
 #endif /* HAVE_STRERROR_R */
 
+#ifndef HAVE_FDWALK
+
+int        fdwalk           (int (* cb) (void *data, int fd),
+                             void *data);
+
+#endif
+
 #endif /* __COMPAT_H__ */

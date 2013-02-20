@@ -37,6 +37,7 @@
 #include "compat.h"
 
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,6 +81,8 @@
 #ifndef HAVE_GETPROGNAME
 
 #ifdef OS_UNIX
+
+#include <unistd.h>
 
 #if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 extern char *program_invocation_short_name;
@@ -866,3 +869,73 @@ strerror_r (int errnum,
 }
 
 #endif /* HAVE_STRERROR_R */
+
+#ifdef OS_UNIX
+
+#include <unistd.h>
+
+#ifndef HAVE_FDWALK
+
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
+int
+fdwalk (int (* cb) (void *data, int fd),
+        void *data)
+{
+	struct dirent *de;
+	char *end;
+	DIR *dir;
+	int open_max;
+	long num;
+	int res = 0;
+	int fd;
+
+#ifdef HAVE_SYS_RESOURCE_H
+	struct rlimit rl;
+#endif
+
+	dir = opendir ("/proc/self/fd");
+	if (dir != NULL) {
+		while ((de = readdir (dir)) != NULL) {
+			end = NULL;
+			num = (int) strtol (de->d_name, &end, 10);
+
+			/* didn't parse or is the opendir() fd */
+			if (!end || *end != '\0' ||
+			    (int)num == dirfd (dir))
+				continue;
+
+			fd = num;
+
+			/* call the callback */
+			res = cb (data, fd);
+			if (res != 0)
+				break;
+		}
+
+		closedir (dir);
+		return res;
+	}
+
+	/* No /proc, brute force */
+#ifdef HAVE_SYS_RESOURCE_H
+	if (getrlimit (RLIMIT_NOFILE, &rl) == 0 && rl.rlim_max != RLIM_INFINITY)
+		open_max = rl.rlim_max;
+	else
+#endif
+		open_max = sysconf (_SC_OPEN_MAX);
+
+	for (fd = 0; fd < open_max; fd++) {
+		res = cb (data, fd);
+		if (res != 0)
+			break;
+	}
+
+	return res;
+}
+
+#endif /* HAVE_FDWALK */
+
+#endif /* OS_UNIX */
