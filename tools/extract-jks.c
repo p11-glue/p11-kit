@@ -294,15 +294,15 @@ prepare_jks_buffer (P11KitIter *iter,
 	encode_msb_int ((unsigned char *)buffer->data + count_at, count);
 
 	/*
-	 * Java keystore reinvents HMAC and uses it to try and secure the
-	 * keystore. We fill this in and use an empty string as the password
-	 * for this keyed digest.
+	 * Java keystore reinvents HMAC and uses it to try and "secure" the
+	 * cacerts. We fill this in and use the default "changeit" string
+	 * as the password for this keyed digest.
 	 */
 	length = buffer->len;
 	digest = p11_buffer_append (buffer, P11_CHECKSUM_SHA1_LENGTH);
 	return_val_if_fail (digest != NULL, false);
 	p11_checksum_sha1 (digest,
-	                   "\000c\000h\000a\000n\000g\000e\000i\000t", 16, /* empty password */
+	                   "\000c\000h\000a\000n\000g\000e\000i\000t", 16, /* default password */
 	                   "Mighty Aphrodite", 16, /* go figure */
 	                   buffer->data, length,
 	                   NULL);
