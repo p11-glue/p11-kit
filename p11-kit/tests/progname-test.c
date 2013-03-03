@@ -81,7 +81,7 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	setenv ("P11_KIT_STRICT", "1", 1);
+	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_progname_default);
