@@ -78,6 +78,12 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([strnstr memdup strndup])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
+	AC_CHECK_FUNCS([timegm])
+
+	# Required functions
+	AC_CHECK_FUNCS([gmtime_r],
+		[AC_DEFINE([HAVE_GMTIME_R], 1, [Whether gmtime_r() is available])],
+		[AC_MSG_ERROR([could not find required gmtime_r() function])])
 
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])

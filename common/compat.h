@@ -272,4 +272,19 @@ int        vasprintf        (char **strp,
 
 #endif /* HAVE_VASPRINTF */
 
+#ifndef HAVE_GMTIME_R
+#include <time.h>
+
+struct tm * gmtime_r        (const time_t *timep,
+                             struct tm *result);
+
+#endif /* HAVE_GMTIME_R */
+
+#ifndef HAVE_TIMEGM
+#include <time.h>
+
+time_t      timegm          (struct tm *tm);
+
+#endif /* HAVE_TIMEGM */
+
 #endif /* __COMPAT_H__ */
