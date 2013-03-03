@@ -551,3 +551,147 @@ vasprintf (char **strp,
 }
 
 #endif /* HAVE_VASPRINTF */
+
+#if !defined(HAVE_MKDTEMP) || !defined(HAVE_MKSTEMP)
+#include <sys/stat.h>
+#include <fcntl.h>
+
+static int
+_gettemp (char *path,
+          int *doopen,
+          int domkdir,
+          int slen)
+{
+	static const char padchar[] =
+		"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	static const int maxpathlen = 1024;
+
+	char *start, *trv, *suffp, *carryp;
+	char *pad;
+	struct stat sbuf;
+	int rval;
+	int rnd;
+	char carrybuf[maxpathlen];
+
+	if ((doopen != NULL && domkdir) || slen < 0) {
+		errno = EINVAL;
+		return (0);
+	}
+
+	for (trv = path; *trv != '\0'; ++trv)
+		;
+	if (trv - path >= maxpathlen) {
+		errno = ENAMETOOLONG;
+		return (0);
+	}
+	trv -= slen;
+	suffp = trv;
+	--trv;
+	if (trv < path || NULL != strchr (suffp, '/')) {
+		errno = EINVAL;
+		return (0);
+	}
+
+	/* Fill space with random characters */
+	while (trv >= path && *trv == 'X') {
+		rnd = rand () % sizeof (padchar) - 1;
+		*trv-- = padchar[rnd];
+	}
+	start = trv + 1;
+
+	/* save first combination of random characters */
+	memcpy (carrybuf, start, suffp - start);
+
+	/*
+	 * check the target directory.
+	 */
+	if (doopen != NULL || domkdir) {
+		for (; trv > path; --trv) {
+			if (*trv == '/') {
+				*trv = '\0';
+				rval = stat(path, &sbuf);
+				*trv = '/';
+				if (rval != 0)
+					return (0);
+				if (!S_ISDIR(sbuf.st_mode)) {
+					errno = ENOTDIR;
+					return (0);
+				}
+				break;
+			}
+		}
+	}
+
+	for (;;) {
+		if (doopen) {
+			if ((*doopen = open (path, O_BINARY | O_CREAT | O_EXCL | O_RDWR, 0600)) >= 0)
+				return (1);
+			if (errno != EEXIST)
+				return (0);
+		} else if (domkdir) {
+#ifdef OS_UNIX
+			if (mkdir (path, 0700) == 0)
+#else
+			if (mkdir (path) == 0)
+#endif
+				return (1);
+			if (errno != EEXIST)
+				return (0);
+#ifdef OS_UNIX
+		} else if (lstat (path, &sbuf))
+#else
+		} else if (stat (path, &sbuf))
+#endif
+			return (errno == ENOENT);
+
+		/* If we have a collision, cycle through the space of filenames */
+		for (trv = start, carryp = carrybuf;;) {
+			/* have we tried all possible permutations? */
+			if (trv == suffp)
+				return (0); /* yes - exit with EEXIST */
+			pad = strchr(padchar, *trv);
+			if (pad == NULL) {
+				/* this should never happen */
+				errno = EIO;
+				return (0);
+			}
+			/* increment character */
+			*trv = (*++pad == '\0') ? padchar[0] : *pad;
+			/* carry to next position? */
+			if (*trv == *carryp) {
+				/* increment position and loop */
+				++trv;
+				++carryp;
+			} else {
+				/* try with new name */
+				break;
+			}
+		}
+	}
+
+	/*NOTREACHED*/
+}
+
+#endif /* !HAVE_MKDTEMP || !HAVE_MKSTEMP */
+
+#ifndef HAVE_MKSTEMP
+
+int
+mkstemp (char *template)
+{
+	int fd;
+
+	return (_gettemp (template, &fd, 0, 0) ? fd : -1);
+}
+
+#endif /* HAVE_MKSTEMP */
+
+#ifndef HAVE_MKDTEMP
+
+char *
+mkdtemp (char *template)
+{
+	return (_gettemp (template, (int *)NULL, 1, 0) ? template : (char *)NULL);
+}
+
+#endif /* HAVE_MKDTEMP */

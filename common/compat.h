@@ -74,6 +74,18 @@ char *       basename    (const char *name);
 
 #endif /* HAVE_BASENAME */
 
+#ifndef HAVE_MKSTEMP
+
+int          mkstemp     (char *template);
+
+#endif /* HAVE_MKSTEMP */
+
+#ifndef HAVE_MKDTEMP
+
+char *       mkdtemp     (char *template);
+
+#endif /* HAVE_MKDTEMP */
+
 /* -----------------------------------------------------------------------------
  * WIN32
  */
