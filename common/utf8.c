@@ -40,6 +40,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 /*
@@ -71,20 +72,20 @@
  */
 
 static ssize_t
-utf8_to_wchar (const char *str,
+utf8_to_uchar (const char *str,
                size_t len,
-               wchar_t *wc)
+               uint32_t *uc)
 {
 	int ch, i, mask, want;
-	wchar_t lbound, wch;
+	uint32_t lbound, uch;
 
 	assert (str != NULL);
 	assert (len > 0);
-	assert (wc != NULL);
+	assert (uc != NULL);
 
 	if (((ch = (unsigned char)*str) & ~0x7f) == 0) {
 		/* Fast path for plain ASCII characters. */
-		*wc = ch;
+		*uc = ch;
 		return 1;
 	}
 
@@ -137,7 +138,7 @@ utf8_to_wchar (const char *str,
 	 * Decode the octet sequence representing the character in chunks
 	 * of 6 bits, most significant first.
 	 */
-	wch = (unsigned char)*str++ & mask;
+	uch = (unsigned char)*str++ & mask;
 	for (i = 1; i < want; i++) {
 		if ((*str & 0xc0) != 0x80) {
 			/*
@@ -146,22 +147,22 @@ utf8_to_wchar (const char *str,
 			 */
 			return -1;
 		}
-		wch <<= 6;
-		wch |= *str++ & 0x3f;
+		uch <<= 6;
+		uch |= *str++ & 0x3f;
 	}
-	if (wch < lbound) {
+	if (uch < lbound) {
 		/*
 		 * Malformed input; redundant encoding.
 		 */
 		return -1;
 	}
 
-	*wc = wch;
+	*uc = uch;
 	return want;
 }
 
 static size_t
-utf8_for_wchar (wchar_t wc,
+utf8_for_uchar (uint32_t uc,
                 char *str,
                 size_t len)
 {
@@ -171,9 +172,9 @@ utf8_for_wchar (wchar_t wc,
 	assert (str != NULL);
 	assert (len >= 6);
 
-	if ((wc & ~0x7f) == 0) {
+	if ((uc & ~0x7f) == 0) {
 		/* Fast path for plain ASCII characters. */
-		*str = (char)wc;
+		*str = (char)uc;
 		return 1;
 	}
 
@@ -183,19 +184,19 @@ utf8_for_wchar (wchar_t wc,
 	 * first few bits of the first octet, which contains the information
 	 * about the sequence length.
 	 */
-	if ((wc & ~0x7ff) == 0) {
+	if ((uc & ~0x7ff) == 0) {
 		lead = 0xc0;
 		want = 2;
-	} else if ((wc & ~0xffff) == 0) {
+	} else if ((uc & ~0xffff) == 0) {
 		lead = 0xe0;
 		want = 3;
-	} else if ((wc & ~0x1fffff) == 0) {
+	} else if ((uc & ~0x1fffff) == 0) {
 		lead = 0xf0;
 		want = 4;
-	} else if ((wc & ~0x3ffffff) == 0) {
+	} else if ((uc & ~0x3ffffff) == 0) {
 		lead = 0xf8;
 		want = 5;
-	} else if ((wc & ~0x7fffffff) == 0) {
+	} else if ((uc & ~0x7fffffff) == 0) {
 		lead = 0xfc;
 		want = 6;
 	} else {
@@ -211,17 +212,17 @@ utf8_for_wchar (wchar_t wc,
 	 * information.
 	 */
 	for (i = want - 1; i > 0; i--) {
-		str[i] = (wc & 0x3f) | 0x80;
-		wc >>= 6;
+		str[i] = (uc & 0x3f) | 0x80;
+		uc >>= 6;
 	}
-	*str = (wc & 0xff) | lead;
+	*str = (uc & 0xff) | lead;
 	return want;
 }
 
 static ssize_t
-ucs2be_to_wchar (const unsigned char *str,
+ucs2be_to_uchar (const unsigned char *str,
                  size_t len,
-                 wchar_t *wc)
+                 uint32_t *wc)
 {
 	assert (str != NULL);
 	assert (len != 0);
@@ -235,18 +236,18 @@ ucs2be_to_wchar (const unsigned char *str,
 }
 
 static ssize_t
-ucs4be_to_wchar (const unsigned char *str,
+ucs4be_to_uchar (const unsigned char *str,
                  size_t len,
-                 wchar_t *wc)
+                 uint32_t *uc)
 {
 	assert (str != NULL);
 	assert (len != 0);
-	assert (wc != NULL);
+	assert (uc != NULL);
 
 	if (len < 4)
 		return -1;
 
-	*wc = (str[0] << 24 | str[1] << 16 | str[2] << 8 | str[3]);
+	*uc = (str[0] << 24 | str[1] << 16 | str[2] << 8 | str[3]);
 	return 4;
 }
 
@@ -254,14 +255,14 @@ bool
 p11_utf8_validate (const char *str,
                    ssize_t len)
 {
-	wchar_t dummy;
+	uint32_t dummy;
 	ssize_t ret;
 
 	if (len < 0)
 		len = strlen (str);
 
 	while (len > 0) {
-		ret = utf8_to_wchar (str, len, &dummy);
+		ret = utf8_to_uchar (str, len, &dummy);
 		if (ret < 0)
 			return false;
 		str += ret;
@@ -272,14 +273,14 @@ p11_utf8_validate (const char *str,
 }
 
 static char *
-utf8_for_convert (ssize_t (* convert) (const unsigned char *, size_t, wchar_t *),
+utf8_for_convert (ssize_t (* convert) (const unsigned char *, size_t, uint32_t *),
                   const unsigned char *str,
                   size_t num_bytes,
                   size_t *ret_len)
 {
 	p11_buffer buf;
 	char block[6];
-	wchar_t wc;
+	uint32_t uc;
 	ssize_t ret;
 
 	assert (convert);
@@ -288,7 +289,7 @@ utf8_for_convert (ssize_t (* convert) (const unsigned char *, size_t, wchar_t *)
 		return_val_if_reached (NULL);
 
 	while (num_bytes != 0) {
-		ret = (convert) (str, num_bytes, &wc);
+		ret = (convert) (str, num_bytes, &uc);
 		if (ret < 0) {
 			p11_buffer_uninit (&buf);
 			return NULL;
@@ -297,7 +298,7 @@ utf8_for_convert (ssize_t (* convert) (const unsigned char *, size_t, wchar_t *)
 		str += ret;
 		num_bytes -= ret;
 
-		ret = utf8_for_wchar (wc, block, 6);
+		ret = utf8_for_uchar (uc, block, 6);
 		if (ret < 0) {
 			p11_buffer_uninit (&buf);
 			return NULL;
@@ -315,7 +316,7 @@ p11_utf8_for_ucs2be (const unsigned char *str,
                      size_t *ret_len)
 {
 	assert (str != NULL);
-	return utf8_for_convert (ucs2be_to_wchar, str, num_bytes, ret_len);
+	return utf8_for_convert (ucs2be_to_uchar, str, num_bytes, ret_len);
 }
 
 char *
@@ -324,5 +325,5 @@ p11_utf8_for_ucs4be (const unsigned char *str,
                      size_t *ret_len)
 {
 	assert (str != NULL);
-	return utf8_for_convert (ucs4be_to_wchar, str, num_bytes, ret_len);
+	return utf8_for_convert (ucs4be_to_uchar, str, num_bytes, ret_len);
 }
