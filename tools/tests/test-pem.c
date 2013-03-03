@@ -249,6 +249,8 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
+	p11_library_init ();
+	mock_module_init ();
 	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_file);

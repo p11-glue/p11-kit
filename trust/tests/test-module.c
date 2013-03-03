@@ -345,8 +345,8 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
+	p11_library_init ();
 	p11_debug_init ();
-	/* p11_message_quiet (); */
 
 	SUITE_ADD_TEST (suite, test_find_certificates);
 	SUITE_ADD_TEST (suite, test_find_builtin);

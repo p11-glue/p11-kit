@@ -490,6 +490,8 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
+	p11_library_init ();
+
 	SUITE_ADD_TEST (suite, test_file_write);
 	SUITE_ADD_TEST (suite, test_file_exists);
 	SUITE_ADD_TEST (suite, test_file_bad_directory);
