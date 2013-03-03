@@ -37,7 +37,6 @@
 
 #include <libtasn1.h>
 
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -86,12 +85,12 @@ main (int argc,
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
 	node_asn *definitions = NULL;
 	node_asn *cert = NULL;
-	unsigned char *data;
-	struct stat sb;
+	p11_mmap *map;
+	void *data;
+	size_t size;
 	int start, end;
 	ssize_t len;
 	int ret;
-	int fd;
 
 	if (argc != 4) {
 		fprintf (stderr, "usage: frob-cert struct field filename\n");
@@ -107,38 +106,26 @@ main (int argc,
 	ret = asn1_create_element (definitions, argv[1], &cert);
 	err_if_fail (ret, "Certificate");
 
-	fd = open (argv[3], O_RDONLY);
-	if (fd == -1) {
+	map = p11_mmap_open (argv[3], &data, &size);
+	if (map == NULL) {
 		fprintf (stderr, "couldn't open file: %s\n", argv[3]);
 		return 1;
 	}
 
-	if (fstat (fd, &sb) < 0) {
-		fprintf (stderr, "couldn't stat file: %s\n", argv[3]);
-		return 1;
-	}
-
-	data = mmap (NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (data == NULL) {
-		fprintf (stderr, "couldn't map file: %s\n", argv[3]);
-		return 1;
-	}
-
-	ret = asn1_der_decoding (&cert, data, sb.st_size, message);
+	ret = asn1_der_decoding (&cert, data, size, message);
 	err_if_fail (ret, message);
 
-	ret = asn1_der_decoding_startEnd (cert, data, sb.st_size, argv[2], &start, &end);
+	ret = asn1_der_decoding_startEnd (cert, data, size, argv[2], &start, &end);
 	err_if_fail (ret, "asn1_der_decoding_startEnd");
 
-	len = tlv_length (data + start, sb.st_size - start);
+	len = tlv_length ((unsigned char *)data + start, size - start);
 	assert (len >= 0);
 
-	fprintf (stderr, "%lu %d %d %ld\n", sb.st_size, start, end, len);
-	fwrite (data + start, 1, len, stdout);
+	fprintf (stderr, "%lu %d %d %ld\n", (unsigned long)size, start, end, (long)len);
+	fwrite ((unsigned char *)data + start, 1, len, stdout);
 	fflush (stdout);
 
-	munmap (data, sb.st_size);
-	close (fd);
+	p11_mmap_close (map);
 
 	asn1_delete_structure (&cert);
 	asn1_delete_structure (&definitions);

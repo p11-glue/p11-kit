@@ -52,7 +52,6 @@
 
 #include <libtasn1.h>
 
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -1043,33 +1042,20 @@ p11_parse_file (p11_parser *parser,
                 p11_parser_sink sink,
                 void *sink_data)
 {
+	p11_mmap *map;
 	void *data;
-	struct stat sb;
-	int fd;
+	size_t size;
 	int ret;
 
-	fd = open (filename, O_RDONLY);
-	if (fd == -1) {
-		p11_message ("couldn't open file: %s: %s", filename, strerror (errno));
+	map = p11_mmap_open (filename, &data, &size);
+	if (map == NULL) {
+		p11_message ("couldn't open and map file: %s: %s", filename, strerror (errno));
 		return P11_PARSE_FAILURE;
 	}
 
-	if (fstat (fd, &sb) < 0) {
-		p11_message ("couldn't stat file: %s: %s", filename, strerror (errno));
-		return P11_PARSE_FAILURE;
-	}
+	ret = p11_parse_memory (parser, filename, flags, data, size, sink, sink_data);
 
-	data = mmap (NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (data == NULL) {
-		p11_message ("couldn't map file: %s: %s", filename, strerror (errno));
-		return P11_PARSE_FAILURE;
-	}
-
-	ret = p11_parse_memory (parser, filename, flags, data, sb.st_size, sink, sink_data);
-
-	munmap (data, sb.st_size);
-	close (fd);
-
+	p11_mmap_close (map);
 	return ret;
 }
 

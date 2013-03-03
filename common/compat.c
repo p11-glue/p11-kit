@@ -175,6 +175,10 @@ basename (const char *name)
 #endif /* HAVE_BASENAME */
 
 #ifdef OS_UNIX
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 void
 p11_mutex_init (p11_mutex_t *mutex)
@@ -194,6 +198,57 @@ p11_dl_error (void)
 {
 	const char *msg = dlerror ();
 	return msg ? strdup (msg) : NULL;
+}
+
+struct _p11_mmap {
+	int fd;
+	void *data;
+	size_t size;
+};
+
+p11_mmap *
+p11_mmap_open (const char *path,
+               void **data,
+               size_t *size)
+{
+	struct stat sb;
+	p11_mmap *map;
+
+	map = calloc (1, sizeof (p11_mmap));
+	if (map == NULL)
+		return NULL;
+
+	map->fd = open (path, O_RDONLY);
+	if (map->fd == -1) {
+		free (map);
+		return NULL;
+	}
+
+	if (fstat (map->fd, &sb) < 0) {
+		close (map->fd);
+		free (map);
+		return NULL;
+	}
+
+	map->size = sb.st_size;
+	map->data = mmap (NULL, map->size, PROT_READ, MAP_PRIVATE, map->fd, 0);
+	if (data == NULL) {
+		close (map->fd);
+		free (map);
+		return NULL;
+	}
+
+	*data = map->data;
+	*size = map->size;
+	return map;
+}
+
+void
+p11_mmap_close (p11_mmap *map)
+{
+	munmap (map->data, map->size);
+	close (map->fd);
+	free (map);
 }
 
 #endif /* OS_UNIX */
@@ -246,43 +301,78 @@ p11_thread_join (p11_thread_t thread)
 	return 0;
 }
 
+struct _p11_mmap {
+	HANDLE file;
+	HANDLE mapping;
+	void *data;
+};
+
+p11_mmap *
+p11_mmap_open (const char *path,
+               void **data,
+               size_t *size)
+{
+	HANDLE mapping;
+	LARGE_INTEGER large;
+	DWORD errn;
+	p11_mmap *map;
+
+	map = calloc (1, sizeof (p11_mmap));
+	if (map == NULL)
+		return NULL;
+
+	map->file  = CreateFile (path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+	if (map->file == INVALID_HANDLE_VALUE) {
+		errn = GetLastError ();
+		free (map);
+		SetLastError (errn);
+		return NULL;
+	}
+
+	if (!GetFileSizeEx (map->file, &large)) {
+		errn = GetLastError ();
+		CloseHandle (map->file);
+		free (map);
+		SetLastError (errn);
+		return NULL;
+	}
+
+	mapping = CreateFileMapping (map->file, NULL, PAGE_READONLY, 0, 0, NULL);
+	if (!mapping) {
+		errn = GetLastError ();
+		CloseHandle (map->file);
+		free (map);
+		SetLastError (errn);
+		return NULL;
+	}
+
+	map->data = MapViewOfFile (mapping, FILE_MAP_READ, 0, 0, large.QuadPart);
+	CloseHandle (mapping);
+
+	if (map->data == NULL) {
+		errn = GetLastError ();
+		CloseHandle (map->file);
+		free (map);
+		SetLastError (errn);
+		return NULL;
+	}
+
+	*data = map->data;
+	*size = large.QuadPart;
+	return map;
+}
+
+void
+p11_mmap_close (p11_mmap *map)
+{
+	UnmapViewOfFile (map->data);
+	CloseHandle (map->file);
+	free (map);
+}
+
 #endif /* OS_WIN32 */
 
 #ifndef HAVE_STRNSTR
-
-/*-
- * Copyright (c) 2001 Mike Barcroft <mike@FreeBSD.org>
- * Copyright (c) 1990, 1993
- *      The Regents of the University of California.  All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Chris Torek.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
 #include <string.h>
 
 /*

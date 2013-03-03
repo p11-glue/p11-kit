@@ -38,6 +38,8 @@
 #include "debug.h"
 #include "test.h"
 
+#include <sys/stat.h>
+
 #include <assert.h>
 #include <dirent.h>
 #include <fcntl.h>

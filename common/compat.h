@@ -133,6 +133,14 @@ char *    p11_dl_error       (void);
 #define p11_sleep_ms(ms) \
 	(Sleep (ms))
 
+typedef struct _p11_mmap p11_mmap;
+
+p11_mmap *  p11_mmap_open   (const char *path,
+                             void **data,
+                             size_t *size);
+
+void        p11_mmap_close  (p11_mmap *map);
+
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------
@@ -185,6 +193,14 @@ char * p11_dl_error (void);
 	struct timespec _ts = { _ms / 1000, (_ms % 1000) * 1000 * 1000 }; \
 	nanosleep (&_ts, NULL); \
 	} while(0)
+
+typedef struct _p11_mmap p11_mmap;
+
+p11_mmap *  p11_mmap_open   (const char *path,
+                             void **data,
+                             size_t *size);
+
+void        p11_mmap_close  (p11_mmap *map);
 
 #endif /* OS_UNIX */
 
