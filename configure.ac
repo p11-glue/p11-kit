@@ -401,8 +401,8 @@ if test "$enable_coverage" = "yes"; then
 		AC_MSG_ERROR(lcov's genhtml tool is not installed)
 	fi
 
-	CFLAGS="$CFLAGS -O0 -g -fprofile-arcs -ftest-coverage"
-	LDFLAGS="$LDFLAGS -lgcov"
+	CFLAGS="$CFLAGS -O0 -g --coverage"
+	LDFLAGS="$LDFLAGS --coverage"
 fi
 
 AM_CONDITIONAL([WITH_COVERAGE], [test "$enable_coverage" = "yes"])
