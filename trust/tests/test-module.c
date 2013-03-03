@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define CRYPTOKI_EXPORTS
+
 #include "attrs.h"
 #include "checksum.h"
 #include "debug.h"

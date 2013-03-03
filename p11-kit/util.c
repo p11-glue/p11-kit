@@ -260,13 +260,13 @@ p11_kit_fini (void)
 
 #ifdef OS_WIN32
 
+BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
+
 BOOL WINAPI
 DllMain (HINSTANCE instance,
          DWORD reason,
          LPVOID reserved)
 {
-	LPVOID data;
-
 	switch (reason) {
 	case DLL_PROCESS_ATTACH:
 		p11_library_init ();

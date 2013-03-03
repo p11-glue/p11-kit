@@ -234,7 +234,7 @@ p11_library_init (void)
 void
 p11_library_thread_cleanup (void)
 {
-	p11_local *local = data;
+	p11_local *local;
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		p11_debug ("thread stopped, freeing tls");
 		local = TlsGetValue (thread_local);
@@ -253,10 +253,10 @@ p11_library_uninit (void)
 
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		data = TlsGetValue (thread_local);
-		free_tls_value (data);
+		free (data);
 		TlsFree (thread_local);
 	}
-	_p11_mutex_uninit (&p11_library_mutex);
+	p11_mutex_uninit (&p11_library_mutex);
 }
 
 #endif /* OS_WIN32 */

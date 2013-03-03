@@ -316,7 +316,7 @@ expand_user_path (const char *path)
 		char directory[MAX_PATH + 1];
 
 		if (!SHGetSpecialFolderPathA (NULL, directory, CSIDL_PROFILE, TRUE)) {
-			_p11_message ("couldn't lookup home directory for user");
+			p11_message ("couldn't lookup home directory for user");
 			errno = ENOTDIR;
 			return NULL;
 		}

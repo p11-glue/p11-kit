@@ -34,6 +34,8 @@
 
 #include "config.h"
 
+#define CRYPTOKI_EXPORTS
+
 #include "attrs.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
@@ -1545,13 +1547,13 @@ p11_trust_module_fini (void)
 
 #ifdef OS_WIN32
 
+BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
+
 BOOL WINAPI
 DllMain (HINSTANCE instance,
          DWORD reason,
          LPVOID reserved)
 {
-	LPVOID data;
-
 	switch (reason) {
 	case DLL_PROCESS_ATTACH:
 		p11_library_init ();

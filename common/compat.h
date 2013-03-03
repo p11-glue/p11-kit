@@ -127,9 +127,9 @@ typedef DWORD p11_thread_id_t;
 
 typedef void * (*p11_thread_routine) (void *arg);
 
-int p11_thread_create (thread_t *thread, thread_routine, void *arg);
+int p11_thread_create (p11_thread_t *thread, p11_thread_routine, void *arg);
 
-int p11_thread_join (thread_t thread);
+int p11_thread_join (p11_thread_t thread);
 
 /* Returns a thread_id_t */
 #define p11_thread_id_self() \
