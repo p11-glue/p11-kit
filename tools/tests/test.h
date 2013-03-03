@@ -221,12 +221,16 @@ void       test_check_data_msg          (CuTest *tc,
                                          const void *refdata,
                                          long reflen);
 
+#ifdef OS_UNIX
+
 void       test_check_symlink_msg       (CuTest *tc,
                                          const char *file,
                                          int line,
                                          const char *directory,
                                          const char *name,
                                          const char *destination);
+
+#endif /* OS_UNIX */
 
 p11_dict * test_check_directory_files   (const char *file,
                                          ...) GNUC_NULL_TERMINATED;
@@ -243,8 +247,12 @@ void       test_check_directory_msg     (CuTest *tc,
 #define test_check_data(tc, directory, name, data, length) \
 	(test_check_data_msg (tc, __FILE__, __LINE__, directory, name, data, length))
 
+#ifdef OS_UNIX
+
 #define test_check_symlink(tc, directory, name, destination) \
 	(test_check_symlink_msg (tc, __FILE__, __LINE__, directory, name, destination))
+
+#endif /* OS_UNIX */
 
 #define test_check_directory(tc, directory, files) \
 	(test_check_directory_msg (tc, __FILE__, __LINE__, directory, \

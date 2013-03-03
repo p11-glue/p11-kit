@@ -599,15 +599,20 @@ test_directory (CuTest *tc)
 	CuAssertIntEquals (tc, true, ret);
 
 	test_check_directory (tc, test.directory, ("Custom_Label.pem", "Custom_Label.1.pem",
-	                                           "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0", NULL));
+#ifdef OS_UNIX
+	                                           "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0",
+#endif
+	                                           NULL));
 	test_check_file (tc, test.directory, "Custom_Label.pem",
 	                 SRCDIR "/files/cacert3-trusted-client-server-alias.pem");
 	test_check_file (tc, test.directory, "Custom_Label.1.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
+#ifdef OS_UNIX
 	test_check_symlink (tc, test.directory, "e5662767.0", "Custom_Label.pem");
 	test_check_symlink (tc, test.directory, "e5662767.1", "Custom_Label.1.pem");
 	test_check_symlink (tc, test.directory, "590d426f.0", "Custom_Label.pem");
 	test_check_symlink (tc, test.directory, "590d426f.1", "Custom_Label.1.pem");
+#endif
 	teardown (tc);
 }
 

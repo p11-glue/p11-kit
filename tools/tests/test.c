@@ -121,6 +121,8 @@ test_check_data_msg (CuTest *tc,
 	free (filedata);
 }
 
+#ifdef OS_UNIX
+
 void
 test_check_symlink_msg (CuTest *tc,
                         const char *file,
@@ -143,6 +145,8 @@ test_check_symlink_msg (CuTest *tc,
 	unlink (filename);
 	free (filename);
 }
+
+#endif /* OS_UNIX */
 
 p11_dict *
 test_check_directory_files (const char *file,

@@ -68,10 +68,14 @@ p11_save_file *  p11_save_open_file_in      (p11_save_dir *directory,
                                              const char *extension,
                                              const char **filename);
 
+#ifdef OS_UNIX
+
 bool             p11_save_symlink_in        (p11_save_dir *dir,
                                              const char *linkname,
                                              const char *extension,
                                              const char *destination);
+
+#endif /* OS_UNIX */
 
 bool             p11_save_finish_directory  (p11_save_dir *dir,
                                              bool commit);

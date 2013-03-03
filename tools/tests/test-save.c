@@ -71,7 +71,7 @@ static void
 teardown (CuTest *tc)
 {
 	if (rmdir (test.directory) < 0)
-		CuFail (tc, "rmdir() failed");
+		CuFail (tc, strerror (errno));
 	free (test.directory);
 }
 
@@ -288,16 +288,24 @@ test_directory_files (CuTest *tc)
 	CuAssertIntEquals (tc, true, ret);
 	CuAssertStrEquals (tc, "file.txt", filename);
 
+#ifdef OS_UNIX
 	ret = p11_save_symlink_in (dir, "link", ".ext", "/the/destination");
 	CuAssertIntEquals (tc, true, ret);
+#endif
 
 	ret = p11_save_finish_directory (dir, true);
 	CuAssertIntEquals (tc, true, ret);
 
-	test_check_directory (tc, subdir, ("blah.cer", "file.txt", "link.ext", NULL));
+	test_check_directory (tc, subdir, ("blah.cer", "file.txt",
+#ifdef OS_UNIX
+	                      "link.ext",
+#endif
+	                      NULL));
 	test_check_file (tc, subdir, "blah.cer", SRCDIR "/files/cacert3.der");
 	test_check_data (tc, subdir, "file.txt", test_text, strlen (test_text));
+#ifdef OS_UNIX
 	test_check_symlink (tc, subdir, "link.ext", "/the/destination");
+#endif
 
 	rmdir (subdir);
 	free (subdir);
@@ -351,11 +359,13 @@ test_directory_dups (CuTest *tc)
 	                                 test_text, 15);
 	CuAssertIntEquals (tc, true, ret);
 
+#ifdef OS_UNIX
 	ret = p11_save_symlink_in (dir, "link", ".0", "/destination1");
 	CuAssertIntEquals (tc, true, ret);
 
 	ret = p11_save_symlink_in (dir, "link", ".0", "/destination2");
 	CuAssertIntEquals (tc, true, ret);
+#endif
 
 	ret = p11_save_finish_directory (dir, true);
 	CuAssertIntEquals (tc, true, ret);
@@ -363,7 +373,9 @@ test_directory_dups (CuTest *tc)
 	test_check_directory (tc, subdir, ("file.txt", "file.1.txt", "file.2.txt",
 	                                   "no-ext", "no-ext.1",
 	                                   "with-num.0", "with-num.1",
+#ifdef OS_UNIX
 	                                   "link.0", "link.1",
+#endif
 	                                   NULL));
 	test_check_data (tc, subdir, "file.txt", test_text, 5);
 	test_check_data (tc, subdir, "file.1.txt", test_text, 10);
@@ -372,8 +384,10 @@ test_directory_dups (CuTest *tc)
 	test_check_data (tc, subdir, "no-ext.1", test_text, 16);
 	test_check_data (tc, subdir, "with-num.0", test_text, 14);
 	test_check_data (tc, subdir, "with-num.1", test_text, 15);
+#ifdef OS_UNIX
 	test_check_symlink (tc, subdir, "link.0", "/destination1");
 	test_check_symlink (tc, subdir, "link.1", "/destination2");
+#endif
 
 	rmdir (subdir);
 	free (subdir);
@@ -392,7 +406,11 @@ test_directory_exists (CuTest *tc)
 	if (asprintf (&subdir, "%s/%s", test.directory, "extract-dir") < 0)
 		CuFail (tc, "asprintf() failed");
 
+#ifdef OS_UNIX
 	if (mkdir (subdir, S_IRWXU) < 0)
+#else
+	if (mkdir (subdir) < 0)
+#endif
 		CuFail (tc, "mkdir() failed");
 
 	p11_message_quiet ();
@@ -421,7 +439,11 @@ test_directory_overwrite (CuTest *tc)
 	if (asprintf (&subdir, "%s/%s", test.directory, "extract-dir") < 0)
 		CuFail (tc, "asprintf() failed");
 
+#ifdef OS_UNIX
 	if (mkdir (subdir, S_IRWXU) < 0)
+#else
+	if (mkdir (subdir) < 0)
+#endif
 		CuFail (tc, "mkdir() failed");
 
 	/* Some initial files into this directory, which get overwritten */

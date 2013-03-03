@@ -506,6 +506,8 @@ p11_openssl_canon_name_der (p11_dict *asn1_defs,
 	return !failed;
 }
 
+#ifdef OS_UNIX
+
 static char *
 symlink_for_subject_hash (p11_extract_info *ex)
 {
@@ -564,6 +566,8 @@ symlink_for_subject_old_hash (p11_extract_info *ex)
 	return linkname;
 }
 
+#endif /* OS_UNIX */
+
 bool
 p11_extract_openssl_directory (P11KitIter *iter,
                                p11_extract_info *ex)
@@ -573,11 +577,14 @@ p11_extract_openssl_directory (P11KitIter *iter,
 	p11_save_dir *dir;
 	p11_buffer buf;
 	bool ret = true;
-	char *linkname;
 	char *name;
 	size_t length;
 	char *pem;
 	CK_RV rv;
+
+#ifdef OS_UNIX
+	char *linkname;
+#endif
 
 	dir = p11_save_open_directory (ex->destination, ex->flags);
 	if (dir == NULL)
@@ -611,9 +618,13 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			 *
 			 * The trailing number is incremented p11_save_symlink_in() if it
 			 * conflicts with something we've already written out.
+			 *
+			 * On Windows no symlinks.
 			 */
 
 			ret = true;
+
+#ifdef OS_UNIX
 			linkname = symlink_for_subject_hash (ex);
 			if (file && linkname) {
 				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
@@ -625,6 +636,7 @@ p11_extract_openssl_directory (P11KitIter *iter,
 				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
 				free (linkname);
 			}
+#endif /* OS_UNIX */
 
 			if (ret)
 				ret = p11_save_write_and_finish (file, pem, length);

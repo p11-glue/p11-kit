@@ -171,12 +171,13 @@ p11_save_finish_file (p11_save_file *file,
 		return false;
 
 	if (!commit) {
-		unlink (file->temp);
 		close (file->fd);
+		unlink (file->temp);
 		filo_free (file);
 		return true;
 	}
 
+#ifdef OS_UNIX
 	/* Set the mode of the file */
 	if (chmod (file->temp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) < 0) {
 		p11_message ("couldn't set file permissions: %s: %s",
@@ -184,10 +185,15 @@ p11_save_finish_file (p11_save_file *file,
 		close (file->fd);
 		ret = false;
 
-	} else if (close (file->fd) < 0) {
+	} else
+#endif /* OS_UNIX */
+
+	if (close (file->fd) < 0) {
 		p11_message ("couldn't write file: %s: %s",
 		             file->temp, strerror (errno));
 		ret = false;
+
+#ifdef OS_UNIX
 
 	/* Atomically rename the tempfile over the filename */
 	} else if (file->flags & P11_SAVE_OVERWRITE) {
@@ -207,6 +213,30 @@ p11_save_finish_file (p11_save_file *file,
 			ret = false;
 		}
 		unlink (file->temp);
+
+#else /* OS_WIN32 */
+
+	/* Windows does not do atomic renames, so delete original file first */
+	} else {
+		if (file->flags & P11_SAVE_OVERWRITE) {
+			if (unlink (file->path) < 0 && errno != ENOENT) {
+				p11_message ("couldn't remove original file: %s: %s",
+				             file->path, strerror (errno));
+				ret = false;
+			}
+		}
+
+		if (ret == true) {
+			if (rename (file->temp, file->path) < 0) {
+				p11_message ("couldn't complete writing file: %s: %s",
+				             file->path, strerror (errno));
+				ret = false;
+			}
+		}
+
+		unlink (file->temp);
+
+#endif /* OS_WIN32 */
 	}
 
 	filo_free (file);
@@ -217,12 +247,18 @@ p11_save_dir *
 p11_save_open_directory (const char *path,
                          int flags)
 {
+#ifdef OS_UNIX
 	mode_t mode = S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH;
+#endif
 	p11_save_dir *dir;
 
 	return_val_if_fail (path != NULL, NULL);
 
+#ifdef OS_UNIX
 	if (mkdir (path, mode) < 0) {
+#else /* OS_WIN32 */
+	if (mkdir (path) < 0) {
+#endif
 		if (!(flags & P11_SAVE_OVERWRITE) || errno != EEXIST) {
 			p11_message ("directory already exists: %s", path);
 			return NULL;
@@ -334,6 +370,8 @@ p11_save_open_file_in (p11_save_dir *dir,
 	return file;
 }
 
+#ifdef OS_UNIX
+
 bool
 p11_save_symlink_in (p11_save_dir *dir,
                      const char *linkname,
@@ -372,6 +410,8 @@ p11_save_symlink_in (p11_save_dir *dir,
 
 	return ret;
 }
+
+#endif /* OS_UNIX */
 
 static bool
 cleanup_directory (const char *directory,
