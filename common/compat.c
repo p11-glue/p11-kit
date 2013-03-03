@@ -424,6 +424,28 @@ memdup (const void *data,
 
 #endif /* HAVE_MEMDUP */
 
+#ifndef HAVE_STRNDUP
+
+char *
+strndup (const char *data,
+         size_t length)
+{
+	char *ret;
+	size_t len;
+
+	len = strlen (data);
+	if (length > len)
+		length = len;
+
+	ret = memdup (data, length + 1);
+	if (ret != NULL)
+		ret[length] = 0;
+
+	return ret;
+}
+
+#endif /* HAVE_STRDUP */
+
 #ifndef HAVE_STRCONCAT
 
 #include <stdarg.h>

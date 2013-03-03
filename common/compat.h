@@ -223,6 +223,13 @@ void *     memdup           (const void *data,
 
 #endif /* HAVE_MEMDUP */
 
+#ifndef HAVE_STRNDUP
+
+char *     strndup          (const char *data,
+                             size_t length);
+
+#endif /* HAVE_STRDUP */
+
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
 #else
