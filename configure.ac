@@ -172,7 +172,7 @@ AS_IF([test "$with_libtasn1" != "yes"], [
 	enable_trust_module="no"
 ])
 
-AS_IF(test "$enable_trust_module" != "no"], [enable_trust_module="yes"])
+AS_IF([test "$enable_trust_module" != "no"], [enable_trust_module="yes"])
 AM_CONDITIONAL(WITH_TRUST_MODULE, test "$enable_trust_module" = "yes")
 AC_MSG_RESULT([$enable_trust_module])
 
