@@ -243,4 +243,21 @@ char *     strconcat        (const char *first,
 
 #endif /* HAVE_STRCONCAT */
 
+#ifndef HAVE_ASPRINTF
+
+int        asprintf         (char **strp,
+                             const char *fmt,
+                             ...);
+
+#endif /* HAVE_ASPRINTF */
+
+#ifndef HAVE_VASPRINTF
+#include <stdarg.h>
+
+int        vasprintf        (char **strp,
+                             const char *fmt,
+                             va_list ap);
+
+#endif /* HAVE_VASPRINTF */
+
 #endif /* __COMPAT_H__ */

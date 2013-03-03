@@ -77,6 +77,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([strnstr memdup strndup])
+	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])

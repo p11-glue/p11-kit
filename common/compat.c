@@ -485,3 +485,69 @@ strconcat (const char *first,
 }
 
 #endif /* HAVE_STRCONCAT */
+
+#ifndef HAVE_ASPRINTF
+
+int
+asprintf (char **strp,
+          const char *fmt,
+          ...)
+{
+	va_list va;
+	int ret;
+
+	va_start (va, fmt);
+	ret = vasprintf (strp, fmt, va);
+	va_end (va);
+
+	return ret;
+}
+
+#endif /* HAVE_ASPRINTF */
+
+#ifndef HAVE_VASPRINTF
+#include <stdio.h>
+
+int
+vasprintf (char **strp,
+           const char *fmt,
+           va_list ap)
+{
+	char *buf = NULL;
+	char *nbuf;
+	int guess = 128;
+	int length = 0;
+	int ret;
+
+	if (fmt == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	for (;;) {
+		nbuf = realloc (buf, guess);
+		if (!nbuf) {
+			free (buf);
+			return -1;
+		}
+
+		buf = nbuf;
+		length = guess;
+
+		ret = vsnprintf (buf, length, fmt, ap);
+
+		if (ret < 0)
+			guess *= 2;
+
+		else if (ret >= length)
+			guess = ret + 1;
+
+		else
+			break;
+	}
+
+	*strp = buf;
+	return ret;
+}
+
+#endif /* HAVE_VASPRINTF */
