@@ -125,7 +125,7 @@ read_config_file (const char* filename, int flags)
 
 	assert (filename);
 
-	f = fopen (filename, "r");
+	f = fopen (filename, "rb");
 	if (f == NULL) {
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&

@@ -64,6 +64,10 @@
 #endif
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 #ifndef HAVE_GETPROGNAME
 const char * getprogname (void);
 #endif

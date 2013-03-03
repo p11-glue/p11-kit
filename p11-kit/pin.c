@@ -465,7 +465,7 @@ p11_kit_pin_file_callback (const char *pin_source,
 	if (pin_flags & P11_KIT_PIN_FLAGS_RETRY)
 		return NULL;
 
-	fd = open (pin_source, O_RDONLY);
+	fd = open (pin_source, O_BINARY | O_RDONLY);
 	if (fd == -1)
 		return NULL;
 

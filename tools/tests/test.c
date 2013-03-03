@@ -54,20 +54,19 @@ read_file (CuTest *tc,
            const char *filename,
            long *len)
 {
+	struct stat sb;
 	FILE *f = NULL;
 	char *data;
 
-	f = fopen (filename, "r");
+	f = fopen (filename, "rb");
 	if (f == NULL)
 		CuFail_Line (tc, file, line, "Couldn't open file", filename);
 
 	/* Figure out size */
-	if (fseek (f, 0, SEEK_END) == -1 ||
-	    (*len = ftell (f)) == -1 ||
-	    fseek (f, 0, SEEK_SET) == -1) {
-		CuFail_Line (tc, file, line, "Couldn't get file length", filename);
-	}
+	if (stat (filename, &sb) < 0)
+		CuFail_Line (tc, file, line, "Couldn't stat file", filename);
 
+	*len = sb.st_size;
 	data = malloc (*len ? *len : 1);
 	assert (data != NULL);
 
