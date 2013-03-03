@@ -68,6 +68,12 @@
 const char * getprogname (void);
 #endif
 
+#ifndef HAVE_BASENAME
+
+char *       basename    (const char *name);
+
+#endif /* HAVE_BASENAME */
+
 /* -----------------------------------------------------------------------------
  * WIN32
  */

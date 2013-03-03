@@ -72,9 +72,10 @@ if test "$os_unix" = "yes"; then
 		[AC_MSG_ERROR([could not find dlopen])])
 	AC_SEARCH_LIBS([nanosleep], [rt], [],
 		[AC_MSG_ERROR([could not find nanosleep])])
+
+	# These are thngs we can work around
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
-	AC_CHECK_FUNCS([getprogname getexecname memdup])
-	AC_CHECK_FUNCS([getprogname getexecname strnstr memdup])
+	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])
