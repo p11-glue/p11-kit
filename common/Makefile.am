@@ -50,6 +50,9 @@ libp11_data_la_SOURCES = \
 	x509.c x509.h \
 	$(NULL)
 
+libp11_data_la_CFLAGS = \
+	$(LIBTASN1_CFLAGS)
+
 asn:
 	asn1Parser -o pkix.asn.h pkix.asn
 	asn1Parser -o openssl.asn.h openssl.asn

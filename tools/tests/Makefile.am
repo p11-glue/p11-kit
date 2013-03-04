@@ -16,7 +16,9 @@ INCLUDES = \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
-	$(CUTEST_CFLAGS)
+	$(LIBTASN1_CFLAGS) \
+	$(CUTEST_CFLAGS) \
+	$(NULL)
 
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit.la \

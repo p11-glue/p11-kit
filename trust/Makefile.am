@@ -7,6 +7,7 @@ COMMON = $(top_srcdir)/common
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/common \
+	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
 MODULE_SRCS = \

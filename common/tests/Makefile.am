@@ -33,6 +33,10 @@ LDADD += \
 	$(LIBTASN1_LIBS) \
 	$(NULL)
 
+INCLUDES += \
+	$(LIBTASN1_CFLAGS) \
+	$(NULL)
+
 CHECK_PROGS += \
 	test-asn1 \
 	test-checksum \

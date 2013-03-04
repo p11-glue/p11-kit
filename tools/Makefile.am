@@ -22,7 +22,6 @@ p11_kit_SOURCES = \
 	$(NULL)
 
 p11_kit_CFLAGS = \
-	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
 p11_kit_LDADD = \
@@ -37,6 +36,9 @@ if WITH_ASN1
 p11_kit_LDADD += \
 	$(top_builddir)/common/libp11-data.la \
 	$(LIBTASN1_LIBS)
+
+p11_kit_CFLAGS += \
+	$(LIBTASN1_CFLAGS)
 
 p11_kit_SOURCES += \
 	extract.c extract.h \
