@@ -59,7 +59,7 @@ typedef struct _Callback {
  *
  * Used to iterate over PKCS\#11 objects.
  */
-typedef struct p11_kit_iter {
+struct p11_kit_iter {
 
 	/* Iterator matching data */
 	CK_INFO match_module;
@@ -93,7 +93,7 @@ typedef struct p11_kit_iter {
 	int iterating : 1;
 	int match_nothing : 1;
 	int keep_session : 1;
-} P11KitIter;
+};
 
 /**
  * p11_kit_iter_new:
