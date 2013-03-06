@@ -143,6 +143,65 @@ test_iterate (CuTest *tc)
 	p11_dict_free (map);
 }
 
+static int
+compar_pointers (const void *one,
+                 const void *two)
+{
+	char **p1 = (char **)one;
+	char **p2 = (char **)two;
+	return *p1 - *p2;
+}
+
+static void
+test_iterate_remove (CuTest *tc)
+{
+	p11_dict *map;
+	p11_dictiter iter;
+	char *keys[] = { "one", "two", "three" };
+	char *values[] = { "four", "eight", "twelve" };
+	void *okeys[3];
+	void *ovalues[3];
+	bool ret;
+	int i;
+
+	map = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
+	CuAssertPtrNotNull (tc, map);
+
+	for (i = 0; i < 3; i++) {
+		if (!p11_dict_set (map, keys[i], values[i]))
+			CuFail (tc, "should not be reached");
+	}
+
+	p11_dict_iterate (map, &iter);
+
+	ret = p11_dict_next (&iter, &okeys[0], &ovalues[0]);
+	CuAssertIntEquals (tc, true, ret);
+
+	ret = p11_dict_next (&iter, &okeys[1], &ovalues[1]);
+	CuAssertIntEquals (tc, true, ret);
+	if (!p11_dict_remove (map, okeys[1]))
+		CuFail (tc, "should not be reached");
+
+	ret = p11_dict_next (&iter, &okeys[2], &ovalues[2]);
+	CuAssertIntEquals (tc, true, ret);
+
+	ret = p11_dict_next (&iter, NULL, NULL);
+	CuAssertIntEquals (tc, false, ret);
+
+	CuAssertIntEquals (tc, 2, p11_dict_size (map));
+	p11_dict_free (map);
+
+	qsort (okeys, 3, sizeof (void *), compar_pointers);
+	qsort (ovalues, 3, sizeof (void *), compar_pointers);
+
+	for (i = 0; i < 3; i++) {
+		CuAssertStrEquals (tc, keys[i], okeys[i]);
+		CuAssertPtrEquals (tc, keys[i], okeys[i]);
+		CuAssertStrEquals (tc, values[i], ovalues[i]);
+		CuAssertPtrEquals (tc, values[i], ovalues[i]);
+	}
+}
+
 static void
 test_set_get (CuTest *tc)
 {
@@ -455,6 +514,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_free_null);
 	SUITE_ADD_TEST (suite, test_free_destroys);
 	SUITE_ADD_TEST (suite, test_iterate);
+	SUITE_ADD_TEST (suite, test_iterate_remove);
 	SUITE_ADD_TEST (suite, test_hash_add_check_lots_and_collisions);
 	SUITE_ADD_TEST (suite, test_hash_count);
 	SUITE_ADD_TEST (suite, test_hash_ulongptr);

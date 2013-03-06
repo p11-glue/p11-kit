@@ -141,6 +141,8 @@ void                p11_dict_iterate           (p11_dict *dict,
  *  p11_dict_next: Enumerate through hash table
  * - sets key and value to key and/or value
  * - returns whether there was another entry
+ * - p11_dict_remove or p11_dict_steal is safe to use on
+ *   the current key.
  */
 bool                p11_dict_next              (p11_dictiter *iter,
                                                 void **key,
