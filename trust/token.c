@@ -59,7 +59,8 @@
 struct _p11_token {
 	p11_parser *parser;
 	p11_dict *objects;
-	const char *paths;
+	const char *path;
+	CK_SLOT_ID slot;
 	int loaded;
 };
 
@@ -206,43 +207,6 @@ loader_load_path (p11_token *token,
 	} else {
 		return loader_load_file (token, path, &sb, P11_PARSE_FLAG_ANCHOR);
 	}
-}
-
-static int
-loader_load_paths (p11_token *token,
-                   const char *paths)
-{
-	const char *pos;
-	int total = 0;
-	char *path;
-	int ret;
-
-	p11_debug ("loading paths: %s", paths);
-
-	while (paths) {
-		pos = strchr (paths, ':');
-		if (pos == NULL) {
-			path = strdup (paths);
-			paths = NULL;
-		} else {
-			path = strndup (paths, pos - paths);
-			paths = pos + 1;
-		}
-
-		return_val_if_fail (path != NULL, -1);
-
-		if (path[0] != '\0') {
-			/* We don't expect this to fail except for in strange circumstances */
-			ret = loader_load_path (token, path);
-			if (ret < 0)
-				return_val_if_reached (-1);
-			total += ret;
-		}
-
-		free (path);
-	}
-
-	return total;
 }
 
 static int
@@ -425,7 +389,7 @@ p11_token_load (p11_token *token)
 
 	builtins = load_builtin_objects (token);
 
-	count = loader_load_paths (token, token->paths);
+	count = loader_load_path (token, token->path);
 	return_val_if_fail (count >= 0, count);
 
 	return count + builtins;
@@ -449,7 +413,8 @@ p11_token_free (p11_token *token)
 }
 
 p11_token *
-p11_token_new (const char *paths)
+p11_token_new (CK_SLOT_ID slot,
+               const char *path)
 {
 	p11_token *token;
 
@@ -464,8 +429,25 @@ p11_token_new (const char *paths)
 	                               free, p11_attrs_free);
 	return_val_if_fail (token->objects != NULL, NULL);
 
-	token->paths = paths;
+	token->path = strdup (path);
+	return_val_if_fail (token->path != NULL, NULL);
+
+	token->slot = slot;
 	token->loaded = 0;
 
 	return token;
+}
+
+const char *
+p11_token_get_path (p11_token *token)
+{
+	return_val_if_fail (token != NULL, NULL);
+	return token->path;
+}
+
+CK_SLOT_ID
+p11_token_get_slot (p11_token *token)
+{
+	return_val_if_fail (token != NULL, 0);
+	return token->slot;
 }

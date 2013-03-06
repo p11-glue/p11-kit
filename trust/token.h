@@ -36,15 +36,21 @@
 #define P11_TOKEN_H_
 
 #include "dict.h"
+#include "pkcs11.h"
 
 typedef struct _p11_token p11_token;
 
-p11_token *     p11_token_new         (const char *paths);
+p11_token *     p11_token_new         (CK_SLOT_ID slot,
+                                       const char *path);
 
 void            p11_token_free        (p11_token *token);
 
 int             p11_token_load        (p11_token *token);
 
 p11_dict *      p11_token_objects     (p11_token *token);
+
+const char *    p11_token_get_path    (p11_token *token);
+
+CK_SLOT_ID      p11_token_get_slot    (p11_token *token);
 
 #endif /* P11_TOKEN_H_ */

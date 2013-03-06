@@ -49,10 +49,19 @@
 #include "test-data.h"
 #include "token.h"
 
+#include <assert.h>
+
+/*
+ * This is the number of input paths. Should match the
+ * paths below near :
+ *
+ * paths='%s'
+ */
+#define NUM_SLOTS 3
+
 struct {
 	CK_FUNCTION_LIST *module;
-	CK_SLOT_ID slot;
-	CK_SESSION_HANDLE session;
+	CK_SLOT_ID slots[NUM_SLOTS];
 } test;
 
 static void
@@ -71,7 +80,7 @@ setup (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	paths = SRCDIR "/input:" SRCDIR "/files/cacert-ca.der";
+	paths = SRCDIR "/input:" SRCDIR "/files/cacert-ca.der:" SRCDIR "/files/testing-server.der";
 	if (asprintf (&arguments, "paths='%s'", paths) < 0)
 		CuAssertTrue (cu, false && "not reached");
 	args.pReserved = arguments;
@@ -82,13 +91,10 @@ setup (CuTest *cu)
 
 	free (arguments);
 
-	count = 1;
-	rv = test.module->C_GetSlotList (CK_TRUE, &test.slot, &count);
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (CK_TRUE, test.slots, &count);
 	CuAssertTrue (cu, rv == CKR_OK);
-	CuAssertTrue (cu, count == 1);
-
-	rv = test.module->C_OpenSession (test.slot, CKF_SERIAL_SESSION, NULL, NULL, &test.session);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertTrue (cu, count == NUM_SLOTS);
 }
 
 static void
@@ -96,38 +102,238 @@ teardown (CuTest *cu)
 {
 	CK_RV rv;
 
-	rv = test.module->C_CloseSession (test.session);
-	CuAssertTrue (cu, rv == CKR_OK);
-
 	rv = test.module->C_Finalize (NULL);
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&test, 0, sizeof (test));
 }
 
+static void
+test_get_slot_list (CuTest *cu)
+{
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	setup (cu);
+
+	rv = test.module->C_GetSlotList (TRUE, NULL, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	count = 1;
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_BUFFER_TOO_SMALL, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	count = NUM_SLOTS;
+	memset (slots, 0, sizeof (slots));
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	for (i = 0; i < NUM_SLOTS; i++)
+		CuAssertTrue (cu, slots[i] != 0);
+
+	teardown (cu);
+}
+
+static void
+test_get_slot_info (CuTest *cu)
+{
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_SLOT_INFO info;
+	char description[64];
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	/* These are the paths passed in in setup() */
+	const char *paths[] = {
+		SRCDIR "/input",
+		SRCDIR "/files/cacert-ca.der",
+		SRCDIR "/files/testing-server.der"
+	};
+
+	setup (cu);
+
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = test.module->C_GetSlotInfo (slots[i], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		memset (description, ' ', sizeof (description));
+		assert (strlen (paths[i]) <= sizeof (description));
+		memcpy (description, paths[i], strlen (paths[i]));
+		CuAssertTrue (cu, memcmp (info.slotDescription, description, sizeof (description)) == 0);
+	}
+
+	teardown (cu);
+}
+
+static void
+test_get_token_info (CuTest *cu)
+{
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_TOKEN_INFO info;
+	char label[32];
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	/* These are the paths passed in in setup() */
+	const char *labels[] = {
+		"input",
+		"cacert-ca.der",
+		"testing-server.der"
+	};
+
+	setup (cu);
+
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = test.module->C_GetTokenInfo (slots[i], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		memset (label, ' ', sizeof (label));
+		memcpy (label, labels[i], strlen (labels[i]));
+		CuAssertTrue (cu, memcmp (info.label, label, sizeof (label)) == 0);
+	}
+
+	teardown (cu);
+}
+
+static void
+test_get_session_info (CuTest *cu)
+{
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_SESSION_HANDLE sessions[NUM_SLOTS];
+	CK_SESSION_INFO info;
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	setup (cu);
+
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	/* Open two sessions with each token */
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = test.module->C_OpenSession (slots[i], CKF_SERIAL_SESSION, NULL, NULL, &sessions[i]);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		rv = test.module->C_GetSessionInfo (sessions[i], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		CuAssertIntEquals (cu, slots[i], info.slotID);
+		CuAssertIntEquals (cu, CKF_SERIAL_SESSION, info.flags);
+	}
+
+	teardown (cu);
+}
+
+static void
+test_close_all_sessions (CuTest *cu)
+{
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_SESSION_HANDLE sessions[NUM_SLOTS][2];
+	CK_SESSION_INFO info;
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	setup (cu);
+
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (TRUE, slots, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
+
+	/* Open two sessions with each token */
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = test.module->C_OpenSession (slots[i], CKF_SERIAL_SESSION, NULL, NULL, &sessions[i][0]);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		rv = test.module->C_GetSessionInfo (sessions[i][0], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		rv = test.module->C_OpenSession (slots[i], CKF_SERIAL_SESSION, NULL, NULL, &sessions[i][1]);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+
+		rv = test.module->C_GetSessionInfo (sessions[i][0], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+	}
+
+	/* Close all the sessions on the first token */
+	rv = test.module->C_CloseAllSessions (slots[0]);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Those sessions should be closed */
+	rv = test.module->C_GetSessionInfo (sessions[0][0], &info);
+	CuAssertIntEquals (cu, CKR_SESSION_HANDLE_INVALID, rv);
+	rv = test.module->C_GetSessionInfo (sessions[0][1], &info);
+	CuAssertIntEquals (cu, CKR_SESSION_HANDLE_INVALID, rv);
+
+	/* Other sessions should still be open */
+	for (i = 1; i < NUM_SLOTS; i++) {
+		rv = test.module->C_GetSessionInfo (sessions[i][0], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+		rv = test.module->C_GetSessionInfo (sessions[i][0], &info);
+		CuAssertIntEquals (cu, CKR_OK, rv);
+	}
+
+	teardown (cu);
+}
+
 static CK_ULONG
 find_objects (CuTest *cu,
               CK_ATTRIBUTE *match,
+              CK_OBJECT_HANDLE *sessions,
               CK_OBJECT_HANDLE *objects,
-              CK_ULONG num_objects)
+              CK_ULONG max_objects)
 {
+	CK_SESSION_HANDLE session;
 	CK_RV rv;
+	CK_ULONG found;
 	CK_ULONG count;
+	int i, j;
 
-	count = p11_attrs_count (match);
+	found = 0;
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = test.module->C_OpenSession (test.slots[i], CKF_SERIAL_SESSION, NULL, NULL, &session);
+		CuAssertTrue (cu, rv == CKR_OK);
 
-	rv = test.module->C_FindObjectsInit (test.session, match, count);
-	CuAssertTrue (cu, rv == CKR_OK);
-	rv = test.module->C_FindObjects (test.session, objects, num_objects, &num_objects);
-	CuAssertTrue (cu, rv == CKR_OK);
-	rv = test.module->C_FindObjectsFinal (test.session);
-	CuAssertTrue (cu, rv == CKR_OK);
+		rv = test.module->C_FindObjectsInit (session, match, p11_attrs_count (match));
+		CuAssertTrue (cu, rv == CKR_OK);
+		rv = test.module->C_FindObjects (session, objects + found, max_objects - found, &count);
+		CuAssertTrue (cu, rv == CKR_OK);
+		rv = test.module->C_FindObjectsFinal (session);
+		CuAssertTrue (cu, rv == CKR_OK);
 
-	return num_objects;
+		for (j = found ; j < found + count; j++)
+			sessions[j] = session;
+		found += count;
+	}
+
+	assert (found < max_objects);
+	return found;
 }
 
 static void
 check_trust_object_equiv (CuTest *cu,
+                          CK_SESSION_HANDLE session,
                           CK_OBJECT_HANDLE trust,
                           CK_ATTRIBUTE *cert)
 {
@@ -150,7 +356,7 @@ check_trust_object_equiv (CuTest *cu,
 		{ CKA_INVALID, },
 	};
 
-	rv = test.module->C_GetAttributeValue (test.session, trust, equiv, 6);
+	rv = test.module->C_GetAttributeValue (session, trust, equiv, 6);
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	test_check_attrs (cu, equiv, cert);
@@ -158,6 +364,7 @@ check_trust_object_equiv (CuTest *cu,
 
 static void
 check_trust_object_hashes (CuTest *cu,
+                           CK_SESSION_HANDLE session,
                            CK_OBJECT_HANDLE trust,
                            CK_ATTRIBUTE *cert)
 {
@@ -173,7 +380,7 @@ check_trust_object_hashes (CuTest *cu,
 		{ CKA_INVALID, },
 	};
 
-	rv = test.module->C_GetAttributeValue (test.session, trust, hashes, 2);
+	rv = test.module->C_GetAttributeValue (session, trust, hashes, 2);
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	value = p11_attrs_find (cert, CKA_VALUE);
@@ -193,6 +400,7 @@ check_has_trust_object (CuTest *cu,
 	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_ATTRIBUTE klass = { CKA_CLASS, &trust_object, sizeof (trust_object) };
 	CK_OBJECT_HANDLE objects[2];
+	CK_SESSION_HANDLE sessions[2];
 	CK_ATTRIBUTE *match;
 	CK_ATTRIBUTE *attr;
 	CK_ULONG count;
@@ -201,15 +409,16 @@ check_has_trust_object (CuTest *cu,
 	CuAssertPtrNotNull (cu, attr);
 
 	match = p11_attrs_build (NULL, &klass, attr, NULL);
-	count = find_objects (cu, match, objects, 2);
+	count = find_objects (cu, match, sessions, objects, 2);
 	CuAssertIntEquals (cu, 1, count);
 
-	check_trust_object_equiv (cu, objects[0], cert);
-	check_trust_object_hashes (cu, objects[0], cert);
+	check_trust_object_equiv (cu, sessions[0], objects[0], cert);
+	check_trust_object_hashes (cu, sessions[0], objects[0], cert);
 }
 
 static void
 check_certificate (CuTest *cu,
+                   CK_SESSION_HANDLE session,
                    CK_OBJECT_HANDLE handle)
 {
 	unsigned char label[4096]= { 0, };
@@ -249,7 +458,7 @@ check_certificate (CuTest *cu,
 	};
 
 	/* Note that we don't pass the CKA_INVALID attribute in */
-	rv = test.module->C_GetAttributeValue (test.session, handle, attrs, 15);
+	rv = test.module->C_GetAttributeValue (session, handle, attrs, 15);
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	/* If this is the cacert3 certificate, check its values */
@@ -270,7 +479,7 @@ check_certificate (CuTest *cu,
 		test_check_cacert3_ca (cu, attrs, NULL);
 
 		/* Get anchor specific attributes */
-		rv = test.module->C_GetAttributeValue (test.session, handle, anchor, 1);
+		rv = test.module->C_GetAttributeValue (session, handle, anchor, 1);
 		CuAssertTrue (cu, rv == CKR_OK);
 
 		/* It lives in the trusted directory */
@@ -295,16 +504,17 @@ test_find_certificates (CuTest *cu)
 	};
 
 	CK_OBJECT_HANDLE objects[16];
+	CK_SESSION_HANDLE sessions[16];
 	CK_ULONG count;
 	CK_ULONG i;
 
 	setup (cu);
 
-	count = find_objects (cu, match, objects, 16);
-	CuAssertIntEquals (cu, 6, count);
+	count = find_objects (cu, match, sessions, objects, 16);
+	CuAssertIntEquals (cu, 7, count);
 
 	for (i = 0; i < count; i++)
-		check_certificate (cu, objects[i]);
+		check_certificate (cu, sessions[i], objects[i]);
 
 	teardown (cu);
 }
@@ -325,12 +535,14 @@ test_find_builtin (CuTest *cu)
 	};
 
 	CK_OBJECT_HANDLE objects[16];
+	CK_SESSION_HANDLE sessions[16];
 	CK_ULONG count;
 
 	setup (cu);
 
-	count = find_objects (cu, match, objects, 16);
-	CuAssertIntEquals (cu, 1, count);
+	/* One per token */
+	count = find_objects (cu, match, sessions, objects, 16);
+	CuAssertIntEquals (cu, NUM_SLOTS, count);
 
 	teardown (cu);
 }
@@ -346,6 +558,11 @@ main (void)
 	p11_library_init ();
 	p11_debug_init ();
 
+	SUITE_ADD_TEST (suite, test_get_slot_list);
+	SUITE_ADD_TEST (suite, test_get_slot_info);
+	SUITE_ADD_TEST (suite, test_get_token_info);
+	SUITE_ADD_TEST (suite, test_get_session_info);
+	SUITE_ADD_TEST (suite, test_close_all_sessions);
 	SUITE_ADD_TEST (suite, test_find_certificates);
 	SUITE_ADD_TEST (suite, test_find_builtin);
 

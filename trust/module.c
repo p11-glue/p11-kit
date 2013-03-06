@@ -36,12 +36,14 @@
 
 #define CRYPTOKI_EXPORTS
 
+#include "array.h"
 #include "attrs.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "dict.h"
 #include "library.h"
 #include "module.h"
+#include "parser.h"
 #include "pkcs11.h"
 #include "session.h"
 #include "token.h"
@@ -53,17 +55,16 @@
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Trust Module        "
-#define SLOT_DESCRIPTION        "System Certificates, Trust Anchors, and Black Lists             "
 #define TOKEN_LABEL             "System Trust Anchors and Policy "
 #define TOKEN_MODEL             "PKCS#11 Kit      "
 #define TOKEN_SERIAL_NUMBER     "1                "
 
-/* Arbitrary non-zero and non-one choice */
-#define SYSTEM_SLOT_ID   18UL
+/* Initial slot id: non-zero and non-one */
+#define BASE_SLOT_ID   18UL
 
 static struct _Shared {
 	p11_dict *sessions;
-	p11_token *token;
+	p11_array *tokens;
 	char *paths;
 } gl = { NULL, NULL };
 
@@ -101,6 +102,80 @@ lookup_session (CK_SESSION_HANDLE handle,
 	if (sess && session)
 		*session = sess;
 	return CKR_OK;
+}
+
+static CK_RV
+lookup_slot_inlock (CK_SLOT_ID id,
+                    p11_token **token)
+{
+	/*
+	 * These are invalid inputs, that well behaved callers should
+	 * not produce, so have them fail precondations
+	 */
+
+	return_val_if_fail (gl.tokens != NULL,
+	                    CKR_CRYPTOKI_NOT_INITIALIZED);
+
+	return_val_if_fail (id >= BASE_SLOT_ID && id - BASE_SLOT_ID < gl.tokens->num,
+	                    CKR_SLOT_ID_INVALID);
+
+	if (token)
+		*token = gl.tokens->elem[id - BASE_SLOT_ID];
+	return CKR_OK;
+}
+
+static bool
+check_slot (CK_SLOT_ID id)
+{
+	bool ret;
+
+	p11_lock ();
+	ret = lookup_slot_inlock (id, NULL) == CKR_OK;
+	p11_unlock ();
+
+	return ret;
+}
+
+static bool
+create_tokens_inlock (p11_array *tokens,
+                      const char *paths)
+{
+	p11_token *token;
+	p11_token *check;
+	CK_SLOT_ID slot;
+	const char *path;
+	char *remaining;
+	char *pos;
+
+	p11_debug ("using paths: %s", paths);
+
+	remaining = strdup (paths);
+	return_val_if_fail (remaining != NULL, false);
+
+	while (remaining) {
+		path = remaining;
+		pos = strchr (remaining, ':');
+		if (pos == NULL) {
+			remaining = NULL;
+		} else {
+			pos[0] = '\0';
+			remaining = pos + 1;
+		}
+
+		if (path[0] != '\0') {
+			slot = BASE_SLOT_ID + tokens->num;
+			token = p11_token_new (slot, path);
+			return_val_if_fail (token != NULL, false);
+
+			if (!p11_array_push (tokens, token))
+				return_val_if_reached (false);
+
+			assert (lookup_slot_inlock (slot, &check) == CKR_OK && check == token);
+		}
+	}
+
+	free (remaining);
+	return true;
 }
 
 static void
@@ -220,8 +295,8 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 				p11_dict_free (gl.sessions);
 				gl.sessions = NULL;
 
-				p11_token_free (gl.token);
-				gl.token = NULL;
+				p11_array_free (gl.tokens);
+				gl.tokens = NULL;
 
 				rv = CKR_OK;
 			}
@@ -284,9 +359,11 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 			                            p11_dict_ulongptr_equal,
 			                            NULL, p11_session_free);
 
-			gl.token = p11_token_new (gl.paths ? gl.paths : TRUST_PATHS);
+			gl.tokens = p11_array_new ((p11_destroyer)p11_token_free);
+			if (gl.tokens && !create_tokens_inlock (gl.tokens, gl.paths ? gl.paths : TRUST_PATHS))
+				gl.tokens = NULL;
 
-			if (gl.sessions == NULL || gl.token == NULL) {
+			if (gl.sessions == NULL || gl.tokens == NULL) {
 				warn_if_reached ();
 				rv = CKR_GENERAL_ERROR;
 			}
@@ -351,6 +428,7 @@ sys_C_GetSlotList (CK_BBOOL token_present,
                    CK_ULONG_PTR count)
 {
 	CK_RV rv = CKR_OK;
+	int i;
 
 	return_val_if_fail (count != NULL, CKR_ARGUMENTS_BAD);
 
@@ -367,16 +445,17 @@ sys_C_GetSlotList (CK_BBOOL token_present,
 		/* already failed */
 
 	} else if (!slot_list) {
-		*count = 1;
+		*count = gl.tokens->num;
 		rv = CKR_OK;
 
-	} else if (*count < 1) {
-		*count = 1;
+	} else if (*count < gl.tokens->num) {
+		*count = gl.tokens->num;
 		rv = CKR_BUFFER_TOO_SMALL;
 
 	} else {
-		slot_list[0] = SYSTEM_SLOT_ID;
-		*count = 1;
+		for (i = 0; i < gl.tokens->num; i++)
+			slot_list[i] = BASE_SLOT_ID + i;
+		*count = gl.tokens->num;
 		rv = CKR_OK;
 	}
 
@@ -390,19 +469,16 @@ sys_C_GetSlotInfo (CK_SLOT_ID id,
                    CK_SLOT_INFO_PTR info)
 {
 	CK_RV rv = CKR_OK;
+	p11_token *token;
+	const char *path;
+	size_t length;
 
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
 
 	p11_debug ("in");
-
 	p11_lock ();
 
-		if (!gl.sessions)
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-
-	p11_unlock ();
-
+	rv = lookup_slot_inlock (id, &token);
 	if (rv == CKR_OK) {
 		memset (info, 0, sizeof (*info));
 		info->firmwareVersion.major = 0;
@@ -411,9 +487,17 @@ sys_C_GetSlotInfo (CK_SLOT_ID id,
 		info->hardwareVersion.minor = 0;
 		info->flags = CKF_TOKEN_PRESENT;
 		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
-		strncpy ((char*)info->slotDescription, SLOT_DESCRIPTION, 64);
+
+		/* If too long, copy the first 64 characters into buffer */
+		path = p11_token_get_path (token);
+		length = strlen (path);
+		if (length > sizeof (info->slotDescription))
+			length = sizeof (info->slotDescription);
+		memset (info->slotDescription, ' ', sizeof (info->slotDescription));
+		memcpy (info->slotDescription, path, length);
 	}
 
+	p11_unlock ();
 	p11_debug ("out: 0x%lx", rv);
 
 	return rv;
@@ -424,19 +508,17 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
                     CK_TOKEN_INFO_PTR info)
 {
 	CK_RV rv = CKR_OK;
+	p11_token *token;
+	const char *path;
+	size_t length;
 
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
 
 	p11_debug ("in");
 
 	p11_lock ();
 
-		if (!gl.sessions)
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-
-	p11_unlock ();
-
+	rv = lookup_slot_inlock (id, &token);
 	if (rv == CKR_OK) {
 		memset (info, 0, sizeof (*info));
 		info->firmwareVersion.major = 0;
@@ -445,7 +527,6 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->hardwareVersion.minor = 0;
 		info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
 		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
-		strncpy ((char*)info->label, TOKEN_LABEL, 32);
 		strncpy ((char*)info->model, TOKEN_MODEL, 16);
 		strncpy ((char*)info->serialNumber, TOKEN_SERIAL_NUMBER, 16);
 		info->ulMaxSessionCount = CK_EFFECTIVELY_INFINITE;
@@ -458,8 +539,17 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->ulFreePublicMemory = CK_UNAVAILABLE_INFORMATION;
 		info->ulTotalPrivateMemory = CK_UNAVAILABLE_INFORMATION;
 		info->ulFreePrivateMemory = CK_UNAVAILABLE_INFORMATION;
+
+		/* If too long, copy the last 32 characters into buffer */
+		path = basename (p11_token_get_path (token));
+		length = strlen (path);
+		if (length > sizeof (info->label))
+			length = sizeof (info->label);
+		memset (info->label, ' ', sizeof (info->label));
+		memcpy (info->label, path, length);
 	}
 
+	p11_unlock ();
 	p11_debug ("out: 0x%lx", rv);
 
 	return rv;
@@ -487,8 +577,8 @@ sys_C_GetMechanismInfo (CK_SLOT_ID id,
                         CK_MECHANISM_TYPE type,
                         CK_MECHANISM_INFO_PTR info)
 {
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (check_slot (id), CKR_SLOT_ID_INVALID);
 	return_val_if_reached (CKR_MECHANISM_INVALID);
 }
 
@@ -498,7 +588,7 @@ sys_C_InitToken (CK_SLOT_ID id,
                  CK_ULONG pin_len,
                  CK_UTF8CHAR_PTR label)
 {
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
+	return_val_if_fail (check_slot (id), CKR_SLOT_ID_INVALID);
 	return_val_if_reached (CKR_TOKEN_WRITE_PROTECTED);
 }
 
@@ -519,17 +609,19 @@ sys_C_OpenSession (CK_SLOT_ID id,
                    CK_SESSION_HANDLE_PTR handle)
 {
 	p11_session *session;
+	p11_token *token;
 	CK_RV rv = CKR_OK;
 
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
+	return_val_if_fail (check_slot (id), CKR_SLOT_ID_INVALID);
 	return_val_if_fail (handle != NULL, CKR_ARGUMENTS_BAD);
 
 	p11_debug ("in");
 
 	p11_lock ();
 
-		if (!gl.sessions) {
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+		rv = lookup_slot_inlock (id, &token);
+		if (rv != CKR_OK) {
+			/* fail below */;
 
 		} else if (!(flags & CKF_SERIAL_SESSION)) {
 			rv = CKR_SESSION_PARALLEL_NOT_SUPPORTED;
@@ -538,7 +630,7 @@ sys_C_OpenSession (CK_SLOT_ID id,
 			rv = CKR_TOKEN_WRITE_PROTECTED;
 
 		} else {
-			session = p11_session_new (gl.token);
+			session = p11_session_new (token);
 			if (p11_dict_set (gl.sessions, &session->handle, session)) {
 				rv = CKR_OK;
 				*handle = session->handle;
@@ -585,20 +677,23 @@ sys_C_CloseSession (CK_SESSION_HANDLE handle)
 static CK_RV
 sys_C_CloseAllSessions (CK_SLOT_ID id)
 {
-	CK_RV rv = CKR_OK;
-
-	return_val_if_fail (id == SYSTEM_SLOT_ID, CKR_SLOT_ID_INVALID);
+	CK_SESSION_HANDLE *handle;
+	p11_session *session;
+	p11_token *token;
+	p11_dictiter iter;
+	CK_RV rv;
 
 	p11_debug ("in");
 
 	p11_lock ();
 
-		if (!gl.sessions) {
-			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-
-		} else {
-			p11_dict_clear (gl.sessions);
-			rv = CKR_OK;
+		rv = lookup_slot_inlock (id, &token);
+		if (rv == CKR_OK) {
+			p11_dict_iterate (gl.sessions, &iter);
+			while (p11_dict_next (&iter, (void **)&handle, (void **)&session)) {
+				if (session->token == token)
+					p11_dict_remove (gl.sessions, handle);
+			}
 		}
 
 	p11_unlock ();
@@ -624,6 +719,7 @@ static CK_RV
 sys_C_GetSessionInfo (CK_SESSION_HANDLE handle,
                       CK_SESSION_INFO_PTR info)
 {
+	p11_session *session;
 	CK_RV rv;
 
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
@@ -632,16 +728,16 @@ sys_C_GetSessionInfo (CK_SESSION_HANDLE handle,
 
 	p11_lock ();
 
-		rv = lookup_session (handle, NULL);
+		rv = lookup_session (handle, &session);
+		if (rv == CKR_OK) {
+			info->flags = CKF_SERIAL_SESSION;
+			info->state = CKS_RO_PUBLIC_SESSION;
+			info->slotID = p11_token_get_slot (session->token);
+			info->ulDeviceError = 0;
+		}
+
 
 	p11_unlock ();
-
-	if (rv == CKR_OK) {
-		info->flags = CKF_SERIAL_SESSION;
-		info->slotID = SYSTEM_SLOT_ID;
-		info->state = CKS_RO_PUBLIC_SESSION;
-		info->ulDeviceError = 0;
-	}
 
 	p11_debug ("out: 0x%lx", rv);
 
@@ -951,11 +1047,11 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 		/* Refresh from disk if this session hasn't yet */
 		if (rv == CKR_OK && want_token_objects && !session->loaded) {
 			session->loaded = CK_TRUE;
-			p11_token_load (gl.token);
+			p11_token_load (session->token);
 		}
 
 		if (rv == CKR_OK) {
-			objects = p11_token_objects (gl.token);
+			objects = p11_token_objects (session->token);
 
 			find = calloc (1, sizeof (FindObjects));
 			warn_if_fail (find != NULL);

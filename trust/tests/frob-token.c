@@ -48,11 +48,11 @@ main (int argc,
 	int count;
 
 	if (argc != 2) {
-		fprintf (stderr, "usage: frob-token anchor:paths\n");
+		fprintf (stderr, "usage: frob-token path\n");
 		return 2;
 	}
 
-	token = p11_token_new (argv[1]);
+	token = p11_token_new (1, argv[1]);
 	count = p11_token_load (token);
 
 	printf ("%d files loaded\n", count);

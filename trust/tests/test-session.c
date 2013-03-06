@@ -53,7 +53,7 @@ struct {
 static void
 setup (CuTest *cu)
 {
-	test.token = p11_token_new ("");
+	test.token = p11_token_new (1, "/nonexistant");
 	CuAssertPtrNotNull (cu, test.token);
 
 	test.session = p11_session_new (test.token);

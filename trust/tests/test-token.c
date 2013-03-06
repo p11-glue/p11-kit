@@ -51,9 +51,10 @@ struct {
 } test;
 
 static void
-setup (CuTest *cu)
+setup (CuTest *cu,
+       const char *path)
 {
-	test.token = p11_token_new (SRCDIR "/input:" SRCDIR "/files/self-server.der:" SRCDIR "/files/cacert-ca.der");
+	test.token = p11_token_new (333, path);
 	CuAssertPtrNotNull (cu, test.token);
 }
 
@@ -70,10 +71,10 @@ test_token_load (CuTest *cu)
 	p11_dict *objects;
 	int count;
 
-	setup (cu);
+	setup (cu, SRCDIR "/input");
 
 	count = p11_token_load (test.token);
-	CuAssertIntEquals (cu, 7, count);
+	CuAssertIntEquals (cu, 6, count);
 
 	/* A certificate and trust object for each parsed object + builtin */
 	objects = p11_token_objects (test.token);
@@ -183,7 +184,7 @@ test_token_flags (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
-	setup (cu);
+	setup (cu, SRCDIR "/input");
 
 	if (p11_token_load (test.token) < 0)
 		CuFail (cu, "should not be reached");
@@ -193,6 +194,26 @@ test_token_flags (CuTest *cu)
 	CuAssertTrue (cu, check_object (blacklist));
 	CuAssertTrue (cu, check_object (blacklist2));
 	CuAssertTrue (cu, check_object (notrust));
+
+	teardown (cu);
+}
+
+static void
+test_token_path (CuTest *cu)
+{
+	setup (cu, "/wheee");
+
+	CuAssertStrEquals (cu, "/wheee", p11_token_get_path (test.token));
+
+	teardown (cu);
+}
+
+static void
+test_token_slot (CuTest *cu)
+{
+	setup (cu, "/unneeded");
+
+	CuAssertIntEquals (cu, 333, p11_token_get_slot (test.token));
 
 	teardown (cu);
 }
@@ -211,6 +232,8 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_token_load);
 	SUITE_ADD_TEST (suite, test_token_flags);
+	SUITE_ADD_TEST (suite, test_token_path);
+	SUITE_ADD_TEST (suite, test_token_slot);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);
