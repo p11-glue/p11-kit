@@ -203,28 +203,12 @@ format_argument (const char *optarg,
 	return true;
 }
 
-static int
-compar_longs (const void *v1,
-              const void *v2)
-{
-	const long *o1 = v1;
-	const long *o2 = v2;
-	return (int)(o1 - o2);
-}
-
 static void
 limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
                             CK_ATTRIBUTE *match)
 {
-	long policy;
 	char *string;
 	int i, out;
-	char *endptr;
-
-	struct {
-		long policy;
-		CK_FUNCTION_LIST_PTR module;
-	} *order;
 
 	/*
 	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
@@ -241,34 +225,15 @@ limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
 	if (out == 0)
 		return;
 
-	order = malloc (sizeof (*order) * out);
-	return_if_fail (order != NULL);
-
+	/* TODO: This logic will move once we merge our p11-kit managed code */
 	for (i = 0, out = 0; modules[i] != NULL; i++) {
 		string = p11_kit_registered_option (modules[i], "trust-policy");
-		if (string) {
-			policy = strtol (string, &endptr, 10);
-			if (!endptr || endptr[0] != '\0' || policy > INT16_MAX || policy < INT16_MIN) {
-				p11_message ("skipping module with invalid 'trust-policy' setting: %s", string);
-
-			} else {
-				order[out].module = modules[i];
-				order[out].policy = policy;
-				out++;
-			}
-
-			free (string);
-		}
+		if (string && strcmp (string, "yes") == 0)
+			modules[out++] = modules[i];
+		else if (string && strcmp (string, "no") != 0)
+			p11_message ("skipping module with invalid 'trust-policy' setting: %s", string);
+		free (string);
 	}
-
-	/* Our compare function compares the first member of Order */
-	qsort (order, out, sizeof (*order), compar_longs);
-
-	for (i = 0; i < out; i++)
-		modules[i] = order[i].module;
-	modules[i] = NULL;
-
-	free (order);
 
 	if (out == 0)
 		p11_message ("no modules containing trust policy are registered");

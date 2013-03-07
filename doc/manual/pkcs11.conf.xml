@@ -128,13 +128,23 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
+		<term><option>priority:</option></term>
+		<listitem>
+			<para>The value should be an integer. When lists of modules are
+			returned to a caller of p11-kit, modules with a higher number are sorted
+			first. When applications search modules for for certificates, keys and
+			trust policy information, this setting will affect what find
+			first.</para>
+			<para>This argument is optional, and defaults to zero. Modules
+			with the same <option>priority</option> option will be sorted
+			alphabetically.</para>
+		</listitem>
+	</varlistentry>
+	<varlistentry>
 		<term><option>trust-policy:</option></term>
 		<listitem>
-			<para>If this setting is present then this module is used to load
-			trust policy information such as certificate anchors and black lists.
-			The value should be an integer. Modules with a lower number are loaded
-			first. Trust policy information in modules loaded later overrides
-			those loaded first.</para>
+			<para>Set to <literal>yes</literal> to use use this module as a source
+			of trust policy information such as certificate anchors and black lists.</para>
 		</listitem>
 	</varlistentry>
 	</variablelist>

@@ -3,3 +3,4 @@ module: mock-three.so
 setting: user3
 
 enable-in: test-enable
+priority: 3

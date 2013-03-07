@@ -107,11 +107,12 @@ $ pkg-config --variable p11_trust_paths p11-kit-1
 		<listitem><para>Disable loading trust policy information
 		from this module by adding a file to <literal>/etc/pkcs11/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
-		<literal>trust-policy:</literal> line.</para></listitem>
+		<literal>trust-policy: no</literal> line.</para></listitem>
+
 		<listitem><para>Disable this module completely by
 		adding a file to <literal>/etc/pkcs11/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
-		<literal>enable-in:</literal> line.</para></listitem>
+		<literal>enable-in:</literal> line (without a value).</para></listitem>
 	</itemizedlist>
 
 </section>

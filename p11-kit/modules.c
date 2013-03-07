@@ -896,6 +896,51 @@ p11_kit_finalize_registered (void)
 	return rv;
 }
 
+static int
+compar_priority (const void *one,
+                 const void *two)
+{
+	CK_FUNCTION_LIST_PTR f1 = *((CK_FUNCTION_LIST_PTR *)one);
+	CK_FUNCTION_LIST_PTR f2 = *((CK_FUNCTION_LIST_PTR *)two);
+	Module *m1, *m2;
+	const char *v1, *v2;
+	int o1, o2;
+
+	m1 = p11_dict_get (gl.modules, f1);
+	m2 = p11_dict_get (gl.modules, f2);
+	assert (m1 != NULL && m2 != NULL);
+
+	v1 = p11_dict_get (m1->config, "priority");
+	v2 = p11_dict_get (m2->config, "priority");
+
+	o1 = atoi (v1 ? v1 : "0");
+	o2 = atoi (v2 ? v2 : "0");
+
+	/* Priority is in descending order, highest first */
+	if (o1 != o2)
+		return o1 > o2 ? -1 : 1;
+
+	/*
+	 * Otherwise use the names alphabetically in ascending order. This
+	 * is really just to provide consistency between various loads of
+	 * the configuration.
+	 */
+	if (m1->name == m2->name)
+		return 0;
+	if (!m1->name)
+		return -1;
+	if (!m2->name)
+		return 1;
+	return strcmp (m1->name, m2->name);
+}
+
+static void
+sort_modules_by_priority (CK_FUNCTION_LIST_PTR *modules,
+                          int count)
+{
+	qsort (modules, count, sizeof (CK_FUNCTION_LIST_PTR), compar_priority);
+}
+
 CK_FUNCTION_LIST_PTR_PTR
 _p11_kit_registered_modules_unlocked (void)
 {
@@ -927,6 +972,8 @@ _p11_kit_registered_modules_unlocked (void)
 				result[i++] = mod->funcs;
 			}
 		}
+
+		sort_modules_by_priority (result, i);
 	}
 
 	return result;

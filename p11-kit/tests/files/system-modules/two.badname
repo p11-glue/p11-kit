@@ -3,3 +3,4 @@
 
 module: mock-two.so
 setting: system2
+# no priority, use name

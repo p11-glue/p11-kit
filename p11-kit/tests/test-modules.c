@@ -219,6 +219,47 @@ test_enable (CuTest *tc)
 	p11_kit_set_progname (NULL);
 }
 
+static void
+test_priority (CuTest *tc)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+	char *name;
+	int i;
+
+	/*
+	 * The expected order.
+	 * - four is marked with a priority of 4, the highest therefore first
+	 * - three is marked with a priority of 3, next highest
+	 * - one and two do not have priority marked, so they default to zero
+	 *   and fallback to sorting alphabetically. 'o' comes before 't'
+	 */
+
+	const char *expected[] = { "four", "three", "one", "two.badname" };
+
+	/* This enables module three */
+	p11_kit_set_progname ("test-enable");
+
+	modules = initialize_and_get_modules (tc);
+
+	/* The loaded modules should not contain duplicates */
+	for (i = 0; modules[i] != NULL; i++) {
+		name = p11_kit_registered_module_to_name (modules[i]);
+		CuAssertPtrNotNull (tc, name);
+
+		/* Either one of these can be loaded, as this is a duplicate module */
+		if (strcmp (name, "two-duplicate") == 0) {
+			free (name);
+			name = strdup ("two.badname");
+		}
+
+		CuAssertStrEquals (tc, expected[i], name);
+		free (name);
+	}
+
+	CuAssertIntEquals (tc, 4, i);
+	finalize_and_free_modules (tc, modules);
+}
+
 int
 main (void)
 {
@@ -233,6 +274,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_disable);
 	SUITE_ADD_TEST (suite, test_disable_later);
 	SUITE_ADD_TEST (suite, test_enable);
+	SUITE_ADD_TEST (suite, test_priority);
 
 	p11_kit_be_quiet ();
 
