@@ -1,27 +1,21 @@
 #!/bin/sh
 
 # This script is a placeholder designed to be replaced when this software
-# has been customized for distribution.
+# has been customized for distribution. It should be symlinked linked to the
+# distribution's update-ca-certificates or update-ca-trust command as
+# appropriate. In the future this script will be called when the PKCS#11
+# trust module is used to modifiy trust anchors and related data.
 
-echo "WARNING: This placeholder extract-trust command has not been customized"
-echo "by your distribution or administrator. Extracting trust infromation to"
-echo "the following example locations:"
-echo
-echo "  ~/extract-trust-example/openssl-bundle.pem"
-echo "  ~/extract-trust-example/server-auth-bundle.pem"
-echo "  ~/extract-trust-example/cacerts"
+echo "p11-kit: the placeholder extract-trust command has not been customized by your distribution."
 
-DEST=~/extract-trust-example
+# You can use commands like this to extract data from trust modules
+# into appropriate locations for your distribution.
+#
+# p11-kit extract --format=openssl-bundle --filter=ca-anchors \
+# 	--overwrite /tmp/openssl-bundle.pem
+# p11-kit extract --format=pem-bundle --filter=ca-anchors --overwrite \
+# 	--purpose server-auth /tmp/server-auth-bundle.pem
+# p11-kit extract --format=java-cacerts --filter=ca-anchors --overwrite \
+# 	--purpose server-auth /tmp/cacerts
 
-# These are nested autoconf variables
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-
-mkdir -p $DEST
-
-@bindir@/p11-kit extract --format=openssl-bundle --filter=ca-anchors \
-	--overwrite $DEST/openssl-bundle.pem
-@bindir@/p11-kit extract --format=pem-bundle --filter=ca-anchors --overwrite \
-	--purpose server-auth $DEST/server-auth-bundle.pem
-@bindir@/p11-kit extract --format=java-cacerts --filter=ca-anchors --overwrite \
-	--purpose server-auth $DEST/cacerts
+exit 1
