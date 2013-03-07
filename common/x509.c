@@ -122,9 +122,16 @@ p11_x509_parse_basic_constraints (p11_dict *asn1_defs,
 
 	len = sizeof (buffer);
 	ret = asn1_read_value (ext, "cA", buffer, &len);
-	return_val_if_fail (ret == ASN1_SUCCESS, false);
 
-	*is_ca = (strcmp (buffer, "TRUE") == 0);
+	/* Default value for cA is FALSE */
+	if (ret == ASN1_ELEMENT_NOT_FOUND) {
+		*is_ca = false;
+
+	} else {
+		return_val_if_fail (ret == ASN1_SUCCESS, false);
+		*is_ca = (strcmp (buffer, "TRUE") == 0);
+	}
+
 	asn1_delete_structure (&ext);
 
 	return true;
