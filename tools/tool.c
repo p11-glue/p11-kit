@@ -203,7 +203,6 @@ exec_external (const char *command,
 	path = getenv ("PATH");
 	if (!asprintf (&env, "PATH=%s%s%s", path ? path : "", path ? ":" : "", PKGDATADIR))
 		return_if_reached ();
-	printf ("%s\n", env);
 	putenv (env);
 
 	argv[0] = filename;
