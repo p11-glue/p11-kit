@@ -80,7 +80,7 @@ x-custom : text
 
 	<variablelist>
 	<varlistentry>
-		<term>module:</term>
+		<term><option>module:</option></term>
 		<listitem>
 			<para>The filename of the PKCS#11 module to load.
 			This should include an extension like <literal>.so</literal></para>
@@ -93,7 +93,7 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
-		<term>critical:</term>
+		<term><option>critical:</option></term>
 		<listitem>
 			<para>Set to <literal>yes</literal> if the module is critical and
 			required to load. If a critical module fails to load or initialize,
@@ -104,7 +104,7 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
-		<term>enable-in:</term>
+		<term><option>enable-in:</option></term>
 		<listitem>
 			<para>A comma and/or space separated list of names of programs that
 			this module should only be loaded in. The module will not be loaded
@@ -116,7 +116,7 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
-		<term>disable-in:</term>
+		<term><option>disable-in:</option></term>
 		<listitem>
 			<para>A comma and/or space separated list of names of programs that
 			this module should not be loaded in. The module will be loaded for any
@@ -128,7 +128,7 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
-		<term>trust-policy</term>
+		<term><option>trust-policy:</option></term>
 		<listitem>
 			<para>If this setting is present then this module is used to load
 			trust policy information such as certificate anchors and black lists.
@@ -157,7 +157,7 @@ x-custom : text
 
 	<variablelist>
 	<varlistentry>
-		<term>user-config:</term>
+		<term><option>user-config:</option></term>
 		<listitem><para>This will be equal to one of the following values:
 		<literal>none</literal>, <literal>merge</literal>,
 		<literal>only</literal>.</para></listitem>
