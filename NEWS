@@ -1,3 +1,8 @@
+0.16.1 (stable)
+ * Don't break when cA field of BasicConstraints is missing [#61975]
+ * Documentation fixes and updates
+ * p11-kit extract-trust is a placeholder script now
+
 0.16.0 (stable)
  * Update the pkcs11.h header for new mechanisms
  * Fix build and tests on mingw64 (ie: win32)
