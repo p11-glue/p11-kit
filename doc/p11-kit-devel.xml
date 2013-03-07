@@ -261,6 +261,17 @@ $ make install
 
 		<para>Use the <literal>return_val_xxx()</literal> precondition macros to
 		check for unexpected conditions.</para>
+	</section>
 
+	<section id="devel-debugging">
+		<title>Debugging Tips</title>
+
+		<para>Unexpected conditions will produce critical warnings by p11-kit.
+		These are often failed internal preconditions, and usually indicate a
+		bug either in p11-kit or the software calling it.</para>
+
+		<para>You can use the environment variable <literal>P11_KIT_STRICT=yes</literal>
+		to make p11-kit do an <literal>abort()</literal> (and core dump depending on
+		your configuration) when a critical warning occurs.</para>
 	</section>
 </chapter>
