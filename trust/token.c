@@ -53,6 +53,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
+
 struct _p11_token {
 	p11_parser *parser;
 	p11_dict *objects;
@@ -69,6 +71,8 @@ on_parser_object (CK_ATTRIBUTE *attrs,
 	CK_OBJECT_HANDLE object;
 	CK_OBJECT_HANDLE *key;
 	p11_token *token = user_data;
+
+	return_if_fail (attrs != NULL);
 
 	object = p11_module_next_id ();
 
@@ -211,21 +215,19 @@ static int
 load_builtin_objects (p11_token *token)
 {
 	CK_OBJECT_CLASS builtin = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
-	const char *vlabel = "Trust Anchor Roots";
+	const char *trust_anchor_roots = "Trust Anchor Roots";
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
-	CK_ATTRIBUTE *attrs;
 
-	CK_ATTRIBUTE klass = { CKA_CLASS, &builtin, sizeof (builtin) };
-	CK_ATTRIBUTE tok = { CKA_TOKEN, &vtrue, sizeof (vtrue) };
-	CK_ATTRIBUTE priv = { CKA_PRIVATE, &vfalse, sizeof (vfalse) };
-	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &vfalse, sizeof (vfalse) };
-	CK_ATTRIBUTE label = { CKA_LABEL, (void *)vlabel, strlen (vlabel) };
+	CK_ATTRIBUTE builtin_root_list[] = {
+		{ CKA_CLASS, &builtin, sizeof (builtin) },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
+		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
+		{ CKA_LABEL, (void *)trust_anchor_roots, strlen (trust_anchor_roots) },
+	};
 
-	attrs = p11_attrs_build (NULL, &klass, &tok, &priv, &modifiable, &label, NULL);
-	return_val_if_fail (attrs != NULL, 0);
-
-	on_parser_object (attrs, token);
+	on_parser_object (p11_attrs_buildn (NULL, builtin_root_list, ELEMS (builtin_root_list)), token);
 	return 1;
 }
 
