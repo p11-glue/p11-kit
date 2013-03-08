@@ -1,3 +1,8 @@
+0.16.2 (stable)
+ * Fix regression in 'p11-kit extract --purpose' option [#62009]
+ * Documentation updates
+ * Build fixes [#62001, ...]
+
 0.16.1 (stable)
  * Don't break when cA field of BasicConstraints is missing [#61975]
  * Documentation fixes and updates
