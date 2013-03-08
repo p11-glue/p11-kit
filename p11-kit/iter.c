@@ -482,10 +482,6 @@ move_next_session (P11KitIter *iter)
 		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &tinfo))
 			continue;
 
-		/* Token is not initialized, we're not going to get further, so skip */
-		if (!(tinfo.flags & CKF_TOKEN_INITIALIZED))
-			continue;
-
 		rv = (iter->module->C_OpenSession) (iter->slot, iter->session_flags,
 		                                    NULL, NULL, &iter->session);
 		if (rv != CKR_OK)

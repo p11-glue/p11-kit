@@ -806,38 +806,6 @@ test_getslotlist_fail_late (CuTest *tc)
 }
 
 static void
-test_token_not_initialized (CuTest *tc)
-{
-	CK_FUNCTION_LIST module;
-	P11KitIter *iter;
-	CK_RV rv;
-	int at;
-
-	rv = p11_kit_initialize_module (&mock_module);
-	CuAssertTrue (tc, rv == CKR_OK);
-
-	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
-	module.C_GetTokenInfo = mock_C_GetTokenInfo_not_initialized;
-
-	iter = p11_kit_iter_new (NULL);
-	p11_kit_iter_begin_with (iter, &module, 0, 0);
-
-	at= 0;
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK)
-		at++;
-
-	CuAssertTrue (tc, rv == CKR_CANCEL);
-
-	/* Should fail on the first iteration */
-	CuAssertIntEquals (tc, 0, at);
-
-	p11_kit_iter_free (iter);
-
-	rv = p11_kit_finalize_module (&mock_module);
-	CuAssertTrue (tc, rv == CKR_OK);
-}
-
-static void
 test_open_session_fail (CuTest *tc)
 {
 	CK_FUNCTION_LIST module;
@@ -1120,7 +1088,6 @@ main (void)
 	SUITE_ADD_TEST (suite, test_module_mismatch);
 	SUITE_ADD_TEST (suite, test_getslotlist_fail_first);
 	SUITE_ADD_TEST (suite, test_getslotlist_fail_late);
-	SUITE_ADD_TEST (suite, test_token_not_initialized);
 	SUITE_ADD_TEST (suite, test_open_session_fail);
 	SUITE_ADD_TEST (suite, test_find_init_fail);
 	SUITE_ADD_TEST (suite, test_find_objects_fail);
