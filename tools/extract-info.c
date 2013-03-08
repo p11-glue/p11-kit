@@ -107,7 +107,7 @@ load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
 	return stapled;
 }
 
-static int
+static bool
 extract_purposes (p11_extract_info *ex)
 {
 	CK_ATTRIBUTE oid = { CKA_OBJECT_ID,
@@ -138,7 +138,7 @@ extract_purposes (p11_extract_info *ex)
 
 	/* No such extension, match anything */
 	if (ext == NULL)
-		return 1;
+		return true;
 
 	ex->purposes = p11_x509_parse_extended_key_usage (ex->asn1_defs, ext, ext_len);
 
@@ -146,7 +146,7 @@ extract_purposes (p11_extract_info *ex)
 	return ex->purposes != NULL;
 }
 
-static int
+static bool
 extract_certificate (P11KitIter *iter,
                      p11_extract_info *ex)
 {
@@ -158,11 +158,11 @@ extract_certificate (P11KitIter *iter,
 	if (!p11_attrs_find_ulong (ex->attrs, CKA_CERTIFICATE_TYPE, &type))
 		type = (CK_ULONG)-1;
 	if (type != CKC_X_509)
-		return 0;
+		return false;
 
 	attr = p11_attrs_find_valid (ex->attrs, CKA_VALUE);
 	if (!attr || !attr->pValue)
-		return 0;
+		return false;
 
 	ex->cert_der = attr->pValue;
 	ex->cert_len = attr->ulValueLen;
@@ -171,13 +171,13 @@ extract_certificate (P11KitIter *iter,
 
 	if (!ex->cert_asn) {
 		p11_message ("couldn't parse certificate: %s", message);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
-static int
+static bool
 extract_info (P11KitIter *iter,
               p11_extract_info *ex)
 {
@@ -204,25 +204,25 @@ extract_info (P11KitIter *iter,
 	/* The attributes couldn't be loaded */
 	if (rv != CKR_OK && rv != CKR_ATTRIBUTE_TYPE_INVALID && rv != CKR_ATTRIBUTE_SENSITIVE) {
 		p11_message ("couldn't load attributes: %s", p11_kit_strerror (rv));
-		return 0;
+		return false;
 	}
 
 	attr = p11_attrs_find (ex->attrs, CKA_CLASS);
 
 	/* No class attribute, very strange, just skip */
 	if (!attr || !attr->pValue || attr->ulValueLen != sizeof (CK_OBJECT_CLASS))
-		return 0;
+		return false;
 
 	ex->klass = *((CK_ULONG *)attr->pValue);
 
 	/* If a certificate then  */
 	if (ex->klass != CKO_CERTIFICATE) {
 		p11_message ("skipping non-certificate object");
-		return 0;
+		return false;
 	}
 
 	if (!extract_certificate (iter, ex))
-		return 0;
+		return false;
 
 	attr = p11_attrs_find (ex->attrs, CKA_ID);
 	if (attr) {
@@ -230,13 +230,13 @@ extract_info (P11KitIter *iter,
 		                                       p11_kit_iter_get_slot (iter),
 		                                       attr);
 		if (!ex->stapled)
-			return 0;
+			return false;
 	}
 
 	if (!extract_purposes (ex))
-		return 0;
+		return false;
 
-	return 1;
+	return true;
 }
 
 static void
