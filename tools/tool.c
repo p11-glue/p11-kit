@@ -241,22 +241,24 @@ main (int argc, char *argv[])
 
 	for (in = 1, out = 1; in < argc; in++, out++) {
 
-		/* Already seen the command, keep the arguments */
-		if (command) {
-			skip = false;
-
 		/* The non-option is the command, take it out of the arguments */
-		} else if (argv[in][0] != '-') {
-			skip = true;
-			command = argv[in];
+		if (argv[in][0] != '-') {
+			if (!command) {
+				skip = true;
+				command = argv[in];
+			}
 
 		/* The global long options */
 		} else if (argv[in][1] == '-') {
 			skip = false;
 
 			if (strcmp (argv[in], "--") == 0) {
-				p11_message ("no command specified");
-				return 2;
+				if (!command) {
+					p11_message ("no command specified");
+					return 2;
+				} else {
+					break;
+				}
 
 			} else if (strcmp (argv[in], "--verbose") == 0) {
 				verbose_arg ();
@@ -268,8 +270,8 @@ main (int argc, char *argv[])
 				command_usage ();
 				return 0;
 
-			} else {
-				p11_message ("unknown option: %s", argv[in]);
+			} else if (!command) {
+				p11_message ("unknown global option: %s", argv[in]);
 				return 2;
 			}
 
@@ -297,8 +299,11 @@ main (int argc, char *argv[])
 					break;
 
 				default:
-					p11_message ("unknown option: -%c", (int)argv[in][i]);
-					return 2;
+					if (!command) {
+						p11_message ("unknown global option: -%c", (int)argv[in][i]);
+						return 2;
+					}
+					break;
 				}
 			}
 		}
