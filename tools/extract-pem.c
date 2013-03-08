@@ -34,6 +34,8 @@
 
 #include "config.h"
 
+#define P11_DEBUG_FLAG P11_DEBUG_TOOL
+
 #include "compat.h"
 #include "debug.h"
 #include "extract.h"
@@ -61,6 +63,7 @@ p11_extract_pem_bundle (P11KitIter *iter,
 		pem = p11_pem_write (ex->cert_der, ex->cert_len, "CERTIFICATE", &length);
 		return_val_if_fail (pem != NULL, false);
 
+		p11_debug ("writing 'CERTIFICATE' PEM block of size %lu", (unsigned long)length);
 		ret = p11_save_write (file, pem, length);
 		free (pem);
 
