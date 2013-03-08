@@ -1,4 +1,7 @@
 
+WEBHOST = anarchy.freedesktop.org
+WEBBASE = /srv/p11-glue.freedesktop.org/www
+
 if WITH_TRUST_MODULE
 TRUST_DIR = trust
 else
@@ -40,19 +43,24 @@ coverage:
 	$(LCOV) --directory . --zerocounters
 	$(MAKE) check
 	$(LCOV) --directory . --capture --output-file build/coverage.info
-	$(GENHTML) --output-directory build/coverage build/coverage.info
+	$(GENHTML) --output-directory build/coverage \
+		--title "p11-kit $(PACKAGE_VERSION)" \
+		build/coverage.info
 	@echo "file://$(abs_top_builddir)/build/coverage/index.html"
+
+upload-coverage: coverage
+	rsync -Hvax build/coverage/./ $(WEBHOST):$(WEBBASE)/build/coverage/./
 endif
 
 if ENABLE_GTK_DOC
 upload-doc: all
-	rsync -Hvax --exclude doc \
-		doc/html/./ anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/doc/p11-kit/./
+	rsync -Hvax --exclude doc build \
+		doc/html/./ $(WEBHOST):$(WEBBASE)/doc/p11-kit/./
 endif
 
 upload-release: $(DIST_ARCHIVES)
 	gpg --detach-sign --local-user 'stef@thewalter.net' $(DIST_ARCHIVES)
-	scp $(DIST_ARCHIVES) $(DIST_ARCHIVES).sig anarchy.freedesktop.org:/srv/p11-glue.freedesktop.org/www/releases/
+	scp $(DIST_ARCHIVES) $(DIST_ARCHIVES).sig $(WEBHOST):$(WEBBASE)/releases/
 
 EXTRA_DIST = \
 	config.rpath \

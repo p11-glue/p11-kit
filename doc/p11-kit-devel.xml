@@ -263,6 +263,28 @@ $ make install
 		check for unexpected conditions.</para>
 	</section>
 
+	<section id="devel-testing">
+		<title>Testing and Code Coverage</title>
+
+		<para>As a general rule changes to p11-kit should have a tests exercising
+		that change. Use the <literal>make check</literal> command to run all
+		the tests. If you run it from a subdirectory only the tests in that
+		directory will be run.</para>
+
+		<para>Build p11-kit with the <option>--enable-coverage</option> configure
+		option to build code coverage support.</para>
+
+		<para>Once you've done that you can either use <literal>make coverage</literal>
+		to build code coverage information. Alternatively (and this is usually
+		easier) you can use
+		<ulink url="http://stef.thewalter.net/2012/12/git-coverage-useful-code-coverage.html">
+			<literal>git coverage</literal></ulink> to easily check whether
+		you've tested the lines changed by a patch.</para>
+
+		<para>A code coverage report is
+			<ulink url="http://p11-glue.freedesktop.org/build/coverage">available online</ulink></para>.
+	</section>
+
 	<section id="devel-debugging">
 		<title>Debugging Tips</title>
 
