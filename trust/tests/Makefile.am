@@ -34,7 +34,13 @@ CHECK_PROGS = \
 
 noinst_PROGRAMS = \
 	frob-token \
+	frob-nss-trust \
 	$(CHECK_PROGS)
+
+frob_nss_trust_LDADD = \
+	$(top_builddir)/common/libp11-library.la \
+	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/p11-kit/libp11-kit.la
 
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
 
