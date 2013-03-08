@@ -103,8 +103,8 @@ p11_message (const char* msg,
 	/* If printing is not disabled, just print out */
 	if (print_messages)
 		fprintf (stderr, "p11-kit: %s\n", buffer);
-
-	p11_debug_message (P11_DEBUG_LIB, "message: %s", buffer);
+	else
+		p11_debug_message (P11_DEBUG_LIB, "message: %s", buffer);
 	p11_message_store (buffer, length);
 }
 
