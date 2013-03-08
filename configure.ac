@@ -65,6 +65,8 @@ AC_C_BIGENDIAN
 # ------------------------------------------------------------------------------
 # Checks for libraries and headers
 
+AC_HEADER_STDBOOL
+
 if test "$os_unix" = "yes"; then
 	AC_CHECK_LIB(pthread, pthread_mutex_lock,,
 		[AC_MSG_ERROR([could not find pthread_mutex_lock])])
