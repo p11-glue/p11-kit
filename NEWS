@@ -1,3 +1,9 @@
+0.16.3 (stable)
+ * When iterating don't skip tokens without the CKF_TOKEN_INITIALIZED flag
+ * Hardcode some distrust records for NSS temporarily
+ * Parse global options better in the p11-kit command
+ * Better debugging
+
 0.16.2 (stable)
  * Fix regression in 'p11-kit extract --purpose' option [#62009]
  * Documentation updates
