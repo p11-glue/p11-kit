@@ -82,7 +82,7 @@ build_trust_object_ku (p11_parser *parser,
 	defawlt = present;
 
 	/* If blacklisted, don't even bother looking at extensions */
-	if (present != CKT_NETSCAPE_UNTRUSTED)
+	if (present != CKT_NSS_NOT_TRUSTED)
 		data = p11_parsing_get_extension (parser, parsing, P11_OID_KEY_USAGE, &length);
 
 	if (data) {
@@ -91,7 +91,7 @@ build_trust_object_ku (p11_parser *parser,
 		 * usages are to be set. If the extension was invalid, then
 		 * fail safe to none of the key usages.
 		 */
-		defawlt = CKT_NETSCAPE_TRUST_UNKNOWN;
+		defawlt = CKT_NSS_TRUST_UNKNOWN;
 
 		defs = p11_parser_get_asn1_defs (parser);
 		if (!p11_x509_parse_key_usage (defs, data, length, &ku))
@@ -171,19 +171,19 @@ build_trust_object_eku (p11_parser *parser,
 		return_val_if_reached (NULL);
 
 	/* The neutral value is set if an purpose is not present */
-	if (allow == CKT_NETSCAPE_UNTRUSTED)
-		neutral = CKT_NETSCAPE_UNTRUSTED;
+	if (allow == CKT_NSS_NOT_TRUSTED)
+		neutral = CKT_NSS_NOT_TRUSTED;
 
 	/* If anything explicitly set, then neutral is unknown */
 	else if (purposes || rejects)
-		neutral = CKT_NETSCAPE_TRUST_UNKNOWN;
+		neutral = CKT_NSS_TRUST_UNKNOWN;
 
 	/* Otherwise neutral will allow any purpose */
 	else
 		neutral = allow;
 
 	/* The value set if a purpose is explictly rejected */
-	disallow = CKT_NETSCAPE_UNTRUSTED;
+	disallow = CKT_NSS_NOT_TRUSTED;
 
 	for (i = 0; eku_attribute_map[i].type != CKA_INVALID; i++) {
 		attrs[i].type = eku_attribute_map[i].type;
@@ -218,7 +218,7 @@ build_nss_trust_object (p11_parser *parser,
 	CK_ATTRIBUTE *object = NULL;
 	CK_TRUST allow;
 
-	CK_OBJECT_CLASS vclass = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS vclass = CKO_NSS_TRUST;
 	CK_BYTE vsha1_hash[P11_CHECKSUM_SHA1_LENGTH];
 	CK_BYTE vmd5_hash[P11_CHECKSUM_MD5_LENGTH];
 	CK_BBOOL vfalse = CK_FALSE;
@@ -270,13 +270,13 @@ build_nss_trust_object (p11_parser *parser,
 
 	/* Calculate the default allow trust */
 	if (distrust)
-		allow = CKT_NETSCAPE_UNTRUSTED;
+		allow = CKT_NSS_NOT_TRUSTED;
 	else if (trust && authority)
-		allow = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+		allow = CKT_NSS_TRUSTED_DELEGATOR;
 	else if (trust)
-		allow = CKT_NETSCAPE_TRUSTED;
+		allow = CKT_NSS_TRUSTED;
 	else
-		allow = CKT_NETSCAPE_TRUST_UNKNOWN;
+		allow = CKT_NSS_TRUST_UNKNOWN;
 
 	object = build_trust_object_ku (parser, parsing, object, allow);
 	return_if_fail (object != NULL);

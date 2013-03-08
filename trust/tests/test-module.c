@@ -192,7 +192,7 @@ static void
 check_has_trust_object (CuTest *cu,
                         CK_ATTRIBUTE *cert)
 {
-	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_ATTRIBUTE klass = { CKA_CLASS, &trust_object, sizeof (trust_object) };
 	CK_OBJECT_HANDLE objects[2];
 	CK_ATTRIBUTE *match;
@@ -314,7 +314,7 @@ test_find_certificates (CuTest *cu)
 static void
 test_find_builtin (CuTest *cu)
 {
-	CK_OBJECT_CLASS klass = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+	CK_OBJECT_CLASS klass = CKO_NSS_BUILTIN_ROOT_LIST;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 

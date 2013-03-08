@@ -154,11 +154,11 @@ test_parse_pem_certificate (CuTest *cu)
 static void
 test_parse_openssl_trusted (CuTest *cu)
 {
-	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
-	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST trusted = CKT_NSS_TRUSTED_DELEGATOR;
+	CK_TRUST distrusted = CKT_NSS_NOT_TRUSTED;
+	CK_TRUST unknown = CKT_NSS_TRUST_UNKNOWN;
 	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
-	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
 	CK_X_ASSERTION_TYPE anchored_certificate = CKT_X_ANCHORED_CERTIFICATE;
 	CK_X_ASSERTION_TYPE distrusted_certificate = CKT_X_DISTRUSTED_CERTIFICATE;
@@ -294,9 +294,9 @@ test_parse_openssl_trusted (CuTest *cu)
 static void
 test_parse_openssl_distrusted (CuTest *cu)
 {
-	CK_TRUST distrusted = CKT_NETSCAPE_UNTRUSTED;
+	CK_TRUST distrusted = CKT_NSS_NOT_TRUSTED;
 	CK_OBJECT_CLASS certificate_extension = CKO_X_CERTIFICATE_EXTENSION;
-	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
 	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
 	CK_X_ASSERTION_TYPE distrusted_certificate = CKT_X_DISTRUSTED_CERTIFICATE;
@@ -515,10 +515,10 @@ test_parse_openssl_distrusted (CuTest *cu)
 static void
 test_parse_with_key_usage (CuTest *cu)
 {
-	CK_TRUST trusted = CKT_NETSCAPE_TRUSTED;
-	CK_TRUST unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_TRUST trusted = CKT_NSS_TRUSTED;
+	CK_TRUST unknown = CKT_NSS_TRUST_UNKNOWN;
 	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
-	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
@@ -606,9 +606,9 @@ static void
 test_parse_anchor (CuTest *cu)
 {
 	CK_BBOOL vtrue = CK_TRUE;
-	CK_OBJECT_CLASS trust_object = CKO_NETSCAPE_TRUST;
+	CK_OBJECT_CLASS trust_object = CKO_NSS_TRUST;
 	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
-	CK_TRUST delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+	CK_TRUST delegator = CKT_NSS_TRUSTED_DELEGATOR;
 	CK_OBJECT_CLASS trust_assertion = CKO_X_TRUST_ASSERTION;
 	CK_X_ASSERTION_TYPE anchored_certificate = CKT_X_ANCHORED_CERTIFICATE;
 

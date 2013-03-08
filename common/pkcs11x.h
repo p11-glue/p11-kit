@@ -50,30 +50,30 @@ extern "C" {
 #ifdef CRYPTOKI_NSS_VENDOR_DEFINED
 
 /* Various NSS objects */
-#define CKO_NETSCAPE_CRL                0xce534351UL
-#define CKO_NETSCAPE_SMIME              0xce534352UL
-#define CKO_NETSCAPE_TRUST              0xce534353UL
-#define CKO_NETSCAPE_BUILTIN_ROOT_LIST  0xce534354UL
-#define CKO_NETSCAPE_NEWSLOT            0xce534355UL
-#define CKO_NETSCAPE_DELSLOT            0xce534356UL
+#define CKO_NSS_CRL                     0xce534351UL
+#define CKO_NSS_SMIME                   0xce534352UL
+#define CKO_NSS_TRUST                   0xce534353UL
+#define CKO_NSS_BUILTIN_ROOT_LIST       0xce534354UL
+#define CKO_NSS_NEWSLOT                 0xce534355UL
+#define CKO_NSS_DELSLOT                 0xce534356UL
 
 /* Various NSS key types */
-#define CKK_NETSCAPE_PKCS8              0xce534351UL
+#define CKK_NSS_PKCS8                   0xce534351UL
 
 /* Various NSS attributes */
-#define CKA_NETSCAPE_URL                0xce534351UL
-#define CKA_NETSCAPE_EMAIL              0xce534352UL
-#define CKA_NETSCAPE_SMIME_INFO         0xce534353UL
-#define CKA_NETSCAPE_SMIME_TIMESTAMP    0xce534354UL
-#define CKA_NETSCAPE_PKCS8_SALT         0xce534355UL
-#define CKA_NETSCAPE_PASSWORD_CHECK     0xce534356UL
-#define CKA_NETSCAPE_EXPIRES            0xce534357UL
-#define CKA_NETSCAPE_KRL                0xce534358UL
-#define CKA_NETSCAPE_PQG_COUNTER        0xce534364UL
-#define CKA_NETSCAPE_PQG_SEED           0xce534365UL
-#define CKA_NETSCAPE_PQG_H              0xce534366UL
-#define CKA_NETSCAPE_PQG_SEED_BITS      0xce534367UL
-#define CKA_NETSCAPE_MODULE_SPEC        0xce534368UL
+#define CKA_NSS_URL                     0xce534351UL
+#define CKA_NSS_EMAIL                   0xce534352UL
+#define CKA_NSS_SMIME_INFO              0xce534353UL
+#define CKA_NSS_SMIME_TIMESTAMP         0xce534354UL
+#define CKA_NSS_PKCS8_SALT              0xce534355UL
+#define CKA_NSS_PASSWORD_CHECK          0xce534356UL
+#define CKA_NSS_EXPIRES                 0xce534357UL
+#define CKA_NSS_KRL                     0xce534358UL
+#define CKA_NSS_PQG_COUNTER             0xce534364UL
+#define CKA_NSS_PQG_SEED                0xce534365UL
+#define CKA_NSS_PQG_H                   0xce534366UL
+#define CKA_NSS_PQG_SEED_BITS           0xce534367UL
+#define CKA_NSS_MODULE_SPEC             0xce534368UL
 
 /* NSS trust attributes */
 #define CKA_TRUST_DIGITAL_SIGNATURE     0xce536351UL
@@ -97,19 +97,20 @@ extern "C" {
 
 /* NSS trust values */
 typedef CK_ULONG                        CK_TRUST;
-#define CKT_NETSCAPE_TRUSTED            0xce534351UL
-#define CKT_NETSCAPE_TRUSTED_DELEGATOR  0xce534352UL
-#define CKT_NETSCAPE_UNTRUSTED          0xce534353UL
-#define CKT_NETSCAPE_MUST_VERIFY        0xce534354UL
-#define CKT_NETSCAPE_TRUST_UNKNOWN      0xce534355UL
+#define CKT_NSS_TRUSTED                 0xce534351UL
+#define CKT_NSS_TRUSTED_DELEGATOR       0xce534352UL
+#define CKT_NSS_MUST_VERIFY_TRUST       0xce534353UL
+#define CKT_NSS_NOT_TRUSTED             0xce53435AUL
+#define CKT_NSS_TRUST_UNKNOWN           0xce534355UL
+#define CKT_NSS_VALID_DELEGATOR         0xce53435BUL
 
 /* NSS specific mechanisms */
-#define CKM_NETSCAPE_AES_KEY_WRAP       0xce534351UL
-#define CKM_NETSCAPE_AES_KEY_WRAP_PAD   0xce534352UL
+#define CKM_NSS_AES_KEY_WRAP            0xce534351UL
+#define CKM_NSS_AES_KEY_WRAP_PAD        0xce534352UL
 
 /* NSS specific return values */
-#define CKR_NETSCAPE_CERTDB_FAILED      0xce534351UL
-#define CKR_NETSCAPE_KEYDB_FAILED       0xce534352UL
+#define CKR_NSS_CERTDB_FAILED           0xce534351UL
+#define CKR_NSS_KEYDB_FAILED            0xce534352UL
 
 #endif /* CRYPTOKI_NSS_VENDOR_DEFINED */
 

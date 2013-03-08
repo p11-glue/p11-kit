@@ -214,9 +214,9 @@ loader_load_paths (p11_token *token,
 static int
 load_builtin_objects (p11_token *token)
 {
-	CK_OBJECT_CLASS builtin = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
-	CK_OBJECT_CLASS nss_trust = CKO_NETSCAPE_TRUST;
-	CK_TRUST nss_not_trusted = CKT_NETSCAPE_UNTRUSTED;
+	CK_OBJECT_CLASS builtin = CKO_NSS_BUILTIN_ROOT_LIST;
+	CK_OBJECT_CLASS nss_trust = CKO_NSS_TRUST;
+	CK_TRUST nss_not_trusted = CKT_NSS_NOT_TRUSTED;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 
