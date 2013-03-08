@@ -272,6 +272,54 @@ test_info_skip_non_certificate (CuTest *tc)
 	teardown (tc);
 }
 
+static void
+test_limit_to_purpose_match (CuTest *tc)
+{
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
+
+	p11_extract_info_limit_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	p11_message_quiet ();
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	p11_message_loud ();
+
+	teardown (tc);
+}
+
+static void
+test_limit_to_purpose_no_match (CuTest *tc)
+{
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
+
+	p11_extract_info_limit_purpose (&test.ex, "3.3.3.3");
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	p11_message_quiet ();
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+
+	p11_message_loud ();
+
+	teardown (tc);
+}
+
 int
 main (void)
 {
@@ -290,6 +338,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_info_limit_purposes);
 	SUITE_ADD_TEST (suite, test_info_invalid_purposes);
 	SUITE_ADD_TEST (suite, test_info_skip_non_certificate);
+	SUITE_ADD_TEST (suite, test_limit_to_purpose_match);
+	SUITE_ADD_TEST (suite, test_limit_to_purpose_no_match);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

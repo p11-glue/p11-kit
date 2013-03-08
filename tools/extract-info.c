@@ -316,9 +316,18 @@ void
 p11_extract_info_limit_purpose (p11_extract_info *ex,
                                 const char *purpose)
 {
-	if (!ex->limit_to_purposes)
+	char *value;
+
+	if (!ex->limit_to_purposes) {
 		ex->limit_to_purposes = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-	p11_dict_set (ex->limit_to_purposes, strdup (purpose), NULL);
+		return_if_fail (ex->limit_to_purposes != NULL);
+	}
+
+	value = strdup (purpose);
+	return_if_fail (value != NULL);
+
+	if (!p11_dict_set (ex->limit_to_purposes, value, value))
+		return_if_reached ();
 }
 
 static char *
