@@ -185,20 +185,21 @@ AC_ARG_WITH([system-anchors],
 
 AC_MSG_CHECKING([location of system CA anchors])
 
-if test "$enable_trust_module" != "yes"; then
-	if test "$with_system_anchors" != ""; then
-		AC_MSG_ERROR([need --enable-trust-module in order to use system anchors.])
-	fi
-	with_system_anchors="no"
-fi
-
 # This option was disabled, no anchors
 if test "$with_system_anchors" = "no"; then
 	with_system_anchors=""
 	AC_MSG_RESULT([disabled])
 
+elif test "$enable_trust_module" != "yes"; then
+	if test "$with_system_anchors" != ""; then
+		AC_MSG_ERROR([need --enable-trust-module in order to use system anchors.])
+	fi
+	with_system_anchors=""
+	AC_MSG_RESULT([disabled])
+
 # Option was not set, try to detect
-elif test "$with_system_anchors" = ""; then
+elif test "$with_system_anchors" = "" -o "$with_system_anchors" = "yes"; then
+	with_system_anchors=""
 	for f in /etc/pki/tls/certs/ca-bundle.crt \
 		/etc/ssl/certs/ca-certificates.crt \
 		/etc/ssl/ca-bundle.pem \
@@ -214,7 +215,9 @@ elif test "$with_system_anchors" = ""; then
 	fi
 
 	AC_MSG_RESULT($with_system_anchors)
+
 else
+	# Anchors explicitly set
 	AC_MSG_RESULT($with_system_anchors)
 fi
 
@@ -228,21 +231,23 @@ AC_ARG_WITH([system-certificates],
 
 AC_MSG_CHECKING([location of additional system certificates])
 
-if test "$enable_trust_module" != "yes"; then
+# This option was disabled, no additional certificates
+if test "$with_system_certificates" = "no"; then
+	with_system_certificates=""
+	AC_MSG_RESULT([disabled])
+
+elif test "$enable_trust_module" != "yes"; then
 	if test "$with_system_certificates" != ""; then
 		AC_MSG_ERROR([need --enable-trust-module in order to use additional system certificates.])
 	fi
 	with_system_certificates=""
-fi
-
-# This option was disabled, no additional certificates
-if test "$with_system_certificates" = "no"; then
-	with_system_certificates=""
-fi
-
-if test "$with_system_certificates" = ""; then
 	AC_MSG_RESULT([disabled])
+
+elif test "$with_system_certificates" = "yes"; then
+	AC_MSG_ERROR([--with-system-certificates requires paths as an argument])
+
 else
+	# Anchors explicitly set
 	AC_MSG_RESULT($with_system_certificates)
 fi
 
