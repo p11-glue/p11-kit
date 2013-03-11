@@ -58,23 +58,23 @@ temp.txt
 
 /common/tests/hash-test
 
-/doc/html
-/doc/p11-kit-decl-list.txt
-/doc/p11-kit-decl.txt
-/doc/p11-kit-undeclared.txt
-/doc/p11-kit-undocumented.txt
-/doc/p11-kit-unused.txt
-/doc/p11-kit.args
-/doc/p11-kit.hierarchy
-/doc/p11-kit.interfaces
-/doc/p11-kit.prerequisites
-/doc/p11-kit.signals
-/doc/p11-kit.types
-/doc/tmpl/
-/doc/version.xml
-/doc/xml/
-/doc/*.5
-/doc/*.8
+/doc/manual/html
+/doc/manual/p11-kit-decl-list.txt
+/doc/manual/p11-kit-decl.txt
+/doc/manual/p11-kit-undeclared.txt
+/doc/manual/p11-kit-undocumented.txt
+/doc/manual/p11-kit-unused.txt
+/doc/manual/p11-kit.args
+/doc/manual/p11-kit.hierarchy
+/doc/manual/p11-kit.interfaces
+/doc/manual/p11-kit.prerequisites
+/doc/manual/p11-kit.signals
+/doc/manual/p11-kit.types
+/doc/manual/tmpl/
+/doc/manual/version.xml
+/doc/manual/xml/
+/doc/manual/*.5
+/doc/manual/*.8
 
 /p11-kit/p11-kit.pc
 /p11-kit/p11-kit-1.pc

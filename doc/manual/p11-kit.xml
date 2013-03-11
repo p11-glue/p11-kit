@@ -33,7 +33,7 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit extract</command> <arg choice="plain">--filter=&lt;what&gt;</arg> 
+		<command>p11-kit extract</command> <arg choice="plain">--filter=&lt;what&gt;</arg>
 			<arg choice="plain">--format=&lt;type&gt;</arg> /path/to/destination
 	</cmdsynopsis>
 </refsynopsisdiv>

@@ -55,7 +55,7 @@ endif
 if ENABLE_GTK_DOC
 upload-doc: all
 	rsync -Hvax --exclude doc build \
-		doc/html/./ $(WEBHOST):$(WEBBASE)/doc/p11-kit/./
+		doc/manual/html/./ $(WEBHOST):$(WEBBASE)/doc/p11-kit/./
 endif
 
 upload-release: $(DIST_ARCHIVES)

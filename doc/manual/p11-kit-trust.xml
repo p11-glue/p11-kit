@@ -66,7 +66,7 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 	the box with NSS. The trust policy module provides NSS style
 	PKCS#11 trust objects for NSS to retrieve.</para>
 
- 	<para>The module may be used to replace the
+	<para>The module may be used to replace the
 	<literal>libnssckbi.so</literal> file via an distribution
 	specific alternatives mechanism or otherwise.</para>
 
@@ -82,7 +82,7 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 	<para>The trust policy module can be used as a source of trust
 	information for glib-networking's <literal>gnutls-pkcs11</literal> backend.
 	The module provides PKCS#11 trust assertion objects as expected.</para>
-	
+
 	<para>The module should work by default if the <literal>gnutls-pkcs11</literal>
 	backend is selected as the glib-networking TLS backend.</para>
 </section>
@@ -101,7 +101,7 @@ $ pkg-config --variable p11_system_certificates p11-kit-1
 		from this module by adding a file to <literal>/etc/pkcs11/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
 		<literal>trust-policy:</literal> line.</para></listitem>
-		<listitem><para>Disable this module completely by 
+		<listitem><para>Disable this module completely by
 		adding a file to <literal>/etc/pkcs11/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
 		<literal>enable-in:</literal> line.</para></listitem>

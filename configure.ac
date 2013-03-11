@@ -279,10 +279,10 @@ if test x$enable_doc = xyes; then
 	if test -z "$XSLTPROC"; then
 		AC_MSG_ERROR([the xsltproc command was not found and --enable-doc requested])
 	fi
-	doc_status="yes (manual, gtk-doc reference)"
+	doc_status="yes (manual, reference)"
 else
 	enable_doc=no
-	doc_status="no (no manual, reference)"
+	doc_status="no (no manual or reference)"
 fi
 
 AC_MSG_CHECKING([whether to build documentation])
@@ -433,7 +433,8 @@ AC_CONFIG_FILES([Makefile
 	common/Makefile
 	common/tests/Makefile
 	doc/Makefile
-	doc/version.xml
+	doc/manual/Makefile
+	doc/manual/version.xml
 	po/Makefile.in
 	p11-kit/Makefile
 	p11-kit/tests/Makefile
