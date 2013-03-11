@@ -229,6 +229,7 @@ int
 main (int argc, char *argv[])
 {
 	char *command = NULL;
+	bool want_help = false;
 	bool skip;
 	int in, out;
 	int i;
@@ -267,8 +268,7 @@ main (int argc, char *argv[])
 				quiet_arg ();
 
 			} else if (strcmp (argv[in], "--help") == 0) {
-				command_usage ();
-				return 0;
+				want_help = true;
 
 			} else if (!command) {
 				p11_message ("unknown global option: %s", argv[in]);
@@ -282,8 +282,8 @@ main (int argc, char *argv[])
 			for (i = 1; argv[in][i] != '\0'; i++) {
 				switch (argv[in][i]) {
 				case 'h':
-					command_usage ();
-					return 0;
+					want_help = true;
+					break;
 
 				/* Compatibility option */
 				case 'l':
@@ -320,11 +320,16 @@ main (int argc, char *argv[])
 
 	if (command == NULL) {
 		/* As a special favor if someone just typed 'p11-kit', help them out */
-		if (argc == 1)
+		if (argc == 1) {
 			command_usage ();
-		else
+			return 2;
+		} else if (want_help) {
+			command_usage ();
+			return 0;
+		} else {
 			p11_message ("no command specified");
-		return 2;
+			return 2;
+		}
 	}
 
 	argc = out;
