@@ -25,6 +25,7 @@ libp11_library_la_SOURCES = \
 	constants.c constants.h \
 	debug.c debug.h \
 	dict.c dict.h \
+	lexer.c lexer.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
 	$(NULL)

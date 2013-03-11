@@ -40,6 +40,7 @@
 #include "conf.h"
 #define P11_DEBUG_FLAG P11_DEBUG_CONF
 #include "debug.h"
+#include "lexer.h"
 #include "library.h"
 #include "private.h"
 
@@ -65,46 +66,6 @@
 #include <shlobj.h>
 #endif
 
-static void
-strcln (char* data, char ch)
-{
-	char* p;
-	for (p = data; *data; data++, p++) {
-		while (*data == ch)
-			data++;
-		*p = *data;
-	}
-
-	/* Renull terminate */
-	*p = 0;
-}
-
-static char*
-strbtrim (const char* data)
-{
-	while (*data && isspace (*data))
-		++data;
-	return (char*)data;
-}
-
-static void
-stretrim (char* data)
-{
-	char* t = data + strlen (data);
-	while (t > data && isspace (*(t - 1))) {
-		t--;
-		*t = 0;
-	}
-}
-
-static char*
-strtrim (char* data)
-{
-	data = (char*)strbtrim (data);
-	stretrim (data);
-	return data;
-}
-
 static int
 strequal (const char *one, const char *two)
 {
@@ -115,8 +76,10 @@ strequal (const char *one, const char *two)
  * CONFIG PARSER
  */
 
-static char*
-read_config_file (const char* filename, int flags)
+static char *
+read_config_file (const char* filename,
+                  int flags,
+                  size_t *length)
 {
 	char* config = NULL;
 	FILE* f = NULL;
@@ -132,13 +95,15 @@ read_config_file (const char* filename, int flags)
 		    (error == ENOENT || error == ENOTDIR)) {
 			p11_debug ("config file does not exist");
 			config = strdup ("\n");
+			*length = 0;
 			return_val_if_fail (config != NULL, NULL);
 			return config;
 
 		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
 		           (error == EPERM || error == EACCES)) {
 			p11_debug ("config file is inaccessible");
-			config = strdup ("\n");
+			config = strdup ("");
+			*length = 0;
 			return_val_if_fail (config != NULL, NULL);
 			return config;
 		}
@@ -177,12 +142,7 @@ read_config_file (const char* filename, int flags)
 	fclose (f);
 
 	/* Null terminate the data */
-	config[len] = '\n';
-	config[len + 1] = 0;
-
-	/* Remove nasty dos line endings */
-	strcln (config, '\r');
-
+	*length = len;
 	return config;
 }
 
@@ -213,71 +173,58 @@ _p11_conf_merge_defaults (p11_dict *map,
 p11_dict *
 _p11_conf_parse_file (const char* filename, int flags)
 {
-	char *name;
-	char *value;
 	p11_dict *map = NULL;
 	char *data;
-	char *next;
-	char *end;
-	int error = 0;
+	p11_lexer lexer;
+	bool failed = false;
+	size_t length;
 
 	assert (filename);
 
 	p11_debug ("reading config file: %s", filename);
 
-	/* Adds an extra newline to end of file */
-	data = read_config_file (filename, flags);
+	data = read_config_file (filename, flags, &length);
 	if (!data)
 		return NULL;
 
 	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 	return_val_if_fail (map != NULL, NULL);
 
-	next = data;
-
-	/* Go through lines and process them */
-	while ((end = strchr (next, '\n')) != NULL) {
-		*end = 0;
-		name = strbtrim (next);
-		next = end + 1;
-
-		/* Empty lines / comments at start */
-		if (!*name || *name == '#')
-			continue;
-
-		/* Look for the break between name: value on the same line */
-		value = name + strcspn (name, ":");
-		if (!*value) {
-			p11_message ("%s: invalid config line: %s", filename, name);
-			error = EINVAL;
+	p11_lexer_init (&lexer, filename, data, length);
+	while (p11_lexer_next (&lexer, &failed)) {
+		switch (lexer.tok_type) {
+		case TOK_FIELD:
+			p11_debug ("config value: %s: %s", lexer.tok.field.name,
+			           lexer.tok.field.value);
+			if (!p11_dict_set (map, lexer.tok.field.name, lexer.tok.field.value))
+				return_val_if_reached (NULL);
+			lexer.tok.field.name = NULL;
+			lexer.tok.field.value = NULL;
+			break;
+		case TOK_PEM:
+			p11_message ("%s: unexpected pem block", filename);
+			failed = true;
+			break;
+		case TOK_SECTION:
+			p11_message ("%s: unexpected section header", filename);
+			failed = true;
+			break;
+		case TOK_EOF:
+			assert_not_reached ();
 			break;
 		}
 
-		/* Null terminate and split value part */
-		*value = 0;
-		value++;
-
-		name = strtrim (name);
-		value = strtrim (value);
-
-		name = strdup (name);
-		return_val_if_fail (name != NULL, NULL);
-
-		value = strdup (value);
-		return_val_if_fail (value != NULL, NULL);
-
-		p11_debug ("config value: %s: %s", name, value);
-
-		if (!p11_dict_set (map, name, value))
-			return_val_if_reached (NULL);
+		if (failed)
+			break;
 	}
 
+	p11_lexer_done (&lexer);
 	free (data);
 
-	if (error != 0) {
+	if (failed) {
 		p11_dict_free (map);
 		map = NULL;
-		errno = error;
+		errno = EINVAL;
 	}
 
 	return map;

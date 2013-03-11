@@ -20,6 +20,7 @@ CHECK_PROGS = \
 	test-constants \
 	test-attrs \
 	test-buffer \
+	test-lexer \
 	$(NULL)
 
 noinst_PROGRAMS = \
