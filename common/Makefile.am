@@ -28,6 +28,7 @@ libp11_library_la_SOURCES = \
 	lexer.c lexer.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
+	url.c url.h \
 	$(NULL)
 
 libp11_mock_la_SOURCES = \

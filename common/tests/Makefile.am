@@ -21,6 +21,7 @@ CHECK_PROGS = \
 	test-attrs \
 	test-buffer \
 	test-lexer \
+	test-url \
 	$(NULL)
 
 noinst_PROGRAMS = \

@@ -43,6 +43,7 @@
 #include "private.h"
 #include "p11-kit.h"
 #include "uri.h"
+#include "url.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -145,102 +146,7 @@ struct p11_kit_uri {
 	char *pin_source;
 };
 
-const static char HEX_CHARS[] = "0123456789abcdef";
 const static char WHITESPACE[] = " \n\r\v";
-
-static int
-url_decode (const char *value, const char *end,
-            unsigned char** output, size_t *length)
-{
-	char *a, *b;
-	unsigned char *result, *p;
-
-	assert (output);
-	assert (value <= end);
-
-	/* String can only get shorter */
-	result = malloc ((end - value) + 1);
-	return_val_if_fail (result != NULL, P11_KIT_URI_UNEXPECTED);
-
-	/* Now loop through looking for escapes */
-	p = result;
-	while (value != end) {
-		/*
-		 * A percent sign followed by two hex digits means
-		 * that the digits represent an escaped character.
-		 */
-		if (*value == '%') {
-			value++;
-			if (value + 2 > end) {
-				free (result);
-				return P11_KIT_URI_BAD_ENCODING;
-			}
-			a = strchr (HEX_CHARS, tolower (value[0]));
-			b = strchr (HEX_CHARS, tolower (value[1]));
-			if (!a || !b) {
-				free (result);
-				return P11_KIT_URI_BAD_ENCODING;
-			}
-			*p = (a - HEX_CHARS) << 4;
-			*(p++) |= (b - HEX_CHARS);
-			value += 2;
-
-		/* Ignore whitespace characters */
-		} else if (strchr (WHITESPACE, *value)) {
-			value++;
-
-		/* A different character */
-		} else {
-			*(p++) = *(value++);
-		}
-	}
-
-	/* Null terminate string, in case its a string */
-	*p = 0;
-
-	if (length)
-		*length = p - result;
-	*output = result;
-	return P11_KIT_URI_OK;
-}
-
-static char *
-url_encode (const unsigned char *value,
-            const unsigned char *end,
-            size_t *length,
-            bool force)
-{
-	char *p;
-	char *result;
-
-	assert (value <= end);
-
-	/* Just allocate for worst case */
-	result = malloc (((end - value) * 3) + 1);
-	return_val_if_fail (result != NULL, NULL);
-
-	/* Now loop through looking for escapes */
-	p = result;
-	while (value != end) {
-
-		/* These characters we let through verbatim */
-		if (*value && !force && (isalnum (*value) || strchr ("_-.", *value) != NULL)) {
-			*(p++) = *(value++);
-
-		/* All others get encoded */
-		} else {
-			*(p++) = '%';
-			*(p++) = HEX_CHARS[((unsigned char)*value) >> 4];
-			*(p++) = HEX_CHARS[((unsigned char)*value) & 0x0F];
-			++value;
-		}
-	}
-
-	*p = 0;
-	if (length)
-		*length = p - result;
-	return result;
-}
 
 static char *
 key_decode (const char *value, const char *end)
@@ -750,7 +656,8 @@ format_encode_string (p11_buffer *buffer,
 	char *encoded;
 	bool ret;
 
-	encoded = url_encode (value, value + n_value, NULL, force);
+	encoded = p11_url_encode (value, value + n_value,
+	                          force ? "" : P11_URL_VERBATIM, NULL);
 	return_val_if_fail (encoded != NULL, false);
 
 	ret = format_raw_string (buffer, is_first, name, encoded);
@@ -960,7 +867,6 @@ parse_string_attribute (const char *name, const char *start, const char *end,
 	unsigned char *value;
 	CK_ATTRIBUTE_TYPE type;
 	size_t length;
-	int ret;
 
 	assert (start <= end);
 
@@ -971,9 +877,9 @@ parse_string_attribute (const char *name, const char *start, const char *end,
 	else
 		return 0;
 
-	ret = url_decode (start, end, &value, &length);
-	if (ret < 0)
-		return ret;
+	value = p11_url_decode (start, end, P11_URL_WHITESPACE, &length);
+	if (value == NULL)
+		return P11_KIT_URI_BAD_ENCODING;
 
 	uri->attrs = p11_attrs_take (uri->attrs, type, value, length);
 	return 1;
@@ -1033,13 +939,12 @@ parse_struct_info (unsigned char *where, size_t length, const char *start,
 {
 	unsigned char *value;
 	size_t value_length;
-	int ret;
 
 	assert (start <= end);
 
-	ret = url_decode (start, end, &value, &value_length);
-	if (ret < 0)
-		return ret;
+	value = p11_url_decode (start, end, P11_URL_WHITESPACE, &value_length);
+	if (value == NULL)
+		return P11_KIT_URI_BAD_ENCODING;
 
 	/* Too long, shouldn't match anything */
 	if (value_length > length) {
@@ -1173,15 +1078,14 @@ parse_extra_info (const char *name, const char *start, const char *end,
                   P11KitUri *uri)
 {
 	unsigned char *pin_source;
-	int ret;
 
 	assert (start <= end);
 
 	if (strcmp (name, "pinfile") == 0 ||
 	    strcmp (name, "pin-source") == 0) {
-		ret = url_decode (start, end, &pin_source, NULL);
-		if (ret < 0)
-			return ret;
+		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (pin_source == NULL)
+			return P11_KIT_URI_BAD_ENCODING;
 		free (uri->pin_source);
 		uri->pin_source = (char*)pin_source;
 		return 1;
