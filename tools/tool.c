@@ -315,6 +315,9 @@ main (int argc, char *argv[])
 			argv[out] = argv[in];
 	}
 
+	/* Initialize tool's debugging after setting env vars above */
+	p11_debug_init ();
+
 	if (command == NULL) {
 		/* As a special favor if someone just typed 'p11-kit', help them out */
 		if (argc == 1)
