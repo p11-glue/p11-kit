@@ -32,6 +32,7 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
+#include "index.h"
 #include "pkcs11.h"
 #include "token.h"
 
@@ -42,7 +43,7 @@ typedef void (* p11_session_cleanup) (void *data);
 
 typedef struct {
 	CK_SESSION_HANDLE handle;
-	p11_dict *objects;
+	p11_index *index;
 	p11_token *token;
 	CK_BBOOL loaded;
 
@@ -54,22 +55,6 @@ typedef struct {
 p11_session *     p11_session_new           (p11_token *token);
 
 void              p11_session_free          (void *data);
-
-CK_RV             p11_session_add_object    (p11_session *session,
-                                             CK_ATTRIBUTE *attrs,
-                                             CK_OBJECT_HANDLE *handle);
-
-CK_RV             p11_session_del_object    (p11_session *session,
-                                             CK_OBJECT_HANDLE handle);
-
-CK_ATTRIBUTE *    p11_session_get_object    (p11_session *session,
-                                             CK_OBJECT_HANDLE handle,
-                                             CK_BBOOL *token);
-
-CK_RV             p11_session_set_object    (p11_session *session,
-                                             CK_OBJECT_HANDLE handle,
-                                             CK_ATTRIBUTE *template,
-                                             CK_ULONG count);
 
 void              p11_session_set_operation (p11_session *session,
                                              p11_session_cleanup cleanup,

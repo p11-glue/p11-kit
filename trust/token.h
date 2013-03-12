@@ -36,6 +36,7 @@
 #define P11_TOKEN_H_
 
 #include "dict.h"
+#include "index.h"
 #include "pkcs11.h"
 
 typedef struct _p11_token p11_token;
@@ -47,7 +48,7 @@ void            p11_token_free        (p11_token *token);
 
 int             p11_token_load        (p11_token *token);
 
-p11_dict *      p11_token_objects     (p11_token *token);
+p11_index *     p11_token_index       (p11_token *token);
 
 const char *    p11_token_get_path    (p11_token *token);
 

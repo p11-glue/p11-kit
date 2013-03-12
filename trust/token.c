@@ -58,7 +58,7 @@
 
 struct _p11_token {
 	p11_parser *parser;
-	p11_dict *objects;
+	p11_index *index;
 	const char *path;
 	CK_SLOT_ID slot;
 	int loaded;
@@ -68,18 +68,11 @@ static void
 on_parser_object (CK_ATTRIBUTE *attrs,
                   void *user_data)
 {
-	CK_OBJECT_HANDLE object;
-	CK_OBJECT_HANDLE *key;
 	p11_token *token = user_data;
 
 	return_if_fail (attrs != NULL);
 
-	object = p11_module_next_id ();
-
-	key = memdup (&object, sizeof (object));
-	return_if_fail (key != NULL);
-
-	if (!p11_dict_set (token->objects, key, attrs))
+	if (p11_index_take (token->index, attrs, NULL) != CKR_OK)
 		return_if_reached ();
 }
 
@@ -395,19 +388,13 @@ p11_token_load (p11_token *token)
 	return count + builtins;
 }
 
-p11_dict *
-p11_token_objects (p11_token *token)
-{
-	return token->objects;
-}
-
 void
 p11_token_free (p11_token *token)
 {
 	if (!token)
 		return;
 
-	p11_dict_free (token->objects);
+	p11_index_free (token->index);
 	p11_parser_free (token->parser);
 	free (token);
 }
@@ -424,10 +411,8 @@ p11_token_new (CK_SLOT_ID slot,
 	token->parser = p11_parser_new ();
 	return_val_if_fail (token->parser != NULL, NULL);
 
-	token->objects = p11_dict_new (p11_dict_ulongptr_hash,
-	                               p11_dict_ulongptr_equal,
-	                               free, p11_attrs_free);
-	return_val_if_fail (token->objects != NULL, NULL);
+	token->index = p11_index_new (NULL, NULL, NULL);
+	return_val_if_fail (token->index != NULL, NULL);
 
 	token->path = strdup (path);
 	return_val_if_fail (token->path != NULL, NULL);
@@ -450,4 +435,11 @@ p11_token_get_slot (p11_token *token)
 {
 	return_val_if_fail (token != NULL, 0);
 	return token->slot;
+}
+
+p11_index *
+p11_token_index (p11_token *token)
+{
+	return_val_if_fail (token != NULL, NULL);
+	return token->index;
 }

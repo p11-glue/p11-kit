@@ -48,19 +48,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
-	CK_OBJECT_HANDLE handle;
-	CK_ATTRIBUTE *attrs;
-} Object;
-
-static void
-object_free (void *data)
-{
-	Object *object = data;
-	p11_attrs_free (object->attrs);
-	free (object);
-}
-
 p11_session *
 p11_session_new (p11_token *token)
 {
@@ -71,10 +58,8 @@ p11_session_new (p11_token *token)
 
 	session->handle = p11_module_next_id ();
 
-	session->objects =  p11_dict_new (p11_dict_ulongptr_hash,
-	                                  p11_dict_ulongptr_equal,
-	                                  NULL, object_free);
-	return_val_if_fail (session->objects != NULL, NULL);
+	session->index = p11_index_new (NULL, NULL, NULL);
+	return_val_if_fail (session->index != NULL, NULL);
 
 	session->token = token;
 
@@ -87,109 +72,9 @@ p11_session_free (void *data)
 	p11_session *session = data;
 
 	p11_session_set_operation (session, NULL, NULL);
-	p11_dict_free (session->objects);
+	p11_index_free (session->index);
 
 	free (session);
-}
-
-CK_RV
-p11_session_add_object (p11_session *session,
-                        CK_ATTRIBUTE *attrs,
-                        CK_OBJECT_HANDLE *handle)
-{
-	Object *object;
-
-	assert (handle != NULL);
-	assert (session != NULL);
-
-	return_val_if_fail (attrs != NULL, CKR_GENERAL_ERROR);
-
-	object = malloc (sizeof (Object));
-	return_val_if_fail (object != NULL, CKR_HOST_MEMORY);
-
-	object->handle = p11_module_next_id ();
-	object->attrs = attrs;
-
-	if (!p11_dict_set (session->objects, &object->handle, object))
-		return_val_if_reached (CKR_HOST_MEMORY);
-
-	*handle = object->handle;
-	return CKR_OK;
-}
-
-CK_RV
-p11_session_del_object (p11_session *session,
-                        CK_OBJECT_HANDLE handle)
-{
-	p11_dict *objects;
-
-	assert (session != NULL);
-
-	if (p11_dict_remove (session->objects, &handle))
-		return CKR_OK;
-
-	/* Look for in the global objects */
-	objects = p11_token_objects (session->token);
-	if (p11_dict_get (objects, &handle))
-		return CKR_TOKEN_WRITE_PROTECTED;
-
-	return CKR_OBJECT_HANDLE_INVALID;
-}
-
-CK_ATTRIBUTE *
-p11_session_get_object (p11_session *session,
-                        CK_OBJECT_HANDLE handle,
-                        CK_BBOOL *token)
-{
-	CK_ATTRIBUTE *attrs;
-	p11_dict *objects;
-	Object *object;
-
-	assert (session != NULL);
-
-	object = p11_dict_get (session->objects, &handle);
-	if (object) {
-		if (token)
-			*token = CK_FALSE;
-		return object->attrs;
-	}
-
-	objects = p11_token_objects (session->token);
-	attrs = p11_dict_get (objects, &handle);
-	if (attrs) {
-		if (token)
-			*token = CK_TRUE;
-		return attrs;
-	}
-
-	return NULL;
-}
-
-CK_RV
-p11_session_set_object (p11_session *session,
-                        CK_OBJECT_HANDLE handle,
-                        CK_ATTRIBUTE *template,
-                        CK_ULONG count)
-{
-	CK_BBOOL token;
-	p11_dict *objects;
-	Object *object;
-
-	assert (session != NULL);
-
-	object = p11_dict_get (session->objects, &handle);
-	if (object == NULL) {
-		objects = p11_token_objects (session->token);
-		if (p11_dict_get (objects, &handle))
-			return CKR_TOKEN_WRITE_PROTECTED;
-		return CKR_OBJECT_HANDLE_INVALID;
-	}
-
-	if (!p11_attrs_findn_bool (template, count, CKA_TOKEN, &token) && token)
-		return CKR_TEMPLATE_INCONSISTENT;
-
-	object->attrs = p11_attrs_buildn (object->attrs, template, count);
-	return CKR_OK;
 }
 
 void

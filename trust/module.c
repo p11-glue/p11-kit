@@ -104,6 +104,33 @@ lookup_session (CK_SESSION_HANDLE handle,
 	return CKR_OK;
 }
 
+static CK_ATTRIBUTE *
+lookup_object_inlock (p11_session *session,
+                      CK_OBJECT_HANDLE handle,
+                      p11_index **index)
+{
+	CK_ATTRIBUTE *attrs;
+
+	assert (session != NULL);
+
+	attrs = p11_index_lookup (session->index, handle);
+	if (attrs) {
+		if (index)
+			*index = session->index;
+		return attrs;
+	}
+
+	attrs = p11_index_lookup (p11_token_index (session->token), handle);
+	if (attrs) {
+		if (index)
+			*index = p11_token_index (session->token);
+		return attrs;
+	}
+
+	return NULL;
+}
+
+
 static CK_RV
 lookup_slot_inlock (CK_SLOT_ID id,
                     p11_token **token)
@@ -803,7 +830,6 @@ sys_C_CreateObject (CK_SESSION_HANDLE handle,
                     CK_ULONG count,
                     CK_OBJECT_HANDLE_PTR new_object)
 {
-	CK_ATTRIBUTE *attrs;
 	p11_session *session;
 	CK_BBOOL token;
 	CK_RV rv;
@@ -820,10 +846,8 @@ sys_C_CreateObject (CK_SESSION_HANDLE handle,
 				rv = CKR_TOKEN_WRITE_PROTECTED;
 		}
 
-		if (rv == CKR_OK) {
-			attrs = p11_attrs_buildn (NULL, template, count);
-			rv = p11_session_add_object (session, attrs, new_object);
-		}
+		if (rv == CKR_OK)
+			rv = p11_index_add (session->index, template, count, new_object);
 
 	p11_unlock ();
 
@@ -855,7 +879,7 @@ sys_C_CopyObject (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			original = p11_session_get_object (session, object, NULL);
+			original = lookup_object_inlock (session, object, NULL);
 			if (original == NULL)
 				rv = CKR_OBJECT_HANDLE_INVALID;
 		}
@@ -869,7 +893,7 @@ sys_C_CopyObject (CK_SESSION_HANDLE handle,
 			attrs = p11_attrs_dup (original);
 			attrs = p11_attrs_buildn (attrs, template, count);
 			attrs = p11_attrs_build (attrs, &token, NULL);
-			rv = p11_session_add_object (session, attrs, new_object);
+			rv = p11_index_take (session->index, attrs, new_object);
 		}
 
 	p11_unlock ();
@@ -891,8 +915,13 @@ sys_C_DestroyObject (CK_SESSION_HANDLE handle,
 	p11_lock ();
 
 		rv = lookup_session (handle, &session);
-		if (rv == CKR_OK)
-			rv = p11_session_del_object (session, object);
+		if (rv == CKR_OK) {
+			rv = p11_index_remove (session->index, object);
+			if (rv == CKR_OBJECT_HANDLE_INVALID) {
+				if (p11_index_lookup (p11_token_index (session->token), object))
+					rv = CKR_TOKEN_WRITE_PROTECTED;
+			}
+		}
 
 	p11_unlock ();
 
@@ -917,7 +946,7 @@ sys_C_GetObjectSize (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			if (p11_session_get_object (session, object, NULL)) {
+			if (lookup_object_inlock (session, object, NULL)) {
 				*size = CK_UNAVAILABLE_INFORMATION;
 				rv = CKR_OK;
 			} else {
@@ -951,7 +980,7 @@ sys_C_GetAttributeValue (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			attrs = p11_session_get_object (session, object, NULL);
+			attrs = lookup_object_inlock (session, object, NULL);
 			if (attrs == NULL)
 				rv = CKR_OBJECT_HANDLE_INVALID;
 		}
@@ -1003,8 +1032,13 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 	p11_lock ();
 
 		rv = lookup_session (handle, &session);
-		if (rv == CKR_OK)
-			rv = p11_session_set_object (session, object, template, count);
+		if (rv == CKR_OK) {
+			rv = p11_index_set (session->index, object, template, count);
+			if (rv == CKR_OBJECT_HANDLE_INVALID) {
+				if (p11_index_lookup (p11_token_index (session->token), object))
+					rv = CKR_TOKEN_WRITE_PROTECTED;
+			}
+		}
 
 	p11_unlock ();
 
@@ -1018,16 +1052,14 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
                        CK_ATTRIBUTE_PTR template,
                        CK_ULONG count)
 {
-	CK_OBJECT_HANDLE *handle_ptr;
+	p11_index *indices[2] = { NULL, NULL };
 	CK_BBOOL want_token_objects;
 	CK_BBOOL want_session_objects;
 	CK_BBOOL token;
-	p11_dict *objects;
 	FindObjects *find;
 	p11_session *session;
-	p11_dictiter iter;
-	CK_ULONG i;
 	CK_RV rv;
+	int n = 0;
 
 	p11_debug ("in");
 
@@ -1045,50 +1077,28 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 		rv = lookup_session (handle, &session);
 
 		/* Refresh from disk if this session hasn't yet */
-		if (rv == CKR_OK && want_token_objects && !session->loaded) {
-			session->loaded = CK_TRUE;
-			p11_token_load (session->token);
-		}
-
 		if (rv == CKR_OK) {
-			objects = p11_token_objects (session->token);
+			if (want_session_objects)
+				indices[n++] = session->index;
+			if (want_token_objects) {
+				if (!session->loaded)
+					p11_token_load (session->token);
+				session->loaded = CK_TRUE;
+				indices[n++] = p11_token_index (session->token);
+			}
 
 			find = calloc (1, sizeof (FindObjects));
 			warn_if_fail (find != NULL);
 
-			/* Make a copy of what we're matching */
+			/* Make a snapshot of what we're matching */
 			if (find) {
 				find->match = p11_attrs_buildn (NULL, template, count);
 				warn_if_fail (find->match != NULL);
 
 				/* Build a session snapshot of all objects */
 				find->iterator = 0;
-				count = p11_dict_size (objects) + p11_dict_size (session->objects) + 1;
-				find->snapshot = calloc (count, sizeof (CK_OBJECT_HANDLE));
+				find->snapshot = p11_index_snapshot (indices[0], indices[1], template, count);
 				warn_if_fail (find->snapshot != NULL);
-			}
-
-			if (find && find->snapshot) {
-				i = 0;
-
-				if (want_token_objects) {
-					p11_dict_iterate (objects, &iter);
-					for ( ; p11_dict_next (&iter, (void *)&handle_ptr, NULL); i++) {
-						assert (i < count);
-						find->snapshot[i] = *handle_ptr;
-					}
-				}
-
-				if (want_session_objects) {
-					p11_dict_iterate (session->objects, &iter);
-					for ( ; p11_dict_next (&iter, (void *)&handle_ptr, NULL); i++) {
-						assert (i < count);
-						find->snapshot[i] = *handle_ptr;
-					}
-				}
-
-				assert (i < count);
-				assert (find->snapshot[i] == 0UL);
 			}
 
 			if (!find || !find->snapshot || !find->match)
@@ -1115,6 +1125,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 	FindObjects *find = NULL;
 	p11_session *session;
 	CK_ULONG matched;
+	p11_index *index;
 	CK_RV rv;
 
 	return_val_if_fail (count != NULL, CKR_ARGUMENTS_BAD);
@@ -1139,7 +1150,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 
 				find->iterator++;
 
-				attrs = p11_session_get_object (session, object, NULL);
+				attrs = lookup_object_inlock (session, object, &index);
 				if (attrs == NULL)
 					continue;
 

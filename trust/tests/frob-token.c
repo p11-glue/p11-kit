@@ -44,7 +44,7 @@ main (int argc,
       char *argv[])
 {
 	p11_token *token;
-	p11_dict *objects;
+	p11_index *index;
 	int count;
 
 	if (argc != 2) {
@@ -56,8 +56,8 @@ main (int argc,
 	count = p11_token_load (token);
 
 	printf ("%d files loaded\n", count);
-	objects = p11_token_objects (token);
-	printf ("%d objects loaded\n", p11_dict_size (objects));
+	index = p11_token_index (token);
+	printf ("%d objects loaded\n", p11_index_size (index));
 
 	p11_token_free (token);
 	return 0;

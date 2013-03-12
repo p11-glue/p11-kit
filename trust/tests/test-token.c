@@ -68,7 +68,7 @@ teardown (CuTest *cu)
 static void
 test_token_load (CuTest *cu)
 {
-	p11_dict *objects;
+	p11_index *index;
 	int count;
 
 	setup (cu, SRCDIR "/input");
@@ -77,8 +77,8 @@ test_token_load (CuTest *cu)
 	CuAssertIntEquals (cu, 6, count);
 
 	/* A certificate and trust object for each parsed object + builtin */
-	objects = p11_token_objects (test.token);
-	CuAssertTrue (cu, ((count - 1) * 2) + 1 <= p11_dict_size (objects));
+	index = p11_token_index (test.token);
+	CuAssertTrue (cu, ((count - 1) * 2) + 1 <= p11_index_size (index));
 
 	teardown (cu);
 }
@@ -86,19 +86,25 @@ test_token_load (CuTest *cu)
 static bool
 check_object (CK_ATTRIBUTE *match)
 {
+	CK_OBJECT_HANDLE *handles;
 	CK_ATTRIBUTE *attrs;
-	p11_dict *objects;
-	p11_dictiter iter;
+	p11_index *index;
+	bool ret = false;
+	int i;
 
-	objects = p11_token_objects (test.token);
+	index = p11_token_index (test.token);
+	handles = p11_index_snapshot (index, NULL, match, p11_attrs_count (match));
 
-	p11_dict_iterate (objects, &iter);
-	while (p11_dict_next (&iter, NULL, (void **)&attrs)) {
-		if (p11_attrs_match (attrs, match))
-			return true;
+	for (i = 0; handles[i] != 0; i++) {
+		attrs = p11_index_lookup (index, handles[i]);
+		if (p11_attrs_match (attrs, match)) {
+			ret = true;
+			break;
+		}
 	}
 
-	return false;
+	free (handles);
+	return ret;
 }
 
 static void

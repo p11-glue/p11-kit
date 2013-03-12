@@ -547,6 +547,236 @@ test_find_builtin (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_session_object (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_ULONG size;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CreateObject (session, original, 2, &handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_GetObjectSize (session, handle, &size);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	teardown (cu);
+}
+
+static void
+test_session_find (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_OBJECT_HANDLE check;
+	CK_ULONG count;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CreateObject (session, original, 2, &handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjectsInit (session, original, 2);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, 1, count);
+	CuAssertIntEquals (cu, handle, check);
+
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	teardown (cu);
+}
+
+static void
+test_lookup_invalid (CuTest *cu)
+{
+	CK_SESSION_HANDLE session;
+	CK_ULONG size;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_GetObjectSize (session, 88888, &size);
+	CuAssertTrue (cu, rv == CKR_OBJECT_HANDLE_INVALID);
+
+	teardown (cu);
+}
+
+static void
+test_remove_token (CuTest *cu)
+{
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_ULONG count;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjectsInit (session, NULL, 0);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjects (session, &handle, 1, &count);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, 1, count);
+
+	rv = test.module->C_DestroyObject (session, handle);
+	CuAssertTrue (cu, rv == CKR_TOKEN_WRITE_PROTECTED);
+
+	teardown (cu);
+}
+
+static void
+test_setattr_token (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_ULONG count;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjectsInit (session, NULL, 0);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_FindObjects (session, &handle, 1, &count);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, 1, count);
+
+	rv = test.module->C_SetAttributeValue (session, handle, original, 2);
+	CuAssertTrue (cu, rv == CKR_TOKEN_WRITE_PROTECTED);
+
+	teardown (cu);
+}
+
+static void
+test_session_copy (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_OBJECT_HANDLE copy;
+	CK_ULONG size;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CreateObject (session, original, 2, &handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CopyObject (session, handle, original, 2, &copy);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_GetObjectSize (session, copy, &size);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	teardown (cu);
+}
+
+static void
+test_session_setattr (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CreateObject (session, original, 2, &handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_SetAttributeValue (session, handle, original, 2);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	teardown (cu);
+}
+
+static void
+test_session_remove (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_CreateObject (session, original, 2, &handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_DestroyObject (session, handle);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = test.module->C_DestroyObject (session, handle);
+	CuAssertTrue (cu, rv == CKR_OBJECT_HANDLE_INVALID);
+
+	teardown (cu);
+}
+
 int
 main (void)
 {
@@ -565,6 +795,14 @@ main (void)
 	SUITE_ADD_TEST (suite, test_close_all_sessions);
 	SUITE_ADD_TEST (suite, test_find_certificates);
 	SUITE_ADD_TEST (suite, test_find_builtin);
+	SUITE_ADD_TEST (suite, test_lookup_invalid);
+	SUITE_ADD_TEST (suite, test_remove_token);
+	SUITE_ADD_TEST (suite, test_setattr_token);
+	SUITE_ADD_TEST (suite, test_session_object);
+	SUITE_ADD_TEST (suite, test_session_find);
+	SUITE_ADD_TEST (suite, test_session_copy);
+	SUITE_ADD_TEST (suite, test_session_remove);
+	SUITE_ADD_TEST (suite, test_session_setattr);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

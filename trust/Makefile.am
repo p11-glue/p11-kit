@@ -12,6 +12,7 @@ INCLUDES = \
 
 MODULE_SRCS = \
 	adapter.c adapter.h \
+	index.c index.h \
 	parser.c parser.h \
 	module.c module.h \
 	session.c session.h \
