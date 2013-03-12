@@ -1,3 +1,7 @@
+0.16.4 (stable)
+ * Display per command help again [#62153]
+ * Don't always print tools debug output [#62152]
+
 0.16.3 (stable)
  * When iterating don't skip tokens without the CKF_TOKEN_INITIALIZED flag
  * Hardcode some distrust records for NSS temporarily
