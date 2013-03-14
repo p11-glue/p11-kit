@@ -546,3 +546,113 @@ p11_asn1_tlv_length (const unsigned char *data,
 
 	return -1;
 }
+
+typedef struct {
+	node_asn *node;
+	char *struct_name;
+	size_t length;
+} asn1_item;
+
+static void
+free_asn1_item (void *data)
+{
+	asn1_item *item = data;
+	free (item->struct_name);
+	asn1_delete_structure (&item->node);
+	free (item);
+}
+
+struct _p11_asn1_cache {
+	p11_dict *defs;
+	p11_dict *items;
+};
+
+p11_asn1_cache *
+p11_asn1_cache_new (void)
+{
+	p11_asn1_cache *cache;
+
+	cache = calloc (1, sizeof (p11_asn1_cache));
+	return_val_if_fail (cache != NULL, NULL);
+
+	cache->defs = p11_asn1_defs_load ();
+	return_val_if_fail (cache->defs != NULL, NULL);
+
+	cache->items = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal,
+	                             NULL, free_asn1_item);
+	return_val_if_fail (cache->items != NULL, NULL);
+
+	return cache;
+}
+
+node_asn *
+p11_asn1_cache_get (p11_asn1_cache *cache,
+                    const char *struct_name,
+                    const unsigned char *der,
+                    size_t der_len)
+{
+	asn1_item *item;
+
+	return_val_if_fail (cache != NULL, NULL);
+	return_val_if_fail (struct_name != NULL, NULL);
+	return_val_if_fail (der != NULL, NULL);
+
+	item = p11_dict_get (cache->items, der);
+	if (item != NULL) {
+		return_val_if_fail (item->length == der_len, NULL);
+		return_val_if_fail (strcmp (item->struct_name, struct_name) == 0, NULL);
+		return item->node;
+	}
+
+	return NULL;
+}
+
+void
+p11_asn1_cache_take (p11_asn1_cache *cache,
+                     node_asn *node,
+                     const char *struct_name,
+                     const unsigned char *der,
+                     size_t der_len)
+{
+	asn1_item *item;
+
+	return_if_fail (cache != NULL);
+	return_if_fail (struct_name != NULL);
+	return_if_fail (der != NULL);
+	return_if_fail (der_len != 0);
+
+	item = calloc (1, sizeof (asn1_item));
+	return_if_fail (item != NULL);
+
+	item->length = der_len;
+	item->node = node;
+	item->struct_name = strdup (struct_name);
+	return_if_fail (item->struct_name != NULL);
+
+	if (!p11_dict_set (cache->items, (void *)der, item))
+		return_if_reached ();
+}
+
+void
+p11_asn1_cache_flush (p11_asn1_cache *cache)
+{
+	return_if_fail (cache != NULL);
+	p11_dict_clear (cache->items);
+}
+
+p11_dict *
+p11_asn1_cache_defs (p11_asn1_cache *cache)
+{
+	return_val_if_fail (cache != NULL, NULL);
+	return cache->defs;
+}
+
+void
+p11_asn1_cache_free (p11_asn1_cache *cache)
+{
+	if (!cache)
+		return;
+	p11_dict_free (cache->items);
+	p11_dict_free (cache->defs);
+	free (cache);
+}

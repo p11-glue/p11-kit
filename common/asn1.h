@@ -39,6 +39,8 @@
 #ifndef P11_ASN1_H_
 #define P11_ASN1_H_
 
+typedef struct _p11_asn1_cache p11_asn1_cache;
+
 p11_dict *       p11_asn1_defs_load                 (void);
 
 node_asn *       p11_asn1_decode                    (p11_dict *asn1_defs,
@@ -61,5 +63,24 @@ time_t           p11_asn1_parse_general             (const char *time_str,
 
 ssize_t          p11_asn1_tlv_length                (const unsigned char *data,
                                                      size_t length);
+
+p11_asn1_cache * p11_asn1_cache_new                 (void);
+
+p11_dict *       p11_asn1_cache_defs                (p11_asn1_cache *cache);
+
+node_asn *       p11_asn1_cache_get                 (p11_asn1_cache *cache,
+                                                     const char *struct_name,
+                                                     const unsigned char *der,
+                                                     size_t der_len);
+
+void             p11_asn1_cache_take                (p11_asn1_cache *cache,
+                                                     node_asn *node,
+                                                     const char *struct_name,
+                                                     const unsigned char *der,
+                                                     size_t der_len);
+
+void             p11_asn1_cache_flush               (p11_asn1_cache *cache);
+
+void             p11_asn1_cache_free                (p11_asn1_cache *cache);
 
 #endif /* P11_ASN1_H_ */
