@@ -84,7 +84,8 @@ p11_attrs_free (void *attrs)
 static CK_ATTRIBUTE *
 attrs_build (CK_ATTRIBUTE *attrs,
              CK_ULONG count_to_add,
-             bool copy,
+             bool take_values,
+             bool override,
              CK_ATTRIBUTE * (*generator) (void *),
              void *state)
 {
@@ -116,18 +117,28 @@ attrs_build (CK_ATTRIBUTE *attrs,
 		for (j = 0; attr == NULL && j < current; j++) {
 			if (attrs[j].type == add->type) {
 				attr = attrs + j;
-				free (attrs[j].pValue);
 				break;
 			}
 		}
 
+		/* The attribute doesn't exist */
 		if (attr == NULL) {
 			attr = attrs + at;
 			at++;
+
+		/* The attribute exists and we're not overriding */
+		} else if (!override) {
+			if (take_values)
+				free (add->pValue);
+			continue;
+
+		/* The attribute exitss, and we're overriding */
+		} else {
+			free (attr->pValue);
 		}
 
 		memcpy (attr, add, sizeof (CK_ATTRIBUTE));
-		if (copy)
+		if (!take_values)
 			attr->pValue = memdup (attr->pValue, attr->ulValueLen);
 	}
 
@@ -158,7 +169,8 @@ p11_attrs_build (CK_ATTRIBUTE *attrs,
 	va_end (va);
 
 	va_start (va, attrs);
-	attrs = attrs_build (attrs, count, true, vararg_generator, &va);
+	attrs = attrs_build (attrs, count, false, true,
+	                     vararg_generator, &va);
 	va_end (va);
 
 	return attrs;
@@ -176,7 +188,8 @@ p11_attrs_buildn (CK_ATTRIBUTE *attrs,
                   const CK_ATTRIBUTE *add,
                   CK_ULONG count)
 {
-	return attrs_build (attrs, count, true, template_generator, &add);
+	return attrs_build (attrs, count, false, true,
+	                    template_generator, &add);
 }
 
 CK_ATTRIBUTE *
@@ -187,7 +200,34 @@ p11_attrs_take (CK_ATTRIBUTE *attrs,
 {
 	CK_ATTRIBUTE attr = { type, value, length };
 	CK_ATTRIBUTE *add = &attr;
-	return attrs_build (attrs, 1, false, template_generator, &add);
+	return attrs_build (attrs, 1, true, true,
+	                    template_generator, &add);
+}
+
+CK_ATTRIBUTE *
+p11_attrs_merge (CK_ATTRIBUTE *attrs,
+                 CK_ATTRIBUTE *merge,
+                 bool replace)
+{
+	CK_ATTRIBUTE *ptr;
+	CK_ULONG count;
+
+	if (attrs == NULL)
+		return merge;
+
+	ptr = merge;
+	count = p11_attrs_count (merge);
+
+	attrs = attrs_build (attrs, count, true, replace,
+	                     template_generator, &ptr);
+
+	/*
+	 * Since we're supposed to own the merge attributes,
+	 * free the container array.
+	 */
+	free (merge);
+
+	return attrs;
 }
 
 CK_ATTRIBUTE *

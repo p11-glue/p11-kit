@@ -290,6 +290,106 @@ test_take (CuTest *tc)
 	p11_attrs_free (attrs);
 }
 
+
+static void
+test_merge_replace (CuTest *tc)
+{
+	CK_ATTRIBUTE initial[] = {
+		{ CKA_LABEL, "label", 5 },
+		{ CKA_VALUE, "nine", 4 },
+	};
+
+	CK_ATTRIBUTE extra[] = {
+		{ CKA_LABEL, "boooyah", 7 },
+		{ CKA_APPLICATION, "disco", 5 },
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
+
+	attrs = p11_attrs_buildn (NULL, initial, 2);
+	merge = p11_attrs_buildn (NULL, extra, 2);
+	attrs = p11_attrs_merge (attrs, merge, true);
+	CuAssertPtrNotNull (tc, attrs);
+
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertIntEquals (tc, 7, attrs[0].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "boooyah", 7) == 0);
+
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
+	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertTrue (tc, attrs[2].type == CKA_APPLICATION);
+	CuAssertIntEquals (tc, 5, attrs[2].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[2].pValue, "disco", 5) == 0);
+
+	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_merge_empty (CuTest *tc)
+{
+	CK_ATTRIBUTE extra[] = {
+		{ CKA_LABEL, "boooyah", 7 },
+		{ CKA_APPLICATION, "disco", 5 },
+	};
+
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *merge;
+
+	merge = p11_attrs_buildn (NULL, extra, 2);
+	attrs = p11_attrs_merge (attrs, merge, true);
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertPtrEquals (tc, merge, attrs);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_merge_augment (CuTest *tc)
+{
+	CK_ATTRIBUTE initial[] = {
+		{ CKA_LABEL, "label", 5 },
+		{ CKA_VALUE, "nine", 4 },
+	};
+
+	CK_ATTRIBUTE extra[] = {
+		{ CKA_LABEL, "boooyah", 7 },
+		{ CKA_APPLICATION, "disco", 5 },
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
+
+	attrs = p11_attrs_buildn (NULL, initial, 2);
+	merge = p11_attrs_buildn (NULL, extra, 2);
+	attrs = p11_attrs_merge (attrs, merge, false);
+	CuAssertPtrNotNull (tc, attrs);
+
+	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
+	CuAssertIntEquals (tc, 5, attrs[0].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[0].pValue, "label", 5) == 0);
+
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
+	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+
+	CuAssertPtrNotNull (tc, attrs);
+	CuAssertTrue (tc, attrs[2].type == CKA_APPLICATION);
+	CuAssertIntEquals (tc, 5, attrs[2].ulValueLen);
+	CuAssertTrue (tc, memcmp (attrs[2].pValue, "disco", 5) == 0);
+
+	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+
+	p11_attrs_free (attrs);
+}
+
 static void
 test_free_null (CuTest *tc)
 {
@@ -592,6 +692,9 @@ main (void)
 	SUITE_ADD_TEST (suite, test_build_null);
 	SUITE_ADD_TEST (suite, test_dup);
 	SUITE_ADD_TEST (suite, test_take);
+	SUITE_ADD_TEST (suite, test_merge_replace);
+	SUITE_ADD_TEST (suite, test_merge_augment);
+	SUITE_ADD_TEST (suite, test_merge_empty);
 	SUITE_ADD_TEST (suite, test_free_null);
 	SUITE_ADD_TEST (suite, test_match);
 	SUITE_ADD_TEST (suite, test_matchn);
