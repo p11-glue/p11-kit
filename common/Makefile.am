@@ -22,6 +22,7 @@ libp11_library_la_SOURCES = \
 	attrs.c attrs.h \
 	array.c array.h \
 	buffer.c buffer.h \
+	constants.c constants.h \
 	debug.c debug.h \
 	dict.c dict.h \
 	library.c library.h \

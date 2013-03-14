@@ -17,6 +17,7 @@ LDADD = \
 CHECK_PROGS = \
 	test-dict \
 	test-array \
+	test-constants \
 	test-attrs \
 	test-buffer \
 	$(NULL)

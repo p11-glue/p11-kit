@@ -38,6 +38,7 @@
 #include "attrs.h"
 #include "buffer.h"
 #include "compat.h"
+#include "constants.h"
 #include "debug.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
@@ -47,6 +48,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 bool
 p11_attrs_is_empty (const CK_ATTRIBUTE *attrs)
@@ -662,29 +665,7 @@ static void
 format_class (p11_buffer *buffer,
               CK_OBJECT_CLASS klass)
 {
-	const char *string = NULL;
-
-	switch (klass) {
-	#define X(x) case x: string = #x; break;
-	X (CKO_DATA)
-	X (CKO_CERTIFICATE)
-	X (CKO_PUBLIC_KEY)
-	X (CKO_PRIVATE_KEY)
-	X (CKO_SECRET_KEY)
-	X (CKO_HW_FEATURE)
-	X (CKO_DOMAIN_PARAMETERS)
-	X (CKO_MECHANISM)
-	X (CKO_X_TRUST_ASSERTION)
-	X (CKO_X_CERTIFICATE_EXTENSION)
-	X (CKO_NSS_CRL)
-	X (CKO_NSS_SMIME)
-	X (CKO_NSS_TRUST)
-	X (CKO_NSS_BUILTIN_ROOT_LIST)
-	X (CKO_NSS_NEWSLOT)
-	X (CKO_NSS_DELSLOT)
-	#undef X
-	}
-
+	const char *string = p11_constant_name (p11_constant_classes, klass);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
@@ -695,16 +676,7 @@ static void
 format_assertion_type (p11_buffer *buffer,
                        CK_X_ASSERTION_TYPE type)
 {
-	const char *string = NULL;
-
-	switch (type) {
-	#define X(x) case x: string = #x; break;
-	X (CKT_X_DISTRUSTED_CERTIFICATE)
-	X (CKT_X_PINNED_CERTIFICATE)
-	X (CKT_X_ANCHORED_CERTIFICATE)
-	#undef X
-	}
-
+	const char *string = p11_constant_name (p11_constant_asserts, type);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
@@ -715,39 +687,7 @@ static void
 format_key_type (p11_buffer *buffer,
                  CK_KEY_TYPE type)
 {
-	const char *string = NULL;
-
-	switch (type) {
-	#define X(x) case x: string = #x; break;
-	X (CKK_RSA)
-	X (CKK_DSA)
-	X (CKK_DH)
-	/* X (CKK_ECDSA) */
-	X (CKK_EC)
-	X (CKK_X9_42_DH)
-	X (CKK_KEA)
-	X (CKK_GENERIC_SECRET)
-	X (CKK_RC2)
-	X (CKK_RC4)
-	X (CKK_DES)
-	X (CKK_DES2)
-	X (CKK_DES3)
-	X (CKK_CAST)
-	X (CKK_CAST3)
-	X (CKK_CAST128)
-	X (CKK_RC5)
-	X (CKK_IDEA)
-	X (CKK_SKIPJACK)
-	X (CKK_BATON)
-	X (CKK_JUNIPER)
-	X (CKK_CDMF)
-	X (CKK_AES)
-	X (CKK_BLOWFISH)
-	X (CKK_TWOFISH)
-	X (CKK_NSS_PKCS8)
-	#undef X
-	}
-
+	const char *string = p11_constant_name (p11_constant_keys, type);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
@@ -758,15 +698,7 @@ static void
 format_certificate_type (p11_buffer *buffer,
                          CK_CERTIFICATE_TYPE type)
 {
-	const char *string = NULL;
-
-	switch (type) {
-	#define X(x) case x: string = #x; break;
-	X (CKC_X_509)
-	X (CKC_X_509_ATTR_CERT)
-	X (CKC_WTLS)
-	}
-
+	const char *string = p11_constant_name (p11_constant_certs, type);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
@@ -777,17 +709,7 @@ static void
 format_trust_value (p11_buffer *buffer,
                     CK_TRUST trust)
 {
-	const char *string = NULL;
-
-	switch (trust) {
-	#define X(x) case x: string = #x; break;
-	X (CKT_NSS_TRUSTED)
-	X (CKT_NSS_TRUSTED_DELEGATOR)
-	X (CKT_NSS_NOT_TRUSTED)
-	X (CKT_NSS_MUST_VERIFY_TRUST)
-	X (CKT_NSS_TRUST_UNKNOWN)
-	}
-
+	const char *string = p11_constant_name (p11_constant_trusts, trust);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
@@ -798,23 +720,7 @@ static void
 format_certificate_category (p11_buffer *buffer,
                              CK_ULONG category)
 {
-	const char *string = NULL;
-
-	switch (category) {
-	case 0:
-		string = "unspecified";
-		break;
-	case 1:
-		string = "token-user";
-		break;
-	case 2:
-		string = "authority";
-		break;
-	case 3:
-		string = "other-entry";
-		break;
-	}
-
+	const char *string = p11_constant_name (p11_constant_categories, category);
 	if (string != NULL)
 		buffer_append_printf (buffer, "%lu (%s)", category, string);
 	else
@@ -825,135 +731,7 @@ static void
 format_attribute_type (p11_buffer *buffer,
                        CK_ULONG type)
 {
-	const char *string = NULL;
-
-	switch (type) {
-	#define X(x) case x: string = #x; break;
-	X (CKA_CLASS)
-	X (CKA_TOKEN)
-	X (CKA_PRIVATE)
-	X (CKA_LABEL)
-	X (CKA_APPLICATION)
-	X (CKA_VALUE)
-	X (CKA_OBJECT_ID)
-	X (CKA_CERTIFICATE_TYPE)
-	X (CKA_ISSUER)
-	X (CKA_SERIAL_NUMBER)
-	X (CKA_AC_ISSUER)
-	X (CKA_OWNER)
-	X (CKA_ATTR_TYPES)
-	X (CKA_TRUSTED)
-	X (CKA_CERTIFICATE_CATEGORY)
-	X (CKA_JAVA_MIDP_SECURITY_DOMAIN)
-	X (CKA_URL)
-	X (CKA_HASH_OF_SUBJECT_PUBLIC_KEY)
-	X (CKA_HASH_OF_ISSUER_PUBLIC_KEY)
-	X (CKA_CHECK_VALUE)
-	X (CKA_KEY_TYPE)
-	X (CKA_SUBJECT)
-	X (CKA_ID)
-	X (CKA_SENSITIVE)
-	X (CKA_ENCRYPT)
-	X (CKA_DECRYPT)
-	X (CKA_WRAP)
-	X (CKA_UNWRAP)
-	X (CKA_SIGN)
-	X (CKA_SIGN_RECOVER)
-	X (CKA_VERIFY)
-	X (CKA_VERIFY_RECOVER)
-	X (CKA_DERIVE)
-	X (CKA_START_DATE)
-	X (CKA_END_DATE)
-	X (CKA_MODULUS)
-	X (CKA_MODULUS_BITS)
-	X (CKA_PUBLIC_EXPONENT)
-	X (CKA_PRIVATE_EXPONENT)
-	X (CKA_PRIME_1)
-	X (CKA_PRIME_2)
-	X (CKA_EXPONENT_1)
-	X (CKA_EXPONENT_2)
-	X (CKA_COEFFICIENT)
-	X (CKA_PRIME)
-	X (CKA_SUBPRIME)
-	X (CKA_BASE)
-	X (CKA_PRIME_BITS)
-	/* X (CKA_SUBPRIME_BITS) */
-	X (CKA_SUB_PRIME_BITS)
-	X (CKA_VALUE_BITS)
-	X (CKA_VALUE_LEN)
-	X (CKA_EXTRACTABLE)
-	X (CKA_LOCAL)
-	X (CKA_NEVER_EXTRACTABLE)
-	X (CKA_ALWAYS_SENSITIVE)
-	X (CKA_KEY_GEN_MECHANISM)
-	X (CKA_MODIFIABLE)
-	X (CKA_ECDSA_PARAMS)
-	/* X (CKA_EC_PARAMS) */
-	X (CKA_EC_POINT)
-	X (CKA_SECONDARY_AUTH)
-	X (CKA_AUTH_PIN_FLAGS)
-	X (CKA_ALWAYS_AUTHENTICATE)
-	X (CKA_WRAP_WITH_TRUSTED)
-	X (CKA_WRAP_TEMPLATE)
-	X (CKA_UNWRAP_TEMPLATE)
-	X (CKA_HW_FEATURE_TYPE)
-	X (CKA_RESET_ON_INIT)
-	X (CKA_HAS_RESET)
-	X (CKA_PIXEL_X)
-	X (CKA_PIXEL_Y)
-	X (CKA_RESOLUTION)
-	X (CKA_CHAR_ROWS)
-	X (CKA_CHAR_COLUMNS)
-	X (CKA_COLOR)
-	X (CKA_BITS_PER_PIXEL)
-	X (CKA_CHAR_SETS)
-	X (CKA_ENCODING_METHODS)
-	X (CKA_MIME_TYPES)
-	X (CKA_MECHANISM_TYPE)
-	X (CKA_REQUIRED_CMS_ATTRIBUTES)
-	X (CKA_DEFAULT_CMS_ATTRIBUTES)
-	X (CKA_SUPPORTED_CMS_ATTRIBUTES)
-	X (CKA_ALLOWED_MECHANISMS)
-	X (CKA_X_ASSERTION_TYPE)
-	X (CKA_X_CERTIFICATE_VALUE)
-	X (CKA_X_PURPOSE)
-	X (CKA_X_PEER)
-	X (CKA_X_DISTRUSTED)
-	X (CKA_X_CRITICAL)
-	X (CKA_NSS_URL)
-	X (CKA_NSS_EMAIL)
-	X (CKA_NSS_SMIME_INFO)
-	X (CKA_NSS_SMIME_TIMESTAMP)
-	X (CKA_NSS_PKCS8_SALT)
-	X (CKA_NSS_PASSWORD_CHECK)
-	X (CKA_NSS_EXPIRES)
-	X (CKA_NSS_KRL)
-	X (CKA_NSS_PQG_COUNTER)
-	X (CKA_NSS_PQG_SEED)
-	X (CKA_NSS_PQG_H)
-	X (CKA_NSS_PQG_SEED_BITS)
-	X (CKA_NSS_MODULE_SPEC)
-	X (CKA_TRUST_DIGITAL_SIGNATURE)
-	X (CKA_TRUST_NON_REPUDIATION)
-	X (CKA_TRUST_KEY_ENCIPHERMENT)
-	X (CKA_TRUST_DATA_ENCIPHERMENT)
-	X (CKA_TRUST_KEY_AGREEMENT)
-	X (CKA_TRUST_KEY_CERT_SIGN)
-	X (CKA_TRUST_CRL_SIGN)
-	X (CKA_TRUST_SERVER_AUTH)
-	X (CKA_TRUST_CLIENT_AUTH)
-	X (CKA_TRUST_CODE_SIGNING)
-	X (CKA_TRUST_EMAIL_PROTECTION)
-	X (CKA_TRUST_IPSEC_END_SYSTEM)
-	X (CKA_TRUST_IPSEC_TUNNEL)
-	X (CKA_TRUST_IPSEC_USER)
-	X (CKA_TRUST_TIME_STAMPING)
-	X (CKA_TRUST_STEP_UP_APPROVED)
-	X (CKA_CERT_SHA1_HASH)
-	X (CKA_CERT_MD5_HASH)
-	#undef X
-	}
-
+	const char *string = p11_constant_name (p11_constant_types, type);
 	if (string != NULL)
 		p11_buffer_add (buffer, string, -1);
 	else
