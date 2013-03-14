@@ -83,33 +83,10 @@ test_token_load (CuTest *cu)
 	teardown (cu);
 }
 
-static bool
-check_object (CK_ATTRIBUTE *match)
-{
-	CK_OBJECT_HANDLE *handles;
-	CK_ATTRIBUTE *attrs;
-	p11_index *index;
-	bool ret = false;
-	int i;
-
-	index = p11_token_index (test.token);
-	handles = p11_index_snapshot (index, NULL, match, p11_attrs_count (match));
-
-	for (i = 0; handles[i] != 0; i++) {
-		attrs = p11_index_lookup (index, handles[i]);
-		if (p11_attrs_match (attrs, match)) {
-			ret = true;
-			break;
-		}
-	}
-
-	free (handles);
-	return ret;
-}
-
 static void
 test_token_flags (CuTest *cu)
 {
+	CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
 	CK_BBOOL falsev = CK_FALSE;
 	CK_BBOOL truev = CK_TRUE;
 
@@ -120,6 +97,7 @@ test_token_flags (CuTest *cu)
 	 */
 
 	CK_ATTRIBUTE blacklist[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_LABEL, "Red Hat Is the CA", 17 },
 		{ CKA_SERIAL_NUMBER, "\x02\x01\x01", 3 },
 		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
@@ -142,6 +120,7 @@ test_token_flags (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE blacklist2[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_SUBJECT, (void *)self_server_subject, sizeof (self_server_subject) },
 		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
@@ -155,6 +134,7 @@ test_token_flags (CuTest *cu)
 	 */
 
 	CK_ATTRIBUTE anchor[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
 		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
@@ -179,27 +159,40 @@ test_token_flags (CuTest *cu)
 	 */
 
 	CK_ATTRIBUTE notrust[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_SUBJECT, (void *)cacert_root_subject, sizeof (cacert_root_subject) },
 		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_INVALID },
 	};
 
-	CK_ATTRIBUTE invalid[] = {
-		{ CKA_LABEL, "Waonec9aoe9", 8 },
-		{ CKA_INVALID },
+	CK_ATTRIBUTE *expected[] = {
+		anchor,
+		blacklist,
+		blacklist2,
+		notrust,
+		NULL,
 	};
+
+	CK_OBJECT_HANDLE handle;
+	CK_ATTRIBUTE *object;
+	int i;
 
 	setup (cu, SRCDIR "/input");
 
 	if (p11_token_load (test.token) < 0)
 		CuFail (cu, "should not be reached");
 
-	CuAssertTrue (cu, !check_object (invalid));
-	CuAssertTrue (cu, check_object (anchor));
-	CuAssertTrue (cu, check_object (blacklist));
-	CuAssertTrue (cu, check_object (blacklist2));
-	CuAssertTrue (cu, check_object (notrust));
+	/* The other objects */
+	for (i = 0; expected[i]; i++) {
+		handle = p11_index_findn (p11_token_index (test.token), expected[i], 2);
+		CuAssertTrue (cu, handle != 0);
+
+		object = p11_index_lookup (p11_token_index (test.token), handle);
+		CuAssertPtrNotNull (cu, object);
+
+		test_check_attrs (cu, expected[i], object);
+	}
 
 	teardown (cu);
 }
@@ -234,7 +227,6 @@ main (void)
 	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 	p11_debug_init ();
-	p11_message_quiet ();
 
 	SUITE_ADD_TEST (suite, test_token_load);
 	SUITE_ADD_TEST (suite, test_token_flags);

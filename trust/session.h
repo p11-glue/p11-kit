@@ -32,6 +32,7 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
+#include "builder.h"
 #include "index.h"
 #include "pkcs11.h"
 #include "token.h"
@@ -44,6 +45,7 @@ typedef void (* p11_session_cleanup) (void *data);
 typedef struct {
 	CK_SESSION_HANDLE handle;
 	p11_index *index;
+	p11_builder *builder;
 	p11_token *token;
 	CK_BBOOL loaded;
 

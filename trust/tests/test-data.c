@@ -51,11 +51,9 @@ test_check_object_msg (CuTest *cu,
                        CK_OBJECT_CLASS klass,
                        const char *label)
 {
-	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
 
 	CK_ATTRIBUTE expected[] = {
-		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
 		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
 		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
 		{ CKA_CLASS, &klass, sizeof (klass) },

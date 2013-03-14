@@ -28,6 +28,7 @@ LDADD = \
 CHECK_PROGS = \
 	test-parser \
 	test-index \
+	test-builder \
 	test-token \
 	test-module \
 	$(NULL)

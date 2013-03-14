@@ -32,12 +32,20 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
+#include "asn1.h"
 #include "array.h"
 #include "dict.h"
+#include "index.h"
 #include "pkcs11.h"
 
 #ifndef P11_PARSER_H_
 #define P11_PARSER_H_
+
+enum {
+	P11_PARSE_FLAG_NONE = 0,
+	P11_PARSE_FLAG_ANCHOR = 1 << 0,
+	P11_PARSE_FLAG_BLACKLIST = 1 << 1,
+};
 
 enum {
 	P11_PARSE_FAILURE = -1,
@@ -45,50 +53,21 @@ enum {
 	P11_PARSE_SUCCESS = 1,
 };
 
-enum {
-	P11_PARSE_FLAG_NONE = 0,
-	P11_PARSE_FLAG_ANCHOR = 1 << 0,
-	P11_PARSE_FLAG_BLACKLIST = 1 << 1
-};
-
-#define       P11_PARSER_FIRST_HANDLE    0xA0000000UL
-
 typedef struct _p11_parser p11_parser;
 
-p11_parser *  p11_parser_new       (void);
+p11_parser *  p11_parser_new       (p11_index *index,
+                                    p11_asn1_cache *asn1_cache);
 
 void          p11_parser_free      (p11_parser *parser);
-
-typedef void  (* p11_parser_sink)  (CK_ATTRIBUTE *attrs,
-                                    void *user_data);
 
 int           p11_parse_memory     (p11_parser *parser,
                                     const char *filename,
                                     int flags,
                                     const unsigned char *data,
-                                    size_t length,
-                                    p11_parser_sink sink,
-                                    void *sink_data);
+                                    size_t length);
 
 int           p11_parse_file       (p11_parser *parser,
                                     const char *filename,
-                                    int flags,
-                                    p11_parser_sink sink,
-                                    void *sink_data);
-
-p11_dict *    p11_parser_get_asn1_defs        (p11_parser *parser);
-
-/* Functions used for retrieving parsing information */
-
-CK_ATTRIBUTE *          p11_parsing_get_certificate  (p11_parser *parser,
-                                                      p11_array *parsing);
-
-unsigned char *         p11_parsing_get_extension    (p11_parser *parser,
-                                                      p11_array *parsing,
-                                                      const unsigned char *oid,
-                                                      size_t *length);
-
-void                    p11_parsing_update_certificate  (p11_parser *parser,
-                                                         p11_array *parsing);
+                                    int flags);
 
 #endif

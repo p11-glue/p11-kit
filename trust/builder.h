@@ -32,13 +32,35 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
-#include "array.h"
-#include "parser.h"
+#ifndef P11_BUILDER_H_
+#define P11_BUILDER_H_
 
-#ifndef P11_ADAPTER_H_
-#define P11_ADAPTER_H_
+#include "asn1.h"
+#include "dict.h"
+#include "index.h"
+#include "pkcs11.h"
 
-void    p11_adapter_build_objects           (p11_parser *parser,
-                                             p11_array *parsing);
+enum {
+	P11_BUILDER_FLAG_NONE = 0,
+	P11_BUILDER_FLAG_TOKEN = 1 << 1,
+};
 
-#endif /* P11_ADAPTER_H_ */
+typedef struct _p11_builder p11_builder;
+
+p11_builder *         p11_builder_new         (int flags);
+
+void                  p11_builder_free        (p11_builder *builder);
+
+CK_RV                 p11_builder_build       (void *builder,
+                                               p11_index *index,
+                                               CK_ATTRIBUTE **attrs,
+                                               CK_ATTRIBUTE *merge);
+
+void                  p11_builder_changed     (void *builder,
+                                               p11_index *index,
+                                               CK_OBJECT_HANDLE handle,
+                                               CK_ATTRIBUTE *attrs);
+
+p11_asn1_cache *      p11_builder_get_cache   (p11_builder *builder);
+
+#endif /* P11_BUILDER_H_ */

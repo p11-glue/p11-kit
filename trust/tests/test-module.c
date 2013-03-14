@@ -59,6 +59,8 @@
  */
 #define NUM_SLOTS 3
 
+static CK_OBJECT_CLASS data = CKO_DATA;
+
 struct {
 	CK_FUNCTION_LIST *module;
 	CK_SLOT_ID slots[NUM_SLOTS];
@@ -357,7 +359,7 @@ check_trust_object_equiv (CuTest *cu,
 	};
 
 	rv = test.module->C_GetAttributeValue (session, trust, equiv, 6);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	test_check_attrs (cu, equiv, cert);
 }
@@ -551,6 +553,7 @@ static void
 test_session_object (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }
@@ -579,6 +582,7 @@ static void
 test_session_find (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }
@@ -593,21 +597,21 @@ test_session_find (CuTest *cu)
 	setup (cu);
 
 	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_CreateObject (session, original, 2, &handle);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_FindObjectsInit (session, original, 2);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_FindObjects (session, &check, 1, &count);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 	CuAssertIntEquals (cu, 1, count);
 	CuAssertIntEquals (cu, handle, check);
 
 	rv = test.module->C_FindObjectsFinal (session);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	teardown (cu);
 }
@@ -660,6 +664,7 @@ static void
 test_setattr_token (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }
@@ -692,6 +697,7 @@ static void
 test_session_copy (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }
@@ -706,16 +712,16 @@ test_session_copy (CuTest *cu)
 	setup (cu);
 
 	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_CreateObject (session, original, 2, &handle);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_CopyObject (session, handle, original, 2, &copy);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	rv = test.module->C_GetObjectSize (session, copy, &size);
-	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	teardown (cu);
 }
@@ -724,6 +730,7 @@ static void
 test_session_setattr (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }
@@ -751,6 +758,7 @@ static void
 test_session_remove (CuTest *cu)
 {
 	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
 		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_INVALID }

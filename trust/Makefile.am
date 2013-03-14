@@ -11,7 +11,7 @@ INCLUDES = \
 	$(NULL)
 
 MODULE_SRCS = \
-	adapter.c adapter.h \
+	builder.c builder.h \
 	index.c index.h \
 	parser.c parser.h \
 	module.c module.h \

@@ -34,7 +34,9 @@
 
 #include "config.h"
 
+#include "asn1.h"
 #include "attrs.h"
+#include "builder.h"
 #include "compat.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
@@ -59,6 +61,7 @@
 struct _p11_token {
 	p11_parser *parser;
 	p11_index *index;
+	p11_builder *builder;
 	const char *path;
 	CK_SLOT_ID slot;
 	int loaded;
@@ -84,8 +87,7 @@ loader_load_file (p11_token *token,
 {
 	int ret;
 
-	ret = p11_parse_file (token->parser, filename, flags,
-	                      on_parser_object, token);
+	ret = p11_parse_file (token->parser, filename, flags);
 
 	switch (ret) {
 	case P11_PARSE_SUCCESS:
@@ -361,12 +363,14 @@ load_builtin_objects (p11_token *token)
 		{ CKA_TRUST_STEP_UP_APPROVED, &vfalse, sizeof (vfalse) },
 	};
 
+	p11_index_batch (token->index);
 	on_parser_object (p11_attrs_buildn (NULL, builtin_root_list, ELEMS (builtin_root_list)), token);
 	on_parser_object (p11_attrs_buildn (NULL, distrust_trustwave1, ELEMS (distrust_trustwave1)), token);
 	on_parser_object (p11_attrs_buildn (NULL, distrust_trustwave2, ELEMS (distrust_trustwave2)), token);
 	on_parser_object (p11_attrs_buildn (NULL, distrust_turktrust1, ELEMS (distrust_turktrust1)), token);
 	on_parser_object (p11_attrs_buildn (NULL, distrust_turktrust2, ELEMS (distrust_turktrust2)), token);
 	on_parser_object (p11_attrs_buildn (NULL, distrust_p11subca, ELEMS (distrust_p11subca)), token);
+	p11_index_finish (token->index);
 	return 1;
 }
 
@@ -396,6 +400,7 @@ p11_token_free (p11_token *token)
 
 	p11_index_free (token->index);
 	p11_parser_free (token->parser);
+	p11_builder_free (token->builder);
 	free (token);
 }
 
@@ -408,11 +413,17 @@ p11_token_new (CK_SLOT_ID slot,
 	token = calloc (1, sizeof (p11_token));
 	return_val_if_fail (token != NULL, NULL);
 
-	token->parser = p11_parser_new ();
-	return_val_if_fail (token->parser != NULL, NULL);
+	token->builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
+	return_val_if_fail (token->builder != NULL, NULL);
 
-	token->index = p11_index_new (NULL, NULL, NULL);
+	token->index = p11_index_new (p11_builder_build,
+	                              p11_builder_changed,
+	                              token->builder);
 	return_val_if_fail (token->index != NULL, NULL);
+
+	token->parser = p11_parser_new (token->index,
+	                                p11_builder_get_cache (token->builder));
+	return_val_if_fail (token->parser != NULL, NULL);
 
 	token->path = strdup (path);
 	return_val_if_fail (token->path != NULL, NULL);
