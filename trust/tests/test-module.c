@@ -59,8 +59,7 @@ static void
 setup (CuTest *cu)
 {
 	CK_C_INITIALIZE_ARGS args;
-	const char *anchors;
-	const char *certs;
+	const char *paths;
 	char *arguments;
 	CK_ULONG count;
 	CK_RV rv;
@@ -72,9 +71,8 @@ setup (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	anchors = SRCDIR "/anchors:" SRCDIR "/files/cacert-ca.der";
-	certs = SRCDIR "/certificates";
-	if (asprintf (&arguments, "anchors='%s' certificates='%s'", anchors, certs) < 0)
+	paths = SRCDIR "/input:" SRCDIR "/files/cacert-ca.der";
+	if (asprintf (&arguments, "paths='%s'", paths) < 0)
 		CuAssertTrue (cu, false && "not reached");
 	args.pReserved = arguments;
 	args.flags = CKF_OS_LOCKING_OK;

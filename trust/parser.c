@@ -283,8 +283,8 @@ build_x509_certificate (p11_parser *parser,
 
 	/* Filled in later */
 	CK_ULONG vcategory = 0;
-	CK_BBOOL vtrusted = CK_FALSE;
-	CK_BBOOL vdistrusted = CK_FALSE;
+	CK_BBOOL vtrusted = (parser->flags & P11_PARSE_FLAG_ANCHOR) ? CK_TRUE : CK_FALSE;
+	CK_BBOOL vdistrusted = (parser->flags & P11_PARSE_FLAG_BLACKLIST) ? CK_TRUE : CK_FALSE;
 
 	CK_ATTRIBUTE certificate_type = { CKA_CERTIFICATE_TYPE, &vx509, sizeof (vx509) };
 	CK_ATTRIBUTE certificate_category = { CKA_CERTIFICATE_CATEGORY, &vcategory, sizeof (vcategory) };
@@ -780,6 +780,9 @@ build_openssl_extensions (p11_parser *parser,
 	p11_dict *trust = NULL;
 	p11_dict *reject = NULL;
 	p11_dictiter iter;
+	CK_ATTRIBUTE *attr;
+	CK_BBOOL trusted;
+	CK_BBOOL distrust;
 	void *key;
 	int start;
 	int end;
@@ -831,6 +834,46 @@ build_openssl_extensions (p11_parser *parser,
 		ret = build_eku_extension (parser, cert, P11_OID_OPENSSL_REJECT, CK_FALSE, reject);
 		return_val_if_fail (ret == P11_PARSE_SUCCESS, ret);
 	}
+
+	/*
+	 * If loading from an blacklist flagged directory, then override all
+	 * trust assumptionsinformation and mark this as a blacklisted certificate
+	 */
+
+	if (parser->flags & P11_PARSE_FLAG_BLACKLIST) {
+		trusted = CK_FALSE;
+		distrust = CK_TRUE;
+
+	/*
+	 * OpenSSL model blacklists as anchors with all purposes being removed/rejected,
+	 * we account for that here. If there is an ExtendedKeyUsage without any
+	 * useful purposes, then treat like a blacklist.
+	 */
+	} else if (trust && p11_dict_size (trust) == 0) {
+		trusted = CK_FALSE;
+		distrust = CK_TRUE;
+
+	/*
+	 * Otherwise a 'TRUSTED CERTIFICATE' in an input directory is enough to
+	 * mark this as a trusted certificate, even if we're not explicitly
+	 * parsing an directory with the anchors flag.
+	 */
+	} else {
+		trusted = CK_TRUE;
+		distrust = CK_FALSE;
+	}
+
+	attr = p11_attrs_find (cert, CKA_TRUSTED);
+	assert (attr != NULL);
+	assert (attr->pValue != NULL);
+	assert (attr->ulValueLen == sizeof (CK_BBOOL));
+	*((CK_BBOOL *)attr->pValue) = trusted;
+
+	attr = p11_attrs_find (cert, CKA_X_DISTRUSTED);
+	assert (attr != NULL);
+	assert (attr->pValue != NULL);
+	assert (attr->ulValueLen == sizeof (CK_BBOOL));
+	*((CK_BBOOL *)attr->pValue) = distrust;
 
 	p11_dict_free (trust);
 	p11_dict_free (reject);

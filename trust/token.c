@@ -50,6 +50,7 @@
 #include <sys/types.h>
 
 #include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,9 +59,7 @@
 struct _p11_token {
 	p11_parser *parser;
 	p11_dict *objects;
-	const char *anchor_paths;
-	const char *other_paths;
-	const char *certificate_paths;
+	const char *paths;
 	int loaded;
 };
 
@@ -149,11 +148,32 @@ loader_load_directory (p11_token *token,
 }
 
 static int
-loader_load_path (p11_token *token,
-                  const char *path,
-                  int flags)
+loader_load_subdirectory (p11_token *token,
+                          const char *directory,
+                          const char *subdir,
+                          int flags)
 {
 	struct stat sb;
+	char *path;
+	int ret = 0;
+
+	if (asprintf (&path, "%s/%s", directory, subdir) < 0)
+		return_val_if_reached (-1);
+
+	if (stat (path, &sb) >= 0 && S_ISDIR (sb.st_mode))
+		ret = loader_load_directory (token, path, flags);
+
+	free (path);
+	return ret;
+}
+
+static int
+loader_load_path (p11_token *token,
+                  const char *path)
+{
+	struct stat sb;
+	int total;
+	int ret;
 
 	if (stat (path, &sb) < 0) {
 		if (errno == ENOENT) {
@@ -167,16 +187,30 @@ loader_load_path (p11_token *token,
 		return 0;
 	}
 
-	if (S_ISDIR (sb.st_mode))
-		return loader_load_directory (token, path, flags);
-	else
-		return loader_load_file (token, path, &sb, flags);
+	if (S_ISDIR (sb.st_mode)) {
+		total = 0;
+
+		ret = loader_load_subdirectory (token, path, "anchors", P11_PARSE_FLAG_ANCHOR);
+		return_val_if_fail (ret >= 0, ret);
+		total += ret;
+
+		ret = loader_load_subdirectory (token, path, "blacklist", P11_PARSE_FLAG_BLACKLIST);
+		return_val_if_fail (ret >= 0, ret);
+		total += ret;
+
+		ret = loader_load_directory (token, path, P11_PARSE_FLAG_NONE);
+		return_val_if_fail (ret >= 0, ret);
+		total += ret;
+
+		return total;
+	} else {
+		return loader_load_file (token, path, &sb, P11_PARSE_FLAG_ANCHOR);
+	}
 }
 
 static int
 loader_load_paths (p11_token *token,
-                   const char *paths,
-                   int flags)
+                   const char *paths)
 {
 	const char *pos;
 	int total = 0;
@@ -199,7 +233,7 @@ loader_load_paths (p11_token *token,
 
 		if (path[0] != '\0') {
 			/* We don't expect this to fail except for in strange circumstances */
-			ret = loader_load_path (token, path, flags);
+			ret = loader_load_path (token, path);
 			if (ret < 0)
 				return_val_if_reached (-1);
 			total += ret;
@@ -383,8 +417,7 @@ int
 p11_token_load (p11_token *token)
 {
 	int builtins;
-	int anchors;
-	int other;
+	int count;
 
 	if (token->loaded)
 		return 0;
@@ -392,15 +425,10 @@ p11_token_load (p11_token *token)
 
 	builtins = load_builtin_objects (token);
 
-	anchors = loader_load_paths (token, token->anchor_paths, P11_PARSE_FLAG_ANCHOR);
-	if (anchors < 0)
-		return anchors;
+	count = loader_load_paths (token, token->paths);
+	return_val_if_fail (count >= 0, count);
 
-	other = loader_load_paths (token, token->other_paths, P11_PARSE_FLAG_NONE);
-	if (other < 0)
-		return other;
-
-	return anchors + builtins + other;
+	return count + builtins;
 }
 
 p11_dict *
@@ -421,8 +449,7 @@ p11_token_free (p11_token *token)
 }
 
 p11_token *
-p11_token_new (const char *anchor_paths,
-               const char *other_paths)
+p11_token_new (const char *paths)
 {
 	p11_token *token;
 
@@ -437,8 +464,7 @@ p11_token_new (const char *anchor_paths,
 	                               free, p11_attrs_free);
 	return_val_if_fail (token->objects != NULL, NULL);
 
-	token->anchor_paths = anchor_paths;
-	token->other_paths = other_paths;
+	token->paths = paths;
 	token->loaded = 0;
 
 	return token;

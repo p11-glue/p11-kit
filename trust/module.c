@@ -64,8 +64,7 @@
 static struct _Shared {
 	p11_dict *sessions;
 	p11_token *token;
-	char *anchor_paths;
-	char *certificate_paths;
+	char *paths;
 } gl = { NULL, NULL };
 
 /* Used during FindObjects */
@@ -115,13 +114,9 @@ parse_argument (char *arg)
 	else
 		*(value++) = 0;
 
-	if (strcmp (arg, "anchors") == 0) {
-		free (gl.anchor_paths);
-		gl.anchor_paths = value ? strdup (value) : NULL;
-
-	} else if (strcmp (arg, "certificates") == 0) {
-		free (gl.certificate_paths);
-		gl.certificate_paths = value ? strdup (value) : NULL;
+	if (strcmp (arg, "paths") == 0) {
+		free (gl.paths);
+		gl.paths = value ? strdup (value) : NULL;
 
 	} else {
 		p11_message ("unrecognized module argument: %s", arg);
@@ -219,9 +214,8 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
 			} else {
-				free (gl.certificate_paths);
-				free (gl.anchor_paths);
-				gl.certificate_paths = gl.anchor_paths = NULL;
+				free (gl.paths);
+				gl.paths = NULL;
 
 				p11_dict_free (gl.sessions);
 				gl.sessions = NULL;
@@ -290,8 +284,7 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 			                            p11_dict_ulongptr_equal,
 			                            NULL, p11_session_free);
 
-			gl.token = p11_token_new (gl.anchor_paths ? gl.anchor_paths : SYSTEM_ANCHORS,
-			                          gl.certificate_paths ? gl.certificate_paths : SYSTEM_CERTIFICATES);
+			gl.token = p11_token_new (gl.paths ? gl.paths : TRUST_PATHS);
 
 			if (gl.sessions == NULL || gl.token == NULL) {
 				warn_if_reached ();

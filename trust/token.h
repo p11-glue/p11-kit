@@ -39,8 +39,7 @@
 
 typedef struct _p11_token p11_token;
 
-p11_token *     p11_token_new         (const char *anchor_paths,
-                                       const char *other_paths);
+p11_token *     p11_token_new         (const char *paths);
 
 void            p11_token_free        (p11_token *token);
 

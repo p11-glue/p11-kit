@@ -7,7 +7,7 @@ TRUST = $(top_srcdir)/trust/tests
 TOOLS = $(top_srcdir)/tools/tests
 
 prepare-certs:
-	cp -v cacert3.der $(TRUST)/anchors
+	cp -v cacert3.der $(TRUST)/input/anchors
 	cp -v cacert3.der $(TRUST)/files
 	cp -v cacert3.der $(TOOLS)/files
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
@@ -25,14 +25,15 @@ prepare-certs:
 		-addreject ipsecUser -addreject timeStamping
 	cat $(TOOLS)/files/cacert3-trusted-client-server-alias.pem \
 		$(TOOLS)/files/cacert3-trusted-alias.pem > $(TOOLS)/files/cacert3-trusted-multiple.pem
-	cp -v cacert-ca.der $(TRUST)/certificates
+	cp -v cacert-ca.der $(TRUST)/input
 	cp -v cacert-ca.der $(TRUST)/files
 	openssl x509 -in redhat-newca.der -inform DER -out $(TRUST)/files/distrusted.pem \
 		-addreject clientAuth -setalias "Red Hat Is the CA"
-	cp -v self-server.der $(TRUST)/files
-	cp -v self-signed-with-eku.der $(TRUST)/certificates
-	cp -v self-signed-with-ku.der $(TRUST)/certificates
-	cp -v testing-ca.der $(TRUST)/anchors
+	cp -v $(TRUST)/files/distrusted.pem $(TRUST)/input
+	cp -v self-server.der $(TRUST)/input/blacklist
+	cp -v self-signed-with-eku.der $(TRUST)/files
+	cp -v self-signed-with-ku.der $(TRUST)/files
+	cp -v testing-ca.der $(TRUST)/input/anchors
 	cp -v testing-server.der $(TRUST)/files
 
 # Rebuild the self-signed certificates. This is almost never necessary and

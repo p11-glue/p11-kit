@@ -41,7 +41,9 @@
 
 #include "attrs.h"
 #include "debug.h"
+#include "pkcs11x.h"
 #include "library.h"
+#include "test-data.h"
 #include "token.h"
 
 struct {
@@ -51,8 +53,7 @@ struct {
 static void
 setup (CuTest *cu)
 {
-	test.token = p11_token_new (SRCDIR "/anchors:" SRCDIR "/files/cacert-ca.der",
-	                            SRCDIR "/files/self-server.der");
+	test.token = p11_token_new (SRCDIR "/input:" SRCDIR "/files/self-server.der:" SRCDIR "/files/cacert-ca.der");
 	CuAssertPtrNotNull (cu, test.token);
 }
 
@@ -72,11 +73,126 @@ test_token_load (CuTest *cu)
 	setup (cu);
 
 	count = p11_token_load (test.token);
-	CuAssertIntEquals (cu, 5, count);
+	CuAssertIntEquals (cu, 7, count);
 
 	/* A certificate and trust object for each parsed object + builtin */
 	objects = p11_token_objects (test.token);
 	CuAssertTrue (cu, ((count - 1) * 2) + 1 <= p11_dict_size (objects));
+
+	teardown (cu);
+}
+
+static bool
+check_object (CK_ATTRIBUTE *match)
+{
+	CK_ATTRIBUTE *attrs;
+	p11_dict *objects;
+	p11_dictiter iter;
+
+	objects = p11_token_objects (test.token);
+
+	p11_dict_iterate (objects, &iter);
+	while (p11_dict_next (&iter, NULL, (void **)&attrs)) {
+		if (p11_attrs_match (attrs, match))
+			return true;
+	}
+
+	return false;
+}
+
+static void
+test_token_flags (CuTest *cu)
+{
+	CK_BBOOL falsev = CK_FALSE;
+	CK_BBOOL truev = CK_TRUE;
+
+	/*
+	 * blacklist comes from the input/distrust.pem file. It is not in the blacklist
+	 * directory, but is an OpenSSL trusted certificate file, and is marked
+	 * in the blacklist style for OpenSSL.
+	 */
+
+	CK_ATTRIBUTE blacklist[] = {
+		{ CKA_LABEL, "Red Hat Is the CA", 17 },
+		{ CKA_SERIAL_NUMBER, "\x02\x01\x01", 3 },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
+		{ CKA_INVALID },
+	};
+
+	/*
+	 * blacklist2 comes from the input/blacklist/self-server.der file. It is
+	 * explicitly put on the blacklist, even though it containts no trust
+	 * policy information.
+	 */
+
+	const unsigned char self_server_subject[] = {
+		0x30, 0x4b, 0x31, 0x13, 0x30, 0x11, 0x06, 0x0a, 0x09, 0x92, 0x26, 0x89, 0x93, 0xf2, 0x2c, 0x64,
+		0x01, 0x19, 0x16, 0x03, 0x43, 0x4f, 0x4d, 0x31, 0x17, 0x30, 0x15, 0x06, 0x0a, 0x09, 0x92, 0x26,
+		0x89, 0x93, 0xf2, 0x2c, 0x64, 0x01, 0x19, 0x16, 0x07, 0x45, 0x58, 0x41, 0x4d, 0x50, 0x4c, 0x45,
+		0x31, 0x1b, 0x30, 0x19, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x12, 0x73, 0x65, 0x72, 0x76, 0x65,
+		0x72, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
+	};
+
+	CK_ATTRIBUTE blacklist2[] = {
+		{ CKA_SUBJECT, (void *)self_server_subject, sizeof (self_server_subject) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
+		{ CKA_INVALID },
+	};
+
+	/*
+	 * anchor comes from the input/anchors/cacert3.der file. It is
+	 * explicitly marked as an anchor, even though it containts no trust
+	 * policy information.
+	 */
+
+	CK_ATTRIBUTE anchor[] = {
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_TRUSTED, &truev, sizeof (truev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	const unsigned char cacert_root_subject[] = {
+		0x30, 0x79, 0x31, 0x10, 0x30, 0x0e, 0x06, 0x03, 0x55, 0x04, 0x0a, 0x13, 0x07, 0x52, 0x6f, 0x6f,
+		0x74, 0x20, 0x43, 0x41, 0x31, 0x1e, 0x30, 0x1c, 0x06, 0x03, 0x55, 0x04, 0x0b, 0x13, 0x15, 0x68,
+		0x74, 0x74, 0x70, 0x3a, 0x2f, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x63, 0x61, 0x63, 0x65, 0x72, 0x74,
+		0x2e, 0x6f, 0x72, 0x67, 0x31, 0x22, 0x30, 0x20, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x19, 0x43,
+		0x41, 0x20, 0x43, 0x65, 0x72, 0x74, 0x20, 0x53, 0x69, 0x67, 0x6e, 0x69, 0x6e, 0x67, 0x20, 0x41,
+		0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x31, 0x21, 0x30, 0x1f, 0x06, 0x09, 0x2a, 0x86,
+		0x48, 0x86, 0xf7, 0x0d, 0x01, 0x09, 0x01, 0x16, 0x12, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74,
+		0x40, 0x63, 0x61, 0x63, 0x65, 0x72, 0x74, 0x2e, 0x6f, 0x72, 0x67,
+	};
+
+	/*
+	 * notrust comes from the input/cacert-ca.der file. It contains no
+	 * trust information, and is not explicitly marked as an anchor, so
+	 * it's neither trusted or distrusted.
+	 */
+
+	CK_ATTRIBUTE notrust[] = {
+		{ CKA_SUBJECT, (void *)cacert_root_subject, sizeof (cacert_root_subject) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE invalid[] = {
+		{ CKA_LABEL, "Waonec9aoe9", 8 },
+		{ CKA_INVALID },
+	};
+
+	setup (cu);
+
+	if (p11_token_load (test.token) < 0)
+		CuFail (cu, "should not be reached");
+
+	CuAssertTrue (cu, !check_object (invalid));
+	CuAssertTrue (cu, check_object (anchor));
+	CuAssertTrue (cu, check_object (blacklist));
+	CuAssertTrue (cu, check_object (blacklist2));
+	CuAssertTrue (cu, check_object (notrust));
 
 	teardown (cu);
 }
@@ -94,6 +210,7 @@ main (void)
 	p11_message_quiet ();
 
 	SUITE_ADD_TEST (suite, test_token_load);
+	SUITE_ADD_TEST (suite, test_token_flags);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

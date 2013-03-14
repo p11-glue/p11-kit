@@ -178,81 +178,51 @@ AS_IF([test "$enable_trust_module" != "no"], [enable_trust_module="yes"])
 AM_CONDITIONAL(WITH_TRUST_MODULE, test "$enable_trust_module" = "yes")
 AC_MSG_RESULT([$enable_trust_module])
 
-AC_ARG_WITH([system-anchors],
-            AS_HELP_STRING([--with-system-anchors=@<:@path@:>@]:
-                           [files or directories containing system CA anchors])
+AC_ARG_WITH([trust-paths],
+            AS_HELP_STRING([--with-trust-paths=@<:@path@:>@]:
+                           [input paths for trust module])
 )
 
-AC_MSG_CHECKING([location of system CA anchors])
+AC_MSG_CHECKING([for trust module paths])
 
 # This option was disabled, no anchors
-if test "$with_system_anchors" = "no"; then
-	with_system_anchors=""
+if test "$with_trust_paths" = "no"; then
+	with_trust_paths=""
 	AC_MSG_RESULT([disabled])
 
 elif test "$enable_trust_module" != "yes"; then
-	if test "$with_system_anchors" != ""; then
-		AC_MSG_ERROR([need --enable-trust-module in order to use system anchors.])
+	if test "$with_trust_paths" != ""; then
+		AC_MSG_ERROR([need --enable-trust-module in order to specify trust module paths.])
 	fi
-	with_system_anchors=""
+	with_trust_paths=""
 	AC_MSG_RESULT([disabled])
 
 # Option was not set, try to detect
-elif test "$with_system_anchors" = "" -o "$with_system_anchors" = "yes"; then
-	with_system_anchors=""
+elif test "$with_trust_paths" = "" -o "$with_trust_paths" = "yes"; then
+	with_trust_paths=""
 	for f in /etc/pki/tls/certs/ca-bundle.crt \
 		/etc/ssl/certs/ca-certificates.crt \
 		/etc/ssl/ca-bundle.pem \
 		/etc/ssl/ca-bundle.crt; do
 		if test -f "$f"; then
-			with_system_anchors="$f"
+			with_trust_paths="$f"
 			break
 		fi
 	done
 
-	if test "$with_system_anchors" = ""; then
-		AC_MSG_ERROR([could not find. Use --with-system-anchors=path to set, or --without-system-anchors to disable])
+	if test "$with_trust_paths" = ""; then
+		AC_MSG_ERROR([could not find. Use --with-trust-paths=/path to set, or --without-trust-paths to disable])
 	fi
 
-	AC_MSG_RESULT($with_system_anchors)
+	AC_MSG_RESULT($with_trust_paths)
 
 else
 	# Anchors explicitly set
-	AC_MSG_RESULT($with_system_anchors)
+	AC_MSG_RESULT($with_trust_paths)
 fi
 
-AC_DEFINE_UNQUOTED(SYSTEM_ANCHORS, ["$with_system_anchors"], [The system anchor paths])
-AC_SUBST(with_system_anchors)
-
-AC_ARG_WITH([system-certificates],
-            AS_HELP_STRING([--with-system-certificates=@<:@path@:>@]:
-                           [files or directories containing additional system certificates])
-)
-
-AC_MSG_CHECKING([location of additional system certificates])
-
-# This option was disabled, no additional certificates
-if test "$with_system_certificates" = "no"; then
-	with_system_certificates=""
-	AC_MSG_RESULT([disabled])
-
-elif test "$enable_trust_module" != "yes"; then
-	if test "$with_system_certificates" != ""; then
-		AC_MSG_ERROR([need --enable-trust-module in order to use additional system certificates.])
-	fi
-	with_system_certificates=""
-	AC_MSG_RESULT([disabled])
-
-elif test "$with_system_certificates" = "yes"; then
-	AC_MSG_ERROR([--with-system-certificates requires paths as an argument])
-
-else
-	# Anchors explicitly set
-	AC_MSG_RESULT($with_system_certificates)
-fi
-
-AC_DEFINE_UNQUOTED(SYSTEM_CERTIFICATES, ["$with_system_certificates"], [Additional system certificate paths])
-AC_SUBST(with_system_certificates)
+AC_DEFINE_UNQUOTED(TRUST_PATHS, ["$with_trust_paths"], [The trust module input paths])
+AC_SUBST(with_trust_paths)
 
 # --------------------------------------------------------------------
 # GTK Doc
@@ -453,6 +423,10 @@ AC_CONFIG_FILES([Makefile
 ])
 AC_OUTPUT
 
+# Format paths arguments which should wrap correctly in the output
+indent='\n                                     '
+trust_status=$(echo "$with_trust_paths" | sed -e "s/:/$indent/g")
+
 AC_MSG_NOTICE([build options:
 
     Host:                            $host
@@ -469,6 +443,6 @@ AC_MSG_NOTICE([build options:
     With libtasn1 dependency:        $with_libtasn1
 
     Build trust module:              $enable_trust_module
-    System certificate anchor paths: $with_system_anchors
-    Other system certificate paths:  $with_system_certificates
+    Trust module paths:              $trust_status
+
 ])
