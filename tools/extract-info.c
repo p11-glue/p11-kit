@@ -366,3 +366,23 @@ p11_extract_info_filename (p11_extract_info *extract)
 
 	return label;
 }
+
+char *
+p11_extract_info_comment (p11_extract_info *ex,
+                          bool first)
+{
+	char *comment;
+	char *label;
+
+	if (!(ex->flags & P11_EXTRACT_COMMENT))
+		return NULL;
+
+	label = extract_label (ex);
+	if (!asprintf (&comment, "%s# %s\n",
+	               first ? "" : "\n",
+	               label ? label : ""))
+		return_val_if_reached (NULL);
+
+	free (label);
+	return comment;
+}

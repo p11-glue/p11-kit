@@ -314,8 +314,10 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 {
 	p11_save_file *file;
 	p11_buffer buf;
+	char *comment;
 	bool ret = true;
 	size_t length;
+	bool first;
 	CK_RV rv;
 	char *pem;
 
@@ -323,6 +325,7 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 	if (!file)
 		return false;
 
+	first = true;
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
 		p11_buffer_init (&buf, 1024);
 
@@ -330,8 +333,14 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 			pem = p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &length);
 			return_val_if_fail (pem != NULL, false);
 
-			ret = p11_save_write (file, pem, length);
+			comment = p11_extract_info_comment (ex, first);
+			first = false;
+
+			ret = p11_save_write (file, comment, -1) &&
+			      p11_save_write (file, pem, length);
+
 			free (pem);
+			free (comment);
 		}
 
 		p11_buffer_uninit (&buf);

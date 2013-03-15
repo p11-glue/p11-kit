@@ -92,6 +92,11 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 
 	<variablelist>
 		<varlistentry>
+			<term><option>--comment</option></term>
+			<listitem><para>Add identifying comments to PEM bundle output files
+			before each certificate.</para></listitem>
+		</varlistentry>
+		<varlistentry>
 			<term><option>--filter=&lt;what&gt;</option></term>
 			<listitem><para>Specifies what certificates to export.
 			You can specify the following values:

@@ -91,6 +91,49 @@ test_file_name_for_class (CuTest *tc)
 	p11_extract_info_cleanup (&ex);
 }
 
+static void
+test_comment_for_label (CuTest *tc)
+{
+	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
+	p11_extract_info ex;
+	char *comment;
+
+	p11_extract_info_init (&ex);
+
+	ex.flags = P11_EXTRACT_COMMENT;
+	ex.attrs = p11_attrs_build (NULL, &label, NULL);
+
+	comment = p11_extract_info_comment (&ex, true);
+	CuAssertStrEquals (tc, "# The Label!\n", comment);
+	free (comment);
+
+	comment = p11_extract_info_comment (&ex, false);
+	CuAssertStrEquals (tc, "\n# The Label!\n", comment);
+	free (comment);
+
+	p11_extract_info_cleanup (&ex);
+}
+
+static void
+test_comment_not_enabled (CuTest *tc)
+{
+	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
+	p11_extract_info ex;
+	char *comment;
+
+	p11_extract_info_init (&ex);
+
+	ex.attrs = p11_attrs_build (NULL, &label, NULL);
+
+	comment = p11_extract_info_comment (&ex, true);
+	CuAssertPtrEquals (tc, NULL, comment);
+
+	comment = p11_extract_info_comment (&ex, false);
+	CuAssertPtrEquals (tc, NULL, comment);
+
+	p11_extract_info_cleanup (&ex);
+}
+
 struct {
 	CK_FUNCTION_LIST module;
 	P11KitIter *iter;
@@ -334,6 +377,8 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_file_name_for_label);
 	SUITE_ADD_TEST (suite, test_file_name_for_class);
+	SUITE_ADD_TEST (suite, test_comment_for_label);
+	SUITE_ADD_TEST (suite, test_comment_not_enabled);
 	SUITE_ADD_TEST (suite, test_info_simple_certificate);
 	SUITE_ADD_TEST (suite, test_info_limit_purposes);
 	SUITE_ADD_TEST (suite, test_info_invalid_purposes);

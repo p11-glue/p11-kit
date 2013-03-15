@@ -298,6 +298,7 @@ p11_tool_extract (int argc,
 		opt_filter = 1000,
 		opt_purpose,
 		opt_format,
+		opt_comment,
 	};
 
 	struct option options[] = {
@@ -305,6 +306,7 @@ p11_tool_extract (int argc,
 		{ "format", required_argument, NULL, opt_format },
 		{ "purpose", required_argument, NULL, opt_purpose },
 		{ "overwrite", no_argument, NULL, opt_overwrite },
+		{ "comment", no_argument, NULL, opt_comment },
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
@@ -342,6 +344,7 @@ p11_tool_extract (int argc,
 		  "usage"
 		},
 		{ opt_overwrite, "overwrite output file or directory" },
+		{ opt_comment, "add comments to bundles if possible" },
 		{ opt_verbose, "show verbose debug output", },
 		{ opt_quiet, "supress command output", },
 		{ 0 },
@@ -360,6 +363,9 @@ p11_tool_extract (int argc,
 
 		case opt_overwrite:
 			ex.flags |= P11_SAVE_OVERWRITE;
+			break;
+		case opt_comment:
+			ex.flags |= P11_EXTRACT_COMMENT;
 			break;
 		case opt_filter:
 			if (!filter_argument (optarg, &uri, &match))

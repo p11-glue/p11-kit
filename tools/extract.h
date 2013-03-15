@@ -43,6 +43,11 @@
 #include "iter.h"
 #include "pkcs11.h"
 
+enum {
+	/* These overlap with the flags in save.h, so start higher */
+	P11_EXTRACT_COMMENT = 1 << 10,
+};
+
 typedef struct {
 	p11_dict *asn1_defs;
 	p11_dict *limit_to_purposes;
@@ -82,6 +87,9 @@ void            p11_extract_info_limit_purpose (p11_extract_info *ex,
 void            p11_extract_info_cleanup       (p11_extract_info *ex);
 
 char *          p11_extract_info_filename      (p11_extract_info *ex);
+
+char *          p11_extract_info_comment       (p11_extract_info *ex,
+                                                bool first);
 
 typedef bool (* p11_extract_func)              (P11KitIter *iter,
                                                 p11_extract_info *ex);

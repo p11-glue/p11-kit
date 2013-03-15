@@ -49,8 +49,10 @@ bool
 p11_extract_pem_bundle (P11KitIter *iter,
                         p11_extract_info *ex)
 {
+	char *comment;
 	p11_save_file *file;
 	bool ret = true;
+	bool first = true;
 	size_t length;
 	CK_RV rv;
 	char *pem;
@@ -63,8 +65,13 @@ p11_extract_pem_bundle (P11KitIter *iter,
 		pem = p11_pem_write (ex->cert_der, ex->cert_len, "CERTIFICATE", &length);
 		return_val_if_fail (pem != NULL, false);
 
-		p11_debug ("writing 'CERTIFICATE' PEM block of size %lu", (unsigned long)length);
-		ret = p11_save_write (file, pem, length);
+		comment = p11_extract_info_comment (ex, first);
+		first = false;
+
+		ret = p11_save_write (file, comment, -1) &&
+		      p11_save_write (file, pem, length);
+
+		free (comment);
 		free (pem);
 
 		if (!ret)
