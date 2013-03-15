@@ -59,6 +59,8 @@ CK_ATTRIBUTE *      p11_attrs_merge         (CK_ATTRIBUTE *attrs,
                                              CK_ATTRIBUTE *merge,
                                              bool replace);
 
+void                p11_attrs_purge         (CK_ATTRIBUTE *attrs);
+
 bool                p11_attrs_is_empty      (const CK_ATTRIBUTE *attrs);
 
 CK_ULONG            p11_attrs_count         (const CK_ATTRIBUTE *attrs);

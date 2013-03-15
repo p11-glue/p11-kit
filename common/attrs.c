@@ -380,6 +380,7 @@ p11_attrs_findn_valid (CK_ATTRIBUTE *attrs,
 	return NULL;
 }
 
+
 bool
 p11_attrs_remove (CK_ATTRIBUTE *attrs,
                   CK_ATTRIBUTE_TYPE type)
@@ -402,6 +403,28 @@ p11_attrs_remove (CK_ATTRIBUTE *attrs,
 	memmove (attrs + i, attrs + i + 1, (count - (i + 1)) * sizeof (CK_ATTRIBUTE));
 	attrs[count - 1].type = CKA_INVALID;
 	return true;
+}
+
+void
+p11_attrs_purge (CK_ATTRIBUTE *attrs)
+{
+	int in, out;
+
+	for (in = 0, out = 0; !p11_attrs_is_empty (attrs + in); in++) {
+		if (attrs[in].ulValueLen == (CK_ULONG)-1) {
+			free (attrs[in].pValue);
+			attrs[in].pValue = NULL;
+			attrs[in].ulValueLen = 0;
+		} else {
+			if (in != out)
+				memcpy (attrs + out, attrs + in, sizeof (CK_ATTRIBUTE));
+			out++;
+		}
+	}
+
+	attrs[out].type = CKA_INVALID;
+	assert (p11_attrs_is_empty (attrs + out));
+
 }
 
 bool
