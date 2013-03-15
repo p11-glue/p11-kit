@@ -146,17 +146,9 @@ sink_object (p11_parser *parser,
 		p11_message ("couldn't load file into objects: %s", parser->basename);
 }
 
-static void
-id_generate (p11_parser *parser,
-             CK_BYTE *vid)
-{
-	CK_ULONG val = p11_module_next_id ();
-	p11_checksum_sha1 (vid, &val, sizeof (val), NULL);
-}
-
 static CK_ATTRIBUTE *
 certificate_attrs (p11_parser *parser,
-                   CK_BYTE *idv,
+                   CK_ATTRIBUTE *id,
                    const unsigned char *der,
                    size_t der_len)
 {
@@ -168,9 +160,8 @@ certificate_attrs (p11_parser *parser,
 	CK_ATTRIBUTE klass = { CKA_CLASS, &klassv, sizeof (klassv) };
 	CK_ATTRIBUTE certificate_type = { CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) };
 	CK_ATTRIBUTE value = { CKA_VALUE, (void *)der, der_len };
-	CK_ATTRIBUTE id = { CKA_ID, idv, ID_LENGTH };
 
-	return p11_attrs_build (NULL, &klass, &modifiable, &certificate_type, &value, &id, NULL);
+	return p11_attrs_build (NULL, &klass, &modifiable, &certificate_type, &value, id, NULL);
 }
 
 static int
@@ -179,6 +170,7 @@ parse_der_x509_certificate (p11_parser *parser,
                             size_t length)
 {
 	CK_BYTE idv[ID_LENGTH];
+	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *value;
 	node_asn *cert;
@@ -188,9 +180,10 @@ parse_der_x509_certificate (p11_parser *parser,
 		return P11_PARSE_UNRECOGNIZED;
 
 	/* The CKA_ID links related objects */
-	id_generate (parser, idv);
+	if (!p11_x509_calc_keyid (cert, data, length, idv))
+		id.type = CKA_INVALID;
 
-	attrs = certificate_attrs (parser, idv, data, length);
+	attrs = certificate_attrs (parser, &id, data, length);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
 	value = p11_attrs_find (attrs, CKA_VALUE);
@@ -204,7 +197,7 @@ parse_der_x509_certificate (p11_parser *parser,
 
 static CK_ATTRIBUTE *
 extension_attrs (p11_parser *parser,
-                 CK_BYTE *idv,
+                 CK_ATTRIBUTE *id,
                  const unsigned char *oid_der,
                  CK_BBOOL vcritical,
                  const unsigned char *ext_der,
@@ -218,17 +211,16 @@ extension_attrs (p11_parser *parser,
 	CK_ATTRIBUTE critical = { CKA_X_CRITICAL, &vcritical, sizeof (vcritical) };
 	CK_ATTRIBUTE oid = { CKA_OBJECT_ID, (void *)oid_der, p11_oid_length (oid_der) };
 	CK_ATTRIBUTE value = { CKA_VALUE, (void *)ext_der, ext_len };
-	CK_ATTRIBUTE id = { CKA_ID, idv, ID_LENGTH };
 
 	if (ext_der == NULL)
 		value.type = CKA_INVALID;
 
-	return p11_attrs_build (NULL, &id, &klass, &modifiable, &oid, &critical, &value, NULL);
+	return p11_attrs_build (NULL, id, &klass, &modifiable, &oid, &critical, &value, NULL);
 }
 
 static CK_ATTRIBUTE *
 stapled_attrs (p11_parser *parser,
-               CK_BYTE *idv,
+               CK_ATTRIBUTE *id,
                const unsigned char *oid,
                CK_BBOOL critical,
                node_asn *ext)
@@ -237,7 +229,7 @@ stapled_attrs (p11_parser *parser,
 	unsigned char *der;
 	size_t len;
 
-	attrs = extension_attrs (parser, idv, oid, critical, NULL, 0);
+	attrs = extension_attrs (parser, id, oid, critical, NULL, 0);
 	return_val_if_fail (attrs != NULL, NULL);
 
 	der = p11_asn1_encode (ext, &len);
@@ -285,7 +277,7 @@ load_seq_of_oid_str (node_asn *node,
 
 static CK_ATTRIBUTE *
 stapled_eku_attrs (p11_parser *parser,
-                   CK_BYTE *idv,
+                   CK_ATTRIBUTE *id,
                    const unsigned char *oid,
                    CK_BBOOL critical,
                    p11_dict *oid_strs)
@@ -333,7 +325,7 @@ stapled_eku_attrs (p11_parser *parser,
 	}
 
 
-	attrs = stapled_attrs (parser, idv, oid, critical, dest);
+	attrs = stapled_attrs (parser, id, oid, critical, dest);
 	asn1_delete_structure (&dest);
 
 	return attrs;
@@ -342,7 +334,7 @@ stapled_eku_attrs (p11_parser *parser,
 static CK_ATTRIBUTE *
 build_openssl_extensions (p11_parser *parser,
                           CK_ATTRIBUTE *cert,
-                          CK_BYTE *idv,
+                          CK_ATTRIBUTE *id,
                           node_asn *aux,
                           const unsigned char *aux_der,
                           size_t aux_len)
@@ -395,7 +387,7 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (trust) {
-		attrs = stapled_eku_attrs (parser, idv, P11_OID_EXTENDED_KEY_USAGE, CK_TRUE, trust);
+		attrs = stapled_eku_attrs (parser, id, P11_OID_EXTENDED_KEY_USAGE, CK_TRUE, trust);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -409,7 +401,7 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (reject && p11_dict_size (reject) > 0) {
-		attrs = stapled_eku_attrs (parser, idv, P11_OID_OPENSSL_REJECT, CK_FALSE, reject);
+		attrs = stapled_eku_attrs (parser, id, P11_OID_OPENSSL_REJECT, CK_FALSE, reject);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -455,7 +447,7 @@ build_openssl_extensions (p11_parser *parser,
 	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, NULL);
 
 	if (ret == ASN1_SUCCESS) {
-		attrs = extension_attrs (parser, idv, P11_OID_SUBJECT_KEY_IDENTIFIER, CK_FALSE,
+		attrs = extension_attrs (parser, id, P11_OID_SUBJECT_KEY_IDENTIFIER, CK_FALSE,
 		                         aux_der + start, (end - start) + 1);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
@@ -472,6 +464,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 {
 	CK_ATTRIBUTE *attrs;
 	CK_BYTE idv[ID_LENGTH];
+	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
 	CK_ATTRIBUTE *value;
 	char *label = NULL;
 	node_asn *cert;
@@ -502,9 +495,10 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	}
 
 	/* The CKA_ID links related objects */
-	id_generate (parser, idv);
+	if (!p11_x509_calc_keyid (cert, data, cert_len, idv))
+		id.type = CKA_INVALID;
 
-	attrs = certificate_attrs (parser, idv, data, cert_len);
+	attrs = certificate_attrs (parser, &id, data, cert_len);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
 	/* Cache the parsed certificate ASN.1 for later use by the builder */
@@ -526,7 +520,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 		return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 	}
 
-	attrs = build_openssl_extensions (parser, attrs, idv, aux,
+	attrs = build_openssl_extensions (parser, attrs, &id, aux,
 	                                  data + cert_len, length - cert_len);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 

@@ -82,7 +82,7 @@ setup (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	paths = SRCDIR "/input:" SRCDIR "/files/cacert-ca.der:" SRCDIR "/files/testing-server.der";
+	paths = SRCDIR "/input:" SRCDIR "/files/self-signed-with-ku.der:" SRCDIR "/files/thawte.pem";
 	if (asprintf (&arguments, "paths='%s'", paths) < 0)
 		CuAssertTrue (cu, false && "not reached");
 	args.pReserved = arguments;
@@ -154,8 +154,8 @@ test_get_slot_info (CuTest *cu)
 	/* These are the paths passed in in setup() */
 	const char *paths[] = {
 		SRCDIR "/input",
-		SRCDIR "/files/cacert-ca.der",
-		SRCDIR "/files/testing-server.der"
+		SRCDIR "/files/self-signed-with-ku.der",
+		SRCDIR "/files/thawte.pem"
 	};
 
 	setup (cu);
@@ -191,8 +191,8 @@ test_get_token_info (CuTest *cu)
 	/* These are the paths passed in in setup() */
 	const char *labels[] = {
 		"input",
-		"cacert-ca.der",
-		"testing-server.der"
+		"self-signed-with-ku.der",
+		"thawte.pem"
 	};
 
 	setup (cu);

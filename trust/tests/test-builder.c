@@ -152,6 +152,21 @@ test_build_certificate (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CERTIFICATE_CATEGORY, &certificate_authority, sizeof (certificate_authority) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_CHECK_VALUE, "\xad\x7c\x3f", 3 },
+		{ CKA_START_DATE, "20110523", 8 },
+		{ CKA_END_DATE, "20210520", 8, },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_LABEL, "the label", 9 },
+		{ CKA_ID, "\xf0""a\xd8?\x95\x8fMx\xb1G\xb3\x13""9\x97\x8e\xa9\xc2Q\xba\x9b", 20},
+		{ CKA_INVALID },
+	};
+
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
 	CK_RV rv;
@@ -163,7 +178,7 @@ test_build_certificate (CuTest *cu)
 	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
-	test_check_cacert3_ca (cu, attrs, "the label");
+	test_check_attrs (cu, expected, attrs);
 	p11_attrs_free (attrs);
 
 	teardown (cu);
@@ -1406,6 +1421,7 @@ test_changed_without_id (CuTest *cu)
 		{ CKA_CERTIFICATE_CATEGORY, &certificate_authority, sizeof (certificate_authority) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
+		{ CKA_ID, NULL, 0, },
 		{ CKA_INVALID },
 	};
 

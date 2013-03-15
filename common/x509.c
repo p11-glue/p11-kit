@@ -36,6 +36,7 @@
 
 #include "asn1.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
+#include "checksum.h"
 #include "debug.h"
 #include "oid.h"
 #include "utf8.h"
@@ -101,6 +102,27 @@ p11_x509_find_extension (node_asn *cert,
 	}
 
 	return NULL;
+}
+
+bool
+p11_x509_calc_keyid (node_asn *cert,
+                     const unsigned char *der,
+                     size_t der_len,
+                     unsigned char *keyid)
+{
+	int start, end;
+	int ret;
+
+	return_val_if_fail (cert != NULL, NULL);
+	return_val_if_fail (der != NULL, NULL);
+	return_val_if_fail (keyid != NULL, NULL);
+
+	ret = asn1_der_decoding_startEnd (cert, der, der_len, "tbsCertificate.subjectPublicKeyInfo", &start, &end);
+	return_val_if_fail (ret == ASN1_SUCCESS, false);
+	return_val_if_fail (end >= start, false);
+
+	p11_checksum_sha1 (keyid, (der + start), (end - start) + 1, NULL);
+	return true;
 }
 
 bool

@@ -339,6 +339,36 @@ test_parse_anchor (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_parse_thawte (CuTest *cu)
+{
+	CK_ATTRIBUTE *cert;
+	int ret;
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/thawte.pem",
+	                      P11_PARSE_FLAG_NONE);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate  */
+	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+
+	cert = parsed_attrs (certificate_match);
+	test_check_attrs (cu, expected, cert);
+
+	teardown (cu);
+}
+
 /* TODO: A certificate that uses generalTime needs testing */
 
 static void
@@ -393,6 +423,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
 	SUITE_ADD_TEST (suite, test_parse_openssl_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);
+	SUITE_ADD_TEST (suite, test_parse_thawte);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);
 	SUITE_ADD_TEST (suite, test_parse_unrecognized);
 

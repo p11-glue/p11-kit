@@ -124,7 +124,7 @@ lookup_extension (p11_builder *builder,
 
 	/* Look for a stapled certificate extension */
 	id = p11_attrs_find (cert, CKA_ID);
-	if (id != NULL) {
+	if (id != NULL && id->ulValueLen > 0) {
 		match[0].pValue = id->pValue;
 		match[0].ulValueLen = id->ulValueLen;
 
@@ -417,6 +417,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
                          const unsigned char *der,
                          size_t der_len)
 {
+	unsigned char checksum[P11_CHECKSUM_SHA1_LENGTH];
 	CK_BBOOL falsev = CK_FALSE;
 	CK_ULONG zero = 0UL;
 	CK_BYTE checkv[3];
@@ -427,7 +428,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &falsev, sizeof (falsev) };
 	CK_ATTRIBUTE distrusted = { CKA_X_DISTRUSTED, &falsev, sizeof (falsev) };
 	CK_ATTRIBUTE url = { CKA_URL, "", 0 };
-	CK_ATTRIBUTE hash_of_subject_public_key = { CKA_HASH_OF_SUBJECT_PUBLIC_KEY, "", 0 };
+	CK_ATTRIBUTE hash_of_subject_public_key = { CKA_HASH_OF_SUBJECT_PUBLIC_KEY, checksum, sizeof (checksum) };
 	CK_ATTRIBUTE hash_of_issuer_public_key = { CKA_HASH_OF_ISSUER_PUBLIC_KEY, "", 0 };
 	CK_ATTRIBUTE java_midp_security_domain = { CKA_JAVA_MIDP_SECURITY_DOMAIN, &zero, sizeof (zero) };
 	CK_ATTRIBUTE check_value = { CKA_CHECK_VALUE, &checkv, sizeof (checkv) };
@@ -437,6 +438,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE issuer = { CKA_ISSUER, "", 0 };
 	CK_ATTRIBUTE serial_number = { CKA_SERIAL_NUMBER, "", 0 };
 	CK_ATTRIBUTE label = { CKA_LABEL };
+	CK_ATTRIBUTE id = { CKA_ID, checksum, sizeof (checksum) };
 
 	return_val_if_fail (attrs != NULL, NULL);
 
@@ -454,6 +456,11 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 	if (!calc_element (node, der, der_len, "tbsCertificate.subject.rdnSequence", &subject))
 		subject.type = CKA_INVALID;
 	calc_element (node, der, der_len, "tbsCertificate.serialNumber", &serial_number);
+
+	if (!node || !p11_x509_calc_keyid (node, der, der_len, checksum)) {
+		hash_of_subject_public_key.ulValueLen = 0;
+		id.type = CKA_INVALID;
+	}
 
 	if (node) {
 		labelv = p11_x509_lookup_dn_name (node, "tbsCertificate.subject",
@@ -475,11 +482,12 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 
 	attrs = p11_attrs_build (attrs, &trusted, &distrusted, &url, &hash_of_issuer_public_key,
 	                         &hash_of_subject_public_key, &java_midp_security_domain,
-	                         &check_value, &start_date, &end_date,
+	                         &check_value, &start_date, &end_date, &id,
 				 &subject, &issuer, &serial_number, &label,
 				 NULL);
 	return_val_if_fail (attrs != NULL, NULL);
 
+	free (labelv);
 	return attrs;
 }
 
@@ -1405,7 +1413,7 @@ replace_compat_for_cert (p11_builder *builder,
 
 	value = p11_attrs_find (attrs, CKA_VALUE);
 	id = p11_attrs_find (attrs, CKA_ID);
-	if (value == NULL || id == NULL)
+	if (value == NULL || id == NULL || id->ulValueLen == 0)
 		return;
 
 	/*
@@ -1439,7 +1447,7 @@ replace_compat_for_ext (p11_builder *builder,
 	int i;
 
 	id = p11_attrs_find (attrs, CKA_ID);
-	if (id == NULL)
+	if (id == NULL || id->ulValueLen == 0)
 		return;
 
 	handles = lookup_related (index, CKO_CERTIFICATE, id);
@@ -1470,7 +1478,7 @@ update_related_category (p11_builder *builder,
 	};
 
 	id = p11_attrs_find (attrs, CKA_ID);
-	if (id == NULL)
+	if (id == NULL || id->ulValueLen == 0)
 		return;
 
 	/* Find all other objects with this handle */
