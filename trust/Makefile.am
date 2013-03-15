@@ -14,6 +14,7 @@ MODULE_SRCS = \
 	builder.c builder.h \
 	index.c index.h \
 	parser.c parser.h \
+	persist.c persist.h \
 	module.c module.h \
 	session.c session.h \
 	token.c token.h \

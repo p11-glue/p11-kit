@@ -43,6 +43,7 @@ noinst_LTLIBRARIES += \
 
 libp11_data_la_SOURCES = \
 	asn1.c asn1.h \
+	basic.asn basic.asn.h \
 	base64.c base64.h \
 	checksum.c checksum.h \
 	oid.c oid.h \
@@ -59,5 +60,6 @@ libp11_data_la_CFLAGS = \
 asn:
 	asn1Parser -o pkix.asn.h pkix.asn
 	asn1Parser -o openssl.asn.h openssl.asn
+	asn1Parser -o basic.asn.h basic.asn
 
 endif # WITH_ASN1

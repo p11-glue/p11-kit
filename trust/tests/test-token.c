@@ -74,7 +74,7 @@ test_token_load (CuTest *cu)
 	setup (cu, SRCDIR "/input");
 
 	count = p11_token_load (test.token);
-	CuAssertIntEquals (cu, 6, count);
+	CuAssertIntEquals (cu, 7, count);
 
 	/* A certificate and trust object for each parsed object + builtin */
 	index = p11_token_index (test.token);

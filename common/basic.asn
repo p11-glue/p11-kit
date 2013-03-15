@@ -1,0 +1,12 @@
+
+BASIC { }
+
+DEFINITIONS EXPLICIT TAGS ::=
+
+BEGIN
+
+Any ::= ANY
+
+ObjectIdentifier ::= OBJECT IDENTIFIER
+
+END

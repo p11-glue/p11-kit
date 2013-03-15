@@ -26,6 +26,7 @@ LDADD = \
 	$(NULL)
 
 CHECK_PROGS = \
+	test-persist \
 	test-parser \
 	test-index \
 	test-builder \

@@ -156,6 +156,37 @@ test_parse_pem_certificate (CuTest *cu)
 }
 
 static void
+test_parse_p11_kit_persist (CuTest *cu)
+{
+	CK_ATTRIBUTE *cert;
+	int ret;
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_TRUSTED, &truev, sizeof (truev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/input/verisign-v1.p11-kit",
+	                      P11_PARSE_FLAG_NONE);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate  */
+	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+
+	cert = parsed_attrs (certificate_match);
+	test_check_attrs (cu, expected, cert);
+
+	teardown (cu);
+}
+
+static void
 test_parse_openssl_trusted (CuTest *cu)
 {
 	CK_ATTRIBUTE cacert3[] = {
@@ -420,6 +451,7 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);
 	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
+	SUITE_ADD_TEST (suite, test_parse_p11_kit_persist);
 	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
 	SUITE_ADD_TEST (suite, test_parse_openssl_distrusted);
 	SUITE_ADD_TEST (suite, test_parse_anchor);

@@ -47,6 +47,7 @@
 #include "parser.h"
 #include "pem.h"
 #include "pkcs11x.h"
+#include "persist.h"
 #include "x509.h"
 
 #include <libtasn1.h>
@@ -65,6 +66,7 @@ struct _p11_parser {
 	p11_index *index;
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
+	p11_persist *persist;
 	char *basename;
 	int flags;
 };
@@ -573,7 +575,38 @@ parse_pem_certificates (p11_parser *parser,
 	return P11_PARSE_SUCCESS;
 }
 
+static int
+parse_p11_kit_persist (p11_parser *parser,
+                       const unsigned char *data,
+                       size_t length)
+{
+	p11_array *objects;
+	bool ret;
+	int i;
+
+	if (!p11_persist_magic (data, length))
+		return P11_PARSE_UNRECOGNIZED;
+
+	if (!parser->persist) {
+		parser->persist = p11_persist_new ();
+		return_val_if_fail (parser->persist != NULL, P11_PARSE_UNRECOGNIZED);
+	}
+
+	objects = p11_array_new (NULL);
+	return_val_if_fail (objects != NULL, P11_PARSE_FAILURE);
+
+	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
+	if (ret) {
+		for (i = 0; i < objects->num; i++)
+			sink_object (parser, objects->elem[i]);
+	}
+
+	p11_array_free (objects);
+	return ret ? P11_PARSE_SUCCESS : P11_PARSE_FAILURE;
+}
+
 static parser_func all_parsers[] = {
+	parse_p11_kit_persist,
 	parse_pem_certificates,
 	parse_der_x509_certificate,
 	NULL,
@@ -598,6 +631,8 @@ p11_parser_new (p11_index *index,
 void
 p11_parser_free (p11_parser *parser)
 {
+	return_if_fail (parser != NULL);
+	p11_persist_free (parser->persist);
 	free (parser);
 }
 

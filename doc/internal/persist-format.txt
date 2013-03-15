@@ -1,0 +1,54 @@
+These are some notes about the p11-kit persistence format
+
+The format is designed to be somewhat human readable and debuggable, and a bit
+transparent but it is also not encouraged to read/write this format from other
+applications or tools without first discussing this at the the mailing list:
+
+p11-glue@lists.freedesktop.org
+
+The format of the file reflects the PKCS#11 attributes exposed by p11-kit. The
+attributes have a one to one mapping with PKCS#11 attributes of similar names.
+No assumptions should be made that an attribute does what you think it does
+from the label.
+
+Each object in the file starts with the header '[p11-kit-object-v1]'. After that
+point there are names and valeus separated by colons. Whitespace surrounding
+the names and values is ignored.
+
+Boolean values are 'true' and 'false'. Unsigned long attributes are plain
+numbers. String/binary attributes are surrounded with quotes and percent
+encoded. Object id attributes are in their dotted form. Various PKCS#11
+constants are available.
+
+PEM blocks can be present within an object, and these contribute certain
+PKCS#11 attributes to the object. The attributes that come from PEM blocks
+never override those explicitly specified. A 'CERTIFICATE' type PEM block
+contributes the 'value', 'class', 'certificate-type', 'subject', 'issuer'
+'start-date', 'end-date', 'id', 'certificate-category', 'check-value',
+'serial-number' attributes with appropriate values.
+
+Comments starting with a '#' and blank lines are ignored.
+
+Only rudimentary checks are done to make sure that the resulting attributes
+make sense. This may change in the future, and invalid files will be
+unceremoniously rejected. So again use the mailing list if there's a need
+to be writing these files at this point:
+
+p11-glue@lists.freedesktop.org
+
+Example file:
+
+[p11-kit-object-v1]
+class = certificate
+modifiable = true
+java-midp-security-domain = 0
+label = "My special label"
+id = "%01%02%03go"
+
+-----BEGIN CERTIFICATE-----
+MIIEXDCCA0SgAwIBAgIEOGO5ZjANBgkqhkiG9w0BAQUFADCBtDEUMBIGA1UEChML
+................................................................
+B/L/CNDi3tm/Kq+4h4YhPATKt5Rof8886ZjXOP/swNlQ8C5LWK5Gb9Auw2DaclVy
+vUxFnmG6v4SBkgPR0ml8xQ==
+-----END CERTIFICATE-----
+x-distrusted = true

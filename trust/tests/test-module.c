@@ -513,7 +513,7 @@ test_find_certificates (CuTest *cu)
 	setup (cu);
 
 	count = find_objects (cu, match, sessions, objects, 16);
-	CuAssertIntEquals (cu, 7, count);
+	CuAssertIntEquals (cu, 8, count);
 
 	for (i = 0; i < count; i++)
 		check_certificate (cu, sessions[i], objects[i]);
