@@ -46,11 +46,15 @@
 enum {
 	/* These overlap with the flags in save.h, so start higher */
 	P11_EXTRACT_COMMENT = 1 << 10,
+	P11_EXTRACT_ANCHORS = 1 << 11,
+	P11_EXTRACT_BLACKLIST = 1 << 12,
+	P11_EXTRACT_COLLAPSE = 1 << 13,
 };
 
 typedef struct {
 	p11_dict *asn1_defs;
 	p11_dict *limit_to_purposes;
+	p11_dict *already_seen;
 	char *destination;
 	int flags;
 

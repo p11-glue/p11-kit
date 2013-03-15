@@ -171,14 +171,26 @@ teardown (CuTest *tc)
 static CK_OBJECT_CLASS certificate_class = CKO_CERTIFICATE;
 static CK_OBJECT_CLASS extension_class = CKO_X_CERTIFICATE_EXTENSION;
 static CK_CERTIFICATE_TYPE x509_type = CKC_X_509;
+static CK_BBOOL truev = CK_TRUE;
 
-static CK_ATTRIBUTE cacert3_authority_attrs[] = {
+static CK_ATTRIBUTE cacert3_trusted[] = {
 	{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 	{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Cacert3 Here", 11 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_TRUSTED, &truev, sizeof (truev) },
 	{ CKA_ID, "ID1", 3 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_distrusted[] = {
+	{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+	{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
+	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
+	{ CKA_LABEL, "Another CaCert", 11 },
+	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
 	{ CKA_INVALID },
 };
 
@@ -213,7 +225,7 @@ test_info_simple_certificate (CuTest *tc)
 
 	CuAssertPtrNotNull (tc, test.ex.asn1_defs);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -245,7 +257,7 @@ test_info_limit_purposes (CuTest *tc)
 
 	setup (tc);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	/* This should not match the above, with the stapled certificat ext */
@@ -270,7 +282,7 @@ test_info_invalid_purposes (CuTest *tc)
 
 	setup (tc);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_invalid);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -295,7 +307,7 @@ test_info_skip_non_certificate (CuTest *tc)
 
 	setup (tc);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
@@ -322,7 +334,7 @@ test_limit_to_purpose_match (CuTest *tc)
 
 	setup (tc);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_extract_info_limit_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
@@ -346,7 +358,7 @@ test_limit_to_purpose_no_match (CuTest *tc)
 
 	setup (tc);
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_extract_info_limit_purpose (&test.ex, "3.3.3.3");
@@ -359,6 +371,146 @@ test_limit_to_purpose_no_match (CuTest *tc)
 	CuAssertIntEquals (tc, CKR_CANCEL, rv);
 
 	p11_message_loud ();
+
+	teardown (tc);
+}
+
+static void
+test_duplicate_extract (CuTest *tc)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_add_filter (test.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+
+	teardown (tc);
+}
+
+static void
+test_duplicate_collapse (CuTest *tc)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+
+	test.ex.flags = P11_EXTRACT_COLLAPSE;
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_add_filter (test.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+
+	teardown (tc);
+}
+
+static void
+test_trusted_match (CuTest *tc)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_BBOOL boolv;
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+
+	test.ex.flags = P11_EXTRACT_ANCHORS;
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_add_filter (test.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	if (!p11_attrs_find_bool (test.ex.attrs, CKA_TRUSTED, &boolv))
+		boolv = CK_FALSE;
+	CuAssertIntEquals (tc, CK_TRUE, boolv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+
+	teardown (tc);
+}
+
+static void
+test_distrust_match (CuTest *tc)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_BBOOL boolv;
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+
+	test.ex.flags = P11_EXTRACT_BLACKLIST;
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_add_filter (test.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	if (!p11_attrs_find_bool (test.ex.attrs, CKA_X_DISTRUSTED, &boolv))
+		boolv = CK_FALSE;
+	CuAssertIntEquals (tc, CK_TRUE, boolv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+
+	teardown (tc);
+}
+
+static void
+test_anytrust_match (CuTest *tc)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_RV rv;
+
+	setup (tc);
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+
+	test.ex.flags =  P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST;
+	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
+	p11_kit_iter_add_filter (test.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_OK, rv);
+
+	rv = p11_kit_iter_next (test.iter);
+	CuAssertIntEquals (tc, CKR_CANCEL, rv);
 
 	teardown (tc);
 }
@@ -385,6 +537,11 @@ main (void)
 	SUITE_ADD_TEST (suite, test_info_skip_non_certificate);
 	SUITE_ADD_TEST (suite, test_limit_to_purpose_match);
 	SUITE_ADD_TEST (suite, test_limit_to_purpose_no_match);
+	SUITE_ADD_TEST (suite, test_duplicate_extract);
+	SUITE_ADD_TEST (suite, test_duplicate_collapse);
+	SUITE_ADD_TEST (suite, test_trusted_match);
+	SUITE_ADD_TEST (suite, test_distrust_match);
+	SUITE_ADD_TEST (suite, test_anytrust_match);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

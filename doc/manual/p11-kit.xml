@@ -98,12 +98,16 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 		</varlistentry>
 		<varlistentry>
 			<term><option>--filter=&lt;what&gt;</option></term>
-			<listitem><para>Specifies what certificates to export.
-			You can specify the following values:
+			<listitem>
+			<para>Specifies what certificates to extract. You can specify the following values:
 			<variablelist>
 				<varlistentry>
 					<term><option>ca-anchors</option></term>
 					<listitem><para>Certificate anchors (default)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>trust-policy</option></term>
+					<listitem><para>Anchors and blacklist</para></listitem>
 				</varlistentry>
 				<varlistentry>
 					<term><option>blacklist</option></term>
@@ -118,7 +122,16 @@ $ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/dire
 					<listitem><para>A PKCS#11 URI</para></listitem>
 				</varlistentry>
 			</variablelist>
-			</para></listitem>
+			</para>
+
+			<para>If an output format is chosen that cannot support type what has been
+			specified by the filter, a message will be printed.</para>
+
+			<para>None of the available formats support storage of blacklist entries
+			that do not contain a full certificate. Thus any certificates blacklisted by
+			their issuer and serial number alone, are not included in the extracted
+			blacklist.</para>
+			</listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--format=&lt;type&gt;</option></term>

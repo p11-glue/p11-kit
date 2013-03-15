@@ -57,18 +57,16 @@
 static bool
 filter_argument (const char *optarg,
                  P11KitUri **uri,
-                 CK_ATTRIBUTE **match)
+                 CK_ATTRIBUTE **match,
+                 int *flags)
 {
 	CK_ATTRIBUTE *attrs;
 	int ret;
 
-	CK_BBOOL vtrue = CK_TRUE;
 	CK_OBJECT_CLASS vcertificate = CKO_CERTIFICATE;
 	CK_ULONG vauthority = 2;
 	CK_CERTIFICATE_TYPE vx509 = CKC_X_509;
 
-	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &vtrue, sizeof (vtrue) };
-	CK_ATTRIBUTE distrusted = { CKA_X_DISTRUSTED, &vtrue, sizeof (vtrue) };
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &vcertificate, sizeof (vcertificate) };
 	CK_ATTRIBUTE authority = { CKA_CERTIFICATE_CATEGORY, &vauthority, sizeof (vauthority) };
 	CK_ATTRIBUTE x509 = { CKA_CERTIFICATE_TYPE, &vx509, sizeof (vx509) };
@@ -88,13 +86,20 @@ filter_argument (const char *optarg,
 	}
 
 	if (strcmp (optarg, "ca-anchors") == 0) {
-		attrs = p11_attrs_build (NULL, &trusted, &certificate, &authority, &x509, NULL);
+		attrs = p11_attrs_build (NULL, &certificate, &authority, &x509, NULL);
+		*flags |= P11_EXTRACT_ANCHORS | P11_EXTRACT_COLLAPSE;
+
+	} else if (strcmp (optarg, "trust-policy") == 0) {
+		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		*flags |= P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST | P11_EXTRACT_COLLAPSE;
 
 	} else if (strcmp (optarg, "blacklist") == 0) {
-		attrs = p11_attrs_build (NULL, &distrusted, &certificate, &x509, NULL);
+		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		*flags |= P11_EXTRACT_BLACKLIST | P11_EXTRACT_COLLAPSE;
 
 	} else if (strcmp (optarg, "certificates") == 0) {
 		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		*flags |= P11_EXTRACT_COLLAPSE;
 
 	} else {
 		p11_message ("unsupported or unrecognized filter: %s", optarg);
@@ -205,7 +210,7 @@ format_argument (const char *optarg,
 
 static void
 limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
-                            CK_ATTRIBUTE *match)
+                            int flags)
 {
 	char *string;
 	int i, out;
@@ -215,8 +220,7 @@ limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
 	 * we get from modules explicitly marked as containing trust-policy.
 	 */
 
-	if (!p11_attrs_find (match, CKA_TRUSTED) &&
-	    !p11_attrs_find (match, CKA_X_DISTRUSTED))
+	if ((flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST)) == 0)
 		return;
 
 	/* Count the number of modules */
@@ -239,10 +243,10 @@ limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
 		p11_message ("no modules containing trust policy are registered");
 }
 
-static void
-limit_purposes_if_necessary (p11_extract_info *ex,
-                             p11_extract_func func,
-                             CK_ATTRIBUTE *match)
+static bool
+validate_filter_and_format (p11_extract_info *ex,
+                            p11_extract_func func,
+                            CK_ATTRIBUTE *match)
 {
 	int i;
 
@@ -253,27 +257,41 @@ limit_purposes_if_necessary (p11_extract_info *ex,
 	 * default purpose to limit to.
 	 */
 
-	static p11_extract_func format_supports_purposes[] = {
+	static p11_extract_func supports_trust_policy[] = {
 		p11_extract_openssl_bundle,
 		p11_extract_openssl_directory,
 		NULL
 	};
 
-	/* Check if looking for anchors */
-	if (!p11_attrs_find (match, CKA_TRUSTED))
-		return;
-
-	/* Already limiting to one or more purposes */
-	if (ex->limit_to_purposes)
-		return;
-
-	for (i = 0; format_supports_purposes[i] != NULL; i++) {
-		if (func == format_supports_purposes[i])
-			return;
+	for (i = 0; supports_trust_policy[i] != NULL; i++) {
+		if (func == supports_trust_policy[i])
+			return true;
 	}
 
-	p11_message ("format does not support trust policy, limiting to purpose server-auth");
-	p11_extract_info_limit_purpose (ex, P11_OID_SERVER_AUTH_STR);
+	if ((ex->flags & P11_EXTRACT_ANCHORS) &&
+	    (ex->flags & P11_EXTRACT_BLACKLIST)) {
+		/*
+		 * If we're extracting *both* anchors and blacklist, then we must have
+		 * a format that can represent the different types of information.
+		 */
+
+		p11_message ("format does not support trust policy");
+		return false;
+
+	} else if (ex->flags & P11_EXTRACT_ANCHORS) {
+
+		/*
+		 * If we're extracting anchors, then we must have either limited the
+		 * purposes, or have a format that can represent multiple purposes.
+		 */
+
+		if (!ex->limit_to_purposes) {
+			p11_message ("format does not support multiple purposes, defaulting to 'server-auth'");
+			p11_extract_info_limit_purpose (ex, P11_OID_SERVER_AUTH_STR);
+		}
+	}
+
+	return true;
 }
 
 int
@@ -319,6 +337,7 @@ p11_tool_extract (int argc,
 		  "filter of what to export\n"
 		  "  ca-anchors        certificate anchors (default)\n"
 		  "  blacklist         blacklisted certificates\n"
+		  "  trust-policy      anchors and blacklist\n"
 		  "  certificates      all certificates\n"
 		  "  pkcs11:object=xx  a PKCS#11 URI",
 		  "what",
@@ -368,7 +387,7 @@ p11_tool_extract (int argc,
 			ex.flags |= P11_EXTRACT_COMMENT;
 			break;
 		case opt_filter:
-			if (!filter_argument (optarg, &uri, &match))
+			if (!filter_argument (optarg, &uri, &match, &ex.flags))
 				return 2;
 			break;
 		case opt_purpose:
@@ -406,9 +425,12 @@ p11_tool_extract (int argc,
 
 	/* If nothing that was useful to enumerate was specified, then bail */
 	if (uri == NULL && match == NULL) {
-		p11_message ("no filter specified defaulting to 'ca-anchors'");
-		filter_argument ("ca-anchors", &uri, &match);
+		p11_message ("no filter specified, defaulting to 'ca-anchors'");
+		filter_argument ("ca-anchors", &uri, &match, &ex.flags);
 	}
+
+	if (!validate_filter_and_format (&ex, format, match))
+		return 1;
 
 	if (uri && p11_kit_uri_any_unrecognized (uri))
 		p11_message ("uri contained unrecognized components, nothing will be extracted");
@@ -420,9 +442,7 @@ p11_tool_extract (int argc,
 	}
 
 	modules = p11_kit_registered_modules ();
-
-	limit_purposes_if_necessary (&ex, format, match);
-	limit_modules_if_necessary (modules, match);
+	limit_modules_if_necessary (modules, ex.flags);
 
 	iter = p11_kit_iter_new (uri);
 

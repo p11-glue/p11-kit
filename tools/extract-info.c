@@ -34,6 +34,8 @@
 
 #include "config.h"
 
+#define P11_DEBUG_FLAG P11_DEBUG_TOOL
+
 #include "attrs.h"
 #include "debug.h"
 #include "oid.h"
@@ -147,6 +149,55 @@ extract_purposes (p11_extract_info *ex)
 }
 
 static bool
+should_collapse_certificate (p11_extract_info *ex,
+                             CK_ATTRIBUTE *value)
+{
+	CK_ATTRIBUTE *attrs;
+
+	if (!(ex->flags & P11_EXTRACT_COLLAPSE))
+		return false;
+
+	if (!ex->already_seen) {
+		ex->already_seen = p11_dict_new (p11_attr_hash, p11_attr_equal,
+		                                 NULL, p11_attrs_free);
+		return_val_if_fail (ex->already_seen != NULL, true);
+	}
+
+	if (p11_dict_get (ex->already_seen, value))
+		return true;
+
+	attrs = p11_attrs_build (NULL, value, NULL);
+	return_val_if_fail (attrs != NULL, true);
+
+	if (!p11_dict_set (ex->already_seen, attrs, attrs))
+		return_val_if_reached (true);
+
+	return false;
+}
+
+static bool
+check_trust_flags_match (p11_extract_info *ex)
+{
+	CK_BBOOL boolv;
+	int flags = 0;
+
+	/* If no extract trust flags, then just continue */
+	if (!(ex->flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST)))
+		return true;
+
+	if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &boolv) && boolv)
+		flags |= P11_EXTRACT_ANCHORS;
+	if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &boolv) && boolv)
+		flags |= P11_EXTRACT_BLACKLIST;
+
+	/* Any of the flags can match */
+	if (flags & ex->flags)
+		return true;
+
+	return false;
+}
+
+static bool
 extract_certificate (P11KitIter *iter,
                      p11_extract_info *ex)
 {
@@ -157,12 +208,34 @@ extract_certificate (P11KitIter *iter,
 	/* Don't even bother with not X.509 certificates */
 	if (!p11_attrs_find_ulong (ex->attrs, CKA_CERTIFICATE_TYPE, &type))
 		type = (CK_ULONG)-1;
-	if (type != CKC_X_509)
+	if (type != CKC_X_509) {
+		p11_debug ("skipping non X.509 certificate");
 		return false;
+	}
 
 	attr = p11_attrs_find_valid (ex->attrs, CKA_VALUE);
-	if (!attr || !attr->pValue)
+	if (!attr || !attr->pValue) {
+		p11_debug ("skipping certificate without a value");
 		return false;
+	}
+
+	/*
+	 * If collapsing and have already seen this certificate, and shouldn't
+	 * process it even again during this extract procedure.
+	 */
+	if (should_collapse_certificate (ex, attr)) {
+		p11_debug ("skipping certificate that has already been seen");
+		return false;
+	}
+
+	/*
+	 * We do these checks after collapsing, so that blacklisted certificates
+	 * mask out anchors even if we're not exporting blacklisted stuff.
+	 */
+	if (!check_trust_flags_match (ex)) {
+		p11_debug ("skipping certificate that doesn't match trust flags");
+		return false;
+	}
 
 	ex->cert_der = attr->pValue;
 	ex->cert_len = attr->ulValueLen;
@@ -307,6 +380,9 @@ p11_extract_info_cleanup (p11_extract_info *ex)
 
 	p11_dict_free (ex->limit_to_purposes);
 	ex->limit_to_purposes = NULL;
+
+	p11_dict_free (ex->already_seen);
+	ex->already_seen = NULL;
 
 	p11_dict_free (ex->asn1_defs);
 	ex->asn1_defs = NULL;
