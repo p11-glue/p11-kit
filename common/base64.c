@@ -74,14 +74,11 @@ p11_b64_pton (const char *src,
 	tarindex = 0;
 	end = src + length;
 
-	for (;;) {
-		src++;
-		if (src == end) {
-			ch = 0;
-			break;
-		}
+	/* We can't rely on the null terminator */
+	#define next_char(src, end) \
+		(((src) == (end)) ? '\0': *(src)++)
 
-		ch = *src;
+	while ((ch = next_char (src, end)) != '\0') {
 		if (isspace ((unsigned char) ch)) /* Skip whitespace anywhere. */
 			continue;
 
@@ -143,7 +140,7 @@ p11_b64_pton (const char *src,
 	 */
 
 	if (ch == Pad64) { /* We got a pad char. */
-		ch = *src++; /* Skip it, get next. */
+		ch = next_char (src, end); /* Skip it, get next. */
 		switch (state) {
 		case 0: /* Invalid = in first position */
 		case 1: /* Invalid = in second position */
@@ -151,13 +148,13 @@ p11_b64_pton (const char *src,
 
 		case 2: /* Valid, means one byte of info */
 			/* Skip any number of spaces. */
-			for ((void) NULL; src != end; ch = *src++)
+			for ((void) NULL; ch != '\0'; ch = next_char (src, end))
 				if (!isspace((unsigned char) ch))
 					break;
 			/* Make sure there is another trailing = sign. */
 			if (ch != Pad64)
 				return (-1);
-			ch = *src++; /* Skip the = */
+			ch = next_char (src, end); /* Skip the = */
 			/* Fall through to "single trailing =" case. */
 			/* FALLTHROUGH */
 
@@ -166,7 +163,7 @@ p11_b64_pton (const char *src,
 			 * We know this char is an =.  Is there anything but
 			 * whitespace after it?
 			 */
-			for (src++; src != end; ch = *src++)
+			for ((void)NULL; src != end; ch = next_char (src, end))
 				if (!isspace((unsigned char) ch))
 					return (-1);
 

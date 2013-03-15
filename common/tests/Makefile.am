@@ -40,6 +40,7 @@ INCLUDES += \
 CHECK_PROGS += \
 	test-asn1 \
 	test-checksum \
+	test-base64 \
 	test-pem \
 	test-oid \
 	test-utf8 \
