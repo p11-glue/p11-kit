@@ -144,12 +144,12 @@ test_iterate (CuTest *tc)
 }
 
 static int
-compar_pointers (const void *one,
-                 const void *two)
+compar_strings (const void *one,
+                const void *two)
 {
 	char **p1 = (char **)one;
 	char **p2 = (char **)two;
-	return *p1 - *p2;
+	return strcmp (*p1, *p2);
 }
 
 static void
@@ -157,14 +157,14 @@ test_iterate_remove (CuTest *tc)
 {
 	p11_dict *map;
 	p11_dictiter iter;
-	char *keys[] = { "one", "two", "three" };
-	char *values[] = { "four", "eight", "twelve" };
+	char *keys[] = { "111", "222", "333" };
+	char *values[] = { "444", "555", "666" };
 	void *okeys[3];
 	void *ovalues[3];
 	bool ret;
 	int i;
 
-	map = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
+	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 	CuAssertPtrNotNull (tc, map);
 
 	for (i = 0; i < 3; i++) {
@@ -191,8 +191,8 @@ test_iterate_remove (CuTest *tc)
 	CuAssertIntEquals (tc, 2, p11_dict_size (map));
 	p11_dict_free (map);
 
-	qsort (okeys, 3, sizeof (void *), compar_pointers);
-	qsort (ovalues, 3, sizeof (void *), compar_pointers);
+	qsort (okeys, 3, sizeof (void *), compar_strings);
+	qsort (ovalues, 3, sizeof (void *), compar_strings);
 
 	for (i = 0; i < 3; i++) {
 		CuAssertStrEquals (tc, keys[i], okeys[i]);

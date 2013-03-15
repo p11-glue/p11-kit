@@ -47,7 +47,6 @@ frob_nss_trust_LDADD = \
 TESTS = $(CHECK_PROGS:=$(EXEEXT))
 
 EXTRA_DIST = \
-	anchors \
-	certificates \
+	input \
 	files \
 	$(NULL)

@@ -148,6 +148,7 @@ test_get_slot_info (CuTest *cu)
 	CK_SLOT_INFO info;
 	char description[64];
 	CK_ULONG count;
+	size_t length;
 	CK_RV rv;
 	int i;
 
@@ -170,8 +171,10 @@ test_get_slot_info (CuTest *cu)
 		CuAssertIntEquals (cu, CKR_OK, rv);
 
 		memset (description, ' ', sizeof (description));
-		assert (strlen (paths[i]) <= sizeof (description));
-		memcpy (description, paths[i], strlen (paths[i]));
+		length = strlen(paths[i]);
+		if (length > sizeof (description))
+			length = sizeof (description);
+		memcpy (description, paths[i], length);
 		CuAssertTrue (cu, memcmp (info.slotDescription, description, sizeof (description)) == 0);
 	}
 
