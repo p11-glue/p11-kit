@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
-	[0.16.4],
+	[0.17.0],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
