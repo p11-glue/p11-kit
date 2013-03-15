@@ -66,7 +66,7 @@ struct _p11_save_dir {
 bool
 p11_save_write_and_finish (p11_save_file *file,
                            const void *data,
-                           size_t length)
+                           ssize_t length)
 {
 	bool ret;
 
@@ -128,7 +128,7 @@ p11_save_open_file (const char *path,
 bool
 p11_save_write (p11_save_file *file,
                 const void *data,
-                size_t length)
+                ssize_t length)
 {
 	const unsigned char *buf = data;
 	ssize_t written = 0;
@@ -136,6 +136,13 @@ p11_save_write (p11_save_file *file,
 
 	if (!file)
 		return false;
+
+	/* Automatically calculate length */
+	if (length < 0) {
+		if (!data)
+			return true;
+		length = strlen (data);
+	}
 
 	while (written < length) {
 		res = write (file->fd, buf + written, length - written);

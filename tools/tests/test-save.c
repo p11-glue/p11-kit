@@ -191,6 +191,54 @@ test_file_overwrite (CuTest *tc)
 }
 
 static void
+test_file_auto_empty (CuTest *tc)
+{
+	p11_save_file *file;
+	char *filename;
+	bool ret;
+
+	setup (tc);
+
+	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
+		CuFail (tc, "asprintf() failed");
+
+	file = p11_save_open_file (filename, 0);
+	CuAssertPtrNotNull (tc, file);
+
+	ret = p11_save_write_and_finish (file, NULL, -1);
+	CuAssertIntEquals (tc, true, ret);
+	free (filename);
+
+	test_check_file (tc, test.directory, "extract-file", SRCDIR "/files/empty-file");
+
+	teardown (tc);
+}
+
+static void
+test_file_auto_length (CuTest *tc)
+{
+	p11_save_file *file;
+	char *filename;
+	bool ret;
+
+	setup (tc);
+
+	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
+		CuFail (tc, "asprintf() failed");
+
+	file = p11_save_open_file (filename, 0);
+	CuAssertPtrNotNull (tc, file);
+
+	ret = p11_save_write_and_finish (file, "The simple string is hairy", -1);
+	CuAssertIntEquals (tc, true, ret);
+	free (filename);
+
+	test_check_file (tc, test.directory, "extract-file", SRCDIR "/files/simple-string");
+
+	teardown (tc);
+}
+
+static void
 test_write_with_null (CuTest *tc)
 {
 	bool ret;
@@ -496,6 +544,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_file_exists);
 	SUITE_ADD_TEST (suite, test_file_bad_directory);
 	SUITE_ADD_TEST (suite, test_file_overwrite);
+	SUITE_ADD_TEST (suite, test_file_auto_empty);
+	SUITE_ADD_TEST (suite, test_file_auto_length);
 	SUITE_ADD_TEST (suite, test_write_with_null);
 	SUITE_ADD_TEST (suite, test_write_and_finish_with_null);
 	SUITE_ADD_TEST (suite, test_file_abort);

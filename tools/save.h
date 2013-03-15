@@ -49,11 +49,11 @@ p11_save_file *  p11_save_open_file         (const char *path,
 
 bool             p11_save_write             (p11_save_file *file,
                                              const void *data,
-                                             size_t length);
+                                             ssize_t length);
 
 bool             p11_save_write_and_finish  (p11_save_file *file,
                                              const void *data,
-                                             size_t length);
+                                             ssize_t length);
 
 bool             p11_save_finish_file       (p11_save_file *file,
                                              bool commit);
