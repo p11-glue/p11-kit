@@ -104,7 +104,8 @@ bool                p11_attrs_matchn        (const CK_ATTRIBUTE *attrs,
                                              const CK_ATTRIBUTE *match,
                                              CK_ULONG count);
 
-char *              p11_attrs_to_string     (const CK_ATTRIBUTE *attrs);
+char *              p11_attrs_to_string     (const CK_ATTRIBUTE *attrs,
+                                             int count);
 
 char *              p11_attr_to_string      (const CK_ATTRIBUTE *attr);
 

@@ -474,8 +474,12 @@ test_to_string (CuTest *tc)
 	CuAssertStrEquals (tc, "{ CKA_LABEL = (3) \"yay\" }", string);
 	free (string);
 
-	string = p11_attrs_to_string (attrs);
+	string = p11_attrs_to_string (attrs, -1);
 	CuAssertStrEquals (tc, "(2) [ { CKA_LABEL = (3) \"yay\" }, { CKA_VALUE = (5) NOT-PRINTED } ]", string);
+	free (string);
+
+	string = p11_attrs_to_string (attrs, 1);
+	CuAssertStrEquals (tc, "(1) [ { CKA_LABEL = (3) \"yay\" } ]", string);
 	free (string);
 }
 

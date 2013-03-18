@@ -813,12 +813,14 @@ format_attribute (p11_buffer *buffer,
 
 static void
 format_attributes (p11_buffer *buffer,
-                   const CK_ATTRIBUTE *attrs)
+                   const CK_ATTRIBUTE *attrs,
+                   int count)
 {
 	CK_BBOOL first = CK_TRUE;
-	int count, i;
+	int i;
 
-	count = p11_attrs_count (attrs);
+	if (count < 0)
+		count = p11_attrs_count (attrs);
 	buffer_append_printf (buffer, "(%d) [", count);
 	for (i = 0; i < count; i++) {
 		if (first)
@@ -832,12 +834,13 @@ format_attributes (p11_buffer *buffer,
 }
 
 char *
-p11_attrs_to_string (const CK_ATTRIBUTE *attrs)
+p11_attrs_to_string (const CK_ATTRIBUTE *attrs,
+                     int count)
 {
 	p11_buffer buffer;
 	if (!p11_buffer_init_null (&buffer, 128))
 		return_val_if_reached (NULL);
-	format_attributes (&buffer, attrs);
+	format_attributes (&buffer, attrs, count);
 	return p11_buffer_steal (&buffer, NULL);
 }
 

@@ -68,7 +68,7 @@ dump_object (P11KitIter *iter,
 	else
 		name = strdup ("unknown");
 
-	string = p11_attrs_to_string (attrs);
+	string = p11_attrs_to_string (attrs, -1);
 	printf ("\"%s\" = %s\n", name, string);
 	free (string);
 
