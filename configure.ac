@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
-	[0.17.0],
+	[0.17.1],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
@@ -78,14 +78,9 @@ if test "$os_unix" = "yes"; then
 	# These are thngs we can work around
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
-	AC_CHECK_FUNCS([strnstr memdup])
+	AC_CHECK_FUNCS([strnstr memdup strndup])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
-
-	# WORKAROUND: So in lots of released builds of firefox a completely broken strndup()
-	# is present. It does not NULL terminate its string output. It is unconditionally
-	# defined, and overrides the libc strndup() function on platforms where it
-	# exists. For this reason we (for now) unconditionally define strndup().
 
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],

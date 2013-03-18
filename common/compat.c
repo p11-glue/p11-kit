@@ -424,7 +424,27 @@ memdup (const void *data,
 
 #endif /* HAVE_MEMDUP */
 
-#ifndef HAVE_STRNDUP
+/*
+ * WORKAROUND: So in lots of released builds of firefox a completely broken strndup()
+ * is present. It does not NULL terminate its string output. It is unconditionally
+ * defined, and overrides the libc strndup() function on platforms where it
+ * exists as a function. For this reason we (for now) unconditionally define
+ * strndup().
+ */
+
+#if 1 /* #ifndef HAVE_STRNDUP */
+
+/*
+ * HAVE_STRNDUP may be undefined if strndup() isn't working. So it may be
+ * present, and yet strndup may still be a defined header macro.
+ */
+#ifdef strndup
+#undef strndup
+#endif
+
+char *
+strndup (const char *data,
+         size_t length);
 
 char *
 strndup (const char *data,
