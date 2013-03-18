@@ -1052,19 +1052,19 @@ replace_nss_trust_object (p11_builder *builder,
                           const char **rejects)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *match = NULL;
 	CK_TRUST allow;
 	CK_RV rv;
 
 	CK_OBJECT_CLASS klassv = CKO_NSS_TRUST;
 	CK_BYTE sha1v[P11_CHECKSUM_SHA1_LENGTH];
 	CK_BYTE md5v[P11_CHECKSUM_MD5_LENGTH];
-	CK_BBOOL generated = CK_FALSE;
+	CK_BBOOL generatedv = CK_FALSE;
 	CK_BBOOL falsev = CK_FALSE;
-	CK_BBOOL truev = CK_TRUE;
 
 	CK_ATTRIBUTE klass = { CKA_CLASS, &klassv, sizeof (klassv) };
 	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &falsev, sizeof (falsev) };
-	CK_ATTRIBUTE autogen = { CKA_X_GENERATED, &truev, sizeof (truev) };
+	CK_ATTRIBUTE generated = { CKA_X_GENERATED, &generatedv, sizeof (generatedv) };
 	CK_ATTRIBUTE invalid = { CKA_INVALID, };
 
 	CK_ATTRIBUTE md5_hash = { CKA_CERT_MD5_HASH, md5v, sizeof (md5v) };
@@ -1078,69 +1078,82 @@ replace_nss_trust_object (p11_builder *builder,
 	CK_ATTRIBUTE_PTR issuer;
 	CK_ATTRIBUTE_PTR serial_number;
 
-	void *der;
-	size_t der_len;
+	void *value;
+	size_t length;
 
-	CK_ATTRIBUTE match[] = {
-		{ CKA_CERT_SHA1_HASH, sha1v, sizeof (sha1v) },
-		{ CKA_CLASS, &klassv, sizeof (klassv) },
-		{ CKA_X_GENERATED, &generated, sizeof (generated) },
-		{ CKA_INVALID }
-	};
-
-	/* Setup the hashes of the DER certificate value */
-	der = p11_attrs_find_value (cert, CKA_VALUE, &der_len);
-	return_if_fail (der != NULL);
-	p11_checksum_md5 (md5v, der, der_len, NULL);
-	p11_checksum_sha1 (sha1v, der, der_len, NULL);
-
-	/* If there is a non-auto-generated NSS trust object, then step away */
-	generated = CK_FALSE;
-	if (p11_index_find (index, match))
-		return;
-
-	/* Copy all of the following attributes from certificate */
-	id = p11_attrs_find_valid (cert, CKA_ID);
-	return_if_fail (id != NULL);
-	subject = p11_attrs_find_valid (cert, CKA_SUBJECT);
-	if (subject == NULL)
-		subject = &invalid;
 	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
-	if (issuer == NULL)
-		issuer = &invalid;
 	serial_number = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
-	if (serial_number == NULL)
+	value = p11_attrs_find_value (cert, CKA_VALUE, &length);
+
+	if (!issuer && !serial_number && !value) {
+		p11_debug ("can't generate nss trust object for certificate without issuer+serial or value");
+		return;
+	}
+
+	if (value == NULL) {
+		md5_hash.type = CKA_INVALID;
+		sha1_hash.type = CKA_INVALID;
+	} else {
+		p11_checksum_md5 (md5v, value, length, NULL);
+		p11_checksum_sha1 (sha1v, value, length, NULL);
+	}
+	if (!issuer)
+		issuer = &invalid;
+	if (!serial_number)
 		serial_number = &invalid;
 
-	/* Try to use the same label */
-	label = p11_attrs_find_valid (cert, CKA_LABEL);
-	if (label == NULL)
-		label = &invalid;
+	match = p11_attrs_build (NULL, issuer, serial_number, sha1_hash,
+	                         &generated, &klass, NULL);
+	return_if_fail (match != NULL);
 
-	attrs = p11_attrs_build (NULL, &klass, &modifiable, id, label,
-	                         subject, issuer, serial_number, &md5_hash, &sha1_hash,
-	                         &step_up_approved, &autogen, NULL);
-	return_if_fail (attrs != NULL);
+	/* If we find a non-generated object, then don't generate */
+	if (p11_index_find (index, match)) {
+		p11_debug ("not generating nss trust object because one already exists");
+		attrs = NULL;
 
-	/* Calculate the default allow trust */
-	if (distrust)
-		allow = CKT_NSS_NOT_TRUSTED;
-	else if (trust && authority)
-		allow = CKT_NSS_TRUSTED_DELEGATOR;
-	else if (trust)
-		allow = CKT_NSS_TRUSTED;
-	else
-		allow = CKT_NSS_TRUST_UNKNOWN;
+	} else {
+		generatedv = CK_TRUE;
+		match = p11_attrs_build (match, &generated, NULL);
+		return_if_fail (match != NULL);
 
-	attrs = build_trust_object_ku (builder, index, cert, attrs, allow);
-	return_if_fail (attrs != NULL);
+		/* Copy all of the following attributes from certificate */
+		id = p11_attrs_find_valid (cert, CKA_ID);
+		if (id == NULL)
+			id = &invalid;
+		subject = p11_attrs_find_valid (cert, CKA_SUBJECT);
+		if (subject == NULL)
+			subject = &invalid;
+		label = p11_attrs_find_valid (cert, CKA_LABEL);
+		if (label == NULL)
+			label = &invalid;
 
-	attrs = build_trust_object_eku (attrs, allow, purposes, rejects);
-	return_if_fail (attrs != NULL);
+		attrs = p11_attrs_dup (match);
+		return_if_fail (attrs != NULL);
 
-	/* Replace related generated objects with this new one */
-	generated = CK_TRUE;
-	rv = p11_index_replace (index, match, CKA_CERT_MD5_HASH, attrs);
+		attrs = p11_attrs_build (attrs, &klass, &modifiable, id, label,
+		                         subject, issuer, serial_number,
+		                         &md5_hash, &sha1_hash, &step_up_approved, NULL);
+		return_if_fail (attrs != NULL);
+
+		/* Calculate the default allow trust */
+		if (distrust)
+			allow = CKT_NSS_NOT_TRUSTED;
+		else if (trust && authority)
+			allow = CKT_NSS_TRUSTED_DELEGATOR;
+		else if (trust)
+			allow = CKT_NSS_TRUSTED;
+		else
+			allow = CKT_NSS_TRUST_UNKNOWN;
+
+		attrs = build_trust_object_ku (builder, index, cert, attrs, allow);
+		return_if_fail (attrs != NULL);
+
+		attrs = build_trust_object_eku (attrs, allow, purposes, rejects);
+		return_if_fail (attrs != NULL);
+	}
+
+	/* Replace related generated object with this new one */
+	rv = p11_index_replace (index, match, CKA_INVALID, attrs);
 	return_if_fail (rv == CKR_OK);
 }
 
@@ -1170,16 +1183,33 @@ build_assertions (p11_array *array,
 	CK_ATTRIBUTE *attrs;
 	int i;
 
-	label = p11_attrs_find_valid (cert, CKA_LABEL);
+	if (type == CKT_X_DISTRUSTED_CERTIFICATE) {
+		value = &invalid;
+		issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
+		serial = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
+
+		if (!issuer || !serial) {
+			p11_debug ("not building negative trust assertion for certificate without serial or issuer");
+			return;
+		}
+
+	} else {
+		issuer = &invalid;
+		serial = &invalid;
+		value = p11_attrs_find_valid (cert, CKA_VALUE);
+
+		if (value == NULL) {
+			p11_debug ("not building positive trust assertion for certificate without value");
+			return;
+		}
+	}
+
+	label = p11_attrs_find (cert, CKA_LABEL);
 	if (label == NULL)
 		label = &invalid;
-
-	id = p11_attrs_find_valid (cert, CKA_ID);
-	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
-	serial = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
-	value = p11_attrs_find_valid (cert, CKA_VALUE);
-
-	return_if_fail (id != NULL && issuer != NULL && serial != NULL && value != NULL);
+	id = p11_attrs_find (cert, CKA_ID);
+	if (id == NULL)
+		id = &invalid;
 
 	for (i = 0; oids[i] != NULL; i++) {
 		purpose.pValue = (void *)oids[i];
@@ -1196,7 +1226,8 @@ build_assertions (p11_array *array,
 }
 
 static void
-build_trust_assertions (p11_array *built,
+build_trust_assertions (p11_array *positives,
+                        p11_array *negatives,
                         CK_ATTRIBUTE *cert,
                         CK_BBOOL trust,
                         CK_BBOOL distrust,
@@ -1217,17 +1248,17 @@ build_trust_assertions (p11_array *built,
 	};
 
 	/* Build assertions for anything that's explicitly rejected */
-	if (rejects) {
-		build_assertions (built, cert, CKT_X_DISTRUSTED_CERTIFICATE, rejects);
+	if (rejects && negatives) {
+		build_assertions (negatives, cert, CKT_X_DISTRUSTED_CERTIFICATE, rejects);
 	}
 
-	if (distrust) {
+	if (distrust && negatives) {
 		/*
 		 * Trust assertions are defficient in that they don't blacklist a certificate
 		 * for any purposes. So we just have to go wild and write out a bunch of
 		 * assertions for all our known purposes.
 		 */
-		build_assertions (built, cert, CKT_X_DISTRUSTED_CERTIFICATE, all_purposes);
+		build_assertions (negatives, cert, CKT_X_DISTRUSTED_CERTIFICATE, all_purposes);
 	}
 
 	/*
@@ -1235,13 +1266,13 @@ build_trust_assertions (p11_array *built,
 	 * certificates where not an authority.
 	 */
 
-	if (trust && authority) {
+	if (trust && authority && positives) {
 		if (purposes) {
 			/* If purposes explicitly set, then anchor for those purposes */
-			build_assertions (built, cert, CKT_X_ANCHORED_CERTIFICATE, purposes);
+			build_assertions (positives, cert, CKT_X_ANCHORED_CERTIFICATE, purposes);
 		} else {
 			/* If purposes not-explicitly set, then anchor for all known */
-			build_assertions (built, cert, CKT_X_ANCHORED_CERTIFICATE, all_purposes);
+			build_assertions (positives, cert, CKT_X_ANCHORED_CERTIFICATE, all_purposes);
 		}
 	}
 }
@@ -1257,31 +1288,57 @@ replace_trust_assertions (p11_builder *builder,
                           const char **rejects)
 {
 	CK_OBJECT_CLASS assertion = CKO_X_TRUST_ASSERTION;
-	CK_BBOOL generated = CK_FALSE;
+	CK_BBOOL generated = CK_TRUE;
+	p11_array *positives = NULL;
+	p11_array *negatives = NULL;
 	CK_ATTRIBUTE *value;
-	p11_array *built;
+	CK_ATTRIBUTE *issuer;
+	CK_ATTRIBUTE *serial;
 	CK_RV rv;
 
-	CK_ATTRIBUTE match[] = {
+	CK_ATTRIBUTE match_positive[] = {
 		{ CKA_VALUE, },
 		{ CKA_CLASS, &assertion, sizeof (assertion) },
 		{ CKA_X_GENERATED, &generated, sizeof (generated) },
 		{ CKA_INVALID }
 	};
 
+	CK_ATTRIBUTE match_negative[] = {
+		{ CKA_ISSUER, },
+		{ CKA_SERIAL_NUMBER, },
+		{ CKA_CLASS, &assertion, sizeof (assertion) },
+		{ CKA_X_GENERATED, &generated, sizeof (generated) },
+		{ CKA_INVALID }
+	};
+
 	value = p11_attrs_find_valid (cert, CKA_VALUE);
-	return_if_fail (value != NULL);
+	if (value) {
+		positives = p11_array_new (NULL);
+		memcpy (match_positive, value, sizeof (CK_ATTRIBUTE));
+	}
 
-	built = p11_array_new (NULL);
-	build_trust_assertions (built, cert, trust, distrust, authority, purposes, rejects);
+	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
+	serial = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
+	if (issuer && serial) {
+		negatives = p11_array_new (NULL);
+		memcpy (match_negative + 0, issuer, sizeof (CK_ATTRIBUTE));
+		memcpy (match_negative + 1, serial, sizeof (CK_ATTRIBUTE));
+	}
 
-	generated = CK_TRUE;
-	match[0].pValue = value->pValue;
-	match[0].ulValueLen = value->ulValueLen;
-	rv = p11_index_replace_all (index, match, CKA_X_PURPOSE, built);
-	return_if_fail (rv == CKR_OK);
+	build_trust_assertions (positives, negatives, cert, trust, distrust,
+	                        authority, purposes, rejects);
 
-	p11_array_free (built);
+	if (positives) {
+		rv = p11_index_replace_all (index, match_positive, CKA_X_PURPOSE, positives);
+		return_if_fail (rv == CKR_OK);
+		p11_array_free (positives);
+	}
+
+	if (negatives) {
+		rv = p11_index_replace_all (index, match_negative, CKA_X_PURPOSE, negatives);
+		return_if_fail (rv == CKR_OK);
+		p11_array_free (negatives);
+	}
 }
 
 static void
@@ -1289,30 +1346,12 @@ remove_trust_and_assertions (p11_builder *builder,
                              p11_index *index,
                              CK_ATTRIBUTE *attrs)
 {
-	CK_BBOOL truev = CK_TRUE;
-	CK_ATTRIBUTE *id;
-	p11_array *array;
-	CK_RV rv;
-
-	CK_ATTRIBUTE match[] = {
-		{ CKA_ID, },
-		{ CKA_X_GENERATED, &truev, sizeof (truev) },
-		{ CKA_INVALID }
-	};
-
-	id = p11_attrs_find_valid (attrs, CKA_ID);
-	return_if_fail (id != NULL);
-
-	/* An empty array of replacements */
-	array = p11_array_new (NULL);
-
-	/* Remove all related NSS trust objects */
-	match[0].pValue = id->pValue;
-	match[0].ulValueLen = id->ulValueLen;
-	rv = p11_index_replace_all (index, match, CKA_INVALID, array);
-	return_if_fail (rv == CKR_OK);
-
-	p11_array_free (array);
+	replace_nss_trust_object (builder, index, attrs,
+	                          CK_FALSE, CK_FALSE, CK_FALSE,
+	                          NULL, NULL);
+	replace_trust_assertions (builder, index, attrs,
+	                          CK_FALSE, CK_FALSE, CK_FALSE,
+	                          NULL, NULL);
 }
 
 static void
@@ -1392,9 +1431,7 @@ replace_compat_for_cert (p11_builder *builder,
 {
 	static CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
 	static CK_CERTIFICATE_TYPE x509 = CKC_X_509;
-
 	CK_ATTRIBUTE *value;
-	CK_ATTRIBUTE *id;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_VALUE, },
@@ -1403,20 +1440,18 @@ replace_compat_for_cert (p11_builder *builder,
 		{ CKA_INVALID }
 	};
 
-	value = p11_attrs_find_valid (attrs, CKA_VALUE);
-	id = p11_attrs_find_valid (attrs, CKA_ID);
-	if (value == NULL || id == NULL)
-		return;
-
 	/*
 	 * If this certificate is going away, then find duplicate. In this
 	 * case all the trust assertions are recalculated with this new
 	 * certificate in mind.
 	 */
 	if (handle == 0) {
-		match[0].pValue = value->pValue;
-		match[0].ulValueLen = value->ulValueLen;
-		handle = p11_index_find (index, match);
+		value = p11_attrs_find_valid (attrs, CKA_VALUE);
+		if (value != NULL) {
+			match[0].pValue = value->pValue;
+			match[0].ulValueLen = value->ulValueLen;
+			handle = p11_index_find (index, match);
+		}
 		if (handle != 0)
 			attrs = p11_index_lookup (index, handle);
 	}

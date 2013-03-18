@@ -412,7 +412,8 @@ p11_index_replace (p11_index *index,
                    CK_ATTRIBUTE *replace)
 {
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
-	return index_replacev (index, match, key, &replace, 1);
+	return index_replacev (index, match, key, &replace,
+	                       replace ? 1 : 0);
 }
 
 CK_RV

@@ -889,6 +889,86 @@ test_modify_not_modifiable (CuTest *cu)
 	teardown (cu);
 }
 
+static CK_ATTRIBUTE cacert3_assert_distrust_server[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_SERVER_AUTH_STR, sizeof (P11_OID_SERVER_AUTH_STR) - 1 },
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_client[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_CLIENT_AUTH_STR, sizeof (P11_OID_CLIENT_AUTH_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_code[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_CODE_SIGNING_STR, sizeof (P11_OID_CODE_SIGNING_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_email[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, sizeof (P11_OID_EMAIL_PROTECTION_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_system[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_END_SYSTEM_STR, sizeof (P11_OID_IPSEC_END_SYSTEM_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_tunnel[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_TUNNEL_STR, sizeof (P11_OID_IPSEC_TUNNEL_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_user[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_USER_STR, sizeof (P11_OID_IPSEC_USER_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_assert_distrust_time[] = {
+	{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
+	{ CKA_X_PURPOSE, (void *)P11_OID_TIME_STAMPING_STR, sizeof (P11_OID_TIME_STAMPING_STR) - 1},
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
+	{ CKA_ID, "cacert3", 7 },
+	{ CKA_INVALID },
+};
+
 static void
 test_changed_trusted_certificate (CuTest *cu)
 {
@@ -985,17 +1065,6 @@ test_changed_trusted_certificate (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
-	static CK_ATTRIBUTE email_distrust_assertion[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, sizeof (P11_OID_EMAIL_PROTECTION_STR) - 1 },
-		{ CKA_LABEL, "Custom Label", 12 },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "cacert3", 7 },
-		{ CKA_INVALID },
-	};
-
 	/*
 	 * We should get an NSS trust object and various assertions here.
 	 * The first two attributes of each object are enough to look it up,
@@ -1004,7 +1073,7 @@ test_changed_trusted_certificate (CuTest *cu)
 
 	CK_ATTRIBUTE *expected[] = {
 		nss_trust_server_and_client_distrust_email,
-		email_distrust_assertion,
+		cacert3_assert_distrust_email,
 		server_anchor_assertion,
 		client_anchor_assertion,
 		NULL,
@@ -1046,7 +1115,7 @@ test_changed_trusted_certificate (CuTest *cu)
 }
 
 static void
-test_changed_distrusted (CuTest *cu)
+test_changed_distrust_value (CuTest *cu)
 {
 	CK_ATTRIBUTE distrust_cert[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate), },
@@ -1057,7 +1126,7 @@ test_changed_distrusted (CuTest *cu)
 		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
-		{ CKA_ID, "the id", 6 },
+		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID },
 	};
 
@@ -1066,7 +1135,7 @@ test_changed_distrusted (CuTest *cu)
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
 		{ CKA_X_CRITICAL, &truev, sizeof (truev) },
 		{ CKA_VALUE, "\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x10", 14 },
-		{ CKA_ID, "the id", 6 },
+		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID },
 	};
 
@@ -1075,13 +1144,13 @@ test_changed_distrusted (CuTest *cu)
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
 		{ CKA_X_CRITICAL, &falsev, sizeof (falsev) },
 		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 12 },
-		{ CKA_ID, "the id", 6 },
+		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID },
 	};
 
 	CK_ATTRIBUTE nss_trust_nothing[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
-		{ CKA_ID, "the id", 6 },
+		{ CKA_ID, "cacert3", 7 },
 		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
@@ -1105,86 +1174,6 @@ test_changed_distrusted (CuTest *cu)
 		{ CKA_INVALID, }
 	};
 
-	CK_ATTRIBUTE server_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_SERVER_AUTH_STR, strlen (P11_OID_SERVER_AUTH_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE client_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_CLIENT_AUTH_STR, strlen (P11_OID_CLIENT_AUTH_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE code_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_CODE_SIGNING_STR, strlen (P11_OID_CODE_SIGNING_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE email_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_EMAIL_PROTECTION_STR, strlen (P11_OID_EMAIL_PROTECTION_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE ipsec_system_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_END_SYSTEM_STR, strlen (P11_OID_IPSEC_END_SYSTEM_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE ipsec_tunnel_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_TUNNEL_STR, strlen (P11_OID_IPSEC_TUNNEL_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE ipsec_user_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_IPSEC_USER_STR, strlen (P11_OID_IPSEC_USER_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE stamping_distrust[] = {
-		{ CKA_CLASS, &trust_assertion, sizeof (trust_assertion) },
-		{ CKA_X_PURPOSE, (void *)P11_OID_TIME_STAMPING_STR, strlen (P11_OID_TIME_STAMPING_STR) },
-		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
-		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
-		{ CKA_X_ASSERTION_TYPE, &distrusted_certificate, sizeof (distrusted_certificate) },
-		{ CKA_ID, "the id", 6 },
-		{ CKA_INVALID },
-	};
-
 	/*
 	 * We should get an NSS trust object and various assertions here.
 	 * The first two attributes of each object are enough to look it up,
@@ -1193,14 +1182,14 @@ test_changed_distrusted (CuTest *cu)
 
 	CK_ATTRIBUTE *expected[] = {
 		nss_trust_nothing,
-		server_distrust,
-		client_distrust,
-		code_distrust,
-		email_distrust,
-		ipsec_system_distrust,
-		ipsec_tunnel_distrust,
-		ipsec_user_distrust,
-		stamping_distrust,
+		cacert3_assert_distrust_server,
+		cacert3_assert_distrust_client,
+		cacert3_assert_distrust_code,
+		cacert3_assert_distrust_email,
+		cacert3_assert_distrust_system,
+		cacert3_assert_distrust_tunnel,
+		cacert3_assert_distrust_user,
+		cacert3_assert_distrust_time,
 		NULL
 	};
 
@@ -1212,8 +1201,8 @@ test_changed_distrusted (CuTest *cu)
 	setup (cu);
 
 	/*
-	 * A trusted cetrificate, trusted for server and client purposes,
-	 * and explicitly rejects the email and timestamping purposes.
+	 * A distrusted certificate with a value, plus some extra
+	 * extensions (which should be ignored).
 	 */
 	p11_index_batch (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (distrust_cert), NULL);
@@ -1232,6 +1221,88 @@ test_changed_distrusted (CuTest *cu)
 		attrs = p11_index_lookup (test.index, handle);
 		CuAssertPtrNotNull (cu, attrs);
 
+		test_check_attrs (cu, expected[i], attrs);
+	}
+
+	teardown (cu);
+}
+
+static void
+test_changed_distrust_serial (CuTest *cu)
+{
+	CK_ATTRIBUTE distrust_cert[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate), },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
+		{ CKA_ID, "cacert3", 7 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE nss_trust_distrust[] = {
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
+		{ CKA_ID, "cacert3", 7 },
+		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+		{ CKA_TRUST_SERVER_AUTH, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_CLIENT_AUTH, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_EMAIL_PROTECTION, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_CODE_SIGNING, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_IPSEC_END_SYSTEM, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_IPSEC_TUNNEL, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_IPSEC_USER, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_TIME_STAMPING, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_DIGITAL_SIGNATURE, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_NON_REPUDIATION, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_KEY_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_DATA_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_KEY_AGREEMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_KEY_CERT_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_TRUST_CRL_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_INVALID, }
+	};
+
+	/*
+	 * We should get an NSS trust object and various assertions here.
+	 * The first two attributes of each object are enough to look it up,
+	 * and then we check the rest of the attributes match.
+	 */
+
+	CK_ATTRIBUTE *expected[] = {
+		nss_trust_distrust,
+		cacert3_assert_distrust_server,
+		cacert3_assert_distrust_client,
+		cacert3_assert_distrust_code,
+		cacert3_assert_distrust_email,
+		cacert3_assert_distrust_system,
+		cacert3_assert_distrust_tunnel,
+		cacert3_assert_distrust_user,
+		cacert3_assert_distrust_time,
+		NULL
+	};
+
+	CK_OBJECT_HANDLE handle;
+	CK_ATTRIBUTE *attrs;
+	CK_RV rv;
+	int i;
+
+	setup (cu);
+
+	/*
+	 * A distrusted certificate without a value.
+	 */
+	p11_index_batch (test.index);
+	rv = p11_index_take (test.index, p11_attrs_dup (distrust_cert), NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	p11_index_finish (test.index);
+
+	for (i = 0; expected[i]; i++) {
+		handle = p11_index_findn (test.index, expected[i], 2);
+		CuAssertTrue (cu, handle != 0);
+		attrs = p11_index_lookup (test.index, handle);
+		CuAssertPtrNotNull (cu, attrs);
 		test_check_attrs (cu, expected[i], attrs);
 	}
 
@@ -1273,6 +1344,14 @@ test_changed_dup_certificates (CuTest *cu)
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
 		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_TRUST_SERVER_AUTH, &not_trusted, sizeof (not_trusted) },
+		{ CKA_ID, "cacert3", 7 },
+		{ CKA_INVALID, }
+	};
+
+	static CK_ATTRIBUTE unknown_nss[] = {
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
+		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_TRUST_SERVER_AUTH, &trust_unknown, sizeof (trust_unknown) },
 		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID, }
 	};
@@ -1361,12 +1440,12 @@ test_changed_dup_certificates (CuTest *cu)
 	handle = p11_index_find (test.index, distrust_assertion);
 	CuAssertTrue (cu, handle == 0);
 
-	/* Now remove the original certificate, no more nss/assertions */
+	/* Now remove the original certificate, unknown nss and no assertions */
 	rv = p11_index_remove (test.index, handle1);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
-	handle = p11_index_find (test.index, match_nss);
-	CuAssertTrue (cu, handle == 0);
+	handle = p11_index_find (test.index, unknown_nss);
+	CuAssertTrue (cu, handle != 0);
 	handle = p11_index_find (test.index, match_assertion);
 	CuAssertTrue (cu, handle == 0);
 
@@ -1393,8 +1472,8 @@ test_changed_without_id (CuTest *cu)
 	};
 
 	/*
-	 * A cetrificate without a CKA_ID that's created should not
-	 * automatically create any compat objects.
+	 * A cetrificate without a CKA_ID that's created should still
+	 * automatically create compat objects.
 	 */
 
 	CK_OBJECT_HANDLE handle;
@@ -1409,11 +1488,11 @@ test_changed_without_id (CuTest *cu)
 
 	klass = CKO_NSS_TRUST;
 	handle = p11_index_find (test.index, match);
-	CuAssertIntEquals (cu, 0, handle);
+	CuAssertTrue (cu, handle != 0);
 
 	klass = CKO_X_TRUST_ASSERTION;
 	handle = p11_index_find (test.index, match);
-	CuAssertIntEquals (cu, 0, handle);
+	CuAssertTrue (cu, handle != 0);
 
 	teardown (cu);
 }
@@ -1570,7 +1649,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_modify_not_modifiable);
 
 	SUITE_ADD_TEST (suite, test_changed_trusted_certificate);
-	SUITE_ADD_TEST (suite, test_changed_distrusted);
+	SUITE_ADD_TEST (suite, test_changed_distrust_value);
+	SUITE_ADD_TEST (suite, test_changed_distrust_serial);
 	SUITE_ADD_TEST (suite, test_changed_without_id);
 	SUITE_ADD_TEST (suite, test_changed_staple_ca);
 	SUITE_ADD_TEST (suite, test_changed_staple_ku);
