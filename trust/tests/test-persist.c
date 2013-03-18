@@ -159,10 +159,10 @@ test_number (CuTest *tc)
 {
 	const char *input = "[p11-kit-object-v1]\n"
 	                    "class: data\n"
-	                    "value: 29202390239\n"
+	                    "value: 29202390\n"
 	                    "application: \"test-persist\"\n";
 
-	CK_ULONG value = 29202390239;
+	CK_ULONG value = 29202390;
 
 	CK_ATTRIBUTE expected[] = {
 		{ CKA_CLASS, &data, sizeof (data) },
