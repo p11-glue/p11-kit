@@ -218,7 +218,8 @@ static CK_ATTRIBUTE extension_eku_invalid[] = {
 static void
 test_info_simple_certificate (CuTest *tc)
 {
-	CK_ATTRIBUTE *value;
+	void *value;
+	size_t length;
 	CK_RV rv;
 
 	setup (tc);
@@ -237,9 +238,9 @@ test_info_simple_certificate (CuTest *tc)
 
 	CuAssertIntEquals (tc, CKO_CERTIFICATE, test.ex.klass);
 	CuAssertPtrNotNull (tc, test.ex.attrs);
-	value = p11_attrs_find_valid (test.ex.attrs, CKA_VALUE);
+	value = p11_attrs_find_value (test.ex.attrs, CKA_VALUE, &length);
 	CuAssertPtrNotNull (tc, value);
-	CuAssertTrue (tc, memcmp (value->pValue, test_cacert3_ca_der, value->ulValueLen) == 0);
+	CuAssertTrue (tc, memcmp (value, test_cacert3_ca_der, length) == 0);
 	CuAssertPtrNotNull (tc, test.ex.cert_der);
 	CuAssertTrue (tc, memcmp (test.ex.cert_der, test_cacert3_ca_der, test.ex.cert_len) == 0);
 	CuAssertPtrNotNull (tc, test.ex.cert_asn);

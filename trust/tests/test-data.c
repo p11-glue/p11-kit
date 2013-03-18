@@ -116,7 +116,7 @@ test_check_attrs_msg (CuTest *cu,
 {
 	CK_ATTRIBUTE *attr;
 
-	while (!p11_attrs_is_empty (expected)) {
+	while (!p11_attrs_terminator (expected)) {
 		attr = p11_attrs_find (attrs, expected->type);
 		test_check_attr_msg (cu, file, line, expected, attr);
 		expected++;

@@ -265,7 +265,7 @@ prepare_jks_buffer (P11KitIter *iter,
 		add_msb_int (buffer, trusted_cert);
 
 		/* The alias */
-		label = p11_attrs_find (ex->attrs, CKA_LABEL);
+		label = p11_attrs_find_valid (ex->attrs, CKA_LABEL);
 		if (!add_alias (buffer, aliases, label)) {
 			p11_message ("could not generate a certificate alias name");
 			p11_dict_free (aliases);

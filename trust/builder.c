@@ -111,8 +111,8 @@ lookup_extension (p11_builder *builder,
 	CK_OBJECT_HANDLE obj;
 	CK_ATTRIBUTE *attrs;
 	unsigned char *ext;
-	CK_ATTRIBUTE *value;
-	CK_ATTRIBUTE *id;
+	void *value;
+	size_t length;
 	node_asn *node;
 
 	CK_ATTRIBUTE match[] = {
@@ -123,33 +123,28 @@ lookup_extension (p11_builder *builder,
 	};
 
 	/* Look for a stapled certificate extension */
-	id = p11_attrs_find (cert, CKA_ID);
-	if (id != NULL && id->ulValueLen > 0) {
-		match[0].pValue = id->pValue;
-		match[0].ulValueLen = id->ulValueLen;
+	match[0].pValue = p11_attrs_find_value (cert, CKA_ID, &length);
+	if (match[0].pValue != NULL) {
+		match[0].ulValueLen = length;
 
 		obj = p11_index_find (index, match);
 		attrs = p11_index_lookup (index, obj);
 		if (attrs != NULL) {
-			value = p11_attrs_find (attrs, CKA_VALUE);
-			return_val_if_fail (value != NULL, NULL);
-
-			*ext_len = value->ulValueLen;
-			ext = memdup (value->pValue, value->ulValueLen);
-			return_val_if_fail (ext != NULL, NULL);
-			return ext;
+			value = p11_attrs_find_value (attrs, CKA_VALUE, ext_len);
+			if (value != NULL) {
+				ext = memdup (value, *ext_len);
+				return_val_if_fail (ext != NULL, NULL);
+				return ext;
+			}
 		}
 	}
 
 	/* Couldn't find a parsed extension, so look in the current certificate */
-	value = p11_attrs_find (cert, CKA_VALUE);
+	value = p11_attrs_find_value (cert, CKA_VALUE, &length);
 	if (value != NULL) {
-		node = decode_or_get_asn1 (builder, "PKIX1.Certificate",
-		                           value->pValue, value->ulValueLen);
+		node = decode_or_get_asn1 (builder, "PKIX1.Certificate", value, length);
 		return_val_if_fail (node != NULL, false);
-
-		return p11_x509_find_extension (node, oid, value->pValue,
-		                                value->ulValueLen, ext_len);
+		return p11_x509_find_extension (node, oid, value, length, ext_len);
 	}
 
 	return NULL;
@@ -498,7 +493,6 @@ certificate_populate (p11_builder *builder,
 {
 	CK_ULONG categoryv = 0UL;
 	CK_ATTRIBUTE *attrs = NULL;
-	CK_ATTRIBUTE *value;
 	node_asn *node = NULL;
 	unsigned char *der = NULL;
 	size_t der_len = 0;
@@ -509,13 +503,9 @@ certificate_populate (p11_builder *builder,
 	attrs = common_populate (builder, index, cert);
 	return_val_if_fail (attrs != NULL, NULL);
 
-	value = p11_attrs_find_valid (cert, CKA_VALUE);
-	if (value != NULL) {
-		der = value->pValue;
-		der_len = value->ulValueLen;
-		node = decode_or_get_asn1 (builder, "PKIX1.Certificate",
-		                           value->pValue, value->ulValueLen);
-	}
+	der = p11_attrs_find_value (cert, CKA_VALUE, &der_len);
+	if (der != NULL)
+		node = decode_or_get_asn1 (builder, "PKIX1.Certificate", der, der_len);
 
 	attrs = certificate_value_attrs (attrs, node, der, der_len);
 	return_val_if_fail (attrs != NULL, NULL);
@@ -666,7 +656,7 @@ attrs_filter_if_unchanged (CK_ATTRIBUTE *attrs,
 	assert (attrs != NULL);
 	assert (merge != NULL);
 
-	for (in = 0, out = 0; !p11_attrs_is_empty (merge + in); in++) {
+	for (in = 0, out = 0; !p11_attrs_terminator (merge + in); in++) {
 		attr = p11_attrs_find (attrs, merge[in].type);
 		if (attr && p11_attr_equal (attr, merge + in)) {
 			free (merge[in].pValue);
@@ -680,7 +670,7 @@ attrs_filter_if_unchanged (CK_ATTRIBUTE *attrs,
 	}
 
 	merge[out].type = CKA_INVALID;
-	assert (p11_attrs_is_empty (merge + out));
+	assert (p11_attrs_terminator (merge + out));
 }
 
 static const char *
@@ -1084,10 +1074,12 @@ replace_nss_trust_object (p11_builder *builder,
 
 	CK_ATTRIBUTE_PTR label;
 	CK_ATTRIBUTE_PTR id;
-	CK_ATTRIBUTE_PTR der;
 	CK_ATTRIBUTE_PTR subject;
 	CK_ATTRIBUTE_PTR issuer;
 	CK_ATTRIBUTE_PTR serial_number;
+
+	void *der;
+	size_t der_len;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_CERT_SHA1_HASH, sha1v, sizeof (sha1v) },
@@ -1097,10 +1089,10 @@ replace_nss_trust_object (p11_builder *builder,
 	};
 
 	/* Setup the hashes of the DER certificate value */
-	der = p11_attrs_find (cert, CKA_VALUE);
+	der = p11_attrs_find_value (cert, CKA_VALUE, &der_len);
 	return_if_fail (der != NULL);
-	p11_checksum_md5 (md5v, der->pValue, der->ulValueLen, NULL);
-	p11_checksum_sha1 (sha1v, der->pValue, der->ulValueLen, NULL);
+	p11_checksum_md5 (md5v, der, der_len, NULL);
+	p11_checksum_sha1 (sha1v, der, der_len, NULL);
 
 	/* If there is a non-auto-generated NSS trust object, then step away */
 	generated = CK_FALSE;
@@ -1108,20 +1100,20 @@ replace_nss_trust_object (p11_builder *builder,
 		return;
 
 	/* Copy all of the following attributes from certificate */
-	id = p11_attrs_find (cert, CKA_ID);
+	id = p11_attrs_find_valid (cert, CKA_ID);
 	return_if_fail (id != NULL);
-	subject = p11_attrs_find (cert, CKA_SUBJECT);
+	subject = p11_attrs_find_valid (cert, CKA_SUBJECT);
 	if (subject == NULL)
 		subject = &invalid;
-	issuer = p11_attrs_find (cert, CKA_ISSUER);
+	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
 	if (issuer == NULL)
 		issuer = &invalid;
-	serial_number = p11_attrs_find (cert, CKA_SERIAL_NUMBER);
+	serial_number = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
 	if (serial_number == NULL)
 		serial_number = &invalid;
 
 	/* Try to use the same label */
-	label = p11_attrs_find (cert, CKA_LABEL);
+	label = p11_attrs_find_valid (cert, CKA_LABEL);
 	if (label == NULL)
 		label = &invalid;
 
@@ -1178,14 +1170,14 @@ build_assertions (p11_array *array,
 	CK_ATTRIBUTE *attrs;
 	int i;
 
-	label = p11_attrs_find (cert, CKA_LABEL);
+	label = p11_attrs_find_valid (cert, CKA_LABEL);
 	if (label == NULL)
 		label = &invalid;
 
-	id = p11_attrs_find (cert, CKA_ID);
-	issuer = p11_attrs_find (cert, CKA_ISSUER);
-	serial = p11_attrs_find (cert, CKA_SERIAL_NUMBER);
-	value = p11_attrs_find (cert, CKA_VALUE);
+	id = p11_attrs_find_valid (cert, CKA_ID);
+	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
+	serial = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
+	value = p11_attrs_find_valid (cert, CKA_VALUE);
 
 	return_if_fail (id != NULL && issuer != NULL && serial != NULL && value != NULL);
 
@@ -1277,7 +1269,7 @@ replace_trust_assertions (p11_builder *builder,
 		{ CKA_INVALID }
 	};
 
-	value = p11_attrs_find (cert, CKA_VALUE);
+	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	return_if_fail (value != NULL);
 
 	built = p11_array_new (NULL);
@@ -1308,7 +1300,7 @@ remove_trust_and_assertions (p11_builder *builder,
 		{ CKA_INVALID }
 	};
 
-	id = p11_attrs_find (attrs, CKA_ID);
+	id = p11_attrs_find_valid (attrs, CKA_ID);
 	return_if_fail (id != NULL);
 
 	/* An empty array of replacements */
@@ -1411,9 +1403,9 @@ replace_compat_for_cert (p11_builder *builder,
 		{ CKA_INVALID }
 	};
 
-	value = p11_attrs_find (attrs, CKA_VALUE);
-	id = p11_attrs_find (attrs, CKA_ID);
-	if (value == NULL || id == NULL || id->ulValueLen == 0)
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
+	id = p11_attrs_find_valid (attrs, CKA_ID);
+	if (value == NULL || id == NULL)
 		return;
 
 	/*
@@ -1446,8 +1438,8 @@ replace_compat_for_ext (p11_builder *builder,
 	CK_ATTRIBUTE *id;
 	int i;
 
-	id = p11_attrs_find (attrs, CKA_ID);
-	if (id == NULL || id->ulValueLen == 0)
+	id = p11_attrs_find_valid (attrs, CKA_ID);
+	if (id == NULL)
 		return;
 
 	handles = lookup_related (index, CKO_CERTIFICATE, id);
@@ -1477,8 +1469,8 @@ update_related_category (p11_builder *builder,
 		{ CKA_INVALID, },
 	};
 
-	id = p11_attrs_find (attrs, CKA_ID);
-	if (id == NULL || id->ulValueLen == 0)
+	id = p11_attrs_find_valid (attrs, CKA_ID);
+	if (id == NULL)
 		return;
 
 	/* Find all other objects with this handle */

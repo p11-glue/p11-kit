@@ -61,7 +61,7 @@ CK_ATTRIBUTE *      p11_attrs_merge         (CK_ATTRIBUTE *attrs,
 
 void                p11_attrs_purge         (CK_ATTRIBUTE *attrs);
 
-bool                p11_attrs_is_empty      (const CK_ATTRIBUTE *attrs);
+bool                p11_attrs_terminator    (const CK_ATTRIBUTE *attrs);
 
 CK_ULONG            p11_attrs_count         (const CK_ATTRIBUTE *attrs);
 
@@ -87,16 +87,11 @@ bool                p11_attrs_find_ulong    (CK_ATTRIBUTE *attrs,
                                              CK_ATTRIBUTE_TYPE type,
                                              CK_ULONG *value);
 
-bool                p11_attrs_findn_ulong   (CK_ATTRIBUTE *attrs,
-                                             CK_ULONG count,
+void *              p11_attrs_find_value    (CK_ATTRIBUTE *attrs,
                                              CK_ATTRIBUTE_TYPE type,
-                                             CK_ULONG *value);
+                                             size_t *length);
 
 CK_ATTRIBUTE *      p11_attrs_find_valid    (CK_ATTRIBUTE *attrs,
-                                             CK_ATTRIBUTE_TYPE type);
-
-CK_ATTRIBUTE *      p11_attrs_findn_valid   (CK_ATTRIBUTE *attrs,
-                                             CK_ULONG count,
                                              CK_ATTRIBUTE_TYPE type);
 
 bool                p11_attrs_remove        (CK_ATTRIBUTE *attrs,

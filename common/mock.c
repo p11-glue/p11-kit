@@ -124,24 +124,6 @@ free_session (void *data)
 	free (sess);
 }
 
-static bool
-find_boolean_attribute (CK_ATTRIBUTE *attrs,
-                        CK_ATTRIBUTE_TYPE type,
-                        CK_BBOOL *value)
-{
-	CK_ATTRIBUTE *attr;
-
-	attr = p11_attrs_find (attrs, type);
-	if (attr != NULL &&
-	    attr->pValue != NULL &&
-	    attr->ulValueLen == sizeof (CK_BBOOL)) {
-		*value = *((CK_BBOOL *)attr->pValue);
-		return true;
-	}
-
-	return false;
-}
-
 static CK_RV
 lookup_object (Session *sess,
                CK_OBJECT_HANDLE object,
@@ -164,7 +146,7 @@ lookup_object (Session *sess,
 
 	if (!*attrs)
 		return CKR_OBJECT_HANDLE_INVALID;
-	else if (!logged_in && find_boolean_attribute (*attrs, CKA_PRIVATE, &priv) && priv)
+	else if (!logged_in && p11_attrs_find_bool (*attrs, CKA_PRIVATE, &priv) && priv)
 		return CKR_USER_NOT_LOGGED_IN;
 
 	return CKR_OK;
@@ -1183,7 +1165,7 @@ mock_C_CreateObject (CK_SESSION_HANDLE session,
 
 	attrs = p11_attrs_buildn (NULL, template, count);
 
-	if (find_boolean_attribute (attrs, CKA_PRIVATE, &priv) && priv) {
+	if (p11_attrs_find_bool (attrs, CKA_PRIVATE, &priv) && priv) {
 		if (!logged_in) {
 			p11_attrs_free (attrs);
 			return CKR_USER_NOT_LOGGED_IN;
@@ -1191,7 +1173,7 @@ mock_C_CreateObject (CK_SESSION_HANDLE session,
 	}
 
 	*object = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*object), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*object), attrs);
@@ -1232,7 +1214,7 @@ mock_C_CopyObject (CK_SESSION_HANDLE session,
 	if (rv != CKR_OK)
 		return rv;
 
-	if (find_boolean_attribute (attrs, CKA_PRIVATE, &priv) && priv) {
+	if (p11_attrs_find_bool (attrs, CKA_PRIVATE, &priv) && priv) {
 		if (!logged_in)
 			return CKR_USER_NOT_LOGGED_IN;
 	}
@@ -1240,7 +1222,7 @@ mock_C_CopyObject (CK_SESSION_HANDLE session,
 	attrs = p11_attrs_buildn (p11_attrs_dup (attrs), template, count);
 
 	*new_object = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*new_object), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*new_object), attrs);
@@ -1310,7 +1292,7 @@ mock_C_GetObjectSize (CK_SESSION_HANDLE session,
 		return rv;
 
 	*size = 0;
-	for (i = 0; !p11_attrs_is_empty (attrs + i); i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].ulValueLen != (CK_ULONG)-1)
 			*size += attrs[i].ulValueLen;
 	}
@@ -2118,7 +2100,7 @@ prefix_mechanism_init (CK_SESSION_HANDLE session,
 	if (rv != CKR_OK)
 		return rv;
 
-	value = p11_attrs_find (attrs, CKA_VALUE);
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
 	if (value == NULL)
 		return CKR_KEY_TYPE_INCONSISTENT;
 
@@ -2697,7 +2679,7 @@ mock_C_GenerateKey (CK_SESSION_HANDLE session,
 	attrs = p11_attrs_buildn (attrs, &value, 1);
 
 	*key = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*key), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*key), attrs);
@@ -2757,7 +2739,7 @@ mock_C_GenerateKeyPair (CK_SESSION_HANDLE session,
 	attrs = p11_attrs_buildn (attrs, &value, 1);
 
 	*public_key = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*public_key), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*public_key), attrs);
@@ -2766,7 +2748,7 @@ mock_C_GenerateKeyPair (CK_SESSION_HANDLE session,
 	attrs = p11_attrs_buildn (attrs, &value, 1);
 
 	*private_key = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*private_key), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*private_key), attrs);
@@ -2830,7 +2812,7 @@ mock_C_WrapKey (CK_SESSION_HANDLE session,
 		return CKR_MECHANISM_PARAM_INVALID;
 	}
 
-	attr = p11_attrs_find (attrs, CKA_VALUE);
+	attr = p11_attrs_find_valid (attrs, CKA_VALUE);
 	if (attr == NULL)
 		return CKR_WRAPPED_KEY_INVALID;
 
@@ -2914,7 +2896,7 @@ mock_C_UnwrapKey (CK_SESSION_HANDLE session,
 	attrs = p11_attrs_buildn (attrs, &value, 1);
 
 	*key = ++unique_identifier;
-	if (find_boolean_attribute (attrs, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*key), attrs);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*key), attrs);
@@ -2981,7 +2963,7 @@ mock_C_DeriveKey (CK_SESSION_HANDLE session,
 	copy = p11_attrs_buildn (copy, &value, 1);
 
 	*key = ++unique_identifier;
-	if (find_boolean_attribute (copy, CKA_TOKEN, &token) && token)
+	if (p11_attrs_find_bool (copy, CKA_TOKEN, &token) && token)
 		p11_dict_set (the_objects, handle_to_pointer (*key), copy);
 	else
 		p11_dict_set (sess->objects, handle_to_pointer (*key), copy);

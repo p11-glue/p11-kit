@@ -52,7 +52,7 @@
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 bool
-p11_attrs_is_empty (const CK_ATTRIBUTE *attrs)
+p11_attrs_terminator (const CK_ATTRIBUTE *attrs)
 {
 	return (attrs == NULL || attrs->type == CKA_INVALID);
 }
@@ -65,7 +65,7 @@ p11_attrs_count (const CK_ATTRIBUTE *attrs)
 	if (attrs == NULL)
 		return 0UL;
 
-	for (count = 0; !p11_attrs_is_empty (attrs); count++, attrs++);
+	for (count = 0; !p11_attrs_terminator (attrs); count++, attrs++);
 
 	return count;
 }
@@ -79,7 +79,7 @@ p11_attrs_free (void *attrs)
 	if (!attrs)
 		return;
 
-	for (i = 0; !p11_attrs_is_empty (ats + i); i++)
+	for (i = 0; !p11_attrs_terminator (ats + i); i++)
 		free (ats[i].pValue);
 	free (ats);
 }
@@ -147,7 +147,7 @@ attrs_build (CK_ATTRIBUTE *attrs,
 
 	/* Mark this as the end */
 	(attrs + at)->type = CKA_INVALID;
-	assert (p11_attrs_is_empty (attrs + at));
+	assert (p11_attrs_terminator (attrs + at));
 	return attrs;
 }
 
@@ -248,7 +248,7 @@ p11_attrs_find (CK_ATTRIBUTE *attrs,
 {
 	CK_ULONG i;
 
-	for (i = 0; !p11_attrs_is_empty (attrs + i); i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].type == type)
 			return attrs + i;
 	}
@@ -278,7 +278,7 @@ p11_attrs_find_bool (CK_ATTRIBUTE *attrs,
 {
 	CK_ULONG i;
 
-	for (i = 0; !p11_attrs_is_empty (attrs + i); i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].type == type &&
 		    attrs[i].ulValueLen == sizeof (CK_BBOOL) &&
 		    attrs[i].pValue != NULL) {
@@ -317,7 +317,7 @@ p11_attrs_find_ulong (CK_ATTRIBUTE *attrs,
 {
 	CK_ULONG i;
 
-	for (i = 0; !p11_attrs_is_empty (attrs + i); i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].type == type &&
 		    attrs[i].ulValueLen == sizeof (CK_ULONG) &&
 		    attrs[i].pValue != NULL) {
@@ -329,24 +329,25 @@ p11_attrs_find_ulong (CK_ATTRIBUTE *attrs,
 	return false;
 }
 
-bool
-p11_attrs_findn_ulong (CK_ATTRIBUTE *attrs,
-                       CK_ULONG count,
-                       CK_ATTRIBUTE_TYPE type,
-                       CK_ULONG *value)
+void *
+p11_attrs_find_value (CK_ATTRIBUTE *attrs,
+                      CK_ATTRIBUTE_TYPE type,
+                      size_t *length)
 {
 	CK_ULONG i;
 
-	for (i = 0; i < count; i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].type == type &&
-		    attrs[i].ulValueLen == sizeof (CK_ULONG) &&
+		    attrs[i].ulValueLen != 0 &&
+		    attrs[i].ulValueLen != (CK_ULONG)-1 &&
 		    attrs[i].pValue != NULL) {
-			*value = *((CK_ULONG *)attrs[i].pValue);
-			return true;
+			if (length)
+				*length = attrs[i].ulValueLen;
+			return attrs[i].pValue;
 		}
 	}
 
-	return false;
+	return NULL;
 }
 
 CK_ATTRIBUTE *
@@ -355,31 +356,16 @@ p11_attrs_find_valid (CK_ATTRIBUTE *attrs,
 {
 	CK_ULONG i;
 
-	for (i = 0; !p11_attrs_is_empty (attrs + i); i++) {
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
 		if (attrs[i].type == type &&
+		    attrs[i].pValue != NULL &&
+		    attrs[i].ulValueLen != 0 &&
 		    attrs[i].ulValueLen != (CK_ULONG)-1)
 			return attrs + i;
 	}
 
 	return NULL;
 }
-
-CK_ATTRIBUTE *
-p11_attrs_findn_valid (CK_ATTRIBUTE *attrs,
-                       CK_ULONG count,
-                       CK_ATTRIBUTE_TYPE type)
-{
-	CK_ULONG i;
-
-	for (i = 0; i < count; i++) {
-		if (attrs[i].type == type &&
-		    attrs[i].ulValueLen != (CK_ULONG)-1)
-			return attrs + i;
-	}
-
-	return NULL;
-}
-
 
 bool
 p11_attrs_remove (CK_ATTRIBUTE *attrs,
@@ -410,7 +396,7 @@ p11_attrs_purge (CK_ATTRIBUTE *attrs)
 {
 	int in, out;
 
-	for (in = 0, out = 0; !p11_attrs_is_empty (attrs + in); in++) {
+	for (in = 0, out = 0; !p11_attrs_terminator (attrs + in); in++) {
 		if (attrs[in].ulValueLen == (CK_ULONG)-1) {
 			free (attrs[in].pValue);
 			attrs[in].pValue = NULL;
@@ -423,7 +409,7 @@ p11_attrs_purge (CK_ATTRIBUTE *attrs)
 	}
 
 	attrs[out].type = CKA_INVALID;
-	assert (p11_attrs_is_empty (attrs + out));
+	assert (p11_attrs_terminator (attrs + out));
 
 }
 
@@ -433,7 +419,7 @@ p11_attrs_match (const CK_ATTRIBUTE *attrs,
 {
 	CK_ATTRIBUTE *attr;
 
-	for (; !p11_attrs_is_empty (match); match++) {
+	for (; !p11_attrs_terminator (match); match++) {
 		attr = p11_attrs_find ((CK_ATTRIBUTE *)attrs, match->type);
 		if (!attr)
 			return false;

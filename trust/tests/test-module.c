@@ -388,7 +388,7 @@ check_trust_object_hashes (CuTest *cu,
 	rv = test.module->C_GetAttributeValue (session, trust, hashes, 2);
 	CuAssertTrue (cu, rv == CKR_OK);
 
-	value = p11_attrs_find (cert, CKA_VALUE);
+	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	CuAssertPtrNotNull (cu, value);
 
 	p11_checksum_md5 (check, value->pValue, value->ulValueLen, NULL);
@@ -410,7 +410,7 @@ check_has_trust_object (CuTest *cu,
 	CK_ATTRIBUTE *attr;
 	CK_ULONG count;
 
-	attr = p11_attrs_find (cert, CKA_ID);
+	attr = p11_attrs_find_valid (cert, CKA_ID);
 	CuAssertPtrNotNull (cu, attr);
 
 	match = p11_attrs_build (NULL, &klass, attr, NULL);

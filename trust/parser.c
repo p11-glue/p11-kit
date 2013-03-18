@@ -188,8 +188,8 @@ parse_der_x509_certificate (p11_parser *parser,
 	attrs = certificate_attrs (parser, &id, data, length);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
-	value = p11_attrs_find (attrs, CKA_VALUE);
-	assert (value != NULL);
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
+	return_val_if_fail (value != NULL, P11_PARSE_FAILURE);
 	p11_asn1_cache_take (parser->asn1_cache, cert, "PKIX1.Certificate",
 	                     value->pValue, value->ulValueLen);
 
@@ -504,8 +504,8 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
 	/* Cache the parsed certificate ASN.1 for later use by the builder */
-	value = p11_attrs_find (attrs, CKA_VALUE);
-	assert (value != NULL);
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
+	return_val_if_fail (value != NULL, P11_PARSE_FAILURE);
 	p11_asn1_cache_take (parser->asn1_cache, cert, "PKIX1.Certificate",
 	                     value->pValue, value->ulValueLen);
 

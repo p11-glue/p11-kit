@@ -107,16 +107,16 @@ load_usage_ext (p11_extract_info *ex,
 {
 	CK_ATTRIBUTE attr = { CKA_OBJECT_ID, (void *)ext_oid,
 	                      p11_oid_length (ext_oid) };
-	CK_ATTRIBUTE *value;
+	void *value;
+	size_t length;
 
-	value = p11_attrs_find_valid (p11_dict_get (ex->stapled, &attr), CKA_VALUE);
+	value = p11_attrs_find_value (p11_dict_get (ex->stapled, &attr), CKA_VALUE, &length);
 	if (value == NULL) {
 		*oids = NULL;
 		return true;
 	}
 
-	*oids = p11_x509_parse_extended_key_usage (ex->asn1_defs, value->pValue,
-	                                           value->ulValueLen);
+	*oids = p11_x509_parse_extended_key_usage (ex->asn1_defs, value, length);
 	return_val_if_fail (*oids != NULL, false);
 
 	return true;

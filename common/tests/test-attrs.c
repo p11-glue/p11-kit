@@ -43,6 +43,21 @@
 #include "debug.h"
 
 static void
+test_terminator (CuTest *tc)
+{
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, "label", 5 },
+		{ CKA_LABEL, NULL, 0 },
+		{ CKA_INVALID },
+	};
+
+	CuAssertIntEquals (tc, true, p11_attrs_terminator (attrs + 2));
+	CuAssertIntEquals (tc, true, p11_attrs_terminator (NULL));
+	CuAssertIntEquals (tc, false, p11_attrs_terminator (attrs));
+	CuAssertIntEquals (tc, false, p11_attrs_terminator (attrs + 1));
+}
+
+static void
 test_count (CuTest *tc)
 {
 	CK_BBOOL vtrue = CK_TRUE;
@@ -647,22 +662,53 @@ test_find_ulong (CuTest *tc)
 }
 
 static void
+test_find_value (CuTest *tc)
+{
+	void *value;
+	size_t length;
+
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_LABEL, "", (CK_ULONG)-1 },
+		{ CKA_LABEL, NULL, 5 },
+		{ CKA_LABEL, "", 0 },
+		{ CKA_LABEL, "test", 4 },
+		{ CKA_VALUE, NULL, 0 },
+		{ CKA_INVALID },
+	};
+
+	value = p11_attrs_find_value (attrs, CKA_LABEL, &length);
+	CuAssertPtrEquals (tc, attrs[3].pValue, value);
+	CuAssertIntEquals (tc, 4, length);
+
+	value = p11_attrs_find_value (attrs, CKA_LABEL, NULL);
+	CuAssertPtrEquals (tc, attrs[3].pValue, value);
+
+	value = p11_attrs_find_value (attrs, CKA_VALUE, &length);
+	CuAssertPtrEquals (tc, NULL, value);
+
+	value = p11_attrs_find_value (attrs, CKA_TOKEN, &length);
+	CuAssertPtrEquals (tc, NULL, value);
+}
+
+static void
 test_find_valid (CuTest *tc)
 {
 	CK_ATTRIBUTE *attr;
 
 	CK_ATTRIBUTE attrs[] = {
 		{ CKA_LABEL, "", (CK_ULONG)-1 },
+		{ CKA_LABEL, NULL, 5 },
+		{ CKA_LABEL, "", 0 },
 		{ CKA_LABEL, "test", 4 },
-		{ CKA_VALUE, NULL, 0 },
+		{ CKA_VALUE, "value", 5 },
 		{ CKA_INVALID },
 	};
 
 	attr = p11_attrs_find_valid (attrs, CKA_LABEL);
-	CuAssertPtrEquals (tc, attrs + 1, attr);
+	CuAssertPtrEquals (tc, attrs + 3, attr);
 
 	attr = p11_attrs_find_valid (attrs, CKA_VALUE);
-	CuAssertPtrEquals (tc, attrs + 2, attr);
+	CuAssertPtrEquals (tc, attrs + 4, attr);
 
 	attr = p11_attrs_find_valid (attrs, CKA_TOKEN);
 	CuAssertPtrEquals (tc, NULL, attr);
@@ -682,6 +728,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_hash);
 	SUITE_ADD_TEST (suite, test_to_string);
 
+	SUITE_ADD_TEST (suite, test_terminator);
 	SUITE_ADD_TEST (suite, test_count);
 	SUITE_ADD_TEST (suite, test_build_one);
 	SUITE_ADD_TEST (suite, test_build_two);
@@ -702,6 +749,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_findn);
 	SUITE_ADD_TEST (suite, test_find_bool);
 	SUITE_ADD_TEST (suite, test_find_ulong);
+	SUITE_ADD_TEST (suite, test_find_value);
 	SUITE_ADD_TEST (suite, test_find_valid);
 	SUITE_ADD_TEST (suite, test_remove);
 

@@ -117,19 +117,13 @@ extract_purposes (p11_extract_info *ex)
 	                     sizeof (P11_OID_EXTENDED_KEY_USAGE) };
 	const unsigned char *ext = NULL;
 	unsigned char *alloc = NULL;
-	CK_ATTRIBUTE *value;
 	CK_ATTRIBUTE *attrs;
 	size_t ext_len;
 
 	if (ex->stapled) {
 		attrs = p11_dict_get (ex->stapled, &oid);
-		if (attrs != NULL) {
-			value = p11_attrs_find (attrs, CKA_VALUE);
-			if (value) {
-				ext = value->pValue;
-				ext_len = value->ulValueLen;
-			}
-		}
+		if (attrs != NULL)
+			ext = p11_attrs_find_value (attrs, CKA_VALUE, &ext_len);
 	}
 
 	if (ext == NULL && ex->cert_asn) {
@@ -203,6 +197,7 @@ extract_certificate (P11KitIter *iter,
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_ATTRIBUTE *attr;
+
 	CK_ULONG type;
 
 	/* Don't even bother with not X.509 certificates */
@@ -280,13 +275,9 @@ extract_info (P11KitIter *iter,
 		return false;
 	}
 
-	attr = p11_attrs_find (ex->attrs, CKA_CLASS);
-
 	/* No class attribute, very strange, just skip */
-	if (!attr || !attr->pValue || attr->ulValueLen != sizeof (CK_OBJECT_CLASS))
+	if (!p11_attrs_find_ulong (ex->attrs, CKA_CLASS, &ex->klass))
 		return false;
-
-	ex->klass = *((CK_ULONG *)attr->pValue);
 
 	/* If a certificate then  */
 	if (ex->klass != CKO_CERTIFICATE) {
@@ -297,7 +288,7 @@ extract_info (P11KitIter *iter,
 	if (!extract_certificate (iter, ex))
 		return false;
 
-	attr = p11_attrs_find (ex->attrs, CKA_ID);
+	attr = p11_attrs_find_valid (ex->attrs, CKA_ID);
 	if (attr) {
 		ex->stapled = load_stapled_extensions (p11_kit_iter_get_module (iter),
 		                                       p11_kit_iter_get_slot (iter),
@@ -412,7 +403,7 @@ extract_label (p11_extract_info *extract)
 	CK_ATTRIBUTE *attr;
 
 	/* Look for a label and just use that */
-	attr = p11_attrs_find (extract->attrs, CKA_LABEL);
+	attr = p11_attrs_find_valid (extract->attrs, CKA_LABEL);
 	if (attr && attr->pValue && attr->ulValueLen)
 		return strndup (attr->pValue, attr->ulValueLen);
 

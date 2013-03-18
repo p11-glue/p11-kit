@@ -364,7 +364,7 @@ index_replacev (p11_index *index,
 			continue;
 
 		handled = false;
-		attr = p11_attrs_find_valid (obj->attrs, key);
+		attr = p11_attrs_find (obj->attrs, key);
 
 		/* The match doesn't have the key, so remove it */
 		if (attr != NULL) {
