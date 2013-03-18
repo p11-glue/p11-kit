@@ -972,10 +972,11 @@ sys_C_GetAttributeValue (CK_SESSION_HANDLE handle,
 	CK_ATTRIBUTE *result;
 	CK_ATTRIBUTE *attr;
 	p11_session *session;
+	char *string;
 	CK_ULONG i;
 	CK_RV rv;
 
-	p11_debug ("in");
+	p11_debug ("in: %lu, %lu", handle, object);
 
 	p11_lock ();
 
@@ -1014,7 +1015,11 @@ sys_C_GetAttributeValue (CK_SESSION_HANDLE handle,
 
 	p11_unlock ();
 
-	p11_debug ("out: 0x%lx", rv);
+	if (p11_debugging) {
+		string = p11_attrs_to_string (template, count);
+		p11_debug ("out: 0x%lx %s", rv, string);
+		free (string);
+	}
 
 	return rv;
 }
@@ -1102,10 +1107,15 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 	CK_BBOOL token;
 	FindObjects *find;
 	p11_session *session;
+	char *string;
 	CK_RV rv;
 	int n = 0;
 
-	p11_debug ("in");
+	if (p11_debugging) {
+		string = p11_attrs_to_string (template, count);
+		p11_debug ("in: %lu, %s", handle, string);
+		free (string);
+	}
 
 	p11_lock ();
 
@@ -1177,7 +1187,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 
 	return_val_if_fail (count != NULL, CKR_ARGUMENTS_BAD);
 
-	p11_debug ("in");
+	p11_debug ("in: %lu, %lu", handle, max_count);
 
 	p11_lock ();
 
@@ -1212,7 +1222,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 
 	p11_unlock ();
 
-	p11_debug ("out: 0x%lx", rv);
+	p11_debug ("out: 0x%lx, %lu", handle, *count);
 
 	return rv;
 }
