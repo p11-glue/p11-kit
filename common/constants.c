@@ -173,7 +173,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_X_CERTIFICATE_VALUE, "x-cetrificate-value")
 	CT (CKA_X_PURPOSE, "x-purpose")
 	CT (CKA_X_PEER, "x-peer")
-	CT (CKA_X_DISTRUSTED, "distrusted")
+	CT (CKA_X_DISTRUSTED, "x-distrusted")
 	CT (CKA_X_CRITICAL, "x-critical")
 	{ CKA_INVALID },
 };
