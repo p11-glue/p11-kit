@@ -1,3 +1,7 @@
+0.17.2 (unstable)
+ * Fix build on 32-bit linux
+ * Fix several crashers
+
 0.17.1 (unstable)
  * Support a p11-kit specific PKCS#11 attribute persistance format [#62156]
  * Use the SHA1 hash of SPKI as the CKA_ID in the trust module by default [#62329]
