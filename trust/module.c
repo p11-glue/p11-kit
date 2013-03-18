@@ -45,6 +45,7 @@
 #include "module.h"
 #include "parser.h"
 #include "pkcs11.h"
+#include "pkcs11x.h"
 #include "session.h"
 #include "token.h"
 
@@ -1047,6 +1048,49 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 	return rv;
 }
 
+static CK_ATTRIBUTE *
+work_around_broken_nss_serial_number_lookups (CK_ATTRIBUTE *attrs)
+{
+	/*
+	 * WORKAROUND: NSS calls us asking for CKA_SERIAL_NUMBER items that are
+	 * not DER encoded. It shouldn't be doing this. We never return any certificate
+	 * serial numbers that are not DER encoded.
+	 *
+	 * So work around the issue here while the NSS guys fix this issue.
+	 * This code should be removed in future versions.
+	 */
+
+	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE *serial;
+	unsigned char *der;
+	size_t der_len;
+	int len_len;
+
+	if (!p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) ||
+	    klass != CKO_NSS_TRUST)
+		return attrs;
+
+	serial = p11_attrs_find_valid (attrs, CKA_SERIAL_NUMBER);
+	if (!serial || p11_asn1_tlv_length (serial->pValue, serial->ulValueLen) >= 0)
+		return attrs;
+
+	p11_debug ("working around serial number lookup that's not DER encoded");
+
+	/* Assumption that 32 bytes is more than enough to store a ulong */
+	der_len = 1 + 32 + serial->ulValueLen;
+	der = malloc (der_len);
+	return_val_if_fail (der != NULL, NULL);
+
+	der[0] = ASN1_TAG_INTEGER | ASN1_CLASS_UNIVERSAL;
+	len_len = der_len - 1;
+	asn1_length_der (serial->ulValueLen, der + 1, &len_len);
+	assert (len_len < der_len - serial->ulValueLen);
+	memcpy (der + 1 + len_len, serial->pValue, serial->ulValueLen);
+	der_len = 1 + len_len + serial->ulValueLen;
+
+	return p11_attrs_take (attrs, CKA_SERIAL_NUMBER, der, der_len);
+}
+
 static CK_RV
 sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
                        CK_ATTRIBUTE_PTR template,
@@ -1093,6 +1137,9 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 			/* Make a snapshot of what we're matching */
 			if (find) {
 				find->match = p11_attrs_buildn (NULL, template, count);
+				warn_if_fail (find->match != NULL);
+
+				find->match = work_around_broken_nss_serial_number_lookups (find->match);
 				warn_if_fail (find->match != NULL);
 
 				/* Build a session snapshot of all objects */

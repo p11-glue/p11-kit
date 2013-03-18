@@ -788,6 +788,71 @@ test_session_remove (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_find_serial_der_decoded (CuTest *cu)
+{
+	CK_OBJECT_CLASS nss_trust = CKO_NSS_TRUST;
+
+	CK_ATTRIBUTE object[] = {
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust) },
+		{ CKA_SERIAL_NUMBER, "\x02\x03\x01\x02\x03", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE match_decoded[] = {
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust) },
+		{ CKA_SERIAL_NUMBER, "\x01\x02\x03", 3 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_OBJECT_HANDLE check;
+	CK_ULONG count;
+	CK_RV rv;
+
+	/*
+	 * WORKAROUND: NSS calls us asking for CKA_SERIAL_NUMBER items that are
+	 * not DER encoded. It shouldn't be doing this. We never return any certificate
+	 * serial numbers that are not DER encoded.
+	 *
+	 * So work around the issue here while the NSS guys fix this issue.
+	 * This code should be removed in future versions.
+	 *
+	 * See work_around_broken_nss_serial_number_lookups().
+	 */
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = test.module->C_CreateObject (session, object, 2, &handle);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Do a standard find for the same object */
+	rv = test.module->C_FindObjectsInit (session, object, 2);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 1, count);
+	CuAssertIntEquals (cu, handle, check);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Do a find for the serial number decoded */
+	rv = test.module->C_FindObjectsInit (session, match_decoded, 2);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 1, count);
+	CuAssertIntEquals (cu, handle, check);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	teardown (cu);
+}
+
 int
 main (void)
 {
@@ -814,6 +879,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_session_copy);
 	SUITE_ADD_TEST (suite, test_session_remove);
 	SUITE_ADD_TEST (suite, test_session_setattr);
+	SUITE_ADD_TEST (suite, test_find_serial_der_decoded);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

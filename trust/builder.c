@@ -728,7 +728,7 @@ build_for_schema (p11_builder *builder,
 	if (attrs != NULL)
 		attrs_filter_if_unchanged (attrs, merge);
 
-	if (creating) {
+	if (creating && (builder->flags & P11_BUILDER_FLAG_TOKEN)) {
 		if (schema->build_flags & GENERATED_CLASS) {
 			p11_message ("objects of this type cannot be created");
 			return CKR_TEMPLATE_INCONSISTENT;
