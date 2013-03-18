@@ -444,7 +444,7 @@ strndup (const char *data,
 	return ret;
 }
 
-#endif /* HAVE_STRDUP */
+#endif /* HAVE_STRNDUP */
 
 #ifndef HAVE_STRCONCAT
 
