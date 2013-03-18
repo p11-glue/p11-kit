@@ -1102,7 +1102,7 @@ replace_nss_trust_object (p11_builder *builder,
 	if (!serial_number)
 		serial_number = &invalid;
 
-	match = p11_attrs_build (NULL, issuer, serial_number, sha1_hash,
+	match = p11_attrs_build (NULL, issuer, serial_number, &sha1_hash,
 	                         &generated, &klass, NULL);
 	return_if_fail (match != NULL);
 
