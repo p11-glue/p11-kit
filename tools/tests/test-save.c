@@ -304,7 +304,7 @@ test_directory_empty (CuTest *tc)
 
 	test_check_directory (tc, subdir, (NULL, NULL));
 
-	rmdir (subdir);
+	CuAssertTrue (tc, rmdir (subdir) >= 0);
 	free (subdir);
 
 	teardown (tc);
@@ -355,7 +355,7 @@ test_directory_files (CuTest *tc)
 	test_check_symlink (tc, subdir, "link.ext", "/the/destination");
 #endif
 
-	rmdir (subdir);
+	CuAssertTrue (tc, rmdir (subdir) >= 0);
 	free (subdir);
 
 	teardown (tc);
@@ -437,7 +437,7 @@ test_directory_dups (CuTest *tc)
 	test_check_symlink (tc, subdir, "link.1", "/destination2");
 #endif
 
-	rmdir (subdir);
+	CuAssertTrue (tc, rmdir (subdir) >= 0);
 	free (subdir);
 
 	teardown (tc);
@@ -487,18 +487,15 @@ test_directory_overwrite (CuTest *tc)
 	if (asprintf (&subdir, "%s/%s", test.directory, "extract-dir") < 0)
 		CuFail (tc, "asprintf() failed");
 
-#ifdef OS_UNIX
-	if (mkdir (subdir, S_IRWXU) < 0)
-#else
-	if (mkdir (subdir) < 0)
-#endif
-		CuFail (tc, "mkdir() failed");
-
 	/* Some initial files into this directory, which get overwritten */
-	write_zero_file (tc, subdir, "file.txt");
-	write_zero_file (tc, subdir, "another-file");
-	write_zero_file (tc, subdir, "third-file");
+	dir = p11_save_open_directory (subdir, 0);
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", NULL), "", 0) &&
+	      p11_save_write_and_finish (p11_save_open_file_in (dir, "another-file", NULL, NULL), "", 0) &&
+	      p11_save_write_and_finish (p11_save_open_file_in (dir, "third-file", NULL, NULL), "", 0) &&
+	      p11_save_finish_directory (dir, true);
+	CuAssertTrue (tc, ret && dir);
 
+	/* Now the actual test, using the same directory */
 	dir = p11_save_open_directory (subdir, P11_SAVE_OVERWRITE);
 	CuAssertPtrNotNull (tc, dir);
 
@@ -525,7 +522,7 @@ test_directory_overwrite (CuTest *tc)
 	test_check_data (tc, subdir, "file.txt", test_text, strlen (test_text));
 	test_check_data (tc, subdir, "file.1.txt", test_text, 10);
 
-	rmdir (subdir);
+	CuAssertTrue (tc, rmdir (subdir) >= 0);
 	free (subdir);
 
 	teardown (tc);

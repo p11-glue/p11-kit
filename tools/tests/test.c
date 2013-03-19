@@ -116,7 +116,7 @@ test_check_data_msg (CuTest *tc,
 	if (filelen != reflen || memcmp (filedata, refdata, reflen) != 0)
 		CuFail_Line (tc, file, line, "File contents not as expected", filename);
 
-	unlink (filename);
+	CuAssert_Line (tc, file, line, "couldn't remove file", unlink (filename) >= 0);
 	free (filename);
 	free (filedata);
 }
@@ -142,7 +142,7 @@ test_check_symlink_msg (CuTest *tc,
 
 	CuAssertStrEquals_LineMsg (tc, file, line, "symlink contents wrong", destination, buf);
 
-	unlink (filename);
+	CuAssert_Line (tc, file, line, "couldn't remove symlink", unlink (filename) >= 0);
 	free (filename);
 }
 
@@ -196,6 +196,10 @@ test_check_directory_msg (CuTest *tc,
 	}
 
 	closedir (dir);
+
+#if OS_UNIX
+	CuAssert_Line (tc, file, line, "couldn't chown directory", chmod (directory, S_IRWXU) >= 0);
+#endif
 
 	p11_dict_iterate (files, &iter);
 	while (p11_dict_next (&iter, (void **)&name, NULL))

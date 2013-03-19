@@ -184,23 +184,18 @@ p11_save_finish_file (p11_save_file *file,
 		return true;
 	}
 
-#ifdef OS_UNIX
-	/* Set the mode of the file */
-	if (chmod (file->temp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) < 0) {
-		p11_message ("couldn't set file permissions: %s: %s",
-		             file->temp, strerror (errno));
-		close (file->fd);
-		ret = false;
-
-	} else
-#endif /* OS_UNIX */
-
 	if (close (file->fd) < 0) {
 		p11_message ("couldn't write file: %s: %s",
 		             file->temp, strerror (errno));
 		ret = false;
 
 #ifdef OS_UNIX
+	/* Set the mode of the file, readable by everyone, but not writable */
+	} else if (chmod (file->temp, S_IRUSR | S_IRGRP | S_IROTH) < 0) {
+		p11_message ("couldn't set file permissions: %s: %s",
+		             file->temp, strerror (errno));
+		close (file->fd);
+		ret = false;
 
 	/* Atomically rename the tempfile over the filename */
 	} else if (file->flags & P11_SAVE_OVERWRITE) {
@@ -255,21 +250,42 @@ p11_save_open_directory (const char *path,
                          int flags)
 {
 #ifdef OS_UNIX
-	mode_t mode = S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH;
+	struct stat sb;
 #endif
 	p11_save_dir *dir;
 
 	return_val_if_fail (path != NULL, NULL);
 
 #ifdef OS_UNIX
-	if (mkdir (path, mode) < 0) {
+	/* We update the permissions when we finish writing */
+	if (mkdir (path, S_IRWXU) < 0) {
 #else /* OS_WIN32 */
 	if (mkdir (path) < 0) {
 #endif
-		if (!(flags & P11_SAVE_OVERWRITE) || errno != EEXIST) {
+		/* Some random error, report it */
+		if (errno != EEXIST) {
+			p11_message ("couldn't create directory: %s: %s", path, strerror (errno));
+
+		/* The directory exists and we're not overwriting */
+		} else if (!(flags & P11_SAVE_OVERWRITE)) {
 			p11_message ("directory already exists: %s", path);
 			return NULL;
 		}
+#ifdef OS_UNIX
+		/*
+		 * If the directory exists on unix, we may have restricted
+		 * the directory permissions to read-only. We have to change
+		 * them back to writable in order for things to work.
+		 */
+		if (stat (path, &sb) >= 0) {
+			if ((sb.st_mode & S_IRWXU) != S_IRWXU &&
+			    chmod (path, S_IRWXU | sb.st_mode) < 0) {
+				p11_message ("couldn't make directory writable: %s: %s",
+				             path, strerror (errno));
+				return NULL;
+			}
+		}
+#endif /* OS_UNIX */
 	}
 
 	dir = calloc (1, sizeof (p11_save_dir));
@@ -498,8 +514,20 @@ p11_save_finish_directory (p11_save_dir *dir,
 	if (!dir)
 		return false;
 
-	if (commit && (dir->flags & P11_SAVE_OVERWRITE))
-		ret = cleanup_directory (dir->path, dir->cache);
+	if (commit) {
+		if (dir->flags & P11_SAVE_OVERWRITE)
+			ret = cleanup_directory (dir->path, dir->cache);
+
+#ifdef OS_UNIX
+		/* Try to set the mode of the directory to readable */
+		if (ret && chmod (dir->path, S_IRUSR | S_IXUSR | S_IRGRP |
+		                             S_IXGRP | S_IROTH | S_IXOTH) < 0) {
+			p11_message ("couldn't set directory permissions: %s: %s",
+			             dir->path, strerror (errno));
+			ret = false;
+		}
+#endif /* OS_UNIX */
+	}
 
 	p11_dict_free (dir->cache);
 	free (dir->path);
