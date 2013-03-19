@@ -62,7 +62,8 @@ struct _p11_token {
 	p11_parser *parser;
 	p11_index *index;
 	p11_builder *builder;
-	const char *path;
+	char *path;
+	char *label;
 	CK_SLOT_ID slot;
 	int loaded;
 };
@@ -253,14 +254,20 @@ p11_token_free (p11_token *token)
 	p11_index_free (token->index);
 	p11_parser_free (token->parser);
 	p11_builder_free (token->builder);
+	free (token->path);
+	free (token->label);
 	free (token);
 }
 
 p11_token *
 p11_token_new (CK_SLOT_ID slot,
-               const char *path)
+               const char *path,
+               const char *label)
 {
 	p11_token *token;
+
+	return_val_if_fail (path != NULL, NULL);
+	return_val_if_fail (label != NULL, NULL);
 
 	token = calloc (1, sizeof (p11_token));
 	return_val_if_fail (token != NULL, NULL);
@@ -280,10 +287,21 @@ p11_token_new (CK_SLOT_ID slot,
 	token->path = strdup (path);
 	return_val_if_fail (token->path != NULL, NULL);
 
+	token->label = strdup (label);
+	return_val_if_fail (token->label != NULL, NULL);
+
 	token->slot = slot;
 	token->loaded = 0;
 
+	p11_debug ("token: %s: %s", token->label, token->path);
 	return token;
+}
+
+const char *
+p11_token_get_label (p11_token *token)
+{
+	return_val_if_fail (token != NULL, NULL);
+	return token->label;
 }
 
 const char *

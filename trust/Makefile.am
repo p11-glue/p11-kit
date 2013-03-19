@@ -7,6 +7,8 @@ COMMON = $(top_srcdir)/common
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/common \
+	-DDATADIR=\"$(datadir)\" \
+	-DSYSCONFDIR=\"$(sysconfdir)\" \
 	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 

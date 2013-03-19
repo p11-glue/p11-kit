@@ -54,7 +54,7 @@ static void
 setup (CuTest *cu,
        const char *path)
 {
-	test.token = p11_token_new (333, path);
+	test.token = p11_token_new (333, path, "Label");
 	CuAssertPtrNotNull (cu, test.token);
 }
 
@@ -208,6 +208,16 @@ test_token_path (CuTest *cu)
 }
 
 static void
+test_token_label (CuTest *cu)
+{
+	setup (cu, "/wheee");
+
+	CuAssertStrEquals (cu, "Label", p11_token_get_label (test.token));
+
+	teardown (cu);
+}
+
+static void
 test_token_slot (CuTest *cu)
 {
 	setup (cu, "/unneeded");
@@ -231,6 +241,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_token_load);
 	SUITE_ADD_TEST (suite, test_token_flags);
 	SUITE_ADD_TEST (suite, test_token_path);
+	SUITE_ADD_TEST (suite, test_token_label);
 	SUITE_ADD_TEST (suite, test_token_slot);
 
 	CuSuiteRun (suite);

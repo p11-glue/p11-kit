@@ -7,6 +7,8 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(top_srcdir)/common \
+	-DDATADIR=\"$(datadir)\" \
+	-DSYSCONFDIR=\"$(sysconfdir)\" \
 	$(CUTEST_CFLAGS)
 
 noinst_LTLIBRARIES = \

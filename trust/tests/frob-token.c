@@ -52,7 +52,7 @@ main (int argc,
 		return 2;
 	}
 
-	token = p11_token_new (1, argv[1]);
+	token = p11_token_new (1, argv[1], "Label");
 	count = p11_token_load (token);
 
 	printf ("%d files loaded\n", count);

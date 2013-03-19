@@ -56,8 +56,7 @@
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Trust Module        "
-#define TOKEN_LABEL             "System Trust Anchors and Policy "
-#define TOKEN_MODEL             "PKCS#11 Kit      "
+#define TOKEN_MODEL             "p11-kit-trust    "
 #define TOKEN_SERIAL_NUMBER     "1                "
 
 /* Initial slot id: non-zero and non-one */
@@ -168,12 +167,31 @@ static bool
 create_tokens_inlock (p11_array *tokens,
                       const char *paths)
 {
+	/*
+	 * TRANSLATORS: These label strings are used in PKCS#11 URIs and
+	 * unfortunately cannot be marked translatable. If localization is
+	 * desired they should be translated in GUI applications. These
+	 * strings will not change arbitrarily.
+	 */
+
+	struct {
+		const char *prefix;
+		const char *label;
+	} labels[] = {
+		{ DATADIR, "Default Trust" },
+		{ SYSCONFDIR, "System Trust" },
+		{ NULL },
+	};
+
 	p11_token *token;
 	p11_token *check;
 	CK_SLOT_ID slot;
 	const char *path;
+	const char *label;
 	char *remaining;
+	char *base;
 	char *pos;
+	int i;
 
 	p11_debug ("using paths: %s", paths);
 
@@ -191,13 +209,33 @@ create_tokens_inlock (p11_array *tokens,
 		}
 
 		if (path[0] != '\0') {
+			/* The slot for the new token */
 			slot = BASE_SLOT_ID + tokens->num;
-			token = p11_token_new (slot, path);
+
+			label = NULL;
+			base = NULL;
+
+			/* Claim the various labels based on prefix */
+			for (i = 0; label == NULL && labels[i].prefix != NULL; i++) {
+				if (strncmp (path, labels[i].prefix, strlen (labels[i].prefix)) == 0) {
+					label = labels[i].label;
+					labels[i].label = NULL;
+				}
+			}
+
+			/* Didn't find a label above, then make one based on the path */
+			if (!label) {
+				label = base = p11_basename (path);
+				return_val_if_fail (base != NULL, false);
+			}
+
+			token = p11_token_new (slot, path, label);
 			return_val_if_fail (token != NULL, false);
 
 			if (!p11_array_push (tokens, token))
 				return_val_if_reached (false);
 
+			free (base);
 			assert (lookup_slot_inlock (slot, &check) == CKR_OK && check == token);
 		}
 	}
@@ -511,8 +549,8 @@ sys_C_GetSlotInfo (CK_SLOT_ID id,
 		memset (info, 0, sizeof (*info));
 		info->firmwareVersion.major = 0;
 		info->firmwareVersion.minor = 0;
-		info->hardwareVersion.major = 0;
-		info->hardwareVersion.minor = 0;
+		info->hardwareVersion.major = PACKAGE_MAJOR;
+		info->hardwareVersion.minor = PACKAGE_MINOR;
 		info->flags = CKF_TOKEN_PRESENT;
 		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
 
@@ -537,7 +575,7 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 {
 	CK_RV rv = CKR_OK;
 	p11_token *token;
-	char *path;
+	const char *label;
 	size_t length;
 
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
@@ -551,8 +589,8 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		memset (info, 0, sizeof (*info));
 		info->firmwareVersion.major = 0;
 		info->firmwareVersion.minor = 0;
-		info->hardwareVersion.major = 0;
-		info->hardwareVersion.minor = 0;
+		info->hardwareVersion.major = PACKAGE_MAJOR;
+		info->hardwareVersion.minor = PACKAGE_MINOR;
 		info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
 		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
 		strncpy ((char*)info->model, TOKEN_MODEL, 16);
@@ -568,14 +606,13 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->ulTotalPrivateMemory = CK_UNAVAILABLE_INFORMATION;
 		info->ulFreePrivateMemory = CK_UNAVAILABLE_INFORMATION;
 
-		/* If too long, copy the last 32 characters into buffer */
-		path = p11_basename (p11_token_get_path (token));
-		length = strlen (path);
+		/* If too long, copy the first 32 characters into buffer */
+		label = p11_token_get_label (token);
+		length = strlen (label);
 		if (length > sizeof (info->label))
 			length = sizeof (info->label);
 		memset (info->label, ' ', sizeof (info->label));
-		memcpy (info->label, path, length);
-		free (path);
+		memcpy (info->label, label, length);
 	}
 
 	p11_unlock ();

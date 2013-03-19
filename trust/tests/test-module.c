@@ -184,6 +184,8 @@ test_get_slot_info (CuTest *cu)
 static void
 test_get_token_info (CuTest *cu)
 {
+	CK_C_INITIALIZE_ARGS args;
+	CK_FUNCTION_LIST *module;
 	CK_SLOT_ID slots[NUM_SLOTS];
 	CK_TOKEN_INFO info;
 	char label[32];
@@ -193,20 +195,29 @@ test_get_token_info (CuTest *cu)
 
 	/* These are the paths passed in in setup() */
 	const char *labels[] = {
-		"input",
-		"self-signed-with-ku.der",
-		"thawte.pem"
+		"System Trust",
+		"Default Trust",
+		"the-basename",
 	};
 
-	setup (cu);
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	memset (&args, 0, sizeof (args));
+	args.pReserved = "paths='" SYSCONFDIR "/input:" DATADIR "/files/blah:" "/some/other/path/the-basename'";
+	args.flags = CKF_OS_LOCKING_OK;
+
+	rv = module->C_Initialize (&args);
+	CuAssertTrue (cu, rv == CKR_OK);
 
 	count = NUM_SLOTS;
-	rv = test.module->C_GetSlotList (TRUE, slots, &count);
-	CuAssertIntEquals (cu, CKR_OK, rv);
-	CuAssertIntEquals (cu, NUM_SLOTS, count);
+	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertTrue (cu, count == NUM_SLOTS);
 
 	for (i = 0; i < NUM_SLOTS; i++) {
-		rv = test.module->C_GetTokenInfo (slots[i], &info);
+		rv = module->C_GetTokenInfo (slots[i], &info);
 		CuAssertIntEquals (cu, CKR_OK, rv);
 
 		memset (label, ' ', sizeof (label));
@@ -214,7 +225,8 @@ test_get_token_info (CuTest *cu)
 		CuAssertTrue (cu, memcmp (info.label, label, sizeof (label)) == 0);
 	}
 
-	teardown (cu);
+	rv = module->C_Finalize (NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
 }
 
 static void
