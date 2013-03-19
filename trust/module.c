@@ -537,7 +537,7 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 {
 	CK_RV rv = CKR_OK;
 	p11_token *token;
-	const char *path;
+	char *path;
 	size_t length;
 
 	return_val_if_fail (info != NULL, CKR_ARGUMENTS_BAD);
@@ -569,12 +569,13 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->ulFreePrivateMemory = CK_UNAVAILABLE_INFORMATION;
 
 		/* If too long, copy the last 32 characters into buffer */
-		path = basename (p11_token_get_path (token));
+		path = p11_basename (p11_token_get_path (token));
 		length = strlen (path);
 		if (length > sizeof (info->label))
 			length = sizeof (info->label);
 		memset (info->label, ' ', sizeof (info->label));
 		memcpy (info->label, path, length);
+		free (path);
 	}
 
 	p11_unlock ();

@@ -15,6 +15,7 @@ LDADD = \
 	$(NULL)
 
 CHECK_PROGS = \
+	test-compat \
 	test-dict \
 	test-array \
 	test-constants \

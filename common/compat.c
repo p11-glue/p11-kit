@@ -148,31 +148,39 @@ getprogname (void)
 
 #endif /* HAVE_GETPROGNAME */
 
-#ifndef HAVE_BASENAME
-
 char *
-basename (const char *name)
+p11_basename (const char *name)
 {
-	char *p;
 #ifdef OS_WIN32
-	char *p2;
+	static const char *delims = "/\\";
+#else
+	static const char *delims = "/";
 #endif
 
-	if (!name || name[0] == '\0')
-		return ".";
+	const char *end;
+	const char *beg;
 
-	p = strrchr (name, '/');
-#ifdef OS_WIN32
-	p2 = strrchr (name, '\\');
-	if (p2 > p)
-		p = p2;
-#endif
-	if (p != NULL)
-		return p + 1;
-	return (char *)name;
+	if (name == NULL)
+		return NULL;
+
+	/* Any trailing slashes */
+	end = name + strlen (name);
+	while (end != name) {
+		if (!strchr (delims, *(end - 1)))
+			break;
+		end--;
+	}
+
+	/* Find the last slash after those */
+	beg = end;
+	while (beg != name) {
+		if (strchr (delims, *(beg - 1)))
+			break;
+		beg--;
+	}
+
+	return strndup (beg, end - beg);
 }
-
-#endif /* HAVE_BASENAME */
 
 #ifdef OS_UNIX
 #include <sys/stat.h>

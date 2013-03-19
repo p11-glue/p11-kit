@@ -72,12 +72,6 @@
 const char * getprogname (void);
 #endif
 
-#ifndef HAVE_BASENAME
-
-char *       basename    (const char *name);
-
-#endif /* HAVE_BASENAME */
-
 #ifndef HAVE_MKSTEMP
 
 int          mkstemp     (char *template);
@@ -219,6 +213,17 @@ p11_mmap *  p11_mmap_open   (const char *path,
 void        p11_mmap_close  (p11_mmap *map);
 
 #endif /* OS_UNIX */
+
+/*
+ * The semantics of both POSIX basename() and GNU asename() are so crappy that
+ * we just don't even bother. And what's worse is how it completely changes
+ * behavior if _GNU_SOURCE is defined. Nasty stuff.
+ */
+char *       p11_basename   (const char *name);
+
+/* ----------------------------------------------------------------------------
+ * MORE COMPAT
+ */
 
 #ifdef	HAVE_ERRNO_H
 #include <errno.h>

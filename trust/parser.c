@@ -649,7 +649,7 @@ p11_parse_memory (p11_parser *parser,
 
 	return_val_if_fail (parser != NULL, P11_PARSE_FAILURE);
 
-	base = basename (filename);
+	base = p11_basename (filename);
 	parser->basename = base;
 	parser->flags = flags;
 
@@ -663,6 +663,8 @@ p11_parse_memory (p11_parser *parser,
 	}
 
 	p11_asn1_cache_flush (parser->asn1_cache);
+
+	free (base);
 	parser->basename = NULL;
 	parser->flags = 0;
 
