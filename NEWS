@@ -1,3 +1,10 @@
+0.17.3 (unstable)
+ * Use descriptive labels for the trust module tokens [#62534]
+ * Remove the temporary built in distrust objects
+ * Make extracted output directories and files read-only [#61898]
+ * Don't export unneccessary ABI
+ * Build fixes [#62479]
+
 0.17.2 (unstable)
  * Fix build on 32-bit linux
  * Fix several crashers
