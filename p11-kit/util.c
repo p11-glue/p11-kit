@@ -234,15 +234,15 @@ _p11_get_progname_unlocked (void)
 
 #ifdef OS_UNIX
 
-void p11_kit_init (void);
+void _p11_kit_init (void);
 
-void p11_kit_fini (void);
+void _p11_kit_fini (void);
 
 #ifdef __GNUC__
 __attribute__((constructor))
 #endif
 void
-p11_kit_init (void)
+_p11_kit_init (void)
 {
 	p11_library_init_once ();
 }
@@ -251,7 +251,7 @@ p11_kit_init (void)
 __attribute__((destructor))
 #endif
 void
-p11_kit_fini (void)
+_p11_kit_fini (void)
 {
 	p11_library_uninit ();
 }
