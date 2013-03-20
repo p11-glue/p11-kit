@@ -114,10 +114,10 @@ static CK_ATTRIBUTE cacert3_authority_attrs[] = {
 	{ CKA_INVALID },
 };
 
-static CK_ATTRIBUTE extension_eku_client_server[] = {
+static CK_ATTRIBUTE extension_eku_server[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-	{ CKA_VALUE, (void *)test_eku_client_and_server, sizeof (test_eku_client_and_server) },
+	{ CKA_VALUE, (void *)test_eku_server, sizeof (test_eku_server) },
 	{ CKA_INVALID },
 };
 
@@ -167,7 +167,7 @@ test_file (CuTest *tc)
 	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
-	               extension_eku_client_server,
+	               extension_eku_server,
 	               extension_reject_email,
 	               NULL);
 
@@ -182,7 +182,7 @@ test_file (CuTest *tc)
 	CuAssertIntEquals (tc, true, ret);
 
 	test_check_file (tc, test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-trusted-client-server-alias.pem");
+	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 
 	teardown (tc);
 }
@@ -327,7 +327,7 @@ test_file_multiple (CuTest *tc)
 	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
-	               extension_eku_client_server,
+	               extension_eku_server,
 	               extension_reject_email,
 	               NULL);
 
@@ -579,7 +579,7 @@ test_directory (CuTest *tc)
 	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
-	               extension_eku_client_server,
+	               extension_eku_server,
 	               extension_reject_email,
 	               NULL);
 
@@ -604,7 +604,7 @@ test_directory (CuTest *tc)
 #endif
 	                                           NULL));
 	test_check_file (tc, test.directory, "Custom_Label.pem",
-	                 SRCDIR "/files/cacert3-trusted-client-server-alias.pem");
+	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 	test_check_file (tc, test.directory, "Custom_Label.1.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
 #ifdef OS_UNIX

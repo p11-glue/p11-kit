@@ -40,12 +40,14 @@
 #include "compat.h"
 #include "constants.h"
 #include "debug.h"
+#include "hash.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -481,11 +483,12 @@ unsigned int
 p11_attr_hash (const void *data)
 {
 	const CK_ATTRIBUTE *attr = data;
-	unsigned int hash = (unsigned int)attr->type;
-	const char *p, *end;
+	uint32_t hash;
 
-	for (p = attr->pValue, end = p + attr->ulValueLen ; p != NULL && p != end; p++)
-		hash = (hash << 5) - hash + *p;
+	p11_hash_murmur2 (&hash,
+	                  &attr->type, sizeof (attr->type),
+	                  attr->pValue, (size_t)attr->ulValueLen,
+	                  NULL);
 
 	return hash;
 }

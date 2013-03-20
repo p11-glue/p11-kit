@@ -203,8 +203,7 @@ test_parse_openssl_trusted (CuTest *cu)
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
 		{ CKA_X_CRITICAL, &truev, sizeof (truev) },
-		{ CKA_VALUE, "\x30\x14\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01\x06\x08\x2b\x06"
-			"\x01\x05\x05\x07\x03\x02", 22 },
+		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 12 },
 		{ CKA_INVALID },
 	};
 

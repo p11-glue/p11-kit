@@ -540,3 +540,129 @@ p11_hash_md5 (unsigned char *hash,
 	md5_final (&md5, hash);
 	md5_invalidate (&md5);
 }
+
+/*
+ *  MurmurHash.c
+ *  MYUtilities
+ *
+ *  This file created by Jens Alfke on 3/17/08.
+ *  Algorithm & source code by Austin Appleby, released to public domain.
+ *  <http://murmurhash.googlepages.com/>
+ *  Downloaded 3/16/2008.
+ *  Modified slightly by Jens Alfke (use standard uint32_t and size_t types;
+ *  change 'm' and 'r' to #defines for better C compatibility.)
+ *
+ */
+
+/*-----------------------------------------------------------------------------
+ * MurmurHash2, by Austin Appleby
+ *
+ * Note - This code makes a few assumptions about how your machine behaves -
+ *
+ * 1. We can read a 4-byte value from any address without crashing
+ * 2. sizeof(int) == 4      **Jens: I fixed this by changing 'unsigned int' to 'uint32_t'**
+ *
+ * And it has a few limitations -
+ *
+ * 1. It will not work incrementally.
+ * 2. It will not produce the same results on little-endian and big-endian
+ *    machines.
+ */
+
+void
+p11_hash_murmur2 (void *hash,
+                  const void *input,
+                  size_t len,
+                  ...)
+{
+	/*
+	 * 'm' and 'r' are mixing constants generated offline.
+	 * They're not really 'magic', they just happen to work well.
+	 * seed is arbitrarily chosen
+	 */
+
+	#define m 0x5bd1e995
+	#define r 24
+	#define seed 42
+
+	const unsigned char * data = input;
+	unsigned char overflow[4];
+	va_list va;
+	uint32_t h;
+
+	/* Initialize the hash based on the length */
+	va_start (va, len);
+	h = len;
+	while (va_arg (va, const void *))
+		h += va_arg (va, size_t);
+	h ^= seed;
+	va_end (va);
+
+	/* Mix 4 bytes at a time into the hash */
+	va_start (va, len);
+	for (;;) {
+		uint32_t k;
+
+		if (len >= 4) {
+			k = *(uint32_t *)data;
+			data += 4;
+			len -= 4;
+
+		} else {
+			size_t num = len;
+			memcpy (overflow, data, len);
+
+			while (num < 4) {
+				size_t part;
+
+				data = va_arg (va, const void *);
+				if (!data)
+					break;
+
+				/* Combine uint32 from old and new */
+				len = va_arg (va, size_t);
+				part = 4 - num;
+				if (part > len)
+					part = len;
+				memcpy (overflow + num, data, part);
+				data += part;
+				len -= part;
+				num += part;
+			}
+
+			if (num < 4) {
+				len = num;
+				break;
+			}
+
+			k = *(uint32_t *)overflow;
+		}
+
+		k *= m;
+		k ^= k >> r;
+		k *= m;
+
+		h *= m;
+		h ^= k;
+	}
+	va_end (va);
+
+	/* Handle the last few bytes of the input array */
+	switch(len) {
+	case 3: h ^= overflow[2] << 16;
+	case 2: h ^= overflow[1] << 8;
+	case 1: h ^= overflow[0];
+		h *= m;
+	};
+
+	/*
+	 * Do a few final mixes of the hash to ensure the last few
+	 * bytes are well-incorporated.
+	 */
+	h ^= h >> 13;
+	h *= m;
+	h ^= h >> 15;
+
+	assert (sizeof (h) == P11_HASH_MURMUR2_LEN);
+	memcpy (hash, &h, sizeof (h));
+}

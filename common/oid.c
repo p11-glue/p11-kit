@@ -60,23 +60,6 @@ p11_oid_simple (const unsigned char *oid,
 	        (size_t)oid[1] == len - 2);  /* matches length */
 }
 
-unsigned int
-p11_oid_hash (const void *oid)
-{
-	const unsigned char *v = oid;
-	unsigned int hash;
-	int len;
-	int i;
-
-	len = p11_oid_length (v);
-	hash = v[0];
-
-	for (i = 1; i < len; i++)
-		hash = (hash << 5) - hash + v[i];
-
-	return hash;
-}
-
 bool
 p11_oid_equal (const void *oid_one,
                const void *oid_two)

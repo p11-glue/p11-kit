@@ -35,6 +35,8 @@
 #include "config.h"
 #include "CuTest.h"
 
+#include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -128,6 +130,73 @@ test_md5 (CuTest *cu)
 	}
 }
 
+static void
+test_murmur2 (CuTest *cu)
+{
+	struct {
+		const char *input;
+		const char *input2;
+		int hash;
+	} fixtures[] = {
+		{ "one", NULL, 1910179066 },
+		{ "two", NULL, 396151652 },
+		{ "four", NULL, -2034170174 },
+		{ "seven", NULL, -588341181 },
+		/* Note that these are identical output */
+		{ "eleven", NULL, -37856894 },
+		{ "ele", "ven", -37856894 },
+		{ NULL },
+	};
+
+	uint32_t first;
+	uint32_t second;
+	int i;
+
+	assert (sizeof (first) == P11_HASH_MURMUR2_LEN);
+	for (i = 0; fixtures[i].input != NULL; i++) {
+		p11_hash_murmur2 ((unsigned char *)&first,
+		                  fixtures[i].input,
+		                  strlen (fixtures[i].input),
+		                  fixtures[i].input2,
+		                  fixtures[i].input2 ? strlen (fixtures[i].input2) : 0,
+		                  NULL);
+
+		p11_hash_murmur2 ((unsigned char *)&second,
+		                  fixtures[i].input,
+		                  strlen (fixtures[i].input),
+		                  fixtures[i].input2,
+		                  fixtures[i].input2 ? strlen (fixtures[i].input2) : 0,
+		                  NULL);
+
+		CuAssertIntEquals (cu, fixtures[i].hash, first);
+		CuAssertIntEquals (cu, fixtures[i].hash, second);
+	}
+}
+
+static void
+test_murmur2_incr (CuTest *cu)
+{
+	uint32_t first, second;
+
+	p11_hash_murmur2 ((unsigned char *)&first,
+	                  "this is the long input!", 23,
+	                  NULL);
+
+	p11_hash_murmur2 ((unsigned char *)&second,
+	                  "this", 4,
+	                  " ", 1,
+	                  "is ", 3,
+	                  "the long ", 9,
+	                  "in", 2,
+	                  "p", 1,
+	                  "u", 1,
+	                  "t", 1,
+	                  "!", 1,
+	                  NULL);
+
+	CuAssertIntEquals (cu, first, second);
+}
+
 int
 main (void)
 {
@@ -138,6 +207,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_sha1);
 	SUITE_ADD_TEST (suite, test_sha1_long);
 	SUITE_ADD_TEST (suite, test_md5);
+	SUITE_ADD_TEST (suite, test_murmur2);
+	SUITE_ADD_TEST (suite, test_murmur2_incr);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

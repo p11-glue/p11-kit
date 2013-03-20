@@ -40,8 +40,6 @@
 bool           p11_oid_simple  (const unsigned char *oid,
                                 int len);
 
-unsigned int   p11_oid_hash    (const void *oid);
-
 bool           p11_oid_equal   (const void *oid_one,
                                 const void *oid_two);
 

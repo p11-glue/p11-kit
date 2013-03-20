@@ -35,10 +35,12 @@
 
 #include "debug.h"
 #include "dict.h"
+#include "hash.h"
 
 #include <sys/types.h>
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -326,13 +328,8 @@ p11_dict_size (p11_dict *dict)
 unsigned int
 p11_dict_str_hash (const void *string)
 {
-	const char *p = string;
-	unsigned int hash = *p;
-
-	if (hash)
-		for (p += 1; *p != '\0'; p++)
-			hash = (hash << 5) - hash + *p;
-
+	uint32_t hash;
+	p11_hash_murmur2 (&hash, string, strlen (string), NULL);
 	return hash;
 }
 
