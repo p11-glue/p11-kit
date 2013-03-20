@@ -437,6 +437,131 @@ test_parse_unrecognized (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_duplicate (CuTest *cu)
+{
+	CK_ATTRIBUTE cacert3[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	CK_OBJECT_HANDLE *handles;
+	CK_ATTRIBUTE *cert;
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	p11_message_quiet ();
+
+	/* This shouldn't be added, should print a message */
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	CuAssertTrue (cu, strstr (p11_message_last (), "duplicate") != NULL);
+
+	p11_message_loud ();
+
+	/* Should only be one certificate since the above two are identical */
+	handles = p11_index_find_all (test.index, cacert3, 2);
+	CuAssertPtrNotNull (cu, handles);
+	CuAssertTrue (cu, handles[0] != 0);
+	CuAssertTrue (cu, handles[1] == 0);
+
+	cert = p11_index_lookup (test.index, handles[0]);
+	test_check_attrs (cu, cacert3, cert);
+
+	free (handles);
+	teardown (cu);
+}
+
+static void
+test_duplicate_priority (CuTest *cu)
+{
+	CK_ATTRIBUTE cacert3[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE trusted[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_TRUSTED, &truev, sizeof (truev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE distrust[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
+		{ CKA_INVALID },
+	};
+
+	CK_OBJECT_HANDLE *handles;
+	CK_ATTRIBUTE *cert;
+	int ret;
+
+	setup (cu);
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	p11_message_quiet ();
+
+	/* This shouldn't be added, should print a message */
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
+	                      P11_PARSE_FLAG_ANCHOR);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	CuAssertTrue (cu, strstr (p11_message_last (), "duplicate") != NULL);
+
+	p11_message_loud ();
+
+	/* We should now find the trusted certificate */
+	handles = p11_index_find_all (test.index, cacert3, 2);
+	CuAssertPtrNotNull (cu, handles);
+	CuAssertTrue (cu, handles[0] != 0);
+	CuAssertTrue (cu, handles[1] == 0);
+	cert = p11_index_lookup (test.index, handles[0]);
+	test_check_attrs (cu, trusted, cert);
+	free (handles);
+
+	/* Now add a distrutsed one, this should override the trusted */
+
+	p11_message_quiet ();
+
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
+	                      P11_PARSE_FLAG_BLACKLIST);
+	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+
+	p11_message_loud ();
+
+	/* We should now find the distrusted certificate */
+	handles = p11_index_find_all (test.index, cacert3, 2);
+	CuAssertPtrNotNull (cu, handles);
+	CuAssertTrue (cu, handles[0] != 0);
+	CuAssertTrue (cu, handles[1] == 0);
+	cert = p11_index_lookup (test.index, handles[0]);
+	test_check_attrs (cu, distrust, cert);
+	free (handles);
+
+	teardown (cu);
+}
+
 int
 main (void)
 {
@@ -457,6 +582,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_parse_thawte);
 	SUITE_ADD_TEST (suite, test_parse_invalid_file);
 	SUITE_ADD_TEST (suite, test_parse_unrecognized);
+	SUITE_ADD_TEST (suite, test_duplicate);
+	SUITE_ADD_TEST (suite, test_duplicate_priority);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

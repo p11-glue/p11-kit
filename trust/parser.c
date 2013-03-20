@@ -130,20 +130,112 @@ populate_trust (p11_parser *parser,
 	return p11_attrs_build (attrs, &trusted, &distrust, NULL);
 }
 
+static bool
+lookup_cert_duplicate (p11_index *index,
+                       CK_ATTRIBUTE *attrs,
+                       CK_OBJECT_HANDLE *handle,
+                       CK_ATTRIBUTE **dupl)
+{
+	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
+	CK_ATTRIBUTE *value;
+
+	CK_ATTRIBUTE match[] = {
+		{ CKA_VALUE, },
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_INVALID },
+	};
+
+	/*
+	 * TODO: This will need to be adapted when we support reload on
+	 * the fly, but for now since we only load once, we can assume
+	 * that any certs already present in the index are duplicates.
+	 */
+
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
+	if (value != NULL) {
+		memcpy (match, value, sizeof (CK_ATTRIBUTE));
+		*handle = p11_index_find (index, match, -1);
+		if (*handle != 0) {
+			*dupl = p11_index_lookup (index, *handle);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static char *
+pull_cert_label (CK_ATTRIBUTE *attrs)
+{
+	char *label;
+	size_t len;
+
+	label = p11_attrs_find_value (attrs, CKA_LABEL, &len);
+	if (label)
+		label = strndup (label, len);
+
+	return label;
+}
+
+static int
+calc_cert_priority (CK_ATTRIBUTE *attrs)
+{
+	CK_BBOOL boolv;
+
+	enum {
+		PRI_UNKNOWN,
+		PRI_TRUSTED,
+		PRI_DISTRUST
+	};
+
+	if (p11_attrs_find_bool (attrs, CKA_X_DISTRUSTED, &boolv) && boolv)
+		return PRI_DISTRUST;
+	else if (p11_attrs_find_bool (attrs, CKA_TRUSTED, &boolv) && boolv)
+		return PRI_TRUSTED;
+
+	return PRI_UNKNOWN;
+}
+
 static void
 sink_object (p11_parser *parser,
              CK_ATTRIBUTE *attrs)
 {
+	CK_OBJECT_HANDLE handle;
 	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE *dupl;
+	char *label;
 	CK_RV rv;
+
+	/* By default not replacing anything */
+	handle = 0;
 
 	if (p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) &&
 	    klass == CKO_CERTIFICATE) {
 		attrs = populate_trust (parser, attrs);
 		return_if_fail (attrs != NULL);
+
+		if (lookup_cert_duplicate (parser->index, attrs, &handle, &dupl)) {
+
+			/* This is not a good place to be for a well configured system */
+			label = pull_cert_label (dupl);
+			p11_message ("duplicate '%s' certificate found in: %s",
+			             label ? label : "?", parser->basename);
+			free (label);
+
+			/*
+			 * Nevertheless we provide predictable behavior about what
+			 * overrides what. If we have a lower or equal priority
+			 * to what's there, then just go away, otherwise replace.
+			 */
+			if (calc_cert_priority (attrs) <= calc_cert_priority (dupl)) {
+				p11_attrs_free (attrs);
+				return;
+			}
+		}
 	}
 
-	rv = p11_index_take (parser->index, attrs, NULL);
+	/* If handle is zero, this just adds */
+	rv = p11_index_replace (parser->index, handle, attrs);
 	if (rv != CKR_OK)
 		p11_message ("couldn't load file into objects: %s", parser->basename);
 }

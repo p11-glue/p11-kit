@@ -56,8 +56,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
-
 struct _p11_token {
 	p11_parser *parser;
 	p11_index *index;
@@ -67,18 +65,6 @@ struct _p11_token {
 	CK_SLOT_ID slot;
 	int loaded;
 };
-
-static void
-on_parser_object (CK_ATTRIBUTE *attrs,
-                  void *user_data)
-{
-	p11_token *token = user_data;
-
-	return_if_fail (attrs != NULL);
-
-	if (p11_index_take (token->index, attrs, NULL) != CKR_OK)
-		return_if_reached ();
-}
 
 static int
 loader_load_file (p11_token *token,
@@ -211,6 +197,7 @@ load_builtin_objects (p11_token *token)
 	CK_OBJECT_CLASS builtin = CKO_NSS_BUILTIN_ROOT_LIST;
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
+	CK_RV rv;
 
 	const char *trust_anchor_roots = "Trust Anchor Roots";
 	CK_ATTRIBUTE builtin_root_list[] = {
@@ -219,10 +206,12 @@ load_builtin_objects (p11_token *token)
 		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
 		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
 		{ CKA_LABEL, (void *)trust_anchor_roots, strlen (trust_anchor_roots) },
+		{ CKA_INVALID },
 	};
 
 	p11_index_batch (token->index);
-	on_parser_object (p11_attrs_buildn (NULL, builtin_root_list, ELEMS (builtin_root_list)), token);
+	rv = p11_index_take (token->index, p11_attrs_dup (builtin_root_list), NULL);
+	return_val_if_fail (rv == CKR_OK, 0);
 	p11_index_finish (token->index);
 	return 1;
 }
