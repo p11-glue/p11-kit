@@ -77,6 +77,7 @@ p11_session_free (void *data)
 	p11_session *session = data;
 
 	p11_session_set_operation (session, NULL, NULL);
+	p11_builder_free (session->builder);
 	p11_index_free (session->index);
 
 	free (session);

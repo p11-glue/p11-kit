@@ -192,6 +192,7 @@ test_snapshot (CuTest *cu)
 	for (i = 0; i < NUM; i++)
 		CuAssertIntEquals (cu, expected[i], snapshot[i]);
 
+	free (snapshot);
 	teardown (cu);
 }
 
@@ -229,6 +230,7 @@ test_snapshot_base (CuTest *cu)
 	for (i = 0; i < NUM * 2; i++)
 		CuAssertIntEquals (cu, expected[i / 2], snapshot[i]);
 
+	free (snapshot);
 	teardown (cu);
 }
 
@@ -665,6 +667,7 @@ test_replace_all (CuTest *tc)
 	CuAssertTrue (tc, rv == CKR_OK);
 
 	CuAssertIntEquals (tc, 0, array->num);
+	p11_array_free (array);
 
 	/* eins should have replaced one */
 	check = p11_index_find (test.index, eins, -1);
@@ -1021,6 +1024,8 @@ test_change_nested (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 	p11_index_finish (index);
 	CuAssertIntEquals (cu, 1, on_change_called);
+
+	p11_index_free (index);
 }
 
 int

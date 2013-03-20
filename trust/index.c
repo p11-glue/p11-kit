@@ -293,10 +293,10 @@ index_notify (p11_index *index,
 {
 	index_object *obj;
 
-	if (!index->notify || index->notifying)
-		return;
+	if (!index->notify || index->notifying) {
+		p11_attrs_free (removed);
 
-	if (!index->changes) {
+	} else if (!index->changes) {
 		call_notify (index, handle, removed);
 		p11_attrs_free (removed);
 
@@ -373,6 +373,7 @@ p11_index_take (p11_index *index,
 	rv = index_build (index, &obj->attrs, attrs);
 	if (rv != CKR_OK) {
 		p11_attrs_free (attrs);
+		free (obj);
 		return rv;
 	}
 

@@ -815,6 +815,7 @@ p11_kit_iter_free (P11KitIter *iter)
 	finish_iterating (iter, CKR_OK);
 	p11_array_free (iter->modules);
 	p11_attrs_free (iter->match_attrs);
+	free (iter->slots);
 
 	for (cb = iter->callbacks; cb != NULL; cb = next) {
 		next = cb->next;
@@ -822,4 +823,6 @@ p11_kit_iter_free (P11KitIter *iter)
 			(cb->destroyer) (cb->callback_data);
 		free (cb);
 	}
+
+	free (iter);
 }

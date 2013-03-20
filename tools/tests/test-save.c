@@ -91,6 +91,8 @@ write_zero_file (CuTest *tc,
 	CuAssertTrue (tc, fd != -1);
 	res = close (fd);
 	CuAssertTrue (tc, res >= 0);
+
+	free (filename);
 }
 
 static void

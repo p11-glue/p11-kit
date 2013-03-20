@@ -38,6 +38,7 @@
 #include "utf8.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
@@ -74,6 +75,7 @@ test_ucs2be (CuTest *cu)
 
 		CuAssertIntEquals (cu, fixtures[i].output_len, length);
 		CuAssertStrEquals (cu, fixtures[i].output, output);
+		free (output);
 	}
 }
 
@@ -146,6 +148,8 @@ test_ucs4be (CuTest *cu)
 
 		CuAssertIntEquals (cu, fixtures[i].output_len, length);
 		CuAssertStrEquals (cu, fixtures[i].output, output);
+
+		free (output);
 	}
 }
 

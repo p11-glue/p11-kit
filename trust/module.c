@@ -188,6 +188,7 @@ create_tokens_inlock (p11_array *tokens,
 	CK_SLOT_ID slot;
 	const char *path;
 	const char *label;
+	char *alloc;
 	char *remaining;
 	char *base;
 	char *pos;
@@ -195,7 +196,7 @@ create_tokens_inlock (p11_array *tokens,
 
 	p11_debug ("using paths: %s", paths);
 
-	remaining = strdup (paths);
+	alloc = remaining = strdup (paths);
 	return_val_if_fail (remaining != NULL, false);
 
 	while (remaining) {
@@ -240,7 +241,7 @@ create_tokens_inlock (p11_array *tokens,
 		}
 	}
 
-	free (remaining);
+	free (alloc);
 	return true;
 }
 

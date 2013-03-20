@@ -135,6 +135,7 @@ test_file (CuTest *tc)
 
 	test_check_file (tc, test.directory, "extract.pem", SRCDIR "/files/cacert3.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -160,6 +161,7 @@ test_file_multiple (CuTest *tc)
 
 	test_check_file (tc, test.directory, "extract.pem", SRCDIR "/files/cacert3-twice.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -174,9 +176,6 @@ test_file_without (CuTest *tc)
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.cer") < 0)
-		assert_not_reached ();
-
 	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
@@ -185,6 +184,7 @@ test_file_without (CuTest *tc)
 
 	test_check_data (tc, test.directory, "extract.pem", "", 0);
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 

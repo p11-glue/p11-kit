@@ -184,6 +184,7 @@ test_file (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -208,6 +209,7 @@ test_plain (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -250,6 +252,7 @@ test_keyid (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-keyid.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -282,6 +285,7 @@ test_not_authority (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-not-trusted.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -316,6 +320,7 @@ test_distrust_all (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-distrust-all.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -347,6 +352,7 @@ test_file_multiple (CuTest *tc)
 	test_check_file (tc, test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-multiple.pem");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -369,6 +375,7 @@ test_file_without (CuTest *tc)
 
 	test_check_data (tc, test.directory, "extract.pem", "", 0);
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 

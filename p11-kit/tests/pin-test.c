@@ -109,7 +109,6 @@ test_pin_read (CuTest *tc)
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_one,
 	                                 &data);
 
-	p11_kit_pin_ref (pin);
 	p11_kit_pin_unref (pin);
 }
 

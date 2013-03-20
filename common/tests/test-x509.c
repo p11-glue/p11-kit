@@ -397,6 +397,7 @@ test_directory_string (CuTest *tc)
 
 		CuAssertIntEquals (tc, fixtures[i].output_len, length);
 		CuAssertStrEquals (tc, fixtures[i].output, string);
+		free (string);
 	}
 }
 

@@ -922,10 +922,7 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 
 	free (value);
 
-	attr.pValue = malloc (sizeof (klass));
-	return_val_if_fail (attr.pValue != NULL, P11_KIT_URI_UNEXPECTED);
-
-	memcpy (attr.pValue, &klass, sizeof (klass));
+	attr.pValue = &klass;
 	attr.ulValueLen = sizeof (klass);
 	attr.type = CKA_CLASS;
 

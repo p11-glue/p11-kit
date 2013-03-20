@@ -227,6 +227,7 @@ p11_pem_parse (const char *data,
 				if (sink != NULL)
 					(sink) (type, decoded, n_decoded, user_data);
 				++nfound;
+				free (decoded);
 			}
 		}
 

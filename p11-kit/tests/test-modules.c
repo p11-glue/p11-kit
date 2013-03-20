@@ -96,6 +96,8 @@ test_no_duplicates (CuTest *tc)
 			CuAssert (tc, "shouldn't be reached", 0);
 		if (!p11_dict_set (paths, path, ""))
 			CuAssert (tc, "shouldn't be reached", 0);
+
+		free (path);
 	}
 
 	p11_dict_free (paths);

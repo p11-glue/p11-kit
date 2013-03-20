@@ -983,6 +983,7 @@ test_load_attributes_none (CuTest *tc)
 		attrs = p11_attrs_buildn (NULL, NULL, 0);
 		rv = p11_kit_iter_load_attributes (iter, attrs, 0);
 		CuAssertTrue (tc, rv == CKR_OK);
+		p11_attrs_free (attrs);
 	}
 
 	CuAssertTrue (tc, rv == CKR_CANCEL);

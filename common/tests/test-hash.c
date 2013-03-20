@@ -89,6 +89,8 @@ test_sha1_long (CuTest *cu)
 
 	p11_hash_sha1 (checksum, input, 1000000, NULL);
 	CuAssertTrue (cu, memcmp (expected, checksum, P11_HASH_SHA1_LEN) == 0);
+
+	free (input);
 }
 
 const char *md5_input[] = {

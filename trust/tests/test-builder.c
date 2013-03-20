@@ -429,6 +429,7 @@ test_build_certificate_no_type (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -436,8 +437,10 @@ test_build_certificate_no_type (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCOMPLETE, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -456,6 +459,7 @@ test_build_certificate_bad_type (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -463,8 +467,10 @@ test_build_certificate_bad_type (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCONSISTENT, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -524,6 +530,7 @@ test_create_not_settable (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -531,8 +538,10 @@ test_create_not_settable (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_ATTRIBUTE_READ_ONLY, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -587,6 +596,7 @@ test_create_unsupported (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -594,8 +604,10 @@ test_create_unsupported (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCONSISTENT, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -613,6 +625,7 @@ test_create_generated (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -620,8 +633,10 @@ test_create_generated (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCONSISTENT, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -639,6 +654,7 @@ test_create_bad_attribute (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -646,8 +662,10 @@ test_create_bad_attribute (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCONSISTENT, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -663,6 +681,7 @@ test_create_missing_attribute (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -670,8 +689,10 @@ test_create_missing_attribute (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCOMPLETE, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -687,6 +708,7 @@ test_create_no_class (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -694,8 +716,10 @@ test_create_no_class (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCOMPLETE, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -712,6 +736,7 @@ test_create_token_mismatch (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -719,8 +744,10 @@ test_create_token_mismatch (CuTest *cu)
 	p11_message_quiet ();
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	merge = p11_attrs_dup (input);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_TEMPLATE_INCONSISTENT, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -800,6 +827,7 @@ test_modify_read_only (CuTest *cu)
 	merge = p11_attrs_dup (modify);
 	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_ATTRIBUTE_READ_ONLY, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 
@@ -869,6 +897,7 @@ test_modify_not_modifiable (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *merge;
 	CK_RV rv;
 
 	setup (cu);
@@ -879,8 +908,10 @@ test_modify_not_modifiable (CuTest *cu)
 
 	p11_message_quiet ();
 
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (modify));
+	merge = p11_attrs_dup (modify);
+	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
 	CuAssertIntEquals (cu, CKR_ATTRIBUTE_READ_ONLY, rv);
+	p11_attrs_free (merge);
 
 	p11_message_loud ();
 

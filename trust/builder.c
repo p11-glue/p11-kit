@@ -1159,6 +1159,8 @@ replace_nss_trust_object (p11_builder *builder,
 	rv = p11_index_replace_all (index, match, CKA_INVALID, array);
 	return_if_fail (rv == CKR_OK);
 	p11_array_free (array);
+
+	p11_attrs_free (match);
 }
 
 static void

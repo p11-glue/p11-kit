@@ -135,6 +135,7 @@ test_file (CuTest *tc)
 
 	test_check_file (tc, test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -166,6 +167,7 @@ test_file_multiple (CuTest *tc)
 
 	test_check_file (tc, test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 
@@ -192,6 +194,7 @@ test_file_without (CuTest *tc)
 
 	p11_message_loud ();
 
+	free (test.ex.destination);
 	teardown (tc);
 }
 

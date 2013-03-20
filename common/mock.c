@@ -119,8 +119,10 @@ static void
 free_session (void *data)
 {
 	Session *sess = (Session *)data;
-	if (sess)
+	if (sess) {
 		p11_dict_free (sess->objects);
+		p11_array_free (sess->matches);
+	}
 	free (sess);
 }
 

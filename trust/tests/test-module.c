@@ -431,6 +431,8 @@ check_has_trust_object (CuTest *cu,
 
 	check_trust_object_equiv (cu, sessions[0], objects[0], cert);
 	check_trust_object_hashes (cu, sessions[0], objects[0], cert);
+
+	p11_attrs_free (match);
 }
 
 static void

@@ -602,9 +602,6 @@ p11_extract_openssl_directory (P11KitIter *iter,
 	p11_buffer_init (&buf, 0);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
-		pem = p11_pem_write (ex->cert_der, ex->cert_len, "CERTIFICATE", &length);
-		return_val_if_fail (pem != NULL, false);
-
 		if (!p11_buffer_reset (&buf, 1024))
 			return_val_if_reached (false);
 
