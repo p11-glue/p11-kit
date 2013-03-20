@@ -1,0 +1,11 @@
+NULL =
+
+memcheck:
+	@for dir in $(SUBDIRS); do \
+		test "$$dir" = "." || $(MAKE) -C $$dir memcheck; \
+	done
+
+leakcheck:
+	@for dir in $(SUBDIRS); do \
+		test "$$dir" = "." || $(MAKE) -C $$dir leakcheck; \
+	done

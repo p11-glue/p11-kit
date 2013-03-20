@@ -266,6 +266,10 @@ $ make install
 		the tests. If you run it from a subdirectory only the tests in that
 		directory will be run.</para>
 
+		<para>To check for memory errors or memory leaks, run <literal>make memcheck</literal>
+		or <literal>make leakcheck</literal> respectively. This requires valgrind
+		be installed.</para>
+
 		<para>Build p11-kit with the <option>--enable-coverage</option> configure
 		option to build code coverage support.</para>
 

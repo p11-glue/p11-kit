@@ -1,4 +1,6 @@
 
+include $(top_srcdir)/build/Makefile.decl
+
 WEBHOST = anarchy.freedesktop.org
 WEBBASE = /srv/p11-glue.freedesktop.org/www
 

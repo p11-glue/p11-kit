@@ -1,4 +1,5 @@
-NULL =
+
+include $(top_srcdir)/build/Makefile.decl
 
 SUBDIRS = . tests
 

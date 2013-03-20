@@ -1,2 +1,6 @@
 
 SUBDIRS = manual
+
+memcheck:
+
+leakcheck:

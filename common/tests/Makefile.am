@@ -1,8 +1,6 @@
 
 include $(top_srcdir)/build/Makefile.tests
 
-NULL =
-
 COMMON = $(top_srcdir)/common
 
 INCLUDES = \

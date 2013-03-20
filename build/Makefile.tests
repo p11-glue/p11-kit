@@ -1,3 +1,4 @@
+NULL =
 
 CUTEST_CFLAGS = \
 	-I$(top_srcdir)/build/cutest \
@@ -6,3 +7,13 @@ CUTEST_CFLAGS = \
 	-DP11_KIT_FUTURE_UNSTABLE_API
 
 CUTEST_LIBS = $(top_builddir)/build/libcutest.la
+
+MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet --trace-children=yes
+
+LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes
+
+memcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(MEMCHECK_ENV)" check-TESTS
+
+leakcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(LEAKCHECK_ENV)" check-TESTS

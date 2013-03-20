@@ -1,8 +1,6 @@
 
 include $(top_srcdir)/build/Makefile.tests
 
-NULL =
-
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \

@@ -1,14 +1,14 @@
 
 include $(top_srcdir)/build/Makefile.tests
 
-NULL =
-
 EXTRA_DIST = files
 
 if WITH_ASN1
 
 COMMON = $(top_srcdir)/common
 TOOLS = $(top_srcdir)/tools
+
+TEST_RUNNER = libtool --mode=execute
 
 INCLUDES = \
 	-I$(top_srcdir) \
