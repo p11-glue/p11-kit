@@ -32,7 +32,7 @@
 
 #include "config.h"
 
-#include "checksum.h"
+#include "hash.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -252,10 +252,10 @@ sha1_final (sha1_t *context,
 }
 
 void
-p11_checksum_sha1 (unsigned char *checksum,
-                   const void *input,
-                   size_t length,
-                   ...)
+p11_hash_sha1 (unsigned char *hash,
+               const void *input,
+               size_t length,
+               ...)
 {
 	va_list va;
 	sha1_t sha1;
@@ -271,7 +271,7 @@ p11_checksum_sha1 (unsigned char *checksum,
 	}
 	va_end (va);
 
-	sha1_final (&sha1, checksum);
+	sha1_final (&sha1, hash);
 	sha1_invalidate (&sha1);
 }
 
@@ -518,10 +518,10 @@ md5_final(md5_t *ctx,
 }
 
 void
-p11_checksum_md5 (unsigned char *checksum,
-                  const void *input,
-                  size_t length,
-                  ...)
+p11_hash_md5 (unsigned char *hash,
+              const void *input,
+              size_t length,
+              ...)
 {
 	va_list va;
 	md5_t md5;
@@ -537,6 +537,6 @@ p11_checksum_md5 (unsigned char *checksum,
 	}
 	va_end (va);
 
-	md5_final (&md5, checksum);
+	md5_final (&md5, hash);
 	md5_invalidate (&md5);
 }

@@ -36,10 +36,10 @@
 
 #include "attrs.h"
 #include "buffer.h"
-#include "checksum.h"
 #include "compat.h"
 #include "debug.h"
 #include "extract.h"
+#include "hash.h"
 #include "library.h"
 #include "save.h"
 
@@ -299,13 +299,13 @@ prepare_jks_buffer (P11KitIter *iter,
 	 * as the password for this keyed digest.
 	 */
 	length = buffer->len;
-	digest = p11_buffer_append (buffer, P11_CHECKSUM_SHA1_LENGTH);
+	digest = p11_buffer_append (buffer, P11_HASH_SHA1_LEN);
 	return_val_if_fail (digest != NULL, false);
-	p11_checksum_sha1 (digest,
-	                   "\000c\000h\000a\000n\000g\000e\000i\000t", 16, /* default password */
-	                   "Mighty Aphrodite", 16, /* go figure */
-	                   buffer->data, length,
-	                   NULL);
+	p11_hash_sha1 (digest,
+	               "\000c\000h\000a\000n\000g\000e\000i\000t", 16, /* default password */
+	               "Mighty Aphrodite", 16, /* go figure */
+	               buffer->data, length,
+	               NULL);
 
 	return_val_if_fail (p11_buffer_ok (buffer), false);
 	return true;

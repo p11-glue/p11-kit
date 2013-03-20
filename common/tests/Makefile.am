@@ -16,6 +16,7 @@ LDADD = \
 
 CHECK_PROGS = \
 	test-compat \
+	test-hash \
 	test-dict \
 	test-array \
 	test-constants \
@@ -43,7 +44,6 @@ INCLUDES += \
 
 CHECK_PROGS += \
 	test-asn1 \
-	test-checksum \
 	test-base64 \
 	test-pem \
 	test-oid \

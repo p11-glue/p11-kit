@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "checksum.h"
+#include "hash.h"
 
 const char *sha1_input[] = {
 	"abc",
@@ -56,7 +56,7 @@ const char *sha1_checksum[] = {
 static void
 test_sha1 (CuTest *cu)
 {
-	unsigned char checksum[P11_CHECKSUM_SHA1_LENGTH];
+	unsigned char checksum[P11_HASH_SHA1_LEN];
 	size_t len;
 	int i;
 
@@ -64,12 +64,12 @@ test_sha1 (CuTest *cu)
 		memset (checksum, 0, sizeof (checksum));
 		len = strlen (sha1_input[i]);
 
-		p11_checksum_sha1 (checksum, sha1_input[i], len, NULL);
-		CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_CHECKSUM_SHA1_LENGTH) == 0);
+		p11_hash_sha1 (checksum, sha1_input[i], len, NULL);
+		CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
 
 		if (len > 6) {
-			p11_checksum_sha1 (checksum, sha1_input[i], 6, sha1_input[i] + 6, len - 6, NULL);
-			CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_CHECKSUM_SHA1_LENGTH) == 0);
+			p11_hash_sha1 (checksum, sha1_input[i], 6, sha1_input[i] + 6, len - 6, NULL);
+			CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
 		}
 	}
 }
@@ -77,7 +77,7 @@ test_sha1 (CuTest *cu)
 static void
 test_sha1_long (CuTest *cu)
 {
-	unsigned char checksum[P11_CHECKSUM_SHA1_LENGTH];
+	unsigned char checksum[P11_HASH_SHA1_LEN];
 	char *expected = "\x34\xAA\x97\x3C\xD4\xC4\xDA\xA4\xF6\x1E\xEB\x2B\xDB\xAD\x27\x31\x65\x34\x01\x6F";
 	char *input;
 
@@ -85,8 +85,8 @@ test_sha1_long (CuTest *cu)
 	CuAssertTrue (cu, input != NULL);
 	memset (input, 'a', 1000000);
 
-	p11_checksum_sha1 (checksum, input, strlen (input), NULL);
-	CuAssertTrue (cu, memcmp (expected, checksum, P11_CHECKSUM_SHA1_LENGTH) == 0);
+	p11_hash_sha1 (checksum, input, strlen (input), NULL);
+	CuAssertTrue (cu, memcmp (expected, checksum, P11_HASH_SHA1_LEN) == 0);
 }
 
 const char *md5_input[] = {
@@ -110,7 +110,7 @@ const char *md5_checksum[] = {
 static void
 test_md5 (CuTest *cu)
 {
-	unsigned char checksum[P11_CHECKSUM_MD5_LENGTH];
+	unsigned char checksum[P11_HASH_MD5_LEN];
 	size_t len;
 	int i;
 
@@ -118,12 +118,12 @@ test_md5 (CuTest *cu)
 		memset (checksum, 0, sizeof (checksum));
 		len = strlen (md5_input[i]);
 
-		p11_checksum_md5 (checksum, md5_input[i], len, NULL);
-		CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_CHECKSUM_MD5_LENGTH) == 0);
+		p11_hash_md5 (checksum, md5_input[i], len, NULL);
+		CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
 
 		if (len > 5) {
-			p11_checksum_md5 (checksum, md5_input[i], 5, md5_input[i] + 5, len - 5, NULL);
-			CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_CHECKSUM_MD5_LENGTH) == 0);
+			p11_hash_md5 (checksum, md5_input[i], 5, md5_input[i] + 5, len - 5, NULL);
+			CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
 		}
 	}
 }

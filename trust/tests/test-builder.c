@@ -41,7 +41,7 @@
 
 #include "attrs.h"
 #include "builder.h"
-#include "checksum.h"
+#include "hash.h"
 #include "debug.h"
 #include "index.h"
 #include "library.h"
@@ -187,7 +187,7 @@ test_build_certificate (CuTest *cu)
 static void
 test_build_certificate_empty (CuTest *cu)
 {
-	unsigned char checksum[P11_CHECKSUM_SHA1_LENGTH];
+	unsigned char checksum[P11_HASH_SHA1_LEN];
 	CK_ULONG domain = 0;
 	CK_ULONG category = 0;
 
@@ -225,7 +225,7 @@ test_build_certificate_empty (CuTest *cu)
 
 	setup (cu);
 
-	p11_checksum_sha1 (checksum, test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
+	p11_hash_sha1 (checksum, test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
 
 	attrs = NULL;
 	merge = p11_attrs_dup (input);

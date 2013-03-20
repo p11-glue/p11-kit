@@ -25,6 +25,7 @@ libp11_library_la_SOURCES = \
 	constants.c constants.h \
 	debug.c debug.h \
 	dict.c dict.h \
+	hash.c hash.h \
 	lexer.c lexer.h \
 	library.c library.h \
 	pkcs11.h pkcs11x.h \
@@ -45,7 +46,6 @@ libp11_data_la_SOURCES = \
 	asn1.c asn1.h \
 	basic.asn basic.asn.h \
 	base64.c base64.h \
-	checksum.c checksum.h \
 	oid.c oid.h \
 	openssl.asn openssl.asn.h \
 	pem.c pem.h \

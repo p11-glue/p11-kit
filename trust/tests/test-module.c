@@ -42,8 +42,8 @@
 #define CRYPTOKI_EXPORTS
 
 #include "attrs.h"
-#include "checksum.h"
 #include "debug.h"
+#include "hash.h"
 #include "library.h"
 #include "pkcs11x.h"
 #include "test-data.h"
@@ -385,8 +385,8 @@ check_trust_object_hashes (CuTest *cu,
                            CK_OBJECT_HANDLE trust,
                            CK_ATTRIBUTE *cert)
 {
-	unsigned char sha1[P11_CHECKSUM_SHA1_LENGTH];
-	unsigned char md5[P11_CHECKSUM_MD5_LENGTH];
+	unsigned char sha1[P11_HASH_SHA1_LEN];
+	unsigned char md5[P11_HASH_MD5_LEN];
 	unsigned char check[128];
 	CK_ATTRIBUTE *value;
 	CK_RV rv;
@@ -403,10 +403,10 @@ check_trust_object_hashes (CuTest *cu,
 	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	CuAssertPtrNotNull (cu, value);
 
-	p11_checksum_md5 (check, value->pValue, value->ulValueLen, NULL);
+	p11_hash_md5 (check, value->pValue, value->ulValueLen, NULL);
 	CuAssertTrue (cu, memcmp (md5, check, sizeof (md5)) == 0);
 
-	p11_checksum_sha1 (check, value->pValue, value->ulValueLen, NULL);
+	p11_hash_sha1 (check, value->pValue, value->ulValueLen, NULL);
 	CuAssertTrue (cu, memcmp (sha1, check, sizeof (sha1)) == 0);
 }
 

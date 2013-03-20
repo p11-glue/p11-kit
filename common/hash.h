@@ -32,8 +32,8 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
-#ifndef P11_CHECKSUM_H_
-#define P11_CHECKSUM_H_
+#ifndef P11_HASH_H_
+#define P11_HASH_H_
 
 #include "compat.h"
 
@@ -43,18 +43,18 @@
  * These particular algorithms would be poor choices for that.
  */
 
-#define P11_CHECKSUM_SHA1_LENGTH 20
+#define P11_HASH_MD5_LEN 16
 
-#define P11_CHECKSUM_MD5_LENGTH 16
+void     p11_hash_md5       (unsigned char *hash,
+                             const void *input,
+                             size_t length,
+                             ...) GNUC_NULL_TERMINATED;
 
-void     p11_checksum_md5       (unsigned char *checksum,
-                                 const void *input,
-                                 size_t length,
-                                 ...) GNUC_NULL_TERMINATED;
+#define P11_HASH_SHA1_LEN 20
 
-void     p11_checksum_sha1      (unsigned char *checksum,
-                                 const void *input,
-                                 size_t length,
-                                 ...) GNUC_NULL_TERMINATED;
+void     p11_hash_sha1      (unsigned char *hash,
+                             const void *input,
+                             size_t length,
+                             ...) GNUC_NULL_TERMINATED;
 
-#endif /* P11_CHECKSUM_H_ */
+#endif /* P11_HASH_H_ */
