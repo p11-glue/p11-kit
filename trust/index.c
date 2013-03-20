@@ -648,7 +648,7 @@ index_select (p11_index *index,
 		for (j = 1; j < num; j++) {
 			assert (buckets[j]->elem); /* checked above */
 			at = binary_search (buckets[j]->elem, 0, buckets[j]->num, handle);
-			if (buckets[j]->elem[at] != handle) {
+			if (at >= buckets[j]->num || buckets[j]->elem[at] != handle) {
 				handle = 0;
 				break;
 			}

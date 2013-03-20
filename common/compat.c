@@ -459,15 +459,12 @@ strndup (const char *data,
          size_t length)
 {
 	char *ret;
-	size_t len;
 
-	len = strlen (data);
-	if (length > len)
-		length = len;
-
-	ret = memdup (data, length + 1);
-	if (ret != NULL)
+	ret = malloc (length + 1);
+	if (ret != NULL) {
+		strncpy (ret, data, length);
 		ret[length] = 0;
+	}
 
 	return ret;
 }

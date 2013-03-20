@@ -539,6 +539,8 @@ test_find_all (CuTest *tc)
 	free (check);
 
 	/* A double check of this method */
+	one = 0UL;
+	check = &one;
 	CuAssertTrue (tc, !handles_are (check, 29292929, 0UL));
 	CuAssertTrue (tc, !handles_are (NULL, 0UL));
 

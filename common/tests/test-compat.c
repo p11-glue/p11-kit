@@ -72,6 +72,21 @@ test_basename (CuTest *tc)
 	}
 }
 
+static void
+test_strndup (CuTest *tc)
+{
+	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
+	char *res;
+
+	res = strndup (unterminated, 6);
+	CuAssertStrEquals (tc, res, "tester");
+	free (res);
+
+	res = strndup ("test", 6);
+	CuAssertStrEquals (tc, res, "test");
+	free (res);
+}
+
 int
 main (void)
 {
@@ -80,6 +95,7 @@ main (void)
 	int ret;
 
 	SUITE_ADD_TEST (suite, test_basename);
+	SUITE_ADD_TEST (suite, test_strndup);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

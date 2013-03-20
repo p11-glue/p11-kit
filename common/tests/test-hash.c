@@ -87,7 +87,7 @@ test_sha1_long (CuTest *cu)
 	CuAssertTrue (cu, input != NULL);
 	memset (input, 'a', 1000000);
 
-	p11_hash_sha1 (checksum, input, strlen (input), NULL);
+	p11_hash_sha1 (checksum, input, 1000000, NULL);
 	CuAssertTrue (cu, memcmp (expected, checksum, P11_HASH_SHA1_LEN) == 0);
 }
 
@@ -179,19 +179,19 @@ test_murmur2_incr (CuTest *cu)
 	uint32_t first, second;
 
 	p11_hash_murmur2 ((unsigned char *)&first,
-	                  "this is the long input!", 23,
+	                  "this is the long input!", (size_t)23,
 	                  NULL);
 
 	p11_hash_murmur2 ((unsigned char *)&second,
-	                  "this", 4,
-	                  " ", 1,
-	                  "is ", 3,
-	                  "the long ", 9,
-	                  "in", 2,
-	                  "p", 1,
-	                  "u", 1,
-	                  "t", 1,
-	                  "!", 1,
+	                  "this", (size_t)4,
+	                  " ", (size_t)1,
+	                  "is ", (size_t)3,
+	                  "the long ", (size_t)9,
+	                  "in", (size_t)2,
+	                  "p", (size_t)1,
+	                  "u", (size_t)1,
+	                  "t", (size_t)1,
+	                  "!", (size_t)1,
 	                  NULL);
 
 	CuAssertIntEquals (cu, first, second);
