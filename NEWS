@@ -1,3 +1,7 @@
+0.17.4 (unstable)
+ * Check for duplicate certificates in a token, warn and discard [#62548]
+ * Implement a proper index so we have decent load performance
+
 0.17.3 (unstable)
  * Use descriptive labels for the trust module tokens [#62534]
  * Remove the temporary built in distrust objects
