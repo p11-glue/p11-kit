@@ -55,13 +55,13 @@ typedef CK_RV   (* p11_index_build_cb)   (void *data,
                                           CK_ATTRIBUTE **attrs,
                                           CK_ATTRIBUTE *merge);
 
-typedef void    (* p11_index_changed_cb) (void *data,
+typedef void    (* p11_index_notify_cb)  (void *data,
                                           p11_index *index,
                                           CK_OBJECT_HANDLE handle,
                                           CK_ATTRIBUTE *attrs);
 
 p11_index *        p11_index_new         (p11_index_build_cb build,
-                                          p11_index_changed_cb change,
+                                          p11_index_notify_cb notify,
                                           void *data);
 
 void               p11_index_free        (p11_index *index);
@@ -93,8 +93,7 @@ CK_RV              p11_index_update      (p11_index *index,
                                           CK_ATTRIBUTE *attrs);
 
 CK_RV              p11_index_replace     (p11_index *index,
-                                          CK_ATTRIBUTE *match,
-                                          CK_ATTRIBUTE_TYPE key,
+                                          CK_OBJECT_HANDLE handle,
                                           CK_ATTRIBUTE *replace);
 
 CK_RV              p11_index_replace_all (p11_index *index,
@@ -109,14 +108,12 @@ CK_ATTRIBUTE *     p11_index_lookup      (p11_index *index,
                                           CK_OBJECT_HANDLE handle);
 
 CK_OBJECT_HANDLE   p11_index_find        (p11_index *index,
-                                          CK_ATTRIBUTE *match);
-
-CK_OBJECT_HANDLE   p11_index_findn       (p11_index *index,
                                           CK_ATTRIBUTE *match,
-                                          CK_ULONG count);
+                                          int count);
 
 CK_OBJECT_HANDLE * p11_index_find_all    (p11_index *index,
-                                          CK_ATTRIBUTE *match);
+                                          CK_ATTRIBUTE *match,
+                                          int count);
 
 CK_OBJECT_HANDLE * p11_index_snapshot    (p11_index *index,
                                           p11_index *base,

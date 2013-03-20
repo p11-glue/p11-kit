@@ -185,7 +185,7 @@ test_token_flags (CuTest *cu)
 
 	/* The other objects */
 	for (i = 0; expected[i]; i++) {
-		handle = p11_index_findn (p11_token_index (test.token), expected[i], 2);
+		handle = p11_index_find (p11_token_index (test.token), expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 
 		object = p11_index_lookup (p11_token_index (test.token), handle);

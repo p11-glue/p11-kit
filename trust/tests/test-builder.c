@@ -1102,7 +1102,7 @@ test_changed_trusted_certificate (CuTest *cu)
 
 	/* The other objects */
 	for (i = 0; expected[i]; i++) {
-		handle = p11_index_findn (test.index, expected[i], 2);
+		handle = p11_index_find (test.index, expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 
 		attrs = p11_index_lookup (test.index, handle);
@@ -1215,7 +1215,7 @@ test_changed_distrust_value (CuTest *cu)
 
 	/* The other objects */
 	for (i = 0; expected[i]; i++) {
-		handle = p11_index_findn (test.index, expected[i], 2);
+		handle = p11_index_find (test.index, expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 
 		attrs = p11_index_lookup (test.index, handle);
@@ -1299,7 +1299,7 @@ test_changed_distrust_serial (CuTest *cu)
 	p11_index_finish (test.index);
 
 	for (i = 0; expected[i]; i++) {
-		handle = p11_index_findn (test.index, expected[i], 2);
+		handle = p11_index_find (test.index, expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 		attrs = p11_index_lookup (test.index, handle);
 		CuAssertPtrNotNull (cu, attrs);
@@ -1403,13 +1403,13 @@ test_changed_dup_certificates (CuTest *cu)
 	CuAssertIntEquals (cu, CKR_OK, rv);
 	p11_index_finish (test.index);
 
-	handle = p11_index_find (test.index, match_nss);
+	handle = p11_index_find (test.index, match_nss, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, match_assertion);
+	handle = p11_index_find (test.index, match_assertion, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, trusted_nss);
+	handle = p11_index_find (test.index, trusted_nss, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, anchor_assertion);
+	handle = p11_index_find (test.index, anchor_assertion, -1);
 	CuAssertTrue (cu, handle != 0);
 
 	/* Now we add a distrusted certificate, should update the objects */
@@ -1418,35 +1418,35 @@ test_changed_dup_certificates (CuTest *cu)
 	CuAssertIntEquals (cu, CKR_OK, rv);
 	p11_index_finish (test.index);
 
-	handle = p11_index_find (test.index, trusted_nss);
+	handle = p11_index_find (test.index, trusted_nss, -1);
 	CuAssertTrue (cu, handle == 0);
-	handle = p11_index_find (test.index, distrust_nss);
+	handle = p11_index_find (test.index, distrust_nss, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, anchor_assertion);
+	handle = p11_index_find (test.index, anchor_assertion, -1);
 	CuAssertTrue (cu, handle == 0);
-	handle = p11_index_find (test.index, distrust_assertion);
+	handle = p11_index_find (test.index, distrust_assertion, -1);
 	CuAssertTrue (cu, handle != 0);
 
 	/* Now remove the trusted cetrificate, should update again */
 	rv = p11_index_remove (test.index, handle2);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
-	handle = p11_index_find (test.index, trusted_nss);
+	handle = p11_index_find (test.index, trusted_nss, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, distrust_nss);
+	handle = p11_index_find (test.index, distrust_nss, -1);
 	CuAssertTrue (cu, handle == 0);
-	handle = p11_index_find (test.index, anchor_assertion);
+	handle = p11_index_find (test.index, anchor_assertion, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, distrust_assertion);
+	handle = p11_index_find (test.index, distrust_assertion, -1);
 	CuAssertTrue (cu, handle == 0);
 
 	/* Now remove the original certificate, unknown nss and no assertions */
 	rv = p11_index_remove (test.index, handle1);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
-	handle = p11_index_find (test.index, unknown_nss);
+	handle = p11_index_find (test.index, unknown_nss, -1);
 	CuAssertTrue (cu, handle != 0);
-	handle = p11_index_find (test.index, match_assertion);
+	handle = p11_index_find (test.index, match_assertion, -1);
 	CuAssertTrue (cu, handle == 0);
 
 	teardown (cu);
@@ -1487,11 +1487,11 @@ test_changed_without_id (CuTest *cu)
 	p11_index_finish (test.index);
 
 	klass = CKO_NSS_TRUST;
-	handle = p11_index_find (test.index, match);
+	handle = p11_index_find (test.index, match, -1);
 	CuAssertTrue (cu, handle != 0);
 
 	klass = CKO_X_TRUST_ASSERTION;
-	handle = p11_index_find (test.index, match);
+	handle = p11_index_find (test.index, match, -1);
 	CuAssertTrue (cu, handle != 0);
 
 	teardown (cu);
@@ -1535,7 +1535,7 @@ test_changed_staple_ca (CuTest *cu)
 
 	/* Not a CA at this point, until we staple */
 	category = 0;
-	CuAssertTrue (cu, p11_index_find (test.index, match) == 0);
+	CuAssertTrue (cu, p11_index_find (test.index, match, -1) == 0);
 
 	/* Add a stapled basic constraint */
 	rv = p11_index_add (test.index, stapled, 4, NULL);
@@ -1543,7 +1543,7 @@ test_changed_staple_ca (CuTest *cu)
 
 	/* Now should be a CA */
 	category = 2;
-	CuAssertTrue (cu, p11_index_find (test.index, match) != 0);
+	CuAssertTrue (cu, p11_index_find (test.index, match, -1) != 0);
 
 	p11_attrs_free (attrs);
 
@@ -1604,7 +1604,7 @@ test_changed_staple_ku (CuTest *cu)
 	CuAssertIntEquals (cu, CKR_OK, rv);
 	p11_index_finish (test.index);
 
-	handle = p11_index_findn (test.index, nss_trust_ds_and_np, 2);
+	handle = p11_index_find (test.index, nss_trust_ds_and_np, 2);
 	CuAssertTrue (cu, handle != 0);
 
 	attrs = p11_index_lookup (test.index, handle);

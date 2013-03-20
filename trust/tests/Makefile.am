@@ -29,14 +29,15 @@ LDADD = \
 
 CHECK_PROGS = \
 	test-persist \
-	test-parser \
 	test-index \
+	test-parser \
 	test-builder \
 	test-token \
 	test-module \
 	$(NULL)
 
 noinst_PROGRAMS = \
+	frob-pow \
 	frob-token \
 	frob-nss-trust \
 	$(CHECK_PROGS)

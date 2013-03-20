@@ -403,22 +403,22 @@ test_find (CuTest *tc)
 	p11_index_add (test.index, second, 2, &two);
 	p11_index_add (test.index, third, 2, &three);
 
-	check = p11_index_find (test.index, match3);
+	check = p11_index_find (test.index, match3, -1);
 	CuAssertIntEquals (tc, three, check);
 
-	check = p11_index_findn (test.index, match3, 1);
+	check = p11_index_find (test.index, match3, 1);
 	CuAssertIntEquals (tc, three, check);
 
-	check = p11_index_find (test.index, match_any);
+	check = p11_index_find (test.index, match_any, -1);
 	CuAssertTrue (tc, check == one || check == two || check == three);
 
-	check = p11_index_findn (test.index, match_any, 1);
+	check = p11_index_find (test.index, match_any, 1);
 	CuAssertTrue (tc, check == one || check == two || check == three);
 
-	check = p11_index_find (test.index, match_none);
+	check = p11_index_find (test.index, match_none, -1);
 	CuAssertIntEquals (tc, 0, check);
 
-	check = p11_index_findn (test.index, match_none, 2);
+	check = p11_index_find (test.index, match_none, 2);
 	CuAssertIntEquals (tc, 0, check);
 
 	teardown (tc);
@@ -517,23 +517,23 @@ test_find_all (CuTest *tc)
 	p11_index_add (test.index, second, 3, &two);
 	p11_index_add (test.index, third, 3, &three);
 
-	check = p11_index_find_all (test.index, match_3);
+	check = p11_index_find_all (test.index, match_3, -1);
 	CuAssertTrue (tc, handles_are (check, three, 0UL));
 	free (check);
 
-	check = p11_index_find_all (test.index, match_none);
+	check = p11_index_find_all (test.index, match_none, -1);
 	CuAssertTrue (tc, handles_are (check, 0UL));
 	free (check);
 
-	check = p11_index_find_all (test.index, match_odd);
+	check = p11_index_find_all (test.index, match_odd, -1);
 	CuAssertTrue (tc, handles_are (check, one, three, 0UL));
 	free (check);
 
-	check = p11_index_find_all (test.index, match_any);
+	check = p11_index_find_all (test.index, match_any, -1);
 	CuAssertTrue (tc, handles_are (check, one, two, three, 0UL));
 	free (check);
 
-	check = p11_index_find_all (test.index, match_none);
+	check = p11_index_find_all (test.index, match_none, -1);
 	CuAssertPtrNotNull (tc, check);
 	CuAssertIntEquals (tc, 0, check[0]);
 	free (check);
@@ -567,7 +567,7 @@ test_find_realloc (CuTest *tc)
 	for (i = 0; i < 1000; i++)
 		p11_index_add (test.index, attrs, 3, NULL);
 
-	check = p11_index_find_all (test.index, match);
+	check = p11_index_find_all (test.index, match, -1);
 	CuAssertPtrNotNull (tc, check);
 
 	for (i = 0; i < 1000; i++)
@@ -665,27 +665,27 @@ test_replace_all (CuTest *tc)
 	CuAssertIntEquals (tc, 0, array->num);
 
 	/* eins should have replaced one */
-	check = p11_index_find (test.index, eins);
+	check = p11_index_find (test.index, eins, -1);
 	CuAssertIntEquals (tc, one, check);
 
 	/* two should still be around */
-	check = p11_index_find (test.index, second);
+	check = p11_index_find (test.index, second, -1);
 	CuAssertIntEquals (tc, two, check);
 
 	/* three should have been removed */
-	check = p11_index_find (test.index, third);
+	check = p11_index_find (test.index, third, -1);
 	CuAssertIntEquals (tc, 0, check);
 
 	/* five should have been removed */
-	check = p11_index_find (test.index, fifth);
+	check = p11_index_find (test.index, fifth, -1);
 	CuAssertIntEquals (tc, 0, check);
 
 	/* sieben should have been added */
-	check = p11_index_find (test.index, sieben);
+	check = p11_index_find (test.index, sieben, -1);
 	CuAssertTrue (tc, check != one && check != two && check != three && check != five);
 
 	/* neun should have been added */
-	check = p11_index_find (test.index, neun);
+	check = p11_index_find (test.index, neun, -1);
 	CuAssertTrue (tc, check != one && check != two && check != three && check != five);
 
 	CuAssertIntEquals (tc, 4, p11_index_size (test.index));

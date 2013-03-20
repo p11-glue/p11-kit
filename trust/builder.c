@@ -127,7 +127,7 @@ lookup_extension (p11_builder *builder,
 	if (match[0].pValue != NULL) {
 		match[0].ulValueLen = length;
 
-		obj = p11_index_find (index, match);
+		obj = p11_index_find (index, match, -1);
 		attrs = p11_index_lookup (index, obj);
 		if (attrs != NULL) {
 			value = p11_attrs_find_value (attrs, CKA_VALUE, ext_len);
@@ -166,7 +166,7 @@ lookup_related  (p11_index *index,
 	match[0].pValue = id->pValue;
 	match[0].ulValueLen = id->ulValueLen;
 
-	return p11_index_find_all (index, match);
+	return p11_index_find_all (index, match, -1);
 }
 
 p11_builder *
@@ -1078,6 +1078,7 @@ replace_nss_trust_object (p11_builder *builder,
 	CK_ATTRIBUTE_PTR issuer;
 	CK_ATTRIBUTE_PTR serial_number;
 
+	p11_array *array;
 	void *value;
 	size_t length;
 
@@ -1107,7 +1108,7 @@ replace_nss_trust_object (p11_builder *builder,
 	return_if_fail (match != NULL);
 
 	/* If we find a non-generated object, then don't generate */
-	if (p11_index_find (index, match)) {
+	if (p11_index_find (index, match, -1)) {
 		p11_debug ("not generating nss trust object because one already exists");
 		attrs = NULL;
 
@@ -1153,8 +1154,11 @@ replace_nss_trust_object (p11_builder *builder,
 	}
 
 	/* Replace related generated object with this new one */
-	rv = p11_index_replace (index, match, CKA_INVALID, attrs);
+	array = p11_array_new (NULL);
+	p11_array_push (array, attrs);
+	rv = p11_index_replace_all (index, match, CKA_INVALID, array);
 	return_if_fail (rv == CKR_OK);
+	p11_array_free (array);
 }
 
 static void
@@ -1450,7 +1454,7 @@ replace_compat_for_cert (p11_builder *builder,
 		if (value != NULL) {
 			match[0].pValue = value->pValue;
 			match[0].ulValueLen = value->ulValueLen;
-			handle = p11_index_find (index, match);
+			handle = p11_index_find (index, match, -1);
 		}
 		if (handle != 0)
 			attrs = p11_index_lookup (index, handle);

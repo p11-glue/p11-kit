@@ -88,7 +88,7 @@ static CK_ATTRIBUTE *
 parsed_attrs (CK_ATTRIBUTE *match)
 {
 	CK_OBJECT_HANDLE handle;
-	handle = p11_index_find (test.index, certificate_match);
+	handle = p11_index_find (test.index, certificate_match, -1);
 	return p11_index_lookup (test.index, handle);
 
 }
@@ -247,7 +247,7 @@ test_parse_openssl_trusted (CuTest *cu)
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
-		handle = p11_index_findn (test.index, expected[i], 2);
+		handle = p11_index_find (test.index, expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 
 		object = p11_index_lookup (test.index, handle);
@@ -322,7 +322,7 @@ test_parse_openssl_distrusted (CuTest *cu)
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
-		handle = p11_index_findn (test.index, expected[i], 2);
+		handle = p11_index_find (test.index, expected[i], 2);
 		CuAssertTrue (cu, handle != 0);
 
 		object = p11_index_lookup (test.index, handle);

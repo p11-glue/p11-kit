@@ -44,15 +44,32 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
- * TODO: Eventually we want to be using a bloom filter to optimize and
- * actually implement the index.
+ * The number of buckets we use for indexing, should end up as roughly
+ * equal to the expected number of unique attribute values * 0.75,
+ * prime if possible. Currently we don't expand the index, so this is
+ * just a good guess for general usage.
  */
+#define NUM_BUCKETS 7919
+
+/*
+ * The number of indexes to use when trying to find a matching object.
+ */
+#define MAX_SELECT 3
+
+typedef struct {
+	CK_OBJECT_HANDLE *elem;
+	int num;
+} index_bucket;
 
 struct _p11_index {
-	/* The list of objects */
+	/* The list of objects by handle */
 	p11_dict *objects;
+
+	/* Used for indexing */
+	index_bucket *buckets;
 
 	/* Data passed to callbacks */
 	void *data;
@@ -61,29 +78,29 @@ struct _p11_index {
 	p11_index_build_cb build;
 
 	/* Called after objects change */
-	p11_index_changed_cb changed;
+	p11_index_notify_cb notify;
 
 	/* Used for queueing changes, when in a batch */
 	p11_dict *changes;
-	bool changing;
+	bool notifying;
 };
 
-struct object {
+typedef struct {
 	CK_OBJECT_HANDLE handle;
 	CK_ATTRIBUTE *attrs;
-};
+} index_object;
 
 static void
 free_object (void *data)
 {
-	struct object *obj = data;
+	index_object *obj = data;
 	p11_attrs_free (obj->attrs);
 	free (obj);
 }
 
 p11_index *
 p11_index_new (p11_index_build_cb build,
-               p11_index_changed_cb changed,
+               p11_index_notify_cb notify,
                void *data)
 {
 	p11_index *index;
@@ -92,7 +109,7 @@ p11_index_new (p11_index_build_cb build,
 	return_val_if_fail (index != NULL, NULL);
 
 	index->build = build;
-	index->changed = changed;
+	index->notify = notify;
 	index->data = data;
 
 	index->objects = p11_dict_new (p11_dict_ulongptr_hash,
@@ -100,16 +117,24 @@ p11_index_new (p11_index_build_cb build,
 	                               NULL, free_object);
 	return_val_if_fail (index->objects != NULL, NULL);
 
+	index->buckets = calloc (NUM_BUCKETS, sizeof (index_bucket));
+	return_val_if_fail (index->buckets != NULL, NULL);
+
 	return index;
 }
 
 void
 p11_index_free (p11_index *index)
 {
+	int i;
+
 	return_if_fail (index != NULL);
 
 	p11_dict_free (index->objects);
 	p11_dict_free (index->changes);
+	for (i = 0; i < NUM_BUCKETS; i++)
+		free (index->buckets[i].elem);
+	free (index->buckets);
 	free (index);
 }
 
@@ -118,6 +143,111 @@ p11_index_size (p11_index *index)
 {
 	return_val_if_fail (index != NULL, -1);
 	return p11_dict_size (index->objects);
+}
+
+static bool
+is_indexable (p11_index *index,
+              CK_ATTRIBUTE_TYPE type)
+{
+	switch (type) {
+	case CKA_CLASS:
+	case CKA_VALUE:
+	case CKA_OBJECT_ID:
+	case CKA_ID:
+		return true;
+	}
+
+	return false;
+}
+
+static unsigned int
+alloc_size (int num)
+{
+	unsigned int n = num ? 1 : 0;
+	while (n < num && n > 0)
+		n <<= 1;
+	return n;
+}
+
+static int
+binary_search (CK_OBJECT_HANDLE *elem,
+               int low,
+               int high,
+               CK_OBJECT_HANDLE handle)
+{
+	int mid;
+
+	if (low == high)
+		return low;
+
+	mid = low + ((high - low) / 2);
+	if (handle > elem[mid])
+		return binary_search (elem, mid + 1, high, handle);
+	else if (handle < elem[mid])
+		return binary_search (elem, low, mid, handle);
+
+	return mid;
+}
+
+
+static void
+bucket_insert (index_bucket *bucket,
+               CK_OBJECT_HANDLE handle)
+{
+	unsigned int alloc;
+	int at = 0;
+
+	if (bucket->elem) {
+		at = binary_search (bucket->elem, 0, bucket->num, handle);
+		if (at < bucket->num && bucket->elem[at] == handle)
+			return;
+	}
+
+	alloc = alloc_size (bucket->num);
+	if (bucket->num + 1 > alloc) {
+		alloc = alloc ? alloc * 2 : 1;
+		return_if_fail (alloc != 0);
+		bucket->elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		return_if_fail (bucket->elem != NULL);
+	}
+
+	memmove (bucket->elem + at + 1, bucket->elem + at,
+	         (bucket->num - at) * sizeof (CK_OBJECT_HANDLE));
+	bucket->elem[at] = handle;
+	bucket->num++;
+}
+
+static bool
+bucket_push (index_bucket *bucket,
+             CK_OBJECT_HANDLE handle)
+{
+	unsigned int alloc;
+
+	alloc = alloc_size (bucket->num);
+	if (bucket->num + 1 > alloc) {
+		alloc = alloc ? alloc * 2 : 1;
+		return_val_if_fail (alloc != 0, false);
+		bucket->elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		return_val_if_fail (bucket->elem != NULL, false);
+	}
+
+	bucket->elem[bucket->num++] = handle;
+	return true;
+}
+
+static void
+index_hash (p11_index *index,
+            index_object *obj)
+{
+	unsigned int hash;
+	int i;
+
+	for (i = 0; !p11_attrs_terminator (obj->attrs + i); i++) {
+		if (is_indexable (index, obj->attrs[i].type)) {
+			hash = p11_attr_hash (obj->attrs + i);
+			bucket_insert (index->buckets + (hash % NUM_BUCKETS), obj->handle);
+		}
+	}
 }
 
 static CK_RV
@@ -134,11 +264,11 @@ index_build (p11_index *index,
 }
 
 static void
-call_change (p11_index *index,
+call_notify (p11_index *index,
              CK_OBJECT_HANDLE handle,
              CK_ATTRIBUTE *attrs)
 {
-	assert (index->changed);
+	assert (index->notify);
 
 	/* When attrs is NULL, means this is a modify */
 	if (attrs == NULL) {
@@ -151,27 +281,27 @@ call_change (p11_index *index,
 		handle = 0;
 	}
 
-	index->changing = true;
-	index->changed (index->data, index, handle, attrs);
-	index->changing = false;
+	index->notifying = true;
+	index->notify (index->data, index, handle, attrs);
+	index->notifying = false;
 }
 
 static void
-index_change (p11_index *index,
+index_notify (p11_index *index,
               CK_OBJECT_HANDLE handle,
               CK_ATTRIBUTE *removed)
 {
-	struct object *obj;
+	index_object *obj;
 
-	if (!index->changed || index->changing)
+	if (!index->notify || index->notifying)
 		return;
 
 	if (!index->changes) {
-		call_change (index, handle, removed);
+		call_notify (index, handle, removed);
 		p11_attrs_free (removed);
 
 	} else {
-		obj = calloc (1, sizeof (struct object));
+		obj = calloc (1, sizeof (index_object));
 		return_if_fail (obj != NULL);
 
 		obj->handle = handle;
@@ -199,7 +329,7 @@ void
 p11_index_finish (p11_index *index)
 {
 	p11_dict *changes;
-	struct object *obj;
+	index_object *obj;
 	p11_dictiter iter;
 
 	return_if_fail (index != NULL);
@@ -211,8 +341,10 @@ p11_index_finish (p11_index *index)
 	index->changes = NULL;
 
 	p11_dict_iterate (changes, &iter);
-	while (p11_dict_next (&iter, NULL, (void **)&obj))
-		call_change (index, obj->handle, obj->attrs);
+	while (p11_dict_next (&iter, NULL, (void **)&obj)) {
+		index_notify (index, obj->handle, obj->attrs);
+		obj->attrs = NULL;
+	}
 
 	p11_dict_free (changes);
 }
@@ -229,13 +361,13 @@ p11_index_take (p11_index *index,
                 CK_ATTRIBUTE *attrs,
                 CK_OBJECT_HANDLE *handle)
 {
-	struct object *obj;
+	index_object *obj;
 	CK_RV rv;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 	return_val_if_fail (attrs != NULL, CKR_GENERAL_ERROR);
 
-	obj = calloc (1, sizeof (struct object));
+	obj = calloc (1, sizeof (index_object));
 	return_val_if_fail (obj != NULL, CKR_HOST_MEMORY);
 
 	rv = index_build (index, &obj->attrs, attrs);
@@ -250,10 +382,12 @@ p11_index_take (p11_index *index,
 	if (!p11_dict_set (index->objects, &obj->handle, obj))
 		return_val_if_reached (CKR_HOST_MEMORY);
 
+	index_hash (index, obj);
+
 	if (handle)
 		*handle = obj->handle;
 
-	index_change (index, obj->handle, NULL);
+	index_notify (index, obj->handle, NULL);
 	return CKR_OK;
 }
 
@@ -279,7 +413,7 @@ p11_index_update (p11_index *index,
                   CK_OBJECT_HANDLE handle,
                   CK_ATTRIBUTE *update)
 {
-	struct object *obj;
+	index_object *obj;
 	CK_RV rv;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
@@ -297,7 +431,9 @@ p11_index_update (p11_index *index,
 		return rv;
 	}
 
-	index_change (index, obj->handle, NULL);
+	index_hash (index, obj);
+	index_notify (index, obj->handle, NULL);
+
 	return CKR_OK;
 }
 
@@ -308,7 +444,7 @@ p11_index_set (p11_index *index,
                CK_ULONG count)
 {
 	CK_ATTRIBUTE *update;
-	struct object *obj;
+	index_object *obj;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 
@@ -326,7 +462,7 @@ CK_RV
 p11_index_remove (p11_index *index,
                   CK_OBJECT_HANDLE handle)
 {
-	struct object *obj;
+	index_object *obj;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 
@@ -334,7 +470,7 @@ p11_index_remove (p11_index *index,
 		return CKR_OBJECT_HANDLE_INVALID;
 
 	/* This takes ownership of the attributes */
-	index_change (index, handle, obj->attrs);
+	index_notify (index, handle, obj->attrs);
 	obj->attrs = NULL;
 	free_object (obj);
 
@@ -343,20 +479,17 @@ p11_index_remove (p11_index *index,
 
 static CK_RV
 index_replacev (p11_index *index,
-                CK_ATTRIBUTE *match,
+                CK_OBJECT_HANDLE *handles,
                 CK_ATTRIBUTE_TYPE key,
                 CK_ATTRIBUTE **replace,
                 CK_ULONG replacen)
 {
-	CK_OBJECT_HANDLE *handles;
-	struct object *obj;
+	index_object *obj;
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *attr;
 	bool handled = false;
 	CK_RV rv;
 	int i, j;
-
-	handles = p11_index_find_all (index, match);
 
 	for (i = 0; handles && handles[i] != 0; i++) {
 		obj = p11_dict_get (index->objects, handles + i);
@@ -380,6 +513,8 @@ index_replacev (p11_index *index,
 					obj->attrs = attrs;
 					replace[j] = NULL;
 					handled = true;
+					index_hash (index, obj);
+					index_notify (index, obj->handle, NULL);
 					break;
 				}
 			}
@@ -401,19 +536,18 @@ index_replacev (p11_index *index,
 		replace[j] = NULL;
 	}
 
-	free (handles);
 	return CKR_OK;
 }
 
 CK_RV
 p11_index_replace (p11_index *index,
-                   CK_ATTRIBUTE *match,
-                   CK_ATTRIBUTE_TYPE key,
+                   CK_OBJECT_HANDLE handle,
                    CK_ATTRIBUTE *replace)
 {
+	CK_OBJECT_HANDLE handles[] = { handle, 0 };
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
-	return index_replacev (index, match, key, &replace,
-	                       replace ? 1 : 0);
+	return index_replacev (index, handles, CKA_INVALID,
+	                       &replace, replace ? 1 : 0);
 }
 
 CK_RV
@@ -422,12 +556,15 @@ p11_index_replace_all (p11_index *index,
                        CK_ATTRIBUTE_TYPE key,
                        p11_array *replace)
 {
+	CK_OBJECT_HANDLE *handles;
 	CK_RV rv;
 	int i;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 
-	rv = index_replacev (index, match, key,
+	handles = p11_index_find_all (index, match, -1);
+
+	rv = index_replacev (index, handles, key,
 	                     (CK_ATTRIBUTE **)replace->elem,
 	                     replace->num);
 
@@ -438,6 +575,7 @@ p11_index_replace_all (p11_index *index,
 		}
 	}
 
+	free (handles);
 	return rv;
 }
 
@@ -445,7 +583,7 @@ CK_ATTRIBUTE *
 p11_index_lookup (p11_index *index,
                   CK_OBJECT_HANDLE handle)
 {
-	struct object *obj;
+	index_object *obj;
 
 	return_val_if_fail (index != NULL, NULL);
 
@@ -456,67 +594,153 @@ p11_index_lookup (p11_index *index,
 	return obj ? obj->attrs : NULL;
 }
 
-CK_OBJECT_HANDLE
-p11_index_find (p11_index *index,
-                CK_ATTRIBUTE *match)
-{
-	struct object *obj;
-	p11_dictiter iter;
+typedef bool (* index_sink) (p11_index *index,
+                             index_object *obj,
+                             CK_ATTRIBUTE *match,
+                             CK_ULONG count,
+                             void *data);
 
-	p11_dict_iterate (index->objects, &iter);
-	while (p11_dict_next (&iter, NULL, (void *)&obj)) {
-		if (p11_attrs_match (obj->attrs, match))
-			return obj->handle;
+static void
+index_select (p11_index *index,
+              CK_ATTRIBUTE *match,
+              CK_ULONG count,
+              index_sink sink,
+              void *data)
+{
+	index_bucket *buckets[NUM_BUCKETS];
+	CK_OBJECT_HANDLE handle;
+	index_object *obj;
+	unsigned int hash;
+	p11_dictiter iter;
+	CK_ULONG n;
+	int num, at;
+	int i, j;
+
+	/* First look for any matching buckets */
+	for (n = 0, num = 0; n < count && num < MAX_SELECT; n++) {
+		if (is_indexable (index, match[n].type)) {
+			hash = p11_attr_hash (match + n);
+			buckets[num] = index->buckets + (hash % NUM_BUCKETS);
+
+			/* If any index is empty, then obviously no match */
+			if (!buckets[num]->num)
+				return;
+
+			num++;
+		}
 	}
 
-	return 0;
+	/* Fall back on selecting all the items, if no index */
+	if (num == 0) {
+		p11_dict_iterate (index->objects, &iter);
+		while (p11_dict_next (&iter, NULL, (void *)&obj)) {
+			if (!sink (index, obj, match, count, data))
+				return;
+		}
+		return;
+	}
+
+	for (i = 0; i < buckets[0]->num; i++) {
+		/* A candidate match from first bucket */
+		handle = buckets[0]->elem[i];
+
+		/* Check if the candidate is in other buckets */
+		for (j = 1; j < num; j++) {
+			assert (buckets[j]->elem); /* checked above */
+			at = binary_search (buckets[j]->elem, 0, buckets[j]->num, handle);
+			if (buckets[j]->elem[at] != handle) {
+				handle = 0;
+				break;
+			}
+		}
+
+		/* Matched all the buckets, now actually match attrs */
+		if (handle != 0) {
+			obj = p11_dict_get (index->objects, &handle);
+			if (obj != NULL) {
+				if (!sink (index, obj, match, count, data))
+					return;
+			}
+		}
+	}
+}
+
+static bool
+sink_one_match (p11_index *index,
+                index_object *obj,
+                CK_ATTRIBUTE *match,
+                CK_ULONG count,
+                void *data)
+{
+	CK_OBJECT_HANDLE *result = data;
+
+	if (p11_attrs_matchn (obj->attrs, match, count)) {
+		*result = obj->handle;
+		return false;
+	}
+
+	return true;
 }
 
 CK_OBJECT_HANDLE
-p11_index_findn (p11_index *index,
-                 CK_ATTRIBUTE *match,
-                 CK_ULONG count)
+p11_index_find (p11_index *index,
+                CK_ATTRIBUTE *match,
+                int count)
 {
-	struct object *obj;
-	p11_dictiter iter;
+	CK_OBJECT_HANDLE handle = 0UL;
 
-	p11_dict_iterate (index->objects, &iter);
-	while (p11_dict_next (&iter, NULL, (void *)&obj)) {
-		if (p11_attrs_matchn (obj->attrs, match, count))
-			return obj->handle;
-	}
+	return_val_if_fail (index != NULL, 0UL);
 
-	return 0;
+	if (count < 0)
+		count = p11_attrs_count (match);
+
+	index_select (index, match, count, sink_one_match, &handle);
+	return handle;
+}
+
+static bool
+sink_if_match (p11_index *index,
+               index_object *obj,
+               CK_ATTRIBUTE *match,
+               CK_ULONG count,
+               void *data)
+{
+	index_bucket *handles = data;
+
+	if (p11_attrs_matchn (obj->attrs, match, count))
+		bucket_push (handles, obj->handle);
+	return true;
 }
 
 CK_OBJECT_HANDLE *
 p11_index_find_all (p11_index *index,
-                    CK_ATTRIBUTE *match)
+                    CK_ATTRIBUTE *match,
+                    int count)
 {
-	CK_OBJECT_HANDLE *handles = NULL;
-	struct object *obj;
-	p11_dictiter iter;
-	int nhandles;
-	int at = 0;
+	index_bucket handles = { NULL, 0 };
 
-	nhandles = 16;
-	handles = malloc (nhandles * sizeof (CK_OBJECT_HANDLE));
-	return_val_if_fail (handles != NULL, NULL);
+	return_val_if_fail (index != NULL, NULL);
 
-	p11_dict_iterate (index->objects, &iter);
-	while (p11_dict_next (&iter, NULL, (void *)&obj)) {
-		if (p11_attrs_match (obj->attrs, match)) {
-			if (at + 2 > nhandles) {
-				nhandles += 16;
-				handles = realloc (handles, nhandles * sizeof (CK_OBJECT_HANDLE));
-				return_val_if_fail (handles != NULL, NULL);
-			}
-			handles[at++] = obj->handle;
-		}
-	}
+	if (count < 0)
+		count = p11_attrs_count (match);
 
-	handles[at++] = 0UL;
-	return handles;
+	index_select (index, match, count, sink_if_match, &handles);
+
+	/* Null terminate */
+	bucket_push (&handles, 0UL);
+	return handles.elem;
+}
+
+static bool
+sink_any (p11_index *index,
+          index_object *obj,
+          CK_ATTRIBUTE *match,
+          CK_ULONG count,
+          void *data)
+{
+	index_bucket *handles = data;
+	bucket_push (handles, obj->handle);
+	return true;
 }
 
 CK_OBJECT_HANDLE *
@@ -525,43 +749,18 @@ p11_index_snapshot (p11_index *index,
                     CK_ATTRIBUTE *attrs,
                     CK_ULONG count)
 {
-	CK_OBJECT_HANDLE *snapshot;
-	CK_OBJECT_HANDLE *handle;
-	p11_dictiter iter;
-	int num;
-	int i;
-
-	/*
-	 * TODO: The concept is that we use our bloom filter to provide
-	 * an initial rough snapshot here of which objects match, but for
-	 * now just include everything in the snapshot.
-	 */
+	index_bucket handles = { NULL, 0 };
 
 	return_val_if_fail (index != NULL, NULL);
 
-	num = p11_index_size (index) + 1;
+	if (count < 0)
+		count = p11_attrs_count (attrs);
+
+	index_select (index, attrs, count, sink_any, &handles);
 	if (base)
-		num += p11_index_size (base);
+		index_select (base, attrs, count, sink_any, &handles);
 
-	snapshot = calloc (num, sizeof (CK_OBJECT_HANDLE));
-	return_val_if_fail (snapshot != NULL, NULL);
-
-	p11_dict_iterate (index->objects, &iter);
-	for (i = 0 ; p11_dict_next (&iter, (void *)&handle, NULL); i++) {
-		assert (i < num);
-		snapshot[i] = *handle;
-	}
-
-	if (base) {
-		p11_dict_iterate (base->objects, &iter);
-		for ( ; p11_dict_next (&iter, (void *)&handle, NULL); i++) {
-			assert (i < num);
-			snapshot[i] = *handle;
-		}
-	}
-
-	assert (i < num);
-	assert (snapshot[i] == 0UL);
-
-	return snapshot;
+	/* Null terminate */
+	bucket_push (&handles, 0UL);
+	return handles.elem;
 }
