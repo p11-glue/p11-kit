@@ -68,11 +68,12 @@ void      test_check_attrs_msg         (CuTest *cu,
                                         CK_ATTRIBUTE *attrs);
 
 #define   test_check_attr(cu, expected, attr) \
-	test_check_attr_msg (cu, __FILE__, __LINE__, expected, attr)
+	test_check_attr_msg (cu, __FILE__, __LINE__, CKA_INVALID, expected, attr)
 
 void      test_check_attr_msg          (CuTest *cu,
                                         const char *file,
                                         int line,
+                                        CK_OBJECT_CLASS klass,
                                         CK_ATTRIBUTE *expected,
                                         CK_ATTRIBUTE *attr);
 

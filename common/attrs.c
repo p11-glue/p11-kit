@@ -274,7 +274,7 @@ p11_attrs_findn (CK_ATTRIBUTE *attrs,
 }
 
 bool
-p11_attrs_find_bool (CK_ATTRIBUTE *attrs,
+p11_attrs_find_bool (const CK_ATTRIBUTE *attrs,
                      CK_ATTRIBUTE_TYPE type,
                      CK_BBOOL *value)
 {
@@ -293,7 +293,7 @@ p11_attrs_find_bool (CK_ATTRIBUTE *attrs,
 }
 
 bool
-p11_attrs_findn_bool (CK_ATTRIBUTE *attrs,
+p11_attrs_findn_bool (const CK_ATTRIBUTE *attrs,
                       CK_ULONG count,
                       CK_ATTRIBUTE_TYPE type,
                       CK_BBOOL *value)
@@ -313,13 +313,33 @@ p11_attrs_findn_bool (CK_ATTRIBUTE *attrs,
 }
 
 bool
-p11_attrs_find_ulong (CK_ATTRIBUTE *attrs,
+p11_attrs_find_ulong (const CK_ATTRIBUTE *attrs,
                       CK_ATTRIBUTE_TYPE type,
                       CK_ULONG *value)
 {
 	CK_ULONG i;
 
 	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
+		if (attrs[i].type == type &&
+		    attrs[i].ulValueLen == sizeof (CK_ULONG) &&
+		    attrs[i].pValue != NULL) {
+			*value = *((CK_ULONG *)attrs[i].pValue);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool
+p11_attrs_findn_ulong (const CK_ATTRIBUTE *attrs,
+                       CK_ULONG count,
+                       CK_ATTRIBUTE_TYPE type,
+                       CK_ULONG *value)
+{
+	CK_ULONG i;
+
+	for (i = 0; i < count; i++) {
 		if (attrs[i].type == type &&
 		    attrs[i].ulValueLen == sizeof (CK_ULONG) &&
 		    attrs[i].pValue != NULL) {
@@ -551,7 +571,8 @@ attribute_is_trust_value (const CK_ATTRIBUTE *attr)
 }
 
 static bool
-attribute_is_sensitive (const CK_ATTRIBUTE *attr)
+attribute_is_sensitive (const CK_ATTRIBUTE *attr,
+                        CK_OBJECT_CLASS klass)
 {
 	/*
 	 * Don't print any just attribute, since they may contain
@@ -667,6 +688,9 @@ attribute_is_sensitive (const CK_ATTRIBUTE *attr)
 	X (CKA_TRUST_STEP_UP_APPROVED)
 	X (CKA_CERT_SHA1_HASH)
 	X (CKA_CERT_MD5_HASH)
+	case CKA_VALUE:
+		return (klass != CKO_CERTIFICATE &&
+			klass != CKO_X_CERTIFICATE_EXTENSION);
 	#undef X
 	}
 
@@ -786,7 +810,8 @@ format_some_bytes (p11_buffer *buffer,
 
 static void
 format_attribute (p11_buffer *buffer,
-                  const CK_ATTRIBUTE *attr)
+                  const CK_ATTRIBUTE *attr,
+                  CK_OBJECT_CLASS klass)
 {
 	p11_buffer_add (buffer, "{ ", -1);
 	format_attribute_type (buffer, attr->type);
@@ -805,7 +830,7 @@ format_attribute (p11_buffer *buffer,
 		format_key_type (buffer, *((CK_KEY_TYPE *)attr->pValue));
 	} else if (attribute_is_trust_value (attr)) {
 		format_trust_value (buffer, *((CK_TRUST *)attr->pValue));
-	} else if (attribute_is_sensitive (attr)) {
+	} else if (attribute_is_sensitive (attr, klass)) {
 		buffer_append_printf (buffer, "(%lu) NOT-PRINTED", attr->ulValueLen);
 	} else {
 		buffer_append_printf (buffer, "(%lu) ", attr->ulValueLen);
@@ -820,10 +845,15 @@ format_attributes (p11_buffer *buffer,
                    int count)
 {
 	CK_BBOOL first = CK_TRUE;
+	CK_OBJECT_CLASS klass;
 	int i;
 
 	if (count < 0)
 		count = p11_attrs_count (attrs);
+
+	if (!p11_attrs_findn_ulong (attrs, CKA_CLASS, count, &klass))
+		klass = CKA_INVALID;
+
 	buffer_append_printf (buffer, "(%d) [", count);
 	for (i = 0; i < count; i++) {
 		if (first)
@@ -831,7 +861,7 @@ format_attributes (p11_buffer *buffer,
 		else
 			p11_buffer_add (buffer, ", ", 2);
 		first = CK_FALSE;
-		format_attribute (buffer, attrs + i);
+		format_attribute (buffer, attrs + i, klass);
 	}
 	p11_buffer_add (buffer, " ]", -1);
 }
@@ -848,11 +878,12 @@ p11_attrs_to_string (const CK_ATTRIBUTE *attrs,
 }
 
 char *
-p11_attr_to_string (const CK_ATTRIBUTE *attr)
+p11_attr_to_string (const CK_ATTRIBUTE *attr,
+                    CK_OBJECT_CLASS klass)
 {
 	p11_buffer buffer;
 	if (!p11_buffer_init_null (&buffer, 32))
 		return_val_if_reached (NULL);
-	format_attribute (&buffer, attr);
+	format_attribute (&buffer, attr, klass);
 	return p11_buffer_steal (&buffer, NULL);
 }

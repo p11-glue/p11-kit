@@ -104,7 +104,7 @@ test_check_id_msg (CuTest *cu,
 	one = p11_attrs_find (expected, CKA_ID);
 	two = p11_attrs_find (attr, CKA_ID);
 
-	test_check_attr_msg (cu, file, line, one, two);
+	test_check_attr_msg (cu, file, line, CKA_INVALID, one, two);
 }
 
 void
@@ -114,11 +114,15 @@ test_check_attrs_msg (CuTest *cu,
                       CK_ATTRIBUTE *expected,
                       CK_ATTRIBUTE *attrs)
 {
+	CK_OBJECT_CLASS klass;
 	CK_ATTRIBUTE *attr;
+
+	if (!p11_attrs_find_ulong (expected, CKA_CLASS, &klass))
+		klass = CKA_INVALID;
 
 	while (!p11_attrs_terminator (expected)) {
 		attr = p11_attrs_find (attrs, expected->type);
-		test_check_attr_msg (cu, file, line, expected, attr);
+		test_check_attr_msg (cu, file, line, klass, expected, attr);
 		expected++;
 	}
 }
@@ -127,6 +131,7 @@ void
 test_check_attr_msg (CuTest *cu,
                      const char *file,
                      int line,
+                     CK_OBJECT_CLASS klass,
                      CK_ATTRIBUTE *expected,
                      CK_ATTRIBUTE *attr)
 {
@@ -135,14 +140,14 @@ test_check_attr_msg (CuTest *cu,
 
 	if (attr == NULL) {
 		asprintf (&message, "expected %s but found NULL",
-		          p11_attr_to_string (expected));
+		          p11_attr_to_string (expected, klass));
 		CuFail_Line (cu, file, line, "attribute does not match", message);
 	}
 
 	if (!p11_attr_equal (attr, expected)) {
 		asprintf (&message, "expected %s but found %s",
-		          p11_attr_to_string (expected),
-		          p11_attr_to_string (attr));
+		          p11_attr_to_string (expected, klass),
+		          p11_attr_to_string (attr, klass));
 		CuFail_Line (cu, file, line, "attribute does not match", message);
 	}
 }

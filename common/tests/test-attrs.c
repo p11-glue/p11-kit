@@ -470,7 +470,7 @@ test_to_string (CuTest *tc)
 	char *string;
 
 
-	string = p11_attr_to_string (&one);
+	string = p11_attr_to_string (&one, CKA_INVALID);
 	CuAssertStrEquals (tc, "{ CKA_LABEL = (3) \"yay\" }", string);
 	free (string);
 

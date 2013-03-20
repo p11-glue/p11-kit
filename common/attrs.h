@@ -74,16 +74,21 @@ CK_ATTRIBUTE *      p11_attrs_findn         (CK_ATTRIBUTE *attrs,
                                              CK_ULONG count,
                                              CK_ATTRIBUTE_TYPE type);
 
-bool                p11_attrs_find_bool     (CK_ATTRIBUTE *attrs,
+bool                p11_attrs_find_bool     (const CK_ATTRIBUTE *attrs,
                                              CK_ATTRIBUTE_TYPE type,
                                              CK_BBOOL *value);
 
-bool                p11_attrs_findn_bool    (CK_ATTRIBUTE *attrs,
+bool                p11_attrs_findn_bool    (const CK_ATTRIBUTE *attrs,
                                              CK_ULONG count,
                                              CK_ATTRIBUTE_TYPE type,
                                              CK_BBOOL *value);
 
-bool                p11_attrs_find_ulong    (CK_ATTRIBUTE *attrs,
+bool                p11_attrs_find_ulong    (const CK_ATTRIBUTE *attrs,
+                                             CK_ATTRIBUTE_TYPE type,
+                                             CK_ULONG *value);
+
+bool                p11_attrs_findn_ulong   (const CK_ATTRIBUTE *attrs,
+                                             CK_ULONG count,
                                              CK_ATTRIBUTE_TYPE type,
                                              CK_ULONG *value);
 
@@ -107,7 +112,8 @@ bool                p11_attrs_matchn        (const CK_ATTRIBUTE *attrs,
 char *              p11_attrs_to_string     (const CK_ATTRIBUTE *attrs,
                                              int count);
 
-char *              p11_attr_to_string      (const CK_ATTRIBUTE *attr);
+char *              p11_attr_to_string      (const CK_ATTRIBUTE *attr,
+                                             CK_OBJECT_CLASS klass);
 
 bool                p11_attr_equal          (const void *one,
                                              const void *two);
