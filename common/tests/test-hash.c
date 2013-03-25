@@ -135,44 +135,30 @@ test_md5 (CuTest *cu)
 static void
 test_murmur2 (CuTest *cu)
 {
-	struct {
-		const char *input;
-		const char *input2;
-		int hash;
-	} fixtures[] = {
-		{ "one", NULL, 1910179066 },
-		{ "two", NULL, 396151652 },
-		{ "four", NULL, -2034170174 },
-		{ "seven", NULL, -588341181 },
-		/* Note that these are identical output */
-		{ "eleven", NULL, -37856894 },
-		{ "ele", "ven", -37856894 },
-		{ NULL },
-	};
+	uint32_t one, two, four, seven, eleven, split;
 
-	uint32_t first;
-	uint32_t second;
-	int i;
+	assert (sizeof (one) == P11_HASH_MURMUR2_LEN);
 
-	assert (sizeof (first) == P11_HASH_MURMUR2_LEN);
-	for (i = 0; fixtures[i].input != NULL; i++) {
-		p11_hash_murmur2 ((unsigned char *)&first,
-		                  fixtures[i].input,
-		                  strlen (fixtures[i].input),
-		                  fixtures[i].input2,
-		                  fixtures[i].input2 ? strlen (fixtures[i].input2) : 0,
-		                  NULL);
+	p11_hash_murmur2 ((unsigned char *)&one, "one", 3, NULL);
+	p11_hash_murmur2 ((unsigned char *)&two, "two", 3, NULL);
+	p11_hash_murmur2 ((unsigned char *)&four, "four", 4, NULL);
+	p11_hash_murmur2 ((unsigned char *)&seven, "seven", 5, NULL);
+	p11_hash_murmur2 ((unsigned char *)&eleven, "eleven", 6, NULL);
+	p11_hash_murmur2 ((unsigned char *)&split, "ele", 3, "ven", 3, NULL);
 
-		p11_hash_murmur2 ((unsigned char *)&second,
-		                  fixtures[i].input,
-		                  strlen (fixtures[i].input),
-		                  fixtures[i].input2,
-		                  fixtures[i].input2 ? strlen (fixtures[i].input2) : 0,
-		                  NULL);
+	CuAssertTrue (cu, one != two);
+	CuAssertTrue (cu, one != four);
+	CuAssertTrue (cu, one != seven);
+	CuAssertTrue (cu, one != eleven);
 
-		CuAssertIntEquals (cu, fixtures[i].hash, first);
-		CuAssertIntEquals (cu, fixtures[i].hash, second);
-	}
+	CuAssertTrue (cu, two != four);
+	CuAssertTrue (cu, two != seven);
+	CuAssertTrue (cu, two != eleven);
+
+	CuAssertTrue (cu, four != seven);
+	CuAssertTrue (cu, four != eleven);
+
+	CuAssertTrue (cu, split == eleven);
 }
 
 static void
