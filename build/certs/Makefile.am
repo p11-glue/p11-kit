@@ -45,3 +45,6 @@ build-self-signed:
 	openssl req -new -x509 -outform DER -out self-signed-with-ku.der \
 		-newkey rsa -keyout /dev/null -nodes -subj /CN=self-signed-with-ku.example.com \
 		-config with-ku.conf -set_serial 888 -extensions v3_ca
+	openssl req -new -x509 -outform DER -out distant-end-date.der \
+		-newkey rsa:512 -keyout /dev/null -nodes -subj /CN=far-in-the-future.example.com \
+		-config with-ku.conf -set_serial 999 -extensions v3_ca -days 20000

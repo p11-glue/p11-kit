@@ -257,20 +257,21 @@ calc_date (node_asn *node,
 		ret = asn1_read_value (node, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
 		timet = p11_asn1_parse_general (buf, &when);
-		return_val_if_fail (timet >= 0, false);
 
 	} else if (strcmp (buf, "utcTime") == 0) {
 		len = sizeof (buf) - 1;
 		ret = asn1_read_value (node, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
 		timet = p11_asn1_parse_utc (buf, &when);
-		return_val_if_fail (timet >= 0, false);
 
 	} else {
 		return_val_if_reached (false);
 	}
 
 	free (sub);
+
+	if (timet < 0)
+		return false;
 
 	assert (sizeof (date->year) == 4);
 	snprintf ((char *)buf, 5, "%04d", 1900 + when.tm_year);

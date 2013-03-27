@@ -469,9 +469,9 @@ when_and_offset_to_time_t (struct tm *when,
 {
 	time_t timet;
 
-	/* In order to work with 32 bit time_t. */
-	if (sizeof (time_t) <= 4 && when->tm_year >= 2038) {
-		timet = (time_t)2145914603;  /* 2037-12-31 23:23:23 */
+	/* A 32-bit time, cannot represent this time */
+	if (sizeof (time_t) <= 4 && when->tm_year >= 138) {
+		return -1;
 
 	/* Convert to seconds since epoch */
 	} else {
