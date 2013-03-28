@@ -855,13 +855,41 @@ sys_C_Login (CK_SESSION_HANDLE handle,
              CK_UTF8CHAR_PTR pin,
              CK_ULONG pin_len)
 {
-	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+	CK_RV rv;
+
+	p11_debug ("in");
+
+	p11_lock ();
+
+		rv = lookup_session (handle, NULL);
+		if (rv == CKR_OK)
+			rv = CKR_USER_TYPE_INVALID;
+
+	p11_unlock ();
+
+	p11_debug ("out: 0x%lx", rv);
+
+	return rv;
 }
 
 static CK_RV
 sys_C_Logout (CK_SESSION_HANDLE handle)
 {
-	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+	CK_RV rv;
+
+	p11_debug ("in");
+
+	p11_lock ();
+
+		rv = lookup_session (handle, NULL);
+		if (rv == CKR_OK)
+			rv = CKR_USER_NOT_LOGGED_IN;
+
+	p11_unlock ();
+
+	p11_debug ("out: 0x%lx", rv);
+
+	return rv;
 }
 
 static CK_RV

@@ -867,6 +867,28 @@ test_find_serial_der_decoded (CuTest *cu)
 	teardown (cu);
 }
 
+static void
+test_login_logout (CuTest *cu)
+{
+	CK_SESSION_HANDLE session;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	/* Just testing our stubs for now */
+
+	rv = test.module->C_Login (session, CKU_USER, NULL, 0);
+	CuAssertTrue (cu, rv == CKR_USER_TYPE_INVALID);
+
+	rv = test.module->C_Logout (session);
+	CuAssertTrue (cu, rv == CKR_USER_NOT_LOGGED_IN);
+
+	teardown (cu);
+}
+
 int
 main (void)
 {
@@ -894,6 +916,7 @@ main (void)
 	SUITE_ADD_TEST (suite, test_session_remove);
 	SUITE_ADD_TEST (suite, test_session_setattr);
 	SUITE_ADD_TEST (suite, test_find_serial_der_decoded);
+	SUITE_ADD_TEST (suite, test_login_logout);
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);
