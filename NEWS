@@ -1,3 +1,7 @@
+0.17.5 (unstable)
+ * Don't try to guess at overflowing time values on 32-bit systems [#62825]
+ * Test fixes [#927394]
+
 0.17.4 (unstable)
  * Check for duplicate certificates in a token, warn and discard [#62548]
  * Implement a proper index so we have decent load performance
