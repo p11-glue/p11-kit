@@ -1122,49 +1122,6 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 	return rv;
 }
 
-static CK_ATTRIBUTE *
-work_around_broken_nss_serial_number_lookups (CK_ATTRIBUTE *attrs)
-{
-	/*
-	 * WORKAROUND: NSS calls us asking for CKA_SERIAL_NUMBER items that are
-	 * not DER encoded. It shouldn't be doing this. We never return any certificate
-	 * serial numbers that are not DER encoded.
-	 *
-	 * So work around the issue here while the NSS guys fix this issue.
-	 * This code should be removed in future versions.
-	 */
-
-	CK_OBJECT_CLASS klass;
-	CK_ATTRIBUTE *serial;
-	unsigned char *der;
-	size_t der_len;
-	int len_len;
-
-	if (!p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) ||
-	    klass != CKO_NSS_TRUST)
-		return attrs;
-
-	serial = p11_attrs_find_valid (attrs, CKA_SERIAL_NUMBER);
-	if (!serial || p11_asn1_tlv_length (serial->pValue, serial->ulValueLen) >= 0)
-		return attrs;
-
-	p11_debug ("working around serial number lookup that's not DER encoded");
-
-	/* Assumption that 32 bytes is more than enough to store a ulong */
-	der_len = 1 + 32 + serial->ulValueLen;
-	der = malloc (der_len);
-	return_val_if_fail (der != NULL, NULL);
-
-	der[0] = ASN1_TAG_INTEGER | ASN1_CLASS_UNIVERSAL;
-	len_len = der_len - 1;
-	asn1_length_der (serial->ulValueLen, der + 1, &len_len);
-	assert (len_len < der_len - serial->ulValueLen);
-	memcpy (der + 1 + len_len, serial->pValue, serial->ulValueLen);
-	der_len = 1 + len_len + serial->ulValueLen;
-
-	return p11_attrs_take (attrs, CKA_SERIAL_NUMBER, der, der_len);
-}
-
 static CK_RV
 sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
                        CK_ATTRIBUTE_PTR template,
@@ -1218,9 +1175,6 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 				find->match = p11_attrs_buildn (NULL, template, count);
 				warn_if_fail (find->match != NULL);
 
-				find->match = work_around_broken_nss_serial_number_lookups (find->match);
-				warn_if_fail (find->match != NULL);
-
 				/* Build a session snapshot of all objects */
 				find->iterator = 0;
 				find->snapshot = p11_index_snapshot (indices[0], indices[1], template, count);
@@ -1238,6 +1192,78 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 	p11_debug ("out: 0x%lx", rv);
 
 	return rv;
+}
+
+static bool
+match_for_broken_nss_serial_number_lookups (CK_ATTRIBUTE *attr,
+                                            CK_ATTRIBUTE *match)
+{
+	unsigned char der[32];
+	unsigned char *val_val;
+	size_t der_len;
+	size_t val_len;
+	int len_len;
+
+	if (!match->pValue || !match->ulValueLen ||
+	    match->ulValueLen == CKA_INVALID ||
+	    attr->ulValueLen == CKA_INVALID)
+		return false;
+
+	der_len = sizeof (der);
+	der[0] = ASN1_TAG_INTEGER | ASN1_CLASS_UNIVERSAL;
+	len_len = der_len - 1;
+	asn1_length_der (match->ulValueLen, der + 1, &len_len);
+	assert (len_len < (der_len - 1));
+	der_len = 1 + len_len;
+
+	val_val = attr->pValue;
+	val_len = attr->ulValueLen;
+
+	if (der_len + match->ulValueLen != val_len)
+		return false;
+
+	if (memcmp (der, val_val, der_len) != 0 ||
+	    memcmp (match->pValue, val_val + der_len, match->ulValueLen) != 0)
+		return false;
+
+	p11_debug ("worked around serial number lookup that's not DER encoded");
+	return true;
+}
+
+static bool
+find_objects_match (CK_ATTRIBUTE *attrs,
+                    CK_ATTRIBUTE *match)
+{
+	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE *attr;
+
+	for (; !p11_attrs_terminator (match); match++) {
+		attr = p11_attrs_find ((CK_ATTRIBUTE *)attrs, match->type);
+		if (!attr)
+			return false;
+		if (p11_attr_equal (attr, match))
+			continue;
+
+		/*
+		 * WORKAROUND: NSS calls us asking for CKA_SERIAL_NUMBER items that are
+		 * not DER encoded. It shouldn't be doing this. We never return any certificate
+		 * serial numbers that are not DER encoded.
+		 *
+		 * So work around the issue here while the NSS guys fix this issue.
+		 * This code should be removed in future versions.
+		 */
+
+		if (attr->type == CKA_SERIAL_NUMBER &&
+		    p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) &&
+		    klass == CKO_NSS_TRUST) {
+			if (match_for_broken_nss_serial_number_lookups (attr, match))
+				continue;
+		}
+
+		return false;
+	}
+
+	return true;
 }
 
 static CK_RV
@@ -1280,7 +1306,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 				if (attrs == NULL)
 					continue;
 
-				if (p11_attrs_match (attrs, find->match)) {
+				if (find_objects_match (attrs, find->match)) {
 					objects[matched] = object;
 					matched++;
 				}

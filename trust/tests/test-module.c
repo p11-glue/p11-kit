@@ -639,6 +639,46 @@ test_session_find (CuTest *cu)
 }
 
 static void
+test_session_find_no_attr (CuTest *cu)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE match[] = {
+		{ CKA_COLOR, "blah", 4 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_OBJECT_HANDLE check;
+	CK_ULONG count;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = test.module->C_CreateObject (session, original, 3, &handle);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = test.module->C_FindObjectsInit (session, match, 1);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 0, count);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	teardown (cu);
+}
+
+static void
 test_lookup_invalid (CuTest *cu)
 {
 	CK_SESSION_HANDLE session;
@@ -873,6 +913,71 @@ test_find_serial_der_decoded (CuTest *cu)
 }
 
 static void
+test_find_serial_der_mismatch (CuTest *cu)
+{
+	CK_OBJECT_CLASS nss_trust = CKO_NSS_TRUST;
+
+	CK_ATTRIBUTE object[] = {
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust) },
+		{ CKA_SERIAL_NUMBER, "\x02\x03\x01\x02\x03", 5 },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE match[] = {
+		{ CKA_SERIAL_NUMBER, NULL, 0 },
+		{ CKA_CLASS, &nss_trust, sizeof (nss_trust) },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_OBJECT_HANDLE check;
+	CK_ULONG count;
+	CK_RV rv;
+
+	setup (cu);
+
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = test.module->C_CreateObject (session, object, 2, &handle);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Do a find with a null serial number, no match */
+	rv = test.module->C_FindObjectsInit (session, match, 2);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 0, count);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Do a find with a wrong length, no match */
+	match[0].pValue = "at";
+	match[0].ulValueLen = 2;
+	rv = test.module->C_FindObjectsInit (session, match, 2);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 0, count);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Do a find with a right length, wrong value, no match */
+	match[0].pValue = "one";
+	match[0].ulValueLen = 3;
+	rv = test.module->C_FindObjectsInit (session, match, 2);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	rv = test.module->C_FindObjects (session, &check, 1, &count);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+	CuAssertIntEquals (cu, 0, count);
+	rv = test.module->C_FindObjectsFinal (session);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	teardown (cu);
+}
+
+static void
 test_login_logout (CuTest *cu)
 {
 	CK_SESSION_HANDLE session;
@@ -916,10 +1021,12 @@ main (void)
 	SUITE_ADD_TEST (suite, test_setattr_token);
 	SUITE_ADD_TEST (suite, test_session_object);
 	SUITE_ADD_TEST (suite, test_session_find);
+	SUITE_ADD_TEST (suite, test_session_find_no_attr);
 	SUITE_ADD_TEST (suite, test_session_copy);
 	SUITE_ADD_TEST (suite, test_session_remove);
 	SUITE_ADD_TEST (suite, test_session_setattr);
 	SUITE_ADD_TEST (suite, test_find_serial_der_decoded);
+	SUITE_ADD_TEST (suite, test_find_serial_der_mismatch);
 	SUITE_ADD_TEST (suite, test_login_logout);
 
 	CuSuiteRun (suite);
