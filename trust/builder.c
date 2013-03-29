@@ -630,7 +630,7 @@ const static builder_schema assertion_schema = {
 	GENERATED_CLASS,
 	{ COMMON_ATTRS,
 	  { CKA_X_PURPOSE, REQUIRE | CREATE },
-	  { CKA_VALUE, CREATE },
+	  { CKA_X_CERTIFICATE_VALUE, CREATE },
 	  { CKA_X_ASSERTION_TYPE, REQUIRE | CREATE },
 	  { CKA_ISSUER, CREATE },
 	  { CKA_SERIAL_NUMBER, CREATE },
@@ -1181,6 +1181,7 @@ build_assertions (p11_array *array,
 	CK_ATTRIBUTE autogen = { CKA_X_GENERATED, &truev, sizeof (truev) };
 	CK_ATTRIBUTE purpose = { CKA_X_PURPOSE, };
 	CK_ATTRIBUTE invalid = { CKA_INVALID, };
+	CK_ATTRIBUTE certificate_value = { CKA_X_CERTIFICATE_VALUE, };
 
 	CK_ATTRIBUTE *issuer;
 	CK_ATTRIBUTE *serial;
@@ -1191,7 +1192,7 @@ build_assertions (p11_array *array,
 	int i;
 
 	if (type == CKT_X_DISTRUSTED_CERTIFICATE) {
-		value = &invalid;
+		certificate_value.type = CKA_INVALID;
 		issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
 		serial = p11_attrs_find_valid (cert, CKA_SERIAL_NUMBER);
 
@@ -1209,6 +1210,9 @@ build_assertions (p11_array *array,
 			p11_debug ("not building positive trust assertion for certificate without value");
 			return;
 		}
+
+		certificate_value.pValue = value->pValue;
+		certificate_value.ulValueLen = value->ulValueLen;
 	}
 
 	label = p11_attrs_find (cert, CKA_LABEL);
@@ -1224,7 +1228,7 @@ build_assertions (p11_array *array,
 
 		attrs = p11_attrs_build (NULL, &klass, &private, &modifiable,
 		                         id, label, &assertion_type, &purpose,
-		                         issuer, serial, value, &autogen, NULL);
+		                         issuer, serial, &certificate_value, &autogen, NULL);
 		return_if_fail (attrs != NULL);
 
 		if (!p11_array_push (array, attrs))
@@ -1304,7 +1308,7 @@ replace_trust_assertions (p11_builder *builder,
 	CK_RV rv;
 
 	CK_ATTRIBUTE match_positive[] = {
-		{ CKA_VALUE, },
+		{ CKA_X_CERTIFICATE_VALUE, },
 		{ CKA_CLASS, &assertion, sizeof (assertion) },
 		{ CKA_X_GENERATED, &generated, sizeof (generated) },
 		{ CKA_INVALID }
@@ -1321,7 +1325,8 @@ replace_trust_assertions (p11_builder *builder,
 	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	if (value) {
 		positives = p11_array_new (NULL);
-		memcpy (match_positive, value, sizeof (CK_ATTRIBUTE));
+		match_positive[0].pValue = value->pValue;
+		match_positive[0].ulValueLen = value->ulValueLen;
 	}
 
 	issuer = p11_attrs_find_valid (cert, CKA_ISSUER);
