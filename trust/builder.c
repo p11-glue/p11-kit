@@ -227,16 +227,72 @@ calc_check_value (const unsigned char *data,
 	memcpy (check_value, checksum, 3);
 }
 
+static int
+atoin (const char *p,
+       int digits)
+{
+	int ret = 0, base = 1;
+	while(--digits >= 0) {
+		if (p[digits] < '0' || p[digits] > '9')
+			return -1;
+		ret += (p[digits] - '0') * base;
+		base *= 10;
+	}
+	return ret;
+}
+
+static int
+century_for_two_digit_year (int year)
+{
+	time_t now;
+	struct tm tm;
+	int century, current;
+
+	return_val_if_fail (year >= 0 && year <= 99, -1);
+
+	/* Get the current year */
+	now = time (NULL);
+	return_val_if_fail (now >= 0, -1);
+	if (!gmtime_r (&now, &tm))
+		return_val_if_reached (-1);
+
+	current = (tm.tm_year % 100);
+	century = (tm.tm_year + 1900) - current;
+
+	/*
+	 * Check if it's within 40 years before the
+	 * current date.
+	 */
+	if (current < 40) {
+		if (year < current)
+			return century;
+		if (year > 100 - (40 - current))
+			return century - 100;
+	} else {
+		if (year < current && year > (current - 40))
+			return century;
+	}
+
+	/*
+	 * If it's after then adjust for overflows to
+	 * the next century.
+	 */
+	if (year < current)
+		return century + 100;
+	else
+		return century;
+}
+
 static bool
 calc_date (node_asn *node,
            const char *field,
            CK_DATE *date)
 {
 	node_asn *choice;
-	struct tm when;
 	char buf[64];
-	time_t timet;
+	int century;
 	char *sub;
+	int year;
 	int len;
 	int ret;
 
@@ -252,39 +308,43 @@ calc_date (node_asn *node,
 
 	sub = strconcat (field, ".", buf, NULL);
 
+	/*
+	 * So here we take a shortcut and just copy the date from the
+	 * certificate into the CK_DATE. This doesn't take into account
+	 * time zones. However the PKCS#11 spec does not say what timezone
+	 * the dates are in. In the PKCS#11 value have a day resolution,
+	 * and time zones aren't that critical.
+	 */
+
 	if (strcmp (buf, "generalTime") == 0) {
 		len = sizeof (buf) - 1;
 		ret = asn1_read_value (node, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
-		timet = p11_asn1_parse_general (buf, &when);
+		return_val_if_fail (len >= 8, false);
+
+		/* Same as first 8 characters of date */
+		memcpy (date, buf, 8);
 
 	} else if (strcmp (buf, "utcTime") == 0) {
 		len = sizeof (buf) - 1;
 		ret = asn1_read_value (node, sub, buf, &len);
 		return_val_if_fail (ret == ASN1_SUCCESS, false);
-		timet = p11_asn1_parse_utc (buf, &when);
+		return_val_if_fail (len >= 6, false);
+
+		year = atoin (buf, 2);
+		return_val_if_fail (year > 0, false);
+
+		century = century_for_two_digit_year (year);
+		return_val_if_fail (century >= 0, false);
+
+		snprintf ((char *)date->year, 3, "%02d", century);
+		memcpy (((char *)date) + 2, buf, 6);
 
 	} else {
 		return_val_if_reached (false);
 	}
 
 	free (sub);
-
-	if (timet < 0)
-		return false;
-
-	assert (sizeof (date->year) == 4);
-	snprintf ((char *)buf, 5, "%04d", 1900 + when.tm_year);
-	memcpy (date->year, buf, 4);
-
-	assert (sizeof (date->month) == 2);
-	snprintf ((char *)buf, 3, "%02d", when.tm_mon + 1);
-	memcpy (date->month, buf, 2);
-
-	assert (sizeof (date->day) == 2);
-	snprintf ((char *)buf, 3, "%02d", when.tm_mday);
-	memcpy (date->day, buf, 2);
-
 	return true;
 }
 

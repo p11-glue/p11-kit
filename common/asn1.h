@@ -55,12 +55,6 @@ node_asn *       p11_asn1_create                    (p11_dict *asn1_defs,
 unsigned char *  p11_asn1_encode                    (node_asn *asn,
                                                      size_t *der_len);
 
-time_t           p11_asn1_parse_utc                 (const char *time_str,
-                                                     struct tm *when);
-
-time_t           p11_asn1_parse_general             (const char *time_str,
-                                                     struct tm *when);
-
 ssize_t          p11_asn1_tlv_length                (const unsigned char *data,
                                                      size_t length);
 

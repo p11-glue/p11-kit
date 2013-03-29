@@ -552,7 +552,7 @@ test_build_distant_end_date (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE expected[] = {
-		{ CKA_END_DATE, },
+		{ CKA_END_DATE, "20671229", 8 },
 		{ CKA_START_DATE, "20130327", 8 },
 		{ CKA_INVALID },
 	};
@@ -561,18 +561,6 @@ test_build_distant_end_date (CuTest *cu)
 	CK_RV rv;
 
 	setup (cu);
-
-	/*
-	 * On a 32-bit system, the end date will be too big to compute with
-	 * libc. So it'll be empty, since this is an optional field.
-	 */
-	if (sizeof (time_t) <= 4) {
-		expected[0].pValue = "";
-		expected[0].ulValueLen = 0;
-	} else {
-		expected[0].pValue = "20671229";
-		expected[0].ulValueLen = 8;
-	}
 
 	attrs = NULL;
 	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
