@@ -141,8 +141,10 @@ p11_kit_space_strdup (const unsigned char *string, size_t max_length)
 void
 p11_kit_be_quiet (void)
 {
+	p11_lock ();
 	p11_message_quiet ();
 	p11_debug_init ();
+	p11_unlock ();
 }
 
 /**
@@ -154,8 +156,10 @@ p11_kit_be_quiet (void)
 void
 p11_kit_be_loud (void)
 {
+	p11_lock ();
 	p11_message_loud ();
 	p11_debug_init ();
+	p11_unlock ();
 }
 
 /**
