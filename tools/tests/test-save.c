@@ -39,7 +39,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "dict.h"
-#include "library.h"
+#include "message.h"
 #include "save.h"
 #include "test.h"
 
@@ -537,7 +537,8 @@ main (void)
 	CuSuite* suite = CuSuiteNew ();
 	int ret;
 
-	p11_library_init ();
+	putenv ("P11_KIT_STRICT=1");
+	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_file_write);
 	SUITE_ADD_TEST (suite, test_file_exists);

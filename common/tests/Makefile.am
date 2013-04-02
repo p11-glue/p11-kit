@@ -60,6 +60,5 @@ endif # WITH_ASN1
 TESTS = $(CHECK_PROGS)
 
 LDADD += \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(CUTEST_LIBS)

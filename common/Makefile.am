@@ -10,27 +10,28 @@ inc_HEADERS = \
 	$(NULL)
 
 noinst_LTLIBRARIES = \
-	libp11-compat.la \
+	libp11-common.la \
 	libp11-library.la \
 	libp11-mock.la \
 	$(NULL)
 
-libp11_compat_la_SOURCES = \
-	compat.c compat.h \
-	$(NULL)
-
-libp11_library_la_SOURCES = \
+libp11_common_la_SOURCES = \
 	attrs.c attrs.h \
 	array.c array.h \
 	buffer.c buffer.h \
+	compat.c compat.h \
 	constants.c constants.h \
 	debug.c debug.h \
 	dict.c dict.h \
 	hash.c hash.h \
 	lexer.c lexer.h \
-	library.c library.h \
+	message.c message.h \
 	pkcs11.h pkcs11x.h \
 	url.c url.h \
+	$(NULL)
+
+libp11_library_la_SOURCES = \
+	library.c library.h \
 	$(NULL)
 
 libp11_mock_la_SOURCES = \

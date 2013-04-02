@@ -42,7 +42,6 @@
 #define CRYPTOKI_EXPORTS
 
 #include "attrs.h"
-#include "debug.h"
 #include "hash.h"
 #include "library.h"
 #include "pkcs11x.h"
@@ -898,7 +897,6 @@ main (void)
 
 	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
-	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_get_slot_list);
 	SUITE_ADD_TEST (suite, test_get_slot_info);

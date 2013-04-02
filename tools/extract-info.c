@@ -41,7 +41,7 @@
 #include "oid.h"
 #include "dict.h"
 #include "extract.h"
-#include "library.h"
+#include "message.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "x509.h"

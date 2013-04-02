@@ -44,7 +44,7 @@
 #include "debug.h"
 #include "hash.h"
 #include "index.h"
-#include "library.h"
+#include "message.h"
 #include "oid.h"
 #include "pkcs11x.h"
 #include "x509.h"

@@ -42,7 +42,7 @@
 #include "dict.h"
 #include "extract.h"
 #include "hash.h"
-#include "library.h"
+#include "message.h"
 #include "oid.h"
 #include "pem.h"
 #include "pkcs11.h"

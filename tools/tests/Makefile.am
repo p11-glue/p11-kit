@@ -24,8 +24,7 @@ LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit.la \
 	$(top_builddir)/common/libp11-data.la \
 	$(top_builddir)/common/libp11-mock.la \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(builddir)/libtestcommon.la \
 	$(LIBTASN1_LIBS) \
 	$(LTLIBINTL) \

@@ -41,7 +41,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "extract.h"
-#include "library.h"
+#include "message.h"
 #include "mock.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
@@ -655,7 +655,6 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
 	mock_module_init ();
 	p11_debug_init ();
 

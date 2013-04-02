@@ -44,7 +44,7 @@
 #include "hash.h"
 #include "debug.h"
 #include "index.h"
-#include "library.h"
+#include "message.h"
 #include "oid.h"
 #include "pkcs11x.h"
 
@@ -1722,7 +1722,6 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
 	p11_debug_init ();
 	/* p11_message_quiet (); */
 

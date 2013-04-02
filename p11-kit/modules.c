@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "library.h"
+#include "message.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"

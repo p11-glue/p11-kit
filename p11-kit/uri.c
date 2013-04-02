@@ -38,7 +38,7 @@
 #include "buffer.h"
 #define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
-#include "library.h"
+#include "message.h"
 #include "pkcs11.h"
 #include "private.h"
 #include "p11-kit.h"

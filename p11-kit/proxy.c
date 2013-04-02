@@ -39,6 +39,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "library.h"
+#include "message.h"
 #define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
 #include "p11-kit.h"

@@ -19,7 +19,7 @@ LDADD = \
 	$(top_builddir)/trust/libtrust-testable.la \
 	$(top_builddir)/common/libp11-data.la \
 	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(builddir)/libtestdata.la \
 	$(LIBTASN1_LIBS) \
 	$(CUTEST_LIBS) \
@@ -41,8 +41,7 @@ noinst_PROGRAMS = \
 	$(CHECK_PROGS)
 
 frob_nss_trust_LDADD = \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(top_builddir)/p11-kit/libp11-kit.la
 
 TESTS = $(CHECK_PROGS)

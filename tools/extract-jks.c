@@ -40,7 +40,7 @@
 #include "debug.h"
 #include "extract.h"
 #include "hash.h"
-#include "library.h"
+#include "message.h"
 #include "save.h"
 
 #include <assert.h>

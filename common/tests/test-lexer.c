@@ -42,7 +42,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "lexer.h"
-#include "library.h"
+#include "message.h"
 #include "pem.h"
 
 typedef struct {
@@ -260,7 +260,6 @@ main (void)
 
 	putenv ("P11_KIT_STRICT=1");
 	p11_debug_init ();
-	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_basic);
 	SUITE_ADD_TEST (suite, test_corners);

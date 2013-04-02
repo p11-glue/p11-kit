@@ -36,7 +36,7 @@ p11_kit_trust_la_CFLAGS = \
 p11_kit_trust_la_LIBADD = \
 	$(top_builddir)/common/libp11-data.la \
 	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(LIBTASN1_LIBS) \
 	$(NULL)
 

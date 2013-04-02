@@ -43,7 +43,7 @@
 #include "attrs.h"
 #include "builder.h"
 #include "debug.h"
-#include "library.h"
+#include "message.h"
 #include "oid.h"
 #include "parser.h"
 #include "pkcs11x.h"
@@ -570,7 +570,6 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
 	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_parse_der_certificate);

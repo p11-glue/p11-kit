@@ -41,7 +41,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "hash.h"
-#include "library.h"
+#include "message.h"
 #include "module.h"
 #include "oid.h"
 #include "parser.h"

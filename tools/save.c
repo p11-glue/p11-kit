@@ -37,7 +37,7 @@
 #include "buffer.h"
 #include "debug.h"
 #include "dict.h"
-#include "library.h"
+#include "message.h"
 #include "save.h"
 
 #include <sys/stat.h>

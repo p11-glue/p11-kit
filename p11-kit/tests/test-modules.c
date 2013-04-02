@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "debug.h"
 #include "library.h"
 #include "p11-kit.h"
 #include "private.h"

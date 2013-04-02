@@ -35,9 +35,9 @@
 #include "config.h"
 
 #include "debug.h"
-#include "library.h"
 #define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
+#include "message.h"
 
 #include "mock.h"
 

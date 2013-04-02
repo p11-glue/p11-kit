@@ -41,7 +41,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_CONF
 #include "debug.h"
 #include "lexer.h"
-#include "library.h"
+#include "message.h"
 #include "private.h"
 
 #include <sys/param.h>

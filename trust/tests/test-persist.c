@@ -43,7 +43,7 @@
 #include "attrs.h"
 #include "compat.h"
 #include "debug.h"
-#include "library.h"
+#include "message.h"
 #include "persist.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
@@ -441,7 +441,6 @@ main (void)
 
 	putenv ("P11_KIT_STRICT=1");
 	p11_debug_init ();
-	p11_library_init ();
 
 	SUITE_ADD_TEST (suite, test_magic);
 	SUITE_ADD_TEST (suite, test_simple);

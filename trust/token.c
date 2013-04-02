@@ -41,7 +41,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "errno.h"
-#include "library.h"
+#include "message.h"
 #include "module.h"
 #include "parser.h"
 #include "pkcs11.h"

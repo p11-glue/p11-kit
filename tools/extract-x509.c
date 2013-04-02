@@ -37,7 +37,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "extract.h"
-#include "library.h"
+#include "message.h"
 #include "save.h"
 
 #include <stdlib.h>

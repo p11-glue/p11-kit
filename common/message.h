@@ -34,39 +34,29 @@
  *  Stef Walter <stef@memberwebs.com>
  */
 
-#ifndef P11_LIBRARY_H_
-#define P11_LIBRARY_H_
+#ifndef P11_MESSAGE_H_
+#define P11_MESSAGE_H_
 
-#include "config.h"
 #include "compat.h"
 
 #include <sys/types.h>
 
-extern p11_mutex_t p11_library_mutex;
+#define P11_MESSAGE_MAX 512
 
-#define       p11_lock()                   p11_mutex_lock (&p11_library_mutex);
+extern char * (* p11_message_storage)      (void);
 
-#define       p11_unlock()                 p11_mutex_unlock (&p11_library_mutex);
+void          p11_message                  (const char* msg,
+                                            ...) GNUC_PRINTF (1, 2);
 
-#ifdef OS_WIN32
+void          p11_message_store            (const char* msg,
+                                            size_t length);
 
-/* No implementation, because done by DllMain */
-#define       p11_library_init_once()
+const char *  p11_message_last             (void);
 
-#else /* !OS_WIN32 */
-extern        pthread_once_t               p11_library_once;
+void          p11_message_clear            (void);
 
-#define       p11_library_init_once() \
-	pthread_once (&p11_library_once, p11_library_init_impl);
+void          p11_message_quiet            (void);
 
-void          p11_library_init_impl        (void);
+void          p11_message_loud             (void);
 
-#endif /* !OS_WIN32 */
-
-void          p11_library_init             (void);
-
-void          p11_library_thread_cleanup   (void);
-
-void          p11_library_uninit           (void);
-
-#endif /* P11_LIBRARY_H_ */
+#endif /* P11_MESSAGE_H_ */

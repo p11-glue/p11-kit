@@ -42,7 +42,7 @@
 #include "attrs.h"
 #include "debug.h"
 #include "pkcs11x.h"
-#include "library.h"
+#include "message.h"
 #include "test-data.h"
 #include "token.h"
 
@@ -235,7 +235,6 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
 	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_token_load);

@@ -39,7 +39,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "extract.h"
-#include "library.h"
+#include "message.h"
 #include "pem.h"
 #include "save.h"
 

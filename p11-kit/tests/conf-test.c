@@ -41,7 +41,8 @@
 #include <string.h>
 
 #include "conf.h"
-#include "library.h"
+#include "debug.h"
+#include "message.h"
 #include "p11-kit.h"
 #include "private.h"
 
@@ -78,7 +79,7 @@ test_parse_ignore_missing (CuTest *tc)
 	CuAssertPtrNotNull (tc, map);
 
 	CuAssertIntEquals (tc, 0, p11_dict_size (map));
-	CuAssertPtrEquals (tc, NULL, (void*)p11_kit_message ());
+	CuAssertPtrEquals (tc, NULL, (void*)p11_message_last ());
 	p11_dict_free (map);
 }
 
@@ -89,7 +90,7 @@ test_parse_fail_missing (CuTest *tc)
 
 	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
 	CuAssertPtrEquals (tc, map, NULL);
-	CuAssertPtrNotNull (tc, p11_kit_message ());
+	CuAssertPtrNotNull (tc, p11_message_last ());
 }
 
 static void
@@ -131,7 +132,7 @@ test_load_globals_merge (CuTest *tc)
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertStrEquals (tc, NULL, p11_message_last ());
 	CuAssertIntEquals (tc, CONF_USER_MERGE, user_mode);
 
 	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), "system1");
@@ -153,7 +154,7 @@ test_load_globals_no_user (CuTest *tc)
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertStrEquals (tc, NULL, p11_message_last ());
 	CuAssertIntEquals (tc, CONF_USER_NONE, user_mode);
 
 	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), "system1");
@@ -175,7 +176,7 @@ test_load_globals_user_sets_only (CuTest *tc)
 	                                 SRCDIR "/files/test-user-only.conf",
 	                                 &user_mode);
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertStrEquals (tc, NULL, p11_message_last ());
 	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
 
 	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), NULL);
@@ -197,7 +198,7 @@ test_load_globals_system_sets_only (CuTest *tc)
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
 	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_kit_message ());
+	CuAssertStrEquals (tc, NULL, p11_message_last ());
 	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
 
 	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), NULL);
@@ -222,7 +223,7 @@ test_load_globals_system_sets_invalid (CuTest *tc)
 	error = errno;
 	CuAssertPtrEquals (tc, NULL, config);
 	CuAssertIntEquals (tc, EINVAL, error);
-	CuAssertPtrNotNull (tc, p11_kit_message ());
+	CuAssertPtrNotNull (tc, p11_message_last ());
 
 	p11_dict_free (config);
 }
@@ -242,7 +243,7 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 	error = errno;
 	CuAssertPtrEquals (tc, NULL, config);
 	CuAssertIntEquals (tc, EINVAL, error);
-	CuAssertPtrNotNull (tc, p11_kit_message ());
+	CuAssertPtrNotNull (tc, p11_message_last ());
 
 	p11_dict_free (config);
 }
@@ -267,7 +268,7 @@ test_load_modules_merge (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
+	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
@@ -300,7 +301,7 @@ test_load_modules_user_none (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
+	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
@@ -331,7 +332,7 @@ test_load_modules_user_only (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertPtrEquals (tc, NULL, (void *)p11_kit_message ());
+	CuAssertPtrEquals (tc, NULL, (void *)p11_message_last ());
 
 	config = p11_dict_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
@@ -362,7 +363,7 @@ test_load_modules_no_user (CuTest *tc)
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/non-existant");
 	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_kit_message (), "invalid config filename"));
+	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
 	CuAssertPtrNotNull (tc, config);
@@ -398,7 +399,7 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
+	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_parse_conf_1);
 	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
@@ -415,8 +416,6 @@ main (void)
 	SUITE_ADD_TEST (suite, test_load_modules_user_only);
 	SUITE_ADD_TEST (suite, test_load_modules_user_none);
 	SUITE_ADD_TEST (suite, test_parse_boolean);
-
-	p11_kit_be_quiet ();
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

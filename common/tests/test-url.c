@@ -35,7 +35,8 @@
 #include "config.h"
 #include "CuTest.h"
 
-#include "library.h"
+#include "debug.h"
+#include "message.h"
 
 #include <assert.h>
 #include <string.h>
@@ -146,7 +147,7 @@ main (void)
 	int ret;
 
 	putenv ("P11_KIT_STRICT=1");
-	p11_library_init ();
+	p11_debug_init ();
 
 	SUITE_ADD_TEST (suite, test_decode_success);
 	SUITE_ADD_TEST (suite, test_decode_skip);

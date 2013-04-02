@@ -41,6 +41,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_LIB
 #include "debug.h"
 #include "library.h"
+#include "message.h"
 #include "p11-kit.h"
 #include "private.h"
 

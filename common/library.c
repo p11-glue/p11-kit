@@ -41,6 +41,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_LIB
 #include "debug.h"
 #include "library.h"
+#include "message.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -48,13 +49,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#define P11_MAX_MESSAGE 512
+#define P11_MESSAGE_MAX 512
 
 typedef struct {
-	char message[P11_MAX_MESSAGE];
-#ifdef OS_WIN32
-	void *last_error;
-#endif
+	char message[P11_MESSAGE_MAX];
 } p11_local;
 
 static p11_local * _p11_library_get_thread_local (void);
@@ -65,76 +63,18 @@ p11_mutex_t p11_library_mutex;
 pthread_once_t p11_library_once;
 #endif
 
-static bool print_messages = true;
-
-void
-p11_message_store (const char* msg,
-                   size_t length)
-{
-	p11_local *local;
-
-	if (length > P11_MAX_MESSAGE - 1)
-		length = P11_MAX_MESSAGE - 1;
-
-	local = _p11_library_get_thread_local ();
-	if (local != NULL) {
-		memcpy (local->message, msg, length);
-		local->message[length] = 0;
-	}
-}
-
-void
-p11_message (const char* msg,
-             ...)
-{
-	char buffer[P11_MAX_MESSAGE];
-	va_list va;
-	size_t length;
-
-	va_start (va, msg);
-	length = vsnprintf (buffer, P11_MAX_MESSAGE - 1, msg, va);
-	va_end (va);
-
-	/* Was it truncated? */
-	if (length > P11_MAX_MESSAGE - 1)
-		length = P11_MAX_MESSAGE - 1;
-	buffer[length] = 0;
-
-	/* If printing is not disabled, just print out */
-	if (print_messages)
-		fprintf (stderr, "p11-kit: %s\n", buffer);
-	else
-		p11_debug_message (P11_DEBUG_LIB, "message: %s", buffer);
-	p11_message_store (buffer, length);
-}
-
-void
-p11_message_quiet (void)
-{
-	print_messages = false;
-}
-
-void
-p11_message_loud (void)
-{
-	print_messages = true;
-}
-
-const char*
-p11_message_last (void)
+static char *
+thread_local_message (void)
 {
 	p11_local *local;
 	local = _p11_library_get_thread_local ();
-	return local && local->message[0] ? local->message : NULL;
+	return local ? local->message : NULL;
 }
 
-void
-p11_message_clear (void)
+static char *
+dont_store_message (void)
 {
-	p11_local *local;
-	local = _p11_library_get_thread_local ();
-	if (local != NULL)
-		local->message[0] = 0;
+	return NULL;
 }
 
 static void
@@ -170,6 +110,7 @@ p11_library_init_impl (void)
 	p11_debug ("initializing library");
 	p11_mutex_init (&p11_library_mutex);
 	pthread_key_create (&thread_local, free);
+	p11_message_storage = thread_local_message;
 }
 
 void
@@ -187,6 +128,7 @@ p11_library_uninit (void)
 	free (pthread_getspecific (thread_local));
 	pthread_setspecific (thread_local, NULL);
 
+	p11_message_storage = dont_store_message;
 	pthread_key_delete (thread_local);
 	p11_mutex_uninit (&p11_library_mutex);
 }
@@ -225,6 +167,8 @@ p11_library_init (void)
 	thread_local = TlsAlloc ();
 	if (thread_local == TLS_OUT_OF_INDEXES)
 		p11_debug ("couldn't setup tls");
+	else
+		p11_message_storage = thread_local_message;
 }
 
 void
@@ -234,8 +178,6 @@ p11_library_thread_cleanup (void)
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		p11_debug ("thread stopped, freeing tls");
 		local = TlsGetValue (thread_local);
-		if (local->last_error)
-			LocalFree (local->last_error);
 		LocalFree (local);
 	}
 }
@@ -248,6 +190,7 @@ p11_library_uninit (void)
 	uninit_common ();
 
 	if (thread_local != TLS_OUT_OF_INDEXES) {
+		p11_message_storage = dont_store_message;
 		data = TlsGetValue (thread_local);
 		free (data);
 		TlsFree (thread_local);

@@ -39,7 +39,7 @@
 #include "debug.h"
 #include "extract.h"
 #include "iter.h"
-#include "library.h"
+#include "message.h"
 #include "oid.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"

@@ -12,8 +12,7 @@ INCLUDES = \
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit-testable.la \
 	$(top_builddir)/common/libp11-mock.la \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(CUTEST_LIBS) \
 	$(LTLIBINTL)
 
@@ -47,8 +46,7 @@ mock_one_la_CFLAGS = \
 
 mock_one_la_LIBADD = \
 	$(top_builddir)/common/libp11-mock.la \
-	$(top_builddir)/common/libp11-library.la \
-	$(top_builddir)/common/libp11-compat.la \
+	$(top_builddir)/common/libp11-common.la \
 	$(NULL)
 
 mock_one_la_LDFLAGS = \

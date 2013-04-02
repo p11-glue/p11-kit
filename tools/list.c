@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "library.h"
+#include "message.h"
 #include "p11-kit.h"
 #include "tool.h"
 #include "uri.h"

@@ -40,6 +40,7 @@
 #include "attrs.h"
 #include "iter.h"
 #include "library.h"
+#include "message.h"
 #include "mock.h"
 
 #include <assert.h>
