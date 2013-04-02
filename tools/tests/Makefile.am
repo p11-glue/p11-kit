@@ -49,7 +49,7 @@ CHECK_PROGS = \
 noinst_PROGRAMS = \
 	$(CHECK_PROGS)
 
-TESTS = $(CHECK_PROGS:=$(EXEEXT))
+TESTS = $(CHECK_PROGS)
 
 test_save_SOURCES = \
 	test-save.c \

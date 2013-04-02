@@ -11,10 +11,12 @@
 *.gmo
 *~
 *.html
+*.log
 *.pot
 *.so
 *.stamp
 *.tmp
+*.trs
 
 .deps
 .libs
@@ -46,6 +48,7 @@ Makefile.in
 missing
 stamp-h1
 temp.txt
+test-driver
 
 /*/tests/test-*
 !/*/tests/test-*.[ch]
@@ -83,9 +86,11 @@ temp.txt
 /po/POTFILES
 /po/stamp-po
 /po/remove-potcdate.sed
+/po/Makefile.in.in
 /po/Makevars.template
 /po/en@boldquot*
 /po/en@quot*
+/po/Rules-quot
 
 /p11-kit/tests/p11-test
 /p11-kit/tests/pin-test

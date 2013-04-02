@@ -27,8 +27,6 @@ CHECK_PROGS = \
 noinst_PROGRAMS = \
 	$(CHECK_PROGS)
 
-TESTS = $(CHECK_PROGS:=$(EXEEXT))
-
 if WITH_ASN1
 
 LDADD += \
@@ -58,6 +56,8 @@ noinst_PROGRAMS += \
 	$(NULL)
 
 endif # WITH_ASN1
+
+TESTS = $(CHECK_PROGS)
 
 LDADD += \
 	$(top_builddir)/common/libp11-library.la \

@@ -31,7 +31,7 @@ noinst_PROGRAMS = \
 	print-messages \
 	$(CHECK_PROGS)
 
-TESTS = $(CHECK_PROGS:=$(EXEEXT))
+TESTS = $(CHECK_PROGS)
 
 noinst_LTLIBRARIES = \
 	mock-one.la \
