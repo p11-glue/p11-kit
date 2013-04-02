@@ -57,9 +57,9 @@ void     p11_hash_sha1      (unsigned char *hash,
                              size_t length,
                              ...) GNUC_NULL_TERMINATED;
 
-#define P11_HASH_MURMUR2_LEN 4
+#define P11_HASH_MURMUR3_LEN 4
 
-void     p11_hash_murmur2   (void *hash,
+void     p11_hash_murmur3   (void *hash,
                              const void *input,
                              size_t length,
                              ...) GNUC_NULL_TERMINATED;

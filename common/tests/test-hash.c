@@ -137,14 +137,14 @@ test_murmur2 (CuTest *cu)
 {
 	uint32_t one, two, four, seven, eleven, split;
 
-	assert (sizeof (one) == P11_HASH_MURMUR2_LEN);
+	assert (sizeof (one) == P11_HASH_MURMUR3_LEN);
 
-	p11_hash_murmur2 ((unsigned char *)&one, "one", 3, NULL);
-	p11_hash_murmur2 ((unsigned char *)&two, "two", 3, NULL);
-	p11_hash_murmur2 ((unsigned char *)&four, "four", 4, NULL);
-	p11_hash_murmur2 ((unsigned char *)&seven, "seven", 5, NULL);
-	p11_hash_murmur2 ((unsigned char *)&eleven, "eleven", 6, NULL);
-	p11_hash_murmur2 ((unsigned char *)&split, "ele", 3, "ven", 3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&one, "one", 3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&two, "two", 3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&four, "four", 4, NULL);
+	p11_hash_murmur3 ((unsigned char *)&seven, "seven", 5, NULL);
+	p11_hash_murmur3 ((unsigned char *)&eleven, "eleven", 6, NULL);
+	p11_hash_murmur3 ((unsigned char *)&split, "ele", 3, "ven", 3, NULL);
 
 	CuAssertTrue (cu, one != two);
 	CuAssertTrue (cu, one != four);
@@ -166,11 +166,11 @@ test_murmur2_incr (CuTest *cu)
 {
 	uint32_t first, second;
 
-	p11_hash_murmur2 ((unsigned char *)&first,
+	p11_hash_murmur3 ((unsigned char *)&first,
 	                  "this is the long input!", (size_t)23,
 	                  NULL);
 
-	p11_hash_murmur2 ((unsigned char *)&second,
+	p11_hash_murmur3 ((unsigned char *)&second,
 	                  "this", (size_t)4,
 	                  " ", (size_t)1,
 	                  "is ", (size_t)3,

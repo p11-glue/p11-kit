@@ -329,7 +329,7 @@ unsigned int
 p11_dict_str_hash (const void *string)
 {
 	uint32_t hash;
-	p11_hash_murmur2 (&hash, string, strlen (string), NULL);
+	p11_hash_murmur3 (&hash, string, strlen (string), NULL);
 	return hash;
 }
 

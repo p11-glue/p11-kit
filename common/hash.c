@@ -541,70 +541,69 @@ p11_hash_md5 (unsigned char *hash,
 	md5_invalidate (&md5);
 }
 
-/*
- *  MurmurHash.c
- *  MYUtilities
+/* This code is based on the public domain MurmurHash3 from Austin Appleby:
+ * http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
  *
- *  This file created by Jens Alfke on 3/17/08.
- *  Algorithm & source code by Austin Appleby, released to public domain.
- *  <http://murmurhash.googlepages.com/>
- *  Downloaded 3/16/2008.
- *  Modified slightly by Jens Alfke (use standard uint32_t and size_t types;
- *  change 'm' and 'r' to #defines for better C compatibility.)
- *
+ * We use only the 32 bit variant, and slow it down a bit to support unaligned
+ * reads.
  */
 
-/*-----------------------------------------------------------------------------
- * MurmurHash2, by Austin Appleby
- *
- * Note - This code makes a few assumptions about how your machine behaves -
- *
- * 1. We can read a 4-byte value from any address without crashing
- * 2. sizeof(int) == 4      **Jens: I fixed this by changing 'unsigned int' to 'uint32_t'**
- *
- * And it has a few limitations -
- *
- * 1. It will not work incrementally.
- * 2. It will not produce the same results on little-endian and big-endian
- *    machines.
+#if !defined(__cplusplus) && (__GNUC__ > 2)
+#define GNUC_INLINE __attribute__((always_inline))
+#else
+#define GNUC_INLINE
+#endif
+
+GNUC_INLINE static inline uint32_t
+rotl (uint32_t x,
+      int8_t r)
+{
+	return (x << r) | (x >> (32 - r));
+}
+
+/*
+ * Finalization mix - force all bits of a hash block to avalanche
  */
+
+GNUC_INLINE static inline uint32_t
+fmix (uint32_t h)
+{
+	h ^= h >> 16;
+	h *= 0x85ebca6b;
+	h ^= h >> 13;
+	h *= 0xc2b2ae35;
+	h ^= h >> 16;
+
+	return h;
+}
+
 
 void
-p11_hash_murmur2 (void *hash,
+p11_hash_murmur3 (void *hash,
                   const void *input,
                   size_t len,
                   ...)
 {
-	/*
-	 * 'm' and 'r' are mixing constants generated offline.
-	 * They're not really 'magic', they just happen to work well.
-	 * seed is arbitrarily chosen
-	 */
-
-	#define m 0x5bd1e995
-	#define r 24
-	#define seed 42
-
-	const unsigned char * data = input;
-	unsigned char overflow[4];
+	uint8_t overflow[4];
+	const uint8_t *data;
 	va_list va;
-	uint32_t h;
+	uint32_t h1;
+	uint32_t k1;
+	uint32_t c1;
+	uint32_t c2;
 
-	/* Initialize the hash based on the length */
-	va_start (va, len);
-	h = len;
-	while (va_arg (va, const void *))
-		h += va_arg (va, size_t);
-	h ^= seed;
-	va_end (va);
+	h1 = 42; /* arbitrary choice of seed */
+	c1 = 0xcc9e2d51;
+	c2 = 0x1b873593;
+	data = input;
+
+	/* body */
 
 	/* Mix 4 bytes at a time into the hash */
 	va_start (va, len);
 	for (;;) {
-		uint32_t k;
-
 		if (len >= 4) {
-			k = *(uint32_t *)data;
+			memcpy (&k1, data, 4);
 			data += 4;
 			len -= 4;
 
@@ -635,34 +634,42 @@ p11_hash_murmur2 (void *hash,
 				break;
 			}
 
-			k = *(uint32_t *)overflow;
+			memcpy (&k1, overflow, 4);
 		}
 
-		k *= m;
-		k ^= k >> r;
-		k *= m;
+		k1 *= c1;
+		k1 = rotl (k1, 15);
+		k1 *= c2;
 
-		h *= m;
-		h ^= k;
+		h1 ^= k1;
+		h1 = rotl (h1, 13);
+		h1 = h1 * 5 + 0xe6546b64;
 	}
-	va_end (va);
 
-	/* Handle the last few bytes of the input array */
-	switch(len) {
-	case 3: h ^= overflow[2] << 16;
-	case 2: h ^= overflow[1] << 8;
-	case 1: h ^= overflow[0];
-		h *= m;
-	};
+	/* tail */
 
-	/*
-	 * Do a few final mixes of the hash to ensure the last few
-	 * bytes are well-incorporated.
-	 */
-	h ^= h >> 13;
-	h *= m;
-	h ^= h >> 15;
+	k1 = 0;
 
-	assert (sizeof (h) == P11_HASH_MURMUR2_LEN);
-	memcpy (hash, &h, sizeof (h));
+	switch (len) {
+	case 3:
+		k1 ^= overflow[2] << 16;
+	case 2:
+		k1 ^= overflow[1] << 8;
+	case 1:
+		k1 ^= overflow[0];
+		k1 *= c1;
+		k1 = rotl (k1, 15);
+		k1 *= c2;
+		h1 ^= k1;
+	default:
+		break;
+	}
+
+	/* finalization */
+
+	h1 ^= len;
+	h1 = fmix(h1);
+
+	assert (sizeof (h1) == P11_HASH_MURMUR3_LEN);
+	memcpy (hash, &h1, sizeof (h1));
 }

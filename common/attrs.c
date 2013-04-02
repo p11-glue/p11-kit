@@ -505,7 +505,7 @@ p11_attr_hash (const void *data)
 	const CK_ATTRIBUTE *attr = data;
 	uint32_t hash;
 
-	p11_hash_murmur2 (&hash,
+	p11_hash_murmur3 (&hash,
 	                  &attr->type, sizeof (attr->type),
 	                  attr->pValue, (size_t)attr->ulValueLen,
 	                  NULL);
