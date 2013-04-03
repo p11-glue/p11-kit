@@ -50,14 +50,20 @@ stamp-h1
 temp.txt
 test-driver
 
+local
+x86_64-w64-mingw32
+
 /*/tests/test-*
 !/*/tests/test-*.[ch]
 /*/tests/frob-*
 !/*/tests/frob-*.[ch]
 
+/x86_64_w64-mingw32/
+
 /build/m4/*.m4
 /build/coverage
 /build/coverage.info
+/local
 
 /common/tests/hash-test
 
