@@ -42,6 +42,7 @@
 #include "debug.h"
 #include "lexer.h"
 #include "message.h"
+#include "path.h"
 #include "private.h"
 
 #include <sys/param.h>
@@ -52,19 +53,9 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-
-#ifdef OS_UNIX
-#include <pwd.h>
-#endif
-
-#ifdef OS_WIN32
-#include <shlobj.h>
-#endif
 
 static int
 strequal (const char *one, const char *two)
@@ -230,49 +221,6 @@ _p11_conf_parse_file (const char* filename, int flags)
 	return map;
 }
 
-static char *
-expand_user_path (const char *path)
-{
-	const char *env;
-
-	if (path[0] != '~' || path[1] != '/')
-		return strdup (path);
-
-	path += 1;
-	env = getenv ("HOME");
-	if (env && env[0]) {
-		return strconcat (env, path, NULL);
-
-	} else {
-#ifdef OS_UNIX
-		struct passwd *pwd;
-		int error = 0;
-
-		pwd = getpwuid (getuid ());
-		if (!pwd) {
-			error = errno;
-			p11_message ("couldn't lookup home directory for user %d: %s",
-			             getuid (), strerror (errno));
-			errno = error;
-			return NULL;
-		}
-
-		return strconcat (pwd->pw_dir, path, NULL);
-
-#else /* OS_WIN32 */
-		char directory[MAX_PATH + 1];
-
-		if (!SHGetSpecialFolderPathA (NULL, directory, CSIDL_PROFILE, TRUE)) {
-			p11_message ("couldn't lookup home directory for user");
-			errno = ENOTDIR;
-			return NULL;
-		}
-
-		return strconcat (directory, path, NULL);
-#endif /* OS_WIN32 */
-	}
-}
-
 static int
 user_config_mode (p11_dict *config,
                   int defmode)
@@ -329,7 +277,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 	}
 
 	if (mode != CONF_USER_NONE) {
-		path = expand_user_path (user_conf);
+		path = p11_path_expand (user_conf);
 		if (!path) {
 			error = errno;
 			goto finished;
@@ -504,7 +452,7 @@ load_configs_from_directory (const char *directory,
 
 	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir(dir)) != NULL) {
-		path = strconcat (directory, "/", dp->d_name, NULL);
+		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, false);
 
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
@@ -560,7 +508,7 @@ _p11_conf_load_modules (int mode,
 	/* Load each user config first, if user config is allowed */
 	if (mode != CONF_USER_NONE) {
 		flags = CONF_IGNORE_MISSING | CONF_IGNORE_ACCESS_DENIED;
-		path = expand_user_path (user_dir);
+		path = p11_path_expand (user_dir);
 		if (!path)
 			error = errno;
 		else if (!load_configs_from_directory (path, configs, flags))

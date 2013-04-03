@@ -45,6 +45,7 @@
 #include "message.h"
 #include "module.h"
 #include "parser.h"
+#include "path.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "session.h"
@@ -202,7 +203,7 @@ create_tokens_inlock (p11_array *tokens,
 
 	while (remaining) {
 		path = remaining;
-		pos = strchr (remaining, ':');
+		pos = strchr (remaining, P11_PATH_SEP_C);
 		if (pos == NULL) {
 			remaining = NULL;
 		} else {
@@ -227,7 +228,7 @@ create_tokens_inlock (p11_array *tokens,
 
 			/* Didn't find a label above, then make one based on the path */
 			if (!label) {
-				label = base = p11_basename (path);
+				label = base = p11_path_base (path);
 				return_val_if_fail (base != NULL, false);
 			}
 

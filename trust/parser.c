@@ -45,6 +45,7 @@
 #include "module.h"
 #include "oid.h"
 #include "parser.h"
+#include "path.h"
 #include "pem.h"
 #include "pkcs11x.h"
 #include "persist.h"
@@ -741,7 +742,7 @@ p11_parse_memory (p11_parser *parser,
 
 	return_val_if_fail (parser != NULL, P11_PARSE_FAILURE);
 
-	base = p11_basename (filename);
+	base = p11_path_base (filename);
 	parser->basename = base;
 	parser->flags = flags;
 

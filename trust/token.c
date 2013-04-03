@@ -44,6 +44,7 @@
 #include "message.h"
 #include "module.h"
 #include "parser.h"
+#include "path.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "token.h"
@@ -111,7 +112,7 @@ loader_load_directory (p11_token *token,
 
 	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir (dir)) != NULL) {
-		path = strconcat (directory, "/", dp->d_name, NULL);
+		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, -1);
 
 		if (stat (path, &sb) < 0) {

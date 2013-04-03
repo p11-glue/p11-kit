@@ -38,6 +38,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "message.h"
+#include "path.h"
 #include "p11-kit.h"
 
 #include <assert.h>
@@ -201,7 +202,7 @@ exec_external (const char *command,
 
 	/* Add our libexec directory to the path */
 	path = getenv ("PATH");
-	if (!asprintf (&env, "PATH=%s%s%s", path ? path : "", path ? ":" : "", PKGDATADIR))
+	if (!asprintf (&env, "PATH=%s%s%s", path ? path : "", path ? P11_PATH_SEP : "", PKGDATADIR))
 		return_if_reached ();
 	putenv (env);
 

@@ -41,6 +41,7 @@
 #include "dict.h"
 #include "library.h"
 #include "message.h"
+#include "path.h"
 #include "pkcs11.h"
 #include "p11-kit.h"
 #include "private.h"
@@ -217,39 +218,6 @@ alloc_module_unlocked (void)
 	return mod;
 }
 
-static int
-is_relative_path (const char *path)
-{
-	assert (path);
-
-	return (*path != '/');
-}
-
-static char*
-build_path (const char *dir, const char *filename)
-{
-	char *path;
-	int len;
-
-	assert (dir);
-	assert (filename);
-
-	len = snprintf (NULL, 0, "%s/%s", dir, filename) + 1;
-	return_val_if_fail (len > 0, NULL);
-
-#ifdef PATH_MAX
-	if (len > PATH_MAX)
-		return NULL;
-#endif
-
-	path = malloc (len);
-	return_val_if_fail (path != NULL, NULL);
-
-	sprintf (path, "%s/%s", dir, filename);
-
-	return path;
-}
-
 static CK_RV
 dlopen_and_get_function_list (Module *mod, const char *path)
 {
@@ -326,9 +294,9 @@ expand_module_path (const char *filename)
 {
 	char *path;
 
-	if (is_relative_path (filename)) {
+	if (!p11_path_absolute (filename)) {
 		p11_debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
-		path = build_path (P11_MODULE_PATH, filename);
+		path = p11_path_build (P11_MODULE_PATH, filename, NULL);
 	} else {
 		path = strdup (filename);
 	}

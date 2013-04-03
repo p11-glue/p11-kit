@@ -84,6 +84,8 @@ char *       mkdtemp     (char *template);
 
 #endif /* HAVE_MKDTEMP */
 
+char *       strdup_path_mangle (const char *template);
+
 /* -----------------------------------------------------------------------------
  * WIN32
  */
@@ -213,13 +215,6 @@ p11_mmap *  p11_mmap_open   (const char *path,
 void        p11_mmap_close  (p11_mmap *map);
 
 #endif /* OS_UNIX */
-
-/*
- * The semantics of both POSIX basename() and GNU asename() are so crappy that
- * we just don't even bother. And what's worse is how it completely changes
- * behavior if _GNU_SOURCE is defined. Nasty stuff.
- */
-char *       p11_basename   (const char *name);
 
 /* ----------------------------------------------------------------------------
  * MORE COMPAT

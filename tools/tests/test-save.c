@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "message.h"
+#include "path.h"
 #include "save.h"
 #include "test.h"
 
@@ -62,7 +63,7 @@ struct {
 static void
 setup (CuTest *tc)
 {
-	test.directory = strdup ("/tmp/test-extract.XXXXXX");
+	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
 	if (!mkdtemp (test.directory))
 		CuFail (tc, "mkdtemp() failed");
 }

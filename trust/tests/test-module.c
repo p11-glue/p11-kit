@@ -44,6 +44,7 @@
 #include "attrs.h"
 #include "hash.h"
 #include "library.h"
+#include "path.h"
 #include "pkcs11x.h"
 #include "test-data.h"
 #include "token.h"
@@ -81,7 +82,9 @@ setup (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	paths = SRCDIR "/input:" SRCDIR "/files/self-signed-with-ku.der:" SRCDIR "/files/thawte.pem";
+	paths = SRCDIR "/input" P11_PATH_SEP \
+		SRCDIR "/files/self-signed-with-ku.der" P11_PATH_SEP \
+		SRCDIR "/files/thawte.pem";
 	if (asprintf (&arguments, "paths='%s'", paths) < 0)
 		CuAssertTrue (cu, false && "not reached");
 	args.pReserved = arguments;
@@ -204,7 +207,10 @@ test_get_token_info (CuTest *cu)
 	CuAssertTrue (cu, rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	args.pReserved = "paths='" SYSCONFDIR "/input:" DATADIR "/files/blah:" "/some/other/path/the-basename'";
+	args.pReserved = "paths='" \
+		SYSCONFDIR "/input" P11_PATH_SEP \
+		DATADIR "/files/blah" P11_PATH_SEP \
+		"/some/other/path/the-basename'";
 	args.flags = CKF_OS_LOCKING_OK;
 
 	rv = module->C_Initialize (&args);

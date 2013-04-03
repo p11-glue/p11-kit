@@ -32,46 +32,31 @@
  * Author: Stef Walter <stefw@redhat.com>
  */
 
-#include "config.h"
-#include "CuTest.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#ifndef P11_PATH_H__
+#define P11_PATH_H__
 
 #include "compat.h"
 
-static void
-test_strndup (CuTest *tc)
-{
-	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
-	char *res;
+#ifdef OS_WIN32
+#define P11_PATH_SEP   ";"
+#define P11_PATH_SEP_C ';'
+#else
+#define P11_PATH_SEP   ":"
+#define P11_PATH_SEP_C ':'
+#endif
 
-	res = strndup (unterminated, 6);
-	CuAssertStrEquals (tc, res, "tester");
-	free (res);
+/*
+ * The semantics of both POSIX basename() and GNU asename() are so crappy that
+ * we just don't even bother. And what's worse is how it completely changes
+ * behavior if _GNU_SOURCE is defined. Nasty stuff.
+ */
+char *       p11_path_base      (const char *name);
 
-	res = strndup ("test", 6);
-	CuAssertStrEquals (tc, res, "test");
-	free (res);
-}
+char *       p11_path_expand    (const char *path);
 
-int
-main (void)
-{
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+char *       p11_path_build     (const char *path,
+                                 ...) GNUC_NULL_TERMINATED;
 
-	SUITE_ADD_TEST (suite, test_strndup);
+bool         p11_path_absolute  (const char *path);
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
-}
+#endif /* P11_PATH_H__ */

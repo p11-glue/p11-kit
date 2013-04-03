@@ -43,6 +43,7 @@
 #include "extract.h"
 #include "message.h"
 #include "mock.h"
+#include "path.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
@@ -78,7 +79,7 @@ setup (CuTest *tc)
 
 	p11_extract_info_init (&test.ex);
 
-	test.directory = strdup ("/tmp/test-extract.XXXXXX");
+	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
 	if (!mkdtemp (test.directory))
 		assert_not_reached ();
 }

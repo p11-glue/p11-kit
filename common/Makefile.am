@@ -26,6 +26,7 @@ libp11_common_la_SOURCES = \
 	hash.c hash.h \
 	lexer.c lexer.h \
 	message.c message.h \
+	path.c path.h \
 	pkcs11.h pkcs11x.h \
 	url.c url.h \
 	$(NULL)
