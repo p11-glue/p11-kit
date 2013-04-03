@@ -192,7 +192,7 @@ p11_library_uninit (void)
 	if (thread_local != TLS_OUT_OF_INDEXES) {
 		p11_message_storage = dont_store_message;
 		data = TlsGetValue (thread_local);
-		free (data);
+		LocalFree (data);
 		TlsFree (thread_local);
 	}
 	p11_mutex_uninit (&p11_library_mutex);
