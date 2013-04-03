@@ -9,13 +9,13 @@ AUTOMAKE_OPTIONS = 1.6
 DOC_MODULE=p11-kit
 
 # The top-level SGML file. You can change this if you want to.
-DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
+DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
 
 # The directory containing the source code. Relative to $(srcdir).
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting the functions and macros.
 # e.g. DOC_SOURCE_DIR=../../../gtk
-DOC_SOURCE_DIR=../../p11-kit
+DOC_SOURCE_DIR=$(top_srcdir)/p11-kit
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS= --version
@@ -31,6 +31,8 @@ MKDB_OPTIONS=--sgml-mode --output-format=xml
 # Extra options to supply to gtkdoc-mktmpl
 # e.g. MKTMPL_OPTIONS=--only-section-tmpl
 MKTMPL_OPTIONS=
+
+# MKHTML_OPTIONS=--path="$(builddir)/html $(srcdir)/html"
 
 # Extra options to supply to gtkdoc-fixref. Not normally needed.
 # e.g. FIXXREF_OPTIONS=--extra-dir=../gdk-pixbuf/html --extra-dir=../gdk/html
@@ -69,6 +71,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	p11-kit-devel.xml \
 	p11-kit-trust.xml \
 	p11-kit.xml \
+	pkcs11.conf.xml \
 	annotation-glossary.xml \
 	$(NULL)
 
