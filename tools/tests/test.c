@@ -197,7 +197,7 @@ test_check_directory_msg (CuTest *tc,
 
 	closedir (dir);
 
-#if OS_UNIX
+#ifdef OS_UNIX
 	CuAssert_Line (tc, file, line, "couldn't chown directory", chmod (directory, S_IRWXU) >= 0);
 #endif
 
