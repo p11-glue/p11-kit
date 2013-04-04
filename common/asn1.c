@@ -142,18 +142,18 @@ p11_asn1_decode (p11_dict *asn1_defs,
 
 	return_val_if_fail (asn1_defs != NULL, NULL);
 
-	if (message == NULL)
-		message = msg;
-
 	asn = p11_asn1_create (asn1_defs, struct_name);
 	return_val_if_fail (asn != NULL, NULL);
 
 	/* asn1_der_decoding destroys the element if fails */
-	ret = asn1_der_decoding (&asn, der, der_len, message);
+	ret = asn1_der_decoding (&asn, der, der_len, message ? message : msg);
 
 	if (ret != ASN1_SUCCESS) {
-		p11_debug ("couldn't parse %s: %s: %s",
-		           struct_name, asn1_strerror (ret), message);
+		/* If caller passed in a message buffer, assume they're logging */
+		if (!message) {
+			p11_debug ("couldn't parse %s: %s: %s",
+			           struct_name, asn1_strerror (ret), msg);
+		}
 		return NULL;
 	}
 

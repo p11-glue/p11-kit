@@ -264,13 +264,14 @@ parse_der_x509_certificate (p11_parser *parser,
                             const unsigned char *data,
                             size_t length)
 {
+	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_BYTE idv[ID_LENGTH];
 	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *value;
 	node_asn *cert;
 
-	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, length, NULL);
+	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, length, message);
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
@@ -557,6 +558,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
                                    const unsigned char *data,
                                    size_t length)
 {
+	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_ATTRIBUTE *attrs;
 	CK_BYTE idv[ID_LENGTH];
 	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
@@ -579,11 +581,11 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	if (cert_len <= 0)
 		return P11_PARSE_UNRECOGNIZED;
 
-	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, cert_len, NULL);
+	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, cert_len, message);
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
-	aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len, length - cert_len, NULL);
+	aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len, length - cert_len, message);
 	if (aux == NULL) {
 		asn1_delete_structure (&cert);
 		return P11_PARSE_UNRECOGNIZED;
