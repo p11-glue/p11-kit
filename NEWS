@@ -1,3 +1,11 @@
+0.18.0 (stable)
+ * Fix use of trust module with gcr and empathy [#62896]
+ * Further tweaks to trust module date parsing
+ * Fix unaligned memory reads [#62819]
+ * Win32 fixes [#63062, #63046]
+ * Debug and logging tweaks [#62874]
+ * Other build fixes
+
 0.17.5 (unstable)
  * Don't try to guess at overflowing time values on 32-bit systems [#62825]
  * Test fixes [#927394]
