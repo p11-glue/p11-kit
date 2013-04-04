@@ -27,15 +27,16 @@ SETUP_FILES = \
 	$(content_files)		\
 	$(DOC_MAIN_SGML_FILE)		\
 	$(DOC_MODULE)-sections.txt	\
-	$(DOC_MODULE)-overrides.txt
+	$(DOC_MODULE)-overrides.txt	\
+	style.css
 
 EXTRA_DIST = 				\
 	$(HTML_IMAGES)			\
 	$(SETUP_FILES)
 
-DOC_STAMPS=setup-build.stamp scan-build.stamp tmpl-build.stamp sgml-build.stamp \
+DOC_STAMPS=setup-build.stamp scan-build.stamp sgml-build.stamp \
 	html-build.stamp pdf-build.stamp \
-	tmpl.stamp sgml.stamp html.stamp pdf.stamp
+	sgml.stamp html.stamp pdf.stamp
 
 SCANOBJ_FILES = 		 \
 	$(DOC_MODULE).args 	 \
@@ -84,11 +85,9 @@ setup-build.stamp:
 	                cp -pu $(abs_srcdir)/$$file $(abs_builddir)/ || true; \
 	        done; \
 	    fi; \
-	    test -d $(abs_srcdir)/tmpl && \
-	        { cp -rp $(abs_srcdir)/tmpl $(abs_builddir)/; \
-	        chmod -R u+w $(abs_builddir)/tmpl; } \
 	fi
 	@touch setup-build.stamp
+
 
 #### scan ####
 
@@ -120,29 +119,10 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt: scan-build.stamp
 	@true
 
-#### templates ####
-
-tmpl-build.stamp: setup-build.stamp $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt
-	@echo '  DOC   Rebuilding template files'
-	@gtkdoc-mktmpl --module=$(DOC_MODULE) $(MKTMPL_OPTIONS)
-	@if test "$(abs_srcdir)" != "$(abs_builddir)" ; then \
-	  if test -w $(abs_srcdir) ; then \
-	    cp -rp $(abs_builddir)/tmpl $(abs_srcdir)/; \
-	  fi \
-	fi
-	@touch tmpl-build.stamp
-
-tmpl.stamp: tmpl-build.stamp
-	@true
-
-$(srcdir)/tmpl/*.sgml:
-	@true
-
 #### xml ####
 
-sgml-build.stamp: tmpl.stamp $(DOC_MODULE)-sections.txt $(srcdir)/tmpl/*.sgml $(expand_content_files)
+sgml-build.stamp: setup-build.stamp $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt $(expand_content_files)
 	@echo '  DOC   Building XML'
-	@-chmod -R u+w $(srcdir)
 	@_source_dir='' ; \
 	for i in $(DOC_SOURCE_DIR) ; do \
 	    _source_dir="$${_source_dir} --source-dir=$$i" ; \
@@ -155,7 +135,7 @@ sgml.stamp: sgml-build.stamp
 
 #### html ####
 
-html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files) $(srcdir)/style.css
 	@echo '  DOC   Building HTML'
 	@rm -rf html
 	@mkdir html
@@ -182,6 +162,8 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	done;
 	@echo '  DOC   Fixing cross-references'
 	@gtkdoc-fixxref --module=$(DOC_MODULE) --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	@mv $(builddir)/html/style.css $(builddir)/html/gtk-doc.css
+	@cp $(srcdir)/style.css $(builddir)/html/style.css
 	@touch html-build.stamp
 
 #### pdf ####
@@ -219,7 +201,6 @@ distclean-local:
 	    $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 	@if test "$(abs_srcdir)" != "$(abs_builddir)" ; then \
 	    rm -f $(SETUP_FILES) $(expand_content_files) $(DOC_MODULE).types; \
-	    rm -rf tmpl; \
 	fi
 
 maintainer-clean-local: clean
@@ -267,9 +248,7 @@ dist-check-gtkdoc:
 endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
-	@mkdir $(distdir)/tmpl
 	@mkdir $(distdir)/html
-	@-cp ./tmpl/*.sgml $(distdir)/tmpl
 	@cp ./html/* $(distdir)/html
 	@-cp ./$(DOC_MODULE).pdf $(distdir)/
 	@-cp ./$(DOC_MODULE).types $(distdir)/

@@ -88,6 +88,12 @@ expand_content_files=
 INCLUDES=
 GTKDOC_LIBS=
 
+# Hacks around gtk-doc brokenness for out of tree builds
+p11-kit-sections.txt: $(srcdir)/p11-kit-sections.txt
+	cp $(srcdir)/p11-kit-sections.txt p11-kit-sections.txt
+p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
+	cp $(srcdir)/p11-kit-overrides.txt p11-kit-overrides.txt
+
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make
 
