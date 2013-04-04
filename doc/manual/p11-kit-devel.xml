@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-]>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+
 <chapter xml:id="devel">
 	<title>Building, Packaging, and Contributing to p11-kit</title>
 
