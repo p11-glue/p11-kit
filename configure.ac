@@ -402,6 +402,9 @@ eval SHLEXT=$shrext_cmds
 AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
 AC_SUBST(SHLEXT)
 
+privatedir='${libdir}/p11-kit'
+AC_SUBST(privatedir)
+
 AC_CONFIG_FILES([Makefile
 	build/Makefile
 	build/certs/Makefile

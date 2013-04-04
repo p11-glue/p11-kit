@@ -202,7 +202,7 @@ exec_external (const char *command,
 
 	/* Add our libexec directory to the path */
 	path = getenv ("PATH");
-	if (!asprintf (&env, "PATH=%s%s%s", path ? path : "", path ? P11_PATH_SEP : "", PKGDATADIR))
+	if (!asprintf (&env, "PATH=%s%s%s", path ? path : "", path ? P11_PATH_SEP : "", PRIVATEDIR))
 		return_if_reached ();
 	putenv (env);
 

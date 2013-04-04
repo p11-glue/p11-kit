@@ -10,7 +10,7 @@ INCLUDES = \
 	-I$(top_srcdir)/common \
 	-I$(top_srcdir)/p11-kit \
 	-DSRCDIR=\"$(srcdir)\" \
-	-DPKGDATADIR=\"$(pkgdatadir)\" \
+	-DPRIVATEDIR=\"$(privatedir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(NULL)
 
@@ -50,7 +50,7 @@ p11_kit_SOURCES += \
 	save.c save.h \
 	$(NULL)
 
-externaldir = $(pkgdatadir)
+externaldir = $(privatedir)
 external_SCRIPTS = \
 	p11-kit-extract-trust
 
