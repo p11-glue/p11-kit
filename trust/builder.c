@@ -332,7 +332,7 @@ calc_date (node_asn *node,
 		return_val_if_fail (len >= 6, false);
 
 		year = atoin (buf, 2);
-		return_val_if_fail (year > 0, false);
+		return_val_if_fail (year >= 0, false);
 
 		century = century_for_two_digit_year (year);
 		return_val_if_fail (century >= 0, false);
