@@ -35,7 +35,8 @@
 #define P11_KIT_DISABLE_DEPRECATED
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
+#include "test-tools.h"
 
 #include "attrs.h"
 #include "buffer.h"
@@ -49,9 +50,9 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
-#include "test.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,14 +68,14 @@ struct {
 } test;
 
 static void
-setup (CuTest *tc)
+setup (void *unused)
 {
 	CK_RV rv;
 
 	mock_module_reset ();
 	memcpy (&test.module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	rv = test.module.C_Initialize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	test.iter = p11_kit_iter_new (NULL);
 
@@ -86,7 +87,7 @@ setup (CuTest *tc)
 }
 
 static void
-teardown (CuTest *tc)
+teardown (void *unused)
 {
 	CK_RV rv;
 
@@ -98,7 +99,7 @@ teardown (CuTest *tc)
 	p11_kit_iter_free (test.iter);
 
 	rv = test.module.C_Finalize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 }
 
 static CK_OBJECT_CLASS certificate_class = CKO_CERTIFICATE;
@@ -162,11 +163,9 @@ setup_objects (const CK_ATTRIBUTE *attrs,
 }
 
 static void
-test_file (CuTest *tc)
+test_file (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
 	               extension_eku_server,
@@ -181,21 +180,19 @@ test_file (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_plain (CuTest *tc)
+test_plain (void)
 {
 	bool ret;
 
-	setup (tc);
 	setup_objects (cacert3_authority_attrs, NULL);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -206,17 +203,16 @@ test_plain (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_keyid (CuTest *tc)
+test_keyid (void)
 {
 	bool ret;
 
@@ -238,7 +234,6 @@ test_keyid (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	setup (tc);
 	setup_objects (cacert3_plain, extension_subject_key_identifier, NULL);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -249,17 +244,16 @@ test_keyid (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-keyid.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_not_authority (CuTest *tc)
+test_not_authority (void)
 {
 	bool ret;
 
@@ -271,7 +265,6 @@ test_not_authority (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	setup (tc);
 	setup_objects (cacert3_not_trusted, NULL);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -282,17 +275,16 @@ test_not_authority (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-not-trusted.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_distrust_all (CuTest *tc)
+test_distrust_all (void)
 {
 	bool ret;
 
@@ -305,8 +297,6 @@ test_distrust_all (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	setup (tc);
-
 	setup_objects (cacert3_blacklist, NULL);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -317,21 +307,18 @@ test_distrust_all (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-distrust-all.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_file_multiple (CuTest *tc)
+test_file_multiple (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
 	               extension_eku_server,
@@ -349,21 +336,18 @@ test_file_multiple (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.pem",
+	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-multiple.pem");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_file_without (CuTest *tc)
+test_file_without (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
@@ -373,19 +357,18 @@ test_file_without (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_data (tc, test.directory, "extract.pem", "", 0);
+	test_check_data (test.directory, "extract.pem", "", 0);
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 /* From extract-openssl.c */
 void p11_openssl_canon_string (char *str, size_t *len);
 
 static void
-test_canon_string (CuTest *tc)
+test_canon_string (void)
 {
 	struct {
 		char *input;
@@ -418,8 +401,8 @@ test_canon_string (CuTest *tc)
 			out = strlen (fixtures[i].output);
 		else
 			out = fixtures[i].output_len;
-		CuAssertIntEquals (tc, out, len);
-		CuAssertStrEquals (tc, fixtures[i].output, str);
+		assert_num_eq (out, len);
+		assert_str_eq (fixtures[i].output, str);
 
 		free (str);
 	}
@@ -428,7 +411,7 @@ test_canon_string (CuTest *tc)
 bool   p11_openssl_canon_string_der  (p11_buffer *der);
 
 static void
-test_canon_string_der (CuTest *tc)
+test_canon_string_der (void)
 {
 	struct {
 		unsigned char input[100];
@@ -487,10 +470,10 @@ test_canon_string_der (CuTest *tc)
 		                      fixtures[i].input_len, 0, realloc, free);
 
 		ret = p11_openssl_canon_string_der (&buf);
-		CuAssertIntEquals (tc, true, ret);
+		assert_num_eq (true, ret);
 
-		CuAssertIntEquals (tc, fixtures[i].output_len, buf.len);
-		CuAssertTrue (tc, memcmp (buf.data, fixtures[i].output, buf.len) == 0);
+		assert_num_eq (fixtures[i].output_len, buf.len);
+		assert (memcmp (buf.data, fixtures[i].output, buf.len) == 0);
 
 		p11_buffer_uninit (&buf);
 	}
@@ -500,7 +483,7 @@ bool   p11_openssl_canon_name_der     (p11_dict *asn1_defs,
                                        p11_buffer *der);
 
 static void
-test_canon_name_der (CuTest *tc)
+test_canon_name_der (void)
 {
 	struct {
 		unsigned char input[100];
@@ -542,10 +525,10 @@ test_canon_name_der (CuTest *tc)
 		                      fixtures[i].input_len, 0, realloc, free);
 
 		ret = p11_openssl_canon_name_der (asn1_defs, &buf);
-		CuAssertIntEquals (tc, true, ret);
+		assert_num_eq (true, ret);
 
-		CuAssertIntEquals (tc, fixtures[i].output_len, buf.len);
-		CuAssertTrue (tc, memcmp (buf.data, fixtures[i].output, buf.len) == 0);
+		assert_num_eq (fixtures[i].output_len, buf.len);
+		assert (memcmp (buf.data, fixtures[i].output, buf.len) == 0);
 
 		p11_buffer_uninit (&buf);
 	}
@@ -554,7 +537,7 @@ test_canon_name_der (CuTest *tc)
 }
 
 static void
-test_canon_string_der_fail (CuTest *tc)
+test_canon_string_der_fail (void)
 {
 	struct {
 		unsigned char input[100];
@@ -574,18 +557,16 @@ test_canon_string_der_fail (CuTest *tc)
 		                      fixtures[i].input_len, 0, realloc, free);
 
 		ret = p11_openssl_canon_string_der (&buf);
-		CuAssertIntEquals (tc, false, ret);
+		assert_num_eq (false, ret);
 
 		p11_buffer_uninit (&buf);
 	}
 }
 
 static void
-test_directory (CuTest *tc)
+test_directory (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	setup_objects (cacert3_authority_attrs,
 	               extension_eku_server,
@@ -605,32 +586,29 @@ test_directory (CuTest *tc)
 	test.ex.destination = test.directory;
 
 	ret = p11_extract_openssl_directory (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_directory (tc, test.directory, ("Custom_Label.pem", "Custom_Label.1.pem",
+	test_check_directory (test.directory, ("Custom_Label.pem", "Custom_Label.1.pem",
 #ifdef OS_UNIX
 	                                           "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0",
 #endif
 	                                           NULL));
-	test_check_file (tc, test.directory, "Custom_Label.pem",
+	test_check_file (test.directory, "Custom_Label.pem",
 	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
-	test_check_file (tc, test.directory, "Custom_Label.1.pem",
+	test_check_file (test.directory, "Custom_Label.1.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
 #ifdef OS_UNIX
-	test_check_symlink (tc, test.directory, "e5662767.0", "Custom_Label.pem");
-	test_check_symlink (tc, test.directory, "e5662767.1", "Custom_Label.1.pem");
-	test_check_symlink (tc, test.directory, "590d426f.0", "Custom_Label.pem");
-	test_check_symlink (tc, test.directory, "590d426f.1", "Custom_Label.1.pem");
+	test_check_symlink (test.directory, "e5662767.0", "Custom_Label.pem");
+	test_check_symlink (test.directory, "e5662767.1", "Custom_Label.1.pem");
+	test_check_symlink (test.directory, "590d426f.0", "Custom_Label.pem");
+	test_check_symlink (test.directory, "590d426f.1", "Custom_Label.1.pem");
 #endif
-	teardown (tc);
 }
 
 static void
-test_directory_empty (CuTest *tc)
+test_directory_empty (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
@@ -642,47 +620,35 @@ test_directory_empty (CuTest *tc)
 	test.ex.destination = test.directory;
 
 	ret = p11_extract_openssl_directory (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_directory (tc, test.directory, (NULL, NULL));
-
-	teardown (tc);
+	test_check_directory (test.directory, (NULL, NULL));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	mock_module_init ();
-	p11_debug_init ();
 
-	SUITE_ADD_TEST (suite, test_file);
-	SUITE_ADD_TEST (suite, test_plain);
-	SUITE_ADD_TEST (suite, test_keyid);
-	SUITE_ADD_TEST (suite, test_not_authority);
-	SUITE_ADD_TEST (suite, test_distrust_all);
-	SUITE_ADD_TEST (suite, test_file_multiple);
-	SUITE_ADD_TEST (suite, test_file_without);
+	p11_fixture (setup, teardown);
+	p11_test (test_file, "/openssl/test_file");
+	p11_test (test_plain, "/openssl/test_plain");
+	p11_test (test_keyid, "/openssl/test_keyid");
+	p11_test (test_not_authority, "/openssl/test_not_authority");
+	p11_test (test_distrust_all, "/openssl/test_distrust_all");
+	p11_test (test_file_multiple, "/openssl/test_file_multiple");
+	p11_test (test_file_without, "/openssl/test_file_without");
 
-	SUITE_ADD_TEST (suite, test_canon_string);
-	SUITE_ADD_TEST (suite, test_canon_string_der);
-	SUITE_ADD_TEST (suite, test_canon_string_der_fail);
-	SUITE_ADD_TEST (suite, test_canon_name_der);
+	p11_fixture (NULL, NULL);
+	p11_test (test_canon_string, "/openssl/test_canon_string");
+	p11_test (test_canon_string_der, "/openssl/test_canon_string_der");
+	p11_test (test_canon_string_der_fail, "/openssl/test_canon_string_der_fail");
+	p11_test (test_canon_name_der, "/openssl/test_canon_name_der");
 
-	SUITE_ADD_TEST (suite, test_directory);
-	SUITE_ADD_TEST (suite, test_directory_empty);
+	p11_fixture (setup, teardown);
+	p11_test (test_directory, "/openssl/test_directory");
+	p11_test (test_directory_empty, "/openssl/test_directory_empty");
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

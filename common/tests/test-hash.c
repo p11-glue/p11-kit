@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -56,7 +56,7 @@ const char *sha1_checksum[] = {
 };
 
 static void
-test_sha1 (CuTest *cu)
+test_sha1 (void)
 {
 	unsigned char checksum[P11_HASH_SHA1_LEN];
 	size_t len;
@@ -67,28 +67,28 @@ test_sha1 (CuTest *cu)
 		len = strlen (sha1_input[i]);
 
 		p11_hash_sha1 (checksum, sha1_input[i], len, NULL);
-		CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
+		assert (memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
 
 		if (len > 6) {
 			p11_hash_sha1 (checksum, sha1_input[i], 6, sha1_input[i] + 6, len - 6, NULL);
-			CuAssertTrue (cu, memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
+			assert (memcmp (sha1_checksum[i], checksum, P11_HASH_SHA1_LEN) == 0);
 		}
 	}
 }
 
 static void
-test_sha1_long (CuTest *cu)
+test_sha1_long (void)
 {
 	unsigned char checksum[P11_HASH_SHA1_LEN];
 	char *expected = "\x34\xAA\x97\x3C\xD4\xC4\xDA\xA4\xF6\x1E\xEB\x2B\xDB\xAD\x27\x31\x65\x34\x01\x6F";
 	char *input;
 
 	input = malloc (1000000);
-	CuAssertTrue (cu, input != NULL);
+	assert (input != NULL);
 	memset (input, 'a', 1000000);
 
 	p11_hash_sha1 (checksum, input, 1000000, NULL);
-	CuAssertTrue (cu, memcmp (expected, checksum, P11_HASH_SHA1_LEN) == 0);
+	assert (memcmp (expected, checksum, P11_HASH_SHA1_LEN) == 0);
 
 	free (input);
 }
@@ -112,7 +112,7 @@ const char *md5_checksum[] = {
 };
 
 static void
-test_md5 (CuTest *cu)
+test_md5 (void)
 {
 	unsigned char checksum[P11_HASH_MD5_LEN];
 	size_t len;
@@ -123,17 +123,17 @@ test_md5 (CuTest *cu)
 		len = strlen (md5_input[i]);
 
 		p11_hash_md5 (checksum, md5_input[i], len, NULL);
-		CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
+		assert (memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
 
 		if (len > 5) {
 			p11_hash_md5 (checksum, md5_input[i], 5, md5_input[i] + 5, len - 5, NULL);
-			CuAssertTrue (cu, memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
+			assert (memcmp (md5_checksum[i], checksum, P11_HASH_MD5_LEN) == 0);
 		}
 	}
 }
 
 static void
-test_murmur2 (CuTest *cu)
+test_murmur3 (void)
 {
 	uint32_t one, two, four, seven, eleven, split;
 
@@ -146,23 +146,23 @@ test_murmur2 (CuTest *cu)
 	p11_hash_murmur3 ((unsigned char *)&eleven, "eleven", 6, NULL);
 	p11_hash_murmur3 ((unsigned char *)&split, "ele", 3, "ven", 3, NULL);
 
-	CuAssertTrue (cu, one != two);
-	CuAssertTrue (cu, one != four);
-	CuAssertTrue (cu, one != seven);
-	CuAssertTrue (cu, one != eleven);
+	assert (one != two);
+	assert (one != four);
+	assert (one != seven);
+	assert (one != eleven);
 
-	CuAssertTrue (cu, two != four);
-	CuAssertTrue (cu, two != seven);
-	CuAssertTrue (cu, two != eleven);
+	assert (two != four);
+	assert (two != seven);
+	assert (two != eleven);
 
-	CuAssertTrue (cu, four != seven);
-	CuAssertTrue (cu, four != eleven);
+	assert (four != seven);
+	assert (four != eleven);
 
-	CuAssertTrue (cu, split == eleven);
+	assert (split == eleven);
 }
 
 static void
-test_murmur2_incr (CuTest *cu)
+test_murmur3_incr (void)
 {
 	uint32_t first, second;
 
@@ -182,29 +182,17 @@ test_murmur2_incr (CuTest *cu)
 	                  "!", (size_t)1,
 	                  NULL);
 
-	CuAssertIntEquals (cu, first, second);
+	assert_num_eq (first, second);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_sha1);
-	SUITE_ADD_TEST (suite, test_sha1_long);
-	SUITE_ADD_TEST (suite, test_md5);
-	SUITE_ADD_TEST (suite, test_murmur2);
-	SUITE_ADD_TEST (suite, test_murmur2_incr);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_sha1, "/hash/sha1");
+	p11_test (test_sha1_long, "/hash/sha1-long");
+	p11_test (test_md5, "/hash/md5");
+	p11_test (test_murmur3, "/hash/murmur3");
+	p11_test (test_murmur3_incr, "/hash/murmur3-incr");
+	return p11_test_run (argc, argv);
 }

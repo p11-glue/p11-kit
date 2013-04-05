@@ -35,7 +35,7 @@
 #ifndef TEST_COMMON_H_
 #define TEST_COMMON_H_
 
-#include "CuTest.h"
+#include "test.h"
 
 #include "dict.h"
 
@@ -205,16 +205,16 @@ static const char test_eku_none[] = {
 	0x30, 0x00,
 };
 
-void       test_check_file_msg          (CuTest *tc,
-                                         const char *file,
+void       test_check_file_msg          (const char *file,
                                          int line,
+                                         const char *function,
                                          const char *directory,
                                          const char *filename,
                                          const char *reference);
 
-void       test_check_data_msg          (CuTest *tc,
-                                         const char *file,
+void       test_check_data_msg          (const char *file,
                                          int line,
+                                         const char *function,
                                          const char *directory,
                                          const char *filename,
                                          const void *refdata,
@@ -222,9 +222,9 @@ void       test_check_data_msg          (CuTest *tc,
 
 #ifdef OS_UNIX
 
-void       test_check_symlink_msg       (CuTest *tc,
-                                         const char *file,
+void       test_check_symlink_msg       (const char *file,
                                          int line,
+                                         const char *function,
                                          const char *directory,
                                          const char *name,
                                          const char *destination);
@@ -234,27 +234,27 @@ void       test_check_symlink_msg       (CuTest *tc,
 p11_dict * test_check_directory_files   (const char *file,
                                          ...) GNUC_NULL_TERMINATED;
 
-void       test_check_directory_msg     (CuTest *tc,
-                                         const char *file,
+void       test_check_directory_msg     (const char *file,
                                          int line,
+                                         const char *function,
                                          const char *directory,
                                          p11_dict *files);
 
-#define test_check_file(tc, directory, name, reference) \
-	(test_check_file_msg (tc, __FILE__, __LINE__, directory, name, reference))
+#define test_check_file(directory, name, reference) \
+	(test_check_file_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, reference))
 
-#define test_check_data(tc, directory, name, data, length) \
-	(test_check_data_msg (tc, __FILE__, __LINE__, directory, name, data, length))
+#define test_check_data(directory, name, data, length) \
+	(test_check_data_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, data, length))
 
 #ifdef OS_UNIX
 
-#define test_check_symlink(tc, directory, name, destination) \
-	(test_check_symlink_msg (tc, __FILE__, __LINE__, directory, name, destination))
+#define test_check_symlink(directory, name, destination) \
+	(test_check_symlink_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, destination))
 
 #endif /* OS_UNIX */
 
-#define test_check_directory(tc, directory, files) \
-	(test_check_directory_msg (tc, __FILE__, __LINE__, directory, \
+#define test_check_directory(directory, files) \
+	(test_check_directory_msg (__FILE__, __LINE__, __FUNCTION__, directory, \
 	                           test_check_directory_files files))
 
 #endif /* TEST_COMMON_H_ */

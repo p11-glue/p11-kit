@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "debug.h"
 #include "message.h"
@@ -75,138 +75,138 @@ are_attributes_empty (P11KitUri *uri)
 }
 
 static void
-test_uri_parse (CuTest *tc)
+test_uri_parse (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:", P11_KIT_URI_FOR_MODULE, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	CuAssertTrue (tc, is_module_empty (uri));
-	CuAssertTrue (tc, is_token_empty (uri));
-	CuAssertTrue (tc, are_attributes_empty (uri));
+	assert (is_module_empty (uri));
+	assert (is_token_empty (uri));
+	assert (are_attributes_empty (uri));
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_bad_scheme (CuTest *tc)
+test_uri_parse_bad_scheme (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("http:\\example.com\test", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_SCHEME, ret);
+	assert_num_eq (P11_KIT_URI_BAD_SCHEME, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_label (CuTest *tc)
+test_uri_parse_with_label (void)
 {
 	CK_ATTRIBUTE_PTR attr;
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	CuAssertTrue (tc, is_module_empty (uri));
-	CuAssertTrue (tc, is_token_empty (uri));
+	assert (is_module_empty (uri));
+	assert (is_token_empty (uri));
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == strlen ("Test Label"));
-	CuAssertTrue (tc, memcmp (attr->pValue, "Test Label", attr->ulValueLen) == 0);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == strlen ("Test Label"));
+	assert (memcmp (attr->pValue, "Test Label", attr->ulValueLen) == 0);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_label_and_klass (CuTest *tc)
+test_uri_parse_with_label_and_klass (void)
 {
 	CK_ATTRIBUTE_PTR attr;
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;object-type=cert", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == strlen ("Test Label"));
-	CuAssertTrue (tc, memcmp (attr->pValue, "Test Label", attr->ulValueLen) == 0);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == strlen ("Test Label"));
+	assert (memcmp (attr->pValue, "Test Label", attr->ulValueLen) == 0);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
-	CuAssertTrue (tc, *((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_CERTIFICATE);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
+	assert (*((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_CERTIFICATE);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_id (CuTest *tc)
+test_uri_parse_with_id (void)
 {
 	CK_ATTRIBUTE_PTR attr;
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:id=%54%45%53%54%00", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	/* Note that there's a NULL in the attribute (end) */
 	attr = p11_kit_uri_get_attribute (uri, CKA_ID);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == 5);
-	CuAssertTrue (tc, memcmp (attr->pValue, "TEST", 5) == 0);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == 5);
+	assert (memcmp (attr->pValue, "TEST", 5) == 0);
 
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_bad_string_encoding (CuTest *tc)
+test_uri_parse_with_bad_string_encoding (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object=Test%", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_bad_hex_encoding (CuTest *tc)
+test_uri_parse_with_bad_hex_encoding (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object=T%xxest", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
 }
@@ -226,131 +226,131 @@ is_space_string (CK_UTF8CHAR_PTR string, CK_ULONG size, const char *check)
 }
 
 static void
-test_uri_parse_with_token (CuTest *tc)
+test_uri_parse_with_token (void)
 {
 	P11KitUri *uri = NULL;
 	CK_TOKEN_INFO_PTR token;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:token=Token%20Label;serial=3333;model=Deluxe;manufacturer=Me",
 	                         P11_KIT_URI_FOR_TOKEN, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	token = p11_kit_uri_get_token_info (uri);
-	CuAssertTrue (tc, is_space_string (token->label, sizeof (token->label), "Token Label"));
-	CuAssertTrue (tc, is_space_string (token->serialNumber, sizeof (token->serialNumber), "3333"));
-	CuAssertTrue (tc, is_space_string (token->model, sizeof (token->model), "Deluxe"));
-	CuAssertTrue (tc, is_space_string (token->manufacturerID, sizeof (token->manufacturerID), "Me"));
+	assert (is_space_string (token->label, sizeof (token->label), "Token Label"));
+	assert (is_space_string (token->serialNumber, sizeof (token->serialNumber), "3333"));
+	assert (is_space_string (token->model, sizeof (token->model), "Deluxe"));
+	assert (is_space_string (token->manufacturerID, sizeof (token->manufacturerID), "Me"));
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_token_bad_encoding (CuTest *tc)
+test_uri_parse_with_token_bad_encoding (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:token=Token%", P11_KIT_URI_FOR_TOKEN, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_bad_syntax (CuTest *tc)
+test_uri_parse_with_bad_syntax (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:token", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_SYNTAX, ret);
+	assert_num_eq (P11_KIT_URI_BAD_SYNTAX, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_spaces (CuTest *tc)
+test_uri_parse_with_spaces (void)
 {
 	P11KitUri *uri = NULL;
 	CK_INFO_PTR info;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkc\ns11: lib rary-desc\rrip  \n  tion =The%20Library;\n\n\nlibrary-manufacturer=\rMe",
 	                         P11_KIT_URI_FOR_MODULE, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
 
-	CuAssertTrue (tc, is_space_string (info->manufacturerID, sizeof (info->manufacturerID), "Me"));
-	CuAssertTrue (tc, is_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Library"));
+	assert (is_space_string (info->manufacturerID, sizeof (info->manufacturerID), "Me"));
+	assert (is_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Library"));
 
 	p11_kit_uri_free (uri);
 }
 
 
 static void
-test_uri_parse_with_library (CuTest *tc)
+test_uri_parse_with_library (void)
 {
 	P11KitUri *uri = NULL;
 	CK_INFO_PTR info;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-description=The%20Library;library-manufacturer=Me",
 	                         P11_KIT_URI_FOR_MODULE, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
 
-	CuAssertTrue (tc, is_space_string (info->manufacturerID, sizeof (info->manufacturerID), "Me"));
-	CuAssertTrue (tc, is_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Library"));
+	assert (is_space_string (info->manufacturerID, sizeof (info->manufacturerID), "Me"));
+	assert (is_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Library"));
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_with_library_bad_encoding (CuTest *tc)
+test_uri_parse_with_library_bad_encoding (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-description=Library%", P11_KIT_URI_FOR_MODULE, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_ENCODING, ret);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_build_empty (CuTest *tc)
+test_uri_build_empty (void)
 {
 	P11KitUri *uri;
 	char *string;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertStrEquals (tc, "pkcs11:", string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert_str_eq ("pkcs11:", string);
 	free (string);
 
 	p11_kit_uri_free (uri);
@@ -366,7 +366,7 @@ set_space_string (CK_BYTE_PTR buffer, CK_ULONG length, const char *string)
 }
 
 static void
-test_uri_build_with_token_info (CuTest *tc)
+test_uri_build_with_token_info (void)
 {
 	char *string = NULL;
 	P11KitUri *uri;
@@ -375,7 +375,7 @@ test_uri_build_with_token_info (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	token = p11_kit_uri_get_token_info (uri);
 	set_space_string (token->label, sizeof (token->label), "The Label");
@@ -384,30 +384,30 @@ test_uri_build_with_token_info (CuTest *tc)
 	set_space_string (token->model, sizeof (token->model), "Deluxe");
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertPtrNotNull (tc, string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert_ptr_not_null (string);
 
 	check = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, check);
+	assert_ptr_not_null (check);
 
 	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_TOKEN, check);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	p11_kit_uri_match_token_info (check, p11_kit_uri_get_token_info (uri));
 
 	p11_kit_uri_free (uri);
 	p11_kit_uri_free (check);
 
-	CuAssertTrue (tc, strstr (string, "token=The%20Label") != NULL);
-	CuAssertTrue (tc, strstr (string, "serial=44444") != NULL);
-	CuAssertTrue (tc, strstr (string, "manufacturer=Me") != NULL);
-	CuAssertTrue (tc, strstr (string, "model=Deluxe") != NULL);
+	assert (strstr (string, "token=The%20Label") != NULL);
+	assert (strstr (string, "serial=44444") != NULL);
+	assert (strstr (string, "manufacturer=Me") != NULL);
+	assert (strstr (string, "model=Deluxe") != NULL);
 
 	free (string);
 }
 
 static void
-test_uri_build_with_token_null_info (CuTest *tc)
+test_uri_build_with_token_null_info (void)
 {
 	char *string = NULL;
 	P11KitUri *uri;
@@ -415,23 +415,23 @@ test_uri_build_with_token_null_info (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	token = p11_kit_uri_get_token_info (uri);
 	set_space_string (token->label, sizeof (token->label), "The Label");
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	CuAssertTrue (tc, strstr (string, "token=The%20Label") != NULL);
-	CuAssertTrue (tc, strstr (string, "serial=") == NULL);
+	assert (strstr (string, "token=The%20Label") != NULL);
+	assert (strstr (string, "serial=") == NULL);
 
 	free (string);
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_build_with_token_empty_info (CuTest *tc)
+test_uri_build_with_token_empty_info (void)
 {
 	char *string = NULL;
 	P11KitUri *uri;
@@ -439,24 +439,24 @@ test_uri_build_with_token_empty_info (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	token = p11_kit_uri_get_token_info (uri);
 	set_space_string (token->label, sizeof (token->label), "");
 	set_space_string (token->serialNumber, sizeof (token->serialNumber), "");
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	CuAssertTrue (tc, strstr (string, "token=") != NULL);
-	CuAssertTrue (tc, strstr (string, "serial=") != NULL);
+	assert (strstr (string, "token=") != NULL);
+	assert (strstr (string, "serial=") != NULL);
 
 	free (string);
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_build_with_attributes (CuTest *tc)
+test_uri_build_with_attributes (void)
 {
 	char *string = NULL;
 	P11KitUri *uri;
@@ -467,7 +467,7 @@ test_uri_build_with_attributes (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	at.type = CKA_LABEL;
 	at.pValue = "The Label";
@@ -486,175 +486,175 @@ test_uri_build_with_attributes (CuTest *tc)
 	ret = p11_kit_uri_set_attribute (uri, &at);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	check = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, check);
+	assert_ptr_not_null (check);
 
 	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_ANY, check);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (check, CKA_LABEL);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == 9);
-	CuAssertTrue (tc, memcmp (attr->pValue, "The Label", attr->ulValueLen) == 0);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == 9);
+	assert (memcmp (attr->pValue, "The Label", attr->ulValueLen) == 0);
 
 	attr = p11_kit_uri_get_attribute (check, CKA_CLASS);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == sizeof (klass));
-	CuAssertTrue (tc, *((CK_OBJECT_CLASS_PTR)attr->pValue) == klass);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == sizeof (klass));
+	assert (*((CK_OBJECT_CLASS_PTR)attr->pValue) == klass);
 
 	attr = p11_kit_uri_get_attribute (check, CKA_ID);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == 5);
-	CuAssertTrue (tc, memcmp (attr->pValue, "HELLO", attr->ulValueLen) == 0);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == 5);
+	assert (memcmp (attr->pValue, "HELLO", attr->ulValueLen) == 0);
 
 	p11_kit_uri_free (check);
 
-	CuAssertTrue (tc, strstr (string, "object=The%20Label") != NULL);
-	CuAssertTrue (tc, strstr (string, "object-type=data") != NULL);
-	CuAssertTrue (tc, strstr (string, "id=%48%45%4c%4c%4f") != NULL);
+	assert (strstr (string, "object=The%20Label") != NULL);
+	assert (strstr (string, "object-type=data") != NULL);
+	assert (strstr (string, "id=%48%45%4c%4c%4f") != NULL);
 
 	free (string);
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_private_key (CuTest *tc)
+test_uri_parse_private_key (void)
 {
 	P11KitUri *uri;
 	CK_ATTRIBUTE_PTR attr;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object-type=private", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
-	CuAssertTrue (tc, *((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_PRIVATE_KEY);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
+	assert (*((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_PRIVATE_KEY);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_secret_key (CuTest *tc)
+test_uri_parse_secret_key (void)
 {
 	P11KitUri *uri;
 	CK_ATTRIBUTE_PTR attr;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object-type=secret-key", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
-	CuAssertPtrNotNull (tc, attr);
-	CuAssertTrue (tc, attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
-	CuAssertTrue (tc, *((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_SECRET_KEY);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
+	assert (*((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_SECRET_KEY);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_library_version (CuTest *tc)
+test_uri_parse_library_version (void)
 {
 	P11KitUri *uri;
 	CK_INFO_PTR info;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=2.101", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
-	CuAssertIntEquals (tc, 2, info->libraryVersion.major);
-	CuAssertIntEquals (tc, 101, info->libraryVersion.minor);
+	assert_num_eq (2, info->libraryVersion.major);
+	assert_num_eq (101, info->libraryVersion.minor);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=23", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	info = p11_kit_uri_get_module_info (uri);
-	CuAssertIntEquals (tc, 23, info->libraryVersion.major);
-	CuAssertIntEquals (tc, 0, info->libraryVersion.minor);
+	assert_num_eq (23, info->libraryVersion.major);
+	assert_num_eq (0, info->libraryVersion.minor);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=23.", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
+	assert_num_eq (P11_KIT_URI_BAD_VERSION, ret);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=a.a", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
+	assert_num_eq (P11_KIT_URI_BAD_VERSION, ret);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=.23", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
+	assert_num_eq (P11_KIT_URI_BAD_VERSION, ret);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=1000", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
+	assert_num_eq (P11_KIT_URI_BAD_VERSION, ret);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=2.1000", P11_KIT_URI_FOR_MODULE_WITH_VERSION, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_BAD_VERSION, ret);
+	assert_num_eq (P11_KIT_URI_BAD_VERSION, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_parse_unknown_object_type (CuTest *tc)
+test_uri_parse_parse_unknown_object_type (void)
 {
 	P11KitUri *uri;
 	CK_ATTRIBUTE_PTR attr;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object-type=unknown", P11_KIT_URI_FOR_OBJECT, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_unrecognized (CuTest *tc)
+test_uri_parse_unrecognized (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:x-blah=some-value", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_parse_too_long_is_unrecognized (CuTest *tc)
+test_uri_parse_too_long_is_unrecognized (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:model=a-value-that-is-too-long-for-the-field-that-it-goes-with",
 	                         P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	p11_kit_uri_free (uri);
 }
@@ -662,7 +662,7 @@ test_uri_parse_too_long_is_unrecognized (CuTest *tc)
 
 
 static void
-test_uri_build_object_type_cert (CuTest *tc)
+test_uri_build_object_type_cert (void)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -671,7 +671,7 @@ test_uri_build_object_type_cert (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	klass = CKO_CERTIFICATE;
 	attr.type = CKA_CLASS;
@@ -680,15 +680,15 @@ test_uri_build_object_type_cert (CuTest *tc)
 	p11_kit_uri_set_attribute (uri, &attr);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "object-type=cert") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "object-type=cert") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_object_type_private (CuTest *tc)
+test_uri_build_object_type_private (void)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -697,7 +697,7 @@ test_uri_build_object_type_private (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	klass = CKO_PRIVATE_KEY;
 	attr.type = CKA_CLASS;
@@ -706,15 +706,15 @@ test_uri_build_object_type_private (CuTest *tc)
 	p11_kit_uri_set_attribute (uri, &attr);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "object-type=private") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "object-type=private") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_object_type_public (CuTest *tc)
+test_uri_build_object_type_public (void)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -723,7 +723,7 @@ test_uri_build_object_type_public (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	klass = CKO_PUBLIC_KEY;
 	attr.type = CKA_CLASS;
@@ -732,15 +732,15 @@ test_uri_build_object_type_public (CuTest *tc)
 	p11_kit_uri_set_attribute (uri, &attr);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "object-type=public") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "object-type=public") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_object_type_secret (CuTest *tc)
+test_uri_build_object_type_secret (void)
 {
 	CK_ATTRIBUTE attr;
 	CK_OBJECT_CLASS klass;
@@ -749,7 +749,7 @@ test_uri_build_object_type_secret (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	klass = CKO_SECRET_KEY;
 	attr.type = CKA_CLASS;
@@ -758,15 +758,15 @@ test_uri_build_object_type_secret (CuTest *tc)
 	p11_kit_uri_set_attribute (uri, &attr);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "object-type=secret-key") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "object-type=secret-key") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_with_library (CuTest *tc)
+test_uri_build_with_library (void)
 {
 	CK_INFO_PTR info;
 	P11KitUri *uri;
@@ -774,21 +774,21 @@ test_uri_build_with_library (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	info = p11_kit_uri_get_module_info (uri);
 	set_space_string (info->libraryDescription, sizeof (info->libraryDescription), "The Description");
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "library-description=The%20Description") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "library-description=The%20Description") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_build_library_version (CuTest *tc)
+test_uri_build_library_version (void)
 {
 	CK_INFO_PTR info;
 	P11KitUri *uri;
@@ -796,121 +796,121 @@ test_uri_build_library_version (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	info = p11_kit_uri_get_module_info (uri);
 	info->libraryVersion.major = 2;
 	info->libraryVersion.minor = 10;
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "library-version=2.10") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "library-version=2.10") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
 }
 
 static void
-test_uri_get_set_unrecognized (CuTest *tc)
+test_uri_get_set_unrecognized (void)
 {
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_set_unrecognized (uri, 1);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	p11_kit_uri_set_unrecognized (uri, 0);
 
 	ret = p11_kit_uri_any_unrecognized (uri);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_match_token (CuTest *tc)
+test_uri_match_token (void)
 {
 	CK_TOKEN_INFO token;
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:model=Giselle", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	set_space_string (token.label, sizeof (token.label), "A label");
 	set_space_string (token.model, sizeof (token.model), "Giselle");
 
 	ret = p11_kit_uri_match_token_info (uri, &token);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	set_space_string (token.label, sizeof (token.label), "Another label");
 
 	ret = p11_kit_uri_match_token_info (uri, &token);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	set_space_string (token.model, sizeof (token.model), "Zoolander");
 
 	ret = p11_kit_uri_match_token_info (uri, &token);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_set_unrecognized (uri, 1);
 
 	ret = p11_kit_uri_match_token_info (uri, &token);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_match_module (CuTest *tc)
+test_uri_match_module (void)
 {
 	CK_INFO info;
 	P11KitUri *uri;
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-description=Quiet", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	set_space_string (info.libraryDescription, sizeof (info.libraryDescription), "Quiet");
 	set_space_string (info.manufacturerID, sizeof (info.manufacturerID), "Someone");
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	set_space_string (info.manufacturerID, sizeof (info.manufacturerID), "Someone else");
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	set_space_string (info.libraryDescription, sizeof (info.libraryDescription), "Leise");
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_set_unrecognized (uri, 1);
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_match_version (CuTest *tc)
+test_uri_match_version (void)
 {
 	CK_INFO info;
 	P11KitUri *uri;
@@ -919,28 +919,28 @@ test_uri_match_version (CuTest *tc)
 	memset (&info, 0, sizeof (info));
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:library-version=5.8", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	info.libraryVersion.major = 5;
 	info.libraryVersion.minor = 8;
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	info.libraryVersion.major = 2;
 	info.libraryVersion.minor = 3;
 
 	ret = p11_kit_uri_match_module_info (uri, &info);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_match_attributes (CuTest *tc)
+test_uri_match_attributes (void)
 {
 	CK_ATTRIBUTE attrs[4];
 	CK_OBJECT_CLASS klass;
@@ -965,40 +965,40 @@ test_uri_match_attributes (CuTest *tc)
 	attrs[3].ulValueLen = sizeof (klass);
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;object-type=data", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	attrs[1].pValue = "Fancy";
 	attrs[1].ulValueLen = 5;
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	p11_kit_uri_clear_attribute (uri, CKA_CLASS);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	attrs[2].pValue = "pink";
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
-	CuAssertIntEquals (tc, 1, ret);
+	assert_num_eq (1, ret);
 
 	p11_kit_uri_set_unrecognized (uri, 1);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_get_set_attribute (CuTest *tc)
+test_uri_get_set_attribute (void)
 {
 	CK_ATTRIBUTE attr;
 	CK_ATTRIBUTE_PTR ptr;
@@ -1006,51 +1006,51 @@ test_uri_get_set_attribute (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
-	CuAssertPtrEquals (tc, NULL, ptr);
+	assert_ptr_eq (NULL, ptr);
 
 	ret = p11_kit_uri_clear_attribute (uri, CKA_LABEL);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_clear_attribute (uri, CKA_COLOR);
-	CuAssertIntEquals (tc, P11_KIT_URI_NOT_FOUND, ret);
+	assert_num_eq (P11_KIT_URI_NOT_FOUND, ret);
 
 	attr.type = CKA_LABEL;
 	attr.pValue = "Test";
 	attr.ulValueLen = 4;
 
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	/* We can set other attributes */
 	attr.type = CKA_COLOR;
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	/* And get them too */
 	ptr = p11_kit_uri_get_attribute (uri, CKA_COLOR);
-	CuAssertPtrNotNull (tc, ptr);
+	assert_ptr_not_null (ptr);
 
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
-	CuAssertPtrNotNull (tc, ptr);
+	assert_ptr_not_null (ptr);
 
-	CuAssertTrue (tc, ptr->type == CKA_LABEL);
-	CuAssertTrue (tc, ptr->ulValueLen == 4);
-	CuAssertTrue (tc, memcmp (ptr->pValue, "Test", 4) == 0);
+	assert (ptr->type == CKA_LABEL);
+	assert (ptr->ulValueLen == 4);
+	assert (memcmp (ptr->pValue, "Test", 4) == 0);
 
 	ret = p11_kit_uri_clear_attribute (uri, CKA_LABEL);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ptr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
-	CuAssertPtrEquals (tc, NULL, ptr);
+	assert_ptr_eq (NULL, ptr);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_get_set_attributes (CuTest *tc)
+test_uri_get_set_attributes (void)
 {
 	CK_ATTRIBUTE_PTR attrs;
 	CK_OBJECT_CLASS klass;
@@ -1060,39 +1060,39 @@ test_uri_get_set_attributes (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 0, n_attrs);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (0, n_attrs);
 
 	attr.type = CKA_LABEL;
 	attr.pValue = "Test";
 	attr.ulValueLen = 4;
 
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 1, n_attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertTrue (tc, attrs[0].ulValueLen == 4);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Test", 4) == 0);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (1, n_attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert (attrs[0].ulValueLen == 4);
+	assert (memcmp (attrs[0].pValue, "Test", 4) == 0);
 
 	attr.type = CKA_LABEL;
 	attr.pValue = "Kablooey";
 	attr.ulValueLen = 8;
 
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 1, n_attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertTrue (tc, attrs[0].ulValueLen == 8);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (1, n_attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert (attrs[0].ulValueLen == 8);
+	assert (memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
 
 	klass = CKO_DATA;
 	attr.type = CKA_CLASS;
@@ -1100,52 +1100,52 @@ test_uri_get_set_attributes (CuTest *tc)
 	attr.ulValueLen = sizeof (klass);
 
 	ret = p11_kit_uri_set_attribute (uri, &attr);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 2, n_attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertTrue (tc, attrs[0].ulValueLen == 8);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
-	CuAssertTrue (tc, attrs[1].type == CKA_CLASS);
-	CuAssertTrue (tc, attrs[1].ulValueLen == sizeof (klass));
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, &klass, sizeof (klass)) == 0);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (2, n_attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert (attrs[0].ulValueLen == 8);
+	assert (memcmp (attrs[0].pValue, "Kablooey", 8) == 0);
+	assert (attrs[1].type == CKA_CLASS);
+	assert (attrs[1].ulValueLen == sizeof (klass));
+	assert (memcmp (attrs[1].pValue, &klass, sizeof (klass)) == 0);
 
 	ret = p11_kit_uri_clear_attribute (uri, CKA_LABEL);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 1, n_attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_CLASS);
-	CuAssertTrue (tc, attrs[0].ulValueLen == sizeof (klass));
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, &klass, sizeof (klass)) == 0);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (1, n_attrs);
+	assert (attrs[0].type == CKA_CLASS);
+	assert (attrs[0].ulValueLen == sizeof (klass));
+	assert (memcmp (attrs[0].pValue, &klass, sizeof (klass)) == 0);
 
 	attr.type = CKA_LABEL;
 	attr.pValue = "Three";
 	attr.ulValueLen = 5;
 
 	ret = p11_kit_uri_set_attributes (uri, &attr, 1);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 1, n_attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertTrue (tc, attrs[0].ulValueLen == 5);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "Three", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (1, n_attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert (attrs[0].ulValueLen == 5);
+	assert (memcmp (attrs[0].pValue, "Three", 5) == 0);
 
 	p11_kit_uri_clear_attributes (uri);
 
 	attrs = p11_kit_uri_get_attributes (uri, &n_attrs);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertIntEquals (tc, 0, n_attrs);
+	assert_ptr_not_null (attrs);
+	assert_num_eq (0, n_attrs);
 
 	p11_kit_uri_free (uri);
 }
 static void
-test_uri_pin_source (CuTest *tc)
+test_uri_pin_source (void)
 {
 	P11KitUri *uri;
 	const char *pin_source;
@@ -1153,106 +1153,93 @@ test_uri_pin_source (CuTest *tc)
 	int ret;
 
 	uri = p11_kit_uri_new ();
-	CuAssertPtrNotNull (tc, uri);
+	assert_ptr_not_null (uri);
 
 	p11_kit_uri_set_pin_source (uri, "|my-pin-source");
 
 	pin_source = p11_kit_uri_get_pin_source (uri);
-	CuAssertStrEquals (tc, "|my-pin-source", pin_source);
+	assert_str_eq ("|my-pin-source", pin_source);
 
 	pin_source = p11_kit_uri_get_pinfile (uri);
-	CuAssertStrEquals (tc, "|my-pin-source", pin_source);
+	assert_str_eq ("|my-pin-source", pin_source);
 
 	p11_kit_uri_set_pinfile (uri, "|my-pin-file");
 
 	pin_source = p11_kit_uri_get_pin_source (uri);
-	CuAssertStrEquals (tc, "|my-pin-file", pin_source);
+	assert_str_eq ("|my-pin-file", pin_source);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
-	CuAssertTrue (tc, strstr (string, "pin-source=%7cmy-pin-file") != NULL);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "pin-source=%7cmy-pin-file") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:pin-source=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
-	CuAssertIntEquals (tc, P11_KIT_URI_OK, ret);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	pin_source = p11_kit_uri_get_pin_source (uri);
-	CuAssertStrEquals (tc, "blah/blah", pin_source);
+	assert_str_eq ("blah/blah", pin_source);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_uri_free_null (CuTest *tc)
+test_uri_free_null (void)
 {
 	p11_kit_uri_free (NULL);
 }
 
 static void
-test_uri_message (CuTest *tc)
+test_uri_message (void)
 {
-	CuAssertTrue (tc, p11_kit_uri_message (P11_KIT_URI_OK) == NULL);
-	CuAssertPtrNotNull (tc, p11_kit_uri_message (P11_KIT_URI_UNEXPECTED));
-	CuAssertPtrNotNull (tc, p11_kit_uri_message (-555555));
+	assert (p11_kit_uri_message (P11_KIT_URI_OK) == NULL);
+	assert_ptr_not_null (p11_kit_uri_message (P11_KIT_URI_UNEXPECTED));
+	assert_ptr_not_null (p11_kit_uri_message (-555555));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_test (test_uri_parse, "/uri/test_uri_parse");
+	p11_test (test_uri_parse_bad_scheme, "/uri/test_uri_parse_bad_scheme");
+	p11_test (test_uri_parse_with_label, "/uri/test_uri_parse_with_label");
+	p11_test (test_uri_parse_with_label_and_klass, "/uri/test_uri_parse_with_label_and_klass");
+	p11_test (test_uri_parse_with_id, "/uri/test_uri_parse_with_id");
+	p11_test (test_uri_parse_with_bad_string_encoding, "/uri/test_uri_parse_with_bad_string_encoding");
+	p11_test (test_uri_parse_with_bad_hex_encoding, "/uri/test_uri_parse_with_bad_hex_encoding");
+	p11_test (test_uri_parse_with_token, "/uri/test_uri_parse_with_token");
+	p11_test (test_uri_parse_with_token_bad_encoding, "/uri/test_uri_parse_with_token_bad_encoding");
+	p11_test (test_uri_parse_with_bad_syntax, "/uri/test_uri_parse_with_bad_syntax");
+	p11_test (test_uri_parse_with_spaces, "/uri/test_uri_parse_with_spaces");
+	p11_test (test_uri_parse_with_library, "/uri/test_uri_parse_with_library");
+	p11_test (test_uri_parse_with_library_bad_encoding, "/uri/test_uri_parse_with_library_bad_encoding");
+	p11_test (test_uri_build_empty, "/uri/test_uri_build_empty");
+	p11_test (test_uri_build_with_token_info, "/uri/test_uri_build_with_token_info");
+	p11_test (test_uri_build_with_token_null_info, "/uri/test_uri_build_with_token_null_info");
+	p11_test (test_uri_build_with_token_empty_info, "/uri/test_uri_build_with_token_empty_info");
+	p11_test (test_uri_build_with_attributes, "/uri/test_uri_build_with_attributes");
+	p11_test (test_uri_parse_private_key, "/uri/test_uri_parse_private_key");
+	p11_test (test_uri_parse_secret_key, "/uri/test_uri_parse_secret_key");
+	p11_test (test_uri_parse_library_version, "/uri/test_uri_parse_library_version");
+	p11_test (test_uri_parse_parse_unknown_object_type, "/uri/test_uri_parse_parse_unknown_object_type");
+	p11_test (test_uri_parse_unrecognized, "/uri/test_uri_parse_unrecognized");
+	p11_test (test_uri_parse_too_long_is_unrecognized, "/uri/test_uri_parse_too_long_is_unrecognized");
+	p11_test (test_uri_build_object_type_cert, "/uri/test_uri_build_object_type_cert");
+	p11_test (test_uri_build_object_type_private, "/uri/test_uri_build_object_type_private");
+	p11_test (test_uri_build_object_type_public, "/uri/test_uri_build_object_type_public");
+	p11_test (test_uri_build_object_type_secret, "/uri/test_uri_build_object_type_secret");
+	p11_test (test_uri_build_with_library, "/uri/test_uri_build_with_library");
+	p11_test (test_uri_build_library_version, "/uri/test_uri_build_library_version");
+	p11_test (test_uri_get_set_unrecognized, "/uri/test_uri_get_set_unrecognized");
+	p11_test (test_uri_match_token, "/uri/test_uri_match_token");
+	p11_test (test_uri_match_module, "/uri/test_uri_match_module");
+	p11_test (test_uri_match_version, "/uri/test_uri_match_version");
+	p11_test (test_uri_match_attributes, "/uri/test_uri_match_attributes");
+	p11_test (test_uri_get_set_attribute, "/uri/test_uri_get_set_attribute");
+	p11_test (test_uri_get_set_attributes, "/uri/test_uri_get_set_attributes");
+	p11_test (test_uri_pin_source, "/uri/test_uri_pin_source");
+	p11_test (test_uri_free_null, "/uri/test_uri_free_null");
+	p11_test (test_uri_message, "/uri/test_uri_message");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_uri_parse);
-	SUITE_ADD_TEST (suite, test_uri_parse_bad_scheme);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_label);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_label_and_klass);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_id);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_bad_string_encoding);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_bad_hex_encoding);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_token);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_token_bad_encoding);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_bad_syntax);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_spaces);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_library);
-	SUITE_ADD_TEST (suite, test_uri_parse_with_library_bad_encoding);
-	SUITE_ADD_TEST (suite, test_uri_build_empty);
-	SUITE_ADD_TEST (suite, test_uri_build_with_token_info);
-	SUITE_ADD_TEST (suite, test_uri_build_with_token_null_info);
-	SUITE_ADD_TEST (suite, test_uri_build_with_token_empty_info);
-	SUITE_ADD_TEST (suite, test_uri_build_with_attributes);
-	SUITE_ADD_TEST (suite, test_uri_parse_private_key);
-	SUITE_ADD_TEST (suite, test_uri_parse_secret_key);
-	SUITE_ADD_TEST (suite, test_uri_parse_library_version);
-	SUITE_ADD_TEST (suite, test_uri_parse_parse_unknown_object_type);
-	SUITE_ADD_TEST (suite, test_uri_parse_unrecognized);
-	SUITE_ADD_TEST (suite, test_uri_parse_too_long_is_unrecognized);
-	SUITE_ADD_TEST (suite, test_uri_build_object_type_cert);
-	SUITE_ADD_TEST (suite, test_uri_build_object_type_private);
-	SUITE_ADD_TEST (suite, test_uri_build_object_type_public);
-	SUITE_ADD_TEST (suite, test_uri_build_object_type_secret);
-	SUITE_ADD_TEST (suite, test_uri_build_with_library);
-	SUITE_ADD_TEST (suite, test_uri_build_library_version);
-	SUITE_ADD_TEST (suite, test_uri_get_set_unrecognized);
-	SUITE_ADD_TEST (suite, test_uri_match_token);
-	SUITE_ADD_TEST (suite, test_uri_match_module);
-	SUITE_ADD_TEST (suite, test_uri_match_version);
-	SUITE_ADD_TEST (suite, test_uri_match_attributes);
-	SUITE_ADD_TEST (suite, test_uri_get_set_attribute);
-	SUITE_ADD_TEST (suite, test_uri_get_set_attributes);
-	SUITE_ADD_TEST (suite, test_uri_pin_source);
-	SUITE_ADD_TEST (suite, test_uri_free_null);
-	SUITE_ADD_TEST (suite, test_uri_message);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

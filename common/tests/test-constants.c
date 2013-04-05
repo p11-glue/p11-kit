@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,7 +44,7 @@
 #include "debug.h"
 
 static void
-test_constants (CuTest *tc)
+test_constants (void)
 {
 	const p11_constant *constant;
 	p11_dict *nicks, *names;
@@ -72,29 +72,27 @@ test_constants (CuTest *tc)
 	for (j = 0; constants[j] != NULL; j++) {
 		constant = constants[j];
 		for (i = 1; constant[i].value != CKA_INVALID; i++) {
-			if (constant[i].value < constant[i - 1].value) {
-				CuFail_Line (tc, __FILE__, __LINE__,
-				             "attr constant out of order", constant[i].name);
-			}
+			if (constant[i].value < constant[i - 1].value)
+				assert_fail ("attr constant out of order", constant[i].name);
 		}
 		for (i = 0; constant[i].value != CKA_INVALID; i++) {
-			CuAssertPtrNotNull (tc, constant[i].name);
+			assert_ptr_not_null (constant[i].name);
 
 			if (constant[i].nick) {
-				CuAssertStrEquals (tc, constant[i].nick,
-				                   p11_constant_nick (constant, constant[i].value));
+				assert_str_eq (constant[i].nick,
+				               p11_constant_nick (constant, constant[i].value));
 			}
 
-			CuAssertStrEquals (tc, constant[i].name,
-			                   p11_constant_name (constant, constant[i].value));
+			assert_str_eq (constant[i].name,
+			               p11_constant_name (constant, constant[i].value));
 
 			if (constant[i].nick) {
 				check = p11_constant_resolve (nicks, constant[i].nick);
-				CuAssertIntEquals (tc, constant[i].value, check);
+				assert_num_eq (constant[i].value, check);
 			}
 
 			check = p11_constant_resolve (names, constant[i].name);
-			CuAssertIntEquals (tc, constant[i].value, check);
+			assert_num_eq (constant[i].value, check);
 		}
 	}
 
@@ -103,23 +101,10 @@ test_constants (CuTest *tc)
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_test (test_constants, "/constants/all");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-	SUITE_ADD_TEST (suite, test_constants);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

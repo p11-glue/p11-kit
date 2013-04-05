@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,36 +42,24 @@
 #include "compat.h"
 
 static void
-test_strndup (CuTest *tc)
+test_strndup (void)
 {
 	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
 	char *res;
 
 	res = strndup (unterminated, 6);
-	CuAssertStrEquals (tc, res, "tester");
+	assert_str_eq (res, "tester");
 	free (res);
 
 	res = strndup ("test", 6);
-	CuAssertStrEquals (tc, res, "test");
+	assert_str_eq (res, "test");
 	free (res);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_strndup);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_strndup, "/test/strndup");
+	return p11_test_run (argc, argv);
 }

@@ -33,10 +33,10 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "attrs.h"
-#include "test-data.h"
+#include "test-trust.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -44,9 +44,9 @@
 #include <string.h>
 
 void
-test_check_object_msg (CuTest *cu,
-                       const char *file,
+test_check_object_msg (const char *file,
                        int line,
+                       const char *function,
                        CK_ATTRIBUTE *attrs,
                        CK_OBJECT_CLASS klass,
                        const char *label)
@@ -61,13 +61,13 @@ test_check_object_msg (CuTest *cu,
 		{ CKA_INVALID },
 	};
 
-	test_check_attrs_msg (cu, file, line, expected, attrs);
+	test_check_attrs_msg (file, line, function, expected, attrs);
 }
 
 void
-test_check_cacert3_ca_msg (CuTest *cu,
-                           const char *file,
+test_check_cacert3_ca_msg (const char *file,
                            int line,
+                           const char *function,
                            CK_ATTRIBUTE *attrs,
                            const char *label)
 {
@@ -87,14 +87,14 @@ test_check_cacert3_ca_msg (CuTest *cu,
 		{ CKA_INVALID },
 	};
 
-	test_check_object_msg (cu, file, line, attrs, CKO_CERTIFICATE, label);
-	test_check_attrs_msg (cu, file, line, expected, attrs);
+	test_check_object_msg (file, line, function, attrs, CKO_CERTIFICATE, label);
+	test_check_attrs_msg (file, line, function, expected, attrs);
 }
 
 void
-test_check_id_msg (CuTest *cu,
-                   const char *file,
+test_check_id_msg (const char *file,
                    int line,
+                   const char *function,
                    CK_ATTRIBUTE *expected,
                    CK_ATTRIBUTE *attr)
 {
@@ -104,13 +104,13 @@ test_check_id_msg (CuTest *cu,
 	one = p11_attrs_find (expected, CKA_ID);
 	two = p11_attrs_find (attr, CKA_ID);
 
-	test_check_attr_msg (cu, file, line, CKA_INVALID, one, two);
+	test_check_attr_msg (file, line, function, CKA_INVALID, one, two);
 }
 
 void
-test_check_attrs_msg (CuTest *cu,
-                      const char *file,
+test_check_attrs_msg (const char *file,
                       int line,
+                      const char *function,
                       CK_ATTRIBUTE *expected,
                       CK_ATTRIBUTE *attrs)
 {
@@ -122,39 +122,31 @@ test_check_attrs_msg (CuTest *cu,
 
 	while (!p11_attrs_terminator (expected)) {
 		attr = p11_attrs_find (attrs, expected->type);
-		test_check_attr_msg (cu, file, line, klass, expected, attr);
+		test_check_attr_msg (file, line, function, klass, expected, attr);
 		expected++;
 	}
 }
 
 void
-test_check_attr_msg (CuTest *cu,
-                     const char *file,
+test_check_attr_msg (const char *file,
                      int line,
+                     const char *function,
                      CK_OBJECT_CLASS klass,
                      CK_ATTRIBUTE *expected,
                      CK_ATTRIBUTE *attr)
 {
-	char *message;
 	assert (expected != NULL);
 
 	if (attr == NULL) {
-		asprintf (&message, "expected %s but found NULL",
-		          p11_attr_to_string (expected, klass));
-		CuFail_Line (cu, file, line, "attribute does not match", message);
+		p11_test_fail (file, line, function,
+		               "attribute does not match: (expected %s but found NULL)",
+		               p11_attr_to_string (expected, klass));
 	}
 
 	if (!p11_attr_equal (attr, expected)) {
-		asprintf (&message, "expected %s but found %s",
-		          p11_attr_to_string (expected, klass),
-		          p11_attr_to_string (attr, klass));
-		CuFail_Line (cu, file, line, "attribute does not match", message);
+		p11_test_fail (file, line, function,
+		               "attribute does not match: (expected %s but found %s)",
+		               p11_attr_to_string (expected, klass),
+		               p11_attr_to_string (attr, klass));
 	}
 }
-
-void
-test_fail_attrs_match (CuTest *cu,
-                       const char *file,
-                       const char *line,
-                       CK_ATTRIBUTE *expect,
-                       CK_ATTRIBUTE *attrs);

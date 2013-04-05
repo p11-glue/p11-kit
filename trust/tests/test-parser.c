@@ -33,7 +33,8 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
+#include "test-trust.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,7 +48,6 @@
 #include "oid.h"
 #include "parser.h"
 #include "pkcs11x.h"
-#include "test-data.h"
 
 struct {
 	p11_parser *parser;
@@ -56,16 +56,16 @@ struct {
 } test;
 
 static void
-setup (CuTest *cu)
+setup (void *unused)
 {
 	test.index = p11_index_new (NULL, NULL, NULL);
 	test.cache = p11_asn1_cache_new ();
 	test.parser = p11_parser_new (test.index, test.cache);
-	CuAssertPtrNotNull (cu, test.parser);
+	assert_ptr_not_null (test.parser);
 }
 
 static void
-teardown (CuTest *cu)
+teardown (void *unused)
 {
 	p11_parser_free (test.parser);
 	p11_index_free (test.index);
@@ -94,7 +94,7 @@ parsed_attrs (CK_ATTRIBUTE *match)
 }
 
 static void
-test_parse_der_certificate (CuTest *cu)
+test_parse_der_certificate (void)
 {
 	CK_ATTRIBUTE *cert;
 	int ret;
@@ -108,24 +108,20 @@ test_parse_der_certificate (CuTest *cu)
 		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_INVALID },
 	};
-
-	setup (cu);
 
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate */
-	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+	assert_num_eq (1, p11_index_size (test.index));
 
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected, cert);
-
-	teardown (cu);
+	test_check_attrs (expected, cert);
 }
 
 static void
-test_parse_pem_certificate (CuTest *cu)
+test_parse_pem_certificate (void)
 {
 	CK_ATTRIBUTE *cert;
 	int ret;
@@ -140,23 +136,19 @@ test_parse_pem_certificate (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.pem",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+	assert_num_eq (1, p11_index_size (test.index));
 
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected, cert);
-
-	teardown (cu);
+	test_check_attrs (expected, cert);
 }
 
 static void
-test_parse_p11_kit_persist (CuTest *cu)
+test_parse_p11_kit_persist (void)
 {
 	CK_ATTRIBUTE *cert;
 	int ret;
@@ -171,23 +163,19 @@ test_parse_p11_kit_persist (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/input/verisign-v1.p11-kit",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+	assert_num_eq (1, p11_index_size (test.index));
 
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected, cert);
-
-	teardown (cu);
+	test_check_attrs (expected, cert);
 }
 
 static void
-test_parse_openssl_trusted (CuTest *cu)
+test_parse_openssl_trusted (void)
 {
 	CK_ATTRIBUTE cacert3[] = {
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
@@ -228,40 +216,36 @@ test_parse_openssl_trusted (CuTest *cu)
 	int ret;
 	int i;
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3-trusted.pem",
 	                      P11_PARSE_FLAG_ANCHOR);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/*
 	 * Should have gotten:
 	 * - 1 certificate
 	 * - 2 stapled extensions
 	 */
-	CuAssertIntEquals (cu, 3, p11_index_size (test.index));
+	assert_num_eq (3, p11_index_size (test.index));
 
 	/* The certificate */
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected[0], cert);
+	test_check_attrs (expected[0], cert);
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
 		handle = p11_index_find (test.index, expected[i], 2);
-		CuAssertTrue (cu, handle != 0);
+		assert (handle != 0);
 
 		object = p11_index_lookup (test.index, handle);
-		CuAssertPtrNotNull (cu, object);
+		assert_ptr_not_null (object);
 
-		test_check_attrs (cu, expected[i], object);
-		test_check_id (cu, cert, object);
+		test_check_attrs (expected[i], object);
+		test_check_id (cert, object);
 	}
-
-	teardown (cu);
 }
 
 static void
-test_parse_openssl_distrusted (CuTest *cu)
+test_parse_openssl_distrusted (void)
 {
 	CK_ATTRIBUTE distrust_cert[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate), },
@@ -301,42 +285,38 @@ test_parse_openssl_distrusted (CuTest *cu)
 	int ret;
 	int i;
 
-	setup (cu);
-
 	/*
 	 * OpenSSL style is to litter the blacklist in with the anchors,
 	 * so we parse this as an anchor, but expect it to be blacklisted
 	 */
 	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem",
 	                      P11_PARSE_FLAG_ANCHOR);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/*
 	 * Should have gotten:
 	 * - 1 certificate
 	 * - 2 stapled extensions
 	 */
-	CuAssertIntEquals (cu, 3, p11_index_size (test.index));
+	assert_num_eq (3, p11_index_size (test.index));
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected[0], cert);
+	test_check_attrs (expected[0], cert);
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
 		handle = p11_index_find (test.index, expected[i], 2);
-		CuAssertTrue (cu, handle != 0);
+		assert (handle != 0);
 
 		object = p11_index_lookup (test.index, handle);
-		CuAssertPtrNotNull (cu, object);
+		assert_ptr_not_null (object);
 
-		test_check_attrs (cu, expected[i], object);
-		test_check_id (cu, cert, object);
+		test_check_attrs (expected[i], object);
+		test_check_id (cert, object);
 	}
-
-	teardown (cu);
 }
 
 static void
-test_parse_anchor (CuTest *cu)
+test_parse_anchor (void)
 {
 	CK_ATTRIBUTE cacert3[] = {
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
@@ -351,26 +331,22 @@ test_parse_anchor (CuTest *cu)
 	CK_ATTRIBUTE *cert;
 	int ret;
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
 	                      P11_PARSE_FLAG_ANCHOR);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/*
 	 * Should have gotten:
 	 * - 1 certificate
 	 */
-	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+	assert_num_eq (1, p11_index_size (test.index));
 
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, cacert3, cert);
-
-	teardown (cu);
+	test_check_attrs (cacert3, cert);
 }
 
 static void
-test_parse_thawte (CuTest *cu)
+test_parse_thawte (void)
 {
 	CK_ATTRIBUTE *cert;
 	int ret;
@@ -384,61 +360,49 @@ test_parse_thawte (CuTest *cu)
 		{ CKA_INVALID },
 	};
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/thawte.pem",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	CuAssertIntEquals (cu, 1, p11_index_size (test.index));
+	assert_num_eq (1, p11_index_size (test.index));
 
 	cert = parsed_attrs (certificate_match);
-	test_check_attrs (cu, expected, cert);
-
-	teardown (cu);
+	test_check_attrs (expected, cert);
 }
 
 /* TODO: A certificate that uses generalTime needs testing */
 
 static void
-test_parse_invalid_file (CuTest *cu)
+test_parse_invalid_file (void)
 {
 	int ret;
-
-	setup (cu);
 
 	p11_message_quiet ();
 
 	ret = p11_parse_file (test.parser, "/nonexistant",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_FAILURE, ret);
+	assert_num_eq (P11_PARSE_FAILURE, ret);
 
 	p11_message_loud ();
-
-	teardown (cu);
 }
 
 static void
-test_parse_unrecognized (CuTest *cu)
+test_parse_unrecognized (void)
 {
 	int ret;
-
-	setup (cu);
 
 	p11_message_quiet ();
 
 	ret = p11_parse_file (test.parser, SRCDIR "/files/unrecognized-file.txt",
 	                      P11_PARSE_FLAG_NONE);
-	CuAssertIntEquals (cu, P11_PARSE_UNRECOGNIZED, ret);
+	assert_num_eq (P11_PARSE_UNRECOGNIZED, ret);
 
 	p11_message_loud ();
-
-	teardown (cu);
 }
 
 static void
-test_duplicate (CuTest *cu)
+test_duplicate (void)
 {
 	CK_ATTRIBUTE cacert3[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
@@ -454,36 +418,33 @@ test_duplicate (CuTest *cu)
 	CK_ATTRIBUTE *cert;
 	int ret;
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	p11_message_quiet ();
 
 	/* This shouldn't be added, should print a message */
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
-	CuAssertTrue (cu, strstr (p11_message_last (), "duplicate") != NULL);
+	assert (strstr (p11_message_last (), "duplicate") != NULL);
 
 	p11_message_loud ();
 
 	/* Should only be one certificate since the above two are identical */
 	handles = p11_index_find_all (test.index, cacert3, 2);
-	CuAssertPtrNotNull (cu, handles);
-	CuAssertTrue (cu, handles[0] != 0);
-	CuAssertTrue (cu, handles[1] == 0);
+	assert_ptr_not_null (handles);
+	assert (handles[0] != 0);
+	assert (handles[1] == 0);
 
 	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (cu, cacert3, cert);
+	test_check_attrs (cacert3, cert);
 
 	free (handles);
-	teardown (cu);
 }
 
 static void
-test_duplicate_priority (CuTest *cu)
+test_duplicate_priority (void)
 {
 	CK_ATTRIBUTE cacert3[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
@@ -515,29 +476,27 @@ test_duplicate_priority (CuTest *cu)
 	CK_ATTRIBUTE *cert;
 	int ret;
 
-	setup (cu);
-
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	p11_message_quiet ();
 
 	/* This shouldn't be added, should print a message */
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
 	                      P11_PARSE_FLAG_ANCHOR);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
-	CuAssertTrue (cu, strstr (p11_message_last (), "duplicate") != NULL);
+	assert (strstr (p11_message_last (), "duplicate") != NULL);
 
 	p11_message_loud ();
 
 	/* We should now find the trusted certificate */
 	handles = p11_index_find_all (test.index, cacert3, 2);
-	CuAssertPtrNotNull (cu, handles);
-	CuAssertTrue (cu, handles[0] != 0);
-	CuAssertTrue (cu, handles[1] == 0);
+	assert_ptr_not_null (handles);
+	assert (handles[0] != 0);
+	assert (handles[1] == 0);
 	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (cu, trusted, cert);
+	test_check_attrs (trusted, cert);
 	free (handles);
 
 	/* Now add a distrutsed one, this should override the trusted */
@@ -546,51 +505,35 @@ test_duplicate_priority (CuTest *cu)
 
 	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
 	                      P11_PARSE_FLAG_BLACKLIST);
-	CuAssertIntEquals (cu, P11_PARSE_SUCCESS, ret);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	p11_message_loud ();
 
 	/* We should now find the distrusted certificate */
 	handles = p11_index_find_all (test.index, cacert3, 2);
-	CuAssertPtrNotNull (cu, handles);
-	CuAssertTrue (cu, handles[0] != 0);
-	CuAssertTrue (cu, handles[1] == 0);
+	assert_ptr_not_null (handles);
+	assert (handles[0] != 0);
+	assert (handles[1] == 0);
 	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (cu, distrust, cert);
+	test_check_attrs (distrust, cert);
 	free (handles);
-
-	teardown (cu);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_parse_der_certificate);
-	SUITE_ADD_TEST (suite, test_parse_pem_certificate);
-	SUITE_ADD_TEST (suite, test_parse_p11_kit_persist);
-	SUITE_ADD_TEST (suite, test_parse_openssl_trusted);
-	SUITE_ADD_TEST (suite, test_parse_openssl_distrusted);
-	SUITE_ADD_TEST (suite, test_parse_anchor);
-	SUITE_ADD_TEST (suite, test_parse_thawte);
-	SUITE_ADD_TEST (suite, test_parse_invalid_file);
-	SUITE_ADD_TEST (suite, test_parse_unrecognized);
-	SUITE_ADD_TEST (suite, test_duplicate);
-	SUITE_ADD_TEST (suite, test_duplicate_priority);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_fixture (setup, teardown);
+	p11_test (test_parse_der_certificate, "/parser/parse_der_certificate");
+	p11_test (test_parse_pem_certificate, "/parser/parse_pem_certificate");
+	p11_test (test_parse_p11_kit_persist, "/parser/parse_p11_kit_persist");
+	p11_test (test_parse_openssl_trusted, "/parser/parse_openssl_trusted");
+	p11_test (test_parse_openssl_distrusted, "/parser/parse_openssl_distrusted");
+	p11_test (test_parse_anchor, "/parser/parse_anchor");
+	p11_test (test_parse_thawte, "/parser/parse_thawte");
+	p11_test (test_parse_invalid_file, "/parser/parse_invalid_file");
+	p11_test (test_parse_unrecognized, "/parser/parse_unrecognized");
+	p11_test (test_duplicate, "/parser/duplicate");
+	p11_test (test_duplicate_priority, "/parser/duplicate_priority");
+	return p11_test_run (argc, argv);
 }

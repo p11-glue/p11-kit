@@ -35,7 +35,7 @@
 #define CRYPTOKI_EXPORTS
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "library.h"
 #include "mock.h"
@@ -62,101 +62,99 @@ static CK_ULONG mock_slots_present;
 static CK_ULONG mock_slots_all;
 
 static void
-test_initialize_finalize (CuTest *tc)
+test_initialize_finalize (void)
 {
 	CK_FUNCTION_LIST_PTR proxy;
 	CK_RV rv;
 
 	rv = C_GetFunctionList (&proxy);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	CuAssertTrue (tc, p11_proxy_module_check (proxy));
+	assert (p11_proxy_module_check (proxy));
 
 	rv = proxy->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_proxy_module_cleanup ();
 }
 
 static void
-test_initialize_multiple (CuTest *tc)
+test_initialize_multiple (void)
 {
 	CK_FUNCTION_LIST_PTR proxy;
 	CK_RV rv;
 
 	rv = C_GetFunctionList (&proxy);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	CuAssertTrue (tc, p11_proxy_module_check (proxy));
-
-	rv = proxy->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (p11_proxy_module_check (proxy));
 
 	rv = proxy->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_CRYPTOKI_NOT_INITIALIZED);
+	assert (rv == CKR_CRYPTOKI_NOT_INITIALIZED);
 
 	p11_proxy_module_cleanup ();
 }
 
 static CK_FUNCTION_LIST_PTR
-setup_mock_module (CuTest *tc,
-                   CK_SESSION_HANDLE *session)
+setup_mock_module (CK_SESSION_HANDLE *session)
 {
 	CK_FUNCTION_LIST_PTR proxy;
 	CK_SLOT_ID slots[32];
 	CK_RV rv;
 
 	rv = C_GetFunctionList (&proxy);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	CuAssertTrue (tc, p11_proxy_module_check (proxy));
+	assert (p11_proxy_module_check (proxy));
 
 	rv = proxy->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	mock_slots_all = 32;
 	rv = proxy->C_GetSlotList (CK_FALSE, slots, &mock_slots_all);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertTrue (tc, mock_slots_all >= 2);
+	assert (rv == CKR_OK);
+	assert (mock_slots_all >= 2);
 
 	/* Assume this is the slot we want to deal with */
 	mock_slot_one_id = slots[0];
 	mock_slot_two_id = slots[1];
 
 	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &mock_slots_present);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertTrue (tc, mock_slots_present > 1);
+	assert (rv == CKR_OK);
+	assert (mock_slots_present > 1);
 
 	if (session) {
 		rv = (proxy->C_OpenSession) (mock_slot_one_id,
 		                             CKF_RW_SESSION | CKF_SERIAL_SESSION,
 		                             NULL, NULL, session);
-		CuAssertTrue (tc, rv == CKR_OK);
+		assert (rv == CKR_OK);
 	}
 
 	return proxy;
 }
 
 static void
-teardown_mock_module (CuTest *tc,
-                      CK_FUNCTION_LIST_PTR module)
+teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 {
 	CK_RV rv;
 
 	rv = module->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 }
 
 /*
@@ -182,27 +180,16 @@ static const CK_INFO mock_info = {
 #include "test-mock.c"
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 	p11_kit_be_quiet ();
 
-	SUITE_ADD_TEST (suite, test_initialize_finalize);
-	SUITE_ADD_TEST (suite, test_initialize_multiple);
+	p11_test (test_initialize_finalize, "/proxy/initialize-finalize");
+	p11_test (test_initialize_multiple, "/proxy/initialize-multiple");
 
-	test_mock_add_tests (suite);
+	test_mock_add_tests ("/proxy");
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

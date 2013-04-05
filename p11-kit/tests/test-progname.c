@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "library.h"
 
@@ -47,52 +47,40 @@
 #include "p11-kit/private.h"
 
 static void
-test_progname_default (CuTest *tc)
+test_progname_default (void)
 {
 	const char *progname;
 
 	progname = _p11_get_progname_unlocked ();
-	CuAssertStrEquals (tc, "progname-test", progname);
+	assert_str_eq ("test-progname", progname);
 }
 
 static void
-test_progname_set (CuTest *tc)
+test_progname_set (void)
 {
 	const char *progname;
 
 	p11_kit_set_progname ("love-generation");
 
 	progname = _p11_get_progname_unlocked ();
-	CuAssertStrEquals (tc, "love-generation", progname);
+	assert_str_eq ("love-generation", progname);
 
 	_p11_set_progname_unlocked (NULL);
 
 	progname = _p11_get_progname_unlocked ();
-	CuAssertStrEquals (tc, "progname-test", progname);
+	assert_str_eq ("test-progname", progname);
 }
 
 /* Defined in util.c */
 extern char p11_my_progname[];
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
-	SUITE_ADD_TEST (suite, test_progname_default);
-	SUITE_ADD_TEST (suite, test_progname_set);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	p11_test (test_progname_default, "/progname/test_progname_default");
+	p11_test (test_progname_set, "/progname/test_progname_set");
+	return p11_test_run (argc, argv);
 }

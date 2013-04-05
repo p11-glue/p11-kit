@@ -33,7 +33,8 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
+#include "test-trust.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +44,6 @@
 #include "debug.h"
 #include "pkcs11x.h"
 #include "message.h"
-#include "test-data.h"
 #include "token.h"
 
 struct {
@@ -51,40 +51,35 @@ struct {
 } test;
 
 static void
-setup (CuTest *cu,
-       const char *path)
+setup (void *path)
 {
 	test.token = p11_token_new (333, path, "Label");
-	CuAssertPtrNotNull (cu, test.token);
+	assert_ptr_not_null (test.token);
 }
 
 static void
-teardown (CuTest *cu)
+teardown (void *path)
 {
 	p11_token_free (test.token);
 	memset (&test, 0, sizeof (test));
 }
 
 static void
-test_token_load (CuTest *cu)
+test_token_load (void *path)
 {
 	p11_index *index;
 	int count;
 
-	setup (cu, SRCDIR "/input");
-
 	count = p11_token_load (test.token);
-	CuAssertIntEquals (cu, 7, count);
+	assert_num_eq (7, count);
 
 	/* A certificate and trust object for each parsed object + builtin */
 	index = p11_token_index (test.token);
-	CuAssertTrue (cu, ((count - 1) * 2) + 1 <= p11_index_size (index));
-
-	teardown (cu);
+	assert (((count - 1) * 2) + 1 <= p11_index_size (index));
 }
 
 static void
-test_token_flags (CuTest *cu)
+test_token_flags (void *path)
 {
 	CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
 	CK_BBOOL falsev = CK_FALSE;
@@ -178,78 +173,50 @@ test_token_flags (CuTest *cu)
 	CK_ATTRIBUTE *object;
 	int i;
 
-	setup (cu, SRCDIR "/input");
-
 	if (p11_token_load (test.token) < 0)
-		CuFail (cu, "should not be reached");
+		assert_not_reached ();
 
 	/* The other objects */
 	for (i = 0; expected[i]; i++) {
 		handle = p11_index_find (p11_token_index (test.token), expected[i], 2);
-		CuAssertTrue (cu, handle != 0);
+		assert (handle != 0);
 
 		object = p11_index_lookup (p11_token_index (test.token), handle);
-		CuAssertPtrNotNull (cu, object);
+		assert_ptr_not_null (object);
 
-		test_check_attrs (cu, expected[i], object);
+		test_check_attrs (expected[i], object);
 	}
-
-	teardown (cu);
 }
 
 static void
-test_token_path (CuTest *cu)
+test_token_path (void *path)
 {
-	setup (cu, "/wheee");
-
-	CuAssertStrEquals (cu, "/wheee", p11_token_get_path (test.token));
-
-	teardown (cu);
+	assert_str_eq (path, p11_token_get_path (test.token));
 }
 
 static void
-test_token_label (CuTest *cu)
+test_token_label (void *path)
 {
-	setup (cu, "/wheee");
-
-	CuAssertStrEquals (cu, "Label", p11_token_get_label (test.token));
-
-	teardown (cu);
+	assert_str_eq ("Label", p11_token_get_label (test.token));
 }
 
 static void
-test_token_slot (CuTest *cu)
+test_token_slot (void *path)
 {
-	setup (cu, "/unneeded");
-
-	CuAssertIntEquals (cu, 333, p11_token_get_slot (test.token));
-
-	teardown (cu);
+	assert_num_eq (333, p11_token_get_slot (test.token));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_fixture (setup, teardown);
+	p11_testx (test_token_load, SRCDIR "/input", "/token/load");
+	p11_testx (test_token_flags, SRCDIR "/input", "/token/flags");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_token_load);
-	SUITE_ADD_TEST (suite, test_token_flags);
-	SUITE_ADD_TEST (suite, test_token_path);
-	SUITE_ADD_TEST (suite, test_token_label);
-	SUITE_ADD_TEST (suite, test_token_slot);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_fixture (setup, teardown);
+	p11_testx (test_token_path, "/wheee", "/token/path");
+	p11_testx (test_token_label, "/wheee", "/token/label");
+	p11_testx (test_token_slot, "/unneeded", "/token/slot");
+	return p11_test_run (argc, argv);
 }

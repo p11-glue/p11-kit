@@ -7,7 +7,7 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
-	$(CUTEST_CFLAGS)
+	$(TEST_CFLAGS)
 
 LDADD = \
 	$(NULL)
@@ -61,5 +61,6 @@ endif # WITH_ASN1
 TESTS = $(CHECK_PROGS)
 
 LDADD += \
+	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(CUTEST_LIBS)

@@ -33,26 +33,26 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "array.h"
+#include "test.h"
 
 static void
-test_p11_array_create (CuTest *tc)
+test_create (void)
 {
 	p11_array *array;
 
 	array = p11_array_new (NULL);
-	CuAssertPtrNotNull (tc, array);
+	assert_ptr_not_null (array);
 	p11_array_free (array);
 }
 
 static void
-test_p11_array_free_null (CuTest *tc)
+test_free_null (void)
 {
 	p11_array_free (NULL);
 }
@@ -65,81 +65,81 @@ destroy_value (void *data)
 }
 
 static void
-test_p11_array_free_destroys (CuTest *tc)
+test_free_destroys (void)
 {
 	p11_array *array;
 	int value = 0;
 
 	array = p11_array_new (destroy_value);
-	CuAssertPtrNotNull (tc, array);
+	assert_ptr_not_null (array);
 	if (!p11_array_push (array, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 	p11_array_free (array);
 
-	CuAssertIntEquals (tc, 2, value);
+	assert_num_eq (2, value);
 }
 
 static void
-test_p11_array_add (CuTest *tc)
+test_add (void)
 {
 	char *value = "VALUE";
 	p11_array *array;
 
 	array = p11_array_new (NULL);
 	if (!p11_array_push (array, value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
-	CuAssertIntEquals (tc, 1, array->num);
-	CuAssertPtrEquals (tc, array->elem[0], value);
+	assert_num_eq (1, array->num);
+	assert_ptr_eq (array->elem[0], value);
 
 	p11_array_free (array);
 }
 
 static void
-test_p11_array_add_remove (CuTest *tc)
+test_add_remove (void)
 {
 	char *value = "VALUE";
 	p11_array *array;
 
 	array = p11_array_new (NULL);
 	if (!p11_array_push (array, value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
-	CuAssertIntEquals (tc, 1, array->num);
+	assert_num_eq (1, array->num);
 
-	CuAssertPtrEquals (tc, array->elem[0], value);
+	assert_ptr_eq (array->elem[0], value);
 
 	p11_array_remove (array, 0);
 
-	CuAssertIntEquals (tc, 0, array->num);
+	assert_num_eq (0, array->num);
 
 	p11_array_free (array);
 }
 
 static void
-test_p11_array_remove_destroys (CuTest *tc)
+test_remove_destroys (void)
 {
 	p11_array *array;
 	int value = 0;
 
 	array = p11_array_new (destroy_value);
 	if (!p11_array_push (array, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	p11_array_remove (array, 0);
 
-	CuAssertIntEquals (tc, 2, value);
+	assert_num_eq (2, value);
 
 	/* should not be destroyed again */
 	value = 0;
 
 	p11_array_free (array);
 
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (0, value);
 }
 
 static void
-test_p11_array_remove_and_count (CuTest *tc)
+test_remove_and_count (void)
 {
 	p11_array *array;
 	int *value;
@@ -147,75 +147,62 @@ test_p11_array_remove_and_count (CuTest *tc)
 
 	array = p11_array_new (free);
 
-	CuAssertIntEquals (tc, 0, array->num);
+	assert_num_eq (0, array->num);
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
 		*value = i;
 		if (!p11_array_push (array, value))
-			CuFail (tc, "should not be reached");
-		CuAssertIntEquals (tc, i + 1, array->num);
+			assert_not_reached ();
+		assert_num_eq (i + 1, array->num);
 	}
 
 	for (i = 10; i < 20000; ++i) {
 		p11_array_remove (array, 10);
-		CuAssertIntEquals (tc, 20010 - (i + 1), array->num);
+		assert_num_eq (20010 - (i + 1), array->num);
 	}
 
-	CuAssertIntEquals (tc, 10, array->num);
+	assert_num_eq (10, array->num);
 
 	p11_array_free (array);
 }
 
 static void
-test_p11_array_clear_destroys (CuTest *tc)
+test_clear_destroys (void)
 {
 	p11_array *array;
 	int value = 0;
 
 	array = p11_array_new (destroy_value);
 	if (!p11_array_push (array, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
-	CuAssertIntEquals (tc, 1, array->num);
+	assert_num_eq (1, array->num);
 
 	p11_array_clear (array);
 
-	CuAssertIntEquals (tc, 2, value);
-	CuAssertIntEquals (tc, 0, array->num);
+	assert_num_eq (2, value);
+	assert_num_eq (0, array->num);
 
 	/* should not be destroyed again */
 	value = 0;
 
 	p11_array_free (array);
 
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (0, value);
 }
 
-
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_p11_array_create);
-	SUITE_ADD_TEST (suite, test_p11_array_add);
-	SUITE_ADD_TEST (suite, test_p11_array_add_remove);
-	SUITE_ADD_TEST (suite, test_p11_array_remove_destroys);
-	SUITE_ADD_TEST (suite, test_p11_array_remove_and_count);
-	SUITE_ADD_TEST (suite, test_p11_array_free_null);
-	SUITE_ADD_TEST (suite, test_p11_array_free_destroys);
-	SUITE_ADD_TEST (suite, test_p11_array_clear_destroys);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_create, "/array/create");
+	p11_test (test_add, "/array/add");
+	p11_test (test_add_remove, "/array/add-remove");
+	p11_test (test_remove_destroys, "/array/remove-destroys");
+	p11_test (test_remove_and_count, "/array/remove-and-count");
+	p11_test (test_free_null, "/array/free-null");
+	p11_test (test_free_destroys, "/array/free-destroys");
+	p11_test (test_clear_destroys, "/array/clear-destroys");
+	return p11_test_run (argc, argv);
 }

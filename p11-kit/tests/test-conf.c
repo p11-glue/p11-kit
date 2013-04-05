@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -47,54 +47,54 @@
 #include "private.h"
 
 static void
-test_parse_conf_1 (CuTest *tc)
+test_parse_conf_1 (void)
 {
 	p11_dict *map;
 	const char *value;
 
 	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 
 	value = p11_dict_get (map, "key1");
-	CuAssertStrEquals (tc, "value1", value);
+	assert_str_eq ("value1", value);
 
 	value = p11_dict_get (map, "with-colon");
-	CuAssertStrEquals (tc, "value-of-colon", value);
+	assert_str_eq ("value-of-colon", value);
 
 	value = p11_dict_get (map, "with-whitespace");
-	CuAssertStrEquals (tc, "value-with-whitespace", value);
+	assert_str_eq ("value-with-whitespace", value);
 
 	value = p11_dict_get (map, "embedded-comment");
-	CuAssertStrEquals (tc, "this is # not a comment", value);
+	assert_str_eq ("this is # not a comment", value);
 
 	p11_dict_free (map);
 }
 
 static void
-test_parse_ignore_missing (CuTest *tc)
+test_parse_ignore_missing (void)
 {
 	p11_dict *map;
 
 	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 
-	CuAssertIntEquals (tc, 0, p11_dict_size (map));
-	CuAssertPtrEquals (tc, NULL, (void*)p11_message_last ());
+	assert_num_eq (0, p11_dict_size (map));
+	assert (p11_message_last () == NULL);
 	p11_dict_free (map);
 }
 
 static void
-test_parse_fail_missing (CuTest *tc)
+test_parse_fail_missing (void)
 {
 	p11_dict *map;
 
 	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
-	CuAssertPtrEquals (tc, map, NULL);
-	CuAssertPtrNotNull (tc, p11_message_last ());
+	assert (map == NULL);
+	assert_ptr_not_null (p11_message_last ());
 }
 
 static void
-test_merge_defaults (CuTest *tc)
+test_merge_defaults (void)
 {
 	p11_dict *values;
 	p11_dict *defaults;
@@ -109,19 +109,19 @@ test_merge_defaults (CuTest *tc)
 	p11_dict_set (defaults, strdup ("three"), strdup ("default3"));
 
 	if (!_p11_conf_merge_defaults (values, defaults))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	p11_dict_free (defaults);
 
-	CuAssertStrEquals (tc, p11_dict_get (values, "one"), "real1");
-	CuAssertStrEquals (tc, p11_dict_get (values, "two"), "real2");
-	CuAssertStrEquals (tc, p11_dict_get (values, "three"), "default3");
+	assert_str_eq (p11_dict_get (values, "one"), "real1");
+	assert_str_eq (p11_dict_get (values, "two"), "real2");
+	assert_str_eq (p11_dict_get (values, "three"), "default3");
 
 	p11_dict_free (values);
 }
 
 static void
-test_load_globals_merge (CuTest *tc)
+test_load_globals_merge (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -131,19 +131,19 @@ test_load_globals_merge (CuTest *tc)
 	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_message_last ());
-	CuAssertIntEquals (tc, CONF_USER_MERGE, user_mode);
+	assert_ptr_not_null (config);
+	assert (NULL == p11_message_last ());
+	assert_num_eq (CONF_USER_MERGE, user_mode);
 
-	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), "system1");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key3"), "user3");
+	assert_str_eq (p11_dict_get (config, "key1"), "system1");
+	assert_str_eq (p11_dict_get (config, "key2"), "user2");
+	assert_str_eq (p11_dict_get (config, "key3"), "user3");
 
 	p11_dict_free (config);
 }
 
 static void
-test_load_globals_no_user (CuTest *tc)
+test_load_globals_no_user (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -153,19 +153,19 @@ test_load_globals_no_user (CuTest *tc)
 	config = _p11_conf_load_globals (SRCDIR "/files/test-system-none.conf",
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_message_last ());
-	CuAssertIntEquals (tc, CONF_USER_NONE, user_mode);
+	assert_ptr_not_null (config);
+	assert (NULL == p11_message_last ());
+	assert_num_eq (CONF_USER_NONE, user_mode);
 
-	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), "system1");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key2"), "system2");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key3"), "system3");
+	assert_str_eq (p11_dict_get (config, "key1"), "system1");
+	assert_str_eq (p11_dict_get (config, "key2"), "system2");
+	assert_str_eq (p11_dict_get (config, "key3"), "system3");
 
 	p11_dict_free (config);
 }
 
 static void
-test_load_globals_user_sets_only (CuTest *tc)
+test_load_globals_user_sets_only (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -175,19 +175,19 @@ test_load_globals_user_sets_only (CuTest *tc)
 	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
 	                                 SRCDIR "/files/test-user-only.conf",
 	                                 &user_mode);
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_message_last ());
-	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
+	assert_ptr_not_null (config);
+	assert (NULL == p11_message_last ());
+	assert_num_eq (CONF_USER_ONLY, user_mode);
 
-	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), NULL);
-	CuAssertStrEquals (tc, p11_dict_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key3"), "user3");
+	assert (p11_dict_get (config, "key1") == NULL);
+	assert_str_eq (p11_dict_get (config, "key2"), "user2");
+	assert_str_eq (p11_dict_get (config, "key3"), "user3");
 
 	p11_dict_free (config);
 }
 
 static void
-test_load_globals_system_sets_only (CuTest *tc)
+test_load_globals_system_sets_only (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -197,19 +197,19 @@ test_load_globals_system_sets_only (CuTest *tc)
 	config = _p11_conf_load_globals (SRCDIR "/files/test-system-only.conf",
 	                                 SRCDIR "/files/test-user.conf",
 	                                 &user_mode);
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, NULL, p11_message_last ());
-	CuAssertIntEquals (tc, CONF_USER_ONLY, user_mode);
+	assert_ptr_not_null (config);
+	assert (NULL == p11_message_last ());
+	assert_num_eq (CONF_USER_ONLY, user_mode);
 
-	CuAssertStrEquals (tc, p11_dict_get (config, "key1"), NULL);
-	CuAssertStrEquals (tc, p11_dict_get (config, "key2"), "user2");
-	CuAssertStrEquals (tc, p11_dict_get (config, "key3"), "user3");
+	assert (p11_dict_get (config, "key1") == NULL);
+	assert_str_eq (p11_dict_get (config, "key2"), "user2");
+	assert_str_eq (p11_dict_get (config, "key3"), "user3");
 
 	p11_dict_free (config);
 }
 
 static void
-test_load_globals_system_sets_invalid (CuTest *tc)
+test_load_globals_system_sets_invalid (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -221,15 +221,15 @@ test_load_globals_system_sets_invalid (CuTest *tc)
 	                                 SRCDIR "/files/non-existant.conf",
 	                                 &user_mode);
 	error = errno;
-	CuAssertPtrEquals (tc, NULL, config);
-	CuAssertIntEquals (tc, EINVAL, error);
-	CuAssertPtrNotNull (tc, p11_message_last ());
+	assert_ptr_eq (NULL, config);
+	assert_num_eq (EINVAL, error);
+	assert_ptr_not_null (p11_message_last ());
 
 	p11_dict_free (config);
 }
 
 static void
-test_load_globals_user_sets_invalid (CuTest *tc)
+test_load_globals_user_sets_invalid (void)
 {
 	int user_mode = -1;
 	p11_dict *config;
@@ -241,9 +241,9 @@ test_load_globals_user_sets_invalid (CuTest *tc)
 	                                 SRCDIR "/files/test-user-invalid.conf",
 	                                 &user_mode);
 	error = errno;
-	CuAssertPtrEquals (tc, NULL, config);
-	CuAssertIntEquals (tc, EINVAL, error);
-	CuAssertPtrNotNull (tc, p11_message_last ());
+	assert_ptr_eq (NULL, config);
+	assert_num_eq (EINVAL, error);
+	assert_ptr_not_null (p11_message_last ());
 
 	p11_dict_free (config);
 }
@@ -256,7 +256,7 @@ assert_msg_contains (const char *msg,
 }
 
 static void
-test_load_modules_merge (CuTest *tc)
+test_load_modules_merge (void)
 {
 	p11_dict *configs;
 	p11_dict *config;
@@ -267,29 +267,29 @@ test_load_modules_merge (CuTest *tc)
 	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
-	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
+	assert_ptr_not_null (configs);
+	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-one.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "user1");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "user1");
 
 	config = p11_dict_get (configs, "two.badname");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-two.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "system2");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-three.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "user3");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-three.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "user3");
 
 	p11_dict_free (configs);
 }
 
 static void
-test_load_modules_user_none (CuTest *tc)
+test_load_modules_user_none (void)
 {
 	p11_dict *configs;
 	p11_dict *config;
@@ -300,27 +300,27 @@ test_load_modules_user_none (CuTest *tc)
 	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
-	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
+	assert_ptr_not_null (configs);
+	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-one.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "system1");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "system1");
 
 	config = p11_dict_get (configs, "two.badname");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-two.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "system2");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");
-	CuAssertPtrEquals (tc, NULL, config);
+	assert_ptr_eq (NULL, config);
 
 	p11_dict_free (configs);
 }
 
 static void
-test_load_modules_user_only (CuTest *tc)
+test_load_modules_user_only (void)
 {
 	p11_dict *configs;
 	p11_dict *config;
@@ -331,27 +331,27 @@ test_load_modules_user_only (CuTest *tc)
 	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/user-modules");
-	CuAssertPtrNotNull (tc, configs);
-	CuAssertPtrEquals (tc, NULL, (void *)p11_message_last ());
+	assert_ptr_not_null (configs);
+	assert_ptr_eq (NULL, (void *)p11_message_last ());
 
 	config = p11_dict_get (configs, "one");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, p11_dict_get (config, "module"), NULL);
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "user1");
+	assert_ptr_not_null (config);
+	assert (p11_dict_get (config, "module") == NULL);
+	assert_str_eq (p11_dict_get (config, "setting"), "user1");
 
 	config = p11_dict_get (configs, "two.badname");
-	CuAssertPtrEquals (tc, NULL, config);
+	assert_ptr_eq (NULL, config);
 
 	config = p11_dict_get (configs, "three");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-three.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "user3");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-three.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "user3");
 
 	p11_dict_free (configs);
 }
 
 static void
-test_load_modules_no_user (CuTest *tc)
+test_load_modules_no_user (void)
 {
 	p11_dict *configs;
 	p11_dict *config;
@@ -362,67 +362,53 @@ test_load_modules_no_user (CuTest *tc)
 	                                  SRCDIR "/files/package-modules",
 	                                  SRCDIR "/files/system-modules",
 	                                  SRCDIR "/files/non-existant");
-	CuAssertPtrNotNull (tc, configs);
-	CuAssertTrue (tc, assert_msg_contains (p11_message_last (), "invalid config filename"));
+	assert_ptr_not_null (configs);
+	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
 	config = p11_dict_get (configs, "one");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-one.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "system1");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "system1");
 
 	config = p11_dict_get (configs, "two.badname");
-	CuAssertPtrNotNull (tc, config);
-	CuAssertStrEquals (tc, "mock-two.so", p11_dict_get (config, "module"));
-	CuAssertStrEquals (tc, p11_dict_get (config, "setting"), "system2");
+	assert_ptr_not_null (config);
+	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");
-	CuAssertPtrEquals (tc, NULL, config);
+	assert_ptr_eq (NULL, config);
 
 	p11_dict_free (configs);
 }
 
 static void
-test_parse_boolean (CuTest *tc)
+test_parse_boolean (void)
 {
 	p11_message_quiet ();
 
-	CuAssertIntEquals (tc, true, _p11_conf_parse_boolean ("yes", false));
-	CuAssertIntEquals (tc, false, _p11_conf_parse_boolean ("no", true));
-	CuAssertIntEquals (tc, true, _p11_conf_parse_boolean ("!!!", true));
+	assert_num_eq (true, _p11_conf_parse_boolean ("yes", false));
+	assert_num_eq (false, _p11_conf_parse_boolean ("no", true));
+	assert_num_eq (true, _p11_conf_parse_boolean ("!!!", true));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_parse_conf_1);
-	SUITE_ADD_TEST (suite, test_parse_ignore_missing);
-	SUITE_ADD_TEST (suite, test_parse_fail_missing);
-	SUITE_ADD_TEST (suite, test_merge_defaults);
-	SUITE_ADD_TEST (suite, test_load_globals_merge);
-	SUITE_ADD_TEST (suite, test_load_globals_no_user);
-	SUITE_ADD_TEST (suite, test_load_globals_system_sets_only);
-	SUITE_ADD_TEST (suite, test_load_globals_user_sets_only);
-	SUITE_ADD_TEST (suite, test_load_globals_system_sets_invalid);
-	SUITE_ADD_TEST (suite, test_load_globals_user_sets_invalid);
-	SUITE_ADD_TEST (suite, test_load_modules_merge);
-	SUITE_ADD_TEST (suite, test_load_modules_no_user);
-	SUITE_ADD_TEST (suite, test_load_modules_user_only);
-	SUITE_ADD_TEST (suite, test_load_modules_user_none);
-	SUITE_ADD_TEST (suite, test_parse_boolean);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	p11_test (test_parse_conf_1, "/conf/test_parse_conf_1");
+	p11_test (test_parse_ignore_missing, "/conf/test_parse_ignore_missing");
+	p11_test (test_parse_fail_missing, "/conf/test_parse_fail_missing");
+	p11_test (test_merge_defaults, "/conf/test_merge_defaults");
+	p11_test (test_load_globals_merge, "/conf/test_load_globals_merge");
+	p11_test (test_load_globals_no_user, "/conf/test_load_globals_no_user");
+	p11_test (test_load_globals_system_sets_only, "/conf/test_load_globals_system_sets_only");
+	p11_test (test_load_globals_user_sets_only, "/conf/test_load_globals_user_sets_only");
+	p11_test (test_load_globals_system_sets_invalid, "/conf/test_load_globals_system_sets_invalid");
+	p11_test (test_load_globals_user_sets_invalid, "/conf/test_load_globals_user_sets_invalid");
+	p11_test (test_load_modules_merge, "/conf/test_load_modules_merge");
+	p11_test (test_load_modules_no_user, "/conf/test_load_modules_no_user");
+	p11_test (test_load_modules_user_only, "/conf/test_load_modules_user_only");
+	p11_test (test_load_modules_user_none, "/conf/test_load_modules_user_none");
+	p11_test (test_parse_boolean, "/conf/test_parse_boolean");
+	return p11_test_run (argc, argv);
 }

@@ -39,50 +39,50 @@
 #ifndef TEST_DATA_H_
 #define TEST_DATA_H_
 
-#define   test_check_object(cu, attrs, klass, label) \
-	test_check_object_msg (cu, __FILE__, __LINE__, attrs, klass, label)
+#define   test_check_object(attrs, klass, label) \
+	test_check_object_msg (__FILE__, __LINE__, __FUNCTION__, attrs, klass, label)
 
-void      test_check_object_msg        (CuTest *cu,
-                                        const char *file,
+void      test_check_object_msg        (const char *file,
                                         int line,
+                                        const char *function,
                                         CK_ATTRIBUTE *attrs,
                                         CK_OBJECT_CLASS klass,
                                         const char *label);
 
-#define   test_check_cacert3_ca(cu, attrs, label) \
-	test_check_cacert3_ca_msg (cu, __FILE__, __LINE__, attrs, label)
+#define   test_check_cacert3_ca(attrs, label) \
+	test_check_cacert3_ca_msg (__FILE__, __LINE__, __FUNCTION__, attrs, label)
 
-void      test_check_cacert3_ca_msg    (CuTest *cu,
-                                        const char *file,
+void      test_check_cacert3_ca_msg    (const char *file,
                                         int line,
+                                        const char *function,
                                         CK_ATTRIBUTE *attrs,
                                         const char *label);
 
-#define   test_check_attrs(cu, expected, attrs) \
-	test_check_attrs_msg (cu, __FILE__, __LINE__, expected, attrs)
+#define   test_check_attrs(expected, attrs) \
+	test_check_attrs_msg (__FILE__, __LINE__, __FUNCTION__, expected, attrs)
 
-void      test_check_attrs_msg         (CuTest *cu,
-                                        const char *file,
+void      test_check_attrs_msg         (const char *file,
                                         int line,
+                                        const char *function,
                                         CK_ATTRIBUTE *expected,
                                         CK_ATTRIBUTE *attrs);
 
-#define   test_check_attr(cu, expected, attr) \
-	test_check_attr_msg (cu, __FILE__, __LINE__, CKA_INVALID, expected, attr)
+#define   test_check_attr(expected, attr) \
+	test_check_attr_msg (__FILE__, __LINE__, __FUNCTION__, CKA_INVALID, expected, attr)
 
-void      test_check_attr_msg          (CuTest *cu,
-                                        const char *file,
+void      test_check_attr_msg          (const char *file,
                                         int line,
+                                        const char *function,
                                         CK_OBJECT_CLASS klass,
                                         CK_ATTRIBUTE *expected,
                                         CK_ATTRIBUTE *attr);
 
-#define   test_check_id(cu, expected, attrs) \
-	test_check_id_msg (cu, __FILE__, __LINE__, expected, attrs)
+#define   test_check_id(expected, attrs) \
+	test_check_id_msg (__FILE__, __LINE__, __FUNCTION__, expected, attrs)
 
-void      test_check_id_msg           (CuTest *cu,
-                                       const char *file,
+void      test_check_id_msg           (const char *file,
                                        int line,
+                                       const char *function,
                                        CK_ATTRIBUTE *expected,
                                        CK_ATTRIBUTE *attr);
 

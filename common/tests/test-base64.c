@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "base64.h"
 #include "debug.h"
@@ -45,9 +45,9 @@
 #include <stdlib.h>
 
 static void
-check_decode_msg (CuTest *tc,
-                  const char *file,
+check_decode_msg (const char *file,
                   int line,
+                  const char *function,
                   const char *input,
                   ssize_t input_len,
                   const unsigned char *expected,
@@ -63,33 +63,38 @@ check_decode_msg (CuTest *tc,
 	length = p11_b64_pton (input, input_len, decoded, sizeof (decoded));
 
 	if (expected == NULL) {
-		CuAssert_Line (tc, file, line, "decoding should have failed", length < 0);
+		if (length >= 0)
+			p11_test_fail (file, line, function, "decoding should have failed");
 
 	} else {
-		CuAssert_Line (tc, file, line, "decoding failed", length >= 0);
-		CuAssertIntEquals_LineMsg (tc, file, line, "wrong length", expected_len, length);
-		CuAssert_Line (tc, file, line, "decoded wrong", memcmp (decoded, expected, length) == 0);
+		if (length < 0)
+			p11_test_fail (file, line, function, "decoding failed");
+		if (expected_len != length)
+			p11_test_fail (file, line, function, "wrong length: (%lu != %lu)",
+				       (unsigned long)expected_len, (unsigned long)length);
+		if (memcmp (decoded, expected, length) != 0)
+			p11_test_fail (file, line, function, "decoded wrong");
 	}
 }
 
-#define check_decode_success(tc, input, input_len, expected, expected_len) \
-	check_decode_msg (tc, __FILE__, __LINE__, input, input_len, expected, expected_len)
+#define check_decode_success(input, input_len, expected, expected_len) \
+	check_decode_msg (__FILE__, __LINE__, __FUNCTION__, input, input_len, expected, expected_len)
 
-#define check_decode_failure(tc, input, input_len) \
-	check_decode_msg (tc, __FILE__, __LINE__, input, input_len, NULL, 0)
+#define check_decode_failure(input, input_len) \
+	check_decode_msg (__FILE__, __LINE__, __FUNCTION__, input, input_len, NULL, 0)
 
 static void
-test_decode_simple (CuTest *tc)
+test_decode_simple (void)
 {
-	check_decode_success (tc, "", 0, (unsigned char *)"", 0);
-	check_decode_success (tc, "MQ==", 0, (unsigned char *)"1", 0);
-	check_decode_success (tc, "YmxhaAo=", -1, (unsigned char *)"blah\n", -1);
-	check_decode_success (tc, "bGVlbGEK", -1, (unsigned char *)"leela\n", -1);
-	check_decode_success (tc, "bGVlbG9vCg==", -1, (unsigned char *)"leeloo\n", -1);
+	check_decode_success ("", 0, (unsigned char *)"", 0);
+	check_decode_success ("MQ==", 0, (unsigned char *)"1", 0);
+	check_decode_success ("YmxhaAo=", -1, (unsigned char *)"blah\n", -1);
+	check_decode_success ("bGVlbGEK", -1, (unsigned char *)"leela\n", -1);
+	check_decode_success ("bGVlbG9vCg==", -1, (unsigned char *)"leeloo\n", -1);
 }
 
 static void
-test_decode_thawte (CuTest *tc)
+test_decode_thawte (void)
 {
 	const char *input =
 		"MIIEKjCCAxKgAwIBAgIQYAGXt0an6rS0mtZLL/eQ+zANBgkqhkiG9w0BAQsFADCB"
@@ -186,28 +191,14 @@ test_decode_thawte (CuTest *tc)
 		0x31, 0xd4, 0x40, 0x1a, 0x62, 0x34, 0x36, 0x3f, 0x35, 0x01, 0xae, 0xac, 0x63, 0xa0,
 	};
 
-	check_decode_success (tc, input, -1, output, sizeof (output));
+	check_decode_success (input, -1, output, sizeof (output));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_decode_simple);
-	SUITE_ADD_TEST (suite, test_decode_thawte);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	p11_test (test_decode_simple, "/base64/decode-simple");
+	p11_test (test_decode_thawte, "/base64/decode-thawte");
+	return p11_test_run (argc, argv);
 }

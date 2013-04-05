@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +43,7 @@
 #include "path.h"
 
 static void
-test_base (CuTest *tc)
+test_base (void)
 {
 	struct {
 		const char *in;
@@ -70,27 +70,16 @@ test_base (CuTest *tc)
 
 	for (i = 0; fixtures[i].in != NULL; i++) {
 		out = p11_path_base (fixtures[i].in);
-		CuAssertStrEquals (tc, fixtures[i].out, out);
+		assert_str_eq (fixtures[i].out, out);
 		free (out);
 	}
 }
 
-static void
-check_equals_and_free_msg (CuTest *tc,
-                           const char *file,
-                           int line,
-                           const char *ex,
-                           char *ac)
-{
-	CuAssertStrEquals_LineMsg (tc, file, line, NULL, ex, ac);
-	free (ac);
-}
-
 #define check_equals_and_free(tc, ex, ac) \
-	check_equals_and_free_msg ((tc), __FILE__, __LINE__, (ex), (ac))
+	do { assert_str_eq (ex, ac); free (ac); } while (0)
 
 static void
-test_build (CuTest *tc)
+test_build (void)
 {
 #ifdef OS_UNIX
 	check_equals_and_free (tc, "/root/second",
@@ -118,7 +107,7 @@ test_build (CuTest *tc)
 }
 
 static void
-test_expand (CuTest *tc)
+test_expand (void)
 {
 	char *path;
 
@@ -151,52 +140,41 @@ test_expand (CuTest *tc)
 
 	putenv("HOME=");
 	path = p11_path_expand ("$HOME/this/is/my/path");
-	CuAssertTrue (tc, strstr (path, "this/is/my/path") != NULL);
+	assert (strstr (path, "this/is/my/path") != NULL);
 	free (path);
 
 	putenv("HOME=");
 	path = p11_path_expand ("~/this/is/my/path");
-	CuAssertTrue (tc, strstr (path, "this/is/my/path") != NULL);
+	assert (strstr (path, "this/is/my/path") != NULL);
 	free (path);
 
 	putenv("TEMP=");
 	path = p11_path_expand ("$TEMP/this/is/my/path");
-	CuAssertTrue (tc, strstr (path, "this/is/my/path") != NULL);
+	assert (strstr (path, "this/is/my/path") != NULL);
 	free (path);
 }
 
 static void
-test_absolute (CuTest *tc)
+test_absolute (void)
 {
 #ifdef OS_UNIX
-	CuAssertTrue (tc, p11_path_absolute ("/home"));
-	CuAssertTrue (tc, !p11_path_absolute ("home"));
+	assert (p11_path_absolute ("/home"));
+	assert (!p11_path_absolute ("home"));
 #else /* OS_WIN32 */
-	CuAssertTrue (tc, p11_path_absolute ("C:\\home"));
-	CuAssertTrue (tc, !p11_path_absolute ("home"));
-	CuAssertTrue (tc, p11_path_absolute ("/home"));
+	assert (p11_path_absolute ("C:\\home"));
+	assert (!p11_path_absolute ("home"));
+	assert (p11_path_absolute ("/home"));
 #endif
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_test (test_base, "/path/base");
+	p11_test (test_build, "/path/build");
+	p11_test (test_expand, "/path/expand");
+	p11_test (test_absolute, "/path/absolute");
 
-	SUITE_ADD_TEST (suite, test_base);
-	SUITE_ADD_TEST (suite, test_build);
-	SUITE_ADD_TEST (suite, test_expand);
-	SUITE_ADD_TEST (suite, test_absolute);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

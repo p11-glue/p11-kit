@@ -12,7 +12,7 @@ inc_HEADERS = \
 noinst_LTLIBRARIES = \
 	libp11-common.la \
 	libp11-library.la \
-	libp11-mock.la \
+	libp11-test.la \
 	$(NULL)
 
 libp11_common_la_SOURCES = \
@@ -36,8 +36,9 @@ libp11_library_la_SOURCES = \
 	library.c library.h \
 	$(NULL)
 
-libp11_mock_la_SOURCES = \
+libp11_test_la_SOURCES = \
 	mock.c mock.h \
+	test.c test.h \
 	$(NULL)
 
 if WITH_ASN1

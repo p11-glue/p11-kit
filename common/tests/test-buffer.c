@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,41 +43,41 @@
 #include "buffer.h"
 
 static void
-test_init_uninit (CuTest *tc)
+test_init_uninit (void)
 {
 	p11_buffer buffer;
 
 	p11_buffer_init (&buffer, 10);
-	CuAssertPtrNotNull (tc, buffer.data);
-	CuAssertIntEquals (tc, 0, buffer.len);
-	CuAssertIntEquals (tc, 0, buffer.flags);
-	CuAssertTrue (tc, buffer.size >= 10);
-	CuAssertPtrNotNull (tc, buffer.ffree);
-	CuAssertPtrNotNull (tc, buffer.frealloc);
+	assert_ptr_not_null (buffer.data);
+	assert_num_eq (0, buffer.len);
+	assert_num_eq (0, buffer.flags);
+	assert (buffer.size >= 10);
+	assert_ptr_not_null (buffer.ffree);
+	assert_ptr_not_null (buffer.frealloc);
 
 	p11_buffer_uninit (&buffer);
 }
 
 static void
-test_append (CuTest *tc)
+test_append (void)
 {
 	p11_buffer buffer;
 
 	p11_buffer_init (&buffer, 10);
 	buffer.len = 5;
 	p11_buffer_append (&buffer, 35);
-	CuAssertIntEquals (tc, 5 + 35, buffer.len);
-	CuAssertTrue (tc, buffer.size >= 35 + 5);
+	assert_num_eq (5 + 35, buffer.len);
+	assert (buffer.size >= 35 + 5);
 
 	p11_buffer_append (&buffer, 15);
-	CuAssertIntEquals (tc, 5 + 35 + 15, buffer.len);
-	CuAssertTrue (tc, buffer.size >= 5 + 35 + 15);
+	assert_num_eq (5 + 35 + 15, buffer.len);
+	assert (buffer.size >= 5 + 35 + 15);
 
 	p11_buffer_uninit (&buffer);
 }
 
 static void
-test_null (CuTest *tc)
+test_null (void)
 {
 	p11_buffer buffer;
 
@@ -85,7 +85,7 @@ test_null (CuTest *tc)
 	p11_buffer_add (&buffer, "Blah", -1);
 	p11_buffer_add (&buffer, " blah", -1);
 
-	CuAssertStrEquals (tc, "Blah blah", buffer.data);
+	assert_str_eq ("Blah blah", buffer.data);
 
 	p11_buffer_uninit (&buffer);
 }
@@ -109,7 +109,7 @@ mock_free (void *data)
 }
 
 static void
-test_init_for_data (CuTest *tc)
+test_init_for_data (void)
 {
 	p11_buffer buffer;
 	unsigned char *ret;
@@ -121,29 +121,29 @@ test_init_for_data (CuTest *tc)
 	p11_buffer_init_full (&buffer, (unsigned char *)strdup ("blah"), 4, 0,
 	                       mock_realloc, mock_free);
 
-	CuAssertPtrNotNull (tc, buffer.data);
-	CuAssertStrEquals (tc, "blah", (char *)buffer.data);
-	CuAssertIntEquals (tc, 4, buffer.len);
-	CuAssertIntEquals (tc, 0, buffer.flags);
-	CuAssertIntEquals (tc, 4, buffer.size);
-	CuAssertPtrEquals (tc, mock_free, buffer.ffree);
-	CuAssertPtrEquals (tc, mock_realloc, buffer.frealloc);
+	assert_ptr_not_null (buffer.data);
+	assert_str_eq ("blah", (char *)buffer.data);
+	assert_num_eq (4, buffer.len);
+	assert_num_eq (0, buffer.flags);
+	assert_num_eq (4, buffer.size);
+	assert_ptr_eq (mock_free, buffer.ffree);
+	assert_ptr_eq (mock_realloc, buffer.frealloc);
 
-	CuAssertIntEquals (tc, 0, mock_realloced);
-	CuAssertIntEquals (tc, 0, mock_freed);
+	assert_num_eq (0, mock_realloced);
+	assert_num_eq (0, mock_freed);
 
 	len = buffer.len;
 	ret = p11_buffer_append (&buffer, 1024);
-	CuAssertPtrEquals (tc, (char *)buffer.data + len, ret);
-	CuAssertIntEquals (tc, 1, mock_realloced);
+	assert_ptr_eq ((char *)buffer.data + len, ret);
+	assert_num_eq (1, mock_realloced);
 
 	p11_buffer_uninit (&buffer);
-	CuAssertIntEquals (tc, 1, mock_realloced);
-	CuAssertIntEquals (tc, 1, mock_freed);
+	assert_num_eq (1, mock_realloced);
+	assert_num_eq (1, mock_freed);
 }
 
 static void
-test_steal (CuTest *tc)
+test_steal (void)
 {
 	p11_buffer buffer;
 	char *string;
@@ -154,61 +154,46 @@ test_steal (CuTest *tc)
 	p11_buffer_init_full (&buffer, (unsigned char *)strdup ("blah"), 4,
 	                      P11_BUFFER_NULL, mock_realloc, mock_free);
 
-	CuAssertPtrNotNull (tc, buffer.data);
-	CuAssertStrEquals (tc, "blah", buffer.data);
+	assert_ptr_not_null (buffer.data);
+	assert_str_eq ("blah", buffer.data);
 
 	p11_buffer_add (&buffer, " yada", -1);
-	CuAssertStrEquals (tc, "blah yada", buffer.data);
+	assert_str_eq ("blah yada", buffer.data);
 
 	string = p11_buffer_steal (&buffer, &length);
 	p11_buffer_uninit (&buffer);
 
-	CuAssertStrEquals (tc, "blah yada", string);
-	CuAssertIntEquals (tc, 9, length);
-	CuAssertIntEquals (tc, 0, mock_freed);
+	assert_str_eq ("blah yada", string);
+	assert_num_eq (9, length);
+	assert_num_eq (0, mock_freed);
 
 	free (string);
 }
 
 static void
-test_add (CuTest *tc)
+test_add (void)
 {
 	p11_buffer buffer;
 
 	p11_buffer_init (&buffer, 10);
 
 	p11_buffer_add (&buffer, (unsigned char *)"Planet Express", 15);
-	CuAssertIntEquals (tc, 15, buffer.len);
-	CuAssertStrEquals (tc, "Planet Express", (char *)buffer.data);
-	CuAssertTrue (tc, p11_buffer_ok (&buffer));
+	assert_num_eq (15, buffer.len);
+	assert_str_eq ("Planet Express", (char *)buffer.data);
+	assert (p11_buffer_ok (&buffer));
 
 	p11_buffer_uninit (&buffer);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_init_uninit);
-	SUITE_ADD_TEST (suite, test_init_for_data);
-	SUITE_ADD_TEST (suite, test_append);
-	SUITE_ADD_TEST (suite, test_null);
-	SUITE_ADD_TEST (suite, test_add);
-	SUITE_ADD_TEST (suite, test_steal);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_init_uninit, "/buffer/init-uninit");
+	p11_test (test_init_for_data, "/buffer/init-for-data");
+	p11_test (test_append, "/buffer/append");
+	p11_test (test_null, "/buffer/null");
+	p11_test (test_add, "/buffer/add");
+	p11_test (test_steal, "/buffer/steal");
+	return p11_test_run (argc, argv);
 }

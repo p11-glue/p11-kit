@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "utf8.h"
 
@@ -43,7 +43,7 @@
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 static void
-test_ucs2be (CuTest *cu)
+test_ucs2be (void)
 {
 	char *output;
 	size_t length;
@@ -73,14 +73,14 @@ test_ucs2be (CuTest *cu)
 		                              fixtures[i].input_len,
 		                              &length);
 
-		CuAssertIntEquals (cu, fixtures[i].output_len, length);
-		CuAssertStrEquals (cu, fixtures[i].output, output);
+		assert_num_eq (fixtures[i].output_len, length);
+		assert_str_eq (fixtures[i].output, output);
 		free (output);
 	}
 }
 
 static void
-test_ucs2be_fail (CuTest *cu)
+test_ucs2be_fail (void)
 {
 	char *output;
 	size_t length;
@@ -97,12 +97,12 @@ test_ucs2be_fail (CuTest *cu)
 		output = p11_utf8_for_ucs2be (fixtures[i].input,
 		                              fixtures[i].input_len,
 		                              &length);
-		CuAssertPtrEquals (cu, NULL, output);
+		assert_ptr_eq (NULL, output);
 	}
 }
 
 static void
-test_ucs4be (CuTest *cu)
+test_ucs4be (void)
 {
 	char *output;
 	size_t length;
@@ -146,15 +146,15 @@ test_ucs4be (CuTest *cu)
 		                              fixtures[i].input_len,
 		                              &length);
 
-		CuAssertIntEquals (cu, fixtures[i].output_len, length);
-		CuAssertStrEquals (cu, fixtures[i].output, output);
+		assert_num_eq (fixtures[i].output_len, length);
+		assert_str_eq (fixtures[i].output, output);
 
 		free (output);
 	}
 }
 
 static void
-test_ucs4be_fail (CuTest *cu)
+test_ucs4be_fail (void)
 {
 	char *output;
 	size_t length;
@@ -179,12 +179,12 @@ test_ucs4be_fail (CuTest *cu)
 		output = p11_utf8_for_ucs4be (fixtures[i].input,
 		                              fixtures[i].input_len,
 		                              &length);
-		CuAssertPtrEquals (cu, NULL, output);
+		assert_ptr_eq (NULL, output);
 	}
 }
 
 static void
-test_utf8 (CuTest *cu)
+test_utf8 (void)
 {
 	bool ret;
 	int i;
@@ -203,12 +203,12 @@ test_utf8 (CuTest *cu)
 	for (i = 0; i < ELEMS (fixtures); i++) {
 		ret = p11_utf8_validate (fixtures[i].input,
 		                         fixtures[i].input_len);
-		CuAssertIntEquals (cu, true, ret);
+		assert_num_eq (true, ret);
 	}
 }
 
 static void
-test_utf8_fail (CuTest *cu)
+test_utf8_fail (void)
 {
 	bool ret;
 	int i;
@@ -226,31 +226,19 @@ test_utf8_fail (CuTest *cu)
 	for (i = 0; i < ELEMS (fixtures); i++) {
 		ret = p11_utf8_validate (fixtures[i].input,
 		                         fixtures[i].input_len);
-		CuAssertIntEquals (cu, false, ret);
+		assert_num_eq (false, ret);
 	}
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_ucs2be);
-	SUITE_ADD_TEST (suite, test_ucs2be_fail);
-	SUITE_ADD_TEST (suite, test_ucs4be);
-	SUITE_ADD_TEST (suite, test_ucs4be_fail);
-	SUITE_ADD_TEST (suite, test_utf8);
-	SUITE_ADD_TEST (suite, test_utf8_fail);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_ucs2be, "/utf8/ucs2be");
+	p11_test (test_ucs2be_fail, "/utf8/ucs2be_fail");
+	p11_test (test_ucs4be, "/utf8/ucs4be");
+	p11_test (test_ucs4be_fail, "/utf8/ucs4be_fail");
+	p11_test (test_utf8, "/utf8/utf8");
+	p11_test (test_utf8_fail, "/utf8/utf8_fail");
+	return p11_test_run (argc, argv);
 }

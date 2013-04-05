@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "dict.h"
 #include "library.h"
@@ -49,8 +49,7 @@
 #include <string.h>
 
 static CK_FUNCTION_LIST_PTR
-setup_mock_module (CuTest *tc,
-                   CK_SESSION_HANDLE *session)
+setup_mock_module (CK_SESSION_HANDLE *session)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
@@ -59,38 +58,37 @@ setup_mock_module (CuTest *tc,
 	p11_log_force = true;
 
 	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertPtrNotNull (tc, module);
-	CuAssertTrue (tc, p11_virtual_is_wrapper (module));
+	assert (rv == CKR_OK);
+	assert_ptr_not_null (module);
+	assert (p11_virtual_is_wrapper (module));
 
 	p11_unlock ();
 
 	rv = p11_kit_module_initialize (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	if (session) {
 		rv = (module->C_OpenSession) (MOCK_SLOT_ONE_ID,
 		                              CKF_RW_SESSION | CKF_SERIAL_SESSION,
 		                              NULL, NULL, session);
-		CuAssertTrue (tc, rv == CKR_OK);
+		assert (rv == CKR_OK);
 	}
 
 	return module;
 }
 
 static void
-teardown_mock_module (CuTest *tc,
-                      CK_FUNCTION_LIST_PTR module)
+teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 {
 	CK_RV rv;
 
 	rv = p11_kit_module_finalize (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_lock ();
 
 	rv = p11_module_release_inlock_reentrant (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_unlock ();
 }
@@ -99,27 +97,16 @@ teardown_mock_module (CuTest *tc,
 #include "test-mock.c"
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 	mock_module_init ();
 
-	test_mock_add_tests (suite);
+	test_mock_add_tests ("/log");
 
 	p11_kit_be_quiet ();
 	p11_log_output = false;
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "library.h"
 
@@ -71,7 +71,7 @@ destroy_data (void *callback_data)
 }
 
 static void
-test_pin_register_unregister (CuTest *tc)
+test_pin_register_unregister (void)
 {
 	int data = 33;
 
@@ -81,11 +81,11 @@ test_pin_register_unregister (CuTest *tc)
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_one,
 	                                 &data);
 
-	CuAssertIntEquals (tc, 34, data);
+	assert_num_eq (34, data);
 }
 
 static void
-test_pin_read (CuTest *tc)
+test_pin_read (void)
 {
 	P11KitUri *uri;
 	P11KitPin *pin;
@@ -101,10 +101,10 @@ test_pin_read (CuTest *tc)
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 	p11_kit_uri_free (uri);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 3, length);
-	CuAssertTrue (tc, memcmp (ptr, "one", 3) == 0);
+	assert_num_eq (3, length);
+	assert (memcmp (ptr, "one", 3) == 0);
 
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_one,
 	                                 &data);
@@ -113,7 +113,7 @@ test_pin_read (CuTest *tc)
 }
 
 static void
-test_pin_read_no_match (CuTest *tc)
+test_pin_read_no_match (void)
 {
 	P11KitUri *uri;
 	P11KitPin *pin;
@@ -123,11 +123,11 @@ test_pin_read_no_match (CuTest *tc)
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 	p11_kit_uri_free (uri);
 
-	CuAssertPtrEquals (tc, NULL, pin);
+	assert_ptr_eq (NULL, pin);
 }
 
 static void
-test_pin_register_duplicate (CuTest *tc)
+test_pin_register_duplicate (void)
 {
 	P11KitUri *uri;
 	P11KitPin *pin;
@@ -147,10 +147,10 @@ test_pin_register_duplicate (CuTest *tc)
 	pin = p11_kit_pin_request ("/the/pin_source", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 6, length);
-	CuAssertTrue (tc, memcmp (ptr, "secret", length) == 0);
+	assert_num_eq (6, length);
+	assert (memcmp (ptr, "secret", length) == 0);
 	p11_kit_pin_unref (pin);
 
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_other,
@@ -159,10 +159,10 @@ test_pin_register_duplicate (CuTest *tc)
 	pin = p11_kit_pin_request ("/the/pin_source", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 3, length);
-	CuAssertTrue (tc, memcmp (ptr, "one", length) == 0);
+	assert_num_eq (3, length);
+	assert (memcmp (ptr, "one", length) == 0);
 	p11_kit_pin_unref (pin);
 
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_one,
@@ -171,13 +171,13 @@ test_pin_register_duplicate (CuTest *tc)
 	pin = p11_kit_pin_request ("/the/pin_source", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrEquals (tc, NULL, pin);
+	assert_ptr_eq (NULL, pin);
 
 	p11_kit_uri_free (uri);
 }
 
 static void
-test_pin_register_fallback (CuTest *tc)
+test_pin_register_fallback (void)
 {
 	char *value = "secret";
 	P11KitUri *uri;
@@ -194,10 +194,10 @@ test_pin_register_fallback (CuTest *tc)
 	pin = p11_kit_pin_request ("/the/pin_source", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 3, length);
-	CuAssertTrue (tc, memcmp (ptr, "one", length) == 0);
+	assert_num_eq (3, length);
+	assert (memcmp (ptr, "one", length) == 0);
 	p11_kit_pin_unref (pin);
 
 	p11_kit_pin_register_callback ("/the/pin_source", callback_other,
@@ -206,10 +206,10 @@ test_pin_register_fallback (CuTest *tc)
 	pin = p11_kit_pin_request ("/the/pin_source", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 6, length);
-	CuAssertTrue (tc, memcmp (ptr, "secret", length) == 0);
+	assert_num_eq (6, length);
+	assert (memcmp (ptr, "secret", length) == 0);
 	p11_kit_pin_unref (pin);
 
 	p11_kit_pin_unregister_callback ("/the/pin_source", callback_other,
@@ -222,7 +222,7 @@ test_pin_register_fallback (CuTest *tc)
 }
 
 static void
-test_pin_file (CuTest *tc)
+test_pin_file (void)
 {
 	P11KitUri *uri;
 	P11KitPin *pin;
@@ -237,16 +237,16 @@ test_pin_file (CuTest *tc)
 	pin = p11_kit_pin_request (SRCDIR "/files/test-pinfile", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrNotNull (tc, pin);
+	assert_ptr_not_null (pin);
 	ptr = p11_kit_pin_get_value (pin, &length);
-	CuAssertIntEquals (tc, 12, length);
-	CuAssertTrue (tc, memcmp (ptr, "yogabbagabba", length) == 0);
+	assert_num_eq (12, length);
+	assert (memcmp (ptr, "yogabbagabba", length) == 0);
 	p11_kit_pin_unref (pin);
 
 	pin = p11_kit_pin_request (SRCDIR "/files/nonexistant", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
-	CuAssertPtrEquals (tc, NULL, pin);
+	assert_ptr_eq (NULL, pin);
 
 	p11_kit_pin_unregister_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
 	                                 NULL);
@@ -255,7 +255,7 @@ test_pin_file (CuTest *tc)
 }
 
 static void
-test_pin_file_large (CuTest *tc)
+test_pin_file_large (void)
 {
 	P11KitUri *uri;
 	P11KitPin *pin;
@@ -270,8 +270,8 @@ test_pin_file_large (CuTest *tc)
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
 	error = errno;
-	CuAssertPtrEquals (tc, NULL, pin);
-	CuAssertIntEquals (tc, EFBIG, error);
+	assert_ptr_eq (NULL, pin);
+	assert_num_eq (EFBIG, error);
 
 	p11_kit_pin_unregister_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
 	                                 NULL);
@@ -280,7 +280,7 @@ test_pin_file_large (CuTest *tc)
 }
 
 static void
-test_pin_ref_unref (CuTest *tc)
+test_pin_ref_unref (void)
 {
 	P11KitPin *pin;
 	P11KitPin *check;
@@ -288,38 +288,26 @@ test_pin_ref_unref (CuTest *tc)
 	pin = p11_kit_pin_new_for_string ("crack of lies");
 
 	check = p11_kit_pin_ref (pin);
-	CuAssertPtrEquals (tc, pin, check);
+	assert_ptr_eq (pin, check);
 
 	p11_kit_pin_unref (pin);
 	p11_kit_pin_unref (check);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
-	SUITE_ADD_TEST (suite, test_pin_register_unregister);
-	SUITE_ADD_TEST (suite, test_pin_read);
-	SUITE_ADD_TEST (suite, test_pin_read_no_match);
-	SUITE_ADD_TEST (suite, test_pin_register_duplicate);
-	SUITE_ADD_TEST (suite, test_pin_register_fallback);
-	SUITE_ADD_TEST (suite, test_pin_file);
-	SUITE_ADD_TEST (suite, test_pin_file_large);
-	SUITE_ADD_TEST (suite, test_pin_ref_unref);
+	p11_test (test_pin_register_unregister, "/pin/test_pin_register_unregister");
+	p11_test (test_pin_read, "/pin/test_pin_read");
+	p11_test (test_pin_read_no_match, "/pin/test_pin_read_no_match");
+	p11_test (test_pin_register_duplicate, "/pin/test_pin_register_duplicate");
+	p11_test (test_pin_register_fallback, "/pin/test_pin_register_fallback");
+	p11_test (test_pin_file, "/pin/test_pin_file");
+	p11_test (test_pin_file_large, "/pin/test_pin_file_large");
+	p11_test (test_pin_ref_unref, "/pin/test_pin_ref_unref");
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

@@ -36,7 +36,7 @@
 #define P11_KIT_NO_DEPRECATIONS
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "dict.h"
 #include "library.h"
@@ -55,33 +55,32 @@
 #include <unistd.h>
 
 static CK_FUNCTION_LIST_PTR_PTR
-initialize_and_get_modules (CuTest *tc)
+initialize_and_get_modules (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	CK_RV rv;
 
 	rv = p11_kit_initialize_registered ();
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 	modules = p11_kit_registered_modules ();
-	CuAssertTrue (tc, modules != NULL && modules[0] != NULL);
+	assert (modules != NULL && modules[0] != NULL);
 
 	return modules;
 }
 
 static void
-finalize_and_free_modules (CuTest *tc,
-                           CK_FUNCTION_LIST_PTR_PTR modules)
+finalize_and_free_modules (CK_FUNCTION_LIST_PTR_PTR modules)
 {
 	CK_RV rv;
 
 	free (modules);
 	rv = p11_kit_finalize_registered ();
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 }
 
 static void
-test_no_duplicates (CuTest *tc)
+test_no_duplicates (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	p11_dict *paths;
@@ -89,7 +88,7 @@ test_no_duplicates (CuTest *tc)
 	char *path;
 	int i;
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 	paths = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 	funcs = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
 
@@ -98,26 +97,25 @@ test_no_duplicates (CuTest *tc)
 		path = p11_kit_registered_option (modules[i], "module");
 
 		if (p11_dict_get (funcs, modules[i]))
-			CuAssert (tc, "found duplicate function list pointer", 0);
+			assert_fail ("found duplicate function list pointer", NULL);
 		if (p11_dict_get (paths, path))
-			CuAssert (tc, "found duplicate path name", 0);
+			assert_fail ("found duplicate path name", NULL);
 
 		if (!p11_dict_set (funcs, modules[i], ""))
-			CuAssert (tc, "shouldn't be reached", 0);
+			assert_not_reached ();
 		if (!p11_dict_set (paths, path, ""))
-			CuAssert (tc, "shouldn't be reached", 0);
+			assert_not_reached ();
 
 		free (path);
 	}
 
 	p11_dict_free (paths);
 	p11_dict_free (funcs);
-	finalize_and_free_modules (tc, modules);
+	finalize_and_free_modules (modules);
 }
 
 static CK_FUNCTION_LIST_PTR
-lookup_module_with_name (CuTest *tc,
-                         CK_FUNCTION_LIST_PTR_PTR modules,
+lookup_module_with_name (CK_FUNCTION_LIST_PTR_PTR modules,
                          const char *name)
 {
 	CK_FUNCTION_LIST_PTR match = NULL;
@@ -127,7 +125,7 @@ lookup_module_with_name (CuTest *tc,
 
 	for (i = 0; match == NULL && modules[i] != NULL; i++) {
 		module_name = p11_kit_registered_module_to_name (modules[i]);
-		CuAssertPtrNotNull (tc, module_name);
+		assert_ptr_not_null (module_name);
 		if (strcmp (module_name, name) == 0)
 			match = modules[i];
 		free (module_name);
@@ -138,14 +136,14 @@ lookup_module_with_name (CuTest *tc,
 	 * matches the above search.
 	 */
 	module = p11_kit_registered_name_to_module (name);
-	CuAssert(tc, "different result from p11_kit_registered_name_to_module()",
-	         module == match);
+	if (module != match)
+		assert_fail ("different result from p11_kit_registered_name_to_module()", NULL);
 
 	return match;
 }
 
 static void
-test_disable (CuTest *tc)
+test_disable (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
@@ -154,9 +152,9 @@ test_disable (CuTest *tc)
 	 * that it has disabled.
 	 */
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") != NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "four") != NULL);
+	finalize_and_free_modules (modules);
 
 	/*
 	 * The module two shouldn't have been loaded, because in its config
@@ -167,15 +165,15 @@ test_disable (CuTest *tc)
 
 	p11_kit_set_progname ("test-disable");
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") == NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "four") == NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
 
 static void
-test_disable_later (CuTest *tc)
+test_disable_later (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	CK_RV rv;
@@ -188,21 +186,21 @@ test_disable_later (CuTest *tc)
 	 */
 
 	rv = p11_kit_initialize_registered ();
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	p11_kit_set_progname ("test-disable");
 
 	modules = p11_kit_registered_modules ();
-	CuAssertTrue (tc, modules != NULL && modules[0] != NULL);
+	assert (modules != NULL && modules[0] != NULL);
 
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two") == NULL);
-	finalize_and_free_modules (tc, modules);
+	assert (lookup_module_with_name (modules, "two") == NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
 
 static void
-test_enable (CuTest *tc)
+test_enable (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
@@ -211,9 +209,9 @@ test_enable (CuTest *tc)
 	 * program.
 	 */
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "three") == NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "three") == NULL);
+	finalize_and_free_modules (modules);
 
 	/*
 	 * The module three should be loaded here , because in its config
@@ -224,9 +222,9 @@ test_enable (CuTest *tc)
 
 	p11_kit_set_progname ("test-enable");
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "three") != NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "three") != NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
@@ -265,23 +263,23 @@ mock_C_Initialize__with_fork (CK_VOID_PTR init_args)
 }
 
 static void
-test_fork_initialization (CuTest *tc)
+test_fork_initialization (void)
 {
 	CK_RV rv;
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 
 	/* Build up our own function list */
 	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
 	module.C_Initialize = mock_C_Initialize__with_fork;
 
 	rv = p11_kit_initialize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = p11_kit_finalize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 }
 
 #endif /* OS_UNIX */
@@ -294,20 +292,20 @@ mock_C_Initialize__with_recursive (CK_VOID_PTR init_args)
 }
 
 static void
-test_recursive_initialization (CuTest *tc)
+test_recursive_initialization (void)
 {
 	CK_RV rv;
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 
 	/* Build up our own function list */
 	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
 	module.C_Initialize = mock_C_Initialize__with_recursive;
 
 	rv = p11_kit_initialize_module (&module);
-	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
+	assert (rv == CKR_FUNCTION_FAILED);
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 }
 
 static p11_mutex_t race_mutex;
@@ -341,36 +339,36 @@ mock_C_Finalize__threaded_race (CK_VOID_PTR reserved)
 static void *
 initialization_thread (void *data)
 {
-	CuTest *tc = data;
 	CK_RV rv;
 
+	assert_str_eq (data, "thread-data");
 	rv = p11_kit_initialize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	return tc;
+	return "thread-data";
 }
 
 static void *
 finalization_thread (void *data)
 {
-	CuTest *tc = data;
 	CK_RV rv;
 
+	assert_str_eq (data, "thread-data");
 	rv = p11_kit_finalize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	return tc;
+	return "thread-data";
 }
 
 static void
-test_threaded_initialization (CuTest *tc)
+test_threaded_initialization (void)
 {
 	static const int num_threads = 2;
 	p11_thread_t threads[num_threads];
 	int ret;
 	int i;
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 
 	/* Build up our own function list */
 	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
@@ -381,34 +379,34 @@ test_threaded_initialization (CuTest *tc)
 	finalization_count = 0;
 
 	for (i = 0; i < num_threads; i++) {
-		ret = p11_thread_create (&threads[i], initialization_thread, tc);
-		CuAssertIntEquals (tc, 0, ret);
-		CuAssertTrue (tc, threads[i] != 0);
+		ret = p11_thread_create (&threads[i], initialization_thread, "thread-data");
+		assert_num_eq (0, ret);
+		assert (threads[i] != 0);
 	}
 
 	for (i = 0; i < num_threads; i++) {
 		ret = p11_thread_join (threads[i]);
-		CuAssertIntEquals (tc, 0, ret);
+		assert_num_eq (0, ret);
 		threads[i] = 0;
 	}
 
 	for (i = 0; i < num_threads; i++) {
-		ret = p11_thread_create (&threads[i], finalization_thread, tc);
-		CuAssertIntEquals (tc, 0, ret);
-		CuAssertTrue (tc, threads[i] != 0);
+		ret = p11_thread_create (&threads[i], finalization_thread, "thread-data");
+		assert_num_eq (0, ret);
+		assert (threads[i] != 0);
 	}
 
 	for (i = 0; i < num_threads; i++) {
 		ret = p11_thread_join (threads[i]);
-		CuAssertIntEquals (tc, 0, ret);
+		assert_num_eq (0, ret);
 		threads[i] = 0;
 	}
 
 	/* C_Initialize should have been called exactly once */
-	CuAssertIntEquals (tc, 1, initialization_count);
-	CuAssertIntEquals (tc, 1, finalization_count);
+	assert_num_eq (1, initialization_count);
+	assert_num_eq (1, finalization_count);
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 }
 
 static CK_RV
@@ -441,27 +439,27 @@ mock_C_Initialize__test_mutexes (CK_VOID_PTR args)
 }
 
 static void
-test_mutexes (CuTest *tc)
+test_mutexes (void)
 {
 	CK_RV rv;
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 
 	/* Build up our own function list */
 	memcpy (&module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
 	module.C_Initialize = mock_C_Initialize__test_mutexes;
 
 	rv = p11_kit_initialize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = p11_kit_finalize_module (&module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
-	CuAssertTrue (tc, !mock_module_initialized ());
+	assert (!mock_module_initialized ());
 }
 
 static void
-test_load_and_initialize (CuTest *tc)
+test_load_and_initialize (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_INFO info;
@@ -469,53 +467,42 @@ test_load_and_initialize (CuTest *tc)
 	int ret;
 
 	rv = p11_kit_load_initialize_module (BUILDDIR "/.libs/mock-one" SHLEXT, &module);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertTrue (tc, module != NULL);
+	assert (rv == CKR_OK);
+	assert (module != NULL);
 
 	rv = (module->C_GetInfo) (&info);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	ret = memcmp (info.manufacturerID, "MOCK MANUFACTURER               ", 32);
-	CuAssertTrue (tc, ret == 0);
+	assert (ret == 0);
 
 	rv = p11_kit_finalize_module (module);
-	CuAssertTrue (tc, ret == CKR_OK);
+	assert (ret == CKR_OK);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_mutex_init (&race_mutex);
 	mock_module_init ();
 	p11_library_init ();
 
-	SUITE_ADD_TEST (suite, test_no_duplicates);
-	SUITE_ADD_TEST (suite, test_disable);
-	SUITE_ADD_TEST (suite, test_disable_later);
-	SUITE_ADD_TEST (suite, test_enable);
+	p11_test (test_no_duplicates, "/deprecated/test_no_duplicates");
+	p11_test (test_disable, "/deprecated/test_disable");
+	p11_test (test_disable_later, "/deprecated/test_disable_later");
+	p11_test (test_enable, "/deprecated/test_enable");
 
 #ifdef OS_UNIX
-	SUITE_ADD_TEST (suite, test_fork_initialization);
+	p11_test (test_fork_initialization, "/deprecated/test_fork_initialization");
 #endif
 
-	SUITE_ADD_TEST (suite, test_recursive_initialization);
-	SUITE_ADD_TEST (suite, test_threaded_initialization);
-	SUITE_ADD_TEST (suite, test_mutexes);
-	SUITE_ADD_TEST (suite, test_load_and_initialize);
+	p11_test (test_recursive_initialization, "/deprecated/test_recursive_initialization");
+	p11_test (test_threaded_initialization, "/deprecated/test_threaded_initialization");
+	p11_test (test_mutexes, "/deprecated/test_mutexes");
+	p11_test (test_load_and_initialize, "/deprecated/test_load_and_initialize");
 
 	p11_kit_be_quiet ();
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +43,7 @@
 #include "debug.h"
 
 static void
-test_terminator (CuTest *tc)
+test_terminator (void)
 {
 	CK_ATTRIBUTE attrs[] = {
 		{ CKA_LABEL, "label", 5 },
@@ -51,14 +51,14 @@ test_terminator (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	CuAssertIntEquals (tc, true, p11_attrs_terminator (attrs + 2));
-	CuAssertIntEquals (tc, true, p11_attrs_terminator (NULL));
-	CuAssertIntEquals (tc, false, p11_attrs_terminator (attrs));
-	CuAssertIntEquals (tc, false, p11_attrs_terminator (attrs + 1));
+	assert_num_eq (true, p11_attrs_terminator (attrs + 2));
+	assert_num_eq (true, p11_attrs_terminator (NULL));
+	assert_num_eq (false, p11_attrs_terminator (attrs));
+	assert_num_eq (false, p11_attrs_terminator (attrs + 1));
 }
 
 static void
-test_count (CuTest *tc)
+test_count (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 
@@ -72,13 +72,13 @@ test_count (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	CuAssertIntEquals (tc, 2, p11_attrs_count (attrs));
-	CuAssertIntEquals (tc, 0, p11_attrs_count (NULL));
-	CuAssertIntEquals (tc, 0, p11_attrs_count (empty));
+	assert_num_eq (2, p11_attrs_count (attrs));
+	assert_num_eq (0, p11_attrs_count (NULL));
+	assert_num_eq (0, p11_attrs_count (empty));
 }
 
 static void
-test_build_one (CuTest *tc)
+test_build_one (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE add = { CKA_LABEL, "yay", 3 };
@@ -86,18 +86,18 @@ test_build_one (CuTest *tc)
 	attrs = p11_attrs_build (NULL, &add, NULL);
 
 	/* Test the first attribute */
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs->type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs->ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs->pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs->type == CKA_LABEL);
+	assert_num_eq (3, attrs->ulValueLen);
+	assert (memcmp (attrs->pValue, "yay", 3) == 0);
 
-	CuAssertTrue (tc, attrs[1].type == CKA_INVALID);
+	assert (attrs[1].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_build_two (CuTest *tc)
+test_build_two (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
@@ -105,23 +105,23 @@ test_build_two (CuTest *tc)
 
 	attrs = p11_attrs_build (NULL, &one, &two, NULL);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (3, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "yay", 3) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 5, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "eight", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (5, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "eight", 5) == 0);
 
-	CuAssertTrue (tc, attrs[2].type == CKA_INVALID);
+	assert (attrs[2].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_build_invalid (CuTest *tc)
+test_build_invalid (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
@@ -130,23 +130,23 @@ test_build_invalid (CuTest *tc)
 
 	attrs = p11_attrs_build (NULL, &one, &invalid, &two, NULL);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (3, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "yay", 3) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 5, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "eight", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (5, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "eight", 5) == 0);
 
-	CuAssertTrue (tc, attrs[2].type == CKA_INVALID);
+	assert (attrs[2].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_buildn_two (CuTest *tc)
+test_buildn_two (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE add[] = {
@@ -157,23 +157,23 @@ test_buildn_two (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, add, 2);
 
 	/* Test the first attribute */
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs->type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs->ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs->pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs->type == CKA_LABEL);
+	assert_num_eq (3, attrs->ulValueLen);
+	assert (memcmp (attrs->pValue, "yay", 3) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 5, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "eight", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (5, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "eight", 5) == 0);
 
-	CuAssertTrue (tc, attrs[2].type == CKA_INVALID);
+	assert (attrs[2].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_buildn_one (CuTest *tc)
+test_buildn_one (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE add = { CKA_LABEL, "yay", 3 };
@@ -181,18 +181,18 @@ test_buildn_one (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, &add, 1);
 
 	/* Test the first attribute */
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs->type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs->ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs->pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs->type == CKA_LABEL);
+	assert_num_eq (3, attrs->ulValueLen);
+	assert (memcmp (attrs->pValue, "yay", 3) == 0);
 
-	CuAssertTrue (tc, attrs[1].type == CKA_INVALID);
+	assert (attrs[1].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_build_add (CuTest *tc)
+test_build_add (void)
 {
 	CK_ATTRIBUTE initial[] = {
 		{ CKA_LABEL, "label", 5 },
@@ -206,28 +206,28 @@ test_build_add (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, initial, 2);
 	attrs = p11_attrs_build (attrs, &one, &two, NULL);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (3, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "yay", 3) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (4, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "nine", 4) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[2].type == CKA_TOKEN);
-	CuAssertIntEquals (tc, 1, attrs[2].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[2].pValue, "\x01", 1) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[2].type == CKA_TOKEN);
+	assert_num_eq (1, attrs[2].ulValueLen);
+	assert (memcmp (attrs[2].pValue, "\x01", 1) == 0);
 
-	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+	assert (attrs[3].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_build_null (CuTest *tc)
+test_build_null (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE add = { CKA_LABEL, NULL, (CK_ULONG)-1 };
@@ -235,16 +235,16 @@ test_build_null (CuTest *tc)
 	attrs = p11_attrs_build (NULL, &add, NULL);
 
 	/* Test the first attribute */
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs->type == CKA_LABEL);
-	CuAssertTrue (tc, attrs->ulValueLen == (CK_ULONG)-1);
-	CuAssertPtrEquals (tc, NULL, attrs->pValue);
+	assert_ptr_not_null (attrs);
+	assert (attrs->type == CKA_LABEL);
+	assert (attrs->ulValueLen == (CK_ULONG)-1);
+	assert_ptr_eq (NULL, attrs->pValue);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_dup (CuTest *tc)
+test_dup (void)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE original[] = {
@@ -256,23 +256,23 @@ test_dup (CuTest *tc)
 	attrs = p11_attrs_dup (original);
 
 	/* Test the first attribute */
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs->type == CKA_LABEL);
-	CuAssertIntEquals (tc, 3, attrs->ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs->pValue, "yay", 3) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs->type == CKA_LABEL);
+	assert_num_eq (3, attrs->ulValueLen);
+	assert (memcmp (attrs->pValue, "yay", 3) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 5, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "eight", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (5, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "eight", 5) == 0);
 
-	CuAssertTrue (tc, attrs[2].type == CKA_INVALID);
+	assert (attrs[2].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_take (CuTest *tc)
+test_take (void)
 {
 	CK_ATTRIBUTE initial[] = {
 		{ CKA_LABEL, "label", 5 },
@@ -284,30 +284,30 @@ test_take (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, initial, 2);
 	attrs = p11_attrs_take (attrs, CKA_LABEL, strdup ("boooyah"), 7);
 	attrs = p11_attrs_take (attrs, CKA_TOKEN, strdup ("\x01"), 1);
-	CuAssertPtrNotNull (tc, attrs);
+	assert_ptr_not_null (attrs);
 
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 7, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "boooyah", 7) == 0);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (7, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "boooyah", 7) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (4, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "nine", 4) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[2].type == CKA_TOKEN);
-	CuAssertIntEquals (tc, 1, attrs[2].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[2].pValue, "\x01", 1) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[2].type == CKA_TOKEN);
+	assert_num_eq (1, attrs[2].ulValueLen);
+	assert (memcmp (attrs[2].pValue, "\x01", 1) == 0);
 
-	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+	assert (attrs[3].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 
 static void
-test_merge_replace (CuTest *tc)
+test_merge_replace (void)
 {
 	CK_ATTRIBUTE initial[] = {
 		{ CKA_LABEL, "label", 5 },
@@ -325,29 +325,29 @@ test_merge_replace (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, initial, 2);
 	merge = p11_attrs_buildn (NULL, extra, 2);
 	attrs = p11_attrs_merge (attrs, merge, true);
-	CuAssertPtrNotNull (tc, attrs);
+	assert_ptr_not_null (attrs);
 
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 7, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "boooyah", 7) == 0);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (7, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "boooyah", 7) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (4, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "nine", 4) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[2].type == CKA_APPLICATION);
-	CuAssertIntEquals (tc, 5, attrs[2].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[2].pValue, "disco", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[2].type == CKA_APPLICATION);
+	assert_num_eq (5, attrs[2].ulValueLen);
+	assert (memcmp (attrs[2].pValue, "disco", 5) == 0);
 
-	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+	assert (attrs[3].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_merge_empty (CuTest *tc)
+test_merge_empty (void)
 {
 	CK_ATTRIBUTE extra[] = {
 		{ CKA_LABEL, "boooyah", 7 },
@@ -359,14 +359,14 @@ test_merge_empty (CuTest *tc)
 
 	merge = p11_attrs_buildn (NULL, extra, 2);
 	attrs = p11_attrs_merge (attrs, merge, true);
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertPtrEquals (tc, merge, attrs);
+	assert_ptr_not_null (attrs);
+	assert_ptr_eq (merge, attrs);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_merge_augment (CuTest *tc)
+test_merge_augment (void)
 {
 	CK_ATTRIBUTE initial[] = {
 		{ CKA_LABEL, "label", 5 },
@@ -384,35 +384,35 @@ test_merge_augment (CuTest *tc)
 	attrs = p11_attrs_buildn (NULL, initial, 2);
 	merge = p11_attrs_buildn (NULL, extra, 2);
 	attrs = p11_attrs_merge (attrs, merge, false);
-	CuAssertPtrNotNull (tc, attrs);
+	assert_ptr_not_null (attrs);
 
-	CuAssertTrue (tc, attrs[0].type == CKA_LABEL);
-	CuAssertIntEquals (tc, 5, attrs[0].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[0].pValue, "label", 5) == 0);
+	assert (attrs[0].type == CKA_LABEL);
+	assert_num_eq (5, attrs[0].ulValueLen);
+	assert (memcmp (attrs[0].pValue, "label", 5) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[1].type == CKA_VALUE);
-	CuAssertIntEquals (tc, 4, attrs[1].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[1].pValue, "nine", 4) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[1].type == CKA_VALUE);
+	assert_num_eq (4, attrs[1].ulValueLen);
+	assert (memcmp (attrs[1].pValue, "nine", 4) == 0);
 
-	CuAssertPtrNotNull (tc, attrs);
-	CuAssertTrue (tc, attrs[2].type == CKA_APPLICATION);
-	CuAssertIntEquals (tc, 5, attrs[2].ulValueLen);
-	CuAssertTrue (tc, memcmp (attrs[2].pValue, "disco", 5) == 0);
+	assert_ptr_not_null (attrs);
+	assert (attrs[2].type == CKA_APPLICATION);
+	assert_num_eq (5, attrs[2].ulValueLen);
+	assert (memcmp (attrs[2].pValue, "disco", 5) == 0);
 
-	CuAssertTrue (tc, attrs[3].type == CKA_INVALID);
+	assert (attrs[3].type == CKA_INVALID);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_free_null (CuTest *tc)
+test_free_null (void)
 {
 	p11_attrs_free (NULL);
 }
 
 static void
-test_equal (CuTest *tc)
+test_equal (void)
 {
 	char *data = "extra attribute";
 	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
@@ -422,19 +422,19 @@ test_equal (CuTest *tc)
 	CK_ATTRIBUTE overflow = { CKA_VALUE, data, 5 };
 	CK_ATTRIBUTE content = { CKA_VALUE, "conte", 5 };
 
-	CuAssertTrue (tc, p11_attr_equal (&one, &one));
-	CuAssertTrue (tc, !p11_attr_equal (&one, NULL));
-	CuAssertTrue (tc, !p11_attr_equal (NULL, &one));
-	CuAssertTrue (tc, !p11_attr_equal (&one, &two));
-	CuAssertTrue (tc, !p11_attr_equal (&two, &other));
-	CuAssertTrue (tc, p11_attr_equal (&other, &overflow));
-	CuAssertTrue (tc, !p11_attr_equal (&one, &null));
-	CuAssertTrue (tc, !p11_attr_equal (&one, &null));
-	CuAssertTrue (tc, !p11_attr_equal (&other, &content));
+	assert (p11_attr_equal (&one, &one));
+	assert (!p11_attr_equal (&one, NULL));
+	assert (!p11_attr_equal (NULL, &one));
+	assert (!p11_attr_equal (&one, &two));
+	assert (!p11_attr_equal (&two, &other));
+	assert (p11_attr_equal (&other, &overflow));
+	assert (!p11_attr_equal (&one, &null));
+	assert (!p11_attr_equal (&one, &null));
+	assert (!p11_attr_equal (&other, &content));
 }
 
 static void
-test_hash (CuTest *tc)
+test_hash (void)
 {
 	char *data = "extra attribute";
 	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
@@ -446,18 +446,18 @@ test_hash (CuTest *tc)
 	unsigned int hash;
 
 	hash = p11_attr_hash (&one);
-	CuAssertTrue (tc, hash != 0);
+	assert (hash != 0);
 
-	CuAssertTrue (tc, p11_attr_hash (&one) == hash);
-	CuAssertTrue (tc, p11_attr_hash (&two) != hash);
-	CuAssertTrue (tc, p11_attr_hash (&other) != hash);
-	CuAssertTrue (tc, p11_attr_hash (&overflow) != hash);
-	CuAssertTrue (tc, p11_attr_hash (&null) != hash);
-	CuAssertTrue (tc, p11_attr_hash (&content) != hash);
+	assert (p11_attr_hash (&one) == hash);
+	assert (p11_attr_hash (&two) != hash);
+	assert (p11_attr_hash (&other) != hash);
+	assert (p11_attr_hash (&overflow) != hash);
+	assert (p11_attr_hash (&null) != hash);
+	assert (p11_attr_hash (&content) != hash);
 }
 
 static void
-test_to_string (CuTest *tc)
+test_to_string (void)
 {
 	char *data = "extra attribute";
 	CK_ATTRIBUTE one = { CKA_LABEL, "yay", 3 };
@@ -471,20 +471,20 @@ test_to_string (CuTest *tc)
 
 
 	string = p11_attr_to_string (&one, CKA_INVALID);
-	CuAssertStrEquals (tc, "{ CKA_LABEL = (3) \"yay\" }", string);
+	assert_str_eq ("{ CKA_LABEL = (3) \"yay\" }", string);
 	free (string);
 
 	string = p11_attrs_to_string (attrs, -1);
-	CuAssertStrEquals (tc, "(2) [ { CKA_LABEL = (3) \"yay\" }, { CKA_VALUE = (5) NOT-PRINTED } ]", string);
+	assert_str_eq ("(2) [ { CKA_LABEL = (3) \"yay\" }, { CKA_VALUE = (5) NOT-PRINTED } ]", string);
 	free (string);
 
 	string = p11_attrs_to_string (attrs, 1);
-	CuAssertStrEquals (tc, "(1) [ { CKA_LABEL = (3) \"yay\" } ]", string);
+	assert_str_eq ("(1) [ { CKA_LABEL = (3) \"yay\" } ]", string);
 	free (string);
 }
 
 static void
-test_find (CuTest *tc)
+test_find (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_ATTRIBUTE *attr;
@@ -496,17 +496,17 @@ test_find (CuTest *tc)
 	};
 
 	attr = p11_attrs_find (attrs, CKA_LABEL);
-	CuAssertPtrEquals (tc, attrs + 0, attr);
+	assert_ptr_eq (attrs + 0, attr);
 
 	attr = p11_attrs_find (attrs, CKA_TOKEN);
-	CuAssertPtrEquals (tc, attrs + 1, attr);
+	assert_ptr_eq (attrs + 1, attr);
 
 	attr = p11_attrs_find (attrs, CKA_VALUE);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 }
 
 static void
-test_findn (CuTest *tc)
+test_findn (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_ATTRIBUTE *attr;
@@ -517,20 +517,20 @@ test_findn (CuTest *tc)
 	};
 
 	attr = p11_attrs_findn (attrs, 2, CKA_LABEL);
-	CuAssertPtrEquals (tc, attrs + 0, attr);
+	assert_ptr_eq (attrs + 0, attr);
 
 	attr = p11_attrs_findn (attrs, 2, CKA_TOKEN);
-	CuAssertPtrEquals (tc, attrs + 1, attr);
+	assert_ptr_eq (attrs + 1, attr);
 
 	attr = p11_attrs_findn (attrs, 2, CKA_VALUE);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 
 	attr = p11_attrs_findn (attrs, 1, CKA_TOKEN);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 }
 
 static void
-test_remove (CuTest *tc)
+test_remove (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_ATTRIBUTE *attr;
@@ -543,25 +543,25 @@ test_remove (CuTest *tc)
 	};
 
 	attrs = p11_attrs_buildn (NULL, initial, 2);
-	CuAssertPtrNotNull (tc, attrs);
+	assert_ptr_not_null (attrs);
 
 	attr = p11_attrs_find (attrs, CKA_LABEL);
-	CuAssertPtrEquals (tc, attrs + 0, attr);
+	assert_ptr_eq (attrs + 0, attr);
 
 	ret = p11_attrs_remove (attrs, CKA_LABEL);
-	CuAssertIntEquals (tc, CK_TRUE, ret);
+	assert_num_eq (CK_TRUE, ret);
 
 	attr = p11_attrs_find (attrs, CKA_LABEL);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 
 	ret = p11_attrs_remove (attrs, CKA_LABEL);
-	CuAssertIntEquals (tc, CK_FALSE, ret);
+	assert_num_eq (CK_FALSE, ret);
 
 	p11_attrs_free (attrs);
 }
 
 static void
-test_match (CuTest *tc)
+test_match (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 
@@ -588,14 +588,14 @@ test_match (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	CuAssertTrue (tc, p11_attrs_match (attrs, attrs));
-	CuAssertTrue (tc, p11_attrs_match (attrs, subset));
-	CuAssertTrue (tc, !p11_attrs_match (attrs, different));
-	CuAssertTrue (tc, !p11_attrs_match (attrs, extra));
+	assert (p11_attrs_match (attrs, attrs));
+	assert (p11_attrs_match (attrs, subset));
+	assert (!p11_attrs_match (attrs, different));
+	assert (!p11_attrs_match (attrs, extra));
 }
 
 static void
-test_matchn (CuTest *tc)
+test_matchn (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 
@@ -620,13 +620,13 @@ test_matchn (CuTest *tc)
 		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
 	};
 
-	CuAssertTrue (tc, p11_attrs_matchn (attrs, subset, 1));
-	CuAssertTrue (tc, !p11_attrs_matchn (attrs, different, 2));
-	CuAssertTrue (tc, !p11_attrs_matchn (attrs, extra, 3));
+	assert (p11_attrs_matchn (attrs, subset, 1));
+	assert (!p11_attrs_matchn (attrs, different, 2));
+	assert (!p11_attrs_matchn (attrs, extra, 3));
 }
 
 static void
-test_find_bool (CuTest *tc)
+test_find_bool (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
 	CK_BBOOL vfalse = CK_FALSE;
@@ -640,13 +640,13 @@ test_find_bool (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	CuAssertTrue (tc, p11_attrs_find_bool (attrs, CKA_TOKEN, &value) && value == CK_TRUE);
-	CuAssertTrue (tc, !p11_attrs_find_bool (attrs, CKA_LABEL, &value));
-	CuAssertTrue (tc, !p11_attrs_find_bool (attrs, CKA_VALUE, &value));
+	assert (p11_attrs_find_bool (attrs, CKA_TOKEN, &value) && value == CK_TRUE);
+	assert (!p11_attrs_find_bool (attrs, CKA_LABEL, &value));
+	assert (!p11_attrs_find_bool (attrs, CKA_VALUE, &value));
 }
 
 static void
-test_find_ulong (CuTest *tc)
+test_find_ulong (void)
 {
 	CK_ULONG v33 = 33UL;
 	CK_ULONG v45 = 45UL;
@@ -660,13 +660,13 @@ test_find_ulong (CuTest *tc)
 		{ CKA_INVALID },
 	};
 
-	CuAssertTrue (tc, p11_attrs_find_ulong (attrs, CKA_BITS_PER_PIXEL, &value) && value == v33);
-	CuAssertTrue (tc, !p11_attrs_find_ulong (attrs, CKA_LABEL, &value));
-	CuAssertTrue (tc, !p11_attrs_find_ulong (attrs, CKA_VALUE, &value));
+	assert (p11_attrs_find_ulong (attrs, CKA_BITS_PER_PIXEL, &value) && value == v33);
+	assert (!p11_attrs_find_ulong (attrs, CKA_LABEL, &value));
+	assert (!p11_attrs_find_ulong (attrs, CKA_VALUE, &value));
 }
 
 static void
-test_find_value (CuTest *tc)
+test_find_value (void)
 {
 	void *value;
 	size_t length;
@@ -681,21 +681,21 @@ test_find_value (CuTest *tc)
 	};
 
 	value = p11_attrs_find_value (attrs, CKA_LABEL, &length);
-	CuAssertPtrEquals (tc, attrs[3].pValue, value);
-	CuAssertIntEquals (tc, 4, length);
+	assert_ptr_eq (attrs[3].pValue, value);
+	assert_num_eq (4, length);
 
 	value = p11_attrs_find_value (attrs, CKA_LABEL, NULL);
-	CuAssertPtrEquals (tc, attrs[3].pValue, value);
+	assert_ptr_eq (attrs[3].pValue, value);
 
 	value = p11_attrs_find_value (attrs, CKA_VALUE, &length);
-	CuAssertPtrEquals (tc, NULL, value);
+	assert_ptr_eq (NULL, value);
 
 	value = p11_attrs_find_value (attrs, CKA_TOKEN, &length);
-	CuAssertPtrEquals (tc, NULL, value);
+	assert_ptr_eq (NULL, value);
 }
 
 static void
-test_find_valid (CuTest *tc)
+test_find_valid (void)
 {
 	CK_ATTRIBUTE *attr;
 
@@ -709,61 +709,46 @@ test_find_valid (CuTest *tc)
 	};
 
 	attr = p11_attrs_find_valid (attrs, CKA_LABEL);
-	CuAssertPtrEquals (tc, attrs + 3, attr);
+	assert_ptr_eq (attrs + 3, attr);
 
 	attr = p11_attrs_find_valid (attrs, CKA_VALUE);
-	CuAssertPtrEquals (tc, attrs + 4, attr);
+	assert_ptr_eq (attrs + 4, attr);
 
 	attr = p11_attrs_find_valid (attrs, CKA_TOKEN);
-	CuAssertPtrEquals (tc, NULL, attr);
+	assert_ptr_eq (NULL, attr);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_test (test_equal, "/attrs/equal");
+	p11_test (test_hash, "/attrs/hash");
+	p11_test (test_to_string, "/attrs/to-string");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_equal);
-	SUITE_ADD_TEST (suite, test_hash);
-	SUITE_ADD_TEST (suite, test_to_string);
-
-	SUITE_ADD_TEST (suite, test_terminator);
-	SUITE_ADD_TEST (suite, test_count);
-	SUITE_ADD_TEST (suite, test_build_one);
-	SUITE_ADD_TEST (suite, test_build_two);
-	SUITE_ADD_TEST (suite, test_build_invalid);
-	SUITE_ADD_TEST (suite, test_buildn_one);
-	SUITE_ADD_TEST (suite, test_buildn_two);
-	SUITE_ADD_TEST (suite, test_build_add);
-	SUITE_ADD_TEST (suite, test_build_null);
-	SUITE_ADD_TEST (suite, test_dup);
-	SUITE_ADD_TEST (suite, test_take);
-	SUITE_ADD_TEST (suite, test_merge_replace);
-	SUITE_ADD_TEST (suite, test_merge_augment);
-	SUITE_ADD_TEST (suite, test_merge_empty);
-	SUITE_ADD_TEST (suite, test_free_null);
-	SUITE_ADD_TEST (suite, test_match);
-	SUITE_ADD_TEST (suite, test_matchn);
-	SUITE_ADD_TEST (suite, test_find);
-	SUITE_ADD_TEST (suite, test_findn);
-	SUITE_ADD_TEST (suite, test_find_bool);
-	SUITE_ADD_TEST (suite, test_find_ulong);
-	SUITE_ADD_TEST (suite, test_find_value);
-	SUITE_ADD_TEST (suite, test_find_valid);
-	SUITE_ADD_TEST (suite, test_remove);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_terminator, "/attrs/terminator");
+	p11_test (test_count, "/attrs/count");
+	p11_test (test_build_one, "/attrs/build-one");
+	p11_test (test_build_two, "/attrs/build-two");
+	p11_test (test_build_invalid, "/attrs/build-invalid");
+	p11_test (test_buildn_one, "/attrs/buildn-one");
+	p11_test (test_buildn_two, "/attrs/buildn-two");
+	p11_test (test_build_add, "/attrs/build-add");
+	p11_test (test_build_null, "/attrs/build-null");
+	p11_test (test_dup, "/attrs/dup");
+	p11_test (test_take, "/attrs/take");
+	p11_test (test_merge_replace, "/attrs/merge-replace");
+	p11_test (test_merge_augment, "/attrs/merge-augment");
+	p11_test (test_merge_empty, "/attrs/merge-empty");
+	p11_test (test_free_null, "/attrs/free-null");
+	p11_test (test_match, "/attrs/match");
+	p11_test (test_matchn, "/attrs/matchn");
+	p11_test (test_find, "/attrs/find");
+	p11_test (test_findn, "/attrs/findn");
+	p11_test (test_find_bool, "/attrs/find-bool");
+	p11_test (test_find_ulong, "/attrs/find-ulong");
+	p11_test (test_find_value, "/attrs/find-value");
+	p11_test (test_find_valid, "/attrs/find-valid");
+	p11_test (test_remove, "/attrs/remove");
+	return p11_test_run (argc, argv);
 }

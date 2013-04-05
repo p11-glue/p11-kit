@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "asn1.h"
 #include "debug.h"
@@ -51,14 +51,14 @@ struct {
 } test;
 
 static void
-setup (CuTest *cu)
+setup (void *unused)
 {
 	test.asn1_defs = p11_asn1_defs_load ();
-	CuAssertPtrNotNull (cu, test.asn1_defs);
+	assert_ptr_not_null (test.asn1_defs);
 }
 
 static void
-teardown (CuTest *cu)
+teardown (void *unused)
 {
 	p11_dict_free (test.asn1_defs);
 	memset (&test, 0, sizeof (test));
@@ -226,29 +226,25 @@ struct {
 };
 
 static void
-test_parse_extended_key_usage (CuTest *cu)
+test_parse_extended_key_usage (void)
 {
 	p11_array *ekus;
 	int i, j, count;
-
-	setup (cu);
 
 	for (i = 0; extended_key_usage_fixtures[i].eku != NULL; i++) {
 		ekus = p11_x509_parse_extended_key_usage (test.asn1_defs,
 		                                          (const unsigned char *)extended_key_usage_fixtures[i].eku,
 		                                          extended_key_usage_fixtures[i].length);
-		CuAssertPtrNotNull (cu, ekus);
+		assert_ptr_not_null (ekus);
 
 		for (count = 0; extended_key_usage_fixtures[i].expected[count] != NULL; count++);
 
-		CuAssertIntEquals (cu, count, ekus->num);
+		assert_num_eq (count, ekus->num);
 		for (j = 0; j < count; j++)
-			CuAssertStrEquals (cu, ekus->elem[j], extended_key_usage_fixtures[i].expected[j]);
+			assert_str_eq (ekus->elem[j], extended_key_usage_fixtures[i].expected[j]);
 
 		p11_array_free (ekus);
 	}
-
-	teardown (cu);
 }
 
 struct {
@@ -263,13 +259,11 @@ struct {
 };
 
 static void
-test_parse_key_usage (CuTest *cu)
+test_parse_key_usage (void)
 {
 	unsigned int ku;
 	int i;
 	bool ret;
-
-	setup (cu);
 
 	for (i = 0; key_usage_fixtures[i].ku != NULL; i++) {
 		ku = 0;
@@ -277,68 +271,58 @@ test_parse_key_usage (CuTest *cu)
 		ret = p11_x509_parse_key_usage (test.asn1_defs,
 		                                (const unsigned char *)key_usage_fixtures[i].ku,
 		                                key_usage_fixtures[i].length, &ku);
-		CuAssertIntEquals (cu, true, ret);
+		assert_num_eq (true, ret);
 
-		CuAssertIntEquals (cu, key_usage_fixtures[i].expected, ku);
+		assert_num_eq (key_usage_fixtures[i].expected, ku);
 	}
-
-	teardown (cu);
 }
 
 static void
-test_parse_extension (CuTest *cu)
+test_parse_extension (void)
 {
 	node_asn *cert;
 	unsigned char *ext;
 	size_t length;
 	bool is_ca;
 
-	setup (cu);
-
 	cert = p11_asn1_decode (test.asn1_defs, "PKIX1.Certificate",
 	                        test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
-	CuAssertPtrNotNull (cu, cert);
+	assert_ptr_not_null (cert);
 
 	ext = p11_x509_find_extension (cert, P11_OID_BASIC_CONSTRAINTS,
 	                               test_cacert3_ca_der, sizeof (test_cacert3_ca_der),
 	                               &length);
-	CuAssertPtrNotNull (cu, ext);
-	CuAssertTrue (cu, length > 0);
+	assert_ptr_not_null (ext);
+	assert (length > 0);
 
 	asn1_delete_structure (&cert);
 
 	if (!p11_x509_parse_basic_constraints (test.asn1_defs, ext, length, &is_ca))
-		CuFail (cu, "failed to parse message");
+		assert_fail ("failed to parse message", "basic constraints");
 
 	free (ext);
-
-	teardown (cu);
 }
 static void
-test_parse_extension_not_found (CuTest *cu)
+test_parse_extension_not_found (void)
 {
 	node_asn *cert;
 	unsigned char *ext;
 	size_t length;
 
-	setup (cu);
-
 	cert = p11_asn1_decode (test.asn1_defs, "PKIX1.Certificate",
 	                        test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
-	CuAssertPtrNotNull (cu, cert);
+	assert_ptr_not_null (cert);
 
 	ext = p11_x509_find_extension (cert, P11_OID_OPENSSL_REJECT,
 	                               test_cacert3_ca_der, sizeof (test_cacert3_ca_der),
 	                               &length);
-	CuAssertPtrEquals (cu, NULL, ext);
+	assert_ptr_eq (NULL, ext);
 
 	asn1_delete_structure (&cert);
-
-	teardown (cu);
 }
 
 static void
-test_directory_string (CuTest *tc)
+test_directory_string (void)
 {
 	struct {
 		unsigned char input[100];
@@ -392,17 +376,17 @@ test_directory_string (CuTest *tc)
 		string = p11_x509_parse_directory_string (fixtures[i].input,
 		                                          fixtures[i].input_len,
 		                                          &unknown, &length);
-		CuAssertPtrNotNull (tc, string);
-		CuAssertIntEquals (tc, false, unknown);
+		assert_ptr_not_null (string);
+		assert_num_eq (false, unknown);
 
-		CuAssertIntEquals (tc, fixtures[i].output_len, length);
-		CuAssertStrEquals (tc, fixtures[i].output, string);
+		assert_num_eq (fixtures[i].output_len, length);
+		assert_str_eq (fixtures[i].output, string);
 		free (string);
 	}
 }
 
 static void
-test_directory_string_unknown (CuTest *tc)
+test_directory_string_unknown (void)
 {
 	/* Not a valid choice in DirectoryString */
 	unsigned char input[] = { 0x05, 0x07, 'A', ' ', ' ', 'n', 'i', 'c', 'e' };
@@ -411,34 +395,22 @@ test_directory_string_unknown (CuTest *tc)
 	size_t length;
 
 	string = p11_x509_parse_directory_string (input, sizeof (input), &unknown, &length);
-	CuAssertPtrEquals (tc, NULL, string);
-	CuAssertIntEquals (tc, true, unknown);
+	assert_ptr_eq (NULL, string);
+	assert_num_eq (true, unknown);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_fixture (setup, teardown);
+	p11_test (test_parse_extended_key_usage, "/x509/parse-extended-key-usage");
+	p11_test (test_parse_key_usage, "/x509/parse-key-usage");
+	p11_test (test_parse_extension, "/x509/parse-extension");
+	p11_test (test_parse_extension_not_found, "/x509/parse-extension-not-found");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_parse_extended_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_key_usage);
-	SUITE_ADD_TEST (suite, test_parse_extension);
-	SUITE_ADD_TEST (suite, test_parse_extension_not_found);
-	SUITE_ADD_TEST (suite, test_directory_string);
-	SUITE_ADD_TEST (suite, test_directory_string_unknown);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_fixture (NULL, NULL);
+	p11_test (test_directory_string, "/x509/directory-string");
+	p11_test (test_directory_string_unknown, "/x509/directory-string-unknown");
+	return p11_test_run (argc, argv);
 }

@@ -35,7 +35,8 @@
 #define P11_KIT_DISABLE_DEPRECATED
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
+#include "test-tools.h"
 
 #include "attrs.h"
 #include "compat.h"
@@ -47,13 +48,12 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
-#include "test.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 static void
-test_file_name_for_label (CuTest *tc)
+test_file_name_for_label (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
 	p11_extract_info ex;
@@ -64,14 +64,14 @@ test_file_name_for_label (CuTest *tc)
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
 	name = p11_extract_info_filename (&ex);
-	CuAssertStrEquals (tc, "The_Label_", name);
+	assert_str_eq ("The_Label_", name);
 	free (name);
 
 	p11_extract_info_cleanup (&ex);
 }
 
 static void
-test_file_name_for_class (CuTest *tc)
+test_file_name_for_class (void)
 {
 	p11_extract_info ex;
 	char *name;
@@ -81,20 +81,20 @@ test_file_name_for_class (CuTest *tc)
 	ex.klass = CKO_CERTIFICATE;
 
 	name = p11_extract_info_filename (&ex);
-	CuAssertStrEquals (tc, "certificate", name);
+	assert_str_eq ("certificate", name);
 	free (name);
 
 	ex.klass = CKO_DATA;
 
 	name = p11_extract_info_filename (&ex);
-	CuAssertStrEquals (tc, "unknown", name);
+	assert_str_eq ("unknown", name);
 	free (name);
 
 	p11_extract_info_cleanup (&ex);
 }
 
 static void
-test_comment_for_label (CuTest *tc)
+test_comment_for_label (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
 	p11_extract_info ex;
@@ -106,18 +106,18 @@ test_comment_for_label (CuTest *tc)
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
 	comment = p11_extract_info_comment (&ex, true);
-	CuAssertStrEquals (tc, "# The Label!\n", comment);
+	assert_str_eq ("# The Label!\n", comment);
 	free (comment);
 
 	comment = p11_extract_info_comment (&ex, false);
-	CuAssertStrEquals (tc, "\n# The Label!\n", comment);
+	assert_str_eq ("\n# The Label!\n", comment);
 	free (comment);
 
 	p11_extract_info_cleanup (&ex);
 }
 
 static void
-test_comment_not_enabled (CuTest *tc)
+test_comment_not_enabled (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
 	p11_extract_info ex;
@@ -128,10 +128,10 @@ test_comment_not_enabled (CuTest *tc)
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
 	comment = p11_extract_info_comment (&ex, true);
-	CuAssertPtrEquals (tc, NULL, comment);
+	assert_ptr_eq (NULL, comment);
 
 	comment = p11_extract_info_comment (&ex, false);
-	CuAssertPtrEquals (tc, NULL, comment);
+	assert_ptr_eq (NULL, comment);
 
 	p11_extract_info_cleanup (&ex);
 }
@@ -143,7 +143,7 @@ struct {
 } test;
 
 static void
-setup (CuTest *tc)
+setup (void *unused)
 {
 	CK_RV rv;
 
@@ -151,7 +151,7 @@ setup (CuTest *tc)
 	memcpy (&test.module, &mock_module, sizeof (CK_FUNCTION_LIST));
 
 	rv = test.module.C_Initialize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	test.iter = p11_kit_iter_new (NULL);
 
@@ -159,7 +159,7 @@ setup (CuTest *tc)
 }
 
 static void
-teardown (CuTest *tc)
+teardown (void *unused)
 {
 	CK_RV rv;
 
@@ -168,7 +168,7 @@ teardown (CuTest *tc)
 	p11_kit_iter_free (test.iter);
 
 	rv = test.module.C_Finalize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 }
 
 static CK_OBJECT_CLASS certificate_class = CKO_CERTIFICATE;
@@ -219,15 +219,13 @@ static CK_ATTRIBUTE extension_eku_invalid[] = {
 };
 
 static void
-test_info_simple_certificate (CuTest *tc)
+test_info_simple_certificate (void)
 {
 	void *value;
 	size_t length;
 	CK_RV rv;
 
-	setup (tc);
-
-	CuAssertPtrNotNull (tc, test.ex.asn1_defs);
+	assert_ptr_not_null (test.ex.asn1_defs);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
@@ -237,54 +235,46 @@ test_info_simple_certificate (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
-	CuAssertIntEquals (tc, CKO_CERTIFICATE, test.ex.klass);
-	CuAssertPtrNotNull (tc, test.ex.attrs);
+	assert_num_eq (CKO_CERTIFICATE, test.ex.klass);
+	assert_ptr_not_null (test.ex.attrs);
 	value = p11_attrs_find_value (test.ex.attrs, CKA_VALUE, &length);
-	CuAssertPtrNotNull (tc, value);
-	CuAssertTrue (tc, memcmp (value, test_cacert3_ca_der, length) == 0);
-	CuAssertPtrNotNull (tc, test.ex.cert_der);
-	CuAssertTrue (tc, memcmp (test.ex.cert_der, test_cacert3_ca_der, test.ex.cert_len) == 0);
-	CuAssertPtrNotNull (tc, test.ex.cert_asn);
+	assert_ptr_not_null (value);
+	assert (memcmp (value, test_cacert3_ca_der, length) == 0);
+	assert_ptr_not_null (test.ex.cert_der);
+	assert (memcmp (test.ex.cert_der, test_cacert3_ca_der, test.ex.cert_len) == 0);
+	assert_ptr_not_null (test.ex.cert_asn);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_info_limit_purposes (CuTest *tc)
+test_info_limit_purposes (void)
 {
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	/* This should not match the above, with the stapled certificat ext */
-	CuAssertPtrEquals (tc, NULL, test.ex.limit_to_purposes);
+	assert_ptr_eq (NULL, test.ex.limit_to_purposes);
 	p11_extract_info_limit_purpose (&test.ex, "1.1.1");
-	CuAssertPtrNotNull (tc, test.ex.limit_to_purposes);
+	assert_ptr_not_null (test.ex.limit_to_purposes);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_info_invalid_purposes (CuTest *tc)
+test_info_invalid_purposes (void)
 {
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_invalid);
@@ -297,19 +287,15 @@ test_info_invalid_purposes (CuTest *tc)
 
 	/* No results due to invalid purpose on certificate */
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_kit_be_loud ();
-
-	teardown (tc);
 }
 
 static void
-test_info_skip_non_certificate (CuTest *tc)
+test_info_skip_non_certificate (void)
 {
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
@@ -319,24 +305,20 @@ test_info_skip_non_certificate (CuTest *tc)
 	p11_message_quiet ();
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
-	CuAssertIntEquals (tc, CKO_CERTIFICATE, test.ex.klass);
+	assert_num_eq (CKO_CERTIFICATE, test.ex.klass);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_message_loud ();
-
-	teardown (tc);
 }
 
 static void
-test_limit_to_purpose_match (CuTest *tc)
+test_limit_to_purpose_match (void)
 {
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
@@ -348,19 +330,15 @@ test_limit_to_purpose_match (CuTest *tc)
 	p11_message_quiet ();
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	p11_message_loud ();
-
-	teardown (tc);
 }
 
 static void
-test_limit_to_purpose_no_match (CuTest *tc)
+test_limit_to_purpose_no_match (void)
 {
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
@@ -372,20 +350,16 @@ test_limit_to_purpose_no_match (CuTest *tc)
 	p11_message_quiet ();
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
+	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_message_loud ();
-
-	teardown (tc);
 }
 
 static void
-test_duplicate_extract (CuTest *tc)
+test_duplicate_extract (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
@@ -395,24 +369,20 @@ test_duplicate_extract (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_duplicate_collapse (CuTest *tc)
+test_duplicate_collapse (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
@@ -423,22 +393,18 @@ test_duplicate_collapse (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_trusted_match (CuTest *tc)
+test_trusted_match (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
 	CK_BBOOL boolv;
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
@@ -449,26 +415,22 @@ test_trusted_match (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	if (!p11_attrs_find_bool (test.ex.attrs, CKA_TRUSTED, &boolv))
 		boolv = CK_FALSE;
-	CuAssertIntEquals (tc, CK_TRUE, boolv);
+	assert_num_eq (CK_TRUE, boolv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_distrust_match (CuTest *tc)
+test_distrust_match (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
 	CK_BBOOL boolv;
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
@@ -479,25 +441,21 @@ test_distrust_match (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	if (!p11_attrs_find_bool (test.ex.attrs, CKA_X_DISTRUSTED, &boolv))
 		boolv = CK_FALSE;
-	CuAssertIntEquals (tc, CK_TRUE, boolv);
+	assert_num_eq (CK_TRUE, boolv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 static void
-test_anytrust_match (CuTest *tc)
+test_anytrust_match (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
 	CK_RV rv;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
@@ -508,51 +466,38 @@ test_anytrust_match (CuTest *tc)
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	CuAssertIntEquals (tc, CKR_CANCEL, rv);
-
-	teardown (tc);
+	assert_num_eq (CKR_CANCEL, rv);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	mock_module_init ();
-	p11_debug_init ();
 
-	SUITE_ADD_TEST (suite, test_file_name_for_label);
-	SUITE_ADD_TEST (suite, test_file_name_for_class);
-	SUITE_ADD_TEST (suite, test_comment_for_label);
-	SUITE_ADD_TEST (suite, test_comment_not_enabled);
-	SUITE_ADD_TEST (suite, test_info_simple_certificate);
-	SUITE_ADD_TEST (suite, test_info_limit_purposes);
-	SUITE_ADD_TEST (suite, test_info_invalid_purposes);
-	SUITE_ADD_TEST (suite, test_info_skip_non_certificate);
-	SUITE_ADD_TEST (suite, test_limit_to_purpose_match);
-	SUITE_ADD_TEST (suite, test_limit_to_purpose_no_match);
-	SUITE_ADD_TEST (suite, test_duplicate_extract);
-	SUITE_ADD_TEST (suite, test_duplicate_collapse);
-	SUITE_ADD_TEST (suite, test_trusted_match);
-	SUITE_ADD_TEST (suite, test_distrust_match);
-	SUITE_ADD_TEST (suite, test_anytrust_match);
+	p11_test (test_file_name_for_label, "/extract/test_file_name_for_label");
+	p11_test (test_file_name_for_class, "/extract/test_file_name_for_class");
+	p11_test (test_comment_for_label, "/extract/test_comment_for_label");
+	p11_test (test_comment_not_enabled, "/extract/test_comment_not_enabled");
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
+	p11_fixture (setup, teardown);
+	p11_test (test_info_simple_certificate, "/extract/test_info_simple_certificate");
+	p11_test (test_info_limit_purposes, "/extract/test_info_limit_purposes");
+	p11_test (test_info_invalid_purposes, "/extract/test_info_invalid_purposes");
+	p11_test (test_info_skip_non_certificate, "/extract/test_info_skip_non_certificate");
+	p11_test (test_limit_to_purpose_match, "/extract/test_limit_to_purpose_match");
+	p11_test (test_limit_to_purpose_no_match, "/extract/test_limit_to_purpose_no_match");
+	p11_test (test_duplicate_extract, "/extract/test_duplicate_extract");
+	p11_test (test_duplicate_collapse, "/extract/test_duplicate_collapse");
+	p11_test (test_trusted_match, "/extract/test_trusted_match");
+	p11_test (test_distrust_match, "/extract/test_distrust_match");
+	p11_test (test_anytrust_match, "/extract/test_anytrust_match");
 
-	return ret;
+	return p11_test_run (argc, argv);
 }

@@ -35,7 +35,8 @@
 #define P11_KIT_DISABLE_DEPRECATED
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
+#include "test-tools.h"
 
 #include "attrs.h"
 #include "compat.h"
@@ -48,7 +49,6 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
-#include "test.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -64,14 +64,14 @@ struct {
 } test;
 
 static void
-setup (CuTest *tc)
+setup (void *unused)
 {
 	CK_RV rv;
 
 	mock_module_reset ();
 	memcpy (&test.module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	rv = test.module.C_Initialize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	test.iter = p11_kit_iter_new (NULL);
 
@@ -79,23 +79,23 @@ setup (CuTest *tc)
 
 	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
 	if (!mkdtemp (test.directory))
-		CuFail (tc, "mkdtemp() failed");
+		assert_fail ("mkdtemp() failed", test.directory);
 }
 
 static void
-teardown (CuTest *tc)
+teardown (void *unused)
 {
 	CK_RV rv;
 
 	if (rmdir (test.directory) < 0)
-		CuFail (tc, "rmdir() failed");
+		assert_fail ("rmdir() failed", test.directory);
 	free (test.directory);
 
 	p11_extract_info_cleanup (&test.ex);
 	p11_kit_iter_free (test.iter);
 
 	rv = test.module.C_Finalize (NULL);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 }
 
 static CK_OBJECT_CLASS certificate_class = CKO_CERTIFICATE;
@@ -117,11 +117,9 @@ static CK_ATTRIBUTE certificate_filter[] = {
 };
 
 static void
-test_file (CuTest *tc)
+test_file (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 
@@ -133,20 +131,17 @@ test_file (CuTest *tc)
 		assert_not_reached ();
 
 	ret = p11_extract_x509_file (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_file (tc, test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_file_multiple (CuTest *tc)
+test_file_multiple (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
@@ -161,24 +156,21 @@ test_file_multiple (CuTest *tc)
 	p11_message_quiet ();
 
 	ret = p11_extract_x509_file (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	CuAssertTrue (tc, strstr (p11_message_last (), "multiple certificates") != NULL);
+	assert (strstr (p11_message_last (), "multiple certificates") != NULL);
 
 	p11_message_loud ();
 
-	test_check_file (tc, test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_file_without (CuTest *tc)
+test_file_without (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
@@ -190,22 +182,19 @@ test_file_without (CuTest *tc)
 	p11_message_quiet ();
 
 	ret = p11_extract_x509_file (test.iter, &test.ex);
-	CuAssertIntEquals (tc, false, ret);
+	assert_num_eq (false, ret);
 
-	CuAssertTrue (tc, strstr (p11_message_last (), "no certificate") != NULL);
+	assert (strstr (p11_message_last (), "no certificate") != NULL);
 
 	p11_message_loud ();
 
 	free (test.ex.destination);
-	teardown (tc);
 }
 
 static void
-test_directory (CuTest *tc)
+test_directory (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
@@ -220,21 +209,17 @@ test_directory (CuTest *tc)
 	test.ex.destination = test.directory;
 
 	ret = p11_extract_x509_directory (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_directory (tc, test.directory, ("Cacert3_Here.cer", "Cacert3_Here.1.cer", NULL));
-	test_check_file (tc, test.directory, "Cacert3_Here.cer", SRCDIR "/files/cacert3.der");
-	test_check_file (tc, test.directory, "Cacert3_Here.1.cer", SRCDIR "/files/cacert3.der");
-
-	teardown (tc);
+	test_check_directory (test.directory, ("Cacert3_Here.cer", "Cacert3_Here.1.cer", NULL));
+	test_check_file (test.directory, "Cacert3_Here.cer", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "Cacert3_Here.1.cer", SRCDIR "/files/cacert3.der");
 }
 
 static void
-test_directory_empty (CuTest *tc)
+test_directory_empty (void)
 {
 	bool ret;
-
-	setup (tc);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
@@ -246,37 +231,22 @@ test_directory_empty (CuTest *tc)
 	test.ex.destination = test.directory;
 
 	ret = p11_extract_x509_directory (test.iter, &test.ex);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
-	test_check_directory (tc, test.directory, (NULL, NULL));
-
-	teardown (tc);
+	test_check_directory (test.directory, (NULL, NULL));
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	mock_module_init ();
-	p11_debug_init ();
 
-	SUITE_ADD_TEST (suite, test_file);
-	SUITE_ADD_TEST (suite, test_file_multiple);
-	SUITE_ADD_TEST (suite, test_file_without);
-	SUITE_ADD_TEST (suite, test_directory);
-	SUITE_ADD_TEST (suite, test_directory_empty);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_fixture (setup, teardown);
+	p11_test (test_file, "/x509/test_file");
+	p11_test (test_file_multiple, "/x509/test_file_multiple");
+	p11_test (test_file_without, "/x509/test_file_without");
+	p11_test (test_directory, "/x509/test_directory");
+	p11_test (test_directory_empty, "/x509/test_directory_empty");
+	return p11_test_run (argc, argv);
 }

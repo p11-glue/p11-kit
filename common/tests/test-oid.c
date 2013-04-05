@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,7 +47,7 @@
 #include "pkix.asn.h"
 
 static void
-test_known_oids (CuTest *cu)
+test_known_oids (void)
 {
 	char buffer[128];
 	node_asn *definitions = NULL;
@@ -79,29 +79,29 @@ test_known_oids (CuTest *cu)
 	};
 
 	ret = asn1_array2tree (pkix_asn1_tab, &definitions, NULL);
-	CuAssertTrue (cu, ret == ASN1_SUCCESS);
+	assert (ret == ASN1_SUCCESS);
 
 	for (i = 0; known_oids[i].oid != NULL; i++) {
 
-		CuAssertTrue (cu, p11_oid_simple (known_oids[i].oid, known_oids[i].length));
-		CuAssertIntEquals (cu, known_oids[i].length, p11_oid_length (known_oids[i].oid));
-		CuAssertTrue (cu, p11_oid_equal (known_oids[i].oid, known_oids[i].oid));
+		assert (p11_oid_simple (known_oids[i].oid, known_oids[i].length));
+		assert_num_eq (known_oids[i].length, p11_oid_length (known_oids[i].oid));
+		assert (p11_oid_equal (known_oids[i].oid, known_oids[i].oid));
 
 		if (i > 0)
-			CuAssertTrue (cu, !p11_oid_equal (known_oids[i].oid, known_oids[i - 1].oid));
+			assert (!p11_oid_equal (known_oids[i].oid, known_oids[i - 1].oid));
 
 		/* AttributeType is a OBJECT IDENTIFIER */
 		ret = asn1_create_element (definitions, "PKIX1.AttributeType", &node);
-		CuAssertTrue (cu, ret == ASN1_SUCCESS);
+		assert (ret == ASN1_SUCCESS);
 
 		ret = asn1_der_decoding (&node, known_oids[i].oid, known_oids[i].length, NULL);
-		CuAssertTrue (cu, ret == ASN1_SUCCESS);
+		assert (ret == ASN1_SUCCESS);
 
 		len = sizeof (buffer);
 		ret = asn1_read_value (node, "", buffer, &len);
-		CuAssertTrue (cu, ret == ASN1_SUCCESS);
+		assert (ret == ASN1_SUCCESS);
 
-		CuAssertStrEquals (cu, known_oids[i].string, buffer);
+		assert_str_eq (known_oids[i].string, buffer);
 
 		asn1_delete_structure (&node);
 	}
@@ -110,24 +110,9 @@ test_known_oids (CuTest *cu)
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_known_oids);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_known_oids, "/oids/known");
+	return p11_test_run (argc, argv);
 }

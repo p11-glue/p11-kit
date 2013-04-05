@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -43,17 +43,17 @@
 #include "dict.h"
 
 static void
-test_create (CuTest *tc)
+test_create (void)
 {
 	p11_dict *map;
 
 	map = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	p11_dict_free (map);
 }
 
 static void
-test_free_null (CuTest *tc)
+test_free_null (void)
 {
 	p11_dict_free (NULL);
 }
@@ -98,24 +98,24 @@ value_destroy (void *data)
 }
 
 static void
-test_free_destroys (CuTest *tc)
+test_free_destroys (void)
 {
 	p11_dict *map;
 	Key key = { 8, 0 };
 	int value = 0;
 
 	map = p11_dict_new (key_hash, key_equal, key_destroy, value_destroy);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	if (!p11_dict_set (map, &key, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 	p11_dict_free (map);
 
-	CuAssertIntEquals (tc, true, key.freed);
-	CuAssertIntEquals (tc, 2, value);
+	assert_num_eq (true, key.freed);
+	assert_num_eq (2, value);
 }
 
 static void
-test_iterate (CuTest *tc)
+test_iterate (void)
 {
 	p11_dict *map;
 	p11_dictiter iter;
@@ -126,19 +126,19 @@ test_iterate (CuTest *tc)
 	int ret;
 
 	map = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	if (!p11_dict_set (map, &key, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	p11_dict_iterate (map, &iter);
 
 	ret = p11_dict_next (&iter, &pkey, &pvalue);
-	CuAssertIntEquals (tc, 1, ret);
-	CuAssertPtrEquals (tc, pkey, &key);
-	CuAssertPtrEquals (tc, pvalue, &value);
+	assert_num_eq (1, ret);
+	assert_ptr_eq (pkey, &key);
+	assert_ptr_eq (pvalue, &value);
 
 	ret = p11_dict_next (&iter, &pkey, &pvalue);
-	CuAssertIntEquals (tc, 0, ret);
+	assert_num_eq (0, ret);
 
 	p11_dict_free (map);
 }
@@ -153,7 +153,7 @@ compar_strings (const void *one,
 }
 
 static void
-test_iterate_remove (CuTest *tc)
+test_iterate_remove (void)
 {
 	p11_dict *map;
 	p11_dictiter iter;
@@ -165,45 +165,45 @@ test_iterate_remove (CuTest *tc)
 	int i;
 
 	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 
 	for (i = 0; i < 3; i++) {
 		if (!p11_dict_set (map, keys[i], values[i]))
-			CuFail (tc, "should not be reached");
+			assert_not_reached ();
 	}
 
 	p11_dict_iterate (map, &iter);
 
 	ret = p11_dict_next (&iter, &okeys[0], &ovalues[0]);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
 	ret = p11_dict_next (&iter, &okeys[1], &ovalues[1]);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 	if (!p11_dict_remove (map, okeys[1]))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	ret = p11_dict_next (&iter, &okeys[2], &ovalues[2]);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 
 	ret = p11_dict_next (&iter, NULL, NULL);
-	CuAssertIntEquals (tc, false, ret);
+	assert_num_eq (false, ret);
 
-	CuAssertIntEquals (tc, 2, p11_dict_size (map));
+	assert_num_eq (2, p11_dict_size (map));
 	p11_dict_free (map);
 
 	qsort (okeys, 3, sizeof (void *), compar_strings);
 	qsort (ovalues, 3, sizeof (void *), compar_strings);
 
 	for (i = 0; i < 3; i++) {
-		CuAssertStrEquals (tc, keys[i], okeys[i]);
-		CuAssertPtrEquals (tc, keys[i], okeys[i]);
-		CuAssertStrEquals (tc, values[i], ovalues[i]);
-		CuAssertPtrEquals (tc, values[i], ovalues[i]);
+		assert_str_eq (keys[i], okeys[i]);
+		assert_ptr_eq (keys[i], okeys[i]);
+		assert_str_eq (values[i], ovalues[i]);
+		assert_ptr_eq (values[i], ovalues[i]);
 	}
 }
 
 static void
-test_set_get (CuTest *tc)
+test_set_get (void)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -213,13 +213,13 @@ test_set_get (CuTest *tc)
 	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 	p11_dict_set (map, key, value);
 	check = p11_dict_get (map, key);
-	CuAssertPtrEquals (tc, check, value);
+	assert_ptr_eq (check, value);
 
 	p11_dict_free (map);
 }
 
 static void
-test_set_get_remove (CuTest *tc)
+test_set_get_remove (void)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -230,24 +230,24 @@ test_set_get_remove (CuTest *tc)
 	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 
 	if (!p11_dict_set (map, key, value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	check = p11_dict_get (map, key);
-	CuAssertPtrEquals (tc, check, value);
+	assert_ptr_eq (check, value);
 
 	ret = p11_dict_remove (map, key);
-	CuAssertIntEquals (tc, true, ret);
+	assert_num_eq (true, ret);
 	ret = p11_dict_remove (map, key);
-	CuAssertIntEquals (tc, false, ret);
+	assert_num_eq (false, ret);
 
 	check = p11_dict_get (map, key);
-	CuAssert (tc, "should be null", check == NULL);
+	assert (check == NULL);
 
 	p11_dict_free (map);
 }
 
 static void
-test_set_clear (CuTest *tc)
+test_set_clear (void)
 {
 	char *key = "KEY";
 	char *value = "VALUE";
@@ -257,18 +257,18 @@ test_set_clear (CuTest *tc)
 	map = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
 
 	if (!p11_dict_set (map, key, value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	p11_dict_clear (map);
 
 	check = p11_dict_get (map, key);
-	CuAssert (tc, "should be null", check == NULL);
+	assert (check == NULL);
 
 	p11_dict_free (map);
 }
 
 static void
-test_remove_destroys (CuTest *tc)
+test_remove_destroys (void)
 {
 	p11_dict *map;
 	Key key = { 8, 0 };
@@ -276,23 +276,23 @@ test_remove_destroys (CuTest *tc)
 	bool ret;
 
 	map = p11_dict_new (key_hash, key_equal, key_destroy, value_destroy);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	if (!p11_dict_set (map, &key, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	ret = p11_dict_remove (map, &key);
-	CuAssertIntEquals (tc, true, ret);
-	CuAssertIntEquals (tc, true, key.freed);
-	CuAssertIntEquals (tc, 2, value);
+	assert_num_eq (true, ret);
+	assert_num_eq (true, key.freed);
+	assert_num_eq (2, value);
 
 	/* should not be destroyed again */
 	key.freed = false;
 	value = 0;
 
 	ret = p11_dict_remove (map, &key);
-	CuAssertIntEquals (tc, false, ret);
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (false, ret);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (0, value);
 
 	/* should not be destroyed again */
 	key.freed = false;
@@ -300,12 +300,12 @@ test_remove_destroys (CuTest *tc)
 
 	p11_dict_free (map);
 
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (0, value);
 }
 
 static void
-test_set_destroys (CuTest *tc)
+test_set_destroys (void)
 {
 	p11_dict *map;
 	Key key = { 8, 0 };
@@ -314,88 +314,88 @@ test_set_destroys (CuTest *tc)
 	bool ret;
 
 	map = p11_dict_new (key_hash, key_equal, key_destroy, value_destroy);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	if (!p11_dict_set (map, &key, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	key.freed = key2.freed = false;
 	value = value2 = 0;
 
 	/* Setting same key and value, should not be destroyed */
 	ret = p11_dict_set (map, &key, &value);
-	CuAssertIntEquals (tc, true, ret);
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, false, key2.freed);
-	CuAssertIntEquals (tc, 0, value);
-	CuAssertIntEquals (tc, 0, value2);
+	assert_num_eq (true, ret);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (false, key2.freed);
+	assert_num_eq (0, value);
+	assert_num_eq (0, value2);
 
 	key.freed = key2.freed = false;
 	value = value2 = 0;
 
 	/* Setting a new key same value, key should be destroyed */
 	ret = p11_dict_set (map, &key2, &value);
-	CuAssertIntEquals (tc, true, ret);
-	CuAssertIntEquals (tc, true, key.freed);
-	CuAssertIntEquals (tc, false, key2.freed);
-	CuAssertIntEquals (tc, 0, value);
-	CuAssertIntEquals (tc, 0, value2);
+	assert_num_eq (true, ret);
+	assert_num_eq (true, key.freed);
+	assert_num_eq (false, key2.freed);
+	assert_num_eq (0, value);
+	assert_num_eq (0, value2);
 
 	key.freed = key2.freed = false;
 	value = value2 = 0;
 
 	/* Setting same key, new value, value should be destroyed */
 	ret = p11_dict_set (map, &key2, &value2);
-	CuAssertIntEquals (tc, true, ret);
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, false, key2.freed);
-	CuAssertIntEquals (tc, 2, value);
-	CuAssertIntEquals (tc, 0, value2);
+	assert_num_eq (true, ret);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (false, key2.freed);
+	assert_num_eq (2, value);
+	assert_num_eq (0, value2);
 
 	key.freed = key2.freed = false;
 	value = value2 = 0;
 
 	/* Setting new key new value, both should be destroyed */
 	ret = p11_dict_set (map, &key, &value);
-	CuAssertIntEquals (tc, true, ret);
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, true, key2.freed);
-	CuAssertIntEquals (tc, 0, value);
-	CuAssertIntEquals (tc, 2, value2);
+	assert_num_eq (true, ret);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (true, key2.freed);
+	assert_num_eq (0, value);
+	assert_num_eq (2, value2);
 
 	key.freed = key2.freed = false;
 	value = value2 = 0;
 
 	p11_dict_free (map);
-	CuAssertIntEquals (tc, true, key.freed);
-	CuAssertIntEquals (tc, 2, value);
-	CuAssertIntEquals (tc, false, key2.freed);
-	CuAssertIntEquals (tc, 0, value2);
+	assert_num_eq (true, key.freed);
+	assert_num_eq (2, value);
+	assert_num_eq (false, key2.freed);
+	assert_num_eq (0, value2);
 }
 
 
 static void
-test_clear_destroys (CuTest *tc)
+test_clear_destroys (void)
 {
 	p11_dict *map;
 	Key key = { 18, 0 };
 	int value = 0;
 
 	map = p11_dict_new (key_hash, key_equal, key_destroy, value_destroy);
-	CuAssertPtrNotNull (tc, map);
+	assert_ptr_not_null (map);
 	if (!p11_dict_set (map, &key, &value))
-		CuFail (tc, "should not be reached");
+		assert_not_reached ();
 
 	p11_dict_clear (map);
-	CuAssertIntEquals (tc, true, key.freed);
-	CuAssertIntEquals (tc, 2, value);
+	assert_num_eq (true, key.freed);
+	assert_num_eq (2, value);
 
 	/* should not be destroyed again */
 	key.freed = false;
 	value = 0;
 
 	p11_dict_clear (map);
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (0, value);
 
 	/* should not be destroyed again */
 	key.freed = false;
@@ -403,8 +403,8 @@ test_clear_destroys (CuTest *tc)
 
 	p11_dict_free (map);
 
-	CuAssertIntEquals (tc, false, key.freed);
-	CuAssertIntEquals (tc, 0, value);
+	assert_num_eq (false, key.freed);
+	assert_num_eq (0, value);
 }
 
 static unsigned int
@@ -415,7 +415,7 @@ test_hash_intptr_with_collisions (const void *data)
 }
 
 static void
-test_hash_add_check_lots_and_collisions (CuTest *tc)
+test_hash_add_check_lots_and_collisions (void)
 {
 	p11_dict *map;
 	int *value;
@@ -428,20 +428,20 @@ test_hash_add_check_lots_and_collisions (CuTest *tc)
 		value = malloc (sizeof (int));
 		*value = i;
 		if (!p11_dict_set (map, value, value))
-			CuFail (tc, "should not be reached");
+			assert_not_reached ();
 	}
 
 	for (i = 0; i < 20000; ++i) {
 		value = p11_dict_get (map, &i);
-		CuAssertPtrNotNull (tc, value);
-		CuAssertIntEquals (tc, i, *value);
+		assert_ptr_not_null (value);
+		assert_num_eq (i, *value);
 	}
 
 	p11_dict_free (map);
 }
 
 static void
-test_hash_count (CuTest *tc)
+test_hash_count (void)
 {
 	p11_dict *map;
 	int *value;
@@ -450,30 +450,30 @@ test_hash_count (CuTest *tc)
 
 	map = p11_dict_new (p11_dict_intptr_hash, p11_dict_intptr_equal, NULL, free);
 
-	CuAssertIntEquals (tc, 0, p11_dict_size (map));
+	assert_num_eq (0, p11_dict_size (map));
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
 		*value = i;
 		if (!p11_dict_set (map, value, value))
-			CuFail (tc, "should not be reached");
-		CuAssertIntEquals (tc, i + 1, p11_dict_size (map));
+			assert_not_reached ();
+		assert_num_eq (i + 1, p11_dict_size (map));
 	}
 
 	for (i = 0; i < 20000; ++i) {
 		ret = p11_dict_remove (map, &i);
-		CuAssertIntEquals (tc, true, ret);
-		CuAssertIntEquals (tc, 20000 - (i + 1), p11_dict_size (map));
+		assert_num_eq (true, ret);
+		assert_num_eq (20000 - (i + 1), p11_dict_size (map));
 	}
 
 	p11_dict_clear (map);
-	CuAssertIntEquals (tc, 0, p11_dict_size (map));
+	assert_num_eq (0, p11_dict_size (map));
 
 	p11_dict_free (map);
 }
 
 static void
-test_hash_ulongptr (CuTest *tc)
+test_hash_ulongptr (void)
 {
 	p11_dict *map;
 	unsigned long *value;
@@ -485,47 +485,35 @@ test_hash_ulongptr (CuTest *tc)
 		value = malloc (sizeof (unsigned long));
 		*value = i;
 		if (!p11_dict_set (map, value, value))
-			CuFail (tc, "should not be reached");
+			assert_not_reached ();
 	}
 
 	for (i = 0; i < 20000; ++i) {
 		value = p11_dict_get (map, &i);
-		CuAssertPtrNotNull (tc, value);
-		CuAssertIntEquals (tc, i, *value);
+		assert_ptr_not_null (value);
+		assert_num_eq (i, *value);
 	}
 
 	p11_dict_free (map);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_create);
-	SUITE_ADD_TEST (suite, test_set_get);
-	SUITE_ADD_TEST (suite, test_set_get_remove);
-	SUITE_ADD_TEST (suite, test_remove_destroys);
-	SUITE_ADD_TEST (suite, test_set_clear);
-	SUITE_ADD_TEST (suite, test_set_destroys);
-	SUITE_ADD_TEST (suite, test_clear_destroys);
-	SUITE_ADD_TEST (suite, test_free_null);
-	SUITE_ADD_TEST (suite, test_free_destroys);
-	SUITE_ADD_TEST (suite, test_iterate);
-	SUITE_ADD_TEST (suite, test_iterate_remove);
-	SUITE_ADD_TEST (suite, test_hash_add_check_lots_and_collisions);
-	SUITE_ADD_TEST (suite, test_hash_count);
-	SUITE_ADD_TEST (suite, test_hash_ulongptr);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_create, "/dict/create");
+	p11_test (test_set_get, "/dict/set-get");
+	p11_test (test_set_get_remove, "/dict/set-get-remove");
+	p11_test (test_remove_destroys, "/dict/remove-destroys");
+	p11_test (test_set_clear, "/dict/set-clear");
+	p11_test (test_set_destroys, "/dict/set-destroys");
+	p11_test (test_clear_destroys, "/dict/clear-destroys");
+	p11_test (test_free_null, "/dict/free-null");
+	p11_test (test_free_destroys, "/dict/free-destroys");
+	p11_test (test_iterate, "/dict/iterate");
+	p11_test (test_iterate_remove, "/dict/iterate-remove");
+	p11_test (test_hash_add_check_lots_and_collisions, "/dict/add-check-lots-and-collisions");
+	p11_test (test_hash_count, "/dict/count");
+	p11_test (test_hash_ulongptr, "/dict/ulongptr");
+	return p11_test_run (argc, argv);
 }

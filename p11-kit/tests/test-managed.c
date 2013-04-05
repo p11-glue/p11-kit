@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "dict.h"
 #include "library.h"
@@ -48,8 +48,7 @@
 #include <string.h>
 
 static CK_FUNCTION_LIST_PTR
-setup_mock_module (CuTest *tc,
-                   CK_SESSION_HANDLE *session)
+setup_mock_module (CK_SESSION_HANDLE *session)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
@@ -57,38 +56,37 @@ setup_mock_module (CuTest *tc,
 	p11_lock ();
 
 	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertPtrNotNull (tc, module);
-	CuAssertTrue (tc, p11_virtual_is_wrapper (module));
+	assert (rv == CKR_OK);
+	assert_ptr_not_null (module);
+	assert (p11_virtual_is_wrapper (module));
 
 	p11_unlock ();
 
 	rv = p11_kit_module_initialize (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	if (session) {
 		rv = (module->C_OpenSession) (MOCK_SLOT_ONE_ID,
 		                              CKF_RW_SESSION | CKF_SERIAL_SESSION,
 		                              NULL, NULL, session);
-		CuAssertTrue (tc, rv == CKR_OK);
+		assert (rv == CKR_OK);
 	}
 
 	return module;
 }
 
 static void
-teardown_mock_module (CuTest *tc,
-                      CK_FUNCTION_LIST_PTR module)
+teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 {
 	CK_RV rv;
 
 	rv = p11_kit_module_finalize (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_lock ();
 
 	rv = p11_module_release_inlock_reentrant (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_unlock ();
 }
@@ -100,7 +98,7 @@ fail_C_Initialize (void *init_reserved)
 }
 
 static void
-test_initialize_finalize (CuTest *tc)
+test_initialize_finalize (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
@@ -108,34 +106,34 @@ test_initialize_finalize (CuTest *tc)
 	p11_lock ();
 
 	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
-	CuAssertTrue (tc, rv == CKR_OK);
-	CuAssertPtrNotNull (tc, module);
-	CuAssertTrue (tc, p11_virtual_is_wrapper (module));
+	assert (rv == CKR_OK);
+	assert_ptr_not_null (module);
+	assert (p11_virtual_is_wrapper (module));
 
 	p11_unlock ();
 
 	rv = module->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = module->C_Initialize (NULL);
-	CuAssertTrue (tc, rv == CKR_CRYPTOKI_ALREADY_INITIALIZED);
+	assert (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED);
 
 	rv = module->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = module->C_Finalize (NULL);
-	CuAssertTrue (tc, rv == CKR_CRYPTOKI_NOT_INITIALIZED);
+	assert (rv == CKR_CRYPTOKI_NOT_INITIALIZED);
 
 	p11_lock ();
 
 	rv = p11_module_release_inlock_reentrant (module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_unlock ();
 }
 
 static void
-test_initialize_fail (CuTest *tc)
+test_initialize_fail (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_FUNCTION_LIST base;
@@ -147,16 +145,16 @@ test_initialize_fail (CuTest *tc)
 	p11_lock ();
 
 	rv = p11_module_load_inlock_reentrant (&base, 0, &module);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	p11_unlock ();
 
 	rv = p11_kit_module_initialize (module);
-	CuAssertTrue (tc, rv == CKR_FUNCTION_FAILED);
+	assert (rv == CKR_FUNCTION_FAILED);
 }
 
 static void
-test_separate_close_all_sessions (CuTest *tc)
+test_separate_close_all_sessions (void)
 {
 	CK_FUNCTION_LIST *first;
 	CK_FUNCTION_LIST *second;
@@ -165,64 +163,53 @@ test_separate_close_all_sessions (CuTest *tc)
 	CK_SESSION_INFO info;
 	CK_RV rv;
 
-	first = setup_mock_module (tc, &s1);
-	second = setup_mock_module (tc, &s2);
+	first = setup_mock_module (&s1);
+	second = setup_mock_module (&s2);
 
 	rv = first->C_GetSessionInfo (s1, &info);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = second->C_GetSessionInfo (s2, &info);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	first->C_CloseAllSessions (MOCK_SLOT_ONE_ID);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = first->C_GetSessionInfo (s1, &info);
-	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+	assert (rv == CKR_SESSION_HANDLE_INVALID);
 
 	rv = second->C_GetSessionInfo (s2, &info);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	second->C_CloseAllSessions (MOCK_SLOT_ONE_ID);
-	CuAssertTrue (tc, rv == CKR_OK);
+	assert (rv == CKR_OK);
 
 	rv = first->C_GetSessionInfo (s1, &info);
-	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+	assert (rv == CKR_SESSION_HANDLE_INVALID);
 
 	rv = second->C_GetSessionInfo (s2, &info);
-	CuAssertTrue (tc, rv == CKR_SESSION_HANDLE_INVALID);
+	assert (rv == CKR_SESSION_HANDLE_INVALID);
 
-	teardown_mock_module (tc, first);
-	teardown_mock_module (tc, second);
+	teardown_mock_module (first);
+	teardown_mock_module (second);
 }
 
 /* Bring in all the mock module tests */
 #include "test-mock.c"
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	mock_module_init ();
 	p11_library_init ();
 
-	SUITE_ADD_TEST (suite, test_initialize_finalize);
-	SUITE_ADD_TEST (suite, test_initialize_fail);
-	SUITE_ADD_TEST (suite, test_separate_close_all_sessions);
-	test_mock_add_tests (suite);
+	p11_test (test_initialize_finalize, "/managed/test_initialize_finalize");
+	p11_test (test_initialize_fail, "/managed/test_initialize_fail");
+	p11_test (test_separate_close_all_sessions, "/managed/test_separate_close_all_sessions");
+	test_mock_add_tests ("/managed");
 
 	p11_kit_be_quiet ();
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

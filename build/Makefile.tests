@@ -1,12 +1,9 @@
 NULL =
 
-CUTEST_CFLAGS = \
-	-I$(top_srcdir)/build/cutest \
+TEST_CFLAGS = \
 	-DSRCDIR=\"$(abs_srcdir)\" \
 	-DBUILDDIR=\"$(abs_builddir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API
-
-CUTEST_LIBS = $(top_builddir)/build/libcutest.la
 
 MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet --trace-children=yes
 

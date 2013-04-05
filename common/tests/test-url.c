@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "debug.h"
 #include "message.h"
@@ -46,9 +46,9 @@
 #include "url.h"
 
 static void
-check_decode_msg (CuTest *tc,
-                  const char *file,
+check_decode_msg (const char *file,
                   int line,
+                  const char *function,
                   const char *input,
                   ssize_t input_len,
                   const char *expected,
@@ -62,106 +62,97 @@ check_decode_msg (CuTest *tc,
 	decoded = p11_url_decode (input, input + input_len, "", &length);
 
 	if (expected == NULL) {
-		CuAssert_Line (tc, file, line, "decoding should have failed", decoded == NULL);
+		if (decoded != NULL)
+			p11_test_fail (file, line, function, "decoding should have failed");
 
 	} else {
-		CuAssert_Line (tc, file, line, "decoding failed", decoded != NULL);
-		CuAssertIntEquals_LineMsg (tc, file, line, "wrong length", expected_len, length);
-		CuAssert_Line (tc, file, line, "decoded wrong", memcmp (decoded, expected, length) == 0);
+		if (decoded == NULL)
+			p11_test_fail (file, line, function, "decoding failed");
+		if (expected_len != length)
+			p11_test_fail (file, line, function, "wrong length: (%lu != %lu)",
+			               (unsigned long)expected_len, (unsigned long)length);
+		if (memcmp (decoded, expected, length) != 0)
+			p11_test_fail (file, line, function, "decoding wrong");
 		free (decoded);
 	}
 }
 
-#define check_decode_success(tc, input, input_len, expected, expected_len) \
-	check_decode_msg (tc, __FILE__, __LINE__, input, input_len, expected, expected_len)
+#define check_decode_success(input, input_len, expected, expected_len) \
+	check_decode_msg (__FILE__, __LINE__, __FUNCTION__, input, input_len, expected, expected_len)
 
-#define check_decode_failure(tc, input, input_len) \
-	check_decode_msg (tc, __FILE__, __LINE__, input, input_len, NULL, 0)
+#define check_decode_failure(input, input_len) \
+	check_decode_msg (__FILE__, __LINE__, __FUNCTION__, input, input_len, NULL, 0)
 
 static void
-test_decode_success (CuTest *tc)
+test_decode_success (void)
 {
-	check_decode_success (tc, "%54%45%53%54%00", -1, "TEST", 5);
-	check_decode_success (tc, "%54%45%53%54%00", 6, "TE", 2);
-	check_decode_success (tc, "%54est%00", -1, "Test", 5);
+	check_decode_success ("%54%45%53%54%00", -1, "TEST", 5);
+	check_decode_success ("%54%45%53%54%00", 6, "TE", 2);
+	check_decode_success ("%54est%00", -1, "Test", 5);
 }
 
 static void
-test_decode_skip (CuTest *tc)
+test_decode_skip (void)
 {
 	const char *input = "%54 %45 %53 %54 %00";
 	unsigned char *decoded;
 	size_t length;
 
 	decoded = p11_url_decode (input, input + strlen (input), P11_URL_WHITESPACE, &length);
-	CuAssertStrEquals (tc, "TEST", (char *)decoded);
-	CuAssertIntEquals (tc, 5, length);
+	assert_str_eq ("TEST", (char *)decoded);
+	assert_num_eq (5, length);
 
 	free (decoded);
 }
 
 static void
-test_decode_failure (CuTest *tc)
+test_decode_failure (void)
 {
 	/* Early termination */
-	check_decode_failure (tc, "%54%45%53%5", -1);
-	check_decode_failure (tc, "%54%45%53%", -1);
+	check_decode_failure ("%54%45%53%5", -1);
+	check_decode_failure ("%54%45%53%", -1);
 
 	/* Not hex characters */
-	check_decode_failure (tc, "%54%XX%53%54%00", -1);
+	check_decode_failure ("%54%XX%53%54%00", -1);
 }
 
 static void
-test_encode (CuTest *tc)
+test_encode (void)
 {
 	const unsigned char *input = (unsigned char *)"TEST";
 	char *encoded;
 	size_t length;
 
 	encoded = p11_url_encode (input, input + 5, "", &length);
-	CuAssertStrEquals (tc, "%54%45%53%54%00", (char *)encoded);
-	CuAssertIntEquals (tc, 15, length);
+	assert_str_eq ("%54%45%53%54%00", (char *)encoded);
+	assert_num_eq (15, length);
 
 	free (encoded);
 }
 
 static void
-test_encode_verbatim (CuTest *tc)
+test_encode_verbatim (void)
 {
 	const unsigned char *input = (unsigned char *)"TEST";
 	char *encoded;
 	size_t length;
 
 	encoded = p11_url_encode (input, input + 5, "ES", &length);
-	CuAssertStrEquals (tc, "%54ES%54%00", (char *)encoded);
-	CuAssertIntEquals (tc, 11, length);
+	assert_str_eq ("%54ES%54%00", (char *)encoded);
+	assert_num_eq (11, length);
 
 	free (encoded);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_test (test_decode_success, "/url/decode-success");
+	p11_test (test_decode_skip, "/url/decode-skip");
+	p11_test (test_decode_failure, "/url/decode-failure");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
-
-	SUITE_ADD_TEST (suite, test_decode_success);
-	SUITE_ADD_TEST (suite, test_decode_skip);
-	SUITE_ADD_TEST (suite, test_decode_failure);
-
-	SUITE_ADD_TEST (suite, test_encode);
-	SUITE_ADD_TEST (suite, test_encode_verbatim);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	p11_test (test_encode, "/url/encode");
+	p11_test (test_encode_verbatim, "/url/encode-verbatim");
+	return p11_test_run (argc, argv);
 }

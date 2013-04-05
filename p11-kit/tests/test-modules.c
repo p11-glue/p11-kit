@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -47,25 +47,24 @@
 #include "dict.h"
 
 static CK_FUNCTION_LIST_PTR_PTR
-initialize_and_get_modules (CuTest *tc)
+initialize_and_get_modules (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
 	modules = p11_kit_modules_load_and_initialize (0);
-	CuAssertTrue (tc, modules != NULL && modules[0] != NULL);
+	assert (modules != NULL && modules[0] != NULL);
 
 	return modules;
 }
 
 static void
-finalize_and_free_modules (CuTest *tc,
-                           CK_FUNCTION_LIST_PTR_PTR modules)
+finalize_and_free_modules (CK_FUNCTION_LIST_PTR_PTR modules)
 {
 	p11_kit_modules_finalize_and_release (modules);
 }
 
 static void
-test_no_duplicates (CuTest *tc)
+test_no_duplicates (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	p11_dict *paths;
@@ -73,7 +72,7 @@ test_no_duplicates (CuTest *tc)
 	char *path;
 	int i;
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 	paths = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 	funcs = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
 
@@ -82,26 +81,25 @@ test_no_duplicates (CuTest *tc)
 		path = p11_kit_config_option (modules[i], "module");
 
 		if (p11_dict_get (funcs, modules[i]))
-			CuAssert (tc, "found duplicate function list pointer", 0);
+			assert_fail ("found duplicate function list pointer", NULL);
 		if (p11_dict_get (paths, path))
-			CuAssert (tc, "found duplicate path name", 0);
+			assert_fail ("found duplicate path name", NULL);
 
 		if (!p11_dict_set (funcs, modules[i], ""))
-			CuAssert (tc, "shouldn't be reached", 0);
+			assert_not_reached ();
 		if (!p11_dict_set (paths, path, ""))
-			CuAssert (tc, "shouldn't be reached", 0);
+			assert_not_reached ();
 
 		free (path);
 	}
 
 	p11_dict_free (paths);
 	p11_dict_free (funcs);
-	finalize_and_free_modules (tc, modules);
+	finalize_and_free_modules (modules);
 }
 
 static CK_FUNCTION_LIST_PTR
-lookup_module_with_name (CuTest *tc,
-                         CK_FUNCTION_LIST_PTR_PTR modules,
+lookup_module_with_name (CK_FUNCTION_LIST_PTR_PTR modules,
                          const char *name)
 {
 	CK_FUNCTION_LIST_PTR match = NULL;
@@ -111,7 +109,7 @@ lookup_module_with_name (CuTest *tc,
 
 	for (i = 0; match == NULL && modules[i] != NULL; i++) {
 		module_name = p11_kit_module_get_name (modules[i]);
-		CuAssertPtrNotNull (tc, module_name);
+		assert_ptr_not_null (module_name);
 		if (strcmp (module_name, name) == 0)
 			match = modules[i];
 		free (module_name);
@@ -122,14 +120,14 @@ lookup_module_with_name (CuTest *tc,
 	 * matches the above search.
 	 */
 	module = p11_kit_module_for_name (modules, name);
-	CuAssert(tc, "different result from p11_kit_module_for_name ()",
-	         module == match);
+	if (module != match)
+		assert_fail ("different result from p11_kit_module_for_name ()", NULL);
 
 	return match;
 }
 
 static void
-test_disable (CuTest *tc)
+test_disable (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
@@ -138,9 +136,9 @@ test_disable (CuTest *tc)
 	 * that it has disabled.
 	 */
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") != NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "four") != NULL);
+	finalize_and_free_modules (modules);
 
 	/*
 	 * The module two shouldn't have been loaded, because in its config
@@ -151,15 +149,15 @@ test_disable (CuTest *tc)
 
 	p11_kit_set_progname ("test-disable");
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "four") == NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "four") == NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
 
 static void
-test_disable_later (CuTest *tc)
+test_disable_later (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
@@ -173,16 +171,16 @@ test_disable_later (CuTest *tc)
 	p11_kit_set_progname ("test-disable");
 
 	modules = p11_kit_modules_load_and_initialize (0);
-	CuAssertTrue (tc, modules != NULL && modules[0] != NULL);
+	assert (modules != NULL && modules[0] != NULL);
 
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "two") == NULL);
-	finalize_and_free_modules (tc, modules);
+	assert (lookup_module_with_name (modules, "two") == NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
 
 static void
-test_enable (CuTest *tc)
+test_enable (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 
@@ -191,9 +189,9 @@ test_enable (CuTest *tc)
 	 * program.
 	 */
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "three") == NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "three") == NULL);
+	finalize_and_free_modules (modules);
 
 	/*
 	 * The module three should be loaded here , because in its config
@@ -204,15 +202,15 @@ test_enable (CuTest *tc)
 
 	p11_kit_set_progname ("test-enable");
 
-	modules = initialize_and_get_modules (tc);
-	CuAssertTrue (tc, lookup_module_with_name (tc, modules, "three") != NULL);
-	finalize_and_free_modules (tc, modules);
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "three") != NULL);
+	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
 }
 
 static void
-test_priority (CuTest *tc)
+test_priority (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	char *name;
@@ -231,12 +229,12 @@ test_priority (CuTest *tc)
 	/* This enables module three */
 	p11_kit_set_progname ("test-enable");
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 
 	/* The loaded modules should not contain duplicates */
 	for (i = 0; modules[i] != NULL; i++) {
 		name = p11_kit_module_get_name (modules[i]);
-		CuAssertPtrNotNull (tc, name);
+		assert_ptr_not_null (name);
 
 		/* Either one of these can be loaded, as this is a duplicate module */
 		if (strcmp (name, "two-duplicate") == 0) {
@@ -244,16 +242,16 @@ test_priority (CuTest *tc)
 			name = strdup ("two.badname");
 		}
 
-		CuAssertStrEquals (tc, expected[i], name);
+		assert_str_eq (expected[i], name);
 		free (name);
 	}
 
-	CuAssertIntEquals (tc, 4, i);
-	finalize_and_free_modules (tc, modules);
+	assert_num_eq (4, i);
+	finalize_and_free_modules (modules);
 }
 
 static void
-test_module_name (CuTest *tc)
+test_module_name (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	CK_FUNCTION_LIST_PTR module;
@@ -264,25 +262,25 @@ test_module_name (CuTest *tc)
 	 * program.
 	 */
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 
 	module = p11_kit_module_for_name (modules, "one");
-	CuAssertPtrNotNull (tc, module);
+	assert_ptr_not_null (module);
 	name = p11_kit_module_get_name (module);
-	CuAssertStrEquals (tc, "one", name);
+	assert_str_eq ("one", name);
 	free (name);
 
 	module = p11_kit_module_for_name (modules, "invalid");
-	CuAssertPtrEquals (tc, NULL, module);
+	assert_ptr_eq (NULL, module);
 
 	module = p11_kit_module_for_name (NULL, "one");
-	CuAssertPtrEquals (tc, NULL, module);
+	assert_ptr_eq (NULL, module);
 
-	finalize_and_free_modules (tc, modules);
+	finalize_and_free_modules (modules);
 }
 
 static void
-test_module_flags (CuTest *tc)
+test_module_flags (void)
 {
 	CK_FUNCTION_LIST **modules;
 	CK_FUNCTION_LIST **unmanaged;
@@ -293,23 +291,23 @@ test_module_flags (CuTest *tc)
 	 * program.
 	 */
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 
 	flags = p11_kit_module_get_flags (modules[0]);
-	CuAssertIntEquals (tc, 0, flags);
+	assert_num_eq (0, flags);
 
 	unmanaged = p11_kit_modules_load (NULL, P11_KIT_MODULE_UNMANAGED);
-	CuAssertTrue (tc, unmanaged != NULL && unmanaged[0] != NULL);
+	assert (unmanaged != NULL && unmanaged[0] != NULL);
 
 	flags = p11_kit_module_get_flags (unmanaged[0]);
-	CuAssertIntEquals (tc, P11_KIT_MODULE_UNMANAGED, flags);
+	assert_num_eq (P11_KIT_MODULE_UNMANAGED, flags);
 
-	finalize_and_free_modules (tc, modules);
+	finalize_and_free_modules (modules);
 	p11_kit_modules_release (unmanaged);
 }
 
 static void
-test_config_option (CuTest *tc)
+test_config_option (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
 	CK_FUNCTION_LIST_PTR module;
@@ -320,59 +318,48 @@ test_config_option (CuTest *tc)
 	 * program.
 	 */
 
-	modules = initialize_and_get_modules (tc);
+	modules = initialize_and_get_modules ();
 
 	value = p11_kit_config_option (NULL, "new");
-	CuAssertStrEquals (tc, "world", value);
+	assert_str_eq ("world", value);
 	free (value);
 
 	module = p11_kit_module_for_name (modules, "one");
-	CuAssertPtrNotNull (tc, module);
+	assert_ptr_not_null (module);
 
 	value = p11_kit_config_option (module, "setting");
-	CuAssertStrEquals (tc, "user1", value);
+	assert_str_eq ("user1", value);
 	free (value);
 
 	value = p11_kit_config_option (NULL, "invalid");
-	CuAssertPtrEquals (tc, NULL, value);
+	assert_ptr_eq (NULL, value);
 
 	value = p11_kit_config_option (module, "invalid");
-	CuAssertPtrEquals (tc, NULL, value);
+	assert_ptr_eq (NULL, value);
 
 	/* Invalid but non-NULL module pointer */
 	value = p11_kit_config_option (module + 1, "setting");
-	CuAssertPtrEquals (tc, NULL, value);
+	assert_ptr_eq (NULL, value);
 
-	finalize_and_free_modules (tc, modules);
+	finalize_and_free_modules (modules);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
-	SUITE_ADD_TEST (suite, test_no_duplicates);
-	SUITE_ADD_TEST (suite, test_disable);
-	SUITE_ADD_TEST (suite, test_disable_later);
-	SUITE_ADD_TEST (suite, test_enable);
-	SUITE_ADD_TEST (suite, test_priority);
-	SUITE_ADD_TEST (suite, test_module_name);
-	SUITE_ADD_TEST (suite, test_module_flags);
-	SUITE_ADD_TEST (suite, test_config_option);
+	p11_test (test_no_duplicates, "/modules/test_no_duplicates");
+	p11_test (test_disable, "/modules/test_disable");
+	p11_test (test_disable_later, "/modules/test_disable_later");
+	p11_test (test_enable, "/modules/test_enable");
+	p11_test (test_priority, "/modules/test_priority");
+	p11_test (test_module_name, "/modules/test_module_name");
+	p11_test (test_module_flags, "/modules/test_module_flags");
+	p11_test (test_config_option, "/modules/test_config_option");
 
 	p11_kit_be_quiet ();
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-	return ret;
+	return p11_test_run (argc, argv);
 }

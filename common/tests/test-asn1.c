@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "asn1.h"
 #include "debug.h"
@@ -49,21 +49,21 @@ struct {
 } test;
 
 static void
-setup (CuTest *cu)
+setup (void *unused)
 {
 	test.asn1_defs = p11_asn1_defs_load ();
-	CuAssertPtrNotNull (cu, test.asn1_defs);
+	assert_ptr_not_null (test.asn1_defs);
 }
 
 static void
-teardown (CuTest *cu)
+teardown (void *unused)
 {
 	p11_dict_free (test.asn1_defs);
 	memset (&test, 0, sizeof (test));
 }
 
 static void
-test_tlv_length (CuTest *cu)
+test_tlv_length (void)
 {
 	struct {
 		const char *der;
@@ -79,14 +79,10 @@ test_tlv_length (CuTest *cu)
 	int length;
 	int i;
 
-	setup (cu);
-
 	for (i = 0; tlv_lengths[i].der != NULL; i++) {
 		length = p11_asn1_tlv_length ((const unsigned char *)tlv_lengths[i].der, tlv_lengths[i].der_len);
-		CuAssertIntEquals (cu, tlv_lengths[i].expected, length);
+		assert_num_eq (tlv_lengths[i].expected, length);
 	}
-
-	teardown (cu);
 }
 
 static const unsigned char test_eku_server_and_client[] = {
@@ -95,7 +91,7 @@ static const unsigned char test_eku_server_and_client[] = {
 };
 
 static void
-test_asn1_cache (CuTest *cu)
+test_asn1_cache (void)
 {
 	p11_asn1_cache *cache;
 	p11_dict *defs;
@@ -103,15 +99,15 @@ test_asn1_cache (CuTest *cu)
 	node_asn *check;
 
 	cache = p11_asn1_cache_new ();
-	CuAssertPtrNotNull (cu, cache);
+	assert_ptr_not_null (cache);
 
 	defs = p11_asn1_cache_defs (cache);
-	CuAssertPtrNotNull (cu, defs);
+	assert_ptr_not_null (defs);
 
 	asn = p11_asn1_decode (defs, "PKIX1.ExtKeyUsageSyntax",
 	                       test_eku_server_and_client,
 	                       sizeof (test_eku_server_and_client), NULL);
-	CuAssertPtrNotNull (cu, defs);
+	assert_ptr_not_null (defs);
 
 	/* Place the parsed data in the cache */
 	p11_asn1_cache_take (cache, asn, "PKIX1.ExtKeyUsageSyntax",
@@ -122,38 +118,27 @@ test_asn1_cache (CuTest *cu)
 	check = p11_asn1_cache_get (cache, "PKIX1.ExtKeyUsageSyntax",
 	                            test_eku_server_and_client,
 	                            sizeof (test_eku_server_and_client));
-	CuAssertPtrEquals (cu, asn, check);
+	assert_ptr_eq (asn, check);
 
 	/* Flush should remove it */
 	p11_asn1_cache_flush (cache);
 	check = p11_asn1_cache_get (cache, "PKIX1.ExtKeyUsageSyntax",
 	                            test_eku_server_and_client,
 	                            sizeof (test_eku_server_and_client));
-	CuAssertPtrEquals (cu, NULL, check);
+	assert_ptr_eq (NULL, check);
 
 	p11_asn1_cache_free (cache);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
+	p11_fixture (setup, teardown);
+	p11_test (test_tlv_length, "/asn1/tlv_length");
 
-	putenv ("P11_KIT_STRICT=1");
-	p11_debug_init ();
+	p11_fixture (NULL, NULL);
+	p11_test (test_asn1_cache, "/asn1/asn1_cache");
 
-	SUITE_ADD_TEST (suite, test_tlv_length);
-	SUITE_ADD_TEST (suite, test_asn1_cache);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

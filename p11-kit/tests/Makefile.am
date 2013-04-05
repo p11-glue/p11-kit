@@ -7,20 +7,20 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
-	$(CUTEST_CFLAGS)
+	$(TEST_CFLAGS)
 
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit-testable.la \
-	$(top_builddir)/common/libp11-mock.la \
+	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(CUTEST_LIBS) \
 	$(LTLIBINTL)
 
 CHECK_PROGS = \
-	progname-test \
-	conf-test \
-	uri-test \
-	pin-test \
+	test-progname \
+	test-conf \
+	test-uri \
+	test-pin \
 	test-init \
 	test-modules \
 	test-deprecated \
@@ -57,7 +57,7 @@ mock_one_la_CFLAGS = \
 	$(AM_CFLAGS)
 
 mock_one_la_LIBADD = \
-	$(top_builddir)/common/libp11-mock.la \
+	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(NULL)
 

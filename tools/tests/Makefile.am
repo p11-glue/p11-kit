@@ -17,13 +17,13 @@ INCLUDES = \
 	-I$(COMMON) \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(LIBTASN1_CFLAGS) \
-	$(CUTEST_CFLAGS) \
+	$(TEST_CFLAGS) \
 	$(NULL)
 
 LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit.la \
 	$(top_builddir)/common/libp11-data.la \
-	$(top_builddir)/common/libp11-mock.la \
+	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(builddir)/libtestcommon.la \
 	$(LIBTASN1_LIBS) \
@@ -35,7 +35,7 @@ noinst_LTLIBRARIES = \
 	libtestcommon.la
 
 libtestcommon_la_SOURCES = \
-	test.c test.h
+	test-tools.c test-tools.h
 
 CHECK_PROGS = \
 	test-save \

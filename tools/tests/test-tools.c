@@ -33,24 +33,27 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include "debug.h"
-#include "test.h"
+#include "test-tools.h"
 
 #include <sys/stat.h>
 
 #include <assert.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 static char *
-read_file (CuTest *tc,
-           const char *file,
+read_file (const char *file,
            int line,
+           const char *function,
            const char *filename,
            long *len)
 {
@@ -60,11 +63,11 @@ read_file (CuTest *tc,
 
 	f = fopen (filename, "rb");
 	if (f == NULL)
-		CuFail_Line (tc, file, line, "Couldn't open file", filename);
+		p11_test_fail (file, line, function, "Couldn't open file: %s", filename);
 
 	/* Figure out size */
 	if (stat (filename, &sb) < 0)
-		CuFail_Line (tc, file, line, "Couldn't stat file", filename);
+		p11_test_fail (file, line, function, "Couldn't stat file: %s", filename);
 
 	*len = sb.st_size;
 	data = malloc (*len ? *len : 1);
@@ -72,7 +75,7 @@ read_file (CuTest *tc,
 
 	/* And read in one block */
 	if (fread (data, 1, *len, f) != *len)
-		CuFail_Line (tc, file, line, "Couldn't read file", filename);
+		p11_test_fail (file, line, function, "Couldn't read file: %s", filename);
 
 	fclose (f);
 
@@ -80,9 +83,9 @@ read_file (CuTest *tc,
 }
 
 void
-test_check_file_msg (CuTest *tc,
-                     const char *file,
+test_check_file_msg (const char *file,
                      int line,
+                     const char *function,
                      const char *directory,
                      const char *name,
                      const char *reference)
@@ -90,15 +93,15 @@ test_check_file_msg (CuTest *tc,
 	char *refdata;
 	long reflen;
 
-	refdata = read_file (tc, file, line, reference, &reflen);
-	test_check_data_msg (tc, file, line, directory, name, refdata, reflen);
+	refdata = read_file (file, line, function, reference, &reflen);
+	test_check_data_msg (file, line, function, directory, name, refdata, reflen);
 	free (refdata);
 }
 
 void
-test_check_data_msg (CuTest *tc,
-                     const char *file,
+test_check_data_msg (const char *file,
                      int line,
+                     const char *function,
                      const char *directory,
                      const char *name,
                      const void *refdata,
@@ -109,14 +112,15 @@ test_check_data_msg (CuTest *tc,
 	long filelen;
 
 	if (asprintf (&filename, "%s/%s", directory, name) < 0)
-		CuFail_Line (tc, file, line, "asprintf() failed", NULL);
+		assert_not_reached ();
 
-	filedata = read_file (tc, file, line, filename, &filelen);
+	filedata = read_file (file, line, function, filename, &filelen);
 
 	if (filelen != reflen || memcmp (filedata, refdata, reflen) != 0)
-		CuFail_Line (tc, file, line, "File contents not as expected", filename);
+		p11_test_fail (file, line, function, "File contents not as expected: %s", filename);
 
-	CuAssert_Line (tc, file, line, "couldn't remove file", unlink (filename) >= 0);
+	if (unlink (filename) < 0)
+		p11_test_fail (file, line, function, "Couldn't remove file: %s", filename);
 	free (filename);
 	free (filedata);
 }
@@ -124,9 +128,9 @@ test_check_data_msg (CuTest *tc,
 #ifdef OS_UNIX
 
 void
-test_check_symlink_msg (CuTest *tc,
-                        const char *file,
+test_check_symlink_msg (const char *file,
                         int line,
+                        const char *function,
                         const char *directory,
                         const char *name,
                         const char *destination)
@@ -135,14 +139,16 @@ test_check_symlink_msg (CuTest *tc,
 	char *filename;
 
 	if (asprintf (&filename, "%s/%s", directory, name) < 0)
-		CuFail_Line (tc, file, line, "asprintf() failed", NULL);
+		assert_not_reached ();
 
 	if (readlink (filename, buf, sizeof (buf)) < 0)
-		CuFail_Line (tc, file, line, "Couldn't read symlink", filename);
+		p11_test_fail (file, line, function, "Couldn't read symlink: %s", filename);
 
-	CuAssertStrEquals_LineMsg (tc, file, line, "symlink contents wrong", destination, buf);
+	if (strcmp (destination, buf) != 0)
+		p11_test_fail (file, line, function, "Symlink contents wrong: %s != %s", destination, buf);
 
-	CuAssert_Line (tc, file, line, "couldn't remove symlink", unlink (filename) >= 0);
+	if (unlink (filename) < 0)
+		p11_test_fail (file, line, function, "Couldn't remove symlink: %s", filename);
 	free (filename);
 }
 
@@ -171,9 +177,9 @@ test_check_directory_files (const char *file,
 }
 
 void
-test_check_directory_msg (CuTest *tc,
-                          const char *file,
+test_check_directory_msg (const char *file,
                           int line,
+                          const char *function,
                           const char *directory,
                           p11_dict *files)
 {
@@ -184,7 +190,7 @@ test_check_directory_msg (CuTest *tc,
 
 	dir = opendir (directory);
 	if (dir == NULL)
-		CuFail_Line (tc, file ,line, "Couldn't open directory", directory);
+		p11_test_fail (file ,line, function, "Couldn't open directory: %s", directory);
 
 	while ((dp = readdir (dir)) != NULL) {
 		if (strcmp (dp->d_name, ".") == 0 ||
@@ -192,18 +198,19 @@ test_check_directory_msg (CuTest *tc,
 			continue;
 
 		if (!p11_dict_remove (files, dp->d_name))
-			CuFail_Line (tc, file, line, "Unexpected file in directory", dp->d_name);
+			p11_test_fail  (file, line, function, "Unexpected file in directory: %s", dp->d_name);
 	}
 
 	closedir (dir);
 
 #ifdef OS_UNIX
-	CuAssert_Line (tc, file, line, "couldn't chown directory", chmod (directory, S_IRWXU) >= 0);
+	if (chmod (directory, S_IRWXU) < 0)
+		p11_test_fail (file, line, function, "couldn't chown directory: %s: %s", directory, strerror (errno));
 #endif
 
 	p11_dict_iterate (files, &iter);
 	while (p11_dict_next (&iter, (void **)&name, NULL))
-		CuFail_Line (tc, file, line, "Couldn't find file in directory", name);
+		p11_test_fail (file, line, function, "Couldn't find file in directory: %s", name);
 
 	p11_dict_free (files);
 }

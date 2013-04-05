@@ -40,7 +40,7 @@
 #include "private.h"
 #include "virtual.h"
 
-#include "CuTest.h"
+#include "test.h"
 
 #include "mock.h"
 
@@ -57,7 +57,7 @@
 
 typedef struct {
 	p11_virtual virt;
-	CuTest *cu;
+	void *check;
 } Override;
 
 static CK_RV
@@ -66,8 +66,8 @@ override_initialize (CK_X_FUNCTION_LIST *self,
 {
 	Override *over = (Override *)self;
 
-	/* We're using CuTest both as closure and as C_Initialize arg */
-	CuAssertPtrEquals (over->cu, over->cu, args);
+	assert_str_eq ("initialize-arg", args);
+	assert_str_eq ("overide-arg", over->check);
 
 	/* An arbitrary error code to check */
 	return CKR_NEED_TO_CREATE_THREADS;
@@ -84,7 +84,7 @@ test_destroyer (void *data)
 }
 
 static void
-test_initialize (CuTest *tc)
+test_initialize (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	Override over = { };
@@ -92,21 +92,21 @@ test_initialize (CuTest *tc)
 
 	p11_virtual_init (&over.virt, &p11_virtual_stack, &mock_x_module_no_slots, test_destroyer);
 	over.virt.funcs.C_Initialize = override_initialize;
-	over.cu = tc;
+	over.check = "overide-arg";
 	test_destroyed = false;
 
 	module = p11_virtual_wrap (&over.virt, (p11_destroyer)p11_virtual_uninit);
-	CuAssertPtrNotNull (tc, module);
+	assert_ptr_not_null (module);
 
-	rv = (module->C_Initialize) (tc);
-	CuAssertIntEquals (tc, CKR_NEED_TO_CREATE_THREADS, rv);
+	rv = (module->C_Initialize) ("initialize-arg");
+	assert_num_eq (CKR_NEED_TO_CREATE_THREADS, rv);
 
 	p11_virtual_unwrap (module);
-	CuAssertIntEquals (tc, true, test_destroyed);
+	assert_num_eq (true, test_destroyed);
 }
 
 static void
-test_fall_through (CuTest *tc)
+test_fall_through (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	Override over = { };
@@ -116,22 +116,22 @@ test_fall_through (CuTest *tc)
 	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
 	p11_virtual_init (&over.virt, &p11_virtual_stack, &base, NULL);
 	over.virt.funcs.C_Initialize = override_initialize;
-	over.cu = tc;
+	over.check = "overide-arg";
 
 	module = p11_virtual_wrap (&over.virt, NULL);
-	CuAssertPtrNotNull (tc, module);
+	assert_ptr_not_null (module);
 
-	rv = (module->C_Initialize) (tc);
-	CuAssertIntEquals (tc, CKR_NEED_TO_CREATE_THREADS, rv);
+	rv = (module->C_Initialize) ("initialize-arg");
+	assert_num_eq (CKR_NEED_TO_CREATE_THREADS, rv);
 
 	/* All other functiosn should have just fallen through */
-	CuAssertPtrEquals (tc, mock_module_no_slots.C_Finalize, module->C_Finalize);
+	assert_ptr_eq (mock_module_no_slots.C_Finalize, module->C_Finalize);
 
 	p11_virtual_unwrap (module);
 }
 
 static void
-test_get_function_list (CuTest *tc)
+test_get_function_list (void)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_FUNCTION_LIST_PTR list;
@@ -140,44 +140,32 @@ test_get_function_list (CuTest *tc)
 
 	p11_virtual_init (&virt, &p11_virtual_base, &mock_x_module_no_slots, NULL);
 	module = p11_virtual_wrap (&virt, NULL);
-	CuAssertPtrNotNull (tc, module);
+	assert_ptr_not_null (module);
 
 	rv = (module->C_GetFunctionList) (&list);
-	CuAssertIntEquals (tc, CKR_OK, rv);
-	CuAssertPtrEquals (tc, module, list);
+	assert_num_eq (CKR_OK, rv);
+	assert_ptr_eq (module, list);
 
 	rv = (module->C_GetFunctionList) (&list);
-	CuAssertIntEquals (tc, CKR_OK, rv);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = (module->C_GetFunctionList) (NULL);
-	CuAssertIntEquals (tc, CKR_ARGUMENTS_BAD, rv);
+	assert_num_eq (CKR_ARGUMENTS_BAD, rv);
 
 	p11_virtual_unwrap (module);
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	putenv ("P11_KIT_STRICT=1");
 	mock_module_init ();
 	p11_library_init ();
 
 	assert (p11_virtual_can_wrap ());
-	SUITE_ADD_TEST (suite, test_initialize);
-	SUITE_ADD_TEST (suite, test_fall_through);
-	SUITE_ADD_TEST (suite, test_get_function_list);
+	p11_test (test_initialize, "/virtual/test_initialize");
+	p11_test (test_fall_through, "/virtual/test_fall_through");
+	p11_test (test_get_function_list, "/virtual/test_get_function_list");
 
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	return p11_test_run (argc, argv);
 }

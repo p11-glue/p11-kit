@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-#include "CuTest.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -125,7 +125,6 @@ struct {
 };
 
 typedef struct {
-	CuTest *cu;
 	int input_index;
 	int output_index;
 	int parsed;
@@ -139,8 +138,8 @@ on_parse_pem_success (const char *type,
 {
 	Closure *cl = user_data;
 
-	CuAssertIntEquals (cl->cu, success_fixtures[cl->input_index].output[cl->output_index].length, length);
-	CuAssertTrue (cl->cu, memcmp (success_fixtures[cl->input_index].output[cl->output_index].data, contents,
+	assert_num_eq (success_fixtures[cl->input_index].output[cl->output_index].length, length);
+	assert (memcmp (success_fixtures[cl->input_index].output[cl->output_index].data, contents,
 	                              success_fixtures[cl->input_index].output[cl->output_index].length) == 0);
 
 	cl->output_index++;
@@ -148,7 +147,7 @@ on_parse_pem_success (const char *type,
 }
 
 static void
-test_pem_success (CuTest *cu)
+test_pem_success (void)
 {
 	Closure cl;
 	int ret;
@@ -156,7 +155,6 @@ test_pem_success (CuTest *cu)
 	int j;
 
 	for (i = 0; success_fixtures[i].input != NULL; i++) {
-		cl.cu = cu;
 		cl.input_index = i;
 		cl.output_index = 0;
 		cl.parsed = 0;
@@ -164,12 +162,12 @@ test_pem_success (CuTest *cu)
 		ret = p11_pem_parse (success_fixtures[i].input, strlen (success_fixtures[i].input),
 		                     on_parse_pem_success, &cl);
 
-		CuAssertTrue (cu, success_fixtures[i].output[cl.output_index].type == NULL);
+		assert (success_fixtures[i].output[cl.output_index].type == NULL);
 
 		/* Count number of outputs, return from p11_pem_parse() should match */
 		for (j = 0; success_fixtures[i].output[j].type != NULL; j++);
-		CuAssertIntEquals (cu, j, ret);
-		CuAssertIntEquals (cu, ret, cl.parsed);
+		assert_num_eq (j, ret);
+		assert_num_eq (ret, cl.parsed);
 	}
 }
 
@@ -215,20 +213,19 @@ on_parse_pem_failure (const char *type,
                       size_t length,
                       void *user_data)
 {
-	CuTest *cu = user_data;
-	CuAssertTrue (cu, false && "not reached");
+	assert (false && "not reached");
 }
 
 static void
-test_pem_failure (CuTest *cu)
+test_pem_failure (void)
 {
 	int ret;
 	int i;
 
 	for (i = 0; failure_fixtures[i] != NULL; i++) {
 		ret = p11_pem_parse (failure_fixtures[i], strlen (failure_fixtures[i]),
-		                     on_parse_pem_failure, cu);
-		CuAssertIntEquals (cu, 0, ret);
+		                     on_parse_pem_failure, NULL);
+		assert_num_eq (0, ret);
 	}
 }
 
@@ -238,11 +235,6 @@ typedef struct {
 	const char *type;
 	const char *output;
 } WriteFixture;
-
-typedef struct {
-	CuTest *cu;
-	WriteFixture *fixture;
-} WriteClosure;
 
 static WriteFixture write_fixtures[] = {
 	{
@@ -303,18 +295,17 @@ on_parse_written (const char *type,
                   size_t length,
                   void *user_data)
 {
-	WriteClosure *cl = user_data;
+	WriteFixture *fixture = user_data;
 
-	CuAssertStrEquals (cl->cu, cl->fixture->type, type);
-	CuAssertIntEquals (cl->cu, cl->fixture->length, length);
-	CuAssertTrue (cl->cu, memcmp (contents, cl->fixture->input, length) == 0);
+	assert_str_eq (fixture->type, type);
+	assert_num_eq (fixture->length, length);
+	assert (memcmp (contents, fixture->input, length) == 0);
 }
 
 static void
-test_pem_write (CuTest *cu)
+test_pem_write (void)
 {
 	WriteFixture *fixture;
-	WriteClosure cl;
 	size_t length;
 	char *output;
 	unsigned int count;
@@ -326,37 +317,22 @@ test_pem_write (CuTest *cu)
 		output = p11_pem_write ((unsigned char *)fixture->input,
 		                        fixture->length,
 		                        fixture->type, &length);
-		CuAssertStrEquals (cu, fixture->output, output);
-		CuAssertIntEquals (cu, strlen (fixture->output), length);
+		assert_str_eq (fixture->output, output);
+		assert_num_eq (strlen (fixture->output), length);
 
-		cl.fixture = fixture;
-		cl.cu = cu;
-
-		count = p11_pem_parse (output, length, on_parse_written, &cl);
-		CuAssertIntEquals (cu, 1, count);
+		count = p11_pem_parse (output, length, on_parse_written, fixture);
+		assert_num_eq (1, count);
 
 		free (output);
 	}
 }
 
 int
-main (void)
+main (int argc,
+      char *argv[])
 {
-	CuString *output = CuStringNew ();
-	CuSuite* suite = CuSuiteNew ();
-	int ret;
-
-	SUITE_ADD_TEST (suite, test_pem_success);
-	SUITE_ADD_TEST (suite, test_pem_failure);
-	SUITE_ADD_TEST (suite, test_pem_write);
-
-	CuSuiteRun (suite);
-	CuSuiteSummary (suite, output);
-	CuSuiteDetails (suite, output);
-	printf ("%s\n", output->buffer);
-	ret = suite->failCount;
-	CuSuiteDelete (suite);
-	CuStringDelete (output);
-
-	return ret;
+	p11_test (test_pem_success, "/pem/success");
+	p11_test (test_pem_failure, "/pem/failure");
+	p11_test (test_pem_write, "/pem/write");
+	return p11_test_run (argc, argv);
 }

@@ -59,8 +59,10 @@ void              p11_debug_precond             (const char *format,
                                                  ...) GNUC_PRINTF (1, 2)
                                                  CLANG_ANALYZER_NORETURN;
 
+#ifndef assert_not_reached
 #define assert_not_reached() \
 	(assert (false && "this code should not be reached"))
+#endif
 
 #define return_val_if_fail(x, v) \
 	do { if (!(x)) { \
