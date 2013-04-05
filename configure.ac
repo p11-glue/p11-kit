@@ -398,7 +398,17 @@ echo $PACKAGE_VERSION | tr '.' ' ' | while read major minor unused; do
 	break
 done
 
-eval SHLEXT=$shrext_cmds
+case "$host" in
+*-*-darwin*)
+	# It seems like libtool lies about this see:
+	# https://bugs.freedesktop.org/show_bug.cgi?id=57714
+	SHLEXT='.so'
+	;;
+*)
+	eval SHLEXT=$shrext_cmds
+	;;
+esac
+
 AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
 AC_SUBST(SHLEXT)
 
