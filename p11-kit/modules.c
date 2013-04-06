@@ -138,13 +138,6 @@ typedef struct _Module {
 	 */
 	p11_virtual virt;
 
-	/*
-	 * The actual function pointers retrieved from the module. This is
-	 * not necessarily populated. For non dl modules, such as rpc
-	 * modules, this will be NULL.
-	 */
-	CK_FUNCTION_LIST *funcs;
-
 	/* The initialize args built from configuration */
 	CK_C_INITIALIZE_ARGS init_args;
 	int ref_count;
@@ -168,20 +161,14 @@ typedef struct _Module {
 	p11_thread_id_t initialize_thread;
 } Module;
 
-typedef struct {
-	p11_virtual virt;
-	Module *mod;
-	bool initialized;
-	p11_dict *sessions;
-} Managed;
-
 /*
  * Shared data between threads, protected by the mutex, a structure so
  * we can audit thread safety easier.
  */
 static struct _Shared {
 	p11_dict *modules;
-	p11_dict *managed;
+	p11_dict *unmanaged_by_funcs;
+	p11_dict *managed_by_closure;
 	p11_dict *config;
 } gl = { NULL, NULL };
 
@@ -291,18 +278,11 @@ alloc_module_unlocked (void)
 	return mod;
 }
 
-static void
-module_setup_with_functions (Module *mod,
-                             CK_FUNCTION_LIST *funcs)
-{
-	mod->funcs = funcs;
-	p11_virtual_init (&mod->virt, &p11_virtual_base, funcs, NULL);
-}
-
 static CK_RV
-dlopen_and_get_function_list (Module *mod, const char *path)
+dlopen_and_get_function_list (Module *mod,
+                              const char *path,
+                              CK_FUNCTION_LIST **funcs)
 {
-	CK_FUNCTION_LIST *funcs;
 	CK_C_GetFunctionList gfl;
 	dl_module_t dl;
 	char *error;
@@ -310,6 +290,7 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 
 	assert (mod != NULL);
 	assert (path != NULL);
+	assert (funcs != NULL);
 
 	dl = p11_dl_open (path);
 	if (dl == NULL) {
@@ -332,70 +313,75 @@ dlopen_and_get_function_list (Module *mod, const char *path)
 		return CKR_GENERAL_ERROR;
 	}
 
-	rv = gfl (&funcs);
+	rv = gfl (funcs);
 	if (rv != CKR_OK) {
 		p11_message ("call to C_GetFunctiontList failed in module: %s: %s",
 		             path, p11_kit_strerror (rv));
 		return rv;
 	}
 
-	if (p11_proxy_module_check (funcs)) {
+	if (p11_proxy_module_check (*funcs)) {
 		p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
 		return CKR_FUNCTION_FAILED;
 	}
 
-	module_setup_with_functions (mod, funcs);
+	p11_virtual_init (&mod->virt, &p11_virtual_base, *funcs, NULL);
 	p11_debug ("opened module: %s", path);
 	return CKR_OK;
 }
 
 static CK_RV
-load_module_from_file_unlocked (const char *path, Module **result)
+load_module_from_file_inlock (const char *name,
+                              const char *path,
+                              Module **result)
 {
+	CK_FUNCTION_LIST *funcs;
+	char *expand = NULL;
 	Module *mod;
 	Module *prev;
 	CK_RV rv;
 
+	assert (path != NULL);
+	assert (result != NULL);
+
 	mod = alloc_module_unlocked ();
 	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
 
-	rv = dlopen_and_get_function_list (mod, path);
+	if (!p11_path_absolute (path)) {
+		p11_debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
+		path = expand = p11_path_build (P11_MODULE_PATH, path, NULL);
+		return_val_if_fail (path != NULL, CKR_HOST_MEMORY);
+	}
+
+	p11_debug ("loading module %s%sfrom path: %s",
+	           name ? name : "", name ? " " : "", path);
+
+	rv = dlopen_and_get_function_list (mod, path, &funcs);
+	free (expand);
+
 	if (rv != CKR_OK) {
 		free_module_unlocked (mod);
 		return rv;
 	}
 
 	/* Do we have a previous one like this, if so ignore load */
-	assert (mod->funcs != NULL);
-	prev = p11_dict_get (gl.modules, mod->funcs);
+	prev = p11_dict_get (gl.unmanaged_by_funcs, funcs);
 
+	/* If same module was loaded previously, just take over config */
 	if (prev != NULL) {
-		p11_debug ("duplicate module %s, using previous", path);
+		if (!name || prev->name || prev->config)
+			p11_debug ("duplicate module %s, using previous", path);
 		free_module_unlocked (mod);
 		mod = prev;
 
-	} else if (!p11_dict_set (gl.modules, mod->funcs, mod)) {
+	/* This takes ownership of the module */
+	} else if (!p11_dict_set (gl.modules, mod, mod) ||
+		   !p11_dict_set (gl.unmanaged_by_funcs, funcs, mod)) {
 		return_val_if_reached (CKR_HOST_MEMORY);
 	}
 
-	if (result)
-		*result= mod;
+	*result= mod;
 	return CKR_OK;
-}
-
-static char*
-expand_module_path (const char *filename)
-{
-	char *path;
-
-	if (!p11_path_absolute (filename)) {
-		p11_debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
-		path = p11_path_build (P11_MODULE_PATH, filename, NULL);
-	} else {
-		path = strdup (filename);
-	}
-
-	return path;
 }
 
 static int
@@ -458,10 +444,8 @@ take_config_and_load_module_inlock (char **name,
                                     p11_dict **config,
                                     bool critical)
 {
-	Module *mod, *prev;
-	const char *module_filename;
-	char *path;
-	char *key;
+	const char *filename;
+	Module *mod;
 	CK_RV rv;
 
 	assert (name);
@@ -472,24 +456,15 @@ take_config_and_load_module_inlock (char **name,
 	if (!is_module_enabled_unlocked (*name, *config))
 		return CKR_OK;
 
-	module_filename = p11_dict_get (*config, "module");
-	if (module_filename == NULL) {
+	filename = p11_dict_get (*config, "module");
+	if (filename == NULL) {
 		p11_debug ("no module path for module, skipping: %s", *name);
 		return CKR_OK;
 	}
 
-	path = expand_module_path (module_filename);
-	return_val_if_fail (path != NULL, CKR_HOST_MEMORY);
-
-	key = strdup ("module");
-	return_val_if_fail (key != NULL, CKR_HOST_MEMORY);
-
-	/* The hash map will take ownership of the variable */
-	if (!p11_dict_set (*config, key, path))
-		return_val_if_reached (CKR_HOST_MEMORY);
-
-	mod = alloc_module_unlocked ();
-	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
+	rv = load_module_from_file_inlock (*name, filename, &mod);
+	if (rv != CKR_OK)
+		return CKR_OK;
 
 	/* Take ownership of thes evariables */
 	mod->config = *config;
@@ -498,40 +473,12 @@ take_config_and_load_module_inlock (char **name,
 	*name = NULL;
 	mod->critical = critical;
 
-	rv = dlopen_and_get_function_list (mod, path);
-	if (rv != CKR_OK) {
-		free_module_unlocked (mod);
-		return rv;
-	}
-
 	/*
 	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
 	 * 'x-init-reserved' setting in the config. This only works with specific
 	 * PKCS#11 modules, and is non-standard use of that field.
 	 */
 	mod->init_args.pReserved = p11_dict_get (mod->config, "x-init-reserved");
-
-	assert (mod->funcs != NULL);
-	prev = p11_dict_get (gl.modules, mod->funcs);
-
-	/* If same module was loaded previously, just take over config */
-	if (prev && !prev->name && !prev->config) {
-		prev->name = mod->name;
-		mod->name = NULL;
-		prev->config = mod->config;
-		mod->config = NULL;
-		free_module_unlocked (mod);
-
-	/* Ignore duplicate module */
-	} else if (prev) {
-		p11_message ("duplicate configured module: %s: %s", mod->name, path);
-		free_module_unlocked (mod);
-
-	/* Add this new module to our hash table */
-	} else {
-		if (!p11_dict_set (gl.modules, mod->funcs, mod))
-			return_val_if_reached (CKR_HOST_MEMORY);
-	}
 
 	return CKR_OK;
 }
@@ -677,7 +624,7 @@ reinitialize_after_fork (void)
 
 		if (gl.modules) {
 			p11_dict_iterate (gl.modules, &iter);
-			while (p11_dict_next (&iter, NULL, (void **)&mod))
+			while (p11_dict_next (&iter, (void **)&mod, NULL))
 				mod->initialize_called = false;
 		}
 
@@ -694,14 +641,24 @@ init_globals_unlocked (void)
 	static bool once = false;
 
 	if (!gl.modules) {
-		gl.modules = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal,
-		                           NULL, free_module_unlocked);
+		gl.modules = p11_dict_new (p11_dict_direct_hash,
+		                           p11_dict_direct_equal,
+		                           free_module_unlocked, NULL);
 		return_val_if_fail (gl.modules != NULL, CKR_HOST_MEMORY);
 	}
 
-	if (!gl.managed) {
-		gl.managed = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
-		return_val_if_fail (gl.managed != NULL, CKR_HOST_MEMORY);
+	if (!gl.unmanaged_by_funcs) {
+		gl.unmanaged_by_funcs = p11_dict_new (p11_dict_direct_hash,
+		                                      p11_dict_direct_equal,
+		                                      NULL, NULL);
+		return_val_if_fail (gl.unmanaged_by_funcs != NULL, CKR_HOST_MEMORY);
+	}
+
+	if (!gl.managed_by_closure) {
+		gl.managed_by_closure = p11_dict_new (p11_dict_direct_hash,
+		                                      p11_dict_direct_equal,
+		                                      NULL, NULL);
+		return_val_if_fail (gl.managed_by_closure != NULL, CKR_HOST_MEMORY);
 	}
 
 	if (once)
@@ -723,15 +680,20 @@ free_modules_when_no_refs_unlocked (void)
 
 	/* Check if any modules have a ref count */
 	p11_dict_iterate (gl.modules, &iter);
-	while (p11_dict_next (&iter, NULL, (void **)&mod)) {
+	while (p11_dict_next (&iter, (void **)&mod, NULL)) {
 		if (mod->ref_count)
 			return;
 	}
 
+	p11_dict_free (gl.unmanaged_by_funcs);
+	gl.unmanaged_by_funcs = NULL;
+
+	p11_dict_free (gl.managed_by_closure);
+	gl.managed_by_closure = NULL;
+
 	p11_dict_free (gl.modules);
 	gl.modules = NULL;
-	p11_dict_free (gl.managed);
-	gl.managed = NULL;
+
 	p11_dict_free (gl.config);
 	gl.config = NULL;
 }
@@ -775,26 +737,11 @@ finalize_module_inlock_reentrant (Module *mod)
 	return CKR_OK;
 }
 
-static Module*
-find_module_for_name_unlocked (const char *name)
-{
-	Module *mod;
-	p11_dictiter iter;
-
-	assert (name);
-
-	p11_dict_iterate (gl.modules, &iter);
-	while (p11_dict_next (&iter, NULL, (void **)&mod))
-		if (mod->ref_count && mod->name && strcmp (name, mod->name) == 0)
-			return mod;
-	return NULL;
-}
-
 static CK_RV
 initialize_registered_inlock_reentrant (void)
 {
-	Module *mod;
 	p11_dictiter iter;
+	Module *mod;
 	CK_RV rv;
 
 	/*
@@ -808,7 +755,7 @@ initialize_registered_inlock_reentrant (void)
 
 	rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
-		p11_dict_iterate (gl.modules, &iter);
+		p11_dict_iterate (gl.unmanaged_by_funcs, &iter);
 		while (rv == CKR_OK && p11_dict_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered or enabled */
@@ -830,6 +777,27 @@ initialize_registered_inlock_reentrant (void)
 	}
 
 	return rv;
+}
+
+static Module *
+module_for_functions_inlock (CK_FUNCTION_LIST *funcs)
+{
+	if (p11_virtual_is_wrapper (funcs))
+		return p11_dict_get (gl.managed_by_closure, funcs);
+	else
+		return p11_dict_get (gl.unmanaged_by_funcs, funcs);
+}
+
+static CK_FUNCTION_LIST *
+unmanaged_for_module_inlock (Module *mod)
+{
+	CK_FUNCTION_LIST *funcs;
+
+	funcs = mod->virt.lower_module;
+	if (p11_dict_get (gl.unmanaged_by_funcs, funcs) == mod)
+		return funcs;
+
+	return NULL;
 }
 
 /**
@@ -900,12 +868,12 @@ finalize_registered_inlock_reentrant (void)
 
 	/* WARNING: This function must be reentrant */
 
-	to_finalize = calloc (p11_dict_size (gl.modules), sizeof (Module *));
+	to_finalize = calloc (p11_dict_size (gl.unmanaged_by_funcs), sizeof (Module *));
 	if (!to_finalize)
 		return CKR_HOST_MEMORY;
 
 	count = 0;
-	p11_dict_iterate (gl.modules, &iter);
+	p11_dict_iterate (gl.unmanaged_by_funcs, &iter);
 	while (p11_dict_next (&iter, NULL, (void **)&mod)) {
 
 		/* Skip all modules that aren't registered */
@@ -982,14 +950,8 @@ compar_priority (const void *one,
 	const char *v1, *v2;
 	int o1, o2;
 
-	m1 = p11_dict_get (gl.managed, f1);
-	if (m1 == NULL)
-		m1 = p11_dict_get (gl.modules, f1);
-
-	m2 = p11_dict_get (gl.managed, f2);
-	if (m2 == NULL)
-		m2 = p11_dict_get (gl.modules, f2);
-
+	m1 = module_for_functions_inlock (f1);
+	m2 = module_for_functions_inlock (f2);
 	assert (m1 != NULL && m2 != NULL);
 
 	v1 = p11_dict_get (m1->config, "priority");
@@ -1027,6 +989,7 @@ static CK_FUNCTION_LIST **
 list_registered_modules_inlock (void)
 {
 	CK_FUNCTION_LIST **result = NULL;
+	CK_FUNCTION_LIST *funcs;
 	Module *mod;
 	p11_dictiter iter;
 	int i = 0;
@@ -1036,12 +999,13 @@ list_registered_modules_inlock (void)
 	 * a list of all registered enabled modules that have been initialized.
 	 */
 
-	if (gl.modules) {
-		result = calloc (p11_dict_size (gl.modules) + 1, sizeof (CK_FUNCTION_LIST *));
+	if (gl.unmanaged_by_funcs) {
+		result = calloc (p11_dict_size (gl.unmanaged_by_funcs) + 1,
+		                 sizeof (CK_FUNCTION_LIST *));
 		return_val_if_fail (result != NULL, NULL);
 
-		p11_dict_iterate (gl.modules, &iter);
-		while (p11_dict_next (&iter, NULL, (void **)&mod)) {
+		p11_dict_iterate (gl.unmanaged_by_funcs, &iter);
+		while (p11_dict_next (&iter, (void **)&funcs, (void **)&mod)) {
 
 			/*
 			 * We don't include unreferenced modules. We don't include
@@ -1054,9 +1018,9 @@ list_registered_modules_inlock (void)
 			 * having initialized. This is a corner case, but want to make
 			 * sure to cover it.
 			 */
-			if (mod->ref_count && mod->name && mod->init_count && mod->funcs &&
+			if (mod->ref_count && mod->name && mod->init_count &&
 			    is_module_enabled_unlocked (mod->name, mod->config)) {
-				result[i++] = mod->funcs;
+				result[i++] = funcs;
 			}
 		}
 
@@ -1152,9 +1116,7 @@ p11_kit_module_get_name (CK_FUNCTION_LIST *module)
 		p11_message_clear ();
 
 		if (gl.modules) {
-			mod = p11_dict_get (gl.modules, module);
-			if (mod == NULL)
-				mod = p11_dict_get (gl.managed, module);
+			mod = module_for_functions_inlock (module);
 			if (mod && mod->name)
 				name = strdup (mod->name);
 		}
@@ -1196,10 +1158,10 @@ p11_kit_module_get_flags (CK_FUNCTION_LIST *module)
 
 		if (gl.modules) {
 			if (p11_virtual_is_wrapper (module)) {
-				mod = p11_dict_get (gl.managed, module);
+				mod = p11_dict_get (gl.managed_by_closure, module);
 			} else {
 				flags |= P11_KIT_MODULE_UNMANAGED;
-				mod = p11_dict_get (gl.modules, module);
+				mod = p11_dict_get (gl.unmanaged_by_funcs, module);
 			}
 			if (!mod || mod->critical)
 				flags |= P11_KIT_MODULE_CRITICAL;
@@ -1226,6 +1188,8 @@ CK_FUNCTION_LIST_PTR
 p11_kit_registered_name_to_module (const char *name)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
+	CK_FUNCTION_LIST_PTR funcs;
+	p11_dictiter iter;
 	Module *mod;
 
 	return_val_if_fail (name != NULL, NULL);
@@ -1235,9 +1199,16 @@ p11_kit_registered_name_to_module (const char *name)
 	p11_message_clear ();
 
 	if (gl.modules) {
-		mod = find_module_for_name_unlocked (name);
-		if (mod != NULL && mod->funcs && is_module_enabled_unlocked (name, mod->config))
-			module = mod->funcs;
+
+		assert (name);
+
+		p11_dict_iterate (gl.unmanaged_by_funcs, &iter);
+		while (p11_dict_next (&iter, (void **)&funcs, (void **)&mod)) {
+			if (mod->ref_count && mod->name && strcmp (name, mod->name) == 0) {
+				module = funcs;
+				break;
+			}
+		}
 	}
 
 	p11_unlock ();
@@ -1282,9 +1253,7 @@ p11_kit_module_for_name (CK_FUNCTION_LIST **modules,
 		p11_message_clear ();
 
 		for (i = 0; gl.modules && modules[i] != NULL; i++) {
-			mod = p11_dict_get (gl.modules, modules[i]);
-			if (mod == NULL)
-				mod = p11_dict_get (gl.managed, modules[i]);
+			mod = module_for_functions_inlock (modules[i]);
 			if (mod && mod->name && strcmp (mod->name, name) == 0) {
 				ret = modules[i];
 				break;
@@ -1344,7 +1313,7 @@ p11_kit_registered_option (CK_FUNCTION_LIST_PTR module, const char *field)
 		if (module == NULL)
 			mod = NULL;
 		else
-			mod = gl.modules ? p11_dict_get (gl.modules, module) : NULL;
+			mod = gl.unmanaged_by_funcs ? p11_dict_get (gl.unmanaged_by_funcs, module) : NULL;
 
 		value = module_get_option_inlock (mod, field);
 		if (value)
@@ -1388,12 +1357,9 @@ p11_kit_config_option (CK_FUNCTION_LIST *module,
 
 		if (gl.modules) {
 			if (module != NULL) {
-				mod = p11_dict_get (gl.managed, module);
-				if (mod == NULL) {
-					mod = p11_dict_get (gl.modules, module);
-					if (mod == NULL)
-						goto cleanup;
-				}
+				mod = module_for_functions_inlock (module);
+				if (mod == NULL)
+					goto cleanup;
 			}
 
 			value = module_get_option_inlock (mod, option);
@@ -1406,6 +1372,13 @@ cleanup:
 	p11_unlock ();
 	return ret;
 }
+
+typedef struct {
+	p11_virtual virt;
+	Module *mod;
+	bool initialized;
+	p11_dict *sessions;
+} Managed;
 
 static CK_RV
 managed_C_Initialize (CK_X_FUNCTION_LIST *self,
@@ -1712,19 +1685,22 @@ release_module_inlock_rentrant (CK_FUNCTION_LIST *module,
 	assert (module != NULL);
 
 	/* See if a managed module, and finalize if so */
-	mod = p11_dict_get (gl.managed, module);
-	if (mod != NULL) {
-		if (!p11_dict_remove (gl.managed, module))
-			assert_not_reached ();
-		p11_virtual_unwrap (module);
+	if (p11_virtual_is_wrapper (module)) {
+		mod = p11_dict_get (gl.managed_by_closure, module);
+		if (mod != NULL) {
+			if (!p11_dict_remove (gl.managed_by_closure, module))
+				assert_not_reached ();
+			p11_virtual_unwrap (module);
+		}
 
 	/* If an unmanaged module then caller should have finalized */
 	} else {
-		mod = p11_dict_get (gl.modules, module);
-		if (mod == NULL) {
-			p11_debug_precond ("invalid module pointer passed to %s", caller_func);
-			return CKR_ARGUMENTS_BAD;
-		}
+		mod = p11_dict_get (gl.unmanaged_by_funcs, module);
+	}
+
+	if (mod == NULL) {
+		p11_debug_precond ("invalid module pointer passed to %s", caller_func);
+		return CKR_ARGUMENTS_BAD;
 	}
 
 	/* Matches the ref in prepare_module_inlock_reentrant() */
@@ -1787,14 +1763,13 @@ prepare_module_inlock_reentrant (Module *mod,
 		*module = p11_virtual_wrap (virt, destroyer);
 		return_val_if_fail (*module != NULL, CKR_GENERAL_ERROR);
 
-		if (!p11_dict_set (gl.managed, *module, mod))
+		if (!p11_dict_set (gl.managed_by_closure, *module, mod))
 			return_val_if_reached (CKR_HOST_MEMORY);
 
-	} else if (mod->funcs) {
-		*module = mod->funcs;
-
 	} else {
-		return CKR_FUNCTION_NOT_SUPPORTED;
+		*module = unmanaged_for_module_inlock (mod);
+		if (*module == NULL)
+			return CKR_FUNCTION_NOT_SUPPORTED;
 	}
 
 	/* Matches the deref in release_module_inlock_rentrant() */
@@ -2213,7 +2188,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 		assert (rv != CKR_OK || result == module);
 
 		if (rv == CKR_OK) {
-			mod = p11_dict_get (gl.modules, module);
+			mod = p11_dict_get (gl.unmanaged_by_funcs, module);
 			assert (mod != NULL);
 			rv = initialize_module_inlock_reentrant (mod);
 			if (rv != CKR_OK) {
@@ -2240,22 +2215,20 @@ p11_module_load_inlock_reentrant (CK_FUNCTION_LIST *module,
 	rv = init_globals_unlocked ();
 	if (rv == CKR_OK) {
 
-		mod = p11_dict_get (gl.modules, module);
+		mod = p11_dict_get (gl.unmanaged_by_funcs, module);
 		if (mod == NULL) {
 			p11_debug ("allocating new module");
 			allocated = mod = alloc_module_unlocked ();
-			if (mod == NULL)
-				rv = CKR_HOST_MEMORY;
-			else
-				module_setup_with_functions (mod, module);
+			return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
+			p11_virtual_init (&mod->virt, &p11_virtual_base, module, NULL);
 		}
 
 		/* If this was newly allocated, add it to the list */
 		if (rv == CKR_OK && allocated) {
-			if (p11_dict_set (gl.modules, allocated->funcs, allocated))
-				allocated = NULL;
-			else
-				rv = CKR_HOST_MEMORY;
+			if (!p11_dict_set (gl.modules, allocated, allocated) ||
+			    !p11_dict_set (gl.unmanaged_by_funcs, module, allocated))
+				return_val_if_reached (CKR_HOST_MEMORY);
+			allocated = NULL;
 		}
 
 		if (rv == CKR_OK) {
@@ -2308,7 +2281,7 @@ CK_FUNCTION_LIST *
 p11_kit_module_load (const char *module_path,
                      int flags)
 {
-	CK_FUNCTION_LIST *module;
+	CK_FUNCTION_LIST *module = NULL;
 	CK_RV rv;
 	Module *mod;
 
@@ -2326,7 +2299,7 @@ p11_kit_module_load (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_unlocked (module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, &mod);
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */
@@ -2395,7 +2368,7 @@ p11_kit_finalize_module (CK_FUNCTION_LIST *module)
 
 		p11_message_clear ();
 
-		mod = gl.modules ? p11_dict_get (gl.modules, module) : NULL;
+		mod = gl.unmanaged_by_funcs ? p11_dict_get (gl.unmanaged_by_funcs, module) : NULL;
 		if (mod == NULL) {
 			p11_debug ("module not found");
 			rv = CKR_ARGUMENTS_BAD;
@@ -2593,7 +2566,7 @@ p11_kit_load_initialize_module (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_unlocked (module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, &mod);
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */
@@ -2602,8 +2575,8 @@ p11_kit_load_initialize_module (const char *module_path,
 		}
 
 		if (rv == CKR_OK && module) {
-			assert (mod->funcs != NULL);
-			*module = mod->funcs;
+			*module = unmanaged_for_module_inlock (mod);
+			assert (*module != NULL);
 		}
 
 		/*
