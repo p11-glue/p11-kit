@@ -201,11 +201,11 @@ p11_path_absolute (const char *path)
 {
 	return_val_if_fail (path != NULL, false);
 
-#ifdef OS_UNIX
-	return (path[0] == '/');
-#else
-	return (path[0] != '\0' && path[1] == ':' && path[2] == '\\');
+	return (path[0] == '/')
+#ifdef OS_WIN32
+	|| (path[0] != '\0' && path[1] == ':' && path[2] == '\\')
 #endif
+	;
 }
 
 char *

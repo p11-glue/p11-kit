@@ -174,7 +174,7 @@ test_absolute (CuTest *tc)
 #else /* OS_WIN32 */
 	CuAssertTrue (tc, p11_path_absolute ("C:\\home"));
 	CuAssertTrue (tc, !p11_path_absolute ("home"));
-	CuAssertTrue (tc, !p11_path_absolute ("/home"));
+	CuAssertTrue (tc, p11_path_absolute ("/home"));
 #endif
 }
 
