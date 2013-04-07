@@ -36,6 +36,7 @@
 
 #define CRYPTOKI_EXPORTS
 
+#include "argv.h"
 #include "array.h"
 #include "attrs.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
@@ -248,7 +249,8 @@ create_tokens_inlock (p11_array *tokens,
 }
 
 static void
-parse_argument (char *arg)
+parse_argument (char *arg,
+                void *unused)
 {
 	char *value;
 
@@ -265,78 +267,6 @@ parse_argument (char *arg)
 	} else {
 		p11_message ("unrecognized module argument: %s", arg);
 	}
-}
-
-static void
-parse_arguments (const char *string)
-{
-	char quote = '\0';
-	char *src, *dup, *at, *arg;
-
-	if (!string)
-		return;
-
-	src = dup = strdup (string);
-	if (!dup) {
-		p11_message ("couldn't allocate memory for argument string");
-		return;
-	}
-
-	arg = at = src;
-	for (src = dup; *src; src++) {
-
-		/* Matching quote */
-		if (quote == *src) {
-			quote = '\0';
-
-		/* Inside of quotes */
-		} else if (quote != '\0') {
-			if (*src == '\\') {
-				*at++ = *src++;
-				if (!*src) {
-					p11_message ("couldn't parse argument string: %s", string);
-					goto done;
-				}
-				if (*src != quote)
-					*at++ = '\\';
-			}
-			*at++ = *src;
-
-		/* Space, not inside of quotes */
-		} else if (isspace(*src)) {
-			*at = 0;
-			parse_argument (arg);
-			arg = at;
-
-		/* Other character outside of quotes */
-		} else {
-			switch (*src) {
-			case '\'':
-			case '"':
-				quote = *src;
-				break;
-			case '\\':
-				*at++ = *src++;
-				if (!*src) {
-					p11_message ("couldn't parse argument string: %s", string);
-					goto done;
-				}
-				/* fall through */
-			default:
-				*at++ = *src;
-				break;
-			}
-		}
-	}
-
-
-	if (at != arg) {
-		*at = 0;
-		parse_argument (arg);
-	}
-
-done:
-	free (dup);
 }
 
 static CK_RV
@@ -422,7 +352,7 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 		 */
 		if (rv == CKR_OK) {
 			if (args->pReserved)
-				parse_arguments ((const char*)args->pReserved);
+				p11_argv_parse ((const char*)args->pReserved, parse_argument, NULL);
 
 			gl.sessions = p11_dict_new (p11_dict_ulongptr_hash,
 			                            p11_dict_ulongptr_equal,

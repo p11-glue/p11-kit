@@ -16,6 +16,7 @@ noinst_LTLIBRARIES = \
 	$(NULL)
 
 libp11_common_la_SOURCES = \
+	argv.c argv.h \
 	attrs.c attrs.h \
 	array.c array.h \
 	buffer.c buffer.h \
