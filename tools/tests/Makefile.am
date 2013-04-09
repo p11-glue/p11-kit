@@ -10,7 +10,7 @@ TOOLS = $(top_srcdir)/tools
 
 TEST_RUNNER = libtool --mode=execute
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/p11-kit \
 	-I$(srcdir)/.. \

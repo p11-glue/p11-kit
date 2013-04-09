@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/build/Makefile.tests
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(top_srcdir)/common \

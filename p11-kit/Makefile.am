@@ -5,7 +5,7 @@ SUBDIRS = . tests
 
 COMMON = $(top_srcdir)/common
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(COMMON) \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
