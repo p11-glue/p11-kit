@@ -1,3 +1,7 @@
+0.18.1 (stable)
+ * Put the external tools in $libdir/p11-kit
+ * Documentation build fixes
+
 0.18.0 (stable)
  * Fix use of trust module with gcr and empathy [#62896]
  * Further tweaks to trust module date parsing
