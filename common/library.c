@@ -60,7 +60,7 @@ static p11_local * _p11_library_get_thread_local (void);
 p11_mutex_t p11_library_mutex;
 
 #ifdef OS_UNIX
-pthread_once_t p11_library_once;
+pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
 #endif
 
 static char *
