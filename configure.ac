@@ -144,7 +144,7 @@ AC_ARG_WITH([libtasn1],
 )
 
 AS_IF([test "$with_libtasn1" != "no"], [
-	PKG_CHECK_MODULES([LIBTASN1], [libtasn1 >= 2.14], [],
+	PKG_CHECK_MODULES([LIBTASN1], [libtasn1 >= 2.3], [],
 		[AC_MSG_ERROR([libtasn1 not found. Building without it results in significant loss of functionality. To proceed use --without-libtasn1])]
 	)
 	AC_SUBST(LIBTASN1_CFLAGS)
