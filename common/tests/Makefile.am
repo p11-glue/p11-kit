@@ -20,7 +20,6 @@ CHECK_PROGS = \
 	test-constants \
 	test-attrs \
 	test-buffer \
-	test-lexer \
 	test-url \
 	test-path \
 	$(NULL)
@@ -42,6 +41,7 @@ INCLUDES += \
 CHECK_PROGS += \
 	test-asn1 \
 	test-base64 \
+	test-lexer \
 	test-pem \
 	test-oid \
 	test-utf8 \
