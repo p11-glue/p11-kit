@@ -1,3 +1,6 @@
+0.18.2 (stable)
+ * Build fixes [#64378 ...]
+
 0.18.1 (stable)
  * Put the external tools in $libdir/p11-kit
  * Documentation build fixes
