@@ -9,3 +9,8 @@ leakcheck:
 	@for dir in $(SUBDIRS); do \
 		test "$$dir" = "." || $(MAKE) -C $$dir leakcheck; \
 	done
+
+hellcheck:
+	@for dir in $(SUBDIRS); do \
+		test "$$dir" = "." || $(MAKE) -C $$dir hellcheck; \
+	done

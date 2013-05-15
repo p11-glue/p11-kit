@@ -41,7 +41,7 @@ done
 		echo '	done'
 	done
 
-	for target in distcheck memcheck leakcheck install upload-coverage \
+	for target in distcheck memcheck leakcheck hellcheck install upload-coverage \
 		coverage upload-doc upload-release transifex; do
 		echo "$target:"
 		echo '	$(MAKE) -C ./local' $target

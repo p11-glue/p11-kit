@@ -531,8 +531,8 @@ initialize_module_unlocked_reentrant (Module *mod)
 	mod->initialize_thread = self;
 
 	/* Change over to the module specific mutex */
-	p11_mutex_lock (&mod->initialize_mutex);
 	p11_unlock ();
+	p11_mutex_lock (&mod->initialize_mutex);
 
 	if (!mod->initialize_called) {
 		assert (mod->funcs);

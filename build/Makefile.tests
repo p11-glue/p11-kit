@@ -12,8 +12,13 @@ MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet --trace-child
 
 LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes
 
+HELLCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=82 --quiet --tool=helgrind
+
 memcheck: all
 	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(MEMCHECK_ENV)" check-TESTS
 
 leakcheck: all
 	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(LEAKCHECK_ENV)" check-TESTS
+
+hellcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(HELLCHECK_ENV)" check-TESTS
