@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 NOCONFIGURE=1 ./autogen.sh
 
 ARGS="--enable-strict --enable-debug"
