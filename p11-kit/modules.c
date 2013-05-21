@@ -815,7 +815,7 @@ unmanaged_for_module_inlock (Module *mod)
  * If this function fails, then an error message will be available via the
  * p11_kit_message() function.
  *
- * Deprecated: Since: 0.16: Use p11_kit_modules_load() instead.
+ * Deprecated: Since: 0.19.0: Use p11_kit_modules_load() instead.
  *
  * Returns: CKR_OK if the initialization succeeded, or an error code.
  */
@@ -910,7 +910,7 @@ finalize_registered_inlock_reentrant (void)
  * If this function fails, then an error message will be available via the
  * p11_kit_message() function.
  *
- * Deprecated: Since 0.16: Use p11_kit_modules_release() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_modules_release() instead.
  *
  * Returns: CKR_OK if the finalization succeeded, or an error code.
  */
@@ -1041,7 +1041,7 @@ list_registered_modules_inlock (void)
  *
  * The returned modules are unmanaged.
  *
- * Deprecated: Since 0.16: Use p11_kit_modules_load() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_modules_load() instead.
  *
  * Returns: A list of all the registered modules. Use the free() function to
  * free the list.
@@ -1073,7 +1073,7 @@ p11_kit_registered_modules (void)
  * You can use p11_kit_registered_modules() to get a list of all the registered
  * modules. This name is specified by the registered module configuration.
  *
- * Deprecated: Since 0.16: Use p11_kit_module_get_name() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_module_get_name() instead.
  *
  * Returns: A newly allocated string containing the module name, or
  *     <code>NULL</code> if no such registered module exists. Use free() to
@@ -1179,7 +1179,7 @@ p11_kit_module_get_flags (CK_FUNCTION_LIST *module)
  * Lookup a registered PKCS\#11 module by its name. This name is specified by
  * the registered module configuration.
  *
- * Deprecated: Since 0.16: Use p11_kit_module_for_name() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_module_for_name() instead.
  *
  * Returns: a pointer to a PKCS\#11 module, or <code>NULL</code> if this name was
  *     not found.
@@ -1289,7 +1289,7 @@ module_get_option_inlock (Module *mod,
  * <code>NULL</code> module argument is specified, then this will lookup
  * the configuration option in the global config file.
  *
- * Deprecated: Since 0.16: Use p11_kit_config_option() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_config_option() instead.
  *
  * Returns: A newly allocated string containing the option value, or
  *     <code>NULL</code> if the registered module or the option were not found.
@@ -2158,7 +2158,7 @@ p11_kit_modules_finalize_and_release (CK_FUNCTION_LIST **modules)
  * If this function fails, then an error message will be available via the
  * p11_kit_message() function.
  *
- * Deprecated: Since 0.16: Use p11_kit_module_initialize() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_module_initialize() instead.
  *
  * Returns: CKR_OK if the initialization was successful.
  */
@@ -2346,7 +2346,7 @@ p11_kit_module_load (const char *module_path,
  * If this function fails, then an error message will be available via the
  * p11_kit_message() function.
  *
- * Deprecated: Since 0.16: Use p11_kit_module_finalize() and
+ * Deprecated: Since 0.19.0: Use p11_kit_module_finalize() and
  * 	p11_kit_module_release() instead.
  *
  * Returns: CKR_OK if the finalization was successful.
@@ -2540,7 +2540,7 @@ p11_module_release_inlock_reentrant (CK_FUNCTION_LIST *module)
  * If this function fails, then an error message will be available via the
  * p11_kit_message() function.
  *
- * Deprecated: Since 0.16: Use p11_kit_module_load() instead.
+ * Deprecated: Since 0.19.0: Use p11_kit_module_load() instead.
  *
  * Returns: CKR_OK if the initialization was successful.
  */
