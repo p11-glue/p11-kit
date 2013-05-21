@@ -147,6 +147,6 @@ test_check_attr_msg (const char *file,
 		p11_test_fail (file, line, function,
 		               "attribute does not match: (expected %s but found %s)",
 		               p11_attr_to_string (expected, klass),
-		               p11_attr_to_string (attr, klass));
+		               attr ? p11_attr_to_string (attr, klass) : "(null)");
 	}
 }

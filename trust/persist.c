@@ -41,12 +41,15 @@
 #include "lexer.h"
 #include "pem.h"
 #include "persist.h"
+#include "pkcs11.h"
+#include "pkcs11x.h"
 #include "url.h"
 
 #include "basic.asn.h"
 
 #include <libtasn1.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -55,12 +58,6 @@
 struct _p11_persist {
 	p11_dict *constants;
 	node_asn *asn1_defs;
-
-	/* Used during parsing */
-	p11_lexer lexer;
-	CK_ATTRIBUTE *attrs;
-	bool result;
-	bool skip;
 };
 
 bool
@@ -127,6 +124,20 @@ parse_string (p11_lexer *lexer,
 	return true;
 }
 
+static void
+format_string (CK_ATTRIBUTE *attr,
+               p11_buffer *buf)
+{
+	const unsigned char *value;
+
+	assert (attr->ulValueLen != CK_UNAVAILABLE_INFORMATION);
+
+	p11_buffer_add (buf, "\"", 1);
+	value = attr->pValue;
+	p11_url_encode (value, value + attr->ulValueLen, P11_URL_VERBATIM, buf);
+	p11_buffer_add (buf, "\"", 1);
+}
+
 static bool
 parse_bool (p11_lexer *lexer,
             CK_ATTRIBUTE *attr)
@@ -152,6 +163,56 @@ parse_bool (p11_lexer *lexer,
 }
 
 static bool
+format_bool (CK_ATTRIBUTE *attr,
+             p11_buffer *buf)
+{
+	const CK_BBOOL *value;
+
+	if (attr->ulValueLen != sizeof (CK_BBOOL))
+		return false;
+
+	switch (attr->type) {
+	case CKA_TOKEN:
+	case CKA_PRIVATE:
+	case CKA_TRUSTED:
+	case CKA_SENSITIVE:
+	case CKA_ENCRYPT:
+	case CKA_DECRYPT:
+	case CKA_WRAP:
+	case CKA_UNWRAP:
+	case CKA_SIGN:
+	case CKA_SIGN_RECOVER:
+	case CKA_VERIFY:
+	case CKA_VERIFY_RECOVER:
+	case CKA_DERIVE:
+	case CKA_EXTRACTABLE:
+	case CKA_LOCAL:
+	case CKA_NEVER_EXTRACTABLE:
+	case CKA_ALWAYS_SENSITIVE:
+	case CKA_MODIFIABLE:
+	case CKA_SECONDARY_AUTH:
+	case CKA_ALWAYS_AUTHENTICATE:
+	case CKA_WRAP_WITH_TRUSTED:
+	case CKA_RESET_ON_INIT:
+	case CKA_HAS_RESET:
+	case CKA_COLOR:
+		break;
+	default:
+		return false;
+	}
+
+	value = attr->pValue;
+	if (*value == CK_TRUE)
+		p11_buffer_add (buf, "true", -1);
+	else if (*value == CK_FALSE)
+		p11_buffer_add (buf, "false", -1);
+	else
+		return false;
+
+	return true;
+}
+
+static bool
 parse_ulong (p11_lexer *lexer,
              CK_ATTRIBUTE *attr)
 {
@@ -168,6 +229,66 @@ parse_ulong (p11_lexer *lexer,
 	attr->pValue = memdup (&value, sizeof (CK_ULONG));
 	return_val_if_fail (attr->pValue != NULL, false);
 	attr->ulValueLen = sizeof (CK_ULONG);
+	return true;
+}
+
+static bool
+format_ulong (CK_ATTRIBUTE *attr,
+              p11_buffer *buf)
+{
+	char string[sizeof (CK_ULONG) * 4];
+	const CK_ULONG *value;
+
+	if (attr->ulValueLen != sizeof (CK_ULONG))
+		return false;
+
+	switch (attr->type) {
+	case CKA_CERTIFICATE_CATEGORY:
+	case CKA_CERTIFICATE_TYPE:
+	case CKA_CLASS:
+	case CKA_JAVA_MIDP_SECURITY_DOMAIN:
+	case CKA_KEY_GEN_MECHANISM:
+	case CKA_KEY_TYPE:
+	case CKA_MECHANISM_TYPE:
+	case CKA_MODULUS_BITS:
+	case CKA_PRIME_BITS:
+	case CKA_SUB_PRIME_BITS:
+	case CKA_VALUE_BITS:
+	case CKA_VALUE_LEN:
+	case CKA_TRUST_DIGITAL_SIGNATURE:
+	case CKA_TRUST_NON_REPUDIATION:
+	case CKA_TRUST_KEY_ENCIPHERMENT:
+	case CKA_TRUST_DATA_ENCIPHERMENT:
+	case CKA_TRUST_KEY_AGREEMENT:
+	case CKA_TRUST_KEY_CERT_SIGN:
+	case CKA_TRUST_CRL_SIGN:
+	case CKA_TRUST_SERVER_AUTH:
+	case CKA_TRUST_CLIENT_AUTH:
+	case CKA_TRUST_CODE_SIGNING:
+	case CKA_TRUST_EMAIL_PROTECTION:
+	case CKA_TRUST_IPSEC_END_SYSTEM:
+	case CKA_TRUST_IPSEC_TUNNEL:
+	case CKA_TRUST_IPSEC_USER:
+	case CKA_TRUST_TIME_STAMPING:
+	case CKA_TRUST_STEP_UP_APPROVED:
+	case CKA_X_ASSERTION_TYPE:
+	case CKA_AUTH_PIN_FLAGS:
+	case CKA_HW_FEATURE_TYPE:
+	case CKA_PIXEL_X:
+	case CKA_PIXEL_Y:
+	case CKA_RESOLUTION:
+	case CKA_CHAR_ROWS:
+	case CKA_CHAR_COLUMNS:
+	case CKA_BITS_PER_PIXEL:
+		break;
+	default:
+		return false;
+	}
+
+	value = attr->pValue;
+	snprintf (string, sizeof (string), "%lu", *value);
+
+	p11_buffer_add (buf, string, -1);
 	return true;
 }
 
@@ -190,6 +311,70 @@ parse_constant (p11_persist *persist,
 	return true;
 }
 
+static bool
+format_constant (CK_ATTRIBUTE *attr,
+                 p11_buffer *buf)
+{
+	const p11_constant *table;
+	const CK_ULONG *value;
+	const char *nick;
+
+	if (attr->ulValueLen != sizeof (CK_ULONG))
+		return false;
+
+	switch (attr->type) {
+	case CKA_TRUST_DIGITAL_SIGNATURE:
+	case CKA_TRUST_NON_REPUDIATION:
+	case CKA_TRUST_KEY_ENCIPHERMENT:
+	case CKA_TRUST_DATA_ENCIPHERMENT:
+	case CKA_TRUST_KEY_AGREEMENT:
+	case CKA_TRUST_KEY_CERT_SIGN:
+	case CKA_TRUST_CRL_SIGN:
+	case CKA_TRUST_SERVER_AUTH:
+	case CKA_TRUST_CLIENT_AUTH:
+	case CKA_TRUST_CODE_SIGNING:
+	case CKA_TRUST_EMAIL_PROTECTION:
+	case CKA_TRUST_IPSEC_END_SYSTEM:
+	case CKA_TRUST_IPSEC_TUNNEL:
+	case CKA_TRUST_IPSEC_USER:
+	case CKA_TRUST_TIME_STAMPING:
+		table = p11_constant_trusts;
+		break;
+	case CKA_CLASS:
+		table = p11_constant_classes;
+		break;
+	case CKA_CERTIFICATE_TYPE:
+		table = p11_constant_certs;
+		break;
+	case CKA_KEY_TYPE:
+		table = p11_constant_keys;
+		break;
+	case CKA_X_ASSERTION_TYPE:
+		table = p11_constant_asserts;
+		break;
+	case CKA_CERTIFICATE_CATEGORY:
+		table = p11_constant_categories;
+		break;
+	case CKA_KEY_GEN_MECHANISM:
+	case CKA_MECHANISM_TYPE:
+		table = p11_constant_mechanisms;
+		break;
+	default:
+		table = NULL;
+	};
+
+	if (!table)
+		return false;
+
+	value = attr->pValue;
+	nick = p11_constant_nick (table, *value);
+
+	if (!nick)
+		return false;
+
+	p11_buffer_add (buf, nick, -1);
+	return true;
+}
 
 static bool
 parse_oid (p11_persist *persist,
@@ -249,6 +434,60 @@ parse_oid (p11_persist *persist,
 }
 
 static bool
+format_oid (p11_persist *persist,
+            CK_ATTRIBUTE *attr,
+            p11_buffer *buf)
+{
+	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
+	node_asn *asn;
+	char *data;
+	int len;
+	int ret;
+
+	if (attr->type != CKA_OBJECT_ID)
+		return false;
+
+	if (!persist->asn1_defs) {
+		ret = asn1_array2tree (basic_asn1_tab, &persist->asn1_defs, message);
+		if (ret != ASN1_SUCCESS) {
+			p11_debug_precond ("failed to load BASIC definitions: %s: %s\n",
+			                   asn1_strerror (ret), message);
+			return false;
+		}
+	}
+
+	ret = asn1_create_element (persist->asn1_defs, "BASIC.ObjectIdentifier", &asn);
+	if (ret != ASN1_SUCCESS) {
+		p11_debug_precond ("failed to create ObjectIdentifier element: %s\n",
+		                   asn1_strerror (ret));
+		return false;
+	}
+
+	ret = asn1_der_decoding (&asn, attr->pValue, attr->ulValueLen, message);
+	if (ret != ASN1_SUCCESS) {
+		p11_debug_precond ("invalid oid value: %s", message);
+		return false;
+	}
+
+	len = 0;
+	ret = asn1_read_value (asn, "", NULL, &len);
+	return_val_if_fail (ret == ASN1_MEM_ERROR, false);
+
+	data = calloc (len + 1, 1);
+	return_val_if_fail (data != NULL, false);
+
+	ret = asn1_read_value (asn, "", data, &len);
+	return_val_if_fail (ret == ASN1_SUCCESS, false);
+
+	asn1_delete_structure (&asn);
+
+	p11_buffer_add (buf, data, len - 1);
+	free (data);
+
+	return true;
+}
+
+static bool
 parse_value (p11_persist *persist,
              p11_lexer *lexer,
              CK_ATTRIBUTE *attr)
@@ -260,16 +499,41 @@ parse_value (p11_persist *persist,
 	       parse_oid (persist, lexer, attr);
 }
 
+static void
+format_value (p11_persist *persist,
+              CK_ATTRIBUTE *attr,
+              p11_buffer *buf)
+{
+	assert (attr->ulValueLen != CK_UNAVAILABLE_INFORMATION);
+
+	if (format_bool (attr, buf) ||
+	    format_constant (attr, buf) ||
+	    format_ulong (attr, buf) ||
+	    format_oid (persist, attr, buf))
+		return;
+
+	/* Everything else as string */
+	format_string (attr, buf);
+}
+
 static bool
 field_to_attribute (p11_persist *persist,
-                    p11_lexer *lexer)
+                    p11_lexer *lexer,
+                    CK_ATTRIBUTE **attrs)
 {
 	CK_ATTRIBUTE attr = { 0, };
+	char *end;
 
-	attr.type = p11_constant_resolve (persist->constants, lexer->tok.field.name);
-	if (attr.type == CKA_INVALID || !p11_constant_name (p11_constant_types, attr.type)) {
-		p11_lexer_msg (lexer, "invalid or unsupported attribute");
-		return false;
+	end = NULL;
+	attr.type = strtoul (lexer->tok.field.name, &end, 10);
+
+	/* Not a valid number value, probably a constant */
+	if (!end || *end != '\0') {
+		attr.type = p11_constant_resolve (persist->constants, lexer->tok.field.name);
+		if (attr.type == CKA_INVALID || !p11_constant_name (p11_constant_types, attr.type)) {
+			p11_lexer_msg (lexer, "invalid or unsupported attribute");
+			return false;
+		}
 	}
 
 	if (!parse_value (persist, lexer, &attr)) {
@@ -277,10 +541,30 @@ field_to_attribute (p11_persist *persist,
 		return false;
 	}
 
-	persist->attrs = p11_attrs_take (persist->attrs, attr.type,
-	                                 attr.pValue, attr.ulValueLen);
+	*attrs = p11_attrs_take (*attrs, attr.type,
+	                         attr.pValue, attr.ulValueLen);
 	return true;
 }
+
+static CK_ATTRIBUTE *
+certificate_to_attributes (const unsigned char *der,
+                           size_t length)
+{
+	CK_OBJECT_CLASS klassv = CKO_CERTIFICATE;
+	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+
+	CK_ATTRIBUTE klass = { CKA_CLASS, &klassv, sizeof (klassv) };
+	CK_ATTRIBUTE certificate_type = { CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) };
+	CK_ATTRIBUTE value = { CKA_VALUE, (void *)der, length };
+
+	return p11_attrs_build (NULL, &klass, &certificate_type, &value, NULL);
+}
+
+typedef struct {
+	p11_lexer *lexer;
+	CK_ATTRIBUTE *attrs;
+	bool result;
+} parse_block;
 
 static void
 on_pem_block (const char *type,
@@ -288,40 +572,30 @@ on_pem_block (const char *type,
               size_t length,
               void *user_data)
 {
-	CK_OBJECT_CLASS klassv = CKO_CERTIFICATE;
-	CK_CERTIFICATE_TYPE x509 = CKC_X_509;
-	CK_BBOOL modifiablev = CK_FALSE;
-
-	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &modifiablev, sizeof (modifiablev) };
-	CK_ATTRIBUTE klass = { CKA_CLASS, &klassv, sizeof (klassv) };
-	CK_ATTRIBUTE certificate_type = { CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) };
-	CK_ATTRIBUTE value = { CKA_VALUE, };
-
-	p11_persist *store = user_data;
+	parse_block *pb = user_data;
 	CK_ATTRIBUTE *attrs;
 
 	if (strcmp (type, "CERTIFICATE") == 0) {
-		value.pValue = (void *)contents;
-		value.ulValueLen = length;
-		attrs = p11_attrs_build (NULL, &klass, &modifiable, &certificate_type, &value, NULL);
-		store->attrs = p11_attrs_merge (store->attrs, attrs, false);
-		store->result = true;
+		attrs = certificate_to_attributes (contents, length);
+		pb->attrs = p11_attrs_merge (pb->attrs, attrs, false);
+		pb->result = true;
 
 	} else {
-		p11_lexer_msg (&store->lexer, "unsupported pem block in store");
-		store->result = false;
+		p11_lexer_msg (pb->lexer, "unsupported pem block in store");
+		pb->result = false;
 	}
 }
 
 static bool
-pem_to_attributes (p11_persist *store,
-                   p11_lexer *lexer)
+pem_to_attributes (p11_lexer *lexer,
+                   CK_ATTRIBUTE **attrs)
 {
+	parse_block pb = { lexer, *attrs, false };
 	unsigned int count;
 
 	count = p11_pem_parse (lexer->tok.pem.begin,
 	                       lexer->tok.pem.length,
-	                       on_pem_block, store);
+	                       on_pem_block, &pb);
 
 	if (count == 0) {
 		p11_lexer_msg (lexer, "invalid pem block");
@@ -330,7 +604,8 @@ pem_to_attributes (p11_persist *store,
 
 	/* The lexer should have only matched one block */
 	return_val_if_fail (count == 1, false);
-	return store->result;
+	*attrs = pb.attrs;
+	return pb.result;
 }
 
 bool
@@ -340,50 +615,53 @@ p11_persist_read (p11_persist *persist,
                   size_t length,
                   p11_array *objects)
 {
-	bool failed = false;
+	p11_lexer lexer;
+	CK_ATTRIBUTE *attrs;
+	bool failed;
+	bool skip;
 
 	return_val_if_fail (persist != NULL, false);
 	return_val_if_fail (objects != NULL, false);
 
-	persist->skip = false;
-	persist->result = false;
-	persist->attrs = NULL;
+	skip = false;
+	attrs = NULL;
+	failed = false;
 
-	p11_lexer_init (&persist->lexer, filename, (const char *)data, length);
-	while (p11_lexer_next (&persist->lexer, &failed)) {
-		switch (persist->lexer.tok_type) {
+	p11_lexer_init (&lexer, filename, (const char *)data, length);
+	while (p11_lexer_next (&lexer, &failed)) {
+		switch (lexer.tok_type) {
 		case TOK_SECTION:
-			if (persist->attrs && !p11_array_push (objects, persist->attrs))
+			if (attrs && !p11_array_push (objects, attrs))
 				return_val_if_reached (false);
-			persist->attrs = NULL;
-			if (strcmp (persist->lexer.tok.section.name, PERSIST_HEADER) != 0) {
-				p11_lexer_msg (&persist->lexer, "unrecognized or invalid section header");
-				persist->skip = true;
+			attrs = NULL;
+			if (strcmp (lexer.tok.section.name, PERSIST_HEADER) != 0) {
+				p11_lexer_msg (&lexer, "unrecognized or invalid section header");
+				skip = true;
 			} else {
-				persist->attrs = p11_attrs_build (NULL, NULL);
-				return_val_if_fail (persist->attrs != NULL, false);
-				persist->skip = false;
+				attrs = p11_attrs_build (NULL, NULL);
+				return_val_if_fail (attrs != NULL, false);
+				skip = false;
 			}
 			failed = false;
 			break;
 		case TOK_FIELD:
-			if (persist->skip) {
+			if (skip) {
 				failed = false;
-			} else if (!persist->attrs) {
-				p11_lexer_msg (&persist->lexer, "attribute before p11-kit section header");
+			} else if (!attrs) {
+				p11_lexer_msg (&lexer, "attribute before p11-kit section header");
 				failed = true;
 			} else {
-				failed = !field_to_attribute (persist, &persist->lexer);
+				failed = !field_to_attribute (persist, &lexer, &attrs);
 			}
 			break;
 		case TOK_PEM:
-			if (persist->skip) {
+			if (skip) {
 				failed = false;
-			} else if (!persist->attrs) {
-				p11_lexer_msg (&persist->lexer, "pem block before p11-kit section header");
+			} else if (!attrs) {
+				p11_lexer_msg (&lexer, "pem block before p11-kit section header");
 				failed = true;
 			} else {
-				failed = !pem_to_attributes (persist, &persist->lexer);
+				failed = !pem_to_attributes (&lexer, &attrs);
 			}
 			break;
 		}
@@ -392,10 +670,72 @@ p11_persist_read (p11_persist *persist,
 			break;
 	}
 
-	if (persist->attrs && !p11_array_push (objects, persist->attrs))
+	if (attrs && !p11_array_push (objects, attrs))
 		return_val_if_reached (false);
-	persist->attrs = NULL;
+	attrs = NULL;
 
-	p11_lexer_done (&persist->lexer);
+	p11_lexer_done (&lexer);
 	return !failed;
+}
+
+static CK_ATTRIBUTE *
+find_certificate_value (CK_ATTRIBUTE *attrs)
+{
+	CK_OBJECT_CLASS klass;
+	CK_CERTIFICATE_TYPE type;
+
+	if (!p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) ||
+	    klass != CKO_CERTIFICATE)
+		return NULL;
+	if (!p11_attrs_find_ulong (attrs, CKA_CERTIFICATE_TYPE, &type) ||
+	    type != CKC_X_509)
+		return NULL;
+	return p11_attrs_find_valid (attrs, CKA_VALUE);
+}
+
+bool
+p11_persist_write (p11_persist *persist,
+                   CK_ATTRIBUTE *attrs,
+                   p11_buffer *buf)
+{
+	char string[sizeof (CK_ULONG) * 4];
+	CK_ATTRIBUTE *cert_value;
+	const char *nick;
+	int i;
+
+	cert_value = find_certificate_value (attrs);
+
+	p11_buffer_add (buf, "[" PERSIST_HEADER "]\n", -1);
+
+	for (i = 0; !p11_attrs_terminator (attrs + i); i++) {
+
+		/* These are written later? */
+		if (cert_value != NULL &&
+		    (attrs[i].type == CKA_CLASS ||
+		     attrs[i].type == CKA_CERTIFICATE_TYPE ||
+		     attrs[i].type == CKA_VALUE))
+			continue;
+
+		if (attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION)
+			continue;
+
+		nick = p11_constant_nick (p11_constant_types, attrs[i].type);
+		if (nick == NULL) {
+			snprintf (string, sizeof (string), "%lu", attrs[i].type);
+			nick = string;
+		}
+
+		p11_buffer_add (buf, nick, -1);
+		p11_buffer_add (buf, ": ", 2);
+		format_value (persist, attrs + i, buf);
+		p11_buffer_add (buf, "\n", 1);
+	}
+
+	if (cert_value != NULL) {
+		if (!p11_pem_write (cert_value->pValue, cert_value->ulValueLen, "CERTIFICATE", buf))
+			return_val_if_reached (false);
+	}
+
+	p11_buffer_add (buf, "\n", 1);
+	return p11_buffer_ok (buf);
 }

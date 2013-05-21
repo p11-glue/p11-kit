@@ -675,9 +675,13 @@ parse_p11_kit_persist (p11_parser *parser,
                        const unsigned char *data,
                        size_t length)
 {
+	CK_BBOOL modifiablev = CK_FALSE;
+	CK_ATTRIBUTE *attrs;
 	p11_array *objects;
 	bool ret;
 	int i;
+
+	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &modifiablev, sizeof (modifiablev) };
 
 	if (!p11_persist_magic (data, length))
 		return P11_PARSE_UNRECOGNIZED;
@@ -692,8 +696,10 @@ parse_p11_kit_persist (p11_parser *parser,
 
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
 	if (ret) {
-		for (i = 0; i < objects->num; i++)
-			sink_object (parser, objects->elem[i]);
+		for (i = 0; i < objects->num; i++) {
+			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
+			sink_object (parser, attrs);
+		}
 	}
 
 	p11_array_free (objects);

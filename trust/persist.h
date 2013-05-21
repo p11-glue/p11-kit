@@ -54,6 +54,10 @@ bool             p11_persist_read   (p11_persist *persist,
                                      size_t length,
                                      p11_array *objects);
 
+bool             p11_persist_write  (p11_persist *persist,
+                                     CK_ATTRIBUTE *object,
+                                     p11_buffer *buf);
+
 void             p11_persist_free   (p11_persist *persist);
 
 #endif /* P11_PERSIST_H_ */
