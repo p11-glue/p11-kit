@@ -73,6 +73,7 @@ p11_kit_config_option
 <SECTION>
 <FILE>p11-kit-util</FILE>
 p11_kit_strerror
+p11_kit_message
 p11_kit_space_strdup
 p11_kit_space_strlen
 <SUBSECTION Private>
@@ -92,7 +93,6 @@ p11_kit_uri_type_t
 p11_kit_set_progname
 p11_kit_be_quiet
 p11_kit_be_loud
-p11_kit_message
 p11_kit_destroyer
 P11KitIter
 p11_kit_iter_new

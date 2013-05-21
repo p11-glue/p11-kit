@@ -109,9 +109,9 @@ void                   p11_kit_be_quiet                     (void);
 
 void                   p11_kit_be_loud                      (void);
 
-const char *           p11_kit_message                      (void);
-
 #endif
+
+const char *           p11_kit_message                      (void);
 
 #ifdef __cplusplus
 } /* extern "C" */
