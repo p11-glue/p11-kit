@@ -35,6 +35,9 @@
 #ifndef P11_PEM_H_
 #define P11_PEM_H_
 
+#include "buffer.h"
+#include "compat.h"
+
 #include <sys/types.h>
 
 typedef void   (*p11_pem_sink)   (const char *type,
@@ -47,9 +50,9 @@ unsigned int   p11_pem_parse     (const char *input,
                                   p11_pem_sink sink,
                                   void *user_data);
 
-char *         p11_pem_write     (const unsigned char *contents,
+bool           p11_pem_write     (const unsigned char *contents,
                                   size_t length,
                                   const char *type,
-                                  size_t *pem_len);
+                                  p11_buffer *buf);
 
 #endif /* P11_PEM_H_ */

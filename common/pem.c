@@ -242,35 +242,31 @@ p11_pem_parse (const char *data,
 	return nfound;
 }
 
-char *
+bool
 p11_pem_write (const unsigned char *contents,
                size_t length,
                const char *type,
-               size_t *pem_len)
+               p11_buffer *buf)
 {
-	p11_buffer buffer;
 	size_t estimate;
 	size_t prefix;
 	char *target;
 	int len;
 
-	return_val_if_fail (contents || !length, NULL);
-	return_val_if_fail (type, NULL);
-	return_val_if_fail (pem_len, NULL);
+	return_val_if_fail (contents || !length, false);
+	return_val_if_fail (type, false);
+	return_val_if_fail (buf, false);
 
 	/* Estimate from base64 data. Algorithm from Glib reference */
 	estimate = length * 4 / 3 + 7;
 	estimate += estimate / 64 + 1;
 
-	if (!p11_buffer_init_null (&buffer, estimate + 128))
-		return_val_if_reached (NULL);
+	p11_buffer_add (buf, ARMOR_PREF_BEGIN, ARMOR_PREF_BEGIN_L);
+	p11_buffer_add (buf, type, -1);
+	p11_buffer_add (buf, ARMOR_SUFF, ARMOR_SUFF_L);
 
-	p11_buffer_add (&buffer, ARMOR_PREF_BEGIN, ARMOR_PREF_BEGIN_L);
-	p11_buffer_add (&buffer, type, -1);
-	p11_buffer_add (&buffer, ARMOR_SUFF, ARMOR_SUFF_L);
-
-	prefix = buffer.len;
-	target = p11_buffer_append (&buffer, estimate);
+	prefix = buf->len;
+	target = p11_buffer_append (buf, estimate);
 	return_val_if_fail (target != NULL, NULL);
 
 	/*
@@ -282,13 +278,13 @@ p11_pem_write (const unsigned char *contents,
 
 	assert (len > 0);
 	assert (len <= estimate);
-	buffer.len = prefix + len;
+	buf->len = prefix + len;
 
-	p11_buffer_add (&buffer, "\n", 1);
-	p11_buffer_add (&buffer, ARMOR_PREF_END, ARMOR_PREF_END_L);
-	p11_buffer_add (&buffer, type, -1);
-	p11_buffer_add (&buffer, ARMOR_SUFF, ARMOR_SUFF_L);
-	p11_buffer_add (&buffer, "\n", 1);
+	p11_buffer_add (buf, "\n", 1);
+	p11_buffer_add (buf, ARMOR_PREF_END, ARMOR_PREF_END_L);
+	p11_buffer_add (buf, type, -1);
+	p11_buffer_add (buf, ARMOR_SUFF, ARMOR_SUFF_L);
+	p11_buffer_add (buf, "\n", 1);
 
-	return p11_buffer_steal (&buffer, pem_len);
+	return p11_buffer_ok (buf);
 }

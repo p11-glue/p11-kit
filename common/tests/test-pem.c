@@ -306,24 +306,27 @@ static void
 test_pem_write (void)
 {
 	WriteFixture *fixture;
-	size_t length;
-	char *output;
+	p11_buffer buf;
 	unsigned int count;
 	int i;
 
 	for (i = 0; write_fixtures[i].input != NULL; i++) {
 		fixture = write_fixtures + i;
 
-		output = p11_pem_write ((unsigned char *)fixture->input,
-		                        fixture->length,
-		                        fixture->type, &length);
-		assert_str_eq (fixture->output, output);
-		assert_num_eq (strlen (fixture->output), length);
+		if (!p11_buffer_init_null (&buf, 0))
+			assert_not_reached ();
 
-		count = p11_pem_parse (output, length, on_parse_written, fixture);
+		if (!p11_pem_write ((unsigned char *)fixture->input,
+		                    fixture->length,
+		                    fixture->type, &buf))
+			assert_not_reached ();
+		assert_str_eq (fixture->output, buf.data);
+		assert_num_eq (strlen (fixture->output), buf.len);
+
+		count = p11_pem_parse (buf.data, buf.len, on_parse_written, fixture);
 		assert_num_eq (1, count);
 
-		free (output);
+		p11_buffer_uninit (&buf);
 	}
 }
 

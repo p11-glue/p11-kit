@@ -313,33 +313,34 @@ p11_extract_openssl_bundle (P11KitIter *iter,
                             p11_extract_info *ex)
 {
 	p11_save_file *file;
+	p11_buffer output;
 	p11_buffer buf;
 	char *comment;
 	bool ret = true;
-	size_t length;
 	bool first;
 	CK_RV rv;
-	char *pem;
 
 	file = p11_save_open_file (ex->destination, ex->flags);
 	if (!file)
 		return false;
 
 	first = true;
+	p11_buffer_init (&output, 0);
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
 		p11_buffer_init (&buf, 1024);
+		if (!p11_buffer_reset (&output, 2048))
+			return_val_if_reached (false);
 
 		if (prepare_pem_contents (ex, &buf)) {
-			pem = p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &length);
-			return_val_if_fail (pem != NULL, false);
+			if (!p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &output))
+				return_val_if_reached (false);
 
 			comment = p11_extract_info_comment (ex, first);
 			first = false;
 
 			ret = p11_save_write (file, comment, -1) &&
-			      p11_save_write (file, pem, length);
+			      p11_save_write (file, output.data, output.len);
 
-			free (pem);
 			free (comment);
 		}
 
@@ -348,6 +349,8 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 		if (!ret)
 			break;
 	}
+
+	p11_buffer_uninit (&output);
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
 		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
@@ -584,11 +587,10 @@ p11_extract_openssl_directory (P11KitIter *iter,
 	const char *filename;
 	p11_save_file *file;
 	p11_save_dir *dir;
+	p11_buffer output;
 	p11_buffer buf;
 	bool ret = true;
 	char *name;
-	size_t length;
-	char *pem;
 	CK_RV rv;
 
 #ifdef OS_UNIX
@@ -600,14 +602,17 @@ p11_extract_openssl_directory (P11KitIter *iter,
 		return false;
 
 	p11_buffer_init (&buf, 0);
+	p11_buffer_init (&output, 0);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
 		if (!p11_buffer_reset (&buf, 1024))
 			return_val_if_reached (false);
+		if (!p11_buffer_reset (&output, 2048))
+			return_val_if_reached (false);
 
 		if (prepare_pem_contents (ex, &buf)) {
-			pem = p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &length);
-			return_val_if_fail (pem != NULL, false);
+			if (!p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &output))
+				return_val_if_reached (false);
 
 			name = p11_extract_info_filename (ex);
 			return_val_if_fail (name != NULL, false);
@@ -645,12 +650,11 @@ p11_extract_openssl_directory (P11KitIter *iter,
 #endif /* OS_UNIX */
 
 			if (ret)
-				ret = p11_save_write_and_finish (file, pem, length);
+				ret = p11_save_write_and_finish (file, output.data, output.len);
 			else
 				p11_save_finish_file (file, false);
 
 			free (name);
-			free (pem);
 		}
 
 		if (!ret)
@@ -658,6 +662,7 @@ p11_extract_openssl_directory (P11KitIter *iter,
 	}
 
 	p11_buffer_uninit (&buf);
+	p11_buffer_uninit (&output);
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
 		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
