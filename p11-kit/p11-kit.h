@@ -36,7 +36,6 @@
 #define __P11_KIT_H__
 
 #include "p11-kit/pkcs11.h"
-#include "deprecated.h"
 
 /*
  * If the caller is using the PKCS#11 GNU calling convention, then we cater
@@ -45,7 +44,10 @@
 #ifdef CRYPTOKI_GNU
 typedef ck_rv_t CK_RV;
 typedef struct ck_function_list* CK_FUNCTION_LIST_PTR;
+typedef struct ck_function_list CK_FUNCTION_LIST;
 #endif
+
+#include "p11-kit/deprecated.h"
 
 #ifdef __cplusplus
 extern "C" {
