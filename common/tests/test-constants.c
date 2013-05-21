@@ -44,56 +44,38 @@
 #include "debug.h"
 
 static void
-test_constants (void)
+test_constants (void *arg)
 {
-	const p11_constant *constant;
+	const p11_constant *constant = arg;
 	p11_dict *nicks, *names;
 	CK_ULONG check;
-	int i, j;
-
-	static const p11_constant *constants[] = {
-		p11_constant_types,
-		p11_constant_classes,
-		p11_constant_trusts,
-		p11_constant_certs,
-		p11_constant_keys,
-		p11_constant_asserts,
-		p11_constant_categories,
-		p11_constant_mechanisms,
-		p11_constant_users,
-		p11_constant_states,
-		p11_constant_returns,
-		NULL
-	};
+	int i;
 
 	nicks = p11_constant_reverse (true);
 	names = p11_constant_reverse (false);
 
-	for (j = 0; constants[j] != NULL; j++) {
-		constant = constants[j];
-		for (i = 1; constant[i].value != CKA_INVALID; i++) {
-			if (constant[i].value < constant[i - 1].value)
-				assert_fail ("attr constant out of order", constant[i].name);
+	for (i = 1; constant[i].value != CKA_INVALID; i++) {
+		if (constant[i].value < constant[i - 1].value)
+			assert_fail ("attr constant out of order", constant[i].name);
+	}
+	for (i = 0; constant[i].value != CKA_INVALID; i++) {
+		assert_ptr_not_null (constant[i].name);
+
+		if (constant[i].nick) {
+			assert_str_eq (constant[i].nick,
+				       p11_constant_nick (constant, constant[i].value));
 		}
-		for (i = 0; constant[i].value != CKA_INVALID; i++) {
-			assert_ptr_not_null (constant[i].name);
 
-			if (constant[i].nick) {
-				assert_str_eq (constant[i].nick,
-				               p11_constant_nick (constant, constant[i].value));
-			}
+		assert_str_eq (constant[i].name,
+			       p11_constant_name (constant, constant[i].value));
 
-			assert_str_eq (constant[i].name,
-			               p11_constant_name (constant, constant[i].value));
-
-			if (constant[i].nick) {
-				check = p11_constant_resolve (nicks, constant[i].nick);
-				assert_num_eq (constant[i].value, check);
-			}
-
-			check = p11_constant_resolve (names, constant[i].name);
+		if (constant[i].nick) {
+			check = p11_constant_resolve (nicks, constant[i].nick);
 			assert_num_eq (constant[i].value, check);
 		}
+
+		check = p11_constant_resolve (names, constant[i].name);
+		assert_num_eq (constant[i].value, check);
 	}
 
 	p11_dict_free (names);
@@ -104,7 +86,17 @@ int
 main (int argc,
       char *argv[])
 {
-	p11_test (test_constants, "/constants/all");
+	p11_testx (test_constants, (void *)p11_constant_types, "/constants/types");
+	p11_testx (test_constants, (void *)p11_constant_classes, "/constants/classes");
+	p11_testx (test_constants, (void *)p11_constant_trusts, "/constants/trusts");
+	p11_testx (test_constants, (void *)p11_constant_certs, "/constants/certs");
+	p11_testx (test_constants, (void *)p11_constant_keys, "/constants/keys");
+	p11_testx (test_constants, (void *)p11_constant_asserts, "/constants/asserts");
+	p11_testx (test_constants, (void *)p11_constant_categories, "/constants/categories");
+	p11_testx (test_constants, (void *)p11_constant_mechanisms, "/constants/mechanisms");
+	p11_testx (test_constants, (void *)p11_constant_users, "/constants/users");
+	p11_testx (test_constants, (void *)p11_constant_states, "/constants/states");
+	p11_testx (test_constants, (void *)p11_constant_returns, "/constants/returns");
 
 	return p11_test_run (argc, argv);
 }
