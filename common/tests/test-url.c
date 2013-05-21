@@ -120,28 +120,34 @@ static void
 test_encode (void)
 {
 	const unsigned char *input = (unsigned char *)"TEST";
-	char *encoded;
-	size_t length;
+	p11_buffer buf;
 
-	encoded = p11_url_encode (input, input + 5, "", &length);
-	assert_str_eq ("%54%45%53%54%00", (char *)encoded);
-	assert_num_eq (15, length);
+	if (!p11_buffer_init_null (&buf, 5))
+		assert_not_reached ();
 
-	free (encoded);
+	p11_url_encode (input, input + 5, "", &buf);
+	assert (p11_buffer_ok (&buf));
+	assert_str_eq ("%54%45%53%54%00", (char *)buf.data);
+	assert_num_eq (15, buf.len);
+
+	p11_buffer_uninit (&buf);
 }
 
 static void
 test_encode_verbatim (void)
 {
 	const unsigned char *input = (unsigned char *)"TEST";
-	char *encoded;
-	size_t length;
+	p11_buffer buf;
 
-	encoded = p11_url_encode (input, input + 5, "ES", &length);
-	assert_str_eq ("%54ES%54%00", (char *)encoded);
-	assert_num_eq (11, length);
+	if (!p11_buffer_init_null (&buf, 5))
+		assert_not_reached ();
 
-	free (encoded);
+	p11_url_encode (input, input + 5, "ES", &buf);
+	assert (p11_buffer_ok (&buf));
+	assert_str_eq ("%54ES%54%00", (char *)buf.data);
+	assert_num_eq (11, buf.len);
+
+	p11_buffer_uninit (&buf);
 }
 
 int

@@ -625,6 +625,18 @@ p11_kit_uri_new (void)
 	return uri;
 }
 
+static void
+format_name_equals (p11_buffer *buffer,
+                    bool *is_first,
+                    const char *name)
+{
+	if (!*is_first)
+		p11_buffer_add (buffer, ";", 1);
+	p11_buffer_add (buffer, name, -1);
+	p11_buffer_add (buffer, "=", 1);
+	*is_first = false;
+}
+
 static bool
 format_raw_string (p11_buffer *buffer,
                    bool *is_first,
@@ -635,12 +647,8 @@ format_raw_string (p11_buffer *buffer,
 	if (!value)
 		return true;
 
-	if (!*is_first)
-		p11_buffer_add (buffer, ";", 1);
-	p11_buffer_add (buffer, name, -1);
-	p11_buffer_add (buffer, "=", 1);
+	format_name_equals (buffer, is_first, name);
 	p11_buffer_add (buffer, value, -1);
-	*is_first = false;
 
 	return p11_buffer_ok (buffer);
 }
@@ -653,16 +661,14 @@ format_encode_string (p11_buffer *buffer,
                       size_t n_value,
                       bool force)
 {
-	char *encoded;
-	bool ret;
+	/* Not set */
+	if (!value)
+		return true;
 
-	encoded = p11_url_encode (value, value + n_value,
-	                          force ? "" : P11_URL_VERBATIM, NULL);
-	return_val_if_fail (encoded != NULL, false);
+	format_name_equals (buffer, is_first, name);
+	p11_url_encode (value, value + n_value, force ? "" : P11_URL_VERBATIM, buffer);
 
-	ret = format_raw_string (buffer, is_first, name, encoded);
-	free (encoded);
-	return ret;
+	return p11_buffer_ok (buffer);
 }
 
 

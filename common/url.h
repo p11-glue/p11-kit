@@ -36,6 +36,7 @@
 #ifndef P11_URL_H
 #define P11_URL_H
 
+#include "buffer.h"
 #include "compat.h"
 
 #include <stdlib.h>
@@ -51,9 +52,9 @@ unsigned char *       p11_url_decode        (const char *value,
                                              const char *skip,
                                              size_t *length);
 
-char *                p11_url_encode        (const unsigned char *value,
+void                  p11_url_encode        (const unsigned char *value,
                                              const unsigned char *end,
                                              const char *verbatim,
-                                             size_t *length);
+                                             p11_buffer *buf);
 
 #endif /* P11_URL_H */

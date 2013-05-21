@@ -103,40 +103,31 @@ p11_url_decode (const char *value,
 	return result;
 }
 
-char *
+void
 p11_url_encode (const unsigned char *value,
                 const unsigned char *end,
                 const char *verbatim,
-                size_t *length)
+                p11_buffer *buf)
 {
-	char *p;
-	char *result;
+	char hex[3];
 
 	assert (value <= end);
 
-	/* Just allocate for worst case */
-	result = malloc (((end - value) * 3) + 1);
-	return_val_if_fail (result != NULL, NULL);
-
 	/* Now loop through looking for escapes */
-	p = result;
 	while (value != end) {
 
 		/* These characters we let through verbatim */
 		if (*value && strchr (verbatim, *value) != NULL) {
-			*(p++) = *(value++);
+			p11_buffer_add (buf, value, 1);
 
 		/* All others get encoded */
 		} else {
-			*(p++) = '%';
-			*(p++) = HEX_CHARS[((unsigned char)*value) >> 4];
-			*(p++) = HEX_CHARS[((unsigned char)*value) & 0x0F];
-			++value;
+			hex[0] = '%';
+			hex[1] = HEX_CHARS[((unsigned char)*value) >> 4];
+			hex[2] = HEX_CHARS[((unsigned char)*value) & 0x0F];
+			p11_buffer_add (buf, hex, 3);
 		}
-	}
 
-	*p = 0;
-	if (length)
-		*length = p - result;
-	return result;
+		++value;
+	}
 }
