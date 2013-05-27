@@ -1,3 +1,14 @@
+0.19.0 (unstable)
+ * Refactor API to be able to handle managed modules
+ * Deprecate much of old p11-kit API
+ * Implement concept of managed modules
+ * Make C_CloseAllSessions function work for multiple callers
+ * New dependency on libffi
+ * Fix possible threading problems reported by hellgrind
+ * Add log-calls option
+ * Mark p11_kit_message() as a stable function
+ * Use our own unit testing framework
+
 0.18.2 (stable)
  * Build fixes [#64378 ...]
 
