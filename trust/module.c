@@ -65,10 +65,11 @@
 #define BASE_SLOT_ID   18UL
 
 static struct _Shared {
+	int initialized;
 	p11_dict *sessions;
 	p11_array *tokens;
 	char *paths;
-} gl = { NULL, NULL };
+} gl = { 0, NULL, NULL, NULL };
 
 /* Used during FindObjects */
 typedef struct _FindObjects {
@@ -354,10 +355,13 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 	} else {
 		p11_lock ();
 
-			if (!gl.sessions) {
+			if (gl.initialized == 0) {
+				p11_debug ("trust module is not initialized");
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
-			} else {
+			} else if (gl.initialized == 1) {
+				p11_debug ("doing finalization");
+
 				free (gl.paths);
 				gl.paths = NULL;
 
@@ -368,6 +372,11 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 				gl.tokens = NULL;
 
 				rv = CKR_OK;
+				gl.initialized = 0;
+
+			} else {
+				gl.initialized--;
+				p11_debug ("trust module still initialized %d times", gl.initialized);
 			}
 
 		p11_unlock ();
@@ -416,11 +425,17 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 			rv = CKR_CANT_LOCK;
 		}
 
+		if (rv == CKR_OK && gl.initialized != 0) {
+			p11_debug ("trust module already initialized %d times",
+			           gl.initialized);
+
 		/*
 		 * We support setting the socket path and other arguments from from the
 		 * pReserved pointer, similar to how NSS PKCS#11 components are initialized.
 		 */
-		if (rv == CKR_OK) {
+		} else if (rv == CKR_OK) {
+			p11_debug ("doing initialization");
+
 			if (args->pReserved)
 				parse_arguments ((const char*)args->pReserved);
 
@@ -437,6 +452,8 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 				rv = CKR_GENERAL_ERROR;
 			}
 		}
+
+		gl.initialized++;
 
 	p11_unlock ();
 

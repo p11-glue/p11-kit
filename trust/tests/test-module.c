@@ -144,6 +144,54 @@ test_get_slot_list (CuTest *cu)
 }
 
 static void
+test_multi_initialize (CuTest *cu)
+{
+	static CK_C_INITIALIZE_ARGS args =
+		{ NULL, NULL, NULL, NULL, CKF_OS_LOCKING_OK, NULL, };
+	CK_FUNCTION_LIST *module;
+	CK_SESSION_HANDLE session;
+	CK_SLOT_ID slots[8];
+	CK_SESSION_INFO info;
+	CK_ULONG count;
+	CK_RV rv;
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = module->C_Initialize (&args);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	count = 8;
+	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertTrue (cu, count > 0);
+
+	rv = module->C_OpenSession (slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = module->C_GetSessionInfo (session, &info);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertTrue (cu, info.slotID == slots[0]);
+
+	rv = module->C_Initialize (&args);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = module->C_GetSessionInfo (session, &info);
+	CuAssertTrue (cu, rv == CKR_OK);
+	CuAssertTrue (cu, info.slotID == slots[0]);
+
+	rv = module->C_Finalize (NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = module->C_Finalize (NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = module->C_Finalize (NULL);
+	CuAssertIntEquals (cu, CKR_CRYPTOKI_NOT_INITIALIZED, rv);
+}
+
+static void
 test_get_slot_info (CuTest *cu)
 {
 	CK_SLOT_ID slots[NUM_SLOTS];
@@ -1009,6 +1057,7 @@ main (void)
 	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
+	SUITE_ADD_TEST (suite, test_multi_initialize);
 	SUITE_ADD_TEST (suite, test_get_slot_list);
 	SUITE_ADD_TEST (suite, test_get_slot_info);
 	SUITE_ADD_TEST (suite, test_get_token_info);
