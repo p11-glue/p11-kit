@@ -144,6 +144,23 @@ test_get_slot_list (CuTest *cu)
 }
 
 static void
+test_null_initialize (CuTest *cu)
+{
+	CK_FUNCTION_LIST *module;
+	CK_RV rv;
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = module->C_Initialize (NULL);
+	CuAssertTrue (cu, rv == CKR_OK);
+
+	rv = module->C_Finalize (NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+}
+
+static void
 test_multi_initialize (CuTest *cu)
 {
 	static CK_C_INITIALIZE_ARGS args =
@@ -1057,6 +1074,7 @@ main (void)
 	putenv ("P11_KIT_STRICT=1");
 	p11_library_init ();
 
+	SUITE_ADD_TEST (suite, test_null_initialize);
 	SUITE_ADD_TEST (suite, test_multi_initialize);
 	SUITE_ADD_TEST (suite, test_get_slot_list);
 	SUITE_ADD_TEST (suite, test_get_slot_info);

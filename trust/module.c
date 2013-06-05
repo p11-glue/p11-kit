@@ -389,6 +389,8 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 static CK_RV
 sys_C_Initialize (CK_VOID_PTR init_args)
 {
+	static CK_C_INITIALIZE_ARGS def_args =
+		{ NULL, NULL, NULL, NULL, CKF_OS_LOCKING_OK, NULL, };
 	CK_C_INITIALIZE_ARGS *args = NULL;
 	int supplied_ok;
 	CK_RV rv;
@@ -403,8 +405,9 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 
 		rv = CKR_OK;
 
-		/* pReserved must be NULL */
 		args = init_args;
+		if (args == NULL)
+			args = &def_args;
 
 		/* ALL supplied function pointers need to have the value either NULL or non-NULL. */
 		supplied_ok = (args->CreateMutex == NULL && args->DestroyMutex == NULL &&
