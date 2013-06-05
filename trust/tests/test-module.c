@@ -140,6 +140,71 @@ test_get_slot_list (void)
 }
 
 static void
+test_null_initialize (void)
+{
+	CK_FUNCTION_LIST *module;
+	CK_RV rv;
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = module->C_Initialize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = module->C_Finalize (NULL);
+	assert_num_eq (CKR_OK, rv);
+}
+
+static void
+test_multi_initialize (void)
+{
+	static CK_C_INITIALIZE_ARGS args =
+		{ NULL, NULL, NULL, NULL, CKF_OS_LOCKING_OK, NULL, };
+	CK_FUNCTION_LIST *module;
+	CK_SESSION_HANDLE session;
+	CK_SLOT_ID slots[8];
+	CK_SESSION_INFO info;
+	CK_ULONG count;
+	CK_RV rv;
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = module->C_Initialize (&args);
+	assert_num_eq (rv, CKR_OK);
+
+	count = 8;
+	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_cmp (count, >, 0);
+
+	rv = module->C_OpenSession (slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = module->C_GetSessionInfo (session, &info);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (info.slotID, slots[0]);
+
+	rv = module->C_Initialize (&args);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = module->C_GetSessionInfo (session, &info);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (info.slotID, slots[0]);
+
+	rv = module->C_Finalize (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = module->C_Finalize (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = module->C_Finalize (NULL);
+	assert_num_eq (CKR_CRYPTOKI_NOT_INITIALIZED, rv);
+}
+
+static void
 test_get_slot_info (void)
 {
 	CK_SLOT_ID slots[NUM_SLOTS];
@@ -933,6 +998,8 @@ main (int argc,
 	p11_test (test_get_slot_info, "/module/get_slot_info");
 
 	p11_fixture (NULL, NULL);
+	p11_test (test_null_initialize, "/module/initialize-null");
+	p11_test (test_multi_initialize, "/module/initialize-multi");
 	p11_test (test_get_token_info, "/module/get_token_info");
 
 	p11_fixture (setup, teardown);

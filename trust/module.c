@@ -66,10 +66,11 @@
 #define BASE_SLOT_ID   18UL
 
 static struct _Shared {
+	int initialized;
 	p11_dict *sessions;
 	p11_array *tokens;
 	char *paths;
-} gl = { NULL, NULL };
+} gl = { 0, NULL, NULL, NULL };
 
 /* Used during FindObjects */
 typedef struct _FindObjects {
@@ -284,10 +285,13 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 	} else {
 		p11_lock ();
 
-			if (!gl.sessions) {
+			if (gl.initialized == 0) {
+				p11_debug ("trust module is not initialized");
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
-			} else {
+			} else if (gl.initialized == 1) {
+				p11_debug ("doing finalization");
+
 				free (gl.paths);
 				gl.paths = NULL;
 
@@ -298,6 +302,11 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 				gl.tokens = NULL;
 
 				rv = CKR_OK;
+				gl.initialized = 0;
+
+			} else {
+				gl.initialized--;
+				p11_debug ("trust module still initialized %d times", gl.initialized);
 			}
 
 		p11_unlock ();
@@ -310,6 +319,8 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 static CK_RV
 sys_C_Initialize (CK_VOID_PTR init_args)
 {
+	static CK_C_INITIALIZE_ARGS def_args =
+		{ NULL, NULL, NULL, NULL, CKF_OS_LOCKING_OK, NULL, };
 	CK_C_INITIALIZE_ARGS *args = NULL;
 	int supplied_ok;
 	CK_RV rv;
@@ -324,8 +335,9 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 
 		rv = CKR_OK;
 
-		/* pReserved must be NULL */
 		args = init_args;
+		if (args == NULL)
+			args = &def_args;
 
 		/* ALL supplied function pointers need to have the value either NULL or non-NULL. */
 		supplied_ok = (args->CreateMutex == NULL && args->DestroyMutex == NULL &&
@@ -346,11 +358,17 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 			rv = CKR_CANT_LOCK;
 		}
 
+		if (rv == CKR_OK && gl.initialized != 0) {
+			p11_debug ("trust module already initialized %d times",
+			           gl.initialized);
+
 		/*
 		 * We support setting the socket path and other arguments from from the
 		 * pReserved pointer, similar to how NSS PKCS#11 components are initialized.
 		 */
-		if (rv == CKR_OK) {
+		} else if (rv == CKR_OK) {
+			p11_debug ("doing initialization");
+
 			if (args->pReserved)
 				p11_argv_parse ((const char*)args->pReserved, parse_argument, NULL);
 
@@ -367,6 +385,8 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 				rv = CKR_GENERAL_ERROR;
 			}
 		}
+
+		gl.initialized++;
 
 	p11_unlock ();
 

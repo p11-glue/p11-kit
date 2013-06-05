@@ -9,6 +9,11 @@
  * Mark p11_kit_message() as a stable function
  * Use our own unit testing framework
 
+0.18.3 (stable)
+ * Fix reinitialization of trust module [#65401]
+ * Fix crash in trust module C_Initialize
+ * Mac OS fixes [#57714]
+
 0.18.2 (stable)
  * Build fixes [#64378 ...]
 
