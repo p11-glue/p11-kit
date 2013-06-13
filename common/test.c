@@ -121,6 +121,8 @@ p11_test_fail (const char *filename,
 	printf ("# in %s() at %s:%d\n", function, filename, line);
 
 	free (output);
+
+	longjmp (gl.jump, 1);
 }
 
 static void
