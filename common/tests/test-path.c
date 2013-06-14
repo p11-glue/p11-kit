@@ -173,6 +173,22 @@ test_absolute (void)
 #endif
 }
 
+static void
+test_parent (void)
+{
+	check_equals_and_free ("/", p11_path_parent ("/root"));
+	check_equals_and_free ("/", p11_path_parent ("/root/"));
+	check_equals_and_free ("/", p11_path_parent ("/root//"));
+	check_equals_and_free ("/root", p11_path_parent ("/root/second"));
+	check_equals_and_free ("/root", p11_path_parent ("/root//second"));
+	check_equals_and_free ("/root", p11_path_parent ("/root//second//"));
+	check_equals_and_free ("/root", p11_path_parent ("/root///second"));
+	check_equals_and_free ("/root/second", p11_path_parent ("/root/second/test.file"));
+	assert_ptr_eq (NULL, p11_path_parent ("/"));
+	assert_ptr_eq (NULL, p11_path_parent ("//"));
+	assert_ptr_eq (NULL, p11_path_parent (""));
+}
+
 int
 main (int argc,
       char *argv[])
@@ -181,6 +197,7 @@ main (int argc,
 	p11_test (test_build, "/path/build");
 	p11_test (test_expand, "/path/expand");
 	p11_test (test_absolute, "/path/absolute");
+	p11_test (test_parent, "/path/parent");
 
 	return p11_test_run (argc, argv);
 }

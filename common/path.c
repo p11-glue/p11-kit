@@ -262,3 +262,39 @@ p11_path_build (const char *path,
 	built[at] = '\0';
 	return built;
 }
+
+char *
+p11_path_parent (const char *path)
+{
+	const char *e;
+	char *parent;
+	bool had = false;
+
+	return_val_if_fail (path != NULL, NULL);
+
+	/* Find the end of the last component */
+	e = path + strlen (path);
+	while (e != path && is_path_component_or_null (*e))
+		e--;
+
+	/* Find the beginning of the last component */
+	while (e != path && !is_path_component_or_null (*e)) {
+		had = true;
+		e--;
+	}
+
+	/* Find the end of the last component */
+	while (e != path && is_path_component_or_null (*e))
+		e--;
+
+	if (e == path) {
+		if (!had)
+			return NULL;
+		parent = strdup ("/");
+	} else {
+		parent = strndup (path, (e - path) + 1);
+	}
+
+	return_val_if_fail (parent != NULL, NULL);
+	return parent;
+}

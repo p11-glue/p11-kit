@@ -59,4 +59,6 @@ char *       p11_path_build     (const char *path,
 
 bool         p11_path_absolute  (const char *path);
 
+char *       p11_path_parent    (const char *path);
+
 #endif /* P11_PATH_H__ */
