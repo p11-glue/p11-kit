@@ -75,33 +75,33 @@ test_base (void)
 	}
 }
 
-#define check_equals_and_free(tc, ex, ac) \
+#define check_equals_and_free(ex, ac) \
 	do { assert_str_eq (ex, ac); free (ac); } while (0)
 
 static void
 test_build (void)
 {
 #ifdef OS_UNIX
-	check_equals_and_free (tc, "/root/second",
+	check_equals_and_free ("/root/second",
 	                       p11_path_build ("/root", "second", NULL));
-	check_equals_and_free (tc, "/root/second",
+	check_equals_and_free ("/root/second",
 	                       p11_path_build ("/root", "/second", NULL));
-	check_equals_and_free (tc, "/root/second",
+	check_equals_and_free ("/root/second",
 	                       p11_path_build ("/root/", "second", NULL));
-	check_equals_and_free (tc, "/root/second/third",
+	check_equals_and_free ("/root/second/third",
 	                       p11_path_build ("/root", "second", "third", NULL));
-	check_equals_and_free (tc, "/root/second/third",
+	check_equals_and_free ("/root/second/third",
 	                       p11_path_build ("/root", "/second/third", NULL));
 #else /* OS_WIN32 */
-	check_equals_and_free (tc, "C:\\root\\second",
+	check_equals_and_free ("C:\\root\\second",
 	                       p11_path_build ("C:\\root", "second", NULL));
-	check_equals_and_free (tc, "C:\\root\\second",
+	check_equals_and_free ("C:\\root\\second",
 	                       p11_path_build ("C:\\root", "\\second", NULL));
-	check_equals_and_free (tc, "C:\\root\\second",
+	check_equals_and_free ("C:\\root\\second",
 	                       p11_path_build ("C:\\root\\", "second", NULL));
-	check_equals_and_free (tc, "C:\\root\\second\\third",
+	check_equals_and_free ("C:\\root\\second\\third",
 	                       p11_path_build ("C:\\root", "second", "third", NULL));
-	check_equals_and_free (tc, "C:\\root\\second/third",
+	check_equals_and_free ("C:\\root\\second/third",
 	                       p11_path_build ("C:\\root", "second/third", NULL));
 #endif
 }
@@ -113,28 +113,34 @@ test_expand (void)
 
 #ifdef OS_UNIX
 	putenv ("HOME=/home/blah");
-	check_equals_and_free (tc, "/home/blah/my/path",
+	check_equals_and_free ("/home/blah/my/path",
 	                       p11_path_expand ("$HOME/my/path"));
-	check_equals_and_free (tc, "/home/blah/my/path",
+	check_equals_and_free ("/home/blah/my/path",
 	                       p11_path_expand ("~/my/path"));
+	check_equals_and_free ("/home/blah",
+	                       p11_path_expand ("$HOME"));
+	check_equals_and_free ("/home/blah",
+	                       p11_path_expand ("~"));
 	putenv ("TEMP=/tmpdir");
-	check_equals_and_free (tc, "/tmpdir/my/path",
+	check_equals_and_free ("/tmpdir/my/path",
 	                       p11_path_expand ("$TEMP/my/path"));
+	check_equals_and_free ("/tmpdir",
+	                       p11_path_expand ("$TEMP"));
 #else /* OS_WIN32 */
 	putenv ("HOME=C:\\Users\\blah");
-	check_equals_and_free (tc, "C:\\Users\\blah\\path",
+	check_equals_and_free ("C:\\Users\\blah\\path",
 	                       p11_path_expand ("$HOME/path"));
-	check_equals_and_free (tc, "C:\\Users\\blah\\path",
+	check_equals_and_free ("C:\\Users\\blah\\path",
 	                       p11_path_expand ("$HOME\\path"));
-	check_equals_and_free (tc, "C:\\Users\\blah\\path",
+	check_equals_and_free ("C:\\Users\\blah\\path",
 	                       p11_path_expand ("~/path"));
-	check_equals_and_free (tc, "C:\\Users\\blah\\path",
+	check_equals_and_free ("C:\\Users\\blah\\path",
 	                       p11_path_expand ("~\\path"));
 
 	putenv ("TEMP=C:\\Temp Directory");
-	check_equals_and_free (tc, "C:\\Temp Directory\\path",
+	check_equals_and_free ("C:\\Temp Directory\\path",
 	                       p11_path_expand ("$TEMP/path"));
-	check_equals_and_free (tc, "C:\\Temp Directory\\path",
+	check_equals_and_free ("C:\\Temp Directory\\path",
 	                       p11_path_expand ("$TEMP\\path"));
 #endif
 

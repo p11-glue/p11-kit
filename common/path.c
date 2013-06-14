@@ -97,6 +97,9 @@ expand_homedir (const char *remainder)
 {
 	const char *env;
 
+	if (remainder[0] == '\0')
+		remainder = NULL;
+
 	env = getenv ("HOME");
 	if (env && env[0]) {
 		return p11_path_build (env, remainder, NULL);
@@ -137,6 +140,9 @@ expand_tempdir (const char *remainder)
 {
 	const char *env;
 
+	if (remainder[0] == '\0')
+		remainder = NULL;
+
 	env = getenv ("TEMP");
 	if (env && env[0]) {
 		return p11_path_build (env, remainder, NULL);
@@ -164,10 +170,10 @@ expand_tempdir (const char *remainder)
 	}
 }
 
-static bool
+static inline bool
 is_path_component_or_null (char ch)
 {
-	return (ch == '0' || ch == '/'
+	return (ch == '\0' || ch == '/'
 #ifdef OS_WIN32
 			|| ch == '\\'
 #endif
@@ -181,15 +187,15 @@ p11_path_expand (const char *path)
 
 	if (strncmp (path, "~", 1) == 0 &&
 	    is_path_component_or_null (path[1])) {
-		return expand_homedir (path + 2);
+		return expand_homedir (path + 1);
 
 	} else if (strncmp (path, "$HOME", 5) == 0 &&
 	    is_path_component_or_null (path[5])) {
-		return expand_homedir (path + 6);
+		return expand_homedir (path + 5);
 
 	} else if (strncmp (path, "$TEMP", 5) == 0 &&
 	    is_path_component_or_null (path[5])) {
-		return expand_tempdir (path + 6);
+		return expand_tempdir (path + 5);
 
 	} else {
 		return strdup (path);
