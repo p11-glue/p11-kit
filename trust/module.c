@@ -544,7 +544,7 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->firmwareVersion.minor = 0;
 		info->hardwareVersion.major = PACKAGE_MAJOR;
 		info->hardwareVersion.minor = PACKAGE_MINOR;
-		info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
+		info->flags = CKF_TOKEN_INITIALIZED;
 		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
 		strncpy ((char*)info->model, TOKEN_MODEL, 16);
 		strncpy ((char*)info->serialNumber, TOKEN_SERIAL_NUMBER, 16);
@@ -566,6 +566,9 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 			length = sizeof (info->label);
 		memset (info->label, ' ', sizeof (info->label));
 		memcpy (info->label, label, length);
+
+		if (!p11_token_is_writable (token))
+			info->flags |= CKF_WRITE_PROTECTED;
 	}
 
 	p11_unlock ();

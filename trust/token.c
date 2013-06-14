@@ -65,6 +65,9 @@ struct _p11_token {
 	char *label;
 	CK_SLOT_ID slot;
 	int loaded;
+
+	bool checked_writable;
+	bool is_writable;
 };
 
 static int
@@ -313,4 +316,48 @@ p11_token_index (p11_token *token)
 {
 	return_val_if_fail (token != NULL, NULL);
 	return token->index;
+}
+
+static bool
+check_writable_directory (const char *path)
+{
+	struct stat sb;
+	char *parent;
+	bool ret;
+
+	if (access (path, W_OK) == 0)
+		return stat (path, &sb) == 0 && S_ISDIR (sb.st_mode);
+
+	switch (errno) {
+	case EACCES:
+		return false;
+	case ENOENT:
+		parent = p11_path_parent (path);
+		if (parent == NULL)
+			ret = false;
+		else
+			ret = check_writable_directory (parent);
+		free (parent);
+		return ret;
+	default:
+		p11_message ("couldn't access: %s: %s", path, strerror (errno));
+		return false;
+	}
+}
+
+bool
+p11_token_is_writable (p11_token *token)
+{
+	/*
+	 * This function attempts to determine whether a later write
+	 * to this token will succeed so we can setup the appropriate
+	 * token flags. Yes, it is racy, but that's inherent to the problem.
+	 */
+
+	if (!token->checked_writable) {
+		token->is_writable = check_writable_directory (token->path);
+		token->checked_writable = true;
+	}
+
+	return token->is_writable;
 }

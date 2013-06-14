@@ -60,10 +60,13 @@
 #define NUM_SLOTS 3
 
 static CK_OBJECT_CLASS data = CKO_DATA;
+static CK_BBOOL vtrue = CK_TRUE;
+static CK_BBOOL vfalse = CK_FALSE;
 
 struct {
 	CK_FUNCTION_LIST *module;
 	CK_SLOT_ID slots[NUM_SLOTS];
+	char *directory;
 } test;
 
 static void
@@ -109,7 +112,44 @@ teardown (void *unused)
 	rv = test.module->C_Finalize (NULL);
 	assert (rv == CKR_OK);
 
+	free (test.directory);
+
 	memset (&test, 0, sizeof (test));
+}
+
+static void
+setup_writable (void *unused)
+{
+	CK_C_INITIALIZE_ARGS args;
+	char *arguments;
+	CK_ULONG count;
+	CK_RV rv;
+
+	memset (&test, 0, sizeof (test));
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&test.module);
+	assert (rv == CKR_OK);
+
+	test.directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
+	if (!mkdtemp (test.directory))
+		assert_not_reached ();
+
+	memset (&args, 0, sizeof (args));
+	if (asprintf (&arguments, "paths='%s'", test.directory) < 0)
+		assert (false && "not reached");
+	args.pReserved = arguments;
+	args.flags = CKF_OS_LOCKING_OK;
+
+	rv = test.module->C_Initialize (&args);
+	assert (rv == CKR_OK);
+
+	free (arguments);
+
+	count = 1;
+	rv = test.module->C_GetSlotList (CK_TRUE, test.slots, &count);
+	assert (rv == CKR_OK);
+	assert (count == 1);
 }
 
 static void
@@ -587,8 +627,6 @@ static void
 test_find_builtin (void)
 {
 	CK_OBJECT_CLASS klass = CKO_NSS_BUILTIN_ROOT_LIST;
-	CK_BBOOL vtrue = CK_TRUE;
-	CK_BBOOL vfalse = CK_FALSE;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_CLASS, &klass, sizeof (klass) },
@@ -987,6 +1025,18 @@ test_login_logout (void)
 	assert (rv == CKR_USER_NOT_LOGGED_IN);
 }
 
+static void
+test_token_writable (void)
+{
+	CK_TOKEN_INFO info;
+	CK_RV rv;
+
+	rv = test.module->C_GetTokenInfo (test.slots[0], &info);
+
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (info.flags & CKF_WRITE_PROTECTED, 0);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1019,6 +1069,9 @@ main (int argc,
 	p11_test (test_find_serial_der_decoded, "/module/find_serial_der_decoded");
 	p11_test (test_find_serial_der_mismatch, "/module/find_serial_der_mismatch");
 	p11_test (test_login_logout, "/module/login_logout");
+
+	p11_fixture (setup_writable, teardown);
+	p11_test (test_token_writable, "/module/token-writable");
 
 	return p11_test_run (argc, argv);
 }

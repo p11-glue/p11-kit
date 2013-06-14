@@ -42,6 +42,7 @@
 
 #include "attrs.h"
 #include "debug.h"
+#include "path.h"
 #include "pkcs11x.h"
 #include "message.h"
 #include "token.h"
@@ -206,6 +207,75 @@ test_token_slot (void *path)
 	assert_num_eq (333, p11_token_get_slot (test.token));
 }
 
+static void
+test_not_writable (void)
+{
+	p11_token *token;
+
+	token = p11_token_new (333, "/", "Label");
+	assert (!p11_token_is_writable (token));
+	p11_token_free (token);
+
+	token = p11_token_new (333, "", "Label");
+	assert (!p11_token_is_writable (token));
+	p11_token_free (token);
+
+	token = p11_token_new (333, "/non-existant", "Label");
+	assert (!p11_token_is_writable (token));
+	p11_token_free (token);
+}
+
+static void
+test_writable_exists (void)
+{
+	char *directory;
+	p11_token *token;
+
+	directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
+	if (!mkdtemp (directory))
+		assert_not_reached ();
+
+	token = p11_token_new (333, directory, "Label");
+
+	/* A writable directory since we created it */
+	assert (p11_token_is_writable (token));
+
+	p11_token_free (token);
+
+	if (rmdir (directory) < 0)
+		assert_not_reached ();
+
+	free (directory);
+}
+
+static void
+test_writable_no_exist (void)
+{
+	char *directory;
+	p11_token *token;
+	char *path;
+
+	directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
+	if (!mkdtemp (directory))
+		assert_not_reached ();
+
+	path = p11_path_build (directory, "subdir", NULL);
+	assert (path != NULL);
+
+	token = p11_token_new (333, path, "Label");
+	free (path);
+
+	/* A writable directory since parent is writable */
+	assert (p11_token_is_writable (token));
+
+	p11_token_free (token);
+
+	if (rmdir (directory) < 0)
+		assert_not_reached ();
+
+	free (directory);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -218,5 +288,11 @@ main (int argc,
 	p11_testx (test_token_path, "/wheee", "/token/path");
 	p11_testx (test_token_label, "/wheee", "/token/label");
 	p11_testx (test_token_slot, "/unneeded", "/token/slot");
+
+	p11_fixture (NULL, NULL);
+	p11_test (test_not_writable, "/token/not-writable");
+	p11_test (test_writable_exists, "/token/writable-exists");
+	p11_test (test_writable_no_exist, "/token/writable-no-exist");
+
 	return p11_test_run (argc, argv);
 }

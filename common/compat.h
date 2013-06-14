@@ -103,6 +103,8 @@ char *       strdup_path_mangle (const char *template);
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
+#include <io.h>
+
 /* Oh ... my ... god */
 #undef CreateMutex
 
@@ -164,6 +166,7 @@ void        p11_mmap_close  (p11_mmap *map);
 #include <pthread.h>
 #include <dlfcn.h>
 #include <time.h>
+#include <unistd.h>
 
 typedef pthread_mutex_t p11_mutex_t;
 

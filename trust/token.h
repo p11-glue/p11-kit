@@ -57,4 +57,6 @@ const char *    p11_token_get_label   (p11_token *token);
 
 CK_SLOT_ID      p11_token_get_slot    (p11_token *token);
 
+bool            p11_token_is_writable (p11_token *token);
+
 #endif /* P11_TOKEN_H_ */
