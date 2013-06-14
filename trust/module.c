@@ -134,6 +134,19 @@ lookup_object_inlock (p11_session *session,
 	return NULL;
 }
 
+static CK_RV
+check_index_writable (p11_session *session,
+                      p11_index *index)
+{
+	if (index == p11_token_index (session->token)) {
+		if (!p11_token_is_writable (session->token))
+			return CKR_TOKEN_WRITE_PROTECTED;
+		else if (!session->read_write)
+			return CKR_SESSION_READ_ONLY;
+	}
+
+	return CKR_OK;
+}
 
 static CK_RV
 lookup_slot_inlock (CK_SLOT_ID id,
@@ -610,8 +623,8 @@ sys_C_InitToken (CK_SLOT_ID id,
                  CK_ULONG pin_len,
                  CK_UTF8CHAR_PTR label)
 {
-	return_val_if_fail (check_slot (id), CKR_SLOT_ID_INVALID);
-	return_val_if_reached (CKR_TOKEN_WRITE_PROTECTED);
+	p11_debug ("not supported");
+	return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 static CK_RV
@@ -648,13 +661,16 @@ sys_C_OpenSession (CK_SLOT_ID id,
 		} else if (!(flags & CKF_SERIAL_SESSION)) {
 			rv = CKR_SESSION_PARALLEL_NOT_SUPPORTED;
 
-		} else if (flags & CKF_RW_SESSION) {
+		} else if ((flags & CKF_RW_SESSION) &&
+		           !p11_token_is_writable (token)) {
 			rv = CKR_TOKEN_WRITE_PROTECTED;
 
 		} else {
 			session = p11_session_new (token);
 			if (p11_dict_set (gl.sessions, &session->handle, session)) {
 				rv = CKR_OK;
+				if (flags & CKF_RW_SESSION)
+					session->read_write = true;
 				*handle = session->handle;
 				p11_debug ("session: %lu", *handle);
 			} else {
@@ -771,7 +787,8 @@ sys_C_InitPIN (CK_SESSION_HANDLE handle,
                CK_UTF8CHAR_PTR pin,
                CK_ULONG pin_len)
 {
-	return_val_if_reached (CKR_TOKEN_WRITE_PROTECTED);
+	p11_debug ("not supported");
+	return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 static CK_RV
@@ -781,7 +798,8 @@ sys_C_SetPIN (CK_SESSION_HANDLE handle,
               CK_UTF8CHAR_PTR new_pin,
               CK_ULONG new_pin_len)
 {
-	return_val_if_reached (CKR_TOKEN_WRITE_PROTECTED);
+	p11_debug ("not supported");
+	return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 static CK_RV
@@ -854,7 +872,8 @@ sys_C_CreateObject (CK_SESSION_HANDLE handle,
                     CK_OBJECT_HANDLE_PTR new_object)
 {
 	p11_session *session;
-	CK_BBOOL token;
+	p11_index *index;
+	CK_BBOOL val;
 	CK_RV rv;
 
 	return_val_if_fail (new_object != NULL, CKR_ARGUMENTS_BAD);
@@ -865,12 +884,15 @@ sys_C_CreateObject (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			if (p11_attrs_findn_bool (template, count, CKA_TOKEN, &token) && token)
-				rv = CKR_TOKEN_WRITE_PROTECTED;
+			if (p11_attrs_findn_bool (template, count, CKA_TOKEN, &val) && val)
+				index = p11_token_index (session->token);
+			else
+				index = session->index;
+			rv = check_index_writable (session, index);
 		}
 
 		if (rv == CKR_OK)
-			rv = p11_index_add (session->index, template, count, new_object);
+			rv = p11_index_add (index, template, count, new_object);
 
 	p11_unlock ();
 
@@ -891,6 +913,7 @@ sys_C_CopyObject (CK_SESSION_HANDLE handle,
 	p11_session *session;
 	CK_ATTRIBUTE *original;
 	CK_ATTRIBUTE *attrs;
+	p11_index *index;
 	CK_BBOOL val;
 	CK_RV rv;
 
@@ -902,21 +925,22 @@ sys_C_CopyObject (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			original = lookup_object_inlock (session, object, NULL);
+			original = lookup_object_inlock (session, object, &index);
 			if (original == NULL)
 				rv = CKR_OBJECT_HANDLE_INVALID;
 		}
 
 		if (rv == CKR_OK) {
-			if (p11_attrs_findn_bool (template, count, CKA_TOKEN, &val) && val)
-				rv = CKR_TOKEN_WRITE_PROTECTED;
+			if (p11_attrs_findn_bool (template, count, CKA_TOKEN, &val))
+				index = val ? p11_token_index (session->token) : session->index;
+			rv = check_index_writable (session, index);
 		}
 
 		if (rv == CKR_OK) {
 			attrs = p11_attrs_dup (original);
 			attrs = p11_attrs_buildn (attrs, template, count);
 			attrs = p11_attrs_build (attrs, &token, NULL);
-			rv = p11_index_take (session->index, attrs, new_object);
+			rv = p11_index_take (index, attrs, new_object);
 		}
 
 	p11_unlock ();
@@ -931,6 +955,9 @@ sys_C_DestroyObject (CK_SESSION_HANDLE handle,
                      CK_OBJECT_HANDLE object)
 {
 	p11_session *session;
+	CK_ATTRIBUTE *attrs;
+	p11_index *index;
+	CK_BBOOL val;
 	CK_RV rv;
 
 	p11_debug ("in");
@@ -939,11 +966,19 @@ sys_C_DestroyObject (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			rv = p11_index_remove (session->index, object);
-			if (rv == CKR_OBJECT_HANDLE_INVALID) {
-				if (p11_index_lookup (p11_token_index (session->token), object))
-					rv = CKR_TOKEN_WRITE_PROTECTED;
+			attrs = lookup_object_inlock (session, object, &index);
+			if (attrs == NULL)
+				rv = CKR_OBJECT_HANDLE_INVALID;
+			else
+				rv = check_index_writable (session, index);
+
+			if (rv == CKR_OK && p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val) && !val) {
+				/* TODO: This should be replaced with CKR_ACTION_PROHIBITED */
+				rv = CKR_FUNCTION_REJECTED;
 			}
+
+			if (rv == CKR_OK)
+				rv = p11_index_remove (index, object);
 		}
 
 	p11_unlock ();
@@ -1053,6 +1088,9 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
                          CK_ULONG count)
 {
 	p11_session *session;
+	CK_ATTRIBUTE *attrs;
+	p11_index *index;
+	CK_BBOOL val;
 	CK_RV rv;
 
 	p11_debug ("in");
@@ -1061,11 +1099,19 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 
 		rv = lookup_session (handle, &session);
 		if (rv == CKR_OK) {
-			rv = p11_index_set (session->index, object, template, count);
-			if (rv == CKR_OBJECT_HANDLE_INVALID) {
-				if (p11_index_lookup (p11_token_index (session->token), object))
-					rv = CKR_TOKEN_WRITE_PROTECTED;
+			attrs = lookup_object_inlock (session, object, &index);
+			if (attrs == NULL) {
+				rv = CKR_OBJECT_HANDLE_INVALID;
+
+			} else if (p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val) && !val) {
+				/* TODO: This should be replaced with CKR_ACTION_PROHIBITED */
+				rv = CKR_ATTRIBUTE_READ_ONLY;
 			}
+
+			if (rv == CKR_OK)
+				rv = check_index_writable (session, index);
+			if (rv == CKR_OK)
+				rv = p11_index_set (index, object, template, count);
 		}
 
 	p11_unlock ();

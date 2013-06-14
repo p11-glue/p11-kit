@@ -48,6 +48,7 @@ typedef struct {
 	p11_builder *builder;
 	p11_token *token;
 	CK_BBOOL loaded;
+	bool read_write;
 
 	/* Used by various operations */
 	p11_session_cleanup cleanup;

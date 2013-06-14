@@ -148,8 +148,8 @@ setup_writable (void *unused)
 
 	count = 1;
 	rv = test.module->C_GetSlotList (CK_TRUE, test.slots, &count);
-	assert (rv == CKR_OK);
-	assert (count == 1);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (count, 1);
 }
 
 static void
@@ -762,7 +762,7 @@ test_remove_token (void)
 	CK_ULONG count;
 	CK_RV rv;
 
-	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
 	assert (rv == CKR_OK);
 
 	rv = test.module->C_FindObjectsInit (session, NULL, 0);
@@ -773,7 +773,7 @@ test_remove_token (void)
 	assert_num_eq (1, count);
 
 	rv = test.module->C_DestroyObject (session, handle);
-	assert (rv == CKR_TOKEN_WRITE_PROTECTED);
+	assert_num_eq (rv, CKR_FUNCTION_REJECTED);
 }
 
 static void
@@ -791,7 +791,7 @@ test_setattr_token (void)
 	CK_ULONG count;
 	CK_RV rv;
 
-	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
 	assert (rv == CKR_OK);
 
 	rv = test.module->C_FindObjectsInit (session, NULL, 0);
@@ -802,7 +802,7 @@ test_setattr_token (void)
 	assert_num_eq (1, count);
 
 	rv = test.module->C_SetAttributeValue (session, handle, original, 2);
-	assert (rv == CKR_TOKEN_WRITE_PROTECTED);
+	assert_num_eq (rv, CKR_ATTRIBUTE_READ_ONLY);
 }
 
 static void
@@ -1037,6 +1037,31 @@ test_token_writable (void)
 	assert_num_eq (info.flags & CKF_WRITE_PROTECTED, 0);
 }
 
+static void
+test_session_read_only_create (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	CK_RV rv;
+
+	/* Read-only session */
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION,
+	                                 NULL, NULL, &session);
+	assert (rv == CKR_OK);
+
+	/* Create a token object */
+	rv = test.module->C_CreateObject (session, original, 4, &handle);
+	assert_num_eq (rv, CKR_SESSION_READ_ONLY);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1072,6 +1097,7 @@ main (int argc,
 
 	p11_fixture (setup_writable, teardown);
 	p11_test (test_token_writable, "/module/token-writable");
+	p11_test (test_session_read_only_create, "/module/session-read-only-create");
 
 	return p11_test_run (argc, argv);
 }

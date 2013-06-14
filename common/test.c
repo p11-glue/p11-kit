@@ -200,6 +200,7 @@ p11_test_run (int argc,
 	test_item *next;
 	int count;
 	int ret = 0;
+	int setup;
 
 	/* p11-kit specific stuff */
 	putenv ("P11_KIT_STRICT=1");
@@ -229,18 +230,25 @@ p11_test_run (int argc,
 		assert (item->type == TEST);
 		gl.last = item;
 		gl.number++;
+		setup = 0;
 
 		if (setjmp (gl.jump) == 0) {
 			if (fixture && fixture->x.fix.setup)
 				(fixture->x.fix.setup) (item->x.test.argument);
 
+			setup = 1;
+
 			assert (item->x.test.func);
 			(item->x.test.func)(item->x.test.argument);
 
-			if (fixture && fixture->x.fix.teardown)
-				(fixture->x.fix.teardown) (item->x.test.argument);
-
 			printf ("ok %d %s\n", gl.number, item->x.test.name);
+		}
+
+		if (setup) {
+			if (setjmp (gl.jump) == 0) {
+				if (fixture && fixture->x.fix.teardown)
+					(fixture->x.fix.teardown) (item->x.test.argument);
+			}
 		}
 
 		gl.last = NULL;
