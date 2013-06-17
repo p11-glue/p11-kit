@@ -107,6 +107,7 @@ x86_64-w64-mingw32
 /p11-kit/tests/uri-test
 
 /tools/p11-kit
-/tools/p11-kit-extract-trust
+
+/trust/p11-kit-extract-trust
 
 /p11-kit-?.?

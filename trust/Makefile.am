@@ -56,5 +56,9 @@ libtrust_testable_la_LDFLAGS = \
 
 libtrust_testable_la_SOURCES = $(MODULE_SRCS)
 
+externaldir = $(privatedir)
+external_SCRIPTS = \
+	p11-kit-extract-trust
+
 EXTRA_DIST = \
 	p11-kit-trust.module

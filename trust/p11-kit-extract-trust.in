@@ -6,7 +6,12 @@
 # appropriate. In the future this script will be called when the PKCS#11
 # trust module is used to modifiy trust anchors and related data.
 
-echo "p11-kit: the placeholder extract-trust command has not been customized by your distribution."
+if [ $# -ne 0 ]; then
+	echo "usage: p11-kit extract-trust" >&2
+	exit 2
+fi
+
+echo "p11-kit: the placeholder extract-trust command has not been customized by your distribution." >&2
 
 # You can use commands like this to extract data from trust modules
 # into appropriate locations for your distribution.
