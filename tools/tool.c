@@ -204,6 +204,8 @@ exec_external (const char *command,
 	return_if_fail (path != NULL);
 
 	argv[0] = filename;
+	argv[argc] = NULL;
+
 	execvp (path, argv);
 }
 
@@ -245,6 +247,8 @@ main (int argc, char *argv[])
 			if (!command) {
 				skip = true;
 				command = argv[in];
+			} else {
+				skip = false;
 			}
 
 		/* The global long options */
