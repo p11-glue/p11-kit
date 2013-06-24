@@ -1,3 +1,6 @@
+0.18.4 (stable)
+ * Cleanup related to external p11-kit tool commands
+
 0.18.3 (stable)
  * Fix reinitialization of trust module [#65401]
  * Fix crash in trust module C_Initialize
