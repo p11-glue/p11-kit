@@ -37,11 +37,23 @@
 
 #include <getopt.h>
 
+#define P11_TOOL_FALLBACK ""
+
+typedef struct {
+	const char *name;
+	int (*function) (int, char*[]);
+	const char *text;
+} p11_tool_command;
+
 typedef struct  {
 	int option;
 	const char *text;
 	const char *arg;
 } p11_tool_desc;
+
+int        p11_tool_main              (int argc,
+                                       char *argv[],
+                                       const p11_tool_command *commands);
 
 int        p11_tool_getopt            (int argc,
                                        char *argv[],
@@ -49,11 +61,5 @@ int        p11_tool_getopt            (int argc,
 
 void       p11_tool_usage             (const p11_tool_desc *usages,
                                        const struct option *longopts);
-
-int        p11_tool_list_modules      (int argc,
-                                       char *argv[]);
-
-int        p11_tool_extract           (int argc,
-                                       char **argv);
 
 #endif /* P11_TOOL_H_ */

@@ -35,8 +35,8 @@
 #define P11_KIT_DISABLE_DEPRECATED
 
 #include "config.h"
-#include "test.h"
-#include "test-tools.h"
+
+#include "test-trust.h"
 
 #include "attrs.h"
 #include "compat.h"
@@ -49,6 +49,7 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
+#include "test.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -79,7 +80,7 @@ setup (void *unused)
 
 	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
 	if (!mkdtemp (test.directory))
-		assert_not_reached ();
+		assert_fail ("mkdtemp() failed", test.directory);
 }
 
 static void
@@ -88,7 +89,7 @@ teardown (void *unused)
 	CK_RV rv;
 
 	if (rmdir (test.directory) < 0)
-		assert_not_reached ();
+		assert_fail ("rmdir() failed", test.directory);
 	free (test.directory);
 
 	p11_extract_info_cleanup (&test.ex);
@@ -127,13 +128,13 @@ test_file (void)
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.cer") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
+	ret = p11_extract_x509_file (test.iter, &test.ex);
 	assert_num_eq (true, ret);
 
-	test_check_file (test.directory, "extract.pem", SRCDIR "/files/cacert3.pem");
+	test_check_file (test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
 	free (test.ex.destination);
 }
@@ -150,13 +151,19 @@ test_file_multiple (void)
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.cer") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
+	p11_message_quiet ();
+
+	ret = p11_extract_x509_file (test.iter, &test.ex);
 	assert_num_eq (true, ret);
 
-	test_check_file (test.directory, "extract.pem", SRCDIR "/files/cacert3-twice.pem");
+	assert (strstr (p11_message_last (), "multiple certificates") != NULL);
+
+	p11_message_loud ();
+
+	test_check_file (test.directory, "extract.cer", SRCDIR "/files/cacert3.der");
 
 	free (test.ex.destination);
 }
@@ -170,13 +177,17 @@ test_file_without (void)
 	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.cer") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
-	assert_num_eq (true, ret);
+	p11_message_quiet ();
 
-	test_check_data (test.directory, "extract.pem", "", 0);
+	ret = p11_extract_x509_file (test.iter, &test.ex);
+	assert_num_eq (false, ret);
+
+	assert (strstr (p11_message_last (), "no certificate") != NULL);
+
+	p11_message_loud ();
 
 	free (test.ex.destination);
 }
@@ -198,12 +209,12 @@ test_directory (void)
 		assert_not_reached ();
 	test.ex.destination = test.directory;
 
-	ret = p11_extract_pem_directory (test.iter, &test.ex);
+	ret = p11_extract_x509_directory (test.iter, &test.ex);
 	assert_num_eq (true, ret);
 
-	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem", NULL));
-	test_check_file (test.directory, "Cacert3_Here.pem", SRCDIR "/files/cacert3.pem");
-	test_check_file (test.directory, "Cacert3_Here.1.pem", SRCDIR "/files/cacert3.pem");
+	test_check_directory (test.directory, ("Cacert3_Here.cer", "Cacert3_Here.1.cer", NULL));
+	test_check_file (test.directory, "Cacert3_Here.cer", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "Cacert3_Here.1.cer", SRCDIR "/files/cacert3.der");
 }
 
 static void
@@ -220,7 +231,7 @@ test_directory_empty (void)
 		assert_not_reached ();
 	test.ex.destination = test.directory;
 
-	ret = p11_extract_pem_directory (test.iter, &test.ex);
+	ret = p11_extract_x509_directory (test.iter, &test.ex);
 	assert_num_eq (true, ret);
 
 	test_check_directory (test.directory, (NULL, NULL));
@@ -233,10 +244,10 @@ main (int argc,
 	mock_module_init ();
 
 	p11_fixture (setup, teardown);
-	p11_test (test_file, "/pem/test_file");
-	p11_test (test_file_multiple, "/pem/test_file_multiple");
-	p11_test (test_file_without, "/pem/test_file_without");
-	p11_test (test_directory, "/pem/test_directory");
-	p11_test (test_directory_empty, "/pem/test_directory_empty");
+	p11_test (test_file, "/x509/test_file");
+	p11_test (test_file_multiple, "/x509/test_file_multiple");
+	p11_test (test_file_without, "/x509/test_file_without");
+	p11_test (test_directory, "/x509/test_directory");
+	p11_test (test_directory_empty, "/x509/test_directory_empty");
 	return p11_test_run (argc, argv);
 }

@@ -33,8 +33,8 @@
  */
 
 #include "config.h"
-#include "test.h"
-#include "test-tools.h"
+
+#include "test-trust.h"
 
 #include "attrs.h"
 #include "compat.h"
@@ -43,6 +43,7 @@
 #include "message.h"
 #include "path.h"
 #include "save.h"
+#include "test.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>

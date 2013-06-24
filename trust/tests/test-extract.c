@@ -35,8 +35,8 @@
 #define P11_KIT_DISABLE_DEPRECATED
 
 #include "config.h"
-#include "test.h"
-#include "test-tools.h"
+
+#include "test-trust.h"
 
 #include "attrs.h"
 #include "compat.h"
@@ -48,6 +48,7 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "oid.h"
+#include "test.h"
 
 #include <stdlib.h>
 #include <string.h>

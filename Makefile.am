@@ -15,7 +15,6 @@ SUBDIRS = \
 	common \
 	p11-kit \
 	$(TRUST_DIR) \
-	tools \
 	doc \
 	po
 

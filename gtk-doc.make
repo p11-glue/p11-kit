@@ -243,7 +243,7 @@ if ENABLE_GTK_DOC
 dist-check-gtkdoc:
 else
 dist-check-gtkdoc:
-	@echo "*** gtk-doc must be installed and enabled in order to make dist"
+	@echo "*** gtk-doc must be installed and --enable-doc in order to make dist"
 	@false
 endif
 

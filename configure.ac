@@ -458,8 +458,6 @@ AC_CONFIG_FILES([Makefile
 	p11-kit/tests/Makefile
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
-	tools/Makefile
-	tools/tests/Makefile
 	trust/Makefile
 	trust/p11-kit-extract-trust
 	trust/tests/Makefile

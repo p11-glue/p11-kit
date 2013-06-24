@@ -90,7 +90,6 @@ expand_content_files=
 # signals and properties.
 # e.g. INCLUDES=-I$(top_srcdir) -I$(top_builddir) $(GTK_DEBUG_FLAGS)
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
-INCLUDES=
 GTKDOC_LIBS=
 
 # Hacks around gtk-doc brokenness for out of tree builds

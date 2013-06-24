@@ -43,23 +43,12 @@
 #include "debug.h"
 #include "lexer.h"
 #include "message.h"
-#include "pem.h"
 
 typedef struct {
 	int tok_type;
 	const char *name;
 	const char *value;
 } expected_tok;
-
-static void
-on_pem_get_type (const char *type,
-                 const unsigned char *contents,
-                 size_t length,
-                 void *user_data)
-{
-	char **result = (char **)user_data;
-	*result = strdup (type);
-}
 
 static void
 check_lex_msg (const char *file,
@@ -69,9 +58,8 @@ check_lex_msg (const char *file,
                const char *input,
                bool failure)
 {
-	unsigned int count;
 	p11_lexer lexer;
-	char *type;
+	size_t len;
 	bool failed;
 	int i;
 
@@ -99,16 +87,13 @@ check_lex_msg (const char *file,
 				               expected[i].name, lexer.tok.field.name);
 			break;
 		case TOK_PEM:
-			type = NULL;
-			count = p11_pem_parse (lexer.tok.pem.begin, lexer.tok.pem.length,
-			                       on_pem_get_type, &type);
-			if (count != 1)
-				p11_test_fail (file, line, function, "more than one PEM block: %d", count);
-			if (strcmp (expected[i].name, type) != 0)
+			len = strlen (expected[i].name);
+			if (lexer.tok.pem.length < len ||
+			    strncmp (lexer.tok.pem.begin, expected[i].name, len) != 0) {
 				p11_test_fail (file, line, function,
-				               "wrong type of PEM block: (%s != %s)",
-				               expected[i].name, type);
-			free (type);
+				               "wrong type of PEM block: %s",
+				               expected[i].name);
+			}
 			break;
 		case TOK_EOF:
 			p11_test_fail (file, line, function, "eof should not be recieved");
@@ -144,7 +129,7 @@ test_basic (void)
 	const expected_tok expected[] = {
 		{ TOK_SECTION, "the header" },
 		{ TOK_FIELD, "field", "value" },
-		{ TOK_PEM, "BLOCK1", },
+		{ TOK_PEM, "-----BEGIN BLOCK1-----\n", },
 		{ TOK_EOF }
 	};
 
@@ -174,7 +159,7 @@ test_corners (void)
 		{ TOK_FIELD, "number", "3" },
 		{ TOK_FIELD, "number", "4" },
 		{ TOK_FIELD, "not-a-comment", "# value" },
-		{ TOK_PEM, "BLOCK1", },
+		{ TOK_PEM, "-----BEGIN BLOCK1-----\r\n", },
 		{ TOK_EOF }
 	};
 
@@ -190,7 +175,7 @@ test_following (void)
 	                    "field: value";
 
 	const expected_tok expected[] = {
-		{ TOK_PEM, "BLOCK1", },
+		{ TOK_PEM, "-----BEGIN BLOCK1-----\n", },
 		{ TOK_FIELD, "field", "value" },
 		{ TOK_EOF }
 	};

@@ -49,7 +49,9 @@
 #include "tool.h"
 #include "uri.h"
 
-typedef int (*operation) (int argc, char *argv[]);
+int p11_kit_list_modules (int argc,
+                          char *argv[]);
+
 bool verbose = false;
 
 static const char HEXC_LOWER[] = "0123456789abcdef";
@@ -227,8 +229,8 @@ print_modules (void)
 }
 
 int
-p11_tool_list_modules (int argc,
-                       char *argv[])
+p11_kit_list_modules (int argc,
+                      char *argv[])
 {
 	int opt;
 
@@ -257,9 +259,14 @@ p11_tool_list_modules (int argc,
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
 
-		/* Ignore these options, already handled */
 		case opt_verbose:
+			p11_kit_be_loud ();
+			break;
+
 		case opt_quiet:
+			p11_kit_be_quiet ();
+			break;
+
 		case opt_list:
 			break;
 

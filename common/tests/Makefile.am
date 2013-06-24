@@ -22,41 +22,11 @@ CHECK_PROGS = \
 	test-buffer \
 	test-url \
 	test-path \
+	test-lexer \
 	$(NULL)
 
 noinst_PROGRAMS = \
 	$(CHECK_PROGS)
-
-if WITH_ASN1
-
-LDADD += \
-	$(top_builddir)/common/libp11-data.la \
-	$(LIBTASN1_LIBS) \
-	$(NULL)
-
-AM_CPPFLAGS += \
-	$(LIBTASN1_CFLAGS) \
-	$(NULL)
-
-CHECK_PROGS += \
-	test-asn1 \
-	test-base64 \
-	test-lexer \
-	test-pem \
-	test-oid \
-	test-utf8 \
-	test-x509 \
-	$(NULL)
-
-noinst_PROGRAMS += \
-	frob-cert \
-	frob-ku \
-	frob-eku \
-	frob-cert \
-	frob-oid \
-	$(NULL)
-
-endif # WITH_ASN1
 
 TESTS = $(CHECK_PROGS)
 

@@ -32,9 +32,12 @@
  * Author: Stef Walter <stefw@gnome.org>
  */
 
+#include "dict.h"
 #include "pkcs11.h"
+#include "test.h"
 
 #include <sys/types.h>
+#include <stdlib.h>
 
 #ifndef TEST_DATA_H_
 #define TEST_DATA_H_
@@ -269,5 +272,76 @@ static const unsigned char verisign_v1_ca[] = {
 	0x13, 0xd5, 0x35, 0xdc, 0x10, 0x19, 0x59, 0xea, 0x94, 0xc1, 0x00, 0xbf, 0x75, 0x8f, 0xd9, 0xfa,
 	0xfd, 0x76, 0x04, 0xdb, 0x62, 0xbb, 0x90, 0x6a, 0x03, 0xd9, 0x46, 0x35, 0xd9, 0xf8, 0x7c, 0x5b,
 };
+
+static const char test_text[] = "This is the file text";
+
+static const char test_eku_server_and_client[] = {
+	0x30, 0x14, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01, 0x06, 0x08, 0x2b, 0x06,
+	0x01, 0x05, 0x05, 0x07, 0x03, 0x02,
+};
+
+static const char test_eku_server[] = {
+	0x30, 0x0a, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01,
+};
+
+static const char test_eku_email[] = {
+	0x30, 0x0a, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x04
+};
+
+static const char test_eku_none[] = {
+	0x30, 0x00,
+};
+
+void       test_check_file_msg          (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         const char *filename,
+                                         const char *reference);
+
+void       test_check_data_msg          (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         const char *filename,
+                                         const void *refdata,
+                                         long reflen);
+
+#ifdef OS_UNIX
+
+void       test_check_symlink_msg       (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         const char *name,
+                                         const char *destination);
+
+#endif /* OS_UNIX */
+
+p11_dict * test_check_directory_files   (const char *file,
+                                         ...) GNUC_NULL_TERMINATED;
+
+void       test_check_directory_msg     (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         p11_dict *files);
+
+#define test_check_file(directory, name, reference) \
+	(test_check_file_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, reference))
+
+#define test_check_data(directory, name, data, length) \
+	(test_check_data_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, data, length))
+
+#ifdef OS_UNIX
+
+#define test_check_symlink(directory, name, destination) \
+	(test_check_symlink_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, destination))
+
+#endif /* OS_UNIX */
+
+#define test_check_directory(directory, files) \
+	(test_check_directory_msg (__FILE__, __LINE__, __FUNCTION__, directory, \
+	                           test_check_directory_files files))
 
 #endif /* TEST_DATA_H_ */

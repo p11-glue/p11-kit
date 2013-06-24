@@ -119,4 +119,7 @@ bool            p11_extract_openssl_bundle     (P11KitIter *iter,
 bool            p11_extract_openssl_directory  (P11KitIter *iter,
                                                 p11_extract_info *ex);
 
+int             p11_trust_extract              (int argc,
+                                                char **argv);
+
 #endif /* P11_EXTRACT_H_ */

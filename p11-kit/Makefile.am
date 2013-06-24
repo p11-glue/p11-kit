@@ -8,6 +8,8 @@ COMMON = $(top_srcdir)/common
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(COMMON) \
+	-DSRCDIR=\"$(srcdir)\" \
+	-DPRIVATEDIR=\"$(privatedir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(NULL)
 
@@ -113,3 +115,21 @@ EXTRA_DIST = \
 install-exec-hook:
 	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.so` $(DESTDIR)$(libdir)/p11-kit-proxy.so
 	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
+
+bin_PROGRAMS = \
+	p11-kit
+
+p11_kit_SOURCES = \
+	list.c \
+	p11-kit.c \
+	$(NULL)
+
+p11_kit_CFLAGS = \
+	$(NULL)
+
+p11_kit_LDADD = \
+	$(top_builddir)/p11-kit/libp11-kit.la \
+	$(top_builddir)/common/libp11-tool.la \
+	$(top_builddir)/common/libp11-common.la \
+	$(LTLIBINTL) \
+	$(NULL)

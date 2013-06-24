@@ -295,8 +295,8 @@ validate_filter_and_format (p11_extract_info *ex,
 }
 
 int
-p11_tool_extract (int argc,
-                  char **argv)
+p11_trust_extract (int argc,
+                   char **argv)
 {
 	p11_extract_func format = NULL;
 	CK_FUNCTION_LIST_PTR *modules;

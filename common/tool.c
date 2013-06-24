@@ -39,7 +39,6 @@
 #include "debug.h"
 #include "message.h"
 #include "path.h"
-#include "p11-kit.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -50,18 +49,6 @@
 #include <unistd.h>
 
 #include "tool.h"
-
-struct {
-	const char *name;
-	int (*function) (int, char*[]);
-	const char *text;
-} commands[] = {
-#ifdef WITH_ASN1
-	{ "extract", p11_tool_extract, "Extract certificates" },
-#endif
-	{ "list-modules", p11_tool_list_modules, "List modules and tokens"},
-	{ 0, }
-};
 
 static char
 short_option (int opt)
@@ -177,43 +164,25 @@ p11_tool_getopt (int argc,
 }
 
 static void
-command_usage (void)
+command_usage (const p11_tool_command *commands)
 {
+	const char *progname;
 	int i;
 
-	printf ("usage: p11-kit command <args>...\n");
-	printf ("\nCommon p11-kit commands are:\n");
-	for (i = 0; commands[i].name != NULL; i++)
-		printf ("  %-15s  %s\n", commands[i].name, commands[i].text);
-	printf ("\nSee 'p11-kit <command> --help' for more information\n");
-}
-
-static void
-exec_external (const char *command,
-               int argc,
-               char *argv[])
-{
-	char *filename;
-	char *path;
-
-	if (!asprintf (&filename, "p11-kit-%s", command) < 0)
-		return_if_reached ();
-
-	/* Add our libexec directory to the path */
-	path = p11_path_build (PRIVATEDIR, filename, NULL);
-	return_if_fail (path != NULL);
-
-	argv[0] = filename;
-	argv[argc] = NULL;
-
-	execvp (path, argv);
+	progname = getprogname ();
+	printf ("usage: %s command <args>...\n", progname);
+	printf ("\nCommon %s commands are:\n", progname);
+	for (i = 0; commands[i].name != NULL; i++) {
+		if (strcmp (commands[i].name, P11_TOOL_FALLBACK) != 0)
+			printf ("  %-15s  %s\n", commands[i].name, commands[i].text);
+	}
+	printf ("\nSee '%s <command> --help' for more information\n", progname);
 }
 
 static void
 verbose_arg (void)
 {
 	putenv ("P11_KIT_DEBUG=all");
-	p11_kit_be_loud ();
 	p11_message_loud ();
 }
 
@@ -221,13 +190,15 @@ static void
 quiet_arg (void)
 {
 	putenv ("P11_KIT_DEBUG=");
-	p11_kit_be_quiet ();
 	p11_message_quiet ();
 }
 
 int
-main (int argc, char *argv[])
+p11_tool_main (int argc,
+               char *argv[],
+               const p11_tool_command *commands)
 {
+	const p11_tool_command *fallback = NULL;
 	char *command = NULL;
 	bool want_help = false;
 	bool skip;
@@ -321,12 +292,12 @@ main (int argc, char *argv[])
 	p11_debug_init ();
 
 	if (command == NULL) {
-		/* As a special favor if someone just typed 'p11-kit', help them out */
+		/* As a special favor if someone just typed the command, help them out */
 		if (argc == 1) {
-			command_usage ();
+			command_usage (commands);
 			return 2;
 		} else if (want_help) {
-			command_usage ();
+			command_usage (commands);
 			return 0;
 		} else {
 			p11_message ("no command specified");
@@ -338,16 +309,23 @@ main (int argc, char *argv[])
 
 	/* Look for the command */
 	for (i = 0; commands[i].name != NULL; i++) {
-		if (strcmp (commands[i].name, command) == 0) {
+		if (strcmp (commands[i].name, P11_TOOL_FALLBACK) == 0) {
+			fallback = commands + i;
+
+		} else if (strcmp (commands[i].name, command) == 0) {
 			argv[0] = command;
 			return (commands[i].function) (argc, argv);
 		}
 	}
 
 	/* Got here because no command matched */
-	exec_external (command, argc, argv);
+	if (fallback != NULL) {
+		argv[0] = command;
+		return (fallback->function) (argc, argv);
+	}
 
 	/* At this point we have no command */
-	p11_message ("'%s' is not a valid p11-kit command. See 'p11-kit --help'", command);
+	p11_message ("'%s' is not a valid command. See '%s --help'",
+	             command, getprogname ());
 	return 2;
 }
