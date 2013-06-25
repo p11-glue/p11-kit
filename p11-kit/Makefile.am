@@ -128,7 +128,7 @@ p11_kit_CFLAGS = \
 	$(NULL)
 
 p11_kit_LDADD = \
-	$(top_builddir)/p11-kit/libp11-kit.la \
+	libp11-kit.la \
 	$(top_builddir)/common/libp11-tool.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(LTLIBINTL) \
