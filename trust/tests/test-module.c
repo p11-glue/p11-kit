@@ -762,18 +762,19 @@ test_remove_token (void)
 	CK_ULONG count;
 	CK_RV rv;
 
-	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
-	assert (rv == CKR_OK);
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = test.module->C_FindObjectsInit (session, NULL, 0);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = test.module->C_FindObjects (session, &handle, 1, &count);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (1, count);
 
 	rv = test.module->C_DestroyObject (session, handle);
-	assert_num_eq (rv, CKR_FUNCTION_REJECTED);
+	if (rv != CKR_TOKEN_WRITE_PROTECTED)
+		assert_num_eq (rv, CKR_SESSION_READ_ONLY);
 }
 
 static void
@@ -791,18 +792,19 @@ test_setattr_token (void)
 	CK_ULONG count;
 	CK_RV rv;
 
-	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
-	assert (rv == CKR_OK);
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = test.module->C_FindObjectsInit (session, NULL, 0);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = test.module->C_FindObjects (session, &handle, 1, &count);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (1, count);
 
 	rv = test.module->C_SetAttributeValue (session, handle, original, 2);
-	assert_num_eq (rv, CKR_ATTRIBUTE_READ_ONLY);
+	if (rv != CKR_TOKEN_WRITE_PROTECTED)
+		assert_num_eq (rv, CKR_ATTRIBUTE_READ_ONLY);
 }
 
 static void
