@@ -528,6 +528,416 @@ test_build_distant_end_date (void)
 }
 
 static void
+test_valid_bool (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_BBOOL value = CK_TRUE;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_PRIVATE, &value, sizeof (value) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_bool (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_PRIVATE, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "123";
+	input[0].ulValueLen = 3;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = sizeof (CK_BBOOL);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_ulong (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_ULONG value = 2;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CERTIFICATE_CATEGORY, &value, sizeof (value) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_ulong (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CERTIFICATE_CATEGORY, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "123";
+	input[0].ulValueLen = 3;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = sizeof (CK_ULONG);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_utf8 (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_LABEL, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 0;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_utf8 (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_LABEL, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "\xfex23";
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_dates (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_DATE date;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_START_DATE, &date, sizeof (CK_DATE) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	memcpy (&date, "20001010", sizeof (date));
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	input[0].ulValueLen = 0;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_dates (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_DATE date;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_START_DATE, &date, sizeof (CK_DATE) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	memcpy (&date, "AAAABBCC", sizeof (date));
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	memcpy (&date, "20001580", sizeof (date));
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = NULL;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_name (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_SUBJECT, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 0;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	input[0].pValue = (void *)test_cacert3_ca_issuer;
+	input[0].ulValueLen = sizeof (test_cacert3_ca_issuer);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_name (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_SUBJECT, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "blah";
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_serial (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_SERIAL_NUMBER, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 0;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	input[0].pValue = (void *)test_cacert3_ca_serial;
+	input[0].ulValueLen = sizeof (test_cacert3_ca_serial);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_serial (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_SERIAL_NUMBER, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "blah";
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = (void *)test_cacert3_ca_subject;
+	input[0].ulValueLen = sizeof (test_cacert3_ca_subject);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_valid_cert (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_VALUE, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 0;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	input[0].pValue = (void *)test_cacert3_ca_der;
+	input[0].ulValueLen = sizeof (test_cacert3_ca_der);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_cert (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_VALUE, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "blah";
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = (void *)test_cacert3_ca_subject;
+	input[0].ulValueLen = sizeof (test_cacert3_ca_subject);
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = NULL;
+	input[0].ulValueLen = 4;
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_invalid_schema (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_URL, "http://blah", 11 },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	/* Missing CKA_HASH_OF_SUBJECT_PUBLIC_KEY and CKA_HASH_OF_ISSUER_PUBLIC_KEY */
+	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
+
+	p11_message_loud ();
+}
+
+static void
 test_create_not_settable (void)
 {
 	/*
@@ -1597,6 +2007,23 @@ main (int argc,
 	p11_test (test_build_certificate_bad_type, "/builder/build_certificate_bad_type");
 	p11_test (test_build_extension, "/builder/build_extension");
 	p11_test (test_build_distant_end_date, "/builder/build_distant_end_date");
+
+	p11_test (test_valid_bool, "/builder/valid-bool");
+	p11_test (test_valid_ulong, "/builder/valid-ulong");
+	p11_test (test_valid_utf8, "/builder/valid-utf8");
+	p11_test (test_valid_dates, "/builder/valid-date");
+	p11_test (test_valid_name, "/builder/valid-name");
+	p11_test (test_valid_serial, "/builder/valid-serial");
+	p11_test (test_valid_cert, "/builder/valid-cert");
+	p11_test (test_invalid_bool, "/builder/invalid-bool");
+	p11_test (test_invalid_ulong, "/builder/invalid-ulong");
+	p11_test (test_invalid_utf8, "/builder/invalid-utf8");
+	p11_test (test_invalid_dates, "/builder/invalid-date");
+	p11_test (test_invalid_name, "/builder/invalid-name");
+	p11_test (test_invalid_serial, "/builder/invalid-serial");
+	p11_test (test_invalid_cert, "/builder/invalid-cert");
+	p11_test (test_invalid_schema, "/builder/invalid-schema");
+
 	p11_test (test_create_not_settable, "/builder/create_not_settable");
 	p11_test (test_create_but_loadable, "/builder/create_but_loadable");
 	p11_test (test_create_unsupported, "/builder/create_unsupported");

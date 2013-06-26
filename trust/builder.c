@@ -47,6 +47,7 @@
 #include "message.h"
 #include "oid.h"
 #include "pkcs11x.h"
+#include "utf8.h"
 #include "x509.h"
 
 #include <assert.h>
@@ -77,8 +78,10 @@ typedef struct {
 	struct {
 		CK_ATTRIBUTE_TYPE type;
 		int flags;
+		bool (*validate) (p11_builder *, CK_ATTRIBUTE *);
 	} attrs[32];
 	CK_ATTRIBUTE * (*populate) (p11_builder *, p11_index *, CK_ATTRIBUTE *);
+	CK_RV (*validate) (p11_builder *, CK_ATTRIBUTE *);
 } builder_schema;
 
 static node_asn *
@@ -185,12 +188,140 @@ p11_builder_new (int flags)
 	return builder;
 }
 
+static int
+atoin (const char *p,
+       int digits)
+{
+	int ret = 0, base = 1;
+	while(--digits >= 0) {
+		if (p[digits] < '0' || p[digits] > '9')
+			return -1;
+		ret += (p[digits] - '0') * base;
+		base *= 10;
+	}
+	return ret;
+}
+
+static bool
+type_bool (p11_builder *builder,
+           CK_ATTRIBUTE *attr)
+{
+	return (attr->pValue != NULL &&
+	        sizeof (CK_BBOOL) == attr->ulValueLen);
+}
+
+static bool
+type_ulong (p11_builder *builder,
+            CK_ATTRIBUTE *attr)
+{
+	return (attr->pValue != NULL &&
+	        sizeof (CK_ULONG) == attr->ulValueLen);
+}
+
+static bool
+type_utf8 (p11_builder *builder,
+           CK_ATTRIBUTE *attr)
+{
+	if (attr->ulValueLen == 0)
+		return true;
+	if (attr->pValue == NULL)
+		return false;
+	return p11_utf8_validate (attr->pValue, attr->ulValueLen);
+}
+
+static bool
+type_date (p11_builder *builder,
+           CK_ATTRIBUTE *attr)
+{
+	CK_DATE *date;
+	struct tm tm;
+	struct tm two;
+
+	if (attr->ulValueLen == 0)
+		return true;
+	if (attr->pValue == NULL || attr->ulValueLen != sizeof (CK_DATE))
+		return false;
+
+	date = attr->pValue;
+	memset (&tm, 0, sizeof (tm));
+	tm.tm_year = atoin ((char *)date->year, 4);
+	tm.tm_mon = atoin ((char *)date->month, 2);
+	tm.tm_mday = atoin ((char *)date->day, 2);
+
+	if (tm.tm_year < 0 || tm.tm_mon <= 0 || tm.tm_mday <= 0)
+		return false;
+
+	memcpy (&two, &tm, sizeof (tm));
+	if (mktime (&two) < 0)
+		return false;
+
+	/* If mktime changed anything, then bad date */
+	if (tm.tm_year != two.tm_year ||
+	    tm.tm_mon != two.tm_mon ||
+	    tm.tm_mday != two.tm_mday)
+		return false;
+
+	return true;
+}
+
+static bool
+check_der_struct (p11_builder *builder,
+                  const char *struct_name,
+                  CK_ATTRIBUTE *attr)
+{
+	node_asn *asn;
+
+	if (attr->ulValueLen == 0)
+		return true;
+	if (attr->pValue == NULL)
+		return false;
+
+	asn = p11_asn1_decode (builder->asn1_defs, struct_name,
+	                       attr->pValue, attr->ulValueLen, NULL);
+
+	if (asn == NULL)
+		return false;
+
+	asn1_delete_structure (&asn);
+	return true;
+}
+
+static bool
+type_der_name (p11_builder *builder,
+               CK_ATTRIBUTE *attr)
+{
+	return check_der_struct (builder, "PKIX1.Name", attr);
+}
+
+static bool
+type_der_serial (p11_builder *builder,
+                 CK_ATTRIBUTE *attr)
+{
+	return check_der_struct (builder, "PKIX1.CertificateSerialNumber", attr);
+}
+
+static bool
+type_der_oid (p11_builder *builder,
+              CK_ATTRIBUTE *attr)
+{
+	/* AttributeType is an OBJECT ID */
+	return check_der_struct (builder, "PKIX1.AttributeType", attr);
+}
+
+static bool
+type_der_cert (p11_builder *builder,
+               CK_ATTRIBUTE *attr)
+{
+	/* AttributeType is an OBJECT ID */
+	return check_der_struct (builder, "PKIX1.Certificate", attr);
+}
+
 #define COMMON_ATTRS \
-	{ CKA_CLASS, REQUIRE | CREATE }, \
-	{ CKA_TOKEN, CREATE | WANT }, \
-	{ CKA_MODIFIABLE, CREATE | WANT }, \
-	{ CKA_PRIVATE, CREATE }, \
-	{ CKA_LABEL, CREATE | MODIFY | WANT }, \
+	{ CKA_CLASS, REQUIRE | CREATE, type_ulong }, \
+	{ CKA_TOKEN, CREATE | WANT, type_bool }, \
+	{ CKA_MODIFIABLE, CREATE | WANT, type_bool }, \
+	{ CKA_PRIVATE, CREATE, type_bool }, \
+	{ CKA_LABEL, CREATE | MODIFY | WANT, type_utf8 }, \
 	{ CKA_X_GENERATED, CREATE }
 
 static CK_ATTRIBUTE *
@@ -225,20 +356,6 @@ calc_check_value (const unsigned char *data,
 	unsigned char checksum[P11_HASH_SHA1_LEN];
 	p11_hash_sha1 (checksum, data, length, NULL);
 	memcpy (check_value, checksum, 3);
-}
-
-static int
-atoin (const char *p,
-       int digits)
-{
-	int ret = 0, base = 1;
-	while(--digits >= 0) {
-		if (p[digits] < '0' || p[digits] > '9')
-			return -1;
-		ret += (p[digits] - '0') * base;
-		base *= 10;
-	}
-	return ret;
 }
 
 static int
@@ -577,27 +694,58 @@ certificate_populate (p11_builder *builder,
 	return p11_attrs_build (attrs, &category, &empty_value, NULL);
 }
 
+static CK_RV
+certificate_validate (p11_builder *builder,
+                      CK_ATTRIBUTE *attrs)
+{
+	CK_ATTRIBUTE *attr;
+
+	/*
+	 * In theory we should be validating that in the absence of CKA_VALUE
+	 * various other fields must be set. However we do not enforce this
+	 * because we want to be able to have certificates without a value
+	 * but issuer and serial number, for blacklisting purposes.
+	 */
+
+	attr = p11_attrs_find (attrs, CKA_URL);
+	if (attr != NULL && attr->ulValueLen > 0) {
+		attr = p11_attrs_find (attrs, CKA_HASH_OF_SUBJECT_PUBLIC_KEY);
+		if (attr == NULL || attr->ulValueLen == 0) {
+			p11_message ("missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute");
+			return CKR_TEMPLATE_INCONSISTENT;
+		}
+
+		attr = p11_attrs_find (attrs, CKA_HASH_OF_ISSUER_PUBLIC_KEY);
+		if (attr == NULL || attr->ulValueLen == 0) {
+			p11_message ("missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute");
+			return CKR_TEMPLATE_INCONSISTENT;
+		}
+	}
+
+	return CKR_OK;
+}
+
 const static builder_schema certificate_schema = {
 	NORMAL_BUILD,
 	{ COMMON_ATTRS,
-	  { CKA_CERTIFICATE_TYPE, REQUIRE | CREATE },
-	  { CKA_TRUSTED, },
-	  { CKA_X_DISTRUSTED, },
-	  { CKA_CERTIFICATE_CATEGORY, CREATE | MODIFY | WANT },
-	  { CKA_CHECK_VALUE, CREATE | MODIFY | WANT },
-	  { CKA_START_DATE, CREATE | MODIFY | WANT },
-	  { CKA_END_DATE, CREATE | MODIFY | WANT },
-	  { CKA_SUBJECT, CREATE | WANT },
+	  { CKA_CERTIFICATE_TYPE, REQUIRE | CREATE, type_ulong },
+	  { CKA_TRUSTED, NONE, type_bool },
+	  { CKA_X_DISTRUSTED, NONE, type_bool },
+	  { CKA_CERTIFICATE_CATEGORY, CREATE | WANT, type_ulong },
+	  { CKA_CHECK_VALUE, CREATE | WANT, },
+	  { CKA_START_DATE, CREATE | MODIFY | WANT, type_date },
+	  { CKA_END_DATE, CREATE | MODIFY | WANT, type_date },
+	  { CKA_SUBJECT, CREATE | WANT, type_der_name },
 	  { CKA_ID, CREATE | MODIFY | WANT },
-	  { CKA_ISSUER, CREATE | MODIFY | WANT },
-	  { CKA_SERIAL_NUMBER, CREATE | MODIFY | WANT },
-	  { CKA_VALUE, CREATE },
-	  { CKA_URL, CREATE },
+	  { CKA_ISSUER, CREATE | MODIFY | WANT, type_der_name },
+	  { CKA_SERIAL_NUMBER, CREATE | MODIFY | WANT, type_der_serial },
+	  { CKA_VALUE, CREATE, type_der_cert },
+	  { CKA_URL, CREATE, type_utf8 },
 	  { CKA_HASH_OF_SUBJECT_PUBLIC_KEY, CREATE },
 	  { CKA_HASH_OF_ISSUER_PUBLIC_KEY, CREATE },
-	  { CKA_JAVA_MIDP_SECURITY_DOMAIN, CREATE },
+	  { CKA_JAVA_MIDP_SECURITY_DOMAIN, CREATE, type_ulong },
 	  { CKA_INVALID },
-	}, certificate_populate,
+	}, certificate_populate, certificate_validate,
 };
 
 static CK_ATTRIBUTE *
@@ -624,8 +772,8 @@ const static builder_schema extension_schema = {
 	NORMAL_BUILD,
 	{ COMMON_ATTRS,
 	  { CKA_VALUE, REQUIRE | CREATE },
-	  { CKA_X_CRITICAL, WANT },
-	  { CKA_OBJECT_ID, REQUIRE | CREATE },
+	  { CKA_X_CRITICAL, WANT, type_bool },
+	  { CKA_OBJECT_ID, REQUIRE | CREATE, type_der_oid },
 	  { CKA_ID, CREATE | MODIFY | WANT },
 	  { CKA_INVALID },
 	}, extension_populate,
@@ -651,8 +799,8 @@ const static builder_schema data_schema = {
 	NORMAL_BUILD,
 	{ COMMON_ATTRS,
 	  { CKA_VALUE, CREATE | MODIFY | WANT },
-	  { CKA_APPLICATION, CREATE | MODIFY | WANT },
-	  { CKA_OBJECT_ID, CREATE | MODIFY | WANT },
+	  { CKA_APPLICATION, CREATE | MODIFY | WANT, type_utf8 },
+	  { CKA_OBJECT_ID, CREATE | MODIFY | WANT, type_der_oid },
 	  { CKA_INVALID },
 	}, data_populate,
 };
@@ -749,6 +897,40 @@ type_name (CK_ATTRIBUTE_TYPE type)
 }
 
 static CK_RV
+validate_for_schema (p11_builder *builder,
+                     const builder_schema *schema,
+                     CK_ATTRIBUTE *attrs,
+                     CK_ATTRIBUTE *merge)
+{
+	CK_ATTRIBUTE *shallow;
+	CK_ULONG nattrs;
+	CK_ULONG nmerge;
+	CK_RV rv;
+
+	if (!schema->validate)
+		return CKR_OK;
+
+	nattrs = p11_attrs_count (attrs);
+	nmerge = p11_attrs_count (merge);
+
+	/* Make a shallow copy of the combined attributes for validation */
+	shallow = calloc (nmerge + nattrs + 1, sizeof (CK_ATTRIBUTE));
+	return_val_if_fail (shallow != NULL, CKR_GENERAL_ERROR);
+
+	memcpy (shallow, merge, sizeof (CK_ATTRIBUTE) * nmerge);
+	memcpy (shallow + nmerge, attrs, sizeof (CK_ATTRIBUTE) * nattrs);
+
+	/* The terminator attribute */
+	shallow[nmerge + nattrs].type = CKA_INVALID;
+	assert(p11_attrs_terminator (shallow + nmerge + nattrs));
+
+	rv = (schema->validate) (builder, shallow);
+	free (shallow);
+
+	return rv;
+}
+
+static CK_RV
 build_for_schema (p11_builder *builder,
                   p11_index *index,
                   const builder_schema *schema,
@@ -765,6 +947,7 @@ build_for_schema (p11_builder *builder,
 	bool found;
 	int flags;
 	int i, j;
+	CK_RV rv;
 
 	attrs = *object;
 	populate = false;
@@ -813,6 +996,12 @@ build_for_schema (p11_builder *builder,
 				             type_name (schema->attrs[j].type));
 				return CKR_ATTRIBUTE_READ_ONLY;
 			}
+			if (!loading && schema->attrs[j].validate != NULL &&
+			    !schema->attrs[j].validate (builder, merge + i)) {
+				p11_message ("the %s attribute has an invalid value",
+				             type_name (schema->attrs[j].type));
+				return CKR_ATTRIBUTE_VALUE_INVALID;
+			}
 			found = true;
 			break;
 		}
@@ -856,12 +1045,14 @@ build_for_schema (p11_builder *builder,
 			merge = p11_attrs_merge (merge, extra, false);
 	}
 
-	/*
-	 * TODO: Validate the result, before committing to the change. We can
-	 * do this by doing a shallow copy of merge + attrs and then validating
-	 * that. Although there may be duplicate attributets, the validation
-	 * code will see the new ones because they're first.
-	 */
+	/* Validate the result, before committing to the change. */
+	if (!loading) {
+		rv = validate_for_schema (builder, schema, attrs, merge);
+		if (rv != CKR_OK) {
+			p11_attrs_free (merge);
+			return rv;
+		}
+	}
 
 	*object = p11_attrs_merge (attrs, merge, true);
 	return_val_if_fail (*object != NULL, CKR_HOST_MEMORY);
