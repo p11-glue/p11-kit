@@ -61,4 +61,7 @@ bool         p11_path_absolute  (const char *path);
 
 char *       p11_path_parent    (const char *path);
 
+bool         p11_path_prefix    (const char *string,
+                                 const char *prefix);
+
 #endif /* P11_PATH_H__ */

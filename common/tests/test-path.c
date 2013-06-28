@@ -189,6 +189,18 @@ test_parent (void)
 	assert_ptr_eq (NULL, p11_path_parent (""));
 }
 
+static void
+test_prefix (void)
+{
+	assert (p11_path_prefix ("/test/second", "/test"));
+	assert (!p11_path_prefix ("/test", "/test"));
+	assert (!p11_path_prefix ("/different/prefix", "/test"));
+	assert (!p11_path_prefix ("/te", "/test"));
+	assert (!p11_path_prefix ("/test", "/test/blah"));
+	assert (p11_path_prefix ("/test/other/second", "/test"));
+	assert (p11_path_prefix ("/test//other//second", "/test"));
+}
+
 int
 main (int argc,
       char *argv[])
@@ -198,6 +210,7 @@ main (int argc,
 	p11_test (test_expand, "/path/expand");
 	p11_test (test_absolute, "/path/absolute");
 	p11_test (test_parent, "/path/parent");
+	p11_test (test_prefix, "/path/prefix");
 
 	return p11_test_run (argc, argv);
 }

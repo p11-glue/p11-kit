@@ -298,3 +298,20 @@ p11_path_parent (const char *path)
 	return_val_if_fail (parent != NULL, NULL);
 	return parent;
 }
+
+bool
+p11_path_prefix (const char *string,
+                 const char *prefix)
+{
+	int a, b;
+
+	return_val_if_fail (string != NULL, false);
+	return_val_if_fail (prefix != NULL, false);
+
+	a = strlen (string);
+	b = strlen (prefix);
+
+	return a > b &&
+	       strncmp (string, prefix, b) == 0 &&
+	       is_path_component_or_null (string[b]);
+}
