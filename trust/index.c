@@ -313,7 +313,7 @@ index_notify (p11_index *index,
 }
 
 void
-p11_index_batch (p11_index *index)
+p11_index_load (p11_index *index)
 {
 	return_if_fail (index != NULL);
 
@@ -351,7 +351,7 @@ p11_index_finish (p11_index *index)
 }
 
 bool
-p11_index_in_batch (p11_index *index)
+p11_index_loading (p11_index *index)
 {
 	return_val_if_fail (index != NULL, false);
 	return index->changes ? true : false;

@@ -876,9 +876,9 @@ test_change_batch (void)
 	on_change_batching = true;
 	on_change_called = 0;
 
-	p11_index_batch (index);
+	p11_index_load (index);
 
-	assert (p11_index_in_batch (index));
+	assert (p11_index_loading (index));
 
 	rv = p11_index_add (index, original, 2, NULL);
 	assert (rv == CKR_OK);
@@ -896,7 +896,7 @@ test_change_batch (void)
 	assert_num_eq (0, on_change_called);
 
 	/* Nested batch is a noop */
-	p11_index_batch (index);
+	p11_index_load (index);
 
 	rv = p11_index_remove (index, handle);
 	assert (rv == CKR_OK);
@@ -909,7 +909,7 @@ test_change_batch (void)
 	 */
 	p11_index_finish (index);
 
-	assert (!p11_index_in_batch (index));
+	assert (!p11_index_loading (index));
 
 	/*
 	 * Only three calls, because later operations on the
@@ -920,7 +920,7 @@ test_change_batch (void)
 	/* This is a noop */
 	p11_index_finish (index);
 
-	assert (!p11_index_in_batch (index));
+	assert (!p11_index_loading (index));
 
 	p11_index_free (index);
 }
@@ -971,7 +971,7 @@ test_change_nested (void)
 
 
 	on_change_called = 0;
-	p11_index_batch (index);
+	p11_index_load (index);
 	rv = p11_index_add (index, original, 2, NULL);
 	assert (rv == CKR_OK);
 	p11_index_finish (index);

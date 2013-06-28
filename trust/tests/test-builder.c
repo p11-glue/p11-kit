@@ -988,7 +988,7 @@ test_create_but_loadable (void)
 	CK_ATTRIBUTE *attrs;
 	CK_RV rv;
 
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 
 	attrs = NULL;
 	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
@@ -1494,7 +1494,7 @@ test_changed_trusted_certificate (void)
 	 * A trusted cetrificate, trusted for server and client purposes,
 	 * and explicitly rejects the email and timestamping purposes.
 	 */
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (cacert3_trusted_certificate), NULL);
 	assert_num_eq (CKR_OK, rv);
 	rv = p11_index_take (test.index, p11_attrs_dup (eku_extension_server_and_client), NULL);
@@ -1604,7 +1604,7 @@ test_changed_distrust_value (void)
 	 * A distrusted certificate with a value, plus some extra
 	 * extensions (which should be ignored).
 	 */
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (distrust_cert), NULL);
 	assert_num_eq (CKR_OK, rv);
 	rv = p11_index_take (test.index, p11_attrs_dup (eku_extension), NULL);
@@ -1689,7 +1689,7 @@ test_changed_distrust_serial (void)
 	/*
 	 * A distrusted certificate without a value.
 	 */
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (distrust_cert), NULL);
 	assert_num_eq (CKR_OK, rv);
 	p11_index_finish (test.index);
@@ -1790,7 +1790,7 @@ test_changed_dup_certificates (void)
 	 * A trusted certificate, should create trutsed nss trust
 	 * and anchor assertions
 	 */
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (trusted_cert), &handle1);
 	assert_num_eq (CKR_OK, rv);
 	p11_index_finish (test.index);
@@ -1805,7 +1805,7 @@ test_changed_dup_certificates (void)
 	assert (handle != 0);
 
 	/* Now we add a distrusted certificate, should update the objects */
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (distrust_cert), &handle2);
 	assert_num_eq (CKR_OK, rv);
 	p11_index_finish (test.index);
@@ -1869,7 +1869,7 @@ test_changed_without_id (void)
 	CK_OBJECT_HANDLE handle;
 	CK_RV rv;
 
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (trusted_without_id), NULL);
 	assert_num_eq (CKR_OK, rv);
 	p11_index_finish (test.index);
@@ -1977,7 +1977,7 @@ test_changed_staple_ku (void)
 	CK_ATTRIBUTE *attrs;
 	CK_RV rv;
 
-	p11_index_batch (test.index);
+	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (input), NULL);
 	assert_num_eq (CKR_OK, rv);
 	rv = p11_index_take (test.index, p11_attrs_dup (stapled_ds_and_np), NULL);

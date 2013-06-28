@@ -954,7 +954,7 @@ build_for_schema (p11_builder *builder,
 	populate = false;
 
 	/* Signifies that data is being loaded */
-	loading = p11_index_in_batch (index);
+	loading = p11_index_loading (index);
 
 	/* Signifies that this is being created by a caller, instead of loaded */
 	creating = (attrs == NULL && !loading);
@@ -1835,7 +1835,7 @@ p11_builder_changed (void *bilder,
 	 * Treat these operations as loading, not modifying/creating, so we get
 	 * around many of the rules that govern object creation
 	 */
-	p11_index_batch (index);
+	p11_index_load (index);
 
 	/* A certificate */
 	if (p11_attrs_match (attrs, match_cert)) {

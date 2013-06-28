@@ -208,7 +208,7 @@ loader_load_file (p11_token *token,
 		return_val_if_fail (parsed->elem[i] != NULL, 0);
 	}
 
-	p11_index_batch (token->index);
+	p11_index_load (token->index);
 
 	/* Now place all of these in the index */
 	rv = p11_index_replace_all (token->index, origin, CKA_CLASS, parsed);
@@ -366,7 +366,7 @@ load_builtin_objects (p11_token *token)
 		{ CKA_INVALID },
 	};
 
-	p11_index_batch (token->index);
+	p11_index_load (token->index);
 	rv = p11_index_take (token->index, p11_attrs_dup (builtin_root_list), NULL);
 	return_val_if_fail (rv == CKR_OK, 0);
 	p11_index_finish (token->index);

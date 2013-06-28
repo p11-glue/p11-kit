@@ -74,11 +74,11 @@ void               p11_index_free        (p11_index *index);
 
 int                p11_index_size        (p11_index *index);
 
-void               p11_index_batch       (p11_index *index);
+void               p11_index_load        (p11_index *index);
 
 void               p11_index_finish      (p11_index *index);
 
-bool               p11_index_in_batch    (p11_index *index);
+bool               p11_index_loading     (p11_index *index);
 
 CK_RV              p11_index_take        (p11_index *index,
                                           CK_ATTRIBUTE *attrs,
