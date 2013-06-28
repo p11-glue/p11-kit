@@ -440,7 +440,7 @@ p11_trust_extract (int argc,
 
 	limit_modules_if_necessary (modules, ex.flags);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 
 	p11_kit_iter_add_callback (iter, p11_extract_info_load_filter, &ex, NULL);
 	p11_kit_iter_add_filter (iter, match, p11_attrs_count (match));

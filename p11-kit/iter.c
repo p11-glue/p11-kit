@@ -52,8 +52,6 @@ typedef struct _Callback {
 	struct _Callback *next;
 } Callback;
 
-#define MAX_OBJECTS 64
-
 /**
  * P11KitIter:
  *
@@ -77,7 +75,8 @@ struct p11_kit_iter {
 	CK_ULONG saw_slots;
 
 	/* The results of C_FindObjects */
-	CK_OBJECT_HANDLE objects[MAX_OBJECTS];
+	CK_OBJECT_HANDLE *objects;
+	CK_ULONG max_objects;
 	CK_ULONG num_objects;
 	CK_ULONG saw_objects;
 
@@ -93,11 +92,13 @@ struct p11_kit_iter {
 	int iterating : 1;
 	int match_nothing : 1;
 	int keep_session : 1;
+	int preload_results : 1;
 };
 
 /**
  * p11_kit_iter_new:
  * @uri: (allow-none): a PKCS\#11 URI to filter on, or %NULL
+ * @behavior: various behavior flags for iterator
  *
  * Create a new PKCS\#11 iterator for iterating over objects. Only
  * objects that match the @uri will be returned by the iterator.
@@ -111,7 +112,8 @@ struct p11_kit_iter {
  *          with p11_kit_iter_free()
  */
 P11KitIter *
-p11_kit_iter_new (P11KitUri *uri)
+p11_kit_iter_new (P11KitUri *uri,
+                  P11KitIterBehavior behavior)
 {
 	P11KitIter *iter;
 	CK_ATTRIBUTE *attrs;
@@ -149,6 +151,7 @@ p11_kit_iter_new (P11KitUri *uri)
 	}
 
 	iter->session_flags = CKF_SERIAL_SESSION;
+	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);
 
 	return iter;
 }
@@ -515,6 +518,7 @@ move_next_session (P11KitIter *iter)
 CK_RV
 p11_kit_iter_next (P11KitIter *iter)
 {
+	CK_ULONG batch;
 	CK_ULONG count;
 	CK_BBOOL matches;
 	CK_RV rv;
@@ -566,20 +570,36 @@ p11_kit_iter_next (P11KitIter *iter)
 		iter->num_objects = 0;
 		iter->saw_objects = 0;
 
-		rv = (iter->module->C_FindObjects) (iter->session, iter->objects,
-		                                    MAX_OBJECTS, &iter->num_objects);
-		if (rv != CKR_OK)
-			return finish_iterating (iter, rv);
+		for (;;) {
+			if (iter->max_objects - iter->num_objects == 0) {
+				iter->max_objects = iter->max_objects ? iter->max_objects * 2 : 64;
+				iter->objects = realloc (iter->objects, iter->max_objects * sizeof (CK_ULONG));
+				return_val_if_fail (iter->objects != NULL, CKR_HOST_MEMORY);
+			}
 
-		/*
-		 * Done searching on this session, although there are still
-		 * objects outstanding, which will be returned on next
-		 * iterations.
-		 */
-		if (iter->num_objects != MAX_OBJECTS) {
-			iter->searching = 0;
-			iter->searched = 1;
-			(iter->module->C_FindObjectsFinal) (iter->session);
+			batch = iter->max_objects - iter->num_objects;
+			rv = (iter->module->C_FindObjects) (iter->session,
+			                                    iter->objects + iter->num_objects,
+			                                    batch, &count);
+			if (rv != CKR_OK)
+				return finish_iterating (iter, rv);
+
+			iter->num_objects += count;
+
+			/*
+			 * Done searching on this session, although there are still
+			 * objects outstanding, which will be returned on next
+			 * iterations.
+			 */
+			if (batch != count) {
+				iter->searching = 0;
+				iter->searched = 1;
+				(iter->module->C_FindObjectsFinal) (iter->session);
+				break;
+			}
+
+			if (!iter->preload_results)
+				break;
 		}
 	}
 
@@ -635,7 +655,7 @@ p11_kit_iter_get_slot (P11KitIter *iter)
  * The session may be closed after the next p11_kit_iter_next() call
  * unless p11_kit_iter_keep_session() is called.
  *
- * Returns: the slot of the current matching object
+ * Returns: the session used to find the current matching object
  */
 CK_SESSION_HANDLE
 p11_kit_iter_get_session (P11KitIter *iter)
@@ -815,6 +835,7 @@ p11_kit_iter_free (P11KitIter *iter)
 	finish_iterating (iter, CKR_OK);
 	p11_array_free (iter->modules);
 	p11_attrs_free (iter->match_attrs);
+	free (iter->objects);
 	free (iter->slots);
 
 	for (cb = iter->callbacks; cb != NULL; cb = next) {

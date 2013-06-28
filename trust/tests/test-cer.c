@@ -74,7 +74,7 @@ setup (void *unused)
 	rv = test.module.C_Initialize (NULL);
 	assert_num_eq (CKR_OK, rv);
 
-	test.iter = p11_kit_iter_new (NULL);
+	test.iter = p11_kit_iter_new (NULL, 0);
 
 	p11_extract_info_init (&test.ex);
 

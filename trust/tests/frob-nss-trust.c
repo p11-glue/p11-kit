@@ -108,7 +108,7 @@ dump_trust_module (const char *path)
 	rv = p11_kit_module_initialize (module);
 	return_val_if_fail (rv == CKR_OK, 1);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, &match, 1);
 	p11_kit_iter_begin_with (iter, module, 0, 0);
 
@@ -168,7 +168,7 @@ compare_trust_modules (const char *path1,
 	rv = p11_kit_module_initialize (module2);
 	return_val_if_fail (rv == CKR_OK, 1);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, &match, 1);
 	p11_kit_iter_begin_with (iter, module1, 0, 0);
 
@@ -182,7 +182,7 @@ compare_trust_modules (const char *path1,
 		p11_attrs_purge (check);
 
 		/* Check that this object exists */
-		iter2 = p11_kit_iter_new (NULL);
+		iter2 = p11_kit_iter_new (NULL, 0);
 		p11_kit_iter_add_filter (iter2, check, p11_attrs_count (check));
 		p11_kit_iter_begin_with (iter2, module2, 0, 0);
 		rv = p11_kit_iter_next (iter2);

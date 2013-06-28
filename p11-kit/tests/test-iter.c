@@ -38,6 +38,7 @@
 #define P11_KIT_FUTURE_UNSTABLE_API 1
 
 #include "attrs.h"
+#include "dict.h"
 #include "iter.h"
 #include "library.h"
 #include "message.h"
@@ -99,7 +100,7 @@ test_all (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, P11_KIT_ITER_BUSY_SESSIONS);
 	p11_kit_iter_begin (iter, modules);
 
 	at = 0;
@@ -183,7 +184,7 @@ test_callback (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_callback (iter, on_iter_callback, "callback", NULL);
 	p11_kit_iter_begin (iter, modules);
 
@@ -228,7 +229,7 @@ test_callback_fails (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_callback (iter, on_callback_fail, "callback", NULL);
 	p11_kit_iter_begin (iter, modules);
 
@@ -258,7 +259,7 @@ test_callback_destroyer (void)
 	P11KitIter *iter;
 	int value = 1;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_callback (iter, on_callback_fail, &value, on_destroy_increment);
 	p11_kit_iter_free (iter);
 
@@ -283,7 +284,7 @@ test_with_session (void)
 	rv = mock_C_OpenSession (MOCK_SLOT_ONE_ID, CKF_SERIAL_SESSION, NULL, NULL, &session);
 	assert (rv == CKR_OK);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &mock_module, 0, session);
 
 	at= 0;
@@ -336,7 +337,7 @@ test_with_slot (void)
 	rv = mock_module.C_Initialize (NULL);
 	assert (rv == CKR_OK);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &mock_module, MOCK_SLOT_ONE_ID, 0);
 
 	at= 0;
@@ -382,7 +383,7 @@ test_with_module (void)
 	rv = mock_module.C_Initialize (NULL);
 	assert (rv == CKR_OK);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &mock_module, 0, 0);
 
 	at= 0;
@@ -423,7 +424,7 @@ test_keep_session (void)
 	rv = mock_module.C_Initialize (NULL);
 	assert (rv == CKR_OK);
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &mock_module, 0, 0);
 
 	rv = p11_kit_iter_next (iter);
@@ -453,7 +454,7 @@ test_unrecognized (void)
 
 	uri = p11_kit_uri_new ();
 	p11_kit_uri_set_unrecognized (uri, 1);
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -489,7 +490,7 @@ test_uri_with_type (void)
 	ret = p11_kit_uri_parse ("pkcs11:object-type=public", P11_KIT_URI_FOR_OBJECT, uri);
 	assert_num_eq (ret, P11_KIT_URI_OK);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -535,7 +536,7 @@ test_filter (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, attrs, 2);
 
 	p11_kit_iter_begin (iter, modules);
@@ -575,7 +576,7 @@ test_session_flags (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_set_session_flags (iter, CKF_RW_SESSION);
 
 	p11_kit_iter_begin (iter, modules);
@@ -616,7 +617,7 @@ test_module_match (void)
 	ret = p11_kit_uri_parse ("pkcs11:library-description=MOCK%20LIBRARY", P11_KIT_URI_FOR_MODULE, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -651,7 +652,7 @@ test_module_mismatch (void)
 	ret = p11_kit_uri_parse ("pkcs11:library-description=blah", P11_KIT_URI_FOR_MODULE, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -686,7 +687,7 @@ test_token_match (void)
 	ret = p11_kit_uri_parse ("pkcs11:manufacturer=TEST%20MANUFACTURER", P11_KIT_URI_FOR_TOKEN, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -721,7 +722,7 @@ test_token_mismatch (void)
 	ret = p11_kit_uri_parse ("pkcs11:manufacturer=blah", P11_KIT_URI_FOR_TOKEN, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri);
+	iter = p11_kit_iter_new (uri, 0);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -755,7 +756,7 @@ test_getslotlist_fail_first (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_GetSlotList = mock_C_GetSlotList__fail_first;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	at= 0;
@@ -788,7 +789,7 @@ test_getslotlist_fail_late (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_GetSlotList = mock_C_GetSlotList__fail_late;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	at= 0;
@@ -821,7 +822,7 @@ test_open_session_fail (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_OpenSession = mock_C_OpenSession__fails;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	at= 0;
@@ -854,7 +855,7 @@ test_find_init_fail (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_FindObjectsInit = mock_C_FindObjectsInit__fails;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	at= 0;
@@ -887,7 +888,7 @@ test_find_objects_fail (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_FindObjects = mock_C_FindObjects__fails;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	at= 0;
@@ -923,7 +924,7 @@ test_load_attributes (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin (iter, modules);
 
 	attrs = p11_attrs_buildn (NULL, types, 2);
@@ -981,7 +982,7 @@ test_load_attributes_none (void)
 
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
@@ -1015,7 +1016,7 @@ test_load_attributes_fail_first (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_GetAttributeValue = mock_C_GetAttributeValue__fail_first;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
@@ -1049,7 +1050,7 @@ test_load_attributes_fail_late (void)
 	memcpy (&module, &mock_module, sizeof (CK_FUNCTION_LIST));
 	module.C_GetAttributeValue = mock_C_GetAttributeValue__fail_late;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin_with (iter, &module, 0, 0);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
@@ -1062,6 +1063,64 @@ test_load_attributes_fail_late (void)
 	assert (rv == CKR_CANCEL);
 
 	p11_kit_iter_free (iter);
+
+	rv = mock_module.C_Finalize (NULL);
+	assert (rv == CKR_OK);
+}
+
+static void
+test_many (void *flags)
+{
+	P11KitIterBehavior behavior;
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	p11_dict *seen;
+	P11KitIter *iter;
+	CK_RV rv;
+	int count;
+	int i;
+
+	static CK_OBJECT_CLASS data = CKO_DATA;
+	static CK_ATTRIBUTE object[] = {
+		{ CKA_VALUE, "blah", 4 },
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_ID, "ID1", 3 },
+		{ CKA_INVALID },
+	};
+
+	behavior = 0;
+	if (strstr (flags, "busy-sessions"))
+		behavior |= P11_KIT_ITER_BUSY_SESSIONS;
+
+	mock_module_reset ();
+	rv = mock_module.C_Initialize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = mock_C_OpenSession (MOCK_SLOT_ONE_ID, CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
+
+	for (i = 0; i < 10000; i++)
+		mock_module_add_object (MOCK_SLOT_ONE_ID, object);
+
+	seen = p11_dict_new (p11_dict_ulongptr_hash, p11_dict_ulongptr_equal, free, NULL);
+	iter = p11_kit_iter_new (NULL, behavior);
+	p11_kit_iter_add_filter (iter, object, 3);
+	p11_kit_iter_begin_with (iter, &mock_module, 0, session);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		handle = p11_kit_iter_get_object (iter);
+		assert (p11_dict_get (seen, &handle) == NULL);
+		if (!p11_dict_set (seen, memdup (&handle, sizeof (handle)), "x"))
+			assert_not_reached ();
+		count++;
+	}
+
+	assert_num_eq (rv, CKR_CANCEL);
+	assert_num_eq (count, 10000);
+
+	p11_kit_iter_free (iter);
+	p11_dict_free (seen);
 
 	rv = mock_module.C_Finalize (NULL);
 	assert (rv == CKR_OK);
@@ -1099,6 +1158,8 @@ main (int argc,
 	p11_test (test_load_attributes_none, "/iter/test_load_attributes_none");
 	p11_test (test_load_attributes_fail_first, "/iter/test_load_attributes_fail_first");
 	p11_test (test_load_attributes_fail_late, "/iter/test_load_attributes_fail_late");
+	p11_testx (test_many, "", "/iter/test-many");
+	p11_testx (test_many, "busy-sessions", "/iter/test-many-busy");
 
 	return p11_test_run (argc, argv);
 }

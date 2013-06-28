@@ -51,7 +51,7 @@
 
 static p11_dict *
 load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
-                         CK_SLOT_ID slot_id,
+                         CK_SESSION_HANDLE session,
                          CK_ATTRIBUTE *id)
 {
 	CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
@@ -79,9 +79,9 @@ load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
 	if (!id->pValue || !id->ulValueLen)
 		return stapled;
 
-	iter = p11_kit_iter_new (NULL);
+	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, match, 2);
-	p11_kit_iter_begin_with (iter, module, slot_id, 0);
+	p11_kit_iter_begin_with (iter, module, 0, session);
 
 	while (rv == CKR_OK) {
 		rv = p11_kit_iter_next (iter);
@@ -291,7 +291,7 @@ extract_info (P11KitIter *iter,
 	attr = p11_attrs_find_valid (ex->attrs, CKA_ID);
 	if (attr) {
 		ex->stapled = load_stapled_extensions (p11_kit_iter_get_module (iter),
-		                                       p11_kit_iter_get_slot (iter),
+		                                       p11_kit_iter_get_session (iter),
 		                                       attr);
 		if (!ex->stapled)
 			return false;
