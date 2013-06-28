@@ -47,8 +47,14 @@
 #include "message.h"
 #include "token.h"
 
+static CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
+static CK_BBOOL falsev = CK_FALSE;
+static CK_BBOOL truev = CK_TRUE;
+
 struct {
 	p11_token *token;
+	p11_index *index;
+	char *directory;
 } test;
 
 static void
@@ -56,6 +62,19 @@ setup (void *path)
 {
 	test.token = p11_token_new (333, path, "Label");
 	assert_ptr_not_null (test.token);
+
+	test.index = p11_token_index (test.token);
+	assert_ptr_not_null (test.token);
+}
+
+static void
+setup_temp (void *unused)
+{
+	test.directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
+	if (!mkdtemp (test.directory))
+		assert_not_reached ();
+
+	setup (test.directory);
 }
 
 static void
@@ -66,15 +85,23 @@ teardown (void *path)
 }
 
 static void
+teardown_temp (void *unused)
+{
+	test_delete_directory (test.directory);
+	free (test.directory);
+	teardown (test.directory);
+}
+
+static void
 test_token_load (void *path)
 {
 	p11_index *index;
 	int count;
 
 	count = p11_token_load (test.token);
-	assert_num_eq (7, count);
+	assert_num_eq (6, count);
 
-	/* A certificate and trust object for each parsed object + builtin */
+	/* A certificate and trust object for each parsed object */
 	index = p11_token_index (test.token);
 	assert (((count - 1) * 2) + 1 <= p11_index_size (index));
 }
@@ -82,10 +109,6 @@ test_token_load (void *path)
 static void
 test_token_flags (void *path)
 {
-	CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
-	CK_BBOOL falsev = CK_FALSE;
-	CK_BBOOL truev = CK_TRUE;
-
 	/*
 	 * blacklist comes from the input/distrust.pem file. It is not in the blacklist
 	 * directory, but is an OpenSSL trusted certificate file, and is marked
@@ -228,24 +251,8 @@ test_not_writable (void)
 static void
 test_writable_exists (void)
 {
-	char *directory;
-	p11_token *token;
-
-	directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
-	if (!mkdtemp (directory))
-		assert_not_reached ();
-
-	token = p11_token_new (333, directory, "Label");
-
 	/* A writable directory since we created it */
-	assert (p11_token_is_writable (token));
-
-	p11_token_free (token);
-
-	if (rmdir (directory) < 0)
-		assert_not_reached ();
-
-	free (directory);
+	assert (p11_token_is_writable (test.token));
 }
 
 static void
@@ -276,6 +283,196 @@ test_writable_no_exist (void)
 	free (directory);
 }
 
+static void
+test_load_already (void)
+{
+	CK_ATTRIBUTE cert[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	CK_OBJECT_HANDLE handle;
+	int ret;
+
+	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+	handle = p11_index_find (test.index, cert, -1);
+	assert (handle != 0);
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 0);
+	assert_num_eq (p11_index_find (test.index, cert, -1), handle);
+}
+
+static void
+test_load_unreadable (void)
+{
+	CK_ATTRIBUTE cert[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	int ret;
+
+	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+	assert (p11_index_find (test.index, cert, -1) != 0);
+
+	test_write_file (test.directory, "test.cer", "", 0);
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 0);
+	assert (p11_index_find (test.index, cert, -1) == 0);
+}
+
+static void
+test_load_gone (void)
+{
+	CK_ATTRIBUTE cert[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	int ret;
+
+	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+	assert (p11_index_find (test.index, cert, -1) != 0);
+
+	test_delete_file (test.directory, "test.cer");
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 0);
+	assert (p11_index_find (test.index, cert, -1) == 0);
+}
+
+static void
+test_load_found (void)
+{
+	CK_ATTRIBUTE cert[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	int ret;
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 0);
+	assert (p11_index_find (test.index, cert, -1) == 0);
+
+	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+	assert (p11_index_find (test.index, cert, -1) != 0);
+}
+
+static void
+test_reload_changed (void)
+{
+	CK_ATTRIBUTE cacert3[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE verisign[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
+	int ret;
+
+	/* Just one file */
+	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+	handle = p11_index_find (test.index, cacert3, -1);
+	assert (handle != 0);
+
+	/* Replace the file with verisign */
+	test_write_file (test.directory, "test.cer", verisign_v1_ca,
+	                 sizeof (verisign_v1_ca));
+
+	/* Add another file with cacert3, but not reloaded */
+	test_write_file (test.directory, "another.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+
+	attrs = p11_index_lookup (test.index, handle);
+	assert_ptr_not_null (attrs);
+	p11_token_reload (test.token, attrs);
+
+	assert (p11_index_find (test.index, cacert3, -1) == 0);
+	assert (p11_index_find (test.index, verisign, -1) != 0);
+}
+
+static void
+test_reload_gone (void)
+{
+	CK_ATTRIBUTE cacert3[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE verisign[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
+	int ret;
+
+	/* Just one file */
+	test_write_file (test.directory, "cacert3.cer", test_cacert3_ca_der,
+	                 sizeof (test_cacert3_ca_der));
+	test_write_file (test.directory, "verisign.cer", verisign_v1_ca,
+	                 sizeof (verisign_v1_ca));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 2);
+	handle = p11_index_find (test.index, cacert3, -1);
+	assert (handle != 0);
+	assert (p11_index_find (test.index, verisign, -1) != 0);
+
+	test_delete_file (test.directory, "cacert3.cer");
+	test_delete_file (test.directory, "verisign.cer");
+
+	attrs = p11_index_lookup (test.index, handle);
+	assert_ptr_not_null (attrs);
+	p11_token_reload (test.token, attrs);
+
+	assert (p11_index_find (test.index, cacert3, -1) == 0);
+	assert (p11_index_find (test.index, verisign, -1) != 0);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -283,16 +480,22 @@ main (int argc,
 	p11_fixture (setup, teardown);
 	p11_testx (test_token_load, SRCDIR "/input", "/token/load");
 	p11_testx (test_token_flags, SRCDIR "/input", "/token/flags");
-
-	p11_fixture (setup, teardown);
 	p11_testx (test_token_path, "/wheee", "/token/path");
 	p11_testx (test_token_label, "/wheee", "/token/label");
 	p11_testx (test_token_slot, "/unneeded", "/token/slot");
 
 	p11_fixture (NULL, NULL);
 	p11_test (test_not_writable, "/token/not-writable");
-	p11_test (test_writable_exists, "/token/writable-exists");
 	p11_test (test_writable_no_exist, "/token/writable-no-exist");
+
+	p11_fixture (setup_temp, teardown_temp);
+	p11_test (test_writable_exists, "/token/writable-exists");
+	p11_test (test_load_found, "/token/load-found");
+	p11_test (test_load_already, "/token/load-already");
+	p11_test (test_load_unreadable, "/token/load-unreadable");
+	p11_test (test_load_gone, "/token/load-gone");
+	p11_test (test_reload_changed, "/token/reload-changed");
+	p11_test (test_reload_gone, "/token/reload-gone");
 
 	return p11_test_run (argc, argv);
 }

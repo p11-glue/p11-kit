@@ -49,6 +49,9 @@ void            p11_token_free        (p11_token *token);
 
 int             p11_token_load        (p11_token *token);
 
+void            p11_token_reload      (p11_token *token,
+                                       CK_ATTRIBUTE *attrs);
+
 p11_index *     p11_token_index       (p11_token *token);
 
 const char *    p11_token_get_path    (p11_token *token);

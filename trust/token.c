@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Red Hat Inc.
+ * Copyright (C) 2012-2013 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -58,48 +58,200 @@
 #include <string.h>
 
 struct _p11_token {
-	p11_parser *parser;
-	p11_index *index;
-	p11_builder *builder;
-	char *path;
-	char *label;
-	CK_SLOT_ID slot;
-	int loaded;
+	p11_parser *parser;       /* Parser we use to load files */
+	p11_index *index;         /* Index we load objects into */
+	p11_builder *builder;     /* Expands objects and applies policy */
+	p11_dict *loaded;         /* stat structs for loaded files, track reloads */
+
+	char *path;               /* Main path to load from */
+	char *anchors;            /* Path to load anchors from */
+	char *blacklist;          /* Path to load blacklist from */
+	char *label;              /* The token label */
+	CK_SLOT_ID slot;          /* The slot id */
 
 	bool checked_writable;
 	bool is_writable;
 };
 
+static bool
+loader_is_necessary (p11_token *token,
+                     const char *filename,
+                     struct stat *sb)
+{
+	struct stat *last;
+
+	last = p11_dict_get (token->loaded, filename);
+
+	/* Never seen this before, load it */
+	if (last == NULL)
+		return true;
+
+	/*
+	 * If any of these are different assume that the file
+	 * needs to be reloaded
+	 */
+	return (sb->st_mode != last->st_mode ||
+	        sb->st_mtime != last->st_mtime ||
+	        sb->st_size != last->st_size);
+}
+
+static void
+loader_was_loaded (p11_token *token,
+                   const char *filename,
+                   struct stat *sb)
+{
+	char *key;
+
+	key = strdup (filename);
+	return_if_fail (key != NULL);
+
+	sb = memdup (sb, sizeof (struct stat));
+	return_if_fail (sb != NULL);
+
+	/* Track the info about this file, so we don't reload unnecessarily */
+	if (!p11_dict_set (token->loaded, key, sb))
+		return_if_reached ();
+}
+
+static void
+loader_not_loaded (p11_token *token,
+                   const char *filename)
+{
+	/* No longer track info about this file */
+	p11_dict_remove (token->loaded, filename);
+}
+
+static void
+loader_gone_file (p11_token *token,
+                  const char *filename)
+{
+	CK_ATTRIBUTE origin[] = {
+		{ CKA_X_ORIGIN, (void *)filename, strlen (filename) },
+		{ CKA_INVALID },
+	};
+
+	CK_RV rv;
+
+	/* Remove everything at this origin */
+	rv = p11_index_replace_all (token->index, origin, CKA_INVALID, NULL);
+	return_if_fail (rv == CKR_OK);
+
+	/* No longer track info about this file */
+	loader_not_loaded (token, filename);
+}
+
 static int
 loader_load_file (p11_token *token,
                   const char *filename,
-                  struct stat *sb,
-                  int flags)
+                  struct stat *sb)
 {
+	CK_ATTRIBUTE origin[] = {
+		{ CKA_X_ORIGIN, (void *)filename, strlen (filename) },
+		{ CKA_INVALID },
+	};
+
+	CK_BBOOL modifiablev;
+
+	CK_ATTRIBUTE modifiable = {
+		CKA_MODIFIABLE,
+		&modifiablev,
+		sizeof (modifiablev)
+	};
+
+	p11_array *parsed;
+	CK_RV rv;
+	int flags;
 	int ret;
+	int i;
+
+	/* Check if this file is already loaded */
+	if (!loader_is_necessary (token, filename, sb))
+		return 0;
+
+	flags = P11_PARSE_FLAG_NONE;
+
+	/* If it's in the anchors subdirectory, treat as an anchor */
+	if (p11_path_prefix (filename, token->anchors))
+		flags = P11_PARSE_FLAG_ANCHOR;
+
+	/* If it's in the blacklist subdirectory, treat as a blacklist */
+	else if (p11_path_prefix (filename, token->blacklist))
+		flags = P11_PARSE_FLAG_BLACKLIST;
+
+	/* If the token is just one path, then assume they are anchors */
+	else if (strcmp (filename, token->path) == 0 && !S_ISDIR (sb->st_mode))
+		flags = P11_PARSE_FLAG_ANCHOR;
 
 	ret = p11_parse_file (token->parser, filename, flags);
 
 	switch (ret) {
 	case P11_PARSE_SUCCESS:
 		p11_debug ("loaded: %s", filename);
-		return 1;
+		break;
 	case P11_PARSE_UNRECOGNIZED:
 		p11_debug ("skipped: %s", filename);
+		loader_gone_file (token, filename);
 		return 0;
 	default:
 		p11_debug ("failed to parse: %s", filename);
+		loader_gone_file (token, filename);
 		return 0;
 	}
+
+	/* TODO: We should check if in the right format */
+	modifiablev = CK_FALSE;
+
+	/* Update each parsed object with the origin */
+	parsed = p11_parser_parsed (token->parser);
+	for (i = 0; i < parsed->num; i++) {
+		parsed->elem[i] = p11_attrs_build (parsed->elem[i], origin, &modifiable, NULL);
+		return_val_if_fail (parsed->elem[i] != NULL, 0);
+	}
+
+	p11_index_batch (token->index);
+
+	/* Now place all of these in the index */
+	rv = p11_index_replace_all (token->index, origin, CKA_CLASS, parsed);
+
+	p11_index_finish (token->index);
+
+	if (rv != CKR_OK) {
+		p11_message ("couldn't load file into objects: %s", filename);
+		return 0;
+	}
+
+	loader_was_loaded (token, filename, sb);
+	return 1;
+}
+
+static int
+loader_load_if_file (p11_token *token,
+                     const char *path)
+{
+	struct stat sb;
+
+	if (stat (path, &sb) < 0) {
+		if (errno == ENOENT) {
+			p11_message ("couldn't stat path: %s: %s",
+			             path, strerror (errno));
+		}
+
+	} else if (!S_ISDIR (sb.st_mode)) {
+		return loader_load_file (token, path, &sb);
+	}
+
+	/* Perhaps the file became unloadable, so track properly */
+	loader_gone_file (token, path);
+	return 0;
 }
 
 static int
 loader_load_directory (p11_token *token,
                        const char *directory,
-                       int flags)
+                       p11_dict *present)
 {
+	p11_dictiter iter;
 	struct dirent *dp;
-	struct stat sb;
 	char *path;
 	int total = 0;
 	int ret;
@@ -110,6 +262,7 @@ loader_load_directory (p11_token *token,
 	if (!dir) {
 		p11_message ("couldn't list directory: %s: %s",
 		             directory, strerror (errno));
+		loader_not_loaded (token, directory);
 		return 0;
 	}
 
@@ -118,81 +271,81 @@ loader_load_directory (p11_token *token,
 		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, -1);
 
-		if (stat (path, &sb) < 0) {
-			p11_message ("couldn't stat path: %s", path);
+		ret = loader_load_if_file (token, path);
+		return_val_if_fail (ret >=0, -1);
+		total += ret;
 
-		} else if (!S_ISDIR (sb.st_mode)) {
-			ret = loader_load_file (token, path, &sb, flags);
-			return_val_if_fail (ret >= 0, ret);
-			total += ret;
-		}
+		/* Make note that this file was seen */
+		p11_dict_remove (present, path);
 
 		free (path);
 	}
 
 	closedir (dir);
+
+	/* All other files that were present, not here now */
+	p11_dict_iterate (present, &iter);
+	while (p11_dict_next (&iter, (void **)&path, NULL))
+		loader_gone_file (token, path);
+
 	return total;
-}
-
-static int
-loader_load_subdirectory (p11_token *token,
-                          const char *directory,
-                          const char *subdir,
-                          int flags)
-{
-	struct stat sb;
-	char *path;
-	int ret = 0;
-
-	if (asprintf (&path, "%s/%s", directory, subdir) < 0)
-		return_val_if_reached (-1);
-
-	if (stat (path, &sb) >= 0 && S_ISDIR (sb.st_mode))
-		ret = loader_load_directory (token, path, flags);
-
-	free (path);
-	return ret;
 }
 
 static int
 loader_load_path (p11_token *token,
                   const char *path)
 {
+	p11_dictiter iter;
+	p11_dict *present;
+	char *filename;
 	struct stat sb;
 	int total;
 	int ret;
 
 	if (stat (path, &sb) < 0) {
-		if (errno == ENOENT) {
-			p11_message ("trust certificate path does not exist: %s",
-			             path);
-		} else {
+		if (errno != ENOENT) {
 			p11_message ("cannot access trust certificate path: %s: %s",
 			             path, strerror (errno));
 		}
-
+		loader_gone_file (token, path);
 		return 0;
 	}
 
 	if (S_ISDIR (sb.st_mode)) {
-		total = 0;
 
-		ret = loader_load_subdirectory (token, path, "anchors", P11_PARSE_FLAG_ANCHOR);
-		return_val_if_fail (ret >= 0, ret);
-		total += ret;
+		/* All the files we know about at this path */
+		present = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
+		p11_dict_iterate (token->loaded, &iter);
+		while (p11_dict_next (&iter, (void **)&filename, NULL)) {
+			if (p11_path_prefix (filename, path)) {
+				if (!p11_dict_set (present, filename, filename))
+					return_val_if_reached (-1);
+			}
+		}
 
-		ret = loader_load_subdirectory (token, path, "blacklist", P11_PARSE_FLAG_BLACKLIST);
-		return_val_if_fail (ret >= 0, ret);
-		total += ret;
+		/* If the directory has changed, reload it */
+		if (loader_is_necessary (token, path, &sb)) {
+			ret = loader_load_directory (token, path, present);
 
-		ret = loader_load_directory (token, path, P11_PARSE_FLAG_NONE);
-		return_val_if_fail (ret >= 0, ret);
-		total += ret;
+		/* Directory didn't change, but maybe files changed? */
+		} else {
+			total = 0;
+			p11_dict_iterate (present, &iter);
+			while (p11_dict_next (&iter, (void **)&filename, NULL)) {
+				ret = loader_load_if_file (token, filename);
+				return_val_if_fail (ret >= 0, ret);
+				total += ret;
+			}
+		}
 
-		return total;
+		p11_dict_free (present);
+		loader_was_loaded (token, path, &sb);
+
 	} else {
-		return loader_load_file (token, path, &sb, P11_PARSE_FLAG_ANCHOR);
+		ret = loader_load_file (token, path, &sb);
 	}
+
+	return ret;
 }
 
 static int
@@ -223,19 +376,49 @@ load_builtin_objects (p11_token *token)
 int
 p11_token_load (p11_token *token)
 {
-	int builtins;
-	int count;
+	int total = 0;
+	int ret;
 
-	if (token->loaded)
-		return 0;
-	token->loaded = 1;
+	ret = loader_load_path (token, token->path);
+	return_val_if_fail (ret >= 0, -1);
+	total += ret;
 
-	builtins = load_builtin_objects (token);
+	ret = loader_load_path (token, token->anchors);
+	return_val_if_fail (ret >= 0, -1);
+	total += ret;
 
-	count = loader_load_path (token, token->path);
-	return_val_if_fail (count >= 0, count);
+	ret = loader_load_path (token, token->blacklist);
+	return_val_if_fail (ret >= 0, -1);
+	total += ret;
 
-	return count + builtins;
+	return total;
+}
+
+void
+p11_token_reload (p11_token *token,
+                  CK_ATTRIBUTE *attrs)
+{
+	CK_ATTRIBUTE *attr;
+	struct stat sb;
+	char *origin;
+
+	attr = p11_attrs_find (attrs, CKA_X_ORIGIN);
+	if (attr == NULL)
+		return;
+
+	origin = strndup (attr->pValue, attr->ulValueLen);
+	return_if_fail (origin != NULL);
+
+	if (stat (origin, &sb) < 0) {
+		if (errno == ENOENT) {
+			loader_gone_file (token, origin);
+		} else {
+			p11_message ("cannot access trust file: %s: %s",
+			             origin, strerror (errno));
+		}
+	} else {
+		loader_load_file (token, origin, &sb);
+	}
 }
 
 void
@@ -247,7 +430,10 @@ p11_token_free (p11_token *token)
 	p11_index_free (token->index);
 	p11_parser_free (token->parser);
 	p11_builder_free (token->builder);
+	p11_dict_free (token->loaded);
 	free (token->path);
+	free (token->anchors);
+	free (token->blacklist);
 	free (token->label);
 	free (token);
 }
@@ -273,18 +459,27 @@ p11_token_new (CK_SLOT_ID slot,
 	                              token->builder);
 	return_val_if_fail (token->index != NULL, NULL);
 
-	token->parser = p11_parser_new (token->index,
-	                                p11_builder_get_cache (token->builder));
+	token->parser = p11_parser_new (p11_builder_get_cache (token->builder));
 	return_val_if_fail (token->parser != NULL, NULL);
+
+	token->loaded = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
+	return_val_if_fail (token->loaded != NULL, NULL);
 
 	token->path = strdup (path);
 	return_val_if_fail (token->path != NULL, NULL);
+
+	token->anchors = p11_path_build (token->path, "anchors", NULL);
+	return_val_if_fail (token->anchors != NULL, NULL);
+
+	token->blacklist = p11_path_build (token->path, "blacklist", NULL);
+	return_val_if_fail (token->blacklist != NULL, NULL);
 
 	token->label = strdup (label);
 	return_val_if_fail (token->label != NULL, NULL);
 
 	token->slot = slot;
-	token->loaded = 0;
+
+	load_builtin_objects (token);
 
 	p11_debug ("token: %s: %s", token->label, token->path);
 	return token;

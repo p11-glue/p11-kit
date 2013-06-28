@@ -1110,8 +1110,11 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 
 			if (rv == CKR_OK)
 				rv = check_index_writable (session, index);
-			if (rv == CKR_OK)
+			if (rv == CKR_OK) {
+				if (index == p11_token_index (session->token))
+					p11_token_reload (session->token, attrs);
 				rv = p11_index_set (index, object, template, count);
+			}
 		}
 
 	p11_unlock ();

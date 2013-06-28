@@ -380,13 +380,18 @@ test_duplicate_extract (void)
 }
 
 static void
-test_duplicate_collapse (void)
+test_duplicate_distrusted (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_X_DISTRUSTED, NULL, 0 },
+	};
+
+	CK_BBOOL val;
 	CK_RV rv;
 
-	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
 	test.ex.flags = P11_EXTRACT_COLLAPSE;
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -396,6 +401,12 @@ test_duplicate_collapse (void)
 	rv = p11_kit_iter_next (test.iter);
 	assert_num_eq (CKR_OK, rv);
 
+	rv = p11_kit_iter_load_attributes (test.iter, attrs, 1);
+	assert_num_eq (CKR_OK, rv);
+	assert (p11_attrs_findn_bool (attrs, 1, CKA_X_DISTRUSTED, &val));
+	assert_num_eq (val, CK_TRUE);
+	free (attrs[0].pValue);
+
 	rv = p11_kit_iter_next (test.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
@@ -404,7 +415,6 @@ static void
 test_trusted_match (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
-	CK_BBOOL boolv;
 	CK_RV rv;
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
@@ -414,13 +424,6 @@ test_trusted_match (void)
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
 	p11_kit_iter_add_filter (test.iter, &certificate, 1);
 	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
-
-	rv = p11_kit_iter_next (test.iter);
-	assert_num_eq (CKR_OK, rv);
-
-	if (!p11_attrs_find_bool (test.ex.attrs, CKA_TRUSTED, &boolv))
-		boolv = CK_FALSE;
-	assert_num_eq (CK_TRUE, boolv);
 
 	rv = p11_kit_iter_next (test.iter);
 	assert_num_eq (CKR_CANCEL, rv);
@@ -470,9 +473,6 @@ test_anytrust_match (void)
 	assert_num_eq (CKR_OK, rv);
 
 	rv = p11_kit_iter_next (test.iter);
-	assert_num_eq (CKR_OK, rv);
-
-	rv = p11_kit_iter_next (test.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -495,7 +495,7 @@ main (int argc,
 	p11_test (test_limit_to_purpose_match, "/extract/test_limit_to_purpose_match");
 	p11_test (test_limit_to_purpose_no_match, "/extract/test_limit_to_purpose_no_match");
 	p11_test (test_duplicate_extract, "/extract/test_duplicate_extract");
-	p11_test (test_duplicate_collapse, "/extract/test_duplicate_collapse");
+	p11_test (test_duplicate_distrusted, "/extract/test-duplicate-distrusted");
 	p11_test (test_trusted_match, "/extract/test_trusted_match");
 	p11_test (test_distrust_match, "/extract/test_distrust_match");
 	p11_test (test_anytrust_match, "/extract/test_anytrust_match");

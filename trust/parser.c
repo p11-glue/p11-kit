@@ -64,11 +64,11 @@
 #include <unistd.h>
 
 struct _p11_parser {
-	p11_index *index;
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
 	p11_persist *persist;
 	char *basename;
+	p11_array *parsed;
 	int flags;
 };
 
@@ -131,114 +131,20 @@ populate_trust (p11_parser *parser,
 	return p11_attrs_build (attrs, &trusted, &distrust, NULL);
 }
 
-static bool
-lookup_cert_duplicate (p11_index *index,
-                       CK_ATTRIBUTE *attrs,
-                       CK_OBJECT_HANDLE *handle,
-                       CK_ATTRIBUTE **dupl)
-{
-	CK_OBJECT_CLASS klass = CKO_CERTIFICATE;
-	CK_ATTRIBUTE *value;
-
-	CK_ATTRIBUTE match[] = {
-		{ CKA_VALUE, },
-		{ CKA_CLASS, &klass, sizeof (klass) },
-		{ CKA_INVALID },
-	};
-
-	/*
-	 * TODO: This will need to be adapted when we support reload on
-	 * the fly, but for now since we only load once, we can assume
-	 * that any certs already present in the index are duplicates.
-	 */
-
-	value = p11_attrs_find_valid (attrs, CKA_VALUE);
-	if (value != NULL) {
-		memcpy (match, value, sizeof (CK_ATTRIBUTE));
-		*handle = p11_index_find (index, match, -1);
-		if (*handle != 0) {
-			*dupl = p11_index_lookup (index, *handle);
-			return true;
-		}
-	}
-
-	return false;
-}
-
-static char *
-pull_cert_label (CK_ATTRIBUTE *attrs)
-{
-	char *label;
-	size_t len;
-
-	label = p11_attrs_find_value (attrs, CKA_LABEL, &len);
-	if (label)
-		label = strndup (label, len);
-
-	return label;
-}
-
-static int
-calc_cert_priority (CK_ATTRIBUTE *attrs)
-{
-	CK_BBOOL boolv;
-
-	enum {
-		PRI_UNKNOWN,
-		PRI_TRUSTED,
-		PRI_DISTRUST
-	};
-
-	if (p11_attrs_find_bool (attrs, CKA_X_DISTRUSTED, &boolv) && boolv)
-		return PRI_DISTRUST;
-	else if (p11_attrs_find_bool (attrs, CKA_TRUSTED, &boolv) && boolv)
-		return PRI_TRUSTED;
-
-	return PRI_UNKNOWN;
-}
-
 static void
 sink_object (p11_parser *parser,
              CK_ATTRIBUTE *attrs)
 {
-	CK_OBJECT_HANDLE handle;
 	CK_OBJECT_CLASS klass;
-	CK_ATTRIBUTE *dupl;
-	char *label;
-	CK_RV rv;
-
-	/* By default not replacing anything */
-	handle = 0;
 
 	if (p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) &&
 	    klass == CKO_CERTIFICATE) {
 		attrs = populate_trust (parser, attrs);
 		return_if_fail (attrs != NULL);
-
-		if (lookup_cert_duplicate (parser->index, attrs, &handle, &dupl)) {
-
-			/* This is not a good place to be for a well configured system */
-			label = pull_cert_label (dupl);
-			p11_message ("duplicate '%s' certificate found in: %s",
-			             label ? label : "?", parser->basename);
-			free (label);
-
-			/*
-			 * Nevertheless we provide predictable behavior about what
-			 * overrides what. If we have a lower or equal priority
-			 * to what's there, then just go away, otherwise replace.
-			 */
-			if (calc_cert_priority (attrs) <= calc_cert_priority (dupl)) {
-				p11_attrs_free (attrs);
-				return;
-			}
-		}
 	}
 
-	/* If handle is zero, this just adds */
-	rv = p11_index_replace (parser->index, handle, attrs);
-	if (rv != CKR_OK)
-		p11_message ("couldn't load file into objects: %s", parser->basename);
+	if (!p11_array_push (parser->parsed, attrs))
+		return_if_reached ();
 }
 
 static CK_ATTRIBUTE *
@@ -636,8 +542,6 @@ on_pem_block (const char *type,
 	p11_parser *parser = user_data;
 	int ret;
 
-	p11_index_batch (parser->index);
-
 	if (strcmp (type, "CERTIFICATE") == 0) {
 		ret = parse_der_x509_certificate (parser, contents, length);
 
@@ -648,8 +552,6 @@ on_pem_block (const char *type,
 		p11_debug ("Saw unsupported or unrecognized PEM block of type %s", type);
 		ret = P11_PARSE_SUCCESS;
 	}
-
-	p11_index_finish (parser->index);
 
 	if (ret != P11_PARSE_SUCCESS)
 		p11_message ("Couldn't parse PEM block of type %s", type);
@@ -714,17 +616,17 @@ static parser_func all_parsers[] = {
 };
 
 p11_parser *
-p11_parser_new (p11_index *index,
-                p11_asn1_cache *asn1_cache)
+p11_parser_new (p11_asn1_cache *asn1_cache)
 {
 	p11_parser parser = { 0, };
 
-	return_val_if_fail (index != NULL, NULL);
 	return_val_if_fail (asn1_cache != NULL, NULL);
 
-	parser.index = index;
 	parser.asn1_defs = p11_asn1_cache_defs (asn1_cache);
 	parser.asn1_cache = asn1_cache;
+
+	parser.parsed = p11_array_new (p11_attrs_free);
+	return_val_if_fail (parser.parsed != NULL, NULL);
 
 	return memdup (&parser, sizeof (parser));
 }
@@ -734,7 +636,15 @@ p11_parser_free (p11_parser *parser)
 {
 	return_if_fail (parser != NULL);
 	p11_persist_free (parser->persist);
+	p11_array_free (parser->parsed);
 	free (parser);
+}
+
+p11_array *
+p11_parser_parsed (p11_parser *parser)
+{
+	return_val_if_fail (parser != NULL, NULL);
+	return parser->parsed;
 }
 
 int
@@ -749,15 +659,15 @@ p11_parse_memory (p11_parser *parser,
 	int i;
 
 	return_val_if_fail (parser != NULL, P11_PARSE_FAILURE);
+	return_val_if_fail (filename != NULL, P11_PARSE_FAILURE);
 
+	p11_array_clear (parser->parsed);
 	base = p11_path_base (filename);
 	parser->basename = base;
 	parser->flags = flags;
 
 	for (i = 0; all_parsers[i] != NULL; i++) {
-		p11_index_batch (parser->index);
 		ret = (all_parsers[i]) (parser, data, length);
-		p11_index_finish (parser->index);
 
 		if (ret != P11_PARSE_UNRECOGNIZED)
 			break;

@@ -322,7 +322,8 @@ type_der_cert (p11_builder *builder,
 	{ CKA_MODIFIABLE, CREATE | WANT, type_bool }, \
 	{ CKA_PRIVATE, CREATE, type_bool }, \
 	{ CKA_LABEL, CREATE | MODIFY | WANT, type_utf8 }, \
-	{ CKA_X_GENERATED, CREATE }
+	{ CKA_X_GENERATED, CREATE }, \
+	{ CKA_X_ORIGIN, NONE } \
 
 static CK_ATTRIBUTE *
 common_populate (p11_builder *builder,

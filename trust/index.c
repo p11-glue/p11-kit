@@ -154,6 +154,7 @@ is_indexable (p11_index *index,
 	case CKA_VALUE:
 	case CKA_OBJECT_ID:
 	case CKA_ID:
+	case CKA_X_ORIGIN:
 		return true;
 	}
 
@@ -566,13 +567,18 @@ p11_index_replace_all (p11_index *index,
 	handles = p11_index_find_all (index, match, -1);
 
 	rv = index_replacev (index, handles, key,
-	                     (CK_ATTRIBUTE **)replace->elem,
-	                     replace->num);
+	                     replace ? (CK_ATTRIBUTE **)replace->elem : NULL,
+	                     replace ? replace->num : 0);
 
-	for (i = 0; i < replace->num; i++) {
-		if (!replace->elem[i]) {
-			p11_array_remove (replace, i);
-			i--;
+	if (rv == CKR_OK) {
+		if (replace)
+			p11_array_clear (replace);
+	} else {
+		for (i = 0; replace && i < replace->num; i++) {
+			if (!replace->elem[i]) {
+				p11_array_remove (replace, i);
+				i--;
+			}
 		}
 	}
 

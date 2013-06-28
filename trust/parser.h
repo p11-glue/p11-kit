@@ -55,8 +55,7 @@ enum {
 
 typedef struct _p11_parser p11_parser;
 
-p11_parser *  p11_parser_new       (p11_index *index,
-                                    p11_asn1_cache *asn1_cache);
+p11_parser *  p11_parser_new       (p11_asn1_cache *asn1_cache);
 
 void          p11_parser_free      (p11_parser *parser);
 
@@ -70,4 +69,6 @@ int           p11_parse_file       (p11_parser *parser,
                                     const char *filename,
                                     int flags);
 
-#endif
+p11_array *   p11_parser_parsed    (p11_parser *parser);
+
+#endif /* P11_PARSER_H_ */

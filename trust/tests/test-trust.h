@@ -344,4 +344,32 @@ void       test_check_directory_msg     (const char *file,
 	(test_check_directory_msg (__FILE__, __LINE__, __FUNCTION__, directory, \
 	                           test_check_directory_files files))
 
+#define test_write_file(directory, name, data, length) \
+	(test_write_file_msg (__FILE__, __LINE__, __FUNCTION__, directory, name, data, length))
+
+void      test_write_file_msg           (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         const char *name,
+                                         const void *contents,
+                                         size_t length);
+
+#define test_delete_file(directory, name) \
+	(test_delete_file_msg (__FILE__, __LINE__, __FUNCTION__, directory, name))
+
+void      test_delete_file_msg          (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory,
+                                         const char *name);
+
+#define test_delete_directory(directory) \
+	(test_delete_directory_msg (__FILE__, __LINE__, __FUNCTION__, directory))
+
+void      test_delete_directory_msg     (const char *file,
+                                         int line,
+                                         const char *function,
+                                         const char *directory);
+
 #endif /* TEST_DATA_H_ */

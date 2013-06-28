@@ -38,6 +38,7 @@
 #include "array.h"
 #include "compat.h"
 #include "pkcs11.h"
+#include "pkcs11x.h"
 
 /*
  * A boolean value which denotes whether we auto generated
@@ -47,6 +48,11 @@
  * or CK_FALSE for all objects built by this builder.
  */
 #define CKA_X_GENERATED (CKA_X_VENDOR + 8000)
+
+/*
+ * A string pointing to the filename from which this was loaded.
+ */
+#define CKA_X_ORIGIN    (CKA_X_VENDOR + 8001)
 
 typedef struct _p11_index p11_index;
 

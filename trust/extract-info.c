@@ -143,46 +143,66 @@ extract_purposes (p11_extract_info *ex)
 }
 
 static bool
-should_collapse_certificate (p11_extract_info *ex,
-                             CK_ATTRIBUTE *value)
+check_blacklisted (P11KitIter *iter,
+                   CK_ATTRIBUTE *cert)
 {
-	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE dummy;
+	CK_FUNCTION_LIST *module;
+	CK_SESSION_HANDLE session;
+	CK_BBOOL distrusted = CK_TRUE;
+	CK_ULONG have;
+	CK_RV rv;
 
-	if (!(ex->flags & P11_EXTRACT_COLLAPSE))
-		return false;
+	CK_ATTRIBUTE match[] = {
+		{ CKA_VALUE, cert->pValue, cert->ulValueLen },
+		{ CKA_X_DISTRUSTED, &distrusted, sizeof (distrusted) },
+	};
 
-	if (!ex->already_seen) {
-		ex->already_seen = p11_dict_new (p11_attr_hash, p11_attr_equal,
-		                                 NULL, p11_attrs_free);
-		return_val_if_fail (ex->already_seen != NULL, true);
+	module = p11_kit_iter_get_module (iter);
+	session = p11_kit_iter_get_session (iter);
+
+	rv = (module->C_FindObjectsInit) (session, match, 2);
+	if (rv == CKR_OK) {
+		rv = (module->C_FindObjects) (session, &dummy, 1, &have);
+		(module->C_FindObjectsFinal) (session);
 	}
 
-	if (p11_dict_get (ex->already_seen, value))
+	if (rv != CKR_OK) {
+		p11_message ("couldn't check if certificate is on blacklist");
 		return true;
+	}
 
-	attrs = p11_attrs_build (NULL, value, NULL);
-	return_val_if_fail (attrs != NULL, true);
-
-	if (!p11_dict_set (ex->already_seen, attrs, attrs))
-		return_val_if_reached (true);
-
-	return false;
+	if (have == 0) {
+		p11_debug ("anchor is not on blacklist");
+		return false;
+	} else {
+		p11_debug ("anchor is on blacklist");
+		return true;
+	}
 }
 
 static bool
-check_trust_flags_match (p11_extract_info *ex)
+check_trust_flags (P11KitIter *iter,
+                   p11_extract_info *ex,
+                   CK_ATTRIBUTE *cert)
 {
-	CK_BBOOL boolv;
+	CK_BBOOL trusted;
+	CK_BBOOL distrusted;
 	int flags = 0;
 
 	/* If no extract trust flags, then just continue */
 	if (!(ex->flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST)))
 		return true;
 
-	if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &boolv) && boolv)
+	if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &trusted) &&
+	    trusted && !check_blacklisted (iter, cert)) {
 		flags |= P11_EXTRACT_ANCHORS;
-	if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &boolv) && boolv)
+	}
+
+	if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &distrusted) &&
+	    distrusted) {
 		flags |= P11_EXTRACT_BLACKLIST;
+	}
 
 	/* Any of the flags can match */
 	if (flags & ex->flags)
@@ -218,18 +238,26 @@ extract_certificate (P11KitIter *iter,
 	 * If collapsing and have already seen this certificate, and shouldn't
 	 * process it even again during this extract procedure.
 	 */
-	if (should_collapse_certificate (ex, attr)) {
-		p11_debug ("skipping certificate that has already been seen");
+	if (ex->flags & P11_EXTRACT_COLLAPSE) {
+		if (!ex->already_seen) {
+			ex->already_seen = p11_dict_new (p11_attr_hash, p11_attr_equal,
+			                                 p11_attrs_free, NULL);
+			return_val_if_fail (ex->already_seen != NULL, true);
+		}
+
+		if (p11_dict_get (ex->already_seen, attr))
+			return false;
+	}
+
+	if (!check_trust_flags (iter, ex, attr)) {
+		p11_debug ("skipping certificate that doesn't match trust flags");
 		return false;
 	}
 
-	/*
-	 * We do these checks after collapsing, so that blacklisted certificates
-	 * mask out anchors even if we're not exporting blacklisted stuff.
-	 */
-	if (!check_trust_flags_match (ex)) {
-		p11_debug ("skipping certificate that doesn't match trust flags");
-		return false;
+	if (ex->already_seen) {
+		if (!p11_dict_set (ex->already_seen,
+		                   p11_attrs_build (NULL, attr, NULL), "x"))
+			return_val_if_reached (true);
 	}
 
 	ex->cert_der = attr->pValue;

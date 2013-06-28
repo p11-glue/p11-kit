@@ -51,24 +51,25 @@
 
 struct {
 	p11_parser *parser;
+	p11_array *parsed;
 	p11_asn1_cache *cache;
-	p11_index *index;
 } test;
 
 static void
 setup (void *unused)
 {
-	test.index = p11_index_new (NULL, NULL, NULL);
 	test.cache = p11_asn1_cache_new ();
-	test.parser = p11_parser_new (test.index, test.cache);
+	test.parser = p11_parser_new (test.cache);
 	assert_ptr_not_null (test.parser);
+
+	test.parsed = p11_parser_parsed (test.parser);
+	assert_ptr_not_null (test.parsed);
 }
 
 static void
 teardown (void *unused)
 {
 	p11_parser_free (test.parser);
-	p11_index_free (test.index);
 	p11_asn1_cache_free (test.cache);
 	memset (&test, 0, sizeof (test));
 }
@@ -85,12 +86,19 @@ static CK_ATTRIBUTE certificate_match[] = {
 };
 
 static CK_ATTRIBUTE *
-parsed_attrs (CK_ATTRIBUTE *match)
+parsed_attrs (CK_ATTRIBUTE *match,
+              int length)
 {
-	CK_OBJECT_HANDLE handle;
-	handle = p11_index_find (test.index, certificate_match, -1);
-	return p11_index_lookup (test.index, handle);
+	int i;
 
+	if (length < 0)
+		length = p11_attrs_count (match);
+	for (i = 0; i < test.parsed->num; i++) {
+		if (p11_attrs_matchn (test.parsed->elem[i], match, length))
+			return test.parsed->elem[i];
+	}
+
+	return NULL;
 }
 
 static void
@@ -114,9 +122,9 @@ test_parse_der_certificate (void)
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate */
-	assert_num_eq (1, p11_index_size (test.index));
+	assert_num_eq (1, test.parsed->num);
 
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected, cert);
 }
 
@@ -141,9 +149,9 @@ test_parse_pem_certificate (void)
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	assert_num_eq (1, p11_index_size (test.index));
+	assert_num_eq (1, test.parsed->num);
 
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected, cert);
 }
 
@@ -168,9 +176,9 @@ test_parse_p11_kit_persist (void)
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	assert_num_eq (1, p11_index_size (test.index));
+	assert_num_eq (1, test.parsed->num);
 
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected, cert);
 }
 
@@ -212,7 +220,6 @@ test_parse_openssl_trusted (void)
 
 	CK_ATTRIBUTE *cert;
 	CK_ATTRIBUTE *object;
-	CK_OBJECT_HANDLE handle;
 	int ret;
 	int i;
 
@@ -225,18 +232,15 @@ test_parse_openssl_trusted (void)
 	 * - 1 certificate
 	 * - 2 stapled extensions
 	 */
-	assert_num_eq (3, p11_index_size (test.index));
+	assert_num_eq (3, test.parsed->num);
 
 	/* The certificate */
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected[0], cert);
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
-		handle = p11_index_find (test.index, expected[i], 2);
-		assert (handle != 0);
-
-		object = p11_index_lookup (test.index, handle);
+		object = parsed_attrs (expected[i], 2);
 		assert_ptr_not_null (object);
 
 		test_check_attrs (expected[i], object);
@@ -281,7 +285,6 @@ test_parse_openssl_distrusted (void)
 
 	CK_ATTRIBUTE *cert;
 	CK_ATTRIBUTE *object;
-	CK_OBJECT_HANDLE handle;
 	int ret;
 	int i;
 
@@ -298,16 +301,13 @@ test_parse_openssl_distrusted (void)
 	 * - 1 certificate
 	 * - 2 stapled extensions
 	 */
-	assert_num_eq (3, p11_index_size (test.index));
-	cert = parsed_attrs (certificate_match);
+	assert_num_eq (3, test.parsed->num);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected[0], cert);
 
 	/* The other objects */
 	for (i = 1; expected[i]; i++) {
-		handle = p11_index_find (test.index, expected[i], 2);
-		assert (handle != 0);
-
-		object = p11_index_lookup (test.index, handle);
+		object = parsed_attrs (expected[i], 2);
 		assert_ptr_not_null (object);
 
 		test_check_attrs (expected[i], object);
@@ -339,9 +339,9 @@ test_parse_anchor (void)
 	 * Should have gotten:
 	 * - 1 certificate
 	 */
-	assert_num_eq (1, p11_index_size (test.index));
+	assert_num_eq (1, test.parsed->num);
 
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (cacert3, cert);
 }
 
@@ -365,9 +365,9 @@ test_parse_thawte (void)
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */
-	assert_num_eq (1, p11_index_size (test.index));
+	assert_num_eq (1, test.parsed->num);
 
-	cert = parsed_attrs (certificate_match);
+	cert = parsed_attrs (certificate_match, -1);
 	test_check_attrs (expected, cert);
 }
 
@@ -401,124 +401,6 @@ test_parse_unrecognized (void)
 	p11_message_loud ();
 }
 
-static void
-test_duplicate (void)
-{
-	CK_ATTRIBUTE cacert3[] = {
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
-		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
-		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
-		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
-		{ CKA_INVALID },
-	};
-
-	CK_OBJECT_HANDLE *handles;
-	CK_ATTRIBUTE *cert;
-	int ret;
-
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	assert_num_eq (P11_PARSE_SUCCESS, ret);
-
-	p11_message_quiet ();
-
-	/* This shouldn't be added, should print a message */
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	assert_num_eq (P11_PARSE_SUCCESS, ret);
-
-	assert (strstr (p11_message_last (), "duplicate") != NULL);
-
-	p11_message_loud ();
-
-	/* Should only be one certificate since the above two are identical */
-	handles = p11_index_find_all (test.index, cacert3, 2);
-	assert_ptr_not_null (handles);
-	assert (handles[0] != 0);
-	assert (handles[1] == 0);
-
-	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (cacert3, cert);
-
-	free (handles);
-}
-
-static void
-test_duplicate_priority (void)
-{
-	CK_ATTRIBUTE cacert3[] = {
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE trusted[] = {
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_TRUSTED, &truev, sizeof (truev) },
-		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
-		{ CKA_INVALID },
-	};
-
-	CK_ATTRIBUTE distrust[] = {
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
-		{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
-		{ CKA_INVALID },
-	};
-
-	CK_OBJECT_HANDLE *handles;
-	CK_ATTRIBUTE *cert;
-	int ret;
-
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", 0);
-	assert_num_eq (P11_PARSE_SUCCESS, ret);
-
-	p11_message_quiet ();
-
-	/* This shouldn't be added, should print a message */
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
-	                      P11_PARSE_FLAG_ANCHOR);
-	assert_num_eq (P11_PARSE_SUCCESS, ret);
-
-	assert (strstr (p11_message_last (), "duplicate") != NULL);
-
-	p11_message_loud ();
-
-	/* We should now find the trusted certificate */
-	handles = p11_index_find_all (test.index, cacert3, 2);
-	assert_ptr_not_null (handles);
-	assert (handles[0] != 0);
-	assert (handles[1] == 0);
-	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (trusted, cert);
-	free (handles);
-
-	/* Now add a distrutsed one, this should override the trusted */
-
-	p11_message_quiet ();
-
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
-	                      P11_PARSE_FLAG_BLACKLIST);
-	assert_num_eq (P11_PARSE_SUCCESS, ret);
-
-	p11_message_loud ();
-
-	/* We should now find the distrusted certificate */
-	handles = p11_index_find_all (test.index, cacert3, 2);
-	assert_ptr_not_null (handles);
-	assert (handles[0] != 0);
-	assert (handles[1] == 0);
-	cert = p11_index_lookup (test.index, handles[0]);
-	test_check_attrs (distrust, cert);
-	free (handles);
-}
-
 int
 main (int argc,
       char *argv[])
@@ -533,7 +415,5 @@ main (int argc,
 	p11_test (test_parse_thawte, "/parser/parse_thawte");
 	p11_test (test_parse_invalid_file, "/parser/parse_invalid_file");
 	p11_test (test_parse_unrecognized, "/parser/parse_unrecognized");
-	p11_test (test_duplicate, "/parser/duplicate");
-	p11_test (test_duplicate_priority, "/parser/duplicate_priority");
 	return p11_test_run (argc, argv);
 }
