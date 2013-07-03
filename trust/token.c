@@ -38,6 +38,7 @@
 #include "attrs.h"
 #include "builder.h"
 #include "compat.h"
+#include "constants.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "errno.h"
@@ -45,13 +46,16 @@
 #include "module.h"
 #include "parser.h"
 #include "path.h"
+#include "persist.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
+#include "save.h"
 #include "token.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <assert.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,12 +117,12 @@ loader_was_loaded (p11_token *token,
 		return_if_reached ();
 }
 
-static void
+static bool
 loader_not_loaded (p11_token *token,
                    const char *filename)
 {
 	/* No longer track info about this file */
-	p11_dict_remove (token->loaded, filename);
+	return p11_dict_remove (token->loaded, filename);
 }
 
 static void
@@ -148,14 +152,6 @@ loader_load_file (p11_token *token,
 	CK_ATTRIBUTE origin[] = {
 		{ CKA_X_ORIGIN, (void *)filename, strlen (filename) },
 		{ CKA_INVALID },
-	};
-
-	CK_BBOOL modifiablev;
-
-	CK_ATTRIBUTE modifiable = {
-		CKA_MODIFIABLE,
-		&modifiablev,
-		sizeof (modifiablev)
 	};
 
 	p11_array *parsed;
@@ -198,13 +194,10 @@ loader_load_file (p11_token *token,
 		return 0;
 	}
 
-	/* TODO: We should check if in the right format */
-	modifiablev = CK_FALSE;
-
 	/* Update each parsed object with the origin */
 	parsed = p11_parser_parsed (token->parser);
 	for (i = 0; i < parsed->num; i++) {
-		parsed->elem[i] = p11_attrs_build (parsed->elem[i], origin, &modifiable, NULL);
+		parsed->elem[i] = p11_attrs_build (parsed->elem[i], origin, NULL);
 		return_val_if_fail (parsed->elem[i] != NULL, 0);
 	}
 
@@ -401,7 +394,7 @@ p11_token_load (p11_token *token)
 	return total;
 }
 
-void
+bool
 p11_token_reload (p11_token *token,
                   CK_ATTRIBUTE *attrs)
 {
@@ -411,10 +404,10 @@ p11_token_reload (p11_token *token,
 
 	attr = p11_attrs_find (attrs, CKA_X_ORIGIN);
 	if (attr == NULL)
-		return;
+		return false;
 
 	origin = strndup (attr->pValue, attr->ulValueLen);
-	return_if_fail (origin != NULL);
+	return_val_if_fail (origin != NULL, false);
 
 	if (stat (origin, &sb) < 0) {
 		if (errno == ENOENT) {
@@ -423,9 +416,187 @@ p11_token_reload (p11_token *token,
 			p11_message ("cannot access trust file: %s: %s",
 			             origin, strerror (errno));
 		}
-	} else {
-		loader_load_file (token, origin, &sb);
+		return false;
 	}
+
+	return loader_load_file (token, origin, &sb) > 0;
+}
+
+static p11_save_file *
+writer_overwrite_origin (p11_token *token,
+                         CK_ATTRIBUTE *origin)
+{
+	p11_save_file *file;
+	char *path;
+
+	path = strndup (origin->pValue, origin->ulValueLen);
+	return_val_if_fail (path != NULL, NULL);
+
+	file = p11_save_open_file (path, NULL, P11_SAVE_OVERWRITE);
+	free (path);
+
+	return file;
+}
+
+static char *
+writer_suggest_name (CK_ATTRIBUTE *attrs)
+{
+	CK_ATTRIBUTE *label;
+	CK_OBJECT_CLASS klass;
+	const char *nick;
+
+	label = p11_attrs_find (attrs, CKA_LABEL);
+	if (label && label->ulValueLen)
+		return strndup (label->pValue, label->ulValueLen);
+
+	nick = NULL;
+	if (p11_attrs_find_ulong (attrs, CKA_CLASS, &klass))
+		nick = p11_constant_nick (p11_constant_classes, klass);
+	if (nick == NULL)
+		nick = "object";
+	return strdup (nick);
+}
+
+static p11_save_file *
+writer_create_origin (p11_token *token,
+                      CK_ATTRIBUTE *attrs)
+{
+	p11_save_file *file;
+	char *name;
+	char *path;
+
+	name = writer_suggest_name (attrs);
+	return_val_if_fail (name != NULL, NULL);
+
+	p11_path_canon (name);
+
+	path = p11_path_build (token->path, name, NULL);
+	free (name);
+
+	file = p11_save_open_file (path, ".p11-kit", P11_SAVE_UNIQUE);
+	free (path);
+
+	return file;
+}
+
+static CK_RV
+writer_put_header (p11_save_file *file)
+{
+	const char *header =
+		"# This file has been auto-generated and written by p11-kit. Changes will be\n"
+		"# unceremoniously overwritten.\n"
+		"#\n"
+		"# The format is designed to be somewhat human readable and debuggable, and a\n"
+		"# bit transparent but it is not encouraged to read/write this format from other\n"
+		"# applications or tools without first discussing this at the the mailing list:\n"
+		"#\n"
+		"#       p11-glue@lists.freedesktop.org\n"
+		"#\n";
+
+	if (!p11_save_write (file, header, -1))
+		return CKR_FUNCTION_FAILED;
+
+	return CKR_OK;
+}
+
+static CK_RV
+writer_put_object (p11_save_file *file,
+                   p11_persist *persist,
+                   p11_buffer *buffer,
+                   CK_ATTRIBUTE *attrs)
+{
+	if (!p11_buffer_reset (buffer, 0))
+		assert_not_reached ();
+	if (!p11_persist_write (persist, attrs, buffer))
+		return_val_if_reached (CKR_GENERAL_ERROR);
+	if (!p11_save_write (file, buffer->data, buffer->len))
+		return CKR_FUNCTION_FAILED;
+
+	return CKR_OK;
+}
+
+static CK_RV
+on_index_build (void *data,
+                p11_index *index,
+                CK_ATTRIBUTE **attrs,
+                CK_ATTRIBUTE *merge)
+{
+	p11_token *token = data;
+	CK_OBJECT_HANDLE *other;
+	p11_persist *persist;
+	p11_buffer buffer;
+	CK_ATTRIBUTE *origin;
+	CK_ATTRIBUTE *object;
+	p11_save_file *file;
+	bool creating = false;
+	char *path;
+	CK_RV rv;
+	int i;
+
+	rv = p11_builder_build (token->builder, index, attrs, merge);
+	if (rv != CKR_OK)
+		return rv;
+
+	/* Signifies that data is being loaded, don't write out */
+	if (p11_index_loading (index))
+		return CKR_OK;
+
+	/* Do we already have a filename? */
+	origin = p11_attrs_find (*attrs, CKA_X_ORIGIN);
+	if (origin == NULL) {
+		file = writer_create_origin (token, *attrs);
+		creating = true;
+		other = NULL;
+
+	} else {
+		other = p11_index_find_all (index, origin, 1);
+		file = writer_overwrite_origin (token, origin);
+		creating = false;
+	}
+
+	if (file == NULL) {
+		free (origin);
+		return CKR_GENERAL_ERROR;
+	}
+
+	persist = p11_persist_new ();
+	p11_buffer_init (&buffer, 1024);
+
+	rv = writer_put_header (file);
+	if (rv == CKR_OK)
+		rv = writer_put_object (file, persist, &buffer, *attrs);
+
+	for (i = 0; rv == CKR_OK && other && other[i] != 0; i++) {
+		object = p11_index_lookup (index, other[i]);
+		if (object != NULL && object != *attrs)
+			rv = writer_put_object (file, persist, &buffer, object);
+	}
+
+	p11_buffer_uninit (&buffer);
+	p11_persist_free (persist);
+
+	if (rv == CKR_OK) {
+		if (!p11_save_finish_file (file, &path, true))
+			rv = CKR_FUNCTION_FAILED;
+		else if (creating)
+			*attrs = p11_attrs_take (*attrs, CKA_X_ORIGIN, path, strlen (path));
+		else
+			free (path);
+	} else {
+		p11_save_finish_file (file, NULL, false);
+	}
+
+	return rv;
+}
+
+static void
+on_index_notify (void *data,
+                 p11_index *index,
+                 CK_OBJECT_HANDLE handle,
+                 CK_ATTRIBUTE *attrs)
+{
+	p11_token *token = data;
+	p11_builder_changed (token->builder, index, handle, attrs);
 }
 
 void
@@ -461,9 +632,7 @@ p11_token_new (CK_SLOT_ID slot,
 	token->builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
 	return_val_if_fail (token->builder != NULL, NULL);
 
-	token->index = p11_index_new (p11_builder_build,
-	                              p11_builder_changed,
-	                              token->builder);
+	token->index = p11_index_new (on_index_build, on_index_notify, token);
 	return_val_if_fail (token->index != NULL, NULL);
 
 	token->parser = p11_parser_new (p11_builder_get_cache (token->builder));
@@ -518,6 +687,13 @@ p11_token_index (p11_token *token)
 {
 	return_val_if_fail (token != NULL, NULL);
 	return token->index;
+}
+
+p11_parser *
+p11_token_parser (p11_token *token)
+{
+	return_val_if_fail (token != NULL, NULL);
+	return token->parser;
 }
 
 static bool

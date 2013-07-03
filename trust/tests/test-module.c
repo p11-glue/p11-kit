@@ -46,6 +46,7 @@
 #include "hash.h"
 #include "library.h"
 #include "path.h"
+#include "parser.h"
 #include "pkcs11x.h"
 #include "token.h"
 
@@ -67,6 +68,8 @@ struct {
 	CK_FUNCTION_LIST *module;
 	CK_SLOT_ID slots[NUM_SLOTS];
 	char *directory;
+	p11_asn1_cache *cache;
+	p11_parser *parser;
 } test;
 
 static void
@@ -109,6 +112,10 @@ teardown (void *unused)
 {
 	CK_RV rv;
 
+	if (test.parser)
+		p11_parser_free (test.parser);
+	p11_asn1_cache_free (test.cache);
+
 	rv = test.module->C_Finalize (NULL);
 	assert (rv == CKR_OK);
 
@@ -150,6 +157,9 @@ setup_writable (void *unused)
 	rv = test.module->C_GetSlotList (CK_TRUE, test.slots, &count);
 	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (count, 1);
+
+	test.cache = p11_asn1_cache_new ();
+	test.parser = p11_parser_new (test.cache);
 }
 
 static void
@@ -449,7 +459,6 @@ check_trust_object_equiv (CK_SESSION_HANDLE session,
 	unsigned char subject[1024];
 	unsigned char issuer[1024];
 	unsigned char serial[128];
-	CK_BBOOL modifiable;
 	CK_BBOOL private;
 	CK_BBOOL token;
 	CK_RV rv;
@@ -458,14 +467,13 @@ check_trust_object_equiv (CK_SESSION_HANDLE session,
 	CK_ATTRIBUTE equiv[] = {
 		{ CKA_TOKEN, &token, sizeof (token) },
 		{ CKA_PRIVATE, &private, sizeof (private) },
-		{ CKA_MODIFIABLE, &modifiable, sizeof (modifiable) },
 		{ CKA_ISSUER, issuer, sizeof (issuer) },
 		{ CKA_SUBJECT, subject, sizeof (subject) },
 		{ CKA_SERIAL_NUMBER, serial, sizeof (serial) },
 		{ CKA_INVALID, },
 	};
 
-	rv = test.module->C_GetAttributeValue (session, trust, equiv, 6);
+	rv = test.module->C_GetAttributeValue (session, trust, equiv, 5);
 	assert_num_eq (CKR_OK, rv);
 
 	test_check_attrs (equiv, cert);
@@ -541,7 +549,6 @@ check_certificate (CK_SESSION_HANDLE session,
 	CK_DATE start;
 	CK_DATE end;
 	CK_ULONG category;
-	CK_BBOOL modifiable;
 	CK_BBOOL private;
 	CK_BBOOL token;
 	CK_RV rv;
@@ -550,7 +557,6 @@ check_certificate (CK_SESSION_HANDLE session,
 		{ CKA_CLASS, &klass, sizeof (klass) },
 		{ CKA_TOKEN, &token, sizeof (token) },
 		{ CKA_PRIVATE, &private, sizeof (private) },
-		{ CKA_MODIFIABLE, &modifiable, sizeof (modifiable) },
 		{ CKA_VALUE, value, sizeof (value) },
 		{ CKA_ISSUER, issuer, sizeof (issuer) },
 		{ CKA_SUBJECT, subject, sizeof (subject) },
@@ -566,8 +572,8 @@ check_certificate (CK_SESSION_HANDLE session,
 	};
 
 	/* Note that we don't pass the CKA_INVALID attribute in */
-	rv = test.module->C_GetAttributeValue (session, handle, attrs, 15);
-	assert (rv == CKR_OK);
+	rv = test.module->C_GetAttributeValue (session, handle, attrs, 14);
+	assert_num_eq (rv, CKR_OK);
 
 	/* If this is the cacert3 certificate, check its values */
 	if (memcmp (value, test_cacert3_ca_der, sizeof (test_cacert3_ca_der)) == 0) {
@@ -1064,6 +1070,110 @@ test_session_read_only_create (void)
 	assert_num_eq (rv, CKR_SESSION_READ_ONLY);
 }
 
+static void
+test_create_and_write (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_APPLICATION, "", 0 },
+		{ CKA_OBJECT_ID, "", 0 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	p11_array *parsed;
+	char *path;
+	CK_RV rv;
+	int ret;
+
+	/* Read-only session */
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION,
+	                                 NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
+
+	/* Create a token object */
+	rv = test.module->C_CreateObject (session, original, 4, &handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* The expected file name */
+	path = p11_path_build (test.directory, "yay.p11-kit", NULL);
+	ret = p11_parse_file (test.parser, path, 0);
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
+	free (path);
+
+	parsed = p11_parser_parsed (test.parser);
+	assert_num_eq (parsed->num, 1);
+
+	test_check_attrs (expected, parsed->elem[0]);
+}
+
+static void
+test_modify_and_write (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+		{ CKA_MODIFIABLE, &vtrue, sizeof (vtrue) },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "nine", 4 },
+		{ CKA_APPLICATION, "", 0 },
+		{ CKA_OBJECT_ID, "", 0 },
+		{ CKA_INVALID }
+	};
+
+	CK_SESSION_HANDLE session;
+	CK_OBJECT_HANDLE handle;
+	p11_array *parsed;
+	char *path;
+	CK_RV rv;
+	int ret;
+
+	/* Read-only session */
+	rv = test.module->C_OpenSession (test.slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION,
+	                                 NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
+
+	/* Create a token object */
+	rv = test.module->C_CreateObject (session, original, 5, &handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* Now modify the object */
+	original[0].pValue = "nine";
+	original[0].ulValueLen = 4;
+
+	rv = test.module->C_SetAttributeValue (session, handle, original, 5);
+	assert_num_eq (rv, CKR_OK);
+
+	/* The expected file name */
+	path = p11_path_build (test.directory, "yay.p11-kit", NULL);
+	ret = p11_parse_file (test.parser, path, 0);
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
+	free (path);
+
+	parsed = p11_parser_parsed (test.parser);
+	assert_num_eq (parsed->num, 1);
+
+	test_check_attrs (expected, parsed->elem[0]);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1100,6 +1210,8 @@ main (int argc,
 	p11_fixture (setup_writable, teardown);
 	p11_test (test_token_writable, "/module/token-writable");
 	p11_test (test_session_read_only_create, "/module/session-read-only-create");
+	p11_test (test_create_and_write, "/module/create-and-write");
+	p11_test (test_modify_and_write, "/module/modify-and-write");
 
 	return p11_test_run (argc, argv);
 }

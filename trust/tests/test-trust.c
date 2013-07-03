@@ -64,7 +64,6 @@ test_check_object_msg (const char *file,
 
 	CK_ATTRIBUTE expected[] = {
 		{ CKA_PRIVATE, &vfalse, sizeof (vfalse) },
-		{ CKA_MODIFIABLE, &vfalse, sizeof (vfalse) },
 		{ CKA_CLASS, &klass, sizeof (klass) },
 		{ label ? CKA_LABEL : CKA_INVALID, (void *)label, label ? strlen (label) : 0 },
 		{ CKA_INVALID },

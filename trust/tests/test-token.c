@@ -42,18 +42,21 @@
 
 #include "attrs.h"
 #include "debug.h"
+#include "parser.h"
 #include "path.h"
 #include "pkcs11x.h"
 #include "message.h"
 #include "token.h"
 
 static CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
+static CK_OBJECT_CLASS data = CKO_DATA;
 static CK_BBOOL falsev = CK_FALSE;
 static CK_BBOOL truev = CK_TRUE;
 
 struct {
 	p11_token *token;
 	p11_index *index;
+	p11_parser *parser;
 	char *directory;
 } test;
 
@@ -65,6 +68,9 @@ setup (void *path)
 
 	test.index = p11_token_index (test.token);
 	assert_ptr_not_null (test.token);
+
+	test.parser = p11_token_parser (test.token);
+	assert_ptr_not_null (test.parser);
 }
 
 static void
@@ -424,7 +430,8 @@ test_reload_changed (void)
 
 	attrs = p11_index_lookup (test.index, handle);
 	assert_ptr_not_null (attrs);
-	p11_token_reload (test.token, attrs);
+	if (!p11_token_reload (test.token, attrs))
+		assert_not_reached ();
 
 	assert (p11_index_find (test.index, cacert3, -1) == 0);
 	assert (p11_index_find (test.index, verisign, -1) != 0);
@@ -467,10 +474,106 @@ test_reload_gone (void)
 
 	attrs = p11_index_lookup (test.index, handle);
 	assert_ptr_not_null (attrs);
-	p11_token_reload (test.token, attrs);
+	if (p11_token_reload (test.token, attrs))
+		assert_not_reached ();
 
 	assert (p11_index_find (test.index, cacert3, -1) == 0);
 	assert (p11_index_find (test.index, verisign, -1) != 0);
+}
+
+static void
+test_reload_no_origin (void)
+{
+	CK_ATTRIBUTE cacert3[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_INVALID },
+	};
+
+	if (p11_token_reload (test.token, cacert3))
+		assert_not_reached ();
+}
+
+static void
+test_write_new (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "Yay!", 4 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_TOKEN, &truev, sizeof (truev) },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "Yay!", 4 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_APPLICATION, "", 0 },
+		{ CKA_OBJECT_ID, "", 0 },
+		{ CKA_INVALID }
+	};
+
+	CK_OBJECT_HANDLE handle;
+	p11_array *parsed;
+	char *path;
+	CK_RV rv;
+	int ret;
+
+	rv = p11_index_add (test.index, original, 4, &handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* The expected file name */
+	path = p11_path_build (test.directory, "Yay_.p11-kit", NULL);
+	ret = p11_parse_file (test.parser, path, 0);
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
+	free (path);
+
+	parsed = p11_parser_parsed (test.parser);
+	assert_num_eq (parsed->num, 1);
+
+	test_check_attrs (expected, parsed->elem[0]);
+}
+
+static void
+test_write_no_label (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_TOKEN, &truev, sizeof (truev) },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "", 0 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_APPLICATION, "", 0 },
+		{ CKA_OBJECT_ID, "", 0 },
+		{ CKA_INVALID }
+	};
+
+	CK_OBJECT_HANDLE handle;
+	p11_array *parsed;
+	char *path;
+	CK_RV rv;
+	int ret;
+
+	rv = p11_index_add (test.index, original, 4, &handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* The expected file name */
+	path = p11_path_build (test.directory, "data.p11-kit", NULL);
+	ret = p11_parse_file (test.parser, path, 0);
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
+	free (path);
+
+	parsed = p11_parser_parsed (test.parser);
+	assert_num_eq (parsed->num, 1);
+
+	test_check_attrs (expected, parsed->elem[0]);
 }
 
 int
@@ -496,6 +599,9 @@ main (int argc,
 	p11_test (test_load_gone, "/token/load-gone");
 	p11_test (test_reload_changed, "/token/reload-changed");
 	p11_test (test_reload_gone, "/token/reload-gone");
+	p11_test (test_reload_no_origin, "/token/reload-no-origin");
+	p11_test (test_write_new, "/token/write-new");
+	p11_test (test_write_no_label, "/token/write-no-label");
 
 	return p11_test_run (argc, argv);
 }

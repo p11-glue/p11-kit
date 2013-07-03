@@ -577,7 +577,7 @@ parse_p11_kit_persist (p11_parser *parser,
                        const unsigned char *data,
                        size_t length)
 {
-	CK_BBOOL modifiablev = CK_FALSE;
+	CK_BBOOL modifiablev = CK_TRUE;
 	CK_ATTRIBUTE *attrs;
 	p11_array *objects;
 	bool ret;

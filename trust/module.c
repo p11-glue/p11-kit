@@ -1102,7 +1102,6 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 			attrs = lookup_object_inlock (session, object, &index);
 			if (attrs == NULL) {
 				rv = CKR_OBJECT_HANDLE_INVALID;
-
 			} else if (p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val) && !val) {
 				/* TODO: This should be replaced with CKR_ACTION_PROHIBITED */
 				rv = CKR_ATTRIBUTE_READ_ONLY;
@@ -1110,11 +1109,20 @@ sys_C_SetAttributeValue (CK_SESSION_HANDLE handle,
 
 			if (rv == CKR_OK)
 				rv = check_index_writable (session, index);
-			if (rv == CKR_OK) {
-				if (index == p11_token_index (session->token))
-					p11_token_reload (session->token, attrs);
-				rv = p11_index_set (index, object, template, count);
+
+			/* Reload the item if applicable */
+			if (rv == CKR_OK && index == p11_token_index (session->token)) {
+				if (p11_token_reload (session->token, attrs)) {
+					attrs = p11_index_lookup (index, object);
+					if (p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val) && !val) {
+						/* TODO: This should be replaced with CKR_ACTION_PROHIBITED */
+						rv = CKR_ATTRIBUTE_READ_ONLY;
+					}
+				}
 			}
+
+			if (rv == CKR_OK)
+				rv = p11_index_set (index, object, template, count);
 		}
 
 	p11_unlock ();

@@ -165,7 +165,6 @@ test_parse_p11_kit_persist (void)
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
-		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
 		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_INVALID },

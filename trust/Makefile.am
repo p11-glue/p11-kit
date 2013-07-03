@@ -35,6 +35,7 @@ MODULE_SRCS = \
 	parser.c parser.h \
 	persist.c persist.h \
 	module.c module.h \
+	save.c save.h \
 	session.c session.h \
 	token.c token.h \
 	types.h \
