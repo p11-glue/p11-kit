@@ -315,3 +315,18 @@ p11_path_prefix (const char *string,
 	       strncmp (string, prefix, b) == 0 &&
 	       is_path_component_or_null (string[b]);
 }
+
+void
+p11_path_canon (char *name)
+{
+	static const char *VALID =
+		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_";
+	int i;
+
+	return_if_fail (name != NULL);
+
+	for (i = 0; name[i] != '\0'; i++) {
+		if (strchr (VALID, name[i]) == NULL)
+			name[i] = '_';
+	}
+}

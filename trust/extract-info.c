@@ -42,6 +42,7 @@
 #include "dict.h"
 #include "extract.h"
 #include "message.h"
+#include "path.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
 #include "x509.h"
@@ -442,23 +443,15 @@ extract_label (p11_extract_info *extract)
 	return strdup ("unknown");
 }
 
-#define FILENAME_CHARS \
-	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_"
-
 char *
 p11_extract_info_filename (p11_extract_info *extract)
 {
 	char *label;
-	int i;
 
 	label = extract_label (extract);
 	return_val_if_fail (label != NULL, NULL);
 
-	for (i = 0; label[i] != '\0'; i++) {
-		if (strchr (FILENAME_CHARS, label[i]) == NULL)
-			label[i] = '_';
-	}
-
+	p11_path_canon (label);
 	return label;
 }
 

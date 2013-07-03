@@ -201,6 +201,22 @@ test_prefix (void)
 	assert (p11_path_prefix ("/test//other//second", "/test"));
 }
 
+static void
+test_canon (void)
+{
+	char *test;
+
+	test = strdup ("2309haonutb;AOE@#$O ");
+	p11_path_canon (test);
+	assert_str_eq (test, "2309haonutb_AOE___O_");
+	free (test);
+
+	test = strdup ("22@# %ATI@#$onot");
+	p11_path_canon (test);
+	assert_str_eq (test, "22____ATI___onot");
+	free (test);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -211,6 +227,7 @@ main (int argc,
 	p11_test (test_absolute, "/path/absolute");
 	p11_test (test_parent, "/path/parent");
 	p11_test (test_prefix, "/path/prefix");
+	p11_test (test_canon, "/path/canon");
 
 	return p11_test_run (argc, argv);
 }

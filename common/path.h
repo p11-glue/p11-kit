@@ -64,4 +64,6 @@ char *       p11_path_parent    (const char *path);
 bool         p11_path_prefix    (const char *string,
                                  const char *prefix);
 
+void         p11_path_canon     (char *name);
+
 #endif /* P11_PATH_H__ */
