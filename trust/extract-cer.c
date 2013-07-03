@@ -56,7 +56,7 @@ p11_extract_x509_file (P11KitIter *iter,
 			break;
 		}
 
-		file = p11_save_open_file (ex->destination, ex->flags);
+		file = p11_save_open_file (ex->destination, NULL, ex->flags);
 		if (!p11_save_write_and_finish (file, ex->cert_der, ex->cert_len))
 			return false;
 
@@ -95,7 +95,7 @@ p11_extract_x509_directory (P11KitIter *iter,
 		filename = p11_extract_info_filename (ex);
 		return_val_if_fail (filename != NULL, -1);
 
-		file = p11_save_open_file_in (dir, filename, ".cer", NULL);
+		file = p11_save_open_file_in (dir, filename, ".cer");
 		free (filename);
 
 		if (!p11_save_write_and_finish (file, ex->cert_der, ex->cert_len)) {

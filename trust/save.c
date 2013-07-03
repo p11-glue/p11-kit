@@ -51,7 +51,8 @@
 #include <unistd.h>
 
 struct _p11_save_file {
-	char *path;
+	char *bare;
+	char *extension;
 	char *temp;
 	int fd;
 	int flags;
@@ -62,6 +63,11 @@ struct _p11_save_dir {
 	char *path;
 	int flags;
 };
+
+static char *   make_unique_name    (const char *bare,
+                                     const char *extension,
+                                     int (*check) (void *, char *),
+                                     void *data);
 
 bool
 p11_save_write_and_finish (p11_save_file *file,
@@ -74,7 +80,7 @@ p11_save_write_and_finish (p11_save_file *file,
 		return false;
 
 	ret = p11_save_write (file, data, length);
-	if (!p11_save_finish_file (file, ret))
+	if (!p11_save_finish_file (file, NULL, ret))
 		ret = false;
 
 	return ret;
@@ -82,34 +88,25 @@ p11_save_write_and_finish (p11_save_file *file,
 
 p11_save_file *
 p11_save_open_file (const char *path,
+                    const char *extension,
                     int flags)
 {
-	struct stat st;
 	p11_save_file *file;
 	char *temp;
 	int fd;
 
 	return_val_if_fail (path != NULL, NULL);
 
-	/*
-	 * This is just an early convenience check. We check again
-	 * later when committing, in a non-racy fashion.
-	 */
+	if (extension == NULL)
+		extension = "";
 
-	if (!(flags & P11_SAVE_OVERWRITE)) {
-		if (stat (path, &st) >= 0) {
-			p11_message ("file already exists: %s", path);
-			return NULL;
-		}
-	}
-
-	if (asprintf (&temp, "%s.XXXXXX", path) < 0)
+	if (asprintf (&temp, "%s%s.XXXXXX", path, extension) < 0)
 		return_val_if_reached (NULL);
 
 	fd = mkstemp (temp);
 	if (fd < 0) {
-		p11_message ("couldn't create file: %s: %s",
-		             path, strerror (errno));
+		p11_message ("couldn't create file: %s%s: %s",
+		             path, extension, strerror (errno));
 		free (temp);
 		return NULL;
 	}
@@ -117,8 +114,10 @@ p11_save_open_file (const char *path,
 	file = calloc (1, sizeof (p11_save_file));
 	return_val_if_fail (file != NULL, NULL);
 	file->temp = temp;
-	file->path = strdup (path);
-	return_val_if_fail (file->path != NULL, NULL);
+	file->bare = strdup (path);
+	return_val_if_fail (file->bare != NULL, NULL);
+	file->extension = strdup (extension);
+	return_val_if_fail (file->extension != NULL, NULL);
 	file->flags = flags;
 	file->fd = fd;
 
@@ -164,15 +163,58 @@ static void
 filo_free (p11_save_file *file)
 {
 	free (file->temp);
-	free (file->path);
+	free (file->bare);
+	free (file->extension);
 	free (file);
 }
 
+#ifdef OS_UNIX
+
+static int
+on_unique_try_link (void *data,
+                    char *path)
+{
+	p11_save_file *file = data;
+
+	if (link (file->temp, path) < 0) {
+		if (errno == EEXIST)
+			return 0; /* Continue trying other names */
+		p11_message ("couldn't complete writing of file: %s: %s",
+		             path, strerror (errno));
+		return -1;
+	}
+
+	return 1; /* All done */
+}
+
+#else /* OS_WIN32 */
+
+static int
+on_unique_try_rename (void *data,
+                      char *path)
+{
+	p11_save_file *file = data;
+
+	if (rename (file->temp, path) < 0) {
+		if (errno == EEXIST)
+			return 0; /* Continue trying other names */
+		p11_message ("couldn't complete writing of file: %s: %s",
+		             path, strerror (errno));
+		return -1;
+	}
+
+	return 1; /* All done */
+}
+
+#endif /* OS_WIN32 */
+
 bool
 p11_save_finish_file (p11_save_file *file,
+                      char **path_out,
                       bool commit)
 {
 	bool ret = true;
+	char *path;
 
 	if (!file)
 		return false;
@@ -183,6 +225,9 @@ p11_save_finish_file (p11_save_file *file,
 		filo_free (file);
 		return true;
 	}
+
+	if (asprintf (&path, "%s%s", file->bare, file->extension) < 0)
+		return_val_if_reached (false);
 
 	if (close (file->fd) < 0) {
 		p11_message ("couldn't write file: %s: %s",
@@ -199,19 +244,28 @@ p11_save_finish_file (p11_save_file *file,
 
 	/* Atomically rename the tempfile over the filename */
 	} else if (file->flags & P11_SAVE_OVERWRITE) {
-		if (rename (file->temp, file->path) < 0) {
+		if (rename (file->temp, path) < 0) {
 			p11_message ("couldn't complete writing file: %s: %s",
-			             file->path, strerror (errno));
+			             path, strerror (errno));
 			ret = false;
 		} else {
 			unlink (file->temp);
 		}
 
+	/* Create a unique name if requested unique file name */
+	} else if (file->flags & P11_SAVE_UNIQUE) {
+		free (path);
+		path = make_unique_name (file->bare, file->extension,
+		                         on_unique_try_link, file);
+		if (!path)
+			ret = false;
+		unlink (file->temp);
+
 	/* When not overwriting, link will fail if filename exists. */
 	} else {
-		if (link (file->temp, file->path) < 0) {
+		if (link (file->temp, path) < 0) {
 			p11_message ("couldn't complete writing of file: %s: %s",
-			             file->path, strerror (errno));
+			             path, strerror (errno));
 			ret = false;
 		}
 		unlink (file->temp);
@@ -220,16 +274,24 @@ p11_save_finish_file (p11_save_file *file,
 
 	/* Windows does not do atomic renames, so delete original file first */
 	} else {
-		if (file->flags & P11_SAVE_OVERWRITE) {
-			if (unlink (file->path) < 0 && errno != ENOENT) {
+		/* Create a unique name if requested unique file name */
+		if (file->flags & P11_SAVE_UNIQUE) {
+			free (path);
+			path = make_unique_name (file->bare, file->extension,
+			                         on_unique_try_rename, file);
+			if (!path)
+				ret = false;
+
+		} else {
+			if ((file->flags & P11_SAVE_OVERWRITE) &&
+			    unlink (path) < 0 && errno != ENOENT) {
 				p11_message ("couldn't remove original file: %s: %s",
-				             file->path, strerror (errno));
+				             path, strerror (errno));
 				ret = false;
 			}
-		}
 
-		if (ret == true) {
-			if (rename (file->temp, file->path) < 0) {
+			if (ret == true &&
+			    rename (file->temp, file->path) < 0) {
 				p11_message ("couldn't complete writing file: %s: %s",
 				             file->path, strerror (errno));
 				ret = false;
@@ -241,6 +303,12 @@ p11_save_finish_file (p11_save_file *file,
 #endif /* OS_WIN32 */
 	}
 
+	if (ret && path_out) {
+		*path_out = path;
+		path = NULL;
+	}
+
+	free (path);
 	filo_free (file);
 	return ret;
 }
@@ -302,13 +370,18 @@ p11_save_open_directory (const char *path,
 }
 
 static char *
-make_unique_name (p11_save_dir *dir,
-                  const char *filename,
-                  const char *extension)
+make_unique_name (const char *bare,
+                  const char *extension,
+                  int (*check) (void *, char *),
+                  void *data)
 {
 	char unique[16];
 	p11_buffer buf;
+	int ret;
 	int i;
+
+	assert (bare != NULL);
+	assert (check != NULL);
 
 	p11_buffer_init_null (&buf, 0);
 
@@ -323,7 +396,7 @@ make_unique_name (p11_save_dir *dir,
 		 * provided by the caller.
 		 */
 		case 0:
-			p11_buffer_add (&buf, filename, -1);
+			p11_buffer_add (&buf, bare, -1);
 			break;
 
 		/*
@@ -340,7 +413,7 @@ make_unique_name (p11_save_dir *dir,
 			/* fall through */
 
 		default:
-			p11_buffer_add (&buf, filename, -1);
+			p11_buffer_add (&buf, bare, -1);
 			snprintf (unique, sizeof (unique), ".%d", i);
 			p11_buffer_add (&buf, unique, -1);
 			break;
@@ -351,18 +424,32 @@ make_unique_name (p11_save_dir *dir,
 
 		return_val_if_fail (p11_buffer_ok (&buf), NULL);
 
-		if (!p11_dict_get (dir->cache, buf.data))
+		ret = check (data, buf.data);
+		if (ret < 0)
+			return NULL;
+		else if (ret > 0)
 			return p11_buffer_steal (&buf, NULL);
 	}
 
 	assert_not_reached ();
 }
 
+static int
+on_unique_check_dir (void *data,
+                     char *name)
+{
+	p11_save_dir *dir = data;
+
+	if (!p11_dict_get (dir->cache, name))
+		return 1;
+
+	return 0; /* Keep looking */
+}
+
 p11_save_file *
 p11_save_open_file_in (p11_save_dir *dir,
                        const char *basename,
-                       const char *extension,
-                       const char **ret_name)
+                       const char *extension)
 {
 	p11_save_file *file = NULL;
 	char *name;
@@ -371,19 +458,17 @@ p11_save_open_file_in (p11_save_dir *dir,
 	return_val_if_fail (dir != NULL, NULL);
 	return_val_if_fail (basename != NULL, NULL);
 
-	name = make_unique_name (dir, basename, extension);
+	name = make_unique_name (basename, extension, on_unique_check_dir, dir);
 	return_val_if_fail (name != NULL, NULL);
 
 	if (asprintf (&path, "%s/%s", dir->path, name) < 0)
 		return_val_if_reached (NULL);
 
-	file = p11_save_open_file (path, dir->flags);
+	file = p11_save_open_file (path, NULL, dir->flags);
 
 	if (file) {
 		if (!p11_dict_set (dir->cache, name, name))
 			return_val_if_reached (NULL);
-		if (ret_name)
-			*ret_name = name;
 		name = NULL;
 	}
 
@@ -409,7 +494,7 @@ p11_save_symlink_in (p11_save_dir *dir,
 	return_val_if_fail (linkname != NULL, false);
 	return_val_if_fail (destination != NULL, false);
 
-	name = make_unique_name (dir, linkname, extension);
+	name = make_unique_name (linkname, extension, on_unique_check_dir, dir);
 	return_val_if_fail (name != NULL, false);
 
 	if (asprintf (&path, "%s/%s", dir->path, name) < 0)

@@ -48,7 +48,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -106,7 +105,7 @@ test_file_write (void)
 	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
 		assert_not_reached ();
 
-	file = p11_save_open_file (filename, 0);
+	file = p11_save_open_file (filename, NULL, 0);
 	assert_ptr_not_null (file);
 
 	ret = p11_save_write_and_finish (file, test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
@@ -129,8 +128,11 @@ test_file_exists (void)
 
 	p11_message_quiet ();
 
-	file = p11_save_open_file (filename, 0);
-	assert (file == NULL);
+	file = p11_save_open_file (filename, NULL, 0);
+	assert (file != NULL);
+
+	if (p11_save_finish_file (file, NULL, true))
+		assert_not_reached ();
 
 	p11_message_loud ();
 
@@ -149,7 +151,7 @@ test_file_bad_directory (void)
 
 	p11_message_quiet ();
 
-	file = p11_save_open_file (filename, 0);
+	file = p11_save_open_file (filename, NULL, 0);
 	assert (file == NULL);
 
 	p11_message_loud ();
@@ -169,7 +171,7 @@ test_file_overwrite (void)
 
 	write_zero_file (test.directory, "extract-file");
 
-	file = p11_save_open_file (filename, P11_SAVE_OVERWRITE);
+	file = p11_save_open_file (filename, NULL, P11_SAVE_OVERWRITE);
 	assert_ptr_not_null (file);
 
 	ret = p11_save_write_and_finish (file, test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
@@ -177,6 +179,29 @@ test_file_overwrite (void)
 	free (filename);
 
 	test_check_file (test.directory, "extract-file", SRCDIR "/files/cacert3.der");
+}
+
+static void
+test_file_unique (void)
+{
+	p11_save_file *file;
+	char *filename;
+	bool ret;
+
+	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
+		assert_not_reached ();
+
+	write_zero_file (test.directory, "extract-file");
+
+	file = p11_save_open_file (filename, NULL, P11_SAVE_UNIQUE);
+	assert_ptr_not_null (file);
+
+	ret = p11_save_write_and_finish (file, test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
+	assert_num_eq (true, ret);
+	free (filename);
+
+	test_check_file (test.directory, "extract-file", SRCDIR "/files/empty-file");
+	test_check_file (test.directory, "extract-file.1", SRCDIR "/files/cacert3.der");
 }
 
 static void
@@ -189,7 +214,7 @@ test_file_auto_empty (void)
 	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
 		assert_not_reached ();
 
-	file = p11_save_open_file (filename, 0);
+	file = p11_save_open_file (filename, NULL, 0);
 	assert_ptr_not_null (file);
 
 	ret = p11_save_write_and_finish (file, NULL, -1);
@@ -209,7 +234,7 @@ test_file_auto_length (void)
 	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
 		assert_not_reached ();
 
-	file = p11_save_open_file (filename, 0);
+	file = p11_save_open_file (filename, NULL, 0);
 	assert_ptr_not_null (file);
 
 	ret = p11_save_write_and_finish (file, "The simple string is hairy", -1);
@@ -243,16 +268,19 @@ test_file_abort (void)
 	struct stat st;
 	p11_save_file *file;
 	char *filename;
+	char *path;
 	bool ret;
 
 	if (asprintf (&filename, "%s/%s", test.directory, "extract-file") < 0)
 		assert_not_reached ();
 
-	file = p11_save_open_file (filename, 0);
+	file = p11_save_open_file (filename, NULL, 0);
 	assert_ptr_not_null (file);
 
-	ret = p11_save_finish_file (file, false);
+	path = NULL;
+	ret = p11_save_finish_file (file, &path, false);
 	assert_num_eq (true, ret);
+	assert (path == NULL);
 
 	if (stat (filename, &st) >= 0 || errno != ENOENT)
 		assert_fail ("file should not exist", filename);
@@ -286,7 +314,9 @@ test_directory_empty (void)
 static void
 test_directory_files (void)
 {
-	const char *filename;
+	char *path;
+	char *check;
+	p11_save_file *file;
 	p11_save_dir *dir;
 	char *subdir;
 	bool ret;
@@ -297,15 +327,29 @@ test_directory_files (void)
 	dir = p11_save_open_directory (subdir, 0);
 	assert_ptr_not_null (dir);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "blah", ".cer", &filename),
-	                                 test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
+	file = p11_save_open_file_in (dir, "blah", ".cer");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
 	assert_num_eq (true, ret);
-	assert_str_eq ("blah.cer", filename);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "blah.cer") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", &filename),
-	                                 test_text, strlen (test_text));
+	file = p11_save_open_file_in (dir, "file", ".txt");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_text, strlen (test_text));
 	assert_num_eq (true, ret);
-	assert_str_eq ("file.txt", filename);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "file.txt") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
 #ifdef OS_UNIX
 	ret = p11_save_symlink_in (dir, "link", ".ext", "/the/destination");
@@ -333,7 +377,9 @@ test_directory_files (void)
 static void
 test_directory_dups (void)
 {
-	const char *filename;
+	char *path;
+	char *check;
+	p11_save_file *file;
 	p11_save_dir *dir;
 	char *subdir;
 	bool ret;
@@ -344,33 +390,47 @@ test_directory_dups (void)
 	dir = p11_save_open_directory (subdir, 0);
 	assert_ptr_not_null (dir);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", &filename),
-	                                 test_text, 5);
+	file = p11_save_open_file_in (dir, "file", ".txt");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_text, 5);
 	assert_num_eq (true, ret);
-	assert_str_eq ("file.txt", filename);
-
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", &filename),
-	                                 test_text, 10);
+	ret = p11_save_finish_file (file, &path, true);
 	assert_num_eq (true, ret);
-	assert_str_eq ("file.1.txt", filename);
+	if (asprintf (&check, "%s/%s", subdir, "file.txt") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", NULL),
+	file = p11_save_open_file_in (dir, "file", ".txt");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_text, 10);
+	assert_num_eq (true, ret);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "file.1.txt") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
+
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt"),
 	                                 test_text, 15);
 	assert_num_eq (true, ret);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "no-ext", NULL, NULL),
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "no-ext", NULL),
 	                                 test_text, 8);
 	assert_num_eq (true, ret);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "no-ext", NULL, NULL),
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "no-ext", NULL),
 	                                 test_text, 16);
 	assert_num_eq (true, ret);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "with-num", ".0", NULL),
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "with-num", ".0"),
 	                                 test_text, 14);
 	assert_num_eq (true, ret);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "with-num", ".0", NULL),
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "with-num", ".0"),
 	                                 test_text, 15);
 	assert_num_eq (true, ret);
 
@@ -438,7 +498,9 @@ test_directory_exists (void)
 static void
 test_directory_overwrite (void)
 {
-	const char *filename;
+	char *path;
+	char *check;
+	p11_save_file *file;
 	p11_save_dir *dir;
 	char *subdir;
 	bool ret;
@@ -448,9 +510,9 @@ test_directory_overwrite (void)
 
 	/* Some initial files into this directory, which get overwritten */
 	dir = p11_save_open_directory (subdir, 0);
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", NULL), "", 0) &&
-	      p11_save_write_and_finish (p11_save_open_file_in (dir, "another-file", NULL, NULL), "", 0) &&
-	      p11_save_write_and_finish (p11_save_open_file_in (dir, "third-file", NULL, NULL), "", 0) &&
+	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt"), "", 0) &&
+	      p11_save_write_and_finish (p11_save_open_file_in (dir, "another-file", NULL), "", 0) &&
+	      p11_save_write_and_finish (p11_save_open_file_in (dir, "third-file", NULL), "", 0) &&
 	      p11_save_finish_directory (dir, true);
 	assert (ret && dir);
 
@@ -458,20 +520,41 @@ test_directory_overwrite (void)
 	dir = p11_save_open_directory (subdir, P11_SAVE_OVERWRITE);
 	assert_ptr_not_null (dir);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "blah", ".cer", &filename),
-	                                 test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
+	file = p11_save_open_file_in (dir, "blah", ".cer");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_cacert3_ca_der, sizeof (test_cacert3_ca_der));
 	assert_num_eq (true, ret);
-	assert_str_eq ("blah.cer", filename);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "blah.cer") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", &filename),
-	                                 test_text, strlen (test_text));
+	file = p11_save_open_file_in (dir, "file", ".txt");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_text, strlen (test_text));
 	assert_num_eq (true, ret);
-	assert_str_eq ("file.txt", filename);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "file.txt") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
-	ret = p11_save_write_and_finish (p11_save_open_file_in (dir, "file", ".txt", &filename),
-	                                 test_text, 10);
+	file = p11_save_open_file_in (dir, "file", ".txt");
+	assert_ptr_not_null (file);
+	ret = p11_save_write (file, test_text, 10);
 	assert_num_eq (true, ret);
-	assert_str_eq ("file.1.txt", filename);
+	ret = p11_save_finish_file (file, &path, true);
+	assert_num_eq (true, ret);
+	if (asprintf (&check, "%s/%s", subdir, "file.1.txt") < 0)
+		assert_not_reached ();
+	assert_str_eq (check, path);
+	free (check);
+	free (path);
 
 	ret = p11_save_finish_directory (dir, true);
 	assert_num_eq (true, ret);
@@ -494,6 +577,7 @@ main (int argc,
 	p11_test (test_file_exists, "/save/test_file_exists");
 	p11_test (test_file_bad_directory, "/save/test_file_bad_directory");
 	p11_test (test_file_overwrite, "/save/test_file_overwrite");
+	p11_test (test_file_unique, "/save/file-unique");
 	p11_test (test_file_auto_empty, "/save/test_file_auto_empty");
 	p11_test (test_file_auto_length, "/save/test_file_auto_length");
 

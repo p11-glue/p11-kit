@@ -56,7 +56,7 @@ p11_extract_pem_bundle (P11KitIter *iter,
 	bool first = true;
 	CK_RV rv;
 
-	file = p11_save_open_file (ex->destination, ex->flags);
+	file = p11_save_open_file (ex->destination, NULL, ex->flags);
 	if (!file)
 		return false;
 
@@ -92,7 +92,9 @@ p11_extract_pem_bundle (P11KitIter *iter,
 	 * certificates were found.
 	 */
 
-	p11_save_finish_file (file, ret);
+	if (!p11_save_finish_file (file, NULL, ret))
+		ret = false;
+
 	return ret;
 }
 
@@ -122,7 +124,7 @@ p11_extract_pem_directory (P11KitIter *iter,
 		filename = p11_extract_info_filename (ex);
 		return_val_if_fail (filename != NULL, false);
 
-		file = p11_save_open_file_in (dir, filename, ".pem", NULL);
+		file = p11_save_open_file_in (dir, filename, ".pem");
 		free (filename);
 
 		ret = p11_save_write_and_finish (file, buf.data, buf.len);

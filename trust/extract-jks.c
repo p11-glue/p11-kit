@@ -322,7 +322,7 @@ p11_extract_jks_cacerts (P11KitIter *iter,
 	p11_buffer_init (&buffer, 1024 * 10);
 	ret = prepare_jks_buffer (iter, ex, &buffer);
 	if (ret) {
-		file = p11_save_open_file (ex->destination, ex->flags);
+		file = p11_save_open_file (ex->destination, NULL, ex->flags);
 		ret = p11_save_write_and_finish (file, buffer.data, buffer.len);
 	}
 

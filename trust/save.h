@@ -39,12 +39,14 @@
 
 enum {
 	P11_SAVE_OVERWRITE = 1 << 0,
+	P11_SAVE_UNIQUE = 1 << 1,
 };
 
 typedef struct _p11_save_file p11_save_file;
 typedef struct _p11_save_dir p11_save_dir;
 
 p11_save_file *  p11_save_open_file         (const char *path,
+                                             const char *extension,
                                              int flags);
 
 bool             p11_save_write             (p11_save_file *file,
@@ -56,6 +58,7 @@ bool             p11_save_write_and_finish  (p11_save_file *file,
                                              ssize_t length);
 
 bool             p11_save_finish_file       (p11_save_file *file,
+                                             char **path,
                                              bool commit);
 
 const char *     p11_save_file_name         (p11_save_file *file);
@@ -65,8 +68,7 @@ p11_save_dir *   p11_save_open_directory    (const char *path,
 
 p11_save_file *  p11_save_open_file_in      (p11_save_dir *directory,
                                              const char *basename,
-                                             const char *extension,
-                                             const char **filename);
+                                             const char *extension);
 
 #ifdef OS_UNIX
 

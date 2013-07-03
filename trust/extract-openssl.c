@@ -44,6 +44,7 @@
 #include "hash.h"
 #include "message.h"
 #include "oid.h"
+#include "path.h"
 #include "pem.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
@@ -320,7 +321,7 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 	bool first;
 	CK_RV rv;
 
-	file = p11_save_open_file (ex->destination, ex->flags);
+	file = p11_save_open_file (ex->destination, NULL, ex->flags);
 	if (!file)
 		return false;
 
@@ -362,7 +363,8 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 	 * certificates were found.
 	 */
 
-	p11_save_finish_file (file, ret);
+	if (!p11_save_finish_file (file, NULL, ret))
+		ret = false;
 	return ret;
 }
 
@@ -584,12 +586,13 @@ bool
 p11_extract_openssl_directory (P11KitIter *iter,
                                p11_extract_info *ex)
 {
-	const char *filename;
+	char *filename;
 	p11_save_file *file;
 	p11_save_dir *dir;
 	p11_buffer output;
 	p11_buffer buf;
 	bool ret = true;
+	char *path;
 	char *name;
 	CK_RV rv;
 
@@ -617,7 +620,18 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			name = p11_extract_info_filename (ex);
 			return_val_if_fail (name != NULL, false);
 
-			file = p11_save_open_file_in (dir, name, ".pem", &filename);
+			filename = NULL;
+			path = NULL;
+			ret = false;
+
+			file = p11_save_open_file_in (dir, name, ".pem");
+			if (file != NULL) {
+				ret = p11_save_write (file, output.data, output.len);
+				if (!p11_save_finish_file (file, &path, ret))
+					ret = false;
+				if (ret)
+					filename = p11_path_base (path);
+			}
 
 			/*
 			 * The OpenSSL style c_rehash stuff
@@ -633,28 +647,26 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			 * On Windows no symlinks.
 			 */
 
-			ret = true;
-
 #ifdef OS_UNIX
-			linkname = symlink_for_subject_hash (ex);
-			if (file && linkname) {
-				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
-				free (linkname);
+			if (ret) {
+				linkname = symlink_for_subject_hash (ex);
+				if (linkname) {
+					ret = p11_save_symlink_in (dir, linkname, ".0", filename);
+					free (linkname);
+				}
 			}
 
-			linkname = symlink_for_subject_old_hash (ex);
-			if (ret && file && linkname) {
-				ret = p11_save_symlink_in (dir, linkname, ".0", filename);
-				free (linkname);
+			if (ret) {
+				linkname = symlink_for_subject_old_hash (ex);
+				if (linkname) {
+					ret = p11_save_symlink_in (dir, linkname, ".0", filename);
+					free (linkname);
+				}
 			}
 #endif /* OS_UNIX */
 
-			if (ret)
-				ret = p11_save_write_and_finish (file, output.data, output.len);
-			else
-				p11_save_finish_file (file, false);
-
-			free (name);
+			free (filename);
+			free (path);
 		}
 
 		if (!ret)

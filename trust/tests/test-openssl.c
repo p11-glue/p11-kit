@@ -52,7 +52,6 @@
 #include "oid.h"
 #include "test.h"
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
