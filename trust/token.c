@@ -293,7 +293,8 @@ loader_load_directory (p11_token *token,
 
 static int
 loader_load_path (p11_token *token,
-                  const char *path)
+                  const char *path,
+                  bool *is_dir)
 {
 	p11_dictiter iter;
 	p11_dict *present;
@@ -312,6 +313,8 @@ loader_load_path (p11_token *token,
 	}
 
 	if (S_ISDIR (sb.st_mode)) {
+		*is_dir = true;
+		ret = 0;
 
 		/* All the files we know about at this path */
 		present = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
@@ -342,6 +345,7 @@ loader_load_path (p11_token *token,
 		loader_was_loaded (token, path, &sb);
 
 	} else {
+		*is_dir = false;
 		ret = loader_load_file (token, path, &sb);
 	}
 
@@ -377,19 +381,22 @@ int
 p11_token_load (p11_token *token)
 {
 	int total = 0;
+	bool is_dir;
 	int ret;
 
-	ret = loader_load_path (token, token->path);
+	ret = loader_load_path (token, token->path, &is_dir);
 	return_val_if_fail (ret >= 0, -1);
 	total += ret;
 
-	ret = loader_load_path (token, token->anchors);
-	return_val_if_fail (ret >= 0, -1);
-	total += ret;
+	if (is_dir) {
+		ret = loader_load_path (token, token->anchors, &is_dir);
+		return_val_if_fail (ret >= 0, -1);
+		total += ret;
 
-	ret = loader_load_path (token, token->blacklist);
-	return_val_if_fail (ret >= 0, -1);
-	total += ret;
+		ret = loader_load_path (token, token->blacklist, &is_dir);
+		return_val_if_fail (ret >= 0, -1);
+		total += ret;
+	}
 
 	return total;
 }
