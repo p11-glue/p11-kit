@@ -43,6 +43,7 @@
 #include "persist.h"
 #include "pkcs11.h"
 #include "pkcs11x.h"
+#include "types.h"
 #include "url.h"
 
 #include "basic.asn.h"
@@ -714,6 +715,12 @@ p11_persist_write (p11_persist *persist,
 		    (attrs[i].type == CKA_CLASS ||
 		     attrs[i].type == CKA_CERTIFICATE_TYPE ||
 		     attrs[i].type == CKA_VALUE))
+			continue;
+
+		/* These are never written */
+		if (attrs[i].type == CKA_TOKEN ||
+		    attrs[i].type == CKA_X_ORIGIN ||
+		    attrs[i].type == CKA_X_GENERATED)
 			continue;
 
 		if (attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION)

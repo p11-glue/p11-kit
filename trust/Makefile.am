@@ -37,6 +37,7 @@ MODULE_SRCS = \
 	module.c module.h \
 	session.c session.h \
 	token.c token.h \
+	types.h \
 	$(NULL)
 
 configdir = $(p11_package_config_modules)
