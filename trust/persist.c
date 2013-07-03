@@ -39,6 +39,7 @@
 #include "constants.h"
 #include "debug.h"
 #include "lexer.h"
+#include "message.h"
 #include "pem.h"
 #include "persist.h"
 #include "pkcs11.h"
@@ -445,7 +446,7 @@ format_oid (p11_persist *persist,
 	int len;
 	int ret;
 
-	if (attr->type != CKA_OBJECT_ID)
+	if (attr->type != CKA_OBJECT_ID || attr->ulValueLen == 0)
 		return false;
 
 	if (!persist->asn1_defs) {
@@ -466,7 +467,7 @@ format_oid (p11_persist *persist,
 
 	ret = asn1_der_decoding (&asn, attr->pValue, attr->ulValueLen, message);
 	if (ret != ASN1_SUCCESS) {
-		p11_debug_precond ("invalid oid value: %s", message);
+		p11_message ("invalid oid value: %s", message);
 		return false;
 	}
 
