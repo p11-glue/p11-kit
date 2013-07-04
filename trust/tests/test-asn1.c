@@ -130,6 +130,24 @@ test_asn1_cache (void)
 	p11_asn1_cache_free (cache);
 }
 
+static void
+test_asn1_free (void)
+{
+	p11_dict *defs;
+	node_asn *asn;
+
+	defs = p11_asn1_defs_load ();
+	assert_ptr_not_null (defs);
+
+	asn = p11_asn1_decode (defs, "PKIX1.ExtKeyUsageSyntax",
+	                       test_eku_server_and_client,
+	                       sizeof (test_eku_server_and_client), NULL);
+	assert_ptr_not_null (defs);
+
+	p11_asn1_free (asn);
+	p11_asn1_free (NULL);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -139,6 +157,7 @@ main (int argc,
 
 	p11_fixture (NULL, NULL);
 	p11_test (test_asn1_cache, "/asn1/asn1_cache");
+	p11_test (test_asn1_free, "/asn1/free");
 
 	return p11_test_run (argc, argv);
 }

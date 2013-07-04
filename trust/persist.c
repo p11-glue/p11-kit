@@ -443,7 +443,7 @@ format_oid (p11_persist *persist,
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
 	node_asn *asn;
 	char *data;
-	int len;
+	size_t len;
 	int ret;
 
 	if (attr->type != CKA_OBJECT_ID || attr->ulValueLen == 0)
@@ -471,15 +471,8 @@ format_oid (p11_persist *persist,
 		return false;
 	}
 
-	len = 0;
-	ret = asn1_read_value (asn, "", NULL, &len);
-	return_val_if_fail (ret == ASN1_MEM_ERROR, false);
-
-	data = calloc (len + 1, 1);
+	data = p11_asn1_read (asn, "", &len);
 	return_val_if_fail (data != NULL, false);
-
-	ret = asn1_read_value (asn, "", data, &len);
-	return_val_if_fail (ret == ASN1_SUCCESS, false);
 
 	asn1_delete_structure (&asn);
 

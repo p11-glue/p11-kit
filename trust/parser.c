@@ -247,8 +247,7 @@ load_seq_of_oid_str (node_asn *node,
 	p11_dict *oids;
 	char field[128];
 	char *oid;
-	int len;
-	int ret;
+	size_t len;
 	int i;
 
 	oids = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
@@ -257,18 +256,9 @@ load_seq_of_oid_str (node_asn *node,
 		if (snprintf (field, sizeof (field), "%s.?%u", seqof, i) < 0)
 			return_val_if_reached (NULL);
 
-		len = 0;
-		ret = asn1_read_value (node, field, NULL, &len);
-		if (ret == ASN1_ELEMENT_NOT_FOUND)
+		oid = p11_asn1_read (node, field, &len);
+		if (oid == NULL)
 			break;
-
-		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
-
-		oid = malloc (len + 1);
-		return_val_if_fail (oid != NULL, NULL);
-
-		ret = asn1_read_value (node, field, oid, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
 		if (!p11_dict_set (oids, oid, oid))
 			return_val_if_reached (NULL);

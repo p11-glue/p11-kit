@@ -53,11 +53,9 @@ p11_x509_find_extension (node_asn *cert,
                          size_t *ext_len)
 {
 	char field[128];
-	char *value;
 	int start;
 	int end;
 	int ret;
-	int len;
 	int i;
 
 	return_val_if_fail (cert != NULL, NULL);
@@ -87,18 +85,7 @@ p11_x509_find_extension (node_asn *cert,
 		if (snprintf (field, sizeof (field), "tbsCertificate.extensions.?%u.extnValue", i) < 0)
 			return_val_if_reached (NULL);
 
-		len = 0;
-		ret = asn1_read_value (cert, field, NULL, &len);
-		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
-
-		value = malloc (len);
-		return_val_if_fail (value != NULL, NULL);
-
-		ret = asn1_read_value (cert, field, value, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
-
-		*ext_len = len;
-		return (unsigned char *)value;
+		return p11_asn1_read (cert, field, ext_len);
 	}
 
 	return NULL;
@@ -195,9 +182,8 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 	node_asn *asn;
 	char field[128];
 	p11_array *ekus;
+	size_t len;
 	char *eku;
-	int ret;
-	int len;
 	int i;
 
 	asn = p11_asn1_decode (asn1_defs, "PKIX1.ExtKeyUsageSyntax", ext_der, ext_len, NULL);
@@ -210,18 +196,9 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 		if (snprintf (field, sizeof (field), "?%u", i) < 0)
 			return_val_if_reached (NULL);
 
-		len = 0;
-		ret = asn1_read_value (asn, field, NULL, &len);
-		if (ret == ASN1_ELEMENT_NOT_FOUND)
+		eku = p11_asn1_read (asn, field, &len);
+		if (eku == NULL)
 			break;
-
-		return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
-
-		eku = malloc (len + 1);
-		return_val_if_fail (eku != NULL, NULL);
-
-		ret = asn1_read_value (asn, field, eku, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
 		eku[len] = 0;
 
@@ -321,7 +298,7 @@ p11_x509_lookup_dn_name (node_asn *asn,
 {
 	unsigned char *value;
 	char field[128];
-	int value_len;
+	size_t value_len;
 	char *part;
 	int i, j;
 	int start;
@@ -352,15 +329,8 @@ p11_x509_lookup_dn_name (node_asn *asn,
 			snprintf (field, sizeof (field), "%s%srdnSequence.?%d.?%d.value",
 			          dn_field, dn_field ? "." : "", i, j);
 
-			value_len = 0;
-			ret = asn1_read_value (asn, field, NULL, &value_len);
-			return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
-
-			value = malloc (value_len + 1);
+			value = p11_asn1_read (asn, field, &value_len);
 			return_val_if_fail (value != NULL, NULL);
-
-			ret = asn1_read_value (asn, field, value, &value_len);
-			return_val_if_fail (ret == ASN1_SUCCESS, false);
 
 			part = p11_x509_parse_directory_string (value, value_len, NULL, NULL);
 			free (value);

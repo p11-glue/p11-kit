@@ -192,6 +192,44 @@ p11_asn1_encode (node_asn *asn,
 	return der;
 }
 
+void *
+p11_asn1_read (node_asn *asn,
+               const char *field,
+               size_t *length)
+{
+	void *value;
+	int len;
+	int ret;
+
+	return_val_if_fail (asn != NULL, NULL);
+	return_val_if_fail (field != NULL, NULL);
+	return_val_if_fail (length != NULL, NULL);
+
+	len = 0;
+	ret = asn1_read_value (asn, field, NULL, &len);
+	if (ret == ASN1_ELEMENT_NOT_FOUND)
+		return NULL;
+
+	return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
+
+	value = malloc (len);
+	return_val_if_fail (value != NULL, NULL);
+
+	ret = asn1_read_value (asn, field, value, &len);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	*length = len;
+	return value;
+}
+
+void
+p11_asn1_free (void *asn)
+{
+	node_asn *node = asn;
+	if (node != NULL)
+		asn1_delete_structure (&node);
+}
+
 ssize_t
 p11_asn1_tlv_length (const unsigned char *data,
                      size_t length)
