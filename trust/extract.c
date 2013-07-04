@@ -208,41 +208,6 @@ format_argument (const char *optarg,
 	return true;
 }
 
-static void
-limit_modules_if_necessary (CK_FUNCTION_LIST_PTR *modules,
-                            int flags)
-{
-	char *string;
-	int i, out;
-
-	/*
-	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
-	 * we get from modules explicitly marked as containing trust-policy.
-	 */
-
-	if ((flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST)) == 0)
-		return;
-
-	/* Count the number of modules */
-	for (out = 0; modules[out] != NULL; out++);
-
-	if (out == 0)
-		return;
-
-	/* TODO: This logic will move once we merge our p11-kit managed code */
-	for (i = 0, out = 0; modules[i] != NULL; i++) {
-		string = p11_kit_config_option (modules[i], "trust-policy");
-		if (string && strcmp (string, "yes") == 0)
-			modules[out++] = modules[i];
-		else if (string && strcmp (string, "no") != 0)
-			p11_message ("skipping module with invalid 'trust-policy' setting: %s", string);
-		free (string);
-	}
-
-	if (out == 0)
-		p11_message ("no modules containing trust policy are registered");
-}
-
 static bool
 validate_filter_and_format (p11_extract_info *ex,
                             p11_extract_func func,
@@ -304,6 +269,7 @@ p11_trust_extract (int argc,
 	p11_extract_info ex;
 	CK_ATTRIBUTE *match;
 	P11KitUri *uri;
+	int flags;
 	int opt = 0;
 	int ret;
 
@@ -434,11 +400,20 @@ p11_trust_extract (int argc,
 	if (uri && p11_kit_uri_any_unrecognized (uri))
 		p11_message ("uri contained unrecognized components, nothing will be extracted");
 
-	modules = p11_kit_modules_load_and_initialize (0);
+	/*
+	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
+	 * we get from modules explicitly marked as containing trust-policy.
+	 */
+	flags = 0;
+	if (ex.flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST))
+		flags |= P11_KIT_MODULE_TRUSTED;
+
+	modules = p11_kit_modules_load_and_initialize (flags);
 	if (!modules)
 		return 1;
 
-	limit_modules_if_necessary (modules, ex.flags);
+	if (modules[0] == NULL)
+		p11_message ("no modules containing trust policy are registered");
 
 	iter = p11_kit_iter_new (uri, 0);
 

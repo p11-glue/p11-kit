@@ -1126,6 +1126,21 @@ p11_kit_module_get_name (CK_FUNCTION_LIST *module)
 	return name;
 }
 
+static const char *
+module_get_option_inlock (Module *mod,
+                          const char *option)
+{
+	p11_dict *config;
+
+	if (mod == NULL)
+		config = gl.config;
+	else
+		config = mod->config;
+	if (config == NULL)
+		return NULL;
+	return p11_dict_get (config, option);
+}
+
 /**
  * p11_kit_module_get_flags:
  * @module: the module
@@ -1145,6 +1160,7 @@ p11_kit_module_get_name (CK_FUNCTION_LIST *module)
 int
 p11_kit_module_get_flags (CK_FUNCTION_LIST *module)
 {
+	const char *trusted;
 	Module *mod;
 	int flags = 0;
 
@@ -1165,6 +1181,11 @@ p11_kit_module_get_flags (CK_FUNCTION_LIST *module)
 			}
 			if (!mod || mod->critical)
 				flags |= P11_KIT_MODULE_CRITICAL;
+			if (mod) {
+				trusted = module_get_option_inlock (mod, "trust-policy");
+				if (_p11_conf_parse_boolean (trusted, false))
+					flags |= P11_KIT_MODULE_TRUSTED;
+			}
 		}
 
 	p11_unlock ();
@@ -1263,21 +1284,6 @@ p11_kit_module_for_name (CK_FUNCTION_LIST **modules,
 	p11_unlock ();
 
 	return ret;
-}
-
-static const char *
-module_get_option_inlock (Module *mod,
-                          const char *option)
-{
-	p11_dict *config;
-
-	if (mod == NULL)
-		config = gl.config;
-	else
-		config = mod->config;
-	if (config == NULL)
-		return NULL;
-	return p11_dict_get (config, option);
 }
 
 /**
@@ -1735,11 +1741,18 @@ prepare_module_inlock_reentrant (Module *mod,
                                  CK_FUNCTION_LIST **module)
 {
 	p11_destroyer destroyer;
+	const char *trusted;
 	p11_virtual *virt;
 	bool is_managed;
 	bool with_log;
 
 	assert (module != NULL);
+
+	if (flags & P11_KIT_MODULE_TRUSTED) {
+		trusted = module_get_option_inlock (mod, "trust-policy");
+		if (!_p11_conf_parse_boolean (trusted, false))
+			return CKR_FUNCTION_NOT_SUPPORTED;
+	}
 
 	if (flags & P11_KIT_MODULE_UNMANAGED) {
 		is_managed = false;
@@ -1821,7 +1834,9 @@ p11_modules_load_inlock_reentrant (int flags,
 		rv = prepare_module_inlock_reentrant (mod, flags, modules + at);
 		if (rv == CKR_OK)
 			at++;
-		else if (rv != CKR_FUNCTION_NOT_SUPPORTED)
+		else if (rv == CKR_FUNCTION_NOT_SUPPORTED)
+			rv = CKR_OK;
+		else
 			break;
 	}
 
@@ -2301,7 +2316,6 @@ p11_kit_module_load (const char *module_path,
 
 			rv = load_module_from_file_inlock (NULL, module_path, &mod);
 			if (rv == CKR_OK) {
-
 				/* WARNING: Reentrancy can occur here */
 				rv = prepare_module_inlock_reentrant (mod, flags, &module);
 				if (rv != CKR_OK)

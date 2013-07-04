@@ -56,6 +56,7 @@ extern "C" {
 enum {
 	P11_KIT_MODULE_UNMANAGED = 1 << 0,
 	P11_KIT_MODULE_CRITICAL = 1 << 1,
+	P11_KIT_MODULE_TRUSTED = 1 << 2,
 };
 
 typedef void        (* p11_kit_destroyer)                   (void *data);

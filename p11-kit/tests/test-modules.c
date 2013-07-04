@@ -307,6 +307,54 @@ test_module_flags (void)
 }
 
 static void
+test_module_trusted_only (void)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+	char *name;
+
+	modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
+	assert_ptr_not_null (modules);
+	assert_ptr_not_null (modules[0]);
+	assert (modules[1] == NULL);
+
+	name = p11_kit_module_get_name (modules[0]);
+	assert_str_eq (name, "one");
+	free (name);
+
+	assert_num_eq (p11_kit_module_get_flags (modules[0]), P11_KIT_MODULE_TRUSTED);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
+test_module_trust_flags (void)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+	char *name;
+	int flags;
+	int i;
+
+	modules = initialize_and_get_modules ();
+	assert_ptr_not_null (modules);
+
+	for (i = 0; modules[i] != NULL; i++) {
+		name = p11_kit_module_get_name (modules[i]);
+		assert_ptr_not_null (name);
+
+		flags = p11_kit_module_get_flags (modules[i]);
+		if (strcmp (name, "one") == 0) {
+			assert_num_eq (flags, P11_KIT_MODULE_TRUSTED);
+		} else {
+			assert_num_eq (flags, 0);
+		}
+
+		free (name);
+	}
+
+	finalize_and_free_modules (modules);
+}
+
+static void
 test_config_option (void)
 {
 	CK_FUNCTION_LIST_PTR_PTR modules;
@@ -358,6 +406,8 @@ main (int argc,
 	p11_test (test_module_name, "/modules/test_module_name");
 	p11_test (test_module_flags, "/modules/test_module_flags");
 	p11_test (test_config_option, "/modules/test_config_option");
+	p11_test (test_module_trusted_only, "/modules/trusted-only");
+	p11_test (test_module_trust_flags, "/modules/trust-flags");
 
 	p11_kit_be_quiet ();
 

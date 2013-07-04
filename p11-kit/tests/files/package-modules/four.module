@@ -2,3 +2,4 @@
 module: mock-four.so
 disable-in: test-disable, test-other
 priority: 4
+trust-policy: no
