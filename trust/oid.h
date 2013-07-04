@@ -40,6 +40,8 @@
 bool           p11_oid_simple  (const unsigned char *oid,
                                 int len);
 
+unsigned int   p11_oid_hash    (const void *oid);
+
 bool           p11_oid_equal   (const void *oid_one,
                                 const void *oid_two);
 
@@ -74,6 +76,7 @@ static const unsigned char P11_OID_OU[] =
  */
 static const unsigned char P11_OID_SUBJECT_KEY_IDENTIFIER[] =
 	{ 0x06, 0x03, 0x55, 0x1d, 0x0e };
+static const char P11_OID_SUBJECT_KEY_IDENTIFIER_STR[] = "2.5.29.14";
 
 /*
  * 2.5.29.15: KeyUsage
@@ -82,6 +85,7 @@ static const unsigned char P11_OID_SUBJECT_KEY_IDENTIFIER[] =
  */
 static const unsigned char P11_OID_KEY_USAGE[] =
 	{ 0x06, 0x03, 0x55, 0x1d, 0x0f };
+static const char P11_OID_KEY_USAGE_STR[] = { "2.5.29.15" };
 
 enum {
 	P11_KU_DIGITAL_SIGNATURE = 128,
@@ -102,6 +106,7 @@ enum {
  */
 static const unsigned char P11_OID_BASIC_CONSTRAINTS[] =
 	{ 0x06, 0x03, 0x55, 0x1d, 0x13 };
+static const char P11_OID_BASIC_CONSTRAINTS_STR[] = "2.5.29.19";
 
 /*
  * 2.5.29.37: ExtendedKeyUsage
@@ -110,6 +115,7 @@ static const unsigned char P11_OID_BASIC_CONSTRAINTS[] =
  */
 static const unsigned char P11_OID_EXTENDED_KEY_USAGE[] =
 	{ 0x06, 0x03, 0x55, 0x1d, 0x25 };
+static const char P11_OID_EXTENDED_KEY_USAGE_STR[] = "2.5.29.37";
 
 /*
  * 1.3.6.1.4.1.3319.6.10.1: OpenSSL reject extension
@@ -136,6 +142,7 @@ static const unsigned char P11_OID_EXTENDED_KEY_USAGE[] =
  */
 static const unsigned char P11_OID_OPENSSL_REJECT[] =
 	{ 0x06, 0x0a, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x99, 0x77, 0x06, 0x0a, 0x01 };
+static const char P11_OID_OPENSSL_REJECT_STR[] = "1.3.6.1.4.1.3319.6.10.1";
 
 /*
  * 1.3.6.1.5.5.7.3.1: Server Auth

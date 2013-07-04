@@ -34,10 +34,12 @@
 
 #include "config.h"
 
+#include "hash.h"
 #include "oid.h"
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 /*
@@ -58,6 +60,17 @@ p11_oid_simple (const unsigned char *oid,
 	        oid[0] == 0x06 &&            /* simple encoding */
 	        (oid[1] & 128) == 0 &&       /* short form length */
 	        (size_t)oid[1] == len - 2);  /* matches length */
+}
+
+unsigned int
+p11_oid_hash (const void *oid)
+{
+	uint32_t hash;
+	int len;
+
+	len = p11_oid_length (oid);
+	p11_hash_murmur3 (&hash, oid, len, NULL);
+	return hash;
 }
 
 bool

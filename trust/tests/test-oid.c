@@ -61,11 +61,11 @@ test_known_oids (void)
 		size_t length;
 		const char *string;
 	} known_oids[] = {
-		{ P11_OID_SUBJECT_KEY_IDENTIFIER, sizeof (P11_OID_SUBJECT_KEY_IDENTIFIER), "2.5.29.14", },
-		{ P11_OID_KEY_USAGE, sizeof (P11_OID_KEY_USAGE), "2.5.29.15", },
-		{ P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS), "2.5.29.19" },
-		{ P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE), "2.5.29.37" },
-		{ P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT), "1.3.6.1.4.1.3319.6.10.1" },
+		{ P11_OID_SUBJECT_KEY_IDENTIFIER, sizeof (P11_OID_SUBJECT_KEY_IDENTIFIER), P11_OID_SUBJECT_KEY_IDENTIFIER_STR, },
+		{ P11_OID_KEY_USAGE, sizeof (P11_OID_KEY_USAGE), P11_OID_KEY_USAGE_STR, },
+		{ P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS), P11_OID_BASIC_CONSTRAINTS_STR },
+		{ P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE), P11_OID_EXTENDED_KEY_USAGE_STR },
+		{ P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT), P11_OID_OPENSSL_REJECT_STR },
 		{ P11_OID_SERVER_AUTH, sizeof (P11_OID_SERVER_AUTH), P11_OID_SERVER_AUTH_STR },
 		{ P11_OID_CLIENT_AUTH, sizeof (P11_OID_CLIENT_AUTH), P11_OID_CLIENT_AUTH_STR },
 		{ P11_OID_CODE_SIGNING, sizeof (P11_OID_CODE_SIGNING), P11_OID_CODE_SIGNING_STR },
@@ -109,10 +109,19 @@ test_known_oids (void)
 	asn1_delete_structure (&definitions);
 }
 
+static void
+test_hash (void)
+{
+	assert_num_cmp (p11_oid_hash (P11_OID_CN), !=, 0);
+	assert_num_cmp (p11_oid_hash (P11_OID_CN), ==, p11_oid_hash (P11_OID_CN));
+	assert_num_cmp (p11_oid_hash (P11_OID_CN), !=, p11_oid_hash (P11_OID_BASIC_CONSTRAINTS));
+}
+
 int
 main (int argc,
       char *argv[])
 {
 	p11_test (test_known_oids, "/oids/known");
+	p11_test (test_hash, "/oids/hash");
 	return p11_test_run (argc, argv);
 }
