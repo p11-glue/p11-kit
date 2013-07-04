@@ -175,6 +175,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_X_PEER, "x-peer")
 	CT (CKA_X_DISTRUSTED, "x-distrusted")
 	CT (CKA_X_CRITICAL, "x-critical")
+	CT (CKA_X_PUBLIC_KEY_INFO, "x-public-key-info")
 	{ CKA_INVALID },
 };
 

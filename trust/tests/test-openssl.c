@@ -113,6 +113,18 @@ static CK_ATTRIBUTE cacert3_authority_attrs[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Custom Label", 12 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE verisign_v1_attrs[] = {
+	{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
+	{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
+	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
+	{ CKA_LABEL, "Custom Label", 12 },
+	{ CKA_SUBJECT, (void *)verisign_v1_ca_subject, sizeof (verisign_v1_ca_subject) },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)verisign_v1_ca_public_key, sizeof (verisign_v1_ca_public_key) },
 	{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 	{ CKA_INVALID },
 };
@@ -120,14 +132,16 @@ static CK_ATTRIBUTE cacert3_authority_attrs[] = {
 static CK_ATTRIBUTE extension_eku_server[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-	{ CKA_VALUE, (void *)test_eku_server, sizeof (test_eku_server) },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_VALUE, "\x30\x13\x06\x03\x55\x1d\x25\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 21 },
 	{ CKA_INVALID },
 };
 
 static CK_ATTRIBUTE extension_reject_email[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
-	{ CKA_VALUE, (void *)test_eku_email, sizeof (test_eku_email) },
+	{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 28 },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_INVALID },
 };
 
@@ -221,16 +235,16 @@ test_keyid (void)
 		{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
 		{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 		{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 		{ CKA_INVALID },
 	};
 
-	static unsigned char identifier[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
-
 	static CK_ATTRIBUTE extension_subject_key_identifier[] = {
 		{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_SUBJECT_KEY_IDENTIFIER, sizeof (P11_OID_SUBJECT_KEY_IDENTIFIER) },
-		{ CKA_VALUE, identifier, sizeof (identifier) },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_VALUE, "\x30\x0e\x06\x03\x55\x1d\x0e\x04\x07\x00\x01\x02\x03\x04\x05\x06", 16 },
 		{ CKA_INVALID },
 	};
 
@@ -325,7 +339,7 @@ test_file_multiple (void)
 	               extension_reject_email,
 	               NULL);
 
-	setup_objects (cacert3_authority_attrs,
+	setup_objects (verisign_v1_attrs,
 	               NULL);
 
 	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
@@ -338,9 +352,7 @@ test_file_multiple (void)
 	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
 	assert_num_eq (true, ret);
 
-	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-trusted-multiple.pem");
-
+	test_check_file (test.directory, "extract.pem", SRCDIR "/files/multiple.pem");
 	free (test.ex.destination);
 }
 
@@ -573,6 +585,7 @@ test_directory (void)
 	               extension_reject_email,
 	               NULL);
 
+	/* Accesses the above objects */
 	setup_objects (cacert3_authority_attrs,
 	               NULL);
 
@@ -596,7 +609,7 @@ test_directory (void)
 	test_check_file (test.directory, "Custom_Label.pem",
 	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 	test_check_file (test.directory, "Custom_Label.1.pem",
-	                 SRCDIR "/files/cacert3-trusted-alias.pem");
+	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 #ifdef OS_UNIX
 	test_check_symlink (test.directory, "e5662767.0", "Custom_Label.pem");
 	test_check_symlink (test.directory, "e5662767.1", "Custom_Label.1.pem");

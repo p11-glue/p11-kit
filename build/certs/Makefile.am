@@ -4,27 +4,28 @@
 # distributed in the tarballs
 
 TRUST = $(top_srcdir)/trust/tests
-TOOLS = $(top_srcdir)/tools/tests
 
 prepare-certs:
 	cp -v cacert3.der $(TRUST)/input/anchors
 	cp -v cacert3.der $(TRUST)/files
-	cp -v cacert3.der $(TOOLS)/files
+	cp -v cacert3.der $(TRUST)/files
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
-	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3.pem
-	cat $(TOOLS)/files/cacert3.pem $(TOOLS)/files/cacert3.pem > $(TOOLS)/files/cacert3-twice.pem
+	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3.pem
+	cat $(TRUST)/files/cacert3.pem $(TRUST)/files/cacert3.pem > $(TRUST)/files/cacert3-twice.pem
 	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted.pem \
 		-addtrust serverAuth -addreject emailProtection \
 		-setalias "Custom Label"
-	cp $(TRUST)/files/cacert3-trusted.pem $(TOOLS)/files/cacert3-trusted-server-alias.pem
-	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3-trusted-alias.pem \
+	cp $(TRUST)/files/cacert3-trusted.pem $(TRUST)/files/cacert3-trusted-server-alias.pem
+	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-trusted-alias.pem \
 		-setalias "Custom Label"
-	openssl x509 -in cacert3.der -inform DER -out $(TOOLS)/files/cacert3-distrust-all.pem \
+	openssl x509 -in cacert3.der -inform DER -out $(TRUST)/files/cacert3-distrust-all.pem \
 		-addreject serverAuth -addreject clientAuth -addreject codeSigning \
 		-addreject emailProtection -addreject ipsecEndSystem -addreject ipsecTunnel \
 		-addreject ipsecUser -addreject timeStamping
-	cat $(TOOLS)/files/cacert3-trusted-server-alias.pem \
-		$(TOOLS)/files/cacert3-trusted-alias.pem > $(TOOLS)/files/cacert3-trusted-multiple.pem
+	openssl x509 -in verisign-v1.der -inform DER -out $(TRUST)/files/verisign-v1.pem \
+		-setalias "Custom Label"
+	cat $(TRUST)/files/cacert3-trusted-server-alias.pem \
+		$(TRUST)/files/verisign-v1.pem > $(TRUST)/files/multiple.pem
 	cp -v cacert-ca.der $(TRUST)/input
 	cp -v cacert-ca.der $(TRUST)/files
 	openssl x509 -in redhat-newca.der -inform DER -out $(TRUST)/files/distrusted.pem \

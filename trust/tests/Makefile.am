@@ -60,6 +60,7 @@ noinst_PROGRAMS = \
 	frob-cert \
 	frob-ku \
 	frob-eku \
+	frob-ext \
 	frob-cert \
 	frob-oid \
 	$(CHECK_PROGS)

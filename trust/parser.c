@@ -200,44 +200,75 @@ parse_der_x509_certificate (p11_parser *parser,
 static CK_ATTRIBUTE *
 extension_attrs (p11_parser *parser,
                  CK_ATTRIBUTE *id,
+                 CK_ATTRIBUTE *public_key_info,
+                 const char *oid_str,
                  const unsigned char *oid_der,
-                 CK_BBOOL vcritical,
-                 const unsigned char *ext_der,
-                 int ext_len)
+                 bool critical,
+                 const unsigned char *value,
+                 int length)
 {
 	CK_OBJECT_CLASS klassv = CKO_X_CERTIFICATE_EXTENSION;
 	CK_BBOOL modifiablev = CK_FALSE;
 
 	CK_ATTRIBUTE klass = { CKA_CLASS, &klassv, sizeof (klassv) };
 	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &modifiablev, sizeof (modifiablev) };
-	CK_ATTRIBUTE critical = { CKA_X_CRITICAL, &vcritical, sizeof (vcritical) };
 	CK_ATTRIBUTE oid = { CKA_OBJECT_ID, (void *)oid_der, p11_oid_length (oid_der) };
-	CK_ATTRIBUTE value = { CKA_VALUE, (void *)ext_der, ext_len };
 
-	if (ext_der == NULL)
-		value.type = CKA_INVALID;
+	CK_ATTRIBUTE *attrs;
+	node_asn *dest;
+	unsigned char *der;
+	size_t len;
+	int ret;
 
-	return p11_attrs_build (NULL, id, &klass, &modifiable, &oid, &critical, &value, NULL);
+	attrs = p11_attrs_build (NULL, id, public_key_info, &klass, &modifiable, &oid, NULL);
+	return_val_if_fail (attrs != NULL, NULL);
+
+	dest = p11_asn1_create (parser->asn1_defs, "PKIX1.Extension");
+	return_val_if_fail (dest != NULL, NULL);
+
+	ret = asn1_write_value (dest, "extnID", oid_str, 1);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	if (critical)
+		ret = asn1_write_value (dest, "critical", "TRUE", 1);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	ret = asn1_write_value (dest, "extnValue", value, length);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	der = p11_asn1_encode (dest, &len);
+	return_val_if_fail (der != NULL, NULL);
+
+	attrs = p11_attrs_take (attrs, CKA_VALUE, der, len);
+	return_val_if_fail (attrs != NULL, NULL);
+
+	/* An opmitization so that the builder can get at this without parsing */
+	p11_asn1_cache_take (parser->asn1_cache, dest, "PKIX1.Extension", der, len);
+	return attrs;
 }
 
 static CK_ATTRIBUTE *
 stapled_attrs (p11_parser *parser,
                CK_ATTRIBUTE *id,
-               const unsigned char *oid,
-               CK_BBOOL critical,
+               CK_ATTRIBUTE *public_key_info,
+               const char *oid_str,
+               const unsigned char *oid_der,
+               bool critical,
                node_asn *ext)
 {
 	CK_ATTRIBUTE *attrs;
 	unsigned char *der;
 	size_t len;
 
-	attrs = extension_attrs (parser, id, oid, critical, NULL, 0);
-	return_val_if_fail (attrs != NULL, NULL);
-
 	der = p11_asn1_encode (ext, &len);
 	return_val_if_fail (der != NULL, NULL);
 
-	return p11_attrs_take (attrs, CKA_VALUE, der, len);
+	attrs = extension_attrs (parser, id, public_key_info, oid_str, oid_der,
+	                         critical, der, len);
+	return_val_if_fail (attrs != NULL, NULL);
+
+	free (der);
+	return attrs;
 }
 
 static p11_dict *
@@ -270,8 +301,10 @@ load_seq_of_oid_str (node_asn *node,
 static CK_ATTRIBUTE *
 stapled_eku_attrs (p11_parser *parser,
                    CK_ATTRIBUTE *id,
-                   const unsigned char *oid,
-                   CK_BBOOL critical,
+                   CK_ATTRIBUTE *public_key_info,
+                   const char *oid_str,
+                   const unsigned char *oid_der,
+                   bool critical,
                    p11_dict *oid_strs)
 {
 	CK_ATTRIBUTE *attrs;
@@ -317,7 +350,7 @@ stapled_eku_attrs (p11_parser *parser,
 	}
 
 
-	attrs = stapled_attrs (parser, id, oid, critical, dest);
+	attrs = stapled_attrs (parser, id, public_key_info, oid_str, oid_der, critical, dest);
 	asn1_delete_structure (&dest);
 
 	return attrs;
@@ -327,6 +360,7 @@ static CK_ATTRIBUTE *
 build_openssl_extensions (p11_parser *parser,
                           CK_ATTRIBUTE *cert,
                           CK_ATTRIBUTE *id,
+                          CK_ATTRIBUTE *public_key_info,
                           node_asn *aux,
                           const unsigned char *aux_der,
                           size_t aux_len)
@@ -379,7 +413,10 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (trust) {
-		attrs = stapled_eku_attrs (parser, id, P11_OID_EXTENDED_KEY_USAGE, CK_TRUE, trust);
+		attrs = stapled_eku_attrs (parser, id, public_key_info,
+		                           P11_OID_EXTENDED_KEY_USAGE_STR,
+		                           P11_OID_EXTENDED_KEY_USAGE,
+		                           true, trust);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -393,7 +430,10 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (reject && p11_dict_size (reject) > 0) {
-		attrs = stapled_eku_attrs (parser, id, P11_OID_OPENSSL_REJECT, CK_FALSE, reject);
+		attrs = stapled_eku_attrs (parser, id, public_key_info,
+		                           P11_OID_OPENSSL_REJECT_STR,
+		                           P11_OID_OPENSSL_REJECT,
+		                           false, reject);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -439,8 +479,10 @@ build_openssl_extensions (p11_parser *parser,
 	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, NULL);
 
 	if (ret == ASN1_SUCCESS) {
-		attrs = extension_attrs (parser, id, P11_OID_SUBJECT_KEY_IDENTIFIER, CK_FALSE,
-		                         aux_der + start, (end - start) + 1);
+		attrs = extension_attrs (parser, id, public_key_info,
+		                         P11_OID_SUBJECT_KEY_IDENTIFIER_STR,
+		                         P11_OID_SUBJECT_KEY_IDENTIFIER,
+		                         false, aux_der + start, (end - start) + 1);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -458,12 +500,15 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	CK_ATTRIBUTE *attrs;
 	CK_BYTE idv[ID_LENGTH];
 	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
+	CK_ATTRIBUTE public_key_info = { CKA_X_PUBLIC_KEY_INFO };
 	CK_ATTRIBUTE *value;
 	char *label = NULL;
 	node_asn *cert;
 	node_asn *aux;
 	ssize_t cert_len;
-	int len;
+	size_t len;
+	int start;
+	int end;
 	int ret;
 
 	/*
@@ -497,23 +542,27 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	/* Cache the parsed certificate ASN.1 for later use by the builder */
 	value = p11_attrs_find_valid (attrs, CKA_VALUE);
 	return_val_if_fail (value != NULL, P11_PARSE_FAILURE);
+
+	/* Pull out the subject public key info */
+	ret = asn1_der_decoding_startEnd (cert, data, cert_len,
+	                                  "tbsCertificate.subjectPublicKeyInfo", &start, &end);
+	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+
+	public_key_info.pValue = (char *)data + start;
+	public_key_info.ulValueLen = (end - start) + 1;
+
 	p11_asn1_cache_take (parser->asn1_cache, cert, "PKIX1.Certificate",
 	                     value->pValue, value->ulValueLen);
 
 	/* Pull the label out of the CertAux */
 	len = 0;
-	ret = asn1_read_value (aux, "alias", NULL, &len);
-	if (ret != ASN1_ELEMENT_NOT_FOUND) {
-		return_val_if_fail (ret == ASN1_MEM_ERROR, P11_PARSE_FAILURE);
-		label = calloc (len + 1, 1);
-		return_val_if_fail (label != NULL, P11_PARSE_FAILURE);
-		ret = asn1_read_value (aux, "alias", label, &len);
-		return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+	label = p11_asn1_read (aux, "alias", &len);
+	if (label != NULL) {
 		attrs = p11_attrs_take (attrs, CKA_LABEL, label, strlen (label));
 		return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 	}
 
-	attrs = build_openssl_extensions (parser, attrs, &id, aux,
+	attrs = build_openssl_extensions (parser, attrs, &id, &public_key_info, aux,
 	                                  data + cert_len, length - cert_len);
 	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 

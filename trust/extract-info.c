@@ -50,10 +50,50 @@
 #include <stdlib.h>
 #include <string.h>
 
+static bool
+load_stapled_extension (p11_dict *stapled,
+                        p11_dict *asn1_defs,
+                        const unsigned char *der,
+                        size_t len)
+{
+	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
+	node_asn *ext;
+	char *oid;
+	int length;
+	int start;
+	int end;
+	int ret;
+
+	ext = p11_asn1_decode (asn1_defs, "PKIX1.Extension", der, len, message);
+	if (ext == NULL) {
+		p11_message ("couldn't parse stapled certificate extension: %s", message);
+		return false;
+	}
+
+	ret = asn1_der_decoding_startEnd (ext, der, len, "extnID", &start, &end);
+	return_val_if_fail (ret == ASN1_SUCCESS, false);
+
+	/* Make sure it's a straightforward oid with certain assumptions */
+	length = (end - start) + 1;
+	if (!p11_oid_simple (der + start, length)) {
+		p11_debug ("strange complex certificate extension object id");
+		return false;
+	}
+
+	oid = memdup (der + start, length);
+	return_val_if_fail (oid != NULL, false);
+
+	if (!p11_dict_set (stapled, oid, ext))
+		return_val_if_reached (false);
+
+	return true;
+}
+
 static p11_dict *
-load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
+load_stapled_extensions (p11_extract_info *ex,
+                         CK_FUNCTION_LIST_PTR module,
                          CK_SESSION_HANDLE session,
-                         CK_ATTRIBUTE *id)
+                         CK_ATTRIBUTE *spki)
 {
 	CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
 	CK_ATTRIBUTE *attrs;
@@ -63,21 +103,18 @@ load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_CLASS, &extension, sizeof (extension) },
-		{ CKA_ID, id->pValue, id->ulValueLen },
+		{ CKA_X_PUBLIC_KEY_INFO, spki->pValue, spki->ulValueLen },
 	};
 
 	CK_ATTRIBUTE template[] = {
-		{ CKA_OBJECT_ID, },
-		{ CKA_X_CRITICAL, },
 		{ CKA_VALUE, },
 	};
 
-	stapled = p11_dict_new (p11_attr_hash,
-	                        (p11_dict_equals)p11_attr_equal,
-	                        NULL, p11_attrs_free);
+	stapled = p11_dict_new (p11_oid_hash, p11_oid_equal,
+	                        free, p11_asn1_free);
 
 	/* No ID to use, just short circuit */
-	if (!id->pValue || !id->ulValueLen)
+	if (!spki->pValue || !spki->ulValueLen)
 		return stapled;
 
 	iter = p11_kit_iter_new (NULL, 0);
@@ -87,16 +124,16 @@ load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
 	while (rv == CKR_OK) {
 		rv = p11_kit_iter_next (iter);
 		if (rv == CKR_OK) {
-			attrs = p11_attrs_buildn (NULL, template, 3);
-			rv = p11_kit_iter_load_attributes (iter, attrs, 3);
-			if (rv == CKR_OK || rv == CKR_ATTRIBUTE_TYPE_INVALID) {
-				/* CKA_OBJECT_ID is the first attribute, use it as the key */
-				if (!p11_dict_set (stapled, attrs, attrs))
-					return_val_if_reached (NULL);
-				rv = CKR_OK;
-			} else {
-				p11_attrs_free (attrs);
+			attrs = p11_attrs_buildn (NULL, template, 1);
+			rv = p11_kit_iter_load_attributes (iter, attrs, 1);
+			if (rv == CKR_OK) {
+				if (!load_stapled_extension (stapled, ex->asn1_defs,
+				                             attrs[0].pValue,
+				                             attrs[0].ulValueLen)) {
+					rv = CKR_GENERAL_ERROR;
+				}
 			}
+			p11_attrs_free (attrs);
 		}
 	}
 
@@ -113,33 +150,30 @@ load_stapled_extensions (CK_FUNCTION_LIST_PTR module,
 static bool
 extract_purposes (p11_extract_info *ex)
 {
-	CK_ATTRIBUTE oid = { CKA_OBJECT_ID,
-	                     (void *)P11_OID_EXTENDED_KEY_USAGE,
-	                     sizeof (P11_OID_EXTENDED_KEY_USAGE) };
-	const unsigned char *ext = NULL;
-	unsigned char *alloc = NULL;
-	CK_ATTRIBUTE *attrs;
-	size_t ext_len;
+	node_asn *ext = NULL;
+	unsigned char *value = NULL;
+	size_t length;
 
 	if (ex->stapled) {
-		attrs = p11_dict_get (ex->stapled, &oid);
-		if (attrs != NULL)
-			ext = p11_attrs_find_value (attrs, CKA_VALUE, &ext_len);
+		ext = p11_dict_get (ex->stapled, P11_OID_EXTENDED_KEY_USAGE);
+		if (ext != NULL) {
+			value = p11_asn1_read (ext, "extnValue", &length);
+			return_val_if_fail (value != NULL, false);
+		}
 	}
 
-	if (ext == NULL && ex->cert_asn) {
-		alloc = p11_x509_find_extension (ex->cert_asn, P11_OID_EXTENDED_KEY_USAGE,
-		                                 ex->cert_der, ex->cert_len, &ext_len);
-		ext = alloc;
+	if (value == NULL && ex->cert_asn) {
+		value = p11_x509_find_extension (ex->cert_asn, P11_OID_EXTENDED_KEY_USAGE,
+		                                 ex->cert_der, ex->cert_len, &length);
 	}
 
 	/* No such extension, match anything */
-	if (ext == NULL)
+	if (value == NULL)
 		return true;
 
-	ex->purposes = p11_x509_parse_extended_key_usage (ex->asn1_defs, ext, ext_len);
+	ex->purposes = p11_x509_parse_extended_key_usage (ex->asn1_defs, value, length);
 
-	free (alloc);
+	free (value);
 	return ex->purposes != NULL;
 }
 
@@ -292,6 +326,7 @@ extract_info (P11KitIter *iter,
 		{ CKA_TRUSTED, },
 		{ CKA_CERTIFICATE_CATEGORY },
 		{ CKA_X_DISTRUSTED },
+		{ CKA_X_PUBLIC_KEY_INFO },
 		{ CKA_INVALID, },
 	};
 
@@ -317,11 +352,10 @@ extract_info (P11KitIter *iter,
 	if (!extract_certificate (iter, ex))
 		return false;
 
-	attr = p11_attrs_find_valid (ex->attrs, CKA_ID);
+	attr = p11_attrs_find_valid (ex->attrs, CKA_X_PUBLIC_KEY_INFO);
 	if (attr) {
-		ex->stapled = load_stapled_extensions (p11_kit_iter_get_module (iter),
-		                                       p11_kit_iter_get_session (iter),
-		                                       attr);
+		ex->stapled = load_stapled_extensions (ex, p11_kit_iter_get_module (iter),
+		                                       p11_kit_iter_get_session (iter), attr);
 		if (!ex->stapled)
 			return false;
 	}

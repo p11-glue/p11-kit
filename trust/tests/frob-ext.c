@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Red Hat Inc.
+ * Copyright (c) 2013 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -56,11 +56,23 @@ main (int argc,
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
 	node_asn *definitions = NULL;
-	node_asn *ekus = NULL;
+	node_asn *ext = NULL;
+	unsigned char input[1024];
 	char *buf;
+	size_t size;
 	int len;
 	int ret;
-	int i;
+
+	if (argc == 1 || argc > 3) {
+		fprintf (stderr, "usage: frob-ext 1.2.3 TRUE\n");
+		return 2;
+	}
+
+	size = fread (input, 1, sizeof (input), stdin);
+	if (ferror (stdin) || !feof (stdin)) {
+		fprintf (stderr, "bad input\n");
+		return 1;
+	}
 
 	ret = asn1_array2tree (pkix_asn1_tab, &definitions, message);
 	if (ret != ASN1_SUCCESS) {
@@ -68,24 +80,28 @@ main (int argc,
 		return 1;
 	}
 
-	ret = asn1_create_element (definitions, "PKIX1.ExtKeyUsageSyntax", &ekus);
-	err_if_fail (ret, "ExtKeyUsageSyntax");
 
-	for (i = 1; i < argc; i++) {
-		ret = asn1_write_value (ekus, "", "NEW", 1);
-		err_if_fail (ret, "NEW");
+	ret = asn1_create_element (definitions, "PKIX1.Extension", &ext);
+	err_if_fail (ret, "Extension");
 
-		ret = asn1_write_value (ekus, "?LAST", argv[i], strlen (argv[i]));
-		err_if_fail (ret, "asn1_write_value");
+	ret = asn1_write_value (ext, "extnID", argv[1], 1);
+	err_if_fail (ret, "extnID");
+
+	if (argc == 3) {
+		ret = asn1_write_value (ext, "critical", argv[2], 1);
+		err_if_fail (ret, "critical");
 	}
 
+	ret = asn1_write_value (ext, "extnValue", input, size);
+	err_if_fail (ret, "extnValue");
+
 	len = 0;
-	ret = asn1_der_coding (ekus, "", NULL, &len, message);
+	ret = asn1_der_coding (ext, "", NULL, &len, message);
 	assert (ret == ASN1_MEM_ERROR);
 
 	buf = malloc (len);
 	assert (buf != NULL);
-	ret = asn1_der_coding (ekus, "", buf, &len, message);
+	ret = asn1_der_coding (ext, "", buf, &len, message);
 	if (ret != ASN1_SUCCESS) {
 		fprintf (stderr, "asn1_der_coding: %s\n", message);
 		return 1;
@@ -95,7 +111,7 @@ main (int argc,
 	fflush (stdout);
 
 	free (buf);
-	asn1_delete_structure (&ekus);
+	asn1_delete_structure (&ext);
 	asn1_delete_structure (&definitions);
 
 	return 0;

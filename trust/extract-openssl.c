@@ -106,20 +106,24 @@ load_usage_ext (p11_extract_info *ex,
                 const unsigned char *ext_oid,
                 p11_array **oids)
 {
-	CK_ATTRIBUTE attr = { CKA_OBJECT_ID, (void *)ext_oid,
-	                      p11_oid_length (ext_oid) };
-	void *value;
+	unsigned char *value;
+	node_asn *ext = NULL;
 	size_t length;
 
-	value = p11_attrs_find_value (p11_dict_get (ex->stapled, &attr), CKA_VALUE, &length);
-	if (value == NULL) {
+	if (ex->stapled)
+		ext = p11_dict_get (ex->stapled, ext_oid);
+	if (ext == NULL) {
 		*oids = NULL;
 		return true;
 	}
 
+	value = p11_asn1_read (ext, "extnValue", &length);
+	return_val_if_fail (value != NULL, false);
+
 	*oids = p11_x509_parse_extended_key_usage (ex->asn1_defs, value, length);
 	return_val_if_fail (*oids != NULL, false);
 
+	free (value);
 	return true;
 }
 
@@ -221,20 +225,21 @@ static bool
 write_keyid (p11_extract_info *ex,
              node_asn *asn)
 {
-	CK_ATTRIBUTE attr = { CKA_OBJECT_ID,
-	                      (void *)P11_OID_SUBJECT_KEY_IDENTIFIER,
-	                      sizeof (P11_OID_SUBJECT_KEY_IDENTIFIER) };
-	CK_ATTRIBUTE *value;
+	unsigned char *value = NULL;
+	node_asn *ext = NULL;
+	size_t length = 0;
 	int ret;
 
-	value = p11_attrs_find_valid (p11_dict_get (ex->stapled, &attr), CKA_VALUE);
-	if (value == NULL) {
-		ret = asn1_write_value (asn, "keyid", NULL, 0);
-		return_val_if_fail (ret == ASN1_SUCCESS, false);
-	} else {
-		ret = asn1_write_value (asn, "keyid", value->pValue, value->ulValueLen);
-		return_val_if_fail (ret == ASN1_SUCCESS, false);
+	if (ex->stapled)
+		ext = p11_dict_get (ex->stapled, P11_OID_SUBJECT_KEY_IDENTIFIER);
+	if (ext != NULL) {
+		value = p11_asn1_read (ext, "extnValue", &length);
+		return_val_if_fail (value != NULL, false);
 	}
+
+	ret = asn1_write_value (asn, "keyid", value, length);
+	return_val_if_fail (ret == ASN1_SUCCESS, false);
+	free (value);
 
 	return true;
 }

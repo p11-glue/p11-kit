@@ -146,6 +146,7 @@ typedef CK_ULONG CK_X_ASSERTION_TYPE;
 #define CKO_X_CERTIFICATE_EXTENSION                  (CKO_X_VENDOR + 200)
 #define CKA_X_DISTRUSTED                             (CKA_X_VENDOR + 100)
 #define CKA_X_CRITICAL                               (CKA_X_VENDOR + 101)
+#define CKA_X_PUBLIC_KEY_INFO                        (CKA_X_VENDOR + 102)
 
 #endif /* CRYPTOKI_X_VENDOR_DEFINED */
 

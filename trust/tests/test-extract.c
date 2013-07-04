@@ -183,6 +183,7 @@ static CK_ATTRIBUTE cacert3_trusted[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Cacert3 Here", 11 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_TRUSTED, &truev, sizeof (truev) },
 	{ CKA_ID, "ID1", 3 },
 	{ CKA_INVALID },
@@ -207,7 +208,8 @@ static CK_ATTRIBUTE extension_eku_server_client[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_ID, "ID1", 3 },
 	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-	{ CKA_VALUE, (void *)test_eku_server_and_client, sizeof (test_eku_server_and_client) },
+	{ CKA_VALUE, "\x30\x1d\x06\x03\x55\x1d\x25\x04\x16\x30\x14\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 31 },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_INVALID },
 };
 
@@ -215,7 +217,8 @@ static CK_ATTRIBUTE extension_eku_invalid[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_ID, "ID1", 3 },
 	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-	{ CKA_VALUE, "invalid", 7 },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_VALUE, "\x30\x0e\x06\x03\x55\x1d\x25\x04\x07\x69\x6e\x76\x61\x6c\x69\x64", 16 },
 	{ CKA_INVALID },
 };
 

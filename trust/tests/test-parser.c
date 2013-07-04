@@ -197,16 +197,16 @@ test_parse_openssl_trusted (void)
 	CK_ATTRIBUTE eku_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-		{ CKA_X_CRITICAL, &truev, sizeof (truev) },
-		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 12 },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_VALUE, "\x30\x16\x06\x03\x55\x1d\x25\x01\x01\xff\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 24 },
 		{ CKA_INVALID },
 	};
 
 	CK_ATTRIBUTE reject_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
-		{ CKA_X_CRITICAL, &falsev, sizeof (falsev) },
-		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 12 },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 28 },
 		{ CKA_INVALID },
 	};
 
@@ -250,6 +250,20 @@ test_parse_openssl_trusted (void)
 static void
 test_parse_openssl_distrusted (void)
 {
+	static const char distrust_public_key[] = {
+		0x30, 0x81, 0x9f, 0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01,
+		0x05, 0x00, 0x03, 0x81, 0x8d, 0x00, 0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xdf, 0xc7, 0x0d,
+		0x61, 0xa2, 0x2f, 0xc0, 0x5a, 0xad, 0x45, 0x83, 0x22, 0x33, 0x42, 0xea, 0xec, 0x42, 0x5e, 0xa6,
+		0x0d, 0x42, 0x4c, 0x1c, 0x9a, 0x12, 0x0b, 0x5f, 0xe7, 0x25, 0xf9, 0x8b, 0x83, 0x0c, 0x0a, 0xc5,
+		0x2f, 0x5a, 0x58, 0x56, 0xb8, 0xad, 0x87, 0x6d, 0xbc, 0x80, 0x5d, 0xdd, 0x49, 0x45, 0x39, 0x5f,
+		0xb9, 0x08, 0x3a, 0x63, 0xe4, 0x92, 0x33, 0x61, 0x79, 0x19, 0x1b, 0x9d, 0xab, 0x3a, 0xd5, 0x7f,
+		0xa7, 0x8b, 0x7f, 0x8a, 0x5a, 0xf6, 0xd7, 0xde, 0xaf, 0xa1, 0xe5, 0x53, 0x31, 0x29, 0x7d, 0x9c,
+		0x03, 0x55, 0x3e, 0x47, 0x78, 0xcb, 0xb9, 0x7a, 0x98, 0x8c, 0x5f, 0x8d, 0xda, 0x09, 0x0f, 0xc8,
+		0xfb, 0xf1, 0x7a, 0x80, 0xee, 0x12, 0x77, 0x0a, 0x00, 0x8b, 0x70, 0xfa, 0x62, 0xbf, 0xaf, 0xee,
+		0x0b, 0x58, 0x16, 0xf9, 0x9c, 0x5c, 0xde, 0x93, 0xb8, 0x4f, 0xdf, 0x4d, 0x7b, 0x02, 0x03, 0x01,
+		0x00, 0x01,
+	};
+
 	CK_ATTRIBUTE distrust_cert[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate), },
 		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
@@ -262,16 +276,16 @@ test_parse_openssl_distrusted (void)
 	CK_ATTRIBUTE eku_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-		{ CKA_X_CRITICAL, &truev, sizeof (truev) },
-		{ CKA_VALUE, "\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x10", 14 },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
+		{ CKA_VALUE, "\x30\x18\x06\x03\x55\x1d\x25\x01\x01\xff\x04\x0e\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x10", 26 },
 		{ CKA_INVALID },
 	};
 
 	CK_ATTRIBUTE reject_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
-		{ CKA_X_CRITICAL, &falsev, sizeof (falsev) },
-		{ CKA_VALUE, "\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 12 },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
+		{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 28 },
 		{ CKA_INVALID },
 	};
 
