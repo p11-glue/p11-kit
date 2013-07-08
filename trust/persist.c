@@ -198,6 +198,7 @@ format_bool (CK_ATTRIBUTE *attr,
 	case CKA_RESET_ON_INIT:
 	case CKA_HAS_RESET:
 	case CKA_COLOR:
+	case CKA_X_DISTRUSTED:
 		break;
 	default:
 		return false;
