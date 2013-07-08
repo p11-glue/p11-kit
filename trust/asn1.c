@@ -197,7 +197,7 @@ p11_asn1_read (node_asn *asn,
                const char *field,
                size_t *length)
 {
-	void *value;
+	unsigned char *value;
 	int len;
 	int ret;
 
@@ -212,11 +212,14 @@ p11_asn1_read (node_asn *asn,
 
 	return_val_if_fail (ret == ASN1_MEM_ERROR, NULL);
 
-	value = malloc (len);
+	value = malloc (len + 1);
 	return_val_if_fail (value != NULL, NULL);
 
 	ret = asn1_read_value (asn, field, value, &len);
 	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	/* Courtesy zero terminated */
+	value[len] = '\0';
 
 	*length = len;
 	return value;
