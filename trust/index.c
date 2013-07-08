@@ -77,6 +77,9 @@ struct _p11_index {
 	/* Called to build an new/modified object */
 	p11_index_build_cb build;
 
+	/* Called after each object ready to be stored */
+	p11_index_store_cb store;
+
 	/* Called after objects change */
 	p11_index_notify_cb notify;
 
@@ -98,8 +101,37 @@ free_object (void *data)
 	free (obj);
 }
 
+static CK_RV
+default_build (void *data,
+               p11_index *index,
+               CK_ATTRIBUTE *attrs,
+               CK_ATTRIBUTE *merge,
+               CK_ATTRIBUTE **populate)
+{
+	return CKR_OK;
+}
+
+static CK_RV
+default_store (void *data,
+               p11_index *index,
+               CK_OBJECT_HANDLE handle,
+               CK_ATTRIBUTE **attrs)
+{
+	return CKR_OK;
+}
+
+static void
+default_notify (void *data,
+                p11_index *index,
+                CK_OBJECT_HANDLE handle,
+                CK_ATTRIBUTE *attrs)
+{
+
+}
+
 p11_index *
 p11_index_new (p11_index_build_cb build,
+               p11_index_store_cb store,
                p11_index_notify_cb notify,
                void *data)
 {
@@ -108,7 +140,15 @@ p11_index_new (p11_index_build_cb build,
 	index = calloc (1, sizeof (p11_index));
 	return_val_if_fail (index != NULL, NULL);
 
+	if (build == NULL)
+		build = default_build;
+	if (store == NULL)
+		store = default_store;
+	if (notify == NULL)
+		notify = default_notify;
+
 	index->build = build;
+	index->store = store;
 	index->notify = notify;
 	index->data = data;
 
@@ -251,17 +291,89 @@ index_hash (p11_index *index,
 	}
 }
 
+static void
+merge_attrs (CK_ATTRIBUTE *output,
+             CK_ULONG *noutput,
+             CK_ATTRIBUTE *merge,
+             CK_ULONG nmerge,
+             p11_array *to_free)
+{
+	CK_ULONG i;
+
+	for (i = 0; i < nmerge; i++) {
+		/* Already have this attribute? */
+		if (p11_attrs_findn (output, *noutput, merge[i].type)) {
+			p11_array_push (to_free, merge[i].pValue);
+
+		} else {
+			memcpy (output + *noutput, merge + i, sizeof (CK_ATTRIBUTE));
+			(*noutput)++;
+		}
+	}
+
+	/* Freeing the array itself */
+	p11_array_push (to_free, merge);
+}
+
 static CK_RV
 index_build (p11_index *index,
+             CK_OBJECT_HANDLE handle,
              CK_ATTRIBUTE **attrs,
              CK_ATTRIBUTE *merge)
 {
-	if (index->build) {
-		return index->build (index->data, index, attrs, merge);
+	CK_ATTRIBUTE *extra = NULL;
+	CK_ATTRIBUTE *built;
+	p11_array *stack = NULL;
+	CK_ULONG count;
+	CK_ULONG nattrs;
+	CK_ULONG nmerge;
+	CK_ULONG nextra;
+	CK_RV rv;
+	int i;
+
+	rv = index->build (index->data, index, *attrs, merge, &extra);
+	if (rv != CKR_OK)
+		return rv;
+
+	/* Short circuit when nothing to merge */
+	if (*attrs == NULL && extra == NULL) {
+		built = merge;
+		stack = NULL;
+
 	} else {
-		*attrs = p11_attrs_merge (*attrs, merge, true);
-		return CKR_OK;
+		stack = p11_array_new (NULL);
+		nattrs = p11_attrs_count (*attrs);
+		nmerge = p11_attrs_count (merge);
+		nextra = p11_attrs_count (extra);
+
+		/* Make a shallow copy of the combined attributes for validation */
+		built = calloc (nmerge + nattrs + nextra + 1, sizeof (CK_ATTRIBUTE));
+		return_val_if_fail (built != NULL, CKR_GENERAL_ERROR);
+
+		count = nmerge;
+		memcpy (built, merge, sizeof (CK_ATTRIBUTE) * nmerge);
+		merge_attrs (built, &count, *attrs, nattrs, stack);
+		merge_attrs (built, &count, extra, nextra, stack);
+
+		/* The terminator attribute */
+		built[count].type = CKA_INVALID;
+		assert (p11_attrs_terminator (built + count));
 	}
+
+	rv = index->store (index->data, index, handle, &built);
+
+	if (rv == CKR_OK) {
+		for (i = 0; stack && i < stack->num; i++)
+			free (stack->elem[i]);
+		*attrs = built;
+	} else {
+		p11_attrs_free (merge);
+		p11_attrs_free (extra);
+		free (built);
+	}
+
+	p11_array_free (stack);
+	return rv;
 }
 
 static void
@@ -371,7 +483,9 @@ p11_index_take (p11_index *index,
 	obj = calloc (1, sizeof (index_object));
 	return_val_if_fail (obj != NULL, CKR_HOST_MEMORY);
 
-	rv = index_build (index, &obj->attrs, attrs);
+	obj->handle = p11_module_next_id ();
+
+	rv = index_build (index, obj->handle, &obj->attrs, attrs);
 	if (rv != CKR_OK) {
 		p11_attrs_free (attrs);
 		free (obj);
@@ -379,7 +493,6 @@ p11_index_take (p11_index *index,
 	}
 
 	return_val_if_fail (obj->attrs != NULL, CKR_GENERAL_ERROR);
-	obj->handle = p11_module_next_id ();
 
 	if (!p11_dict_set (index->objects, &obj->handle, obj))
 		return_val_if_reached (CKR_HOST_MEMORY);
@@ -427,7 +540,7 @@ p11_index_update (p11_index *index,
 		return CKR_OBJECT_HANDLE_INVALID;
 	}
 
-	rv = index_build (index, &obj->attrs, update);
+	rv = index_build (index, obj->handle, &obj->attrs, update);
 	if (rv != CKR_OK) {
 		p11_attrs_free (update);
 		return rv;
@@ -508,7 +621,7 @@ index_replacev (p11_index *index,
 					continue;
 				if (p11_attrs_matchn (replace[j], attr, 1)) {
 					attrs = NULL;
-					rv = index_build (index, &attrs, replace[j]);
+					rv = index_build (index, obj->handle, &attrs, replace[j]);
 					if (rv != CKR_OK)
 						return rv;
 					p11_attrs_free (obj->attrs);

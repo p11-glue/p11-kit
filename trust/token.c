@@ -73,8 +73,9 @@ struct _p11_token {
 	char *label;              /* The token label */
 	CK_SLOT_ID slot;          /* The slot id */
 
-	bool checked_writable;
+	bool checked_path;
 	bool is_writable;
+	bool make_directory;
 };
 
 static bool
@@ -422,6 +423,60 @@ p11_token_reload (p11_token *token,
 	return loader_load_file (token, origin, &sb) > 0;
 }
 
+static bool
+check_directory (const char *path,
+                 bool *make_directory,
+                 bool *is_writable)
+{
+	struct stat sb;
+	char *parent;
+	bool dummy;
+	bool ret;
+
+	/*
+	 * This function attempts to determine whether a later write
+	 * to this token will succeed so we can setup the appropriate
+	 * token flags. Yes, it is racy, but that's inherent to the problem.
+	 */
+
+	if (stat (path, &sb) == 0) {
+		*make_directory = false;
+		*is_writable = S_ISDIR (sb.st_mode) && access (path, W_OK) == 0;
+		return true;
+	}
+
+	switch (errno) {
+	case EACCES:
+		*is_writable = false;
+		*make_directory = false;
+		return true;
+	case ENOENT:
+		*make_directory = true;
+		parent = p11_path_parent (path);
+		if (parent == NULL)
+			ret = false;
+		else
+			ret = check_directory (parent, &dummy, is_writable);
+		free (parent);
+		return ret;
+	default:
+		p11_message ("couldn't access: %s: %s", path, strerror (errno));
+		return false;
+	}
+}
+
+static bool
+check_token_directory (p11_token *token)
+{
+	if (!token->checked_path) {
+		token->checked_path = check_directory (token->path,
+		                                       &token->make_directory,
+		                                       &token->is_writable);
+	}
+
+	return token->checked_path;
+}
+
 static p11_save_file *
 writer_overwrite_origin (p11_token *token,
                          CK_ATTRIBUTE *origin)
@@ -515,11 +570,50 @@ writer_put_object (p11_save_file *file,
 	return CKR_OK;
 }
 
+static bool
+mkdir_with_parents (const char *path)
+{
+	int mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+	char *parent;
+	bool ret;
+
+	if (mkdir (path, mode) == 0)
+		return true;
+
+	switch (errno) {
+	case ENOENT:
+		parent = p11_path_parent (path);
+		if (parent != NULL) {
+			ret = mkdir_with_parents (parent);
+			free (parent);
+			if (ret == true) {
+				if (mkdir (path, mode) == 0)
+					return true;
+			}
+		}
+		/* fall through */
+	default:
+		p11_message ("couldn't create directory: %s: %s", path, strerror (errno));
+		return false;
+	}
+}
+
 static CK_RV
 on_index_build (void *data,
                 p11_index *index,
-                CK_ATTRIBUTE **attrs,
-                CK_ATTRIBUTE *merge)
+                CK_ATTRIBUTE *attrs,
+                CK_ATTRIBUTE *merge,
+                CK_ATTRIBUTE **extra)
+{
+	p11_token *token = data;
+	return p11_builder_build (token->builder, index, attrs, merge, extra);
+}
+
+static CK_RV
+on_index_store (void *data,
+                p11_index *index,
+                CK_OBJECT_HANDLE handle,
+                CK_ATTRIBUTE **attrs)
 {
 	p11_token *token = data;
 	CK_OBJECT_HANDLE *other;
@@ -533,13 +627,18 @@ on_index_build (void *data,
 	CK_RV rv;
 	int i;
 
-	rv = p11_builder_build (token->builder, index, attrs, merge);
-	if (rv != CKR_OK)
-		return rv;
-
 	/* Signifies that data is being loaded, don't write out */
 	if (p11_index_loading (index))
 		return CKR_OK;
+
+	if (!check_token_directory (token))
+		return CKR_FUNCTION_FAILED;
+
+	if (token->make_directory) {
+		if (!mkdir_with_parents (token->path))
+			return CKR_FUNCTION_FAILED;
+		token->make_directory = false;
+	}
 
 	/* Do we already have a filename? */
 	origin = p11_attrs_find (*attrs, CKA_X_ORIGIN);
@@ -567,9 +666,11 @@ on_index_build (void *data,
 		rv = writer_put_object (file, persist, &buffer, *attrs);
 
 	for (i = 0; rv == CKR_OK && other && other[i] != 0; i++) {
-		object = p11_index_lookup (index, other[i]);
-		if (object != NULL && object != *attrs)
-			rv = writer_put_object (file, persist, &buffer, object);
+		if (other[i] != handle) {
+			object = p11_index_lookup (index, handle);
+			if (object != NULL)
+				rv = writer_put_object (file, persist, &buffer, object);
+		}
 	}
 
 	p11_buffer_uninit (&buffer);
@@ -632,7 +733,10 @@ p11_token_new (CK_SLOT_ID slot,
 	token->builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
 	return_val_if_fail (token->builder != NULL, NULL);
 
-	token->index = p11_index_new (on_index_build, on_index_notify, token);
+	token->index = p11_index_new (on_index_build,
+	                              on_index_store,
+	                              on_index_notify,
+	                              token);
 	return_val_if_fail (token->index != NULL, NULL);
 
 	token->parser = p11_parser_new (p11_builder_get_cache (token->builder));
@@ -698,46 +802,10 @@ p11_token_parser (p11_token *token)
 	return token->parser;
 }
 
-static bool
-check_writable_directory (const char *path)
-{
-	struct stat sb;
-	char *parent;
-	bool ret;
-
-	if (access (path, W_OK) == 0)
-		return stat (path, &sb) == 0 && S_ISDIR (sb.st_mode);
-
-	switch (errno) {
-	case EACCES:
-		return false;
-	case ENOENT:
-		parent = p11_path_parent (path);
-		if (parent == NULL)
-			ret = false;
-		else
-			ret = check_writable_directory (parent);
-		free (parent);
-		return ret;
-	default:
-		p11_message ("couldn't access: %s: %s", path, strerror (errno));
-		return false;
-	}
-}
-
 bool
 p11_token_is_writable (p11_token *token)
 {
-	/*
-	 * This function attempts to determine whether a later write
-	 * to this token will succeed so we can setup the appropriate
-	 * token flags. Yes, it is racy, but that's inherent to the problem.
-	 */
-
-	if (!token->checked_writable) {
-		token->is_writable = check_writable_directory (token->path);
-		token->checked_writable = true;
-	}
-
+	if (!check_token_directory (token))
+		return false;
 	return token->is_writable;
 }

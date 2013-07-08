@@ -53,8 +53,9 @@ void                  p11_builder_free        (p11_builder *builder);
 
 CK_RV                 p11_builder_build       (void *builder,
                                                p11_index *index,
-                                               CK_ATTRIBUTE **attrs,
-                                               CK_ATTRIBUTE *merge);
+                                               CK_ATTRIBUTE *attrs,
+                                               CK_ATTRIBUTE *merge,
+                                               CK_ATTRIBUTE **populate);
 
 void                  p11_builder_changed     (void *builder,
                                                p11_index *index,

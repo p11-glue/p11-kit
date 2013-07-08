@@ -81,7 +81,7 @@ typedef struct {
 		bool (*validate) (p11_builder *, CK_ATTRIBUTE *);
 	} attrs[32];
 	CK_ATTRIBUTE * (*populate) (p11_builder *, p11_index *, CK_ATTRIBUTE *);
-	CK_RV (*validate) (p11_builder *, CK_ATTRIBUTE *);
+	CK_RV (*validate) (p11_builder *, CK_ATTRIBUTE *, CK_ATTRIBUTE *);
 } builder_schema;
 
 static node_asn *
@@ -711,12 +711,24 @@ certificate_populate (p11_builder *builder,
 	return p11_attrs_build (attrs, &category, &empty_value, NULL);
 }
 
-static CK_RV
-certificate_validate (p11_builder *builder,
-                      CK_ATTRIBUTE *attrs)
+static bool
+have_attribute (CK_ATTRIBUTE *attrs1,
+                CK_ATTRIBUTE *attrs2,
+                CK_ATTRIBUTE_TYPE type)
 {
 	CK_ATTRIBUTE *attr;
 
+	attr = p11_attrs_find (attrs1, type);
+	if (attr == NULL)
+		attr = p11_attrs_find (attrs2, type);
+	return attr != NULL && attr->ulValueLen > 0;
+}
+
+static CK_RV
+certificate_validate (p11_builder *builder,
+                      CK_ATTRIBUTE *attrs,
+                      CK_ATTRIBUTE *merge)
+{
 	/*
 	 * In theory we should be validating that in the absence of CKA_VALUE
 	 * various other fields must be set. However we do not enforce this
@@ -724,16 +736,13 @@ certificate_validate (p11_builder *builder,
 	 * but issuer and serial number, for blacklisting purposes.
 	 */
 
-	attr = p11_attrs_find (attrs, CKA_URL);
-	if (attr != NULL && attr->ulValueLen > 0) {
-		attr = p11_attrs_find (attrs, CKA_HASH_OF_SUBJECT_PUBLIC_KEY);
-		if (attr == NULL || attr->ulValueLen == 0) {
+	if (have_attribute (attrs, merge, CKA_URL)) {
+		if (!have_attribute (attrs, merge, CKA_HASH_OF_SUBJECT_PUBLIC_KEY)) {
 			p11_message ("missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute");
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
 
-		attr = p11_attrs_find (attrs, CKA_HASH_OF_ISSUER_PUBLIC_KEY);
-		if (attr == NULL || attr->ulValueLen == 0) {
+		if (!have_attribute (attrs, merge, CKA_HASH_OF_SUBJECT_PUBLIC_KEY)) {
 			p11_message ("missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute");
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
@@ -746,8 +755,8 @@ const static builder_schema certificate_schema = {
 	NORMAL_BUILD,
 	{ COMMON_ATTRS,
 	  { CKA_CERTIFICATE_TYPE, REQUIRE | CREATE, type_ulong },
-	  { CKA_TRUSTED, NONE, type_bool },
-	  { CKA_X_DISTRUSTED, NONE, type_bool },
+	  { CKA_TRUSTED, CREATE | WANT, type_bool },
+	  { CKA_X_DISTRUSTED, CREATE | WANT, type_bool },
 	  { CKA_CERTIFICATE_CATEGORY, CREATE | WANT, type_ulong },
 	  { CKA_CHECK_VALUE, CREATE | WANT, },
 	  { CKA_START_DATE, CREATE | MODIFY | WANT, type_date },
@@ -761,7 +770,7 @@ const static builder_schema certificate_schema = {
 	  { CKA_HASH_OF_SUBJECT_PUBLIC_KEY, CREATE },
 	  { CKA_HASH_OF_ISSUER_PUBLIC_KEY, CREATE },
 	  { CKA_JAVA_MIDP_SECURITY_DOMAIN, CREATE, type_ulong },
-	  { CKA_X_PUBLIC_KEY_INFO, CREATE | WANT, type_der_key },
+	  { CKA_X_PUBLIC_KEY_INFO, WANT, type_der_key },
 	  { CKA_INVALID },
 	}, certificate_populate, certificate_validate,
 };
@@ -884,33 +893,6 @@ const static builder_schema builtin_schema = {
 	}, common_populate
 };
 
-static void
-attrs_filter_if_unchanged (CK_ATTRIBUTE *attrs,
-                           CK_ATTRIBUTE *merge)
-{
-	CK_ATTRIBUTE *attr;
-	int in, out;
-
-	assert (attrs != NULL);
-	assert (merge != NULL);
-
-	for (in = 0, out = 0; !p11_attrs_terminator (merge + in); in++) {
-		attr = p11_attrs_find (attrs, merge[in].type);
-		if (attr && p11_attr_equal (attr, merge + in)) {
-			free (merge[in].pValue);
-			merge[in].pValue = NULL;
-			merge[in].ulValueLen = 0;
-		} else {
-			if (in != out)
-				memcpy (merge + out, merge + in, sizeof (CK_ATTRIBUTE));
-			out++;
-		}
-	}
-
-	merge[out].type = CKA_INVALID;
-	assert (p11_attrs_terminator (merge + out));
-}
-
 static const char *
 value_name (const p11_constant *info,
             CK_ATTRIBUTE_TYPE type)
@@ -926,49 +908,15 @@ type_name (CK_ATTRIBUTE_TYPE type)
 }
 
 static CK_RV
-validate_for_schema (p11_builder *builder,
-                     const builder_schema *schema,
-                     CK_ATTRIBUTE *attrs,
-                     CK_ATTRIBUTE *merge)
-{
-	CK_ATTRIBUTE *shallow;
-	CK_ULONG nattrs;
-	CK_ULONG nmerge;
-	CK_RV rv;
-
-	if (!schema->validate)
-		return CKR_OK;
-
-	nattrs = p11_attrs_count (attrs);
-	nmerge = p11_attrs_count (merge);
-
-	/* Make a shallow copy of the combined attributes for validation */
-	shallow = calloc (nmerge + nattrs + 1, sizeof (CK_ATTRIBUTE));
-	return_val_if_fail (shallow != NULL, CKR_GENERAL_ERROR);
-
-	memcpy (shallow, merge, sizeof (CK_ATTRIBUTE) * nmerge);
-	memcpy (shallow + nmerge, attrs, sizeof (CK_ATTRIBUTE) * nattrs);
-
-	/* The terminator attribute */
-	shallow[nmerge + nattrs].type = CKA_INVALID;
-	assert(p11_attrs_terminator (shallow + nmerge + nattrs));
-
-	rv = (schema->validate) (builder, shallow);
-	free (shallow);
-
-	return rv;
-}
-
-static CK_RV
 build_for_schema (p11_builder *builder,
                   p11_index *index,
                   const builder_schema *schema,
-                  CK_ATTRIBUTE **object,
-                  CK_ATTRIBUTE *merge)
+                  CK_ATTRIBUTE *attrs,
+                  CK_ATTRIBUTE *merge,
+                  CK_ATTRIBUTE **extra)
 {
-	CK_ATTRIBUTE *extra;
-	CK_ATTRIBUTE *attrs;
 	CK_BBOOL modifiable;
+	CK_ATTRIBUTE *attr;
 	bool modifying;
 	bool creating;
 	bool populate;
@@ -978,7 +926,6 @@ build_for_schema (p11_builder *builder,
 	int i, j;
 	CK_RV rv;
 
-	attrs = *object;
 	populate = false;
 
 	/* Signifies that data is being loaded */
@@ -998,9 +945,6 @@ build_for_schema (p11_builder *builder,
 		}
 	}
 
-	if (attrs != NULL)
-		attrs_filter_if_unchanged (attrs, merge);
-
 	if (creating && (builder->flags & P11_BUILDER_FLAG_TOKEN)) {
 		if (schema->build_flags & GENERATED_CLASS) {
 			p11_message ("objects of this type cannot be created");
@@ -1009,6 +953,12 @@ build_for_schema (p11_builder *builder,
 	}
 
 	for (i = 0; merge[i].type != CKA_INVALID; i++) {
+
+		/* Don't validate attribute if not changed */
+		attr = p11_attrs_find (attrs, merge[i].type);
+		if (attr && p11_attr_equal (attr, merge + i))
+			continue;
+
 		found = false;
 		for (j = 0; schema->attrs[j].type != CKA_INVALID; j++) {
 			if (schema->attrs[j].type != merge[i].type)
@@ -1068,23 +1018,15 @@ build_for_schema (p11_builder *builder,
 		}
 	}
 
-	if (populate && schema->populate) {
-		extra = schema->populate (builder, index, merge);
-		if (extra != NULL)
-			merge = p11_attrs_merge (merge, extra, false);
-	}
+	if (populate && schema->populate)
+		*extra = schema->populate (builder, index, merge);
 
 	/* Validate the result, before committing to the change. */
-	if (!loading) {
-		rv = validate_for_schema (builder, schema, attrs, merge);
-		if (rv != CKR_OK) {
-			p11_attrs_free (merge);
+	if (!loading && schema->validate) {
+		rv = (schema->validate) (builder, attrs, merge);
+		if (rv != CKR_OK)
 			return rv;
-		}
 	}
-
-	*object = p11_attrs_merge (attrs, merge, true);
-	return_val_if_fail (*object != NULL, CKR_HOST_MEMORY);
 
 	return CKR_OK;
 }
@@ -1092,11 +1034,11 @@ build_for_schema (p11_builder *builder,
 CK_RV
 p11_builder_build (void *bilder,
                    p11_index *index,
-                   CK_ATTRIBUTE **object,
-                   CK_ATTRIBUTE *merge)
+                   CK_ATTRIBUTE *attrs,
+                   CK_ATTRIBUTE *merge,
+                   CK_ATTRIBUTE **populate)
 {
 	p11_builder *builder = bilder;
-	CK_ATTRIBUTE *attrs;
 	CK_OBJECT_CLASS klass;
 	CK_CERTIFICATE_TYPE type;
 	CK_BBOOL token;
@@ -1104,8 +1046,6 @@ p11_builder_build (void *bilder,
 	return_val_if_fail (builder != NULL, CKR_GENERAL_ERROR);
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 	return_val_if_fail (merge != NULL, CKR_GENERAL_ERROR);
-
-	attrs = *object;
 
 	if (!p11_attrs_find_ulong (attrs ? attrs : merge, CKA_CLASS, &klass)) {
 		p11_message ("no CKA_CLASS attribute found");
@@ -1125,7 +1065,7 @@ p11_builder_build (void *bilder,
 			p11_message ("missing %s on object", type_name (CKA_CERTIFICATE_TYPE));
 			return CKR_TEMPLATE_INCOMPLETE;
 		} else if (type == CKC_X_509) {
-			return build_for_schema (builder, index, &certificate_schema, object, merge);
+			return build_for_schema (builder, index, &certificate_schema, attrs, merge, populate);
 		} else {
 			p11_message ("%s unsupported %s", value_name (p11_constant_certs, type),
 			             type_name (CKA_CERTIFICATE_TYPE));
@@ -1133,19 +1073,19 @@ p11_builder_build (void *bilder,
 		}
 
 	case CKO_X_CERTIFICATE_EXTENSION:
-		return build_for_schema (builder, index, &extension_schema, object, merge);
+		return build_for_schema (builder, index, &extension_schema, attrs, merge, populate);
 
 	case CKO_DATA:
-		return build_for_schema (builder, index, &data_schema, object, merge);
+		return build_for_schema (builder, index, &data_schema, attrs, merge, populate);
 
 	case CKO_NSS_TRUST:
-		return build_for_schema (builder, index, &trust_schema, object, merge);
+		return build_for_schema (builder, index, &trust_schema, attrs, merge, populate);
 
 	case CKO_NSS_BUILTIN_ROOT_LIST:
-		return build_for_schema (builder, index, &builtin_schema, object, merge);
+		return build_for_schema (builder, index, &builtin_schema, attrs, merge, populate);
 
 	case CKO_X_TRUST_ASSERTION:
-		return build_for_schema (builder, index, &assertion_schema, object, merge);
+		return build_for_schema (builder, index, &assertion_schema, attrs, merge, populate);
 
 	default:
 		p11_message ("%s unsupported object class",

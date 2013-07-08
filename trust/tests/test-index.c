@@ -53,7 +53,7 @@ struct {
 static void
 setup (void *unused)
 {
-	test.index = p11_index_new (NULL, NULL, NULL);
+	test.index = p11_index_new (NULL, NULL, NULL, NULL);
 	assert_ptr_not_null (test.index);
 }
 
@@ -657,22 +657,20 @@ test_replace_all (void)
 static CK_RV
 on_build_populate (void *data,
                    p11_index *index,
-                   CK_ATTRIBUTE **attrs,
-                   CK_ATTRIBUTE *merge)
+                   CK_ATTRIBUTE *attrs,
+                   CK_ATTRIBUTE *merge,
+                   CK_ATTRIBUTE **populate)
 {
-	CK_ATTRIBUTE override[] = {
+	CK_ATTRIBUTE more[] = {
 		{ CKA_APPLICATION, "vigorous", 8 },
 		{ CKA_LABEL, "naay", 4 },
-		{ CKA_INVALID },
 	};
 
 	assert_str_eq (data, "blah");
 	assert_ptr_not_null (index);
-	assert_ptr_not_null (attrs);
 	assert_ptr_not_null (merge);
 
-	*attrs = p11_attrs_merge (*attrs, merge, true);
-	*attrs = p11_attrs_merge (*attrs, p11_attrs_dup (override), true);
+	*populate = p11_attrs_buildn (*populate, more, 2);
 	return CKR_OK;
 }
 
@@ -687,7 +685,7 @@ test_build_populate (void)
 	};
 
 	CK_ATTRIBUTE after[] = {
-		{ CKA_LABEL, "naay", 4 },
+		{ CKA_LABEL, "yay", 3 },
 		{ CKA_VALUE, "eight", 5 },
 		{ CKA_APPLICATION, "vigorous", 8 },
 		{ CKA_INVALID }
@@ -698,7 +696,7 @@ test_build_populate (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (on_build_populate, NULL, "blah");
+	index = p11_index_new (on_build_populate, NULL, NULL, "blah");
 	assert_ptr_not_null (index);
 
 	rv = p11_index_add (index, original, 2, &handle);
@@ -723,8 +721,9 @@ test_build_populate (void)
 static CK_RV
 on_build_fail (void *data,
                p11_index *index,
-               CK_ATTRIBUTE **attrs,
-               CK_ATTRIBUTE *merge)
+               CK_ATTRIBUTE *attrs,
+               CK_ATTRIBUTE *merge,
+               CK_ATTRIBUTE **populate)
 {
 	CK_ATTRIBUTE check[] = {
 		{ CKA_LABEL, "nay", 3 },
@@ -737,7 +736,6 @@ on_build_fail (void *data,
 	if (p11_attrs_match (merge, check))
 		return CKR_DEVICE_ERROR;
 
-	*attrs = p11_attrs_merge (*attrs, merge, true);
 	return CKR_OK;
 }
 
@@ -761,7 +759,7 @@ test_build_fail (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (on_build_fail, NULL, "testo");
+	index = p11_index_new (on_build_fail, NULL, NULL, "testo");
 	assert_ptr_not_null (index);
 
 	rv = p11_index_add (index, okay, 2, &handle);
@@ -825,7 +823,7 @@ test_change_called (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, on_change_check, "change-check");
+	index = p11_index_new (NULL, NULL, on_change_check, "change-check");
 	assert_ptr_not_null (index);
 
 	on_change_removing = false;
@@ -870,7 +868,7 @@ test_change_batch (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, on_change_check, "change-check");
+	index = p11_index_new (NULL, NULL, on_change_check, "change-check");
 	assert_ptr_not_null (index);
 
 	on_change_batching = true;
@@ -961,7 +959,7 @@ test_change_nested (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, on_change_nested, "change-nested");
+	index = p11_index_new (NULL, NULL, on_change_nested, "change-nested");
 	assert_ptr_not_null (index);
 
 	on_change_called = 0;

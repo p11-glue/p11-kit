@@ -77,7 +77,7 @@ setup (void *unused)
 	test.builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
 	assert_ptr_not_null (test.builder);
 
-	test.index = p11_index_new (p11_builder_build, p11_builder_changed, test.builder);
+	test.index = p11_index_new (p11_builder_build, NULL, p11_builder_changed, test.builder);
 	assert_ptr_not_null (test.index);
 }
 
@@ -121,12 +121,17 @@ test_build_data (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, merge, true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (check, attrs);
 	p11_attrs_free (attrs);
@@ -160,12 +165,17 @@ test_build_certificate (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, merge, true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -208,14 +218,19 @@ test_build_certificate_empty (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_hash_sha1 (checksum, test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, merge, true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -332,11 +347,16 @@ test_build_certificate_non_ca (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -358,11 +378,16 @@ test_build_certificate_v1_ca (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -394,6 +419,7 @@ test_build_certificate_staple_ca (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	/* Add a stapled certificate */
@@ -401,8 +427,12 @@ test_build_certificate_staple_ca (void)
 	assert_num_eq (CKR_OK, rv);
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	/*
 	 * Even though the certificate is not a valid CA, the presence of the
@@ -422,13 +452,15 @@ test_build_certificate_no_type (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCOMPLETE, rv);
 	p11_attrs_free (merge);
 
@@ -448,13 +480,14 @@ test_build_certificate_bad_type (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 	p11_attrs_free (merge);
 
@@ -484,11 +517,16 @@ test_build_extension (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (check, attrs);
 	p11_attrs_free (attrs);
@@ -538,11 +576,16 @@ test_build_distant_end_date (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -552,6 +595,7 @@ static void
 test_valid_bool (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_BBOOL value = CK_TRUE;
 	CK_RV rv;
 
@@ -562,16 +606,17 @@ test_valid_bool (void)
 		{ CKA_INVALID },
 	};
 
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 }
 
 static void
 test_invalid_bool (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -585,13 +630,13 @@ test_invalid_bool (void)
 
 	input[0].pValue = "123";
 	input[0].ulValueLen = 3;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = sizeof (CK_BBOOL);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -601,6 +646,7 @@ static void
 test_valid_ulong (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_ULONG value = 2;
 	CK_RV rv;
 
@@ -611,16 +657,17 @@ test_valid_ulong (void)
 		{ CKA_INVALID },
 	};
 
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 }
 
 static void
 test_invalid_ulong (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -634,13 +681,13 @@ test_invalid_ulong (void)
 
 	input[0].pValue = "123";
 	input[0].ulValueLen = 3;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = sizeof (CK_ULONG);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -650,6 +697,7 @@ static void
 test_valid_utf8 (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -661,16 +709,17 @@ test_valid_utf8 (void)
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 0;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 }
 
 static void
 test_invalid_utf8 (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -684,13 +733,13 @@ test_invalid_utf8 (void)
 
 	input[0].pValue = "\xfex23";
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -700,6 +749,7 @@ static void
 test_valid_dates (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_DATE date;
 	CK_RV rv;
 
@@ -711,14 +761,14 @@ test_valid_dates (void)
 	};
 
 	memcpy (&date, "20001010", sizeof (date));
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_attrs_free (attrs);
 	attrs = NULL;
 
 	input[0].ulValueLen = 0;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_attrs_free (attrs);
@@ -728,6 +778,7 @@ static void
 test_invalid_dates (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_DATE date;
 	CK_RV rv;
 
@@ -741,15 +792,15 @@ test_invalid_dates (void)
 	p11_message_quiet ();
 
 	memcpy (&date, "AAAABBCC", sizeof (date));
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	memcpy (&date, "20001580", sizeof (date));
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -759,6 +810,7 @@ static void
 test_valid_name (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -770,7 +822,7 @@ test_valid_name (void)
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 0;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_attrs_free (attrs);
@@ -778,7 +830,7 @@ test_valid_name (void)
 
 	input[0].pValue = (void *)test_cacert3_ca_issuer;
 	input[0].ulValueLen = sizeof (test_cacert3_ca_issuer);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_attrs_free (attrs);
@@ -788,6 +840,7 @@ static void
 test_invalid_name (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -801,12 +854,12 @@ test_invalid_name (void)
 
 	input[0].pValue = "blah";
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -816,6 +869,7 @@ static void
 test_valid_serial (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -827,24 +881,25 @@ test_valid_serial (void)
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 0;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 	attrs = NULL;
 
 	input[0].pValue = (void *)test_cacert3_ca_serial;
 	input[0].ulValueLen = sizeof (test_cacert3_ca_serial);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 }
 
 static void
 test_invalid_serial (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -858,17 +913,17 @@ test_invalid_serial (void)
 
 	input[0].pValue = "blah";
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = (void *)test_cacert3_ca_subject;
 	input[0].ulValueLen = sizeof (test_cacert3_ca_subject);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -878,6 +933,7 @@ static void
 test_valid_cert (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -889,24 +945,25 @@ test_valid_cert (void)
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 0;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 	attrs = NULL;
 
 	input[0].pValue = (void *)test_cacert3_ca_der;
 	input[0].ulValueLen = sizeof (test_cacert3_ca_der);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	p11_attrs_free (attrs);
+	p11_attrs_free (extra);
 }
 
 static void
 test_invalid_cert (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -920,17 +977,17 @@ test_invalid_cert (void)
 
 	input[0].pValue = "blah";
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = (void *)test_cacert3_ca_subject;
 	input[0].ulValueLen = sizeof (test_cacert3_ca_subject);
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	input[0].pValue = NULL;
 	input[0].ulValueLen = 4;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
 	p11_message_loud ();
@@ -940,6 +997,7 @@ static void
 test_invalid_schema (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
 	CK_RV rv;
 
 	CK_ATTRIBUTE input[] = {
@@ -952,7 +1010,7 @@ test_invalid_schema (void)
 	p11_message_quiet ();
 
 	/* Missing CKA_HASH_OF_SUBJECT_PUBLIC_KEY and CKA_HASH_OF_ISSUER_PUBLIC_KEY */
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 
 	p11_message_loud ();
@@ -962,26 +1020,27 @@ static void
 test_create_not_settable (void)
 {
 	/*
-	 * CKA_TRUSTED cannot be set by the normal user according to spec
+	 * CKA_X_PUBLIC_KEY_INFO cannot be created/modified
 	 */
 
 	CK_ATTRIBUTE input[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)verisign_v1_ca_public_key, sizeof (verisign_v1_ca_public_key) },
 		{ CKA_INVALID },
 	};
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_READ_ONLY, rv);
 	p11_attrs_free (merge);
 
@@ -994,28 +1053,32 @@ static void
 test_create_but_loadable (void)
 {
 	/*
-	 * CKA_TRUSTED cannot be set on creation, but can be set if we're
+	 * CKA_X_PUBLIC_KEY_INFO cannot be set on creation, but can be set if we're
 	 * loading from our store. This is signified by batching.
 	 */
 
 	CK_ATTRIBUTE input[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)verisign_v1_ca_public_key, sizeof (verisign_v1_ca_public_key) },
 		{ CKA_INVALID },
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_index_load (test.index);
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_index_finish (test.index);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (input, attrs);
 	p11_attrs_free (attrs);
@@ -1033,13 +1096,15 @@ test_create_unsupported (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 	p11_attrs_free (merge);
 
@@ -1058,13 +1123,15 @@ test_create_generated (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 	p11_attrs_free (merge);
 
@@ -1083,13 +1150,15 @@ test_create_bad_attribute (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 	p11_attrs_free (merge);
 
@@ -1106,13 +1175,15 @@ test_create_missing_attribute (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCOMPLETE, rv);
 	p11_attrs_free (merge);
 
@@ -1129,13 +1200,15 @@ test_create_no_class (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCOMPLETE, rv);
 	p11_attrs_free (merge);
 
@@ -1153,13 +1226,15 @@ test_create_token_mismatch (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	p11_message_quiet ();
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_TEMPLATE_INCONSISTENT, rv);
 	p11_attrs_free (merge);
 
@@ -1191,14 +1266,23 @@ test_modify_success (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (modify));
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
+
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, modify, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (modify), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -1221,17 +1305,23 @@ test_modify_read_only (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
+	extra = NULL;
 	merge = p11_attrs_dup (input);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, merge, true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	p11_message_quiet ();
 
+	extra = NULL;
 	merge = p11_attrs_dup (modify);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_READ_ONLY, rv);
 	p11_attrs_free (merge);
 
@@ -1268,14 +1358,22 @@ test_modify_unchanged (void)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (modify));
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
+
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, modify, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (modify), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -1298,16 +1396,22 @@ test_modify_not_modifiable (void)
 
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *merge;
+	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
 	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	extra = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
+
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (input), true);
+	attrs = p11_attrs_merge (attrs, extra, false);
 
 	p11_message_quiet ();
 
+	extra = NULL;
 	merge = p11_attrs_dup (modify);
-	rv = p11_builder_build (test.builder, test.index, &attrs, merge);
+	rv = p11_builder_build (test.builder, test.index, attrs, merge, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_READ_ONLY, rv);
 	p11_attrs_free (merge);
 
