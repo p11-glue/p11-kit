@@ -643,7 +643,7 @@ p11_token_new (CK_SLOT_ID slot,
 	token->loaded = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 	return_val_if_fail (token->loaded != NULL, NULL);
 
-	token->path = strdup (path);
+	token->path = p11_path_expand (path);
 	return_val_if_fail (token->path != NULL, NULL);
 
 	token->anchors = p11_path_build (token->path, "anchors", NULL);
