@@ -66,6 +66,7 @@
 struct _p11_parser {
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
+	bool asn1_owned;
 	p11_persist *persist;
 	char *basename;
 	p11_array *parsed;
@@ -659,10 +660,14 @@ p11_parser_new (p11_asn1_cache *asn1_cache)
 {
 	p11_parser parser = { 0, };
 
-	return_val_if_fail (asn1_cache != NULL, NULL);
-
-	parser.asn1_defs = p11_asn1_cache_defs (asn1_cache);
-	parser.asn1_cache = asn1_cache;
+	if (asn1_cache == NULL) {
+		parser.asn1_owned = true;
+		parser.asn1_defs = p11_asn1_defs_load ();
+	} else {
+		parser.asn1_defs = p11_asn1_cache_defs (asn1_cache);
+		parser.asn1_cache = asn1_cache;
+		parser.asn1_owned = false;
+	}
 
 	parser.parsed = p11_array_new (p11_attrs_free);
 	return_val_if_fail (parser.parsed != NULL, NULL);
@@ -676,6 +681,8 @@ p11_parser_free (p11_parser *parser)
 	return_if_fail (parser != NULL);
 	p11_persist_free (parser->persist);
 	p11_array_free (parser->parsed);
+	if (parser->asn1_owned)
+		p11_dict_free (parser->asn1_defs);
 	free (parser);
 }
 

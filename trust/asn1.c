@@ -302,7 +302,9 @@ p11_asn1_cache_get (p11_asn1_cache *cache,
 {
 	asn1_item *item;
 
-	return_val_if_fail (cache != NULL, NULL);
+	if (cache == NULL)
+		return NULL;
+
 	return_val_if_fail (struct_name != NULL, NULL);
 	return_val_if_fail (der != NULL, NULL);
 
@@ -325,7 +327,9 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 {
 	asn1_item *item;
 
-	return_if_fail (cache != NULL);
+	if (cache == NULL)
+		return;
+
 	return_if_fail (struct_name != NULL);
 	return_if_fail (der != NULL);
 	return_if_fail (der_len != 0);
@@ -345,7 +349,8 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 void
 p11_asn1_cache_flush (p11_asn1_cache *cache)
 {
-	return_if_fail (cache != NULL);
+	if (cache == NULL)
+		return;
 	p11_dict_clear (cache->items);
 }
 

@@ -414,6 +414,24 @@ test_parse_unrecognized (void)
 	p11_message_loud ();
 }
 
+static void
+test_parse_no_asn1_cache (void)
+{
+	p11_parser *parser;
+	int ret;
+
+	parser = p11_parser_new (NULL);
+	assert_ptr_not_null (parser);
+
+	ret = p11_parse_file (parser, SRCDIR "/files/cacert3.der", P11_PARSE_FLAG_NONE);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate  */
+	assert_num_eq (1, p11_parser_parsed (parser)->num);
+
+	p11_parser_free (parser);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -428,5 +446,9 @@ main (int argc,
 	p11_test (test_parse_thawte, "/parser/parse_thawte");
 	p11_test (test_parse_invalid_file, "/parser/parse_invalid_file");
 	p11_test (test_parse_unrecognized, "/parser/parse_unrecognized");
+
+	p11_fixture (NULL, NULL);
+	p11_test (test_parse_no_asn1_cache, "/parser/null-asn1-cache");
+
 	return p11_test_run (argc, argv);
 }
