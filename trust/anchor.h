@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2013, Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,38 +29,15 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ * Author: Stef Walter <stefw@redhat.com>
  */
 
 #include "config.h"
 
-#include "anchor.h"
-#include "extract.h"
+#ifndef P11_ANCHOR_H_
+#define P11_ANCHOR_H_
 
-#include "buffer.h"
-#include "compat.h"
-#include "debug.h"
-#include "message.h"
-#include "path.h"
-#include "tool.h"
+int             p11_trust_anchor               (int argc,
+                                                char **argv);
 
-#include <assert.h>
-#include <ctype.h>
-#include <getopt.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-static const p11_tool_command commands[] = {
-	{ "anchor", p11_trust_anchor, "Add, remove, change trust anchors" },
-	{ "extract", p11_trust_extract, "Extract certificates and trust" },
-	{ 0, }
-};
-
-int
-main (int argc,
-      char *argv[])
-{
-	return p11_tool_main (argc, argv, commands);
-}
+#endif /* P11_ANCHOR_H_ */

@@ -90,6 +90,9 @@ trust_CFLAGS = \
 	$(NULL)
 
 trust_SOURCES = \
+	anchor.c anchor.h \
+	parser.c parser.h \
+	persist.c persist.h \
 	extract.c extract.h \
 	extract-info.c \
 	extract-jks.c \
