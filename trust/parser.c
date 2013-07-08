@@ -59,6 +59,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -70,6 +71,7 @@ struct _p11_parser {
 	p11_persist *persist;
 	char *basename;
 	p11_array *parsed;
+	p11_array *formats;
 	int flags;
 };
 
@@ -166,10 +168,10 @@ certificate_attrs (p11_parser *parser,
 	return p11_attrs_build (NULL, &klass, &modifiable, &certificate_type, &value, id, NULL);
 }
 
-static int
-parse_der_x509_certificate (p11_parser *parser,
-                            const unsigned char *data,
-                            size_t length)
+int
+p11_parser_format_x509 (p11_parser *parser,
+                        const unsigned char *data,
+                        size_t length)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_BYTE idv[ID_LENGTH];
@@ -583,7 +585,7 @@ on_pem_block (const char *type,
 	int ret;
 
 	if (strcmp (type, "CERTIFICATE") == 0) {
-		ret = parse_der_x509_certificate (parser, contents, length);
+		ret = p11_parser_format_x509 (parser, contents, length);
 
 	} else if (strcmp (type, "TRUSTED CERTIFICATE") == 0) {
 		ret = parse_openssl_trusted_certificate (parser, contents, length);
@@ -597,10 +599,10 @@ on_pem_block (const char *type,
 		p11_message ("Couldn't parse PEM block of type %s", type);
 }
 
-static int
-parse_pem_certificates (p11_parser *parser,
-                        const unsigned char *data,
-                        size_t length)
+int
+p11_parser_format_pem (p11_parser *parser,
+                       const unsigned char *data,
+                       size_t length)
 {
 	int num;
 
@@ -612,10 +614,10 @@ parse_pem_certificates (p11_parser *parser,
 	return P11_PARSE_SUCCESS;
 }
 
-static int
-parse_p11_kit_persist (p11_parser *parser,
-                       const unsigned char *data,
-                       size_t length)
+int
+p11_parser_format_persist (p11_parser *parser,
+                           const unsigned char *data,
+                           size_t length)
 {
 	CK_BBOOL modifiablev = CK_TRUE;
 	CK_ATTRIBUTE *attrs;
@@ -647,13 +649,6 @@ parse_p11_kit_persist (p11_parser *parser,
 	p11_array_free (objects);
 	return ret ? P11_PARSE_SUCCESS : P11_PARSE_FAILURE;
 }
-
-static parser_func all_parsers[] = {
-	parse_p11_kit_persist,
-	parse_pem_certificates,
-	parse_der_x509_certificate,
-	NULL,
-};
 
 p11_parser *
 p11_parser_new (p11_asn1_cache *asn1_cache)
@@ -693,6 +688,31 @@ p11_parser_parsed (p11_parser *parser)
 	return parser->parsed;
 }
 
+void
+p11_parser_formats (p11_parser *parser,
+                    ...)
+{
+	p11_array *formats;
+	parser_func func;
+	va_list va;
+
+	formats = p11_array_new (NULL);
+	return_if_fail (formats != NULL);
+
+	va_start (va, parser);
+	for (;;) {
+		func = va_arg (va, parser_func);
+		if (func == NULL)
+			break;
+		if (!p11_array_push (formats, func))
+			return_if_reached ();
+	}
+	va_end (va);
+
+	p11_array_free (parser->formats);
+	parser->formats = formats;
+}
+
 int
 p11_parse_memory (p11_parser *parser,
                   const char *filename,
@@ -706,18 +726,15 @@ p11_parse_memory (p11_parser *parser,
 
 	return_val_if_fail (parser != NULL, P11_PARSE_FAILURE);
 	return_val_if_fail (filename != NULL, P11_PARSE_FAILURE);
+	return_val_if_fail (parser->formats != NULL, P11_PARSE_FAILURE);
 
 	p11_array_clear (parser->parsed);
 	base = p11_path_base (filename);
 	parser->basename = base;
 	parser->flags = flags;
 
-	for (i = 0; all_parsers[i] != NULL; i++) {
-		ret = (all_parsers[i]) (parser, data, length);
-
-		if (ret != P11_PARSE_UNRECOGNIZED)
-			break;
-	}
+	for (i = 0; ret == P11_PARSE_UNRECOGNIZED && i < parser->formats->num; i++)
+		ret = ((parser_func)parser->formats->elem[i]) (parser, data, length);
 
 	p11_asn1_cache_flush (parser->asn1_cache);
 

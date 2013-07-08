@@ -34,9 +34,8 @@
 
 #include "asn1.h"
 #include "array.h"
+#include "compat.h"
 #include "dict.h"
-#include "index.h"
-#include "pkcs11.h"
 
 #ifndef P11_PARSER_H_
 #define P11_PARSER_H_
@@ -70,5 +69,20 @@ int           p11_parse_file       (p11_parser *parser,
                                     int flags);
 
 p11_array *   p11_parser_parsed    (p11_parser *parser);
+
+void          p11_parser_formats   (p11_parser *parser,
+                                    ...) GNUC_NULL_TERMINATED;
+
+int           p11_parser_format_persist      (p11_parser *parser,
+                                              const unsigned char *data,
+                                              size_t length);
+
+int           p11_parser_format_pem          (p11_parser *parser,
+                                              const unsigned char *data,
+                                              size_t length);
+
+int           p11_parser_format_x509         (p11_parser *parser,
+                                              const unsigned char *data,
+                                              size_t length);
 
 #endif /* P11_PARSER_H_ */
