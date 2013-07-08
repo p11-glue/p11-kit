@@ -653,6 +653,54 @@ test_replace_all (void)
 	assert_num_eq (4, p11_index_size (test.index));
 }
 
+static CK_RV
+on_index_build_fail (void *data,
+                     p11_index *index,
+                     CK_ATTRIBUTE *attrs,
+                     CK_ATTRIBUTE *merge,
+                     CK_ATTRIBUTE **populate)
+{
+	CK_ATTRIBUTE *match = data;
+
+	if (p11_attrs_match (merge, match))
+		return CKR_FUNCTION_FAILED;
+
+	return CKR_OK;
+}
+
+static void
+test_replace_all_build_fails (void)
+{
+	CK_ATTRIBUTE replace[] = {
+		{ CKA_LABEL, "odd", 3 },
+		{ CKA_VALUE, "one", 3 },
+		{ CKA_APPLICATION, "test", 4 },
+		{ CKA_INVALID }
+	};
+
+	CK_ATTRIBUTE match[] = {
+		{ CKA_LABEL, "odd", 3 },
+		{ CKA_INVALID }
+	};
+
+	p11_array *array;
+	p11_index *index;
+	CK_RV rv;
+
+	index = p11_index_new (on_index_build_fail, NULL, NULL, &match);
+	assert_ptr_not_null (index);
+
+	array = p11_array_new (p11_attrs_free);
+	if (!p11_array_push (array, p11_attrs_dup (replace)))
+		assert_not_reached ();
+
+	rv = p11_index_replace_all (index, NULL, CKA_INVALID, array);
+	assert_num_eq (rv, CKR_FUNCTION_FAILED);
+
+	p11_array_free (array);
+	p11_index_free (index);
+}
+
 
 static CK_RV
 on_build_populate (void *data,
@@ -1004,5 +1052,7 @@ main (int argc,
 	p11_test (test_change_called, "/index/change_called");
 	p11_test (test_change_batch, "/index/change_batch");
 	p11_test (test_change_nested, "/index/change_nested");
+	p11_test (test_replace_all_build_fails, "/index/replace-all-build-fails");
+
 	return p11_test_run (argc, argv);
 }

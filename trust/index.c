@@ -645,10 +645,11 @@ index_replacev (p11_index *index,
 	for (j = 0; j < replacen; j++) {
 		if (!replace[j])
 			continue;
-		rv = p11_index_take (index, replace[j], NULL);
+		attrs = replace[j];
+		replace[j] = NULL;
+		rv = p11_index_take (index, attrs, NULL);
 		if (rv != CKR_OK)
 			return rv;
-		replace[j] = NULL;
 	}
 
 	return CKR_OK;
