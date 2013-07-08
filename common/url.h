@@ -44,7 +44,7 @@
 
 #define               P11_URL_VERBATIM      "abcdefghijklmnopqrstuvwxyz" \
                                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-                                            "012345789_-."
+                                            "0123456789_-."
 
 unsigned char *       p11_url_decode        (const char *value,
                                              const char *end,
