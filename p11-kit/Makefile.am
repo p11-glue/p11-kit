@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(COMMON) \
 	-DSRCDIR=\"$(srcdir)\" \
+	-DBINDIR=\"$(bindir)\" \
 	-DPRIVATEDIR=\"$(privatedir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
 	$(NULL)

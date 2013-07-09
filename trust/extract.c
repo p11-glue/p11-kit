@@ -297,7 +297,7 @@ p11_trust_extract (int argc,
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit extract --format=<output> <destination>" },
+		{ 0, "usage: trust extract --format=<output> <destination>" },
 		{ opt_filter,
 		  "filter of what to export\n"
 		  "  ca-anchors        certificate anchors (default)\n"

@@ -80,7 +80,7 @@ p11_kit_external (int argc,
 	return_val_if_fail (path != NULL, 1);
 
 	argv[argc] = NULL;
-	execvp (path, argv);
+	execv (path, argv);
 
 	/* At this point we have no command */
 	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
@@ -91,7 +91,25 @@ int
 p11_kit_extract (int argc,
                  char *argv[])
 {
-	return p11_kit_external (argc, argv);
+	char *path;
+	char **args;
+
+	args = calloc (argc + 2, sizeof (char *));
+	return_val_if_fail (args != NULL, 1);
+
+	args[0] = "trust";
+	memcpy (args + 1, argv, sizeof (char *) * argc);
+	args[argc + 1] = NULL;
+
+	/* Add our libexec directory to the path */
+	path = p11_path_build (BINDIR, args[0], NULL);
+	return_val_if_fail (path != NULL, 1);
+
+	execv (path, args);
+
+	/* At this point we have no command */
+	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
+	return 2;
 }
 
 int
