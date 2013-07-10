@@ -194,6 +194,13 @@ $ make install
 					compiler warnings become errors.</para></listitem>
 				</varlistentry>
 				<varlistentry>
+					<term><option>--with-hash-impl=freebl</option></term>
+					<listitem><para>Instead of using internal hash code, link to the freebl3
+					library and use its hash implementations. The only advantage this brings is to
+					meet the policy requirements of system builders.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
 					<term><option>--with-libtasn1</option>, <option>--without-libtasn1</option></term>
 					<listitem><para>Build with a dependency on the libtasn1 library. This dependency
 					allows the trust policy module to be built as well as other code that interacts with

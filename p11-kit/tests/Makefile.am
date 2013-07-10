@@ -14,6 +14,7 @@ LDADD = \
 	$(top_builddir)/common/libp11-mock.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(CUTEST_LIBS) \
+	$(HASH_LIBS) \
 	$(LTLIBINTL)
 
 CHECK_PROGS = \

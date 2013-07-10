@@ -57,6 +57,7 @@ libp11_kit_la_LIBADD = \
 	$(LTLIBINTL) \
 	$(top_builddir)/common/libp11-common.la \
 	$(top_builddir)/common/libp11-library.la \
+	$(HASH_LIBS) \
 	$(NULL)
 
 noinst_LTLIBRARIES = \

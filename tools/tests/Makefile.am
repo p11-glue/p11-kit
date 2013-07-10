@@ -29,6 +29,7 @@ LDADD = \
 	$(LIBTASN1_LIBS) \
 	$(LTLIBINTL) \
 	$(CUTEST_LIBS) \
+	$(HASH_LIBS) \
 	$(NULL)
 
 noinst_LTLIBRARIES = \

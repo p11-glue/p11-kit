@@ -62,4 +62,5 @@ TESTS = $(CHECK_PROGS)
 
 LDADD += \
 	$(top_builddir)/common/libp11-common.la \
+	$(HASH_LIBS) \
 	$(CUTEST_LIBS)

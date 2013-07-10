@@ -23,6 +23,7 @@ LDADD = \
 	$(builddir)/libtestdata.la \
 	$(LIBTASN1_LIBS) \
 	$(CUTEST_LIBS) \
+	$(HASH_LIBS) \
 	$(NULL)
 
 CHECK_PROGS = \
@@ -42,7 +43,9 @@ noinst_PROGRAMS = \
 
 frob_nss_trust_LDADD = \
 	$(top_builddir)/common/libp11-common.la \
-	$(top_builddir)/p11-kit/libp11-kit.la
+	$(top_builddir)/p11-kit/libp11-kit.la \
+	$(HASH_LIBS) \
+	$(NULL)
 
 TESTS = $(CHECK_PROGS)
 

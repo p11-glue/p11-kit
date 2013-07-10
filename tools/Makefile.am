@@ -35,7 +35,8 @@ if WITH_ASN1
 
 p11_kit_LDADD += \
 	$(top_builddir)/common/libp11-data.la \
-	$(LIBTASN1_LIBS)
+	$(LIBTASN1_LIBS) \
+	$(HASH_LIBS)
 
 p11_kit_CFLAGS += \
 	$(LIBTASN1_CFLAGS)

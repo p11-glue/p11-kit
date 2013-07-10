@@ -39,6 +39,42 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef WITH_FREEBL
+
+/*
+ * NSS freebl3 has awkward headers not provided by appropriate packages
+ * in many cases. So put these defines here inline. freebl3 seems completely
+ * undocumented anyway. If you think this is a hack, then you guessed right.
+ *
+ * If you want a stable p11-kit without worries, use the builtin SHA1 and MD5
+ * implementations. They're not used for crypto anyway. If you need p11-kit to
+ * tick the "doesn't implement own crypto" checkbox, then the you're signing
+ * up for this hack.
+ */
+
+typedef enum {
+	HASH_AlgMD5    = 2,
+	HASH_AlgSHA1   = 3,
+} HASH_HashType;
+
+typedef struct NSSLOWInitContextStr NSSLOWInitContext;
+typedef struct NSSLOWHASHContextStr NSSLOWHASHContext;
+
+NSSLOWInitContext *NSSLOW_Init(void);
+NSSLOWHASHContext *NSSLOWHASH_NewContext(
+			NSSLOWInitContext *initContext,
+			HASH_HashType hashType);
+void NSSLOWHASH_Begin(NSSLOWHASHContext *context);
+void NSSLOWHASH_Update(NSSLOWHASHContext *context,
+			const unsigned char *buf,
+			unsigned int len);
+void NSSLOWHASH_End(NSSLOWHASHContext *context,
+			unsigned char *buf,
+			unsigned int *ret, unsigned int len);
+void NSSLOWHASH_Destroy(NSSLOWHASHContext *context);
+
+#endif /* WITH_FREEBL3 */
+
 #define SHA1_BLOCK_LENGTH 64U
 
 typedef struct {
@@ -251,6 +287,38 @@ sha1_final (sha1_t *context,
 	memset (context, 0, sizeof (sha1_t));
 }
 
+#ifdef WITH_FREEBL
+
+static bool
+nss_slow_hash (HASH_HashType type,
+               unsigned char *hash,
+               unsigned int hash_len,
+               const void *input,
+               size_t length,
+               va_list va)
+{
+	NSSLOWHASHContext *ctx;
+	unsigned int len;
+
+	ctx = NSSLOWHASH_NewContext(NSSLOW_Init (), type);
+	if (ctx == NULL)
+		return false;
+
+	NSSLOWHASH_Begin (ctx);
+	while (input != NULL) {
+		NSSLOWHASH_Update (ctx, input, length);
+		input = va_arg (va, const void *);
+		if (input)
+			length = va_arg (va, size_t);
+	}
+	NSSLOWHASH_End (ctx, hash, &len, hash_len);
+	assert (len == hash_len);
+	NSSLOWHASH_Destroy (ctx);
+	return true;
+}
+
+#endif /* WITH_FREEBL */
+
 void
 p11_hash_sha1 (unsigned char *hash,
                const void *input,
@@ -259,6 +327,17 @@ p11_hash_sha1 (unsigned char *hash,
 {
 	va_list va;
 	sha1_t sha1;
+
+#ifdef WITH_FREEBL
+	bool ret;
+
+	va_start (va, length);
+	ret = nss_slow_hash (HASH_AlgSHA1, hash, P11_HASH_SHA1_LEN, input, length, va);
+	va_end (va);
+
+	if (ret)
+		return;
+#endif
 
 	sha1_init (&sha1);
 
@@ -525,6 +604,17 @@ p11_hash_md5 (unsigned char *hash,
 {
 	va_list va;
 	md5_t md5;
+
+#ifdef WITH_FREEBL
+	bool ret;
+
+	va_start (va, length);
+	ret = nss_slow_hash (HASH_AlgMD5, hash, P11_HASH_MD5_LEN, input, length, va);
+	va_end (va);
+
+	if (ret)
+		return;
+#endif
 
 	md5_init (&md5);
 
