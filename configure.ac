@@ -186,6 +186,38 @@ fi
 AM_CONDITIONAL(WITH_FFI, test "$with_libffi" = "yes")
 
 # --------------------------------------------------------------------
+# Hash implementation
+
+AC_ARG_WITH([hash-impl],
+            AS_HELP_STRING([--with-hash-impl=@<:@freebl/internal@:>@],
+                           [Choose the hash implementation to use])
+)
+
+AS_IF([test "$with_hash_impl" = ""], [with_hash_impl=internal])
+
+AS_CASE([$with_hash_impl],
+	[freebl], [
+		AC_CHECK_LIB(freebl3, NSSLOW_Init,
+			[
+				HASH_LIBS=-lfreebl3
+				AC_DEFINE_UNQUOTED(WITH_FREEBL, 1, [Use freebl for hash implementation])
+			],
+			AC_MSG_ERROR([could not find the freebl3 library])
+		)
+	],
+
+	[internal], [
+		HASH_LIBS=
+	],
+
+	[
+		AC_MSG_ERROR([unsupported hash impl: $with_hash_impl])
+	]
+)
+
+AC_SUBST(HASH_LIBS)
+
+# --------------------------------------------------------------------
 # Trust Module
 
 AC_ARG_ENABLE([trust-module],
@@ -483,6 +515,7 @@ AC_MSG_NOTICE([build options:
 
     With libtasn1 dependency:        $with_libtasn1
     With libffi:                     $with_libffi
+    With hash implementation:        $with_hash_impl
 
     Build trust module:              $enable_trust_module
     Trust module paths:              $trust_status

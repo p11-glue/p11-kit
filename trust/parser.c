@@ -40,7 +40,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
 #include "dict.h"
-#include "hash.h"
+#include "digest.h"
 #include "message.h"
 #include "module.h"
 #include "oid.h"
@@ -75,7 +75,7 @@ struct _p11_parser {
 	int flags;
 };
 
-#define ID_LENGTH P11_HASH_SHA1_LEN
+#define ID_LENGTH P11_DIGEST_SHA1_LEN
 
 typedef int (* parser_func)   (p11_parser *parser,
                                const unsigned char *data,

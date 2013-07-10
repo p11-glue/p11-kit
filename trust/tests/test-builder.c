@@ -42,8 +42,8 @@
 
 #include "attrs.h"
 #include "builder.h"
-#include "hash.h"
 #include "debug.h"
+#include "digest.h"
 #include "index.h"
 #include "message.h"
 #include "oid.h"
@@ -184,7 +184,7 @@ test_build_certificate (void)
 static void
 test_build_certificate_empty (void)
 {
-	unsigned char checksum[P11_HASH_SHA1_LEN];
+	unsigned char checksum[P11_DIGEST_SHA1_LEN];
 	CK_ULONG domain = 0;
 	CK_ULONG category = 0;
 
@@ -221,7 +221,7 @@ test_build_certificate_empty (void)
 	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
-	p11_hash_sha1 (checksum, test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
+	p11_digest_sha1 (checksum, test_cacert3_ca_der, sizeof (test_cacert3_ca_der), NULL);
 
 	attrs = NULL;
 	extra = NULL;

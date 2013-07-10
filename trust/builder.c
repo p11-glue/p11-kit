@@ -42,7 +42,7 @@
 #include "builder.h"
 #include "constants.h"
 #include "debug.h"
-#include "hash.h"
+#include "digest.h"
 #include "index.h"
 #include "message.h"
 #include "oid.h"
@@ -363,8 +363,8 @@ calc_check_value (const unsigned char *data,
 		  size_t length,
 		  CK_BYTE *check_value)
 {
-	unsigned char checksum[P11_HASH_SHA1_LEN];
-	p11_hash_sha1 (checksum, data, length, NULL);
+	unsigned char checksum[P11_DIGEST_SHA1_LEN];
+	p11_digest_sha1 (checksum, data, length, NULL);
 	memcpy (check_value, checksum, 3);
 }
 
@@ -602,7 +602,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
                          size_t der_len,
                          CK_ATTRIBUTE *public_key)
 {
-	unsigned char checksum[P11_HASH_SHA1_LEN];
+	unsigned char checksum[P11_DIGEST_SHA1_LEN];
 	CK_BBOOL falsev = CK_FALSE;
 	CK_ULONG zero = 0UL;
 	CK_BYTE checkv[3];
@@ -1278,8 +1278,8 @@ replace_nss_trust_object (p11_builder *builder,
 	CK_RV rv;
 
 	CK_OBJECT_CLASS klassv = CKO_NSS_TRUST;
-	CK_BYTE sha1v[P11_HASH_SHA1_LEN];
-	CK_BYTE md5v[P11_HASH_MD5_LEN];
+	CK_BYTE sha1v[P11_DIGEST_SHA1_LEN];
+	CK_BYTE md5v[P11_DIGEST_MD5_LEN];
 	CK_BBOOL generatedv = CK_FALSE;
 	CK_BBOOL falsev = CK_FALSE;
 
@@ -1316,8 +1316,8 @@ replace_nss_trust_object (p11_builder *builder,
 		md5_hash.type = CKA_INVALID;
 		sha1_hash.type = CKA_INVALID;
 	} else {
-		p11_hash_md5 (md5v, value, length, NULL);
-		p11_hash_sha1 (sha1v, value, length, NULL);
+		p11_digest_md5 (md5v, value, length, NULL);
+		p11_digest_sha1 (sha1v, value, length, NULL);
 	}
 	if (!issuer)
 		issuer = &invalid;

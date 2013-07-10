@@ -160,6 +160,10 @@ $ make install
 				dependency.</para></listitem>
 				<listitem><para><command>libtasn1</command> is required to build the trust
 				module and code that interacts with certificates.</para></listitem>
+				<listitem><para><command>freebl3</command> (developed as part of the NSS
+				code base) is an optional dependency that may be used to meet policy
+				requirements of system builders. Enabling this dependency provides no other
+				advantage.</para></listitem>
 			</itemizedlist>
 
 		</section>
@@ -195,6 +199,13 @@ $ make install
 					<term><option>--enable-strict</option></term>
 					<listitem><para>Enables strict checks during building of p11-kit. All
 					compiler warnings become errors.</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--with-hash-impl=freebl</option></term>
+					<listitem><para>Instead of using internal hash code, link to the freebl3
+					library and use its hash implementations. The only advantage this brings is to
+					meet the policy requirements of system builders.</para>
+					</listitem>
 				</varlistentry>
 				<varlistentry>
 					<term><option>--with-libtasn1</option>, <option>--without-libtasn1</option></term>

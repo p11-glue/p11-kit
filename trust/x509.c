@@ -37,7 +37,7 @@
 #include "asn1.h"
 #define P11_DEBUG_FLAG P11_DEBUG_TRUST
 #include "debug.h"
-#include "hash.h"
+#include "digest.h"
 #include "oid.h"
 #include "utf8.h"
 #include "x509.h"
@@ -108,7 +108,7 @@ p11_x509_calc_keyid (node_asn *cert,
 	return_val_if_fail (ret == ASN1_SUCCESS, false);
 	return_val_if_fail (end >= start, false);
 
-	p11_hash_sha1 (keyid, (der + start), (end - start) + 1, NULL);
+	p11_digest_sha1 (keyid, (der + start), (end - start) + 1, NULL);
 	return true;
 }
 

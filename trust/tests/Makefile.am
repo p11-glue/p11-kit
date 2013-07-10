@@ -20,7 +20,8 @@ noinst_LTLIBRARIES = \
 	libtrust-test.la
 
 libtrust_test_la_SOURCES = \
-	test-trust.c test-trust.h
+	test-trust.c test-trust.h \
+	$(TRUST)/digest.c
 
 LDADD = \
 	$(top_builddir)/trust/libtrust-testable.la \
@@ -31,9 +32,11 @@ LDADD = \
 	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(LIBTASN1_LIBS) \
+	$(HASH_LIBS) \
 	$(NULL)
 
 CHECK_PROGS = \
+	test-digest \
 	test-persist \
 	test-index \
 	test-parser \
@@ -67,7 +70,9 @@ noinst_PROGRAMS = \
 
 frob_nss_trust_LDADD = \
 	$(top_builddir)/common/libp11-common.la \
-	$(top_builddir)/p11-kit/libp11-kit.la
+	$(top_builddir)/p11-kit/libp11-kit.la \
+	$(HASH_LIBS) \
+	$(NULL)
 
 TESTS = $(CHECK_PROGS)
 

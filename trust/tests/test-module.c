@@ -43,7 +43,7 @@
 #include <string.h>
 
 #include "attrs.h"
-#include "hash.h"
+#include "digest.h"
 #include "library.h"
 #include "path.h"
 #include "parser.h"
@@ -485,8 +485,8 @@ check_trust_object_hashes (CK_SESSION_HANDLE session,
                            CK_OBJECT_HANDLE trust,
                            CK_ATTRIBUTE *cert)
 {
-	unsigned char sha1[P11_HASH_SHA1_LEN];
-	unsigned char md5[P11_HASH_MD5_LEN];
+	unsigned char sha1[P11_DIGEST_SHA1_LEN];
+	unsigned char md5[P11_DIGEST_MD5_LEN];
 	unsigned char check[128];
 	CK_ATTRIBUTE *value;
 	CK_RV rv;
@@ -503,10 +503,10 @@ check_trust_object_hashes (CK_SESSION_HANDLE session,
 	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	assert_ptr_not_null (value);
 
-	p11_hash_md5 (check, value->pValue, value->ulValueLen, NULL);
+	p11_digest_md5 (check, value->pValue, value->ulValueLen, NULL);
 	assert (memcmp (md5, check, sizeof (md5)) == 0);
 
-	p11_hash_sha1 (check, value->pValue, value->ulValueLen, NULL);
+	p11_digest_sha1 (check, value->pValue, value->ulValueLen, NULL);
 	assert (memcmp (sha1, check, sizeof (sha1)) == 0);
 }
 

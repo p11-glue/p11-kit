@@ -31,6 +31,7 @@ libtrust_data_la_SOURCES = \
 
 MODULE_SRCS = \
 	builder.c builder.h \
+	digest.c digest.h \
 	index.c index.h \
 	parser.c parser.h \
 	persist.c persist.h \
@@ -56,6 +57,7 @@ p11_kit_trust_la_LIBADD = \
 	$(top_builddir)/common/libp11-library.la \
 	$(top_builddir)/common/libp11-common.la \
 	$(LIBTASN1_LIBS) \
+	$(HASH_LIBS) \
 	$(NULL)
 
 p11_kit_trust_la_LDFLAGS = \
@@ -81,6 +83,7 @@ trust_LDADD = \
 	$(top_builddir)/common/libp11-tool.la \
 	$(LTLIBINTL) \
 	$(LIBTASN1_LIBS) \
+	$(HASH_LIBS) \
 	$(NULL)
 
 trust_CFLAGS = \
@@ -93,6 +96,7 @@ trust_SOURCES = \
 	anchor.c anchor.h \
 	parser.c parser.h \
 	persist.c persist.h \
+	digest.c digest.h \
 	extract.c extract.h \
 	extract-info.c \
 	extract-jks.c \

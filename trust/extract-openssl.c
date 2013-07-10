@@ -40,8 +40,8 @@
 #include "compat.h"
 #include "debug.h"
 #include "dict.h"
+#include "digest.h"
 #include "extract.h"
-#include "hash.h"
 #include "message.h"
 #include "oid.h"
 #include "path.h"
@@ -530,7 +530,7 @@ p11_openssl_canon_name_der (p11_dict *asn1_defs,
 static char *
 symlink_for_subject_hash (p11_extract_info *ex)
 {
-	unsigned char md[P11_HASH_SHA1_LEN];
+	unsigned char md[P11_DIGEST_SHA1_LEN];
 	p11_buffer der;
 	CK_ATTRIBUTE *subject;
 	unsigned long hash;
@@ -545,7 +545,7 @@ symlink_for_subject_hash (p11_extract_info *ex)
 	return_val_if_fail (der.data != NULL, NULL);
 
 	if (p11_openssl_canon_name_der (ex->asn1_defs, &der)) {
-		p11_hash_sha1 (md, der.data, der.len, NULL);
+		p11_digest_sha1 (md, der.data, der.len, NULL);
 
 		hash = (
 		        ((unsigned long)md[0]       ) | ((unsigned long)md[1] << 8L) |
@@ -563,7 +563,7 @@ symlink_for_subject_hash (p11_extract_info *ex)
 static char *
 symlink_for_subject_old_hash (p11_extract_info *ex)
 {
-	unsigned char md[P11_HASH_MD5_LEN];
+	unsigned char md[P11_DIGEST_MD5_LEN];
 	CK_ATTRIBUTE *subject;
 	unsigned long hash;
 	char *linkname;
@@ -572,7 +572,7 @@ symlink_for_subject_old_hash (p11_extract_info *ex)
 	if (!subject)
 		return NULL;
 
-	p11_hash_md5 (md, subject->pValue, subject->ulValueLen, NULL);
+	p11_digest_md5 (md, subject->pValue, subject->ulValueLen, NULL);
 
 	hash = (
 	         ((unsigned long)md[0]       ) | ((unsigned long)md[1] << 8L) |
