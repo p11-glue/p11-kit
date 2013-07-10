@@ -149,7 +149,7 @@ $ make install
 			during the build, then certain features will be disabled.</para>
 
 			<itemizedlist>
-				<listitem><para><command>libffi1</command> for shoring of PKCS#11 modules
+				<listitem><para><command>libffi</command> for sharing of PKCS#11 modules
 				between multiple callers in the same process. It is highly recommended that
 				this dependency be treated as a required dependency.</para></listitem>
 				<listitem><para><command>gtk-doc</command> is required to build the reference

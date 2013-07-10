@@ -79,8 +79,11 @@ p11_kit_space_strlen
 <SUBSECTION Private>
 CK_FUNCTION_LIST_PTR
 CK_RV
+CK_ATTRIBUTE
 CK_ATTRIBUTE_PTR
 CK_ATTRIBUTE_TYPE
+CK_FLAGS
+CK_FUNCTION_LIST
 CK_INFO_PTR
 CK_TOKEN_INFO_PTR
 CK_ULONG
@@ -110,6 +113,7 @@ p11_kit_iter_keep_session
 p11_kit_iter_get_object
 p11_kit_iter_load_attributes
 p11_kit_iter_free
+P11KitIterBehavior
 </SECTION>
 
 <SECTION>

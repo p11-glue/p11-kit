@@ -96,6 +96,14 @@ struct p11_kit_iter {
 };
 
 /**
+ * P11KitIterBehavior:
+ * @P11_KIT_ITER_BUSY_SESSIONS: Allow the iterator's sessions to be
+ * in a busy state when the iterator returns an object.
+ *
+ * Various flags controling the behavior of the iterator.
+ */
+
+/**
  * p11_kit_iter_new:
  * @uri: (allow-none): a PKCS\#11 URI to filter on, or %NULL
  * @behavior: various behavior flags for iterator
