@@ -378,7 +378,7 @@ if test "$GCC" = "yes"; then
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
 		-Wdeclaration-after-statement -Wformat=2 -Winit-self \
 		-Waggregate-return -Wno-missing-format-attribute \
-		-fno-strict-aliasing"
+		-fno-strict-aliasing -fno-common"
 
 	for option in -Wmissing-include-dirs -Wundef; do
 		SAVE_CFLAGS="$CFLAGS"

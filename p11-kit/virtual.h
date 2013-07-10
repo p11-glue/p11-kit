@@ -45,9 +45,9 @@ typedef struct {
 	p11_destroyer lower_destroy;
 } p11_virtual;
 
-CK_X_FUNCTION_LIST      p11_virtual_base;
+extern CK_X_FUNCTION_LIST p11_virtual_base;
 
-CK_X_FUNCTION_LIST      p11_virtual_stack;
+extern CK_X_FUNCTION_LIST p11_virtual_stack;
 
 void                    p11_virtual_init       (p11_virtual *virt,
                                                 CK_X_FUNCTION_LIST *funcs,
