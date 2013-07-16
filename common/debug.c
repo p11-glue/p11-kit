@@ -147,6 +147,10 @@ p11_debug_precond (const char *format,
 	vfprintf (stderr, format, va);
 	va_end (va);
 
+#ifdef __COVERITY__
+	fprintf (stderr, "ignoring P11_KIT_STRICT under coverity: %d", (int)debug_strict);
+#else
 	if (debug_strict)
+#endif
 		abort ();
 }

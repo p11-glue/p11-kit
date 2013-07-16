@@ -122,6 +122,11 @@ p11_test_fail (const char *filename,
 
 	free (output);
 
+	/* Let coverity know we're not supposed to return from here */
+#ifdef __COVERITY__
+	abort();
+#endif
+
 	longjmp (gl.jump, 1);
 }
 
