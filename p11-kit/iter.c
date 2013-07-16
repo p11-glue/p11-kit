@@ -220,6 +220,10 @@ p11_kit_iter_set_session_flags (P11KitIter *iter,
  * indicates through it's <literal>matches</literal> argument that
  * the object should not match, then that object will not be iterated
  * as far as p11_kit_iter_next() is concerned.
+ *
+ * The callbacks will be called with the <literal>matches</literal>
+ * set to <literal>CK_TRUE</literal> and it's up to filters to change
+ * it to <literal>CK_FALSE</literal> when necessary.
  */
 void
 p11_kit_iter_add_callback (P11KitIter *iter,
