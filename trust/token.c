@@ -260,7 +260,6 @@ loader_load_directory (p11_token *token,
 		return 0;
 	}
 
-	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir (dir)) != NULL) {
 		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, -1);

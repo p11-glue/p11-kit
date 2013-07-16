@@ -450,7 +450,6 @@ load_configs_from_directory (const char *directory,
 		return false;
 	}
 
-	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir(dir)) != NULL) {
 		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, false);

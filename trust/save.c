@@ -543,7 +543,6 @@ cleanup_directory (const char *directory,
 
 	remove = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
 
-	/* We're within a global mutex, so readdir is safe */
 	while ((dp = readdir (dir)) != NULL) {
 		if (p11_dict_get (cache, dp->d_name))
 			continue;
