@@ -192,7 +192,7 @@ p11_mmap_open (const char *path,
 	if (map == NULL)
 		return NULL;
 
-	map->fd = open (path, O_RDONLY);
+	map->fd = open (path, O_RDONLY | O_CLOEXEC);
 	if (map->fd == -1) {
 		free (map);
 		return NULL;
@@ -292,14 +292,20 @@ p11_mmap_open (const char *path,
 	p11_mmap *map;
 
 	map = calloc (1, sizeof (p11_mmap));
-	if (map == NULL)
+	if (map == NULL) {
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	map->file  = CreateFile (path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
 	if (map->file == INVALID_HANDLE_VALUE) {
 		errn = GetLastError ();
 		free (map);
 		SetLastError (errn);
+		if (errn == ERROR_PATH_NOT_FOUND || errn == ERROR_FILE_NOT_FOUND)
+			errno = ENOENT;
+		else if (errn == ERROR_ACCESS_DENIED)
+			errno = EPERM;
 		return NULL;
 	}
 
@@ -308,6 +314,8 @@ p11_mmap_open (const char *path,
 		CloseHandle (map->file);
 		free (map);
 		SetLastError (errn);
+		if (errn == ERROR_ACCESS_DENIED)
+			errno = EPERM;
 		return NULL;
 	}
 
@@ -317,6 +325,8 @@ p11_mmap_open (const char *path,
 		CloseHandle (map->file);
 		free (map);
 		SetLastError (errn);
+		if (errn == ERROR_ACCESS_DENIED)
+			errno = EPERM;
 		return NULL;
 	}
 
@@ -328,6 +338,8 @@ p11_mmap_open (const char *path,
 		CloseHandle (map->file);
 		free (map);
 		SetLastError (errn);
+		if (errn == ERROR_ACCESS_DENIED)
+			errno = EPERM;
 		return NULL;
 	}
 
@@ -670,7 +682,7 @@ _gettemp (char *path,
 
 	for (;;) {
 		if (doopen) {
-			if ((*doopen = open (path, O_BINARY | O_CREAT | O_EXCL | O_RDWR, 0600)) >= 0)
+			if ((*doopen = open (path, O_BINARY | O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0600)) >= 0)
 				return (1);
 			if (errno != EEXIST)
 				return (0);

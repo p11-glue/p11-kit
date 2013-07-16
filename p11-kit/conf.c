@@ -67,76 +67,6 @@ strequal (const char *one, const char *two)
  * CONFIG PARSER
  */
 
-static char *
-read_config_file (const char* filename,
-                  int flags,
-                  size_t *length)
-{
-	char* config = NULL;
-	FILE* f = NULL;
-	int error = 0;
-	long len;
-
-	assert (filename);
-
-	f = fopen (filename, "rb");
-	if (f == NULL) {
-		error = errno;
-		if ((flags & CONF_IGNORE_MISSING) &&
-		    (error == ENOENT || error == ENOTDIR)) {
-			p11_debug ("config file does not exist");
-			config = strdup ("\n");
-			*length = 0;
-			return_val_if_fail (config != NULL, NULL);
-			return config;
-
-		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
-		           (error == EPERM || error == EACCES)) {
-			p11_debug ("config file is inaccessible");
-			config = strdup ("");
-			*length = 0;
-			return_val_if_fail (config != NULL, NULL);
-			return config;
-		}
-		p11_message ("couldn't open config file: %s: %s", filename,
-		             strerror (error));
-		errno = error;
-		return NULL;
-	}
-
-	/* Figure out size */
-	if (fseek (f, 0, SEEK_END) == -1 ||
-	    (len = ftell (f)) == -1 ||
-	    fseek (f, 0, SEEK_SET) == -1) {
-		error = errno;
-		p11_message ("couldn't seek config file: %s", filename);
-		errno = error;
-		return NULL;
-	}
-
-	config = malloc (len + 2);
-	if (config == NULL) {
-		p11_message ("config file is too large to read into memory: %lu", len);
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	/* And read in one block */
-	if (fread (config, 1, len, f) != len) {
-		error = errno;
-		p11_message ("couldn't read config file: %s", filename);
-		free (config);
-		errno = error;
-		return NULL;
-	}
-
-	fclose (f);
-
-	/* Null terminate the data */
-	*length = len;
-	return config;
-}
-
 bool
 _p11_conf_merge_defaults (p11_dict *map,
                           p11_dict *defaults)
@@ -165,21 +95,42 @@ p11_dict *
 _p11_conf_parse_file (const char* filename, int flags)
 {
 	p11_dict *map = NULL;
-	char *data;
+	void *data;
 	p11_lexer lexer;
 	bool failed = false;
 	size_t length;
+	p11_mmap *mmap;
+	int error;
 
 	assert (filename);
 
 	p11_debug ("reading config file: %s", filename);
 
-	data = read_config_file (filename, flags, &length);
-	if (!data)
-		return NULL;
+	mmap = p11_mmap_open (filename, &data, &length);
+	if (mmap == NULL) {
+		error = errno;
+		if ((flags & CONF_IGNORE_MISSING) &&
+		    (error == ENOENT || error == ENOTDIR)) {
+			p11_debug ("config file does not exist");
+
+		} else if ((flags & CONF_IGNORE_ACCESS_DENIED) &&
+		           (error == EPERM || error == EACCES)) {
+			p11_debug ("config file is inaccessible");
+
+		} else {
+			p11_message ("couldn't open config file: %s: %s", filename,
+			             strerror (error));
+			errno = error;
+			return NULL;
+		}
+	}
 
 	map = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 	return_val_if_fail (map != NULL, NULL);
+
+	/* Empty config fall through above */
+	if (mmap == NULL)
+		return map;
 
 	p11_lexer_init (&lexer, filename, data, length);
 	while (p11_lexer_next (&lexer, &failed)) {
@@ -210,7 +161,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 	}
 
 	p11_lexer_done (&lexer);
-	free (data);
+	p11_mmap_close (mmap);
 
 	if (failed) {
 		p11_dict_free (map);
