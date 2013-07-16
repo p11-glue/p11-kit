@@ -39,6 +39,7 @@
 #include "debug.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -152,11 +153,16 @@ p11_buffer_append (p11_buffer *buffer,
 	return_val_if_fail (p11_buffer_ok (buffer), NULL);
 
 	terminator = (buffer->flags & P11_BUFFER_NULL) ? 1 : 0;
+
+	/* Check for unlikely and unrecoverable integer overflow */
+	return_val_if_fail (SIZE_MAX - (terminator + length) > buffer->len, NULL);
+
 	reserve = terminator + length + buffer->len;
 
 	if (reserve > buffer->size) {
 
 		/* Calculate a new length, minimize number of buffer allocations */
+		return_val_if_fail (buffer->size < SIZE_MAX / 2, NULL);
 		newlen = buffer->size * 2;
 		if (!newlen)
 			newlen = 16;
