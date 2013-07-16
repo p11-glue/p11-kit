@@ -708,7 +708,7 @@ _p11_kit_initialize_registered_unlocked_reentrant (void)
 	rv = load_registered_modules_unlocked ();
 	if (rv == CKR_OK) {
 		p11_dict_iterate (gl.modules, &iter);
-		while (p11_dict_next (&iter, NULL, (void **)&mod)) {
+		while (rv == CKR_OK && p11_dict_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered */
 			if (mod->name == NULL || !is_module_enabled_unlocked (mod->name, mod->config))
