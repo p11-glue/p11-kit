@@ -608,7 +608,7 @@ index_select (p11_index *index,
               index_sink sink,
               void *data)
 {
-	index_bucket *buckets[NUM_BUCKETS];
+	index_bucket *buckets[MAX_SELECT];
 	CK_OBJECT_HANDLE handle;
 	index_object *obj;
 	unsigned int hash;
@@ -754,7 +754,7 @@ p11_index_snapshot (p11_index *index,
 
 	return_val_if_fail (index != NULL, NULL);
 
-	if (count < 0)
+	if (count < (CK_ULONG)0UL)
 		count = p11_attrs_count (attrs);
 
 	index_select (index, attrs, count, sink_any, &handles);

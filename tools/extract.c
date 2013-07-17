@@ -407,7 +407,7 @@ p11_tool_extract (int argc,
 			assert_not_reached ();
 			break;
 		}
-	} while (opt != -1);
+	}
 
 	argc -= optind;
 	argv += optind;

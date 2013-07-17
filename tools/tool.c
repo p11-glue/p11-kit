@@ -196,7 +196,7 @@ exec_external (const char *command,
 	char *filename;
 	char *path;
 
-	if (!asprintf (&filename, "p11-kit-%s", command) < 0)
+	if (asprintf (&filename, "p11-kit-%s", command) < 0)
 		return_if_reached ();
 
 	/* Add our libexec directory to the path */
