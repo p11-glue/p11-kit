@@ -516,6 +516,11 @@ p11_attr_hash (const void *data)
 static void
 buffer_append_printf (p11_buffer *buffer,
                       const char *format,
+                      ...) GNUC_PRINTF(2, 3);
+
+static void
+buffer_append_printf (p11_buffer *buffer,
+                      const char *format,
                       ...)
 {
 	char *string;
