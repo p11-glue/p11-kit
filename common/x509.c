@@ -111,6 +111,7 @@ p11_x509_calc_keyid (node_asn *cert,
                      unsigned char *keyid)
 {
 	int start, end;
+	size_t len;
 	int ret;
 
 	return_val_if_fail (cert != NULL, NULL);
@@ -121,7 +122,8 @@ p11_x509_calc_keyid (node_asn *cert,
 	return_val_if_fail (ret == ASN1_SUCCESS, false);
 	return_val_if_fail (end >= start, false);
 
-	p11_hash_sha1 (keyid, (der + start), (end - start) + 1, NULL);
+	len = (end - start) + 1;
+	p11_hash_sha1 (keyid, (der + start), len, NULL);
 	return true;
 }
 

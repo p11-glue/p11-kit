@@ -473,10 +473,10 @@ check_trust_object_hashes (CuTest *cu,
 	value = p11_attrs_find_valid (cert, CKA_VALUE);
 	CuAssertPtrNotNull (cu, value);
 
-	p11_hash_md5 (check, value->pValue, value->ulValueLen, NULL);
+	p11_hash_md5 (check, value->pValue, (size_t)value->ulValueLen, NULL);
 	CuAssertTrue (cu, memcmp (md5, check, sizeof (md5)) == 0);
 
-	p11_hash_sha1 (check, value->pValue, value->ulValueLen, NULL);
+	p11_hash_sha1 (check, value->pValue, (size_t)value->ulValueLen, NULL);
 	CuAssertTrue (cu, memcmp (sha1, check, sizeof (sha1)) == 0);
 }
 

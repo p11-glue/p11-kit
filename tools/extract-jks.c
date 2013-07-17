@@ -302,8 +302,8 @@ prepare_jks_buffer (P11KitIter *iter,
 	digest = p11_buffer_append (buffer, P11_HASH_SHA1_LEN);
 	return_val_if_fail (digest != NULL, false);
 	p11_hash_sha1 (digest,
-	               "\000c\000h\000a\000n\000g\000e\000i\000t", 16, /* default password */
-	               "Mighty Aphrodite", 16, /* go figure */
+	               "\000c\000h\000a\000n\000g\000e\000i\000t", (size_t)16, /* default password */
+	               "Mighty Aphrodite", (size_t)16, /* go figure */
 	               buffer->data, length,
 	               NULL);
 

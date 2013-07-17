@@ -562,7 +562,7 @@ symlink_for_subject_old_hash (p11_extract_info *ex)
 	if (!subject)
 		return NULL;
 
-	p11_hash_md5 (md, subject->pValue, subject->ulValueLen, NULL);
+	p11_hash_md5 (md, subject->pValue, (size_t)subject->ulValueLen, NULL);
 
 	hash = (
 	         ((unsigned long)md[0]       ) | ((unsigned long)md[1] << 8L) |
