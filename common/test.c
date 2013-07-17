@@ -38,8 +38,10 @@
 
 #include "test.h"
 #include "debug.h"
+#include "path.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -273,4 +275,59 @@ p11_test_run (int argc,
 	gl.last = 0;
 	gl.number = 0;
 	return ret;
+}
+
+static char *
+expand_tempdir (const char *name)
+{
+	const char *env;
+
+	env = getenv ("TMPDIR");
+	if (env && env[0]) {
+		return p11_path_build (env, name, NULL);
+
+	} else {
+#ifdef OS_UNIX
+#ifdef _PATH_TMP
+		return p11_path_build (_PATH_TMP, name, NULL);
+#else
+		return p11_path_build ("/tmp", name, NULL);
+#endif
+
+#else /* OS_WIN32 */
+		char directory[MAX_PATH + 1];
+
+		if (!GetTempPathA (MAX_PATH + 1, directory)) {
+			printf ("# couldn't lookup temp directory\n");
+			errno = ENOTDIR;
+			return NULL;
+		}
+
+		return p11_path_build (directory, name, NULL);
+
+#endif /* OS_WIN32 */
+	}
+}
+
+char *
+p11_test_directory (const char *prefix)
+{
+	char *templ;
+	char *directory;
+
+	if (asprintf (&templ, "%s.XXXXXX", prefix) < 0)
+		assert_not_reached ();
+
+	directory = expand_tempdir (templ);
+	assert (directory != NULL);
+
+	if (!mkdtemp (directory)) {
+		printf ("# couldn't create temp directory: %s: %s\n",
+		        directory, strerror (errno));
+		free (directory);
+		assert_not_reached ();
+	}
+
+	free (templ);
+	return directory;
 }

@@ -63,9 +63,7 @@ struct {
 static void
 setup (void *unused)
 {
-	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
-	if (!mkdtemp (test.directory))
-		assert_fail ("mkdtemp() failed", strerror (errno));
+	test.directory = p11_test_directory ("test-extract");
 }
 
 static void

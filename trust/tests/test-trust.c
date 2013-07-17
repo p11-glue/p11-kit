@@ -36,6 +36,8 @@
 
 #include "attrs.h"
 #include "debug.h"
+#include "message.h"
+#include "path.h"
 #include "test.h"
 
 #include "test-trust.h"
@@ -51,6 +53,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef OS_UNIX
+#include <paths.h>
+#endif
 
 void
 test_check_object_msg (const char *file,

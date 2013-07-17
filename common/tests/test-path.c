@@ -114,48 +114,19 @@ test_expand (void)
 #ifdef OS_UNIX
 	putenv ("HOME=/home/blah");
 	check_equals_and_free ("/home/blah/my/path",
-	                       p11_path_expand ("$HOME/my/path"));
-	check_equals_and_free ("/home/blah/my/path",
 	                       p11_path_expand ("~/my/path"));
 	check_equals_and_free ("/home/blah",
-	                       p11_path_expand ("$HOME"));
-	check_equals_and_free ("/home/blah",
 	                       p11_path_expand ("~"));
-	putenv ("TEMP=/tmpdir");
-	check_equals_and_free ("/tmpdir/my/path",
-	                       p11_path_expand ("$TEMP/my/path"));
-	check_equals_and_free ("/tmpdir",
-	                       p11_path_expand ("$TEMP"));
 #else /* OS_WIN32 */
 	putenv ("HOME=C:\\Users\\blah");
 	check_equals_and_free ("C:\\Users\\blah\\path",
-	                       p11_path_expand ("$HOME/path"));
-	check_equals_and_free ("C:\\Users\\blah\\path",
-	                       p11_path_expand ("$HOME\\path"));
-	check_equals_and_free ("C:\\Users\\blah\\path",
-	                       p11_path_expand ("~/path"));
+	                       p11_path_expand ("~/my/path"));
 	check_equals_and_free ("C:\\Users\\blah\\path",
 	                       p11_path_expand ("~\\path"));
-
-	putenv ("TEMP=C:\\Temp Directory");
-	check_equals_and_free ("C:\\Temp Directory\\path",
-	                       p11_path_expand ("$TEMP/path"));
-	check_equals_and_free ("C:\\Temp Directory\\path",
-	                       p11_path_expand ("$TEMP\\path"));
 #endif
 
 	putenv("HOME=");
-	path = p11_path_expand ("$HOME/this/is/my/path");
-	assert (strstr (path, "this/is/my/path") != NULL);
-	free (path);
-
-	putenv("HOME=");
 	path = p11_path_expand ("~/this/is/my/path");
-	assert (strstr (path, "this/is/my/path") != NULL);
-	free (path);
-
-	putenv("TEMP=");
-	path = p11_path_expand ("$TEMP/this/is/my/path");
 	assert (strstr (path, "this/is/my/path") != NULL);
 	free (path);
 }

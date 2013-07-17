@@ -138,9 +138,7 @@ setup_writable (void *unused)
 	rv = C_GetFunctionList (&test.module);
 	assert (rv == CKR_OK);
 
-	test.directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
-	if (!mkdtemp (test.directory))
-		assert_not_reached ();
+	test.directory = p11_test_directory ("test-module");
 
 	memset (&args, 0, sizeof (args));
 	if (asprintf (&arguments, "paths='%s'", test.directory) < 0)

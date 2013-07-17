@@ -76,10 +76,7 @@ setup (void *path)
 static void
 setup_temp (void *unused)
 {
-	test.directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
-	if (!mkdtemp (test.directory))
-		assert_not_reached ();
-
+	test.directory = p11_test_directory ("test-module");
 	setup (test.directory);
 }
 
@@ -268,9 +265,7 @@ test_writable_no_exist (void)
 	p11_token *token;
 	char *path;
 
-	directory = p11_path_expand ("$TEMP/test-module.XXXXXX");
-	if (!mkdtemp (directory))
-		assert_not_reached ();
+	directory = p11_test_directory ("test-module");
 
 	path = p11_path_build (directory, "subdir", NULL);
 	assert (path != NULL);

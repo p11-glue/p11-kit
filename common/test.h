@@ -128,4 +128,6 @@ void        p11_fixture             (void (* setup) (void *),
 int         p11_test_run            (int argc,
                                      char **argv);
 
+char *      p11_test_directory      (const char *prefix);
+
 #endif /* P11_TEST_H_ */
