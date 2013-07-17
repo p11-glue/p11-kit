@@ -48,6 +48,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef OS_UNIX
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 enum {
 	FIXTURE,
 	TEST,
@@ -331,3 +337,96 @@ p11_test_directory (const char *prefix)
 	free (templ);
 	return directory;
 }
+
+#ifdef OS_UNIX
+
+static void
+copy_file (const char *input,
+           int fd)
+{
+	p11_mmap *mmap;
+	const char *data;
+	ssize_t written;
+	size_t size;
+
+	mmap = p11_mmap_open (input, (void **)&data, &size);
+	assert (mmap != NULL);
+
+	while (size > 0) {
+		written = write (fd, data, size);
+		assert (written >= 0);
+
+		data += written;
+		size -= written;
+	}
+
+	p11_mmap_close (mmap);
+}
+
+char *
+p11_test_copy_setgid (const char *input)
+{
+	gid_t groups[128];
+		char *path;
+		gid_t group = 0;
+		int ret;
+		int fd;
+		int i;
+
+	ret = getgroups (128, groups);
+	for (i = 0; i < ret; ++i) {
+		if (groups[i] != getgid ()) {
+			group = groups[i];
+			break;
+		}
+	}
+	if (i == ret) {
+		fprintf (stderr, "# no suitable group, skipping test");
+		return NULL;
+	}
+
+	path = strdup ("/tmp/test-setgid.XXXXXX");
+	assert (path != NULL);
+
+	fd = mkstemp (path);
+	assert (fd >= 0);
+
+	copy_file (input, fd);
+	if (fchown (fd, getuid (), group) < 0)
+		assert_not_reached ();
+	if (fchmod (fd, 02750) < 0)
+		assert_not_reached ();
+	if (close (fd) < 0)
+		assert_not_reached ();
+
+	return path;
+}
+
+int
+p11_test_run_child (const char **argv,
+                    bool quiet_out)
+{
+	pid_t child;
+	int status;
+
+	child = fork ();
+	assert (child >= 0);
+
+	/* In the child process? */
+	if (child == 0) {
+		if (quiet_out)
+			close (1); /* stdout */
+		execve (argv[0], (char **)argv, NULL);
+		assert_not_reached ();
+	}
+
+	if (waitpid (child, &status, 0) < 0)
+		assert_not_reached ();
+
+	assert (!WIFSIGNALED (status));
+	assert (WIFEXITED (status));
+
+	return WEXITSTATUS (status);
+}
+
+#endif /* OS_UNIX */

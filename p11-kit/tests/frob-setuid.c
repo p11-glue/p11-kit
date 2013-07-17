@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Red Hat Inc.
+ * Copyright (c) 2012 Red Hat Inc
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,63 +33,63 @@
  */
 
 #include "config.h"
-#include "test.h"
 
-#include <errno.h>
-#include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "compat.h"
-
-static void
-test_strndup (void)
-{
-	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
-	char *res;
-
-	res = strndup (unterminated, 6);
-	assert_str_eq (res, "tester");
-	free (res);
-
-	res = strndup ("test", 6);
-	assert_str_eq (res, "test");
-	free (res);
-}
-
-#ifdef OS_UNIX
-
-static void
-test_getauxval (void)
-{
-	/* 23 is AT_SECURE */
-	const char *args[] = { BUILDDIR "/frob-getauxval", "23", NULL };
-	char *path;
-	int ret;
-
-	ret = p11_test_run_child (args, true);
-	assert_num_eq (ret, 0);
-
-	path = p11_test_copy_setgid (args[0]);
-	if (path == NULL)
-		return;
-
-	args[0] = path;
-	ret = p11_test_run_child (args, true);
-	assert_num_cmp (ret, !=, 0);
-
-	if (unlink (path) < 0)
-		assert_fail ("unlink failed", strerror (errno));
-	free (path);
-}
-
-#endif /* OS_UNIX */
+#include "p11-kit.h"
 
 int
-main (int argc,
-      char *argv[])
+main (void)
 {
-	p11_test (test_strndup, "/test/strndup");
-	p11_test (test_getauxval, "/test/getauxval");
-	return p11_test_run (argc, argv);
+	CK_FUNCTION_LIST **modules;
+	CK_FUNCTION_LIST *module;
+	char *field;
+	char *name;
+	int ret;
+	int i;
+
+	/*
+	 * Use 'chmod ug+s frob-setuid' to change this program
+	 * and test the output with/without setuid or setgid.
+	 */
+
+	putenv ("P11_KIT_STRICT=1");
+
+	modules = p11_kit_modules_load_and_initialize (0);
+	assert (modules != NULL);
+
+	/* This is a system configured module */
+	module = p11_kit_module_for_name (modules, "one");
+	assert (module != NULL);
+
+	field = p11_kit_config_option (module, "setting");
+	printf ("'setting' on module 'one': %s\n", field ? field : "(null)");
+
+	assert (field != NULL);
+	if (getauxval (AT_SECURE))
+		assert (strcmp (field, "system1") == 0);
+	else
+		assert (strcmp (field, "user1") == 0);
+
+	free (field);
+
+	for (i = 0; modules[i] != NULL; i++) {
+		name = p11_kit_module_get_name (modules[i]);
+		printf ("%s\n", name);
+		free (name);
+	}
+
+	field = p11_kit_config_option (module, "number");
+	printf ("'number' on module 'one': %s\n", field ? field : "(null)");
+
+	ret = atoi (field ? field : "0");
+	assert (ret != 0);
+	free (field);
+
+	p11_kit_modules_finalize_and_release (modules);
+	return ret;
 }

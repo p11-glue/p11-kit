@@ -99,6 +99,11 @@ expand_homedir (const char *remainder)
 	if (remainder[0] == '\0')
 		remainder = NULL;
 
+	if (getauxval (AT_SECURE)) {
+		errno = EPERM;
+		return NULL;
+	}
+
 	env = getenv ("HOME");
 	if (env && env[0]) {
 		return p11_path_build (env, remainder, NULL);

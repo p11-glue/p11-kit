@@ -227,6 +227,11 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 		goto finished;
 	}
 
+	if (mode != CONF_USER_NONE && getauxval (AT_SECURE)) {
+		p11_debug ("skipping user config in setuid or setgid program");
+		mode = CONF_USER_NONE;
+	}
+
 	if (mode != CONF_USER_NONE) {
 		path = p11_path_expand (user_conf);
 		if (!path) {

@@ -46,6 +46,12 @@
 #include "p11-kit.h"
 #include "private.h"
 
+#ifdef OS_UNIX
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 static void
 test_parse_conf_1 (void)
 {
@@ -391,6 +397,36 @@ test_parse_boolean (void)
 	assert_num_eq (true, _p11_conf_parse_boolean ("!!!", true));
 }
 
+#ifdef OS_UNIX
+
+static void
+test_setuid (void)
+{
+	const char *args[] = { BUILDDIR "/frob-setuid", NULL, };
+	char *path;
+	int ret;
+
+	/* This is the 'number' setting set in one.module user configuration. */
+	ret = p11_test_run_child (args, true);
+	assert_num_eq (ret, 33);
+
+	path = p11_test_copy_setgid (args[0]);
+	if (path == NULL)
+		return;
+
+	args[0] = path;
+
+	/* This is the 'number' setting set in one.module system configuration. */
+	ret = p11_test_run_child (args, true);
+	assert_num_eq (ret, 18);
+
+	if (unlink (path) < 0)
+		assert_fail ("unlink failed", strerror (errno));
+	free (path);
+}
+
+#endif /* OS_UNIX */
+
 int
 main (int argc,
       char *argv[])
@@ -410,5 +446,8 @@ main (int argc,
 	p11_test (test_load_modules_user_only, "/conf/test_load_modules_user_only");
 	p11_test (test_load_modules_user_none, "/conf/test_load_modules_user_none");
 	p11_test (test_parse_boolean, "/conf/test_parse_boolean");
+#ifdef OS_UNIX
+	p11_test (test_setuid, "/conf/setuid");
+#endif
 	return p11_test_run (argc, argv);
 }

@@ -7,7 +7,9 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
-	$(TEST_CFLAGS)
+	-DBUILDDIR=\"$(abs_builddir)\" \
+	$(TEST_CFLAGS) \
+	$(CUTEST_CFLAGS)
 
 LDADD = \
 	$(NULL)
@@ -26,6 +28,7 @@ CHECK_PROGS = \
 	$(NULL)
 
 noinst_PROGRAMS = \
+	frob-getauxval \
 	$(CHECK_PROGS)
 
 TESTS = $(CHECK_PROGS)

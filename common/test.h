@@ -130,4 +130,13 @@ int         p11_test_run            (int argc,
 
 char *      p11_test_directory      (const char *prefix);
 
+#ifdef OS_UNIX
+
+char *      p11_test_copy_setgid    (const char *path);
+
+int         p11_test_run_child      (const char **argv,
+                                     bool quiet_out);
+
+#endif
+
 #endif /* P11_TEST_H_ */

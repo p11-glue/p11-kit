@@ -79,6 +79,7 @@ if test "$os_unix" = "yes"; then
 	# These are thngs we can work around
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
+	AC_CHECK_FUNCS([getauxval issetugid getresuid])
 	AC_CHECK_FUNCS([strnstr memdup strndup])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
@@ -100,6 +101,8 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_DECLS([__progname])
 	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *__progname; void main() { }])],
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
+	AC_LINK_IFELSE([AC_LANG_SOURCE([extern int __libc_enable_secure; void main() { }])],
+		[AC_DEFINE(HAVE___LIBC_ENABLE_SECURE, [1], [Whether __libc_enable_secure available])])
 fi
 
 AC_CHECK_LIB(intl, dgettext)

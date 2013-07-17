@@ -29,67 +29,35 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@redhat.com>
+ * Author: Stef Walter <stefw@gnome.org>
  */
 
 #include "config.h"
-#include "test.h"
-
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "compat.h"
 
-static void
-test_strndup (void)
-{
-	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
-	char *res;
+#include <libtasn1.h>
 
-	res = strndup (unterminated, 6);
-	assert_str_eq (res, "tester");
-	free (res);
-
-	res = strndup ("test", 6);
-	assert_str_eq (res, "test");
-	free (res);
-}
-
-#ifdef OS_UNIX
-
-static void
-test_getauxval (void)
-{
-	/* 23 is AT_SECURE */
-	const char *args[] = { BUILDDIR "/frob-getauxval", "23", NULL };
-	char *path;
-	int ret;
-
-	ret = p11_test_run_child (args, true);
-	assert_num_eq (ret, 0);
-
-	path = p11_test_copy_setgid (args[0]);
-	if (path == NULL)
-		return;
-
-	args[0] = path;
-	ret = p11_test_run_child (args, true);
-	assert_num_cmp (ret, !=, 0);
-
-	if (unlink (path) < 0)
-		assert_fail ("unlink failed", strerror (errno));
-	free (path);
-}
-
-#endif /* OS_UNIX */
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int
 main (int argc,
       char *argv[])
 {
-	p11_test (test_strndup, "/test/strndup");
-	p11_test (test_getauxval, "/test/getauxval");
-	return p11_test_run (argc, argv);
+	unsigned long type = 0;
+	unsigned long ret;
+
+	if (argc == 2)
+		type = atoi (argv[1]);
+
+	if (type == 0) {
+		fprintf (stderr, "usage: frob-getauxval 23");
+		abort ();
+	}
+
+	ret = getauxval (type);
+	printf ("getauxval(%lu) == %lu\n", type, ret);
+	return (int)ret;
 }

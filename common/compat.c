@@ -759,3 +759,51 @@ mkdtemp (char *template)
 }
 
 #endif /* HAVE_MKDTEMP */
+
+#ifndef HAVE_GETAUXVAL
+
+unsigned long
+getauxval (unsigned long type)
+{
+	static unsigned long secure = 0UL;
+	static bool check_secure_initialized = false;
+
+	/*
+	 * This is the only one our stand-in impl supports and is
+	 * also the only type we define in compat.h header
+	 */
+	assert (type == AT_SECURE);
+
+	if (!check_secure_initialized) {
+#if defined(HAVE___LIBC_ENABLE_SECURE)
+		extern int __libc_enable_secure;
+		secure = __libc_enable_secure;
+
+#elif defined(HAVE_ISSETUGID)
+		secure = issetugid ();
+
+#elif defined(OS_UNIX)
+		uid_t ruid, euid, suid; /* Real, effective and saved user ID's */
+		gid_t rgid, egid, sgid; /* Real, effective and saved group ID's */
+
+#ifdef HAVE_GETRESUID
+		if (getresuid (&ruid, &euid, &suid) != 0 ||
+		    getresgid (&rgid, &egid, &sgid) != 0)
+#endif /* HAVE_GETRESUID */
+		{
+			suid = ruid = getuid ();
+			sgid = rgid = getgid ();
+			euid = geteuid ();
+			egid = getegid ();
+		}
+
+		secure = (ruid != euid || ruid != suid ||
+		          rgid != egid || rgid != sgid);
+#endif /* OS_UNIX */
+		check_secure_initialized = true;
+	}
+
+	return secure;
+}
+
+#endif /* HAVE_GETAUXVAL */
