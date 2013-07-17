@@ -36,16 +36,23 @@
 #include "CuTest.h"
 
 #include "debug.h"
+#include "message.h"
+#include "path.h"
 #include "test.h"
 
 #include <sys/stat.h>
 
 #include <assert.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef OS_UNIX
+#include <paths.h>
+#endif
 
 static char *
 read_file (CuTest *tc,
@@ -206,4 +213,55 @@ test_check_directory_msg (CuTest *tc,
 		CuFail_Line (tc, file, line, "Couldn't find file in directory", name);
 
 	p11_dict_free (files);
+}
+
+static char *
+expand_tempdir (const char *name)
+{
+	const char *env;
+
+	env = getenv ("TMPDIR");
+	if (env && env[0]) {
+		return p11_path_build (env, name, NULL);
+
+	} else {
+#ifdef OS_UNIX
+#ifdef _PATH_TMP
+		return p11_path_build (_PATH_TMP, name, NULL);
+#else
+		return p11_path_build ("/tmp", name, NULL);
+#endif
+
+#else /* OS_WIN32 */
+		char directory[MAX_PATH + 1];
+
+		if (!GetTempPathA (MAX_PATH + 1, directory)) {
+			p11_message ("couldn't lookup temp directory");
+			errno = ENOTDIR;
+			return NULL;
+		}
+
+		return p11_path_build (directory, name, NULL);
+
+#endif /* OS_WIN32 */
+	}
+}
+
+char *
+test_temp_directory (const char *templ)
+{
+	char *directory;
+
+	directory = expand_tempdir (templ);
+	if (directory == NULL)
+		return NULL;
+
+	if (!mkdtemp (directory)) {
+		p11_message ("couldn't create temp directory: %s: %s",
+		             directory, strerror (errno));
+		free (directory);
+		assert (0 && "not reached");
+	}
+
+	return directory;
 }

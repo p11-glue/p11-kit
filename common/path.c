@@ -49,7 +49,6 @@
 #include <string.h>
 
 #ifdef OS_UNIX
-#include <paths.h>
 #include <pwd.h>
 #include <unistd.h>
 #endif
@@ -92,10 +91,25 @@ p11_path_base (const char *path)
 	return strndup (beg, end - beg);
 }
 
+static inline bool
+is_path_component_or_null (char ch)
+{
+	return (ch == '\0' || ch == '/'
+#ifdef OS_WIN32
+			|| ch == '\\'
+#endif
+		);
+}
+
 static char *
 expand_homedir (const char *remainder)
 {
 	const char *env;
+
+	while (remainder[0] && is_path_component_or_null (remainder[0]))
+		remainder++;
+	if (remainder[0] == '\0')
+		remainder = NULL;
 
 	env = getenv ("HOME");
 	if (env && env[0]) {
@@ -132,48 +146,6 @@ expand_homedir (const char *remainder)
 	}
 }
 
-static char *
-expand_tempdir (const char *remainder)
-{
-	const char *env;
-
-	env = getenv ("TEMP");
-	if (env && env[0]) {
-		return p11_path_build (env, remainder, NULL);
-
-	} else {
-#ifdef OS_UNIX
-#ifdef _PATH_TMP
-		return p11_path_build (_PATH_TMP, remainder, NULL);
-#else
-		return p11_path_build ("/tmp", remainder, NULL);
-#endif
-
-#else /* OS_WIN32 */
-		char directory[MAX_PATH + 1];
-
-		if (!GetTempPathA (MAX_PATH + 1, directory)) {
-			p11_message ("couldn't lookup temp directory");
-			errno = ENOTDIR;
-			return NULL;
-		}
-
-		return p11_path_build (directory, remainder, NULL);
-
-#endif /* OS_WIN32 */
-	}
-}
-
-static bool
-is_path_component_or_null (char ch)
-{
-	return (ch == '0' || ch == '/'
-#ifdef OS_WIN32
-			|| ch == '\\'
-#endif
-		);
-}
-
 char *
 p11_path_expand (const char *path)
 {
@@ -181,15 +153,7 @@ p11_path_expand (const char *path)
 
 	if (strncmp (path, "~", 1) == 0 &&
 	    is_path_component_or_null (path[1])) {
-		return expand_homedir (path + 2);
-
-	} else if (strncmp (path, "$HOME", 5) == 0 &&
-	    is_path_component_or_null (path[5])) {
-		return expand_homedir (path + 6);
-
-	} else if (strncmp (path, "$TEMP", 5) == 0 &&
-	    is_path_component_or_null (path[5])) {
-		return expand_tempdir (path + 6);
+		return expand_homedir (path + 1);
 
 	} else {
 		return strdup (path);

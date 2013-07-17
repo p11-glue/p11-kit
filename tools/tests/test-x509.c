@@ -76,9 +76,7 @@ setup (CuTest *tc)
 
 	p11_extract_info_init (&test.ex);
 
-	test.directory = p11_path_expand ("$TEMP/test-extract.XXXXXX");
-	if (!mkdtemp (test.directory))
-		CuFail (tc, "mkdtemp() failed");
+	test.directory = test_temp_directory ("test-extract.XXXXXX");
 }
 
 static void

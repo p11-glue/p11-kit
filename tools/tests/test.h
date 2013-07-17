@@ -257,4 +257,6 @@ void       test_check_directory_msg     (CuTest *tc,
 	(test_check_directory_msg (tc, __FILE__, __LINE__, directory, \
 	                           test_check_directory_files files))
 
+char *     test_temp_directory          (const char *prefix);
+
 #endif /* TEST_COMMON_H_ */
