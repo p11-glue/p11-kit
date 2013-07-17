@@ -572,11 +572,15 @@ writer_put_object (p11_save_file *file,
 static bool
 mkdir_with_parents (const char *path)
 {
-	int mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 	char *parent;
 	bool ret;
 
+#ifdef OS_UNIX
+	int mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 	if (mkdir (path, mode) == 0)
+#else
+	if (mkdir (path) == 0)
+#endif
 		return true;
 
 	switch (errno) {
@@ -586,7 +590,11 @@ mkdir_with_parents (const char *path)
 			ret = mkdir_with_parents (parent);
 			free (parent);
 			if (ret == true) {
+#ifdef OS_UNIX
 				if (mkdir (path, mode) == 0)
+#else
+				if (mkdir (path) == 0)
+#endif
 					return true;
 			}
 		}

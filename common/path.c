@@ -228,6 +228,7 @@ p11_path_build (const char *path,
 	size_t len;
 	size_t at;
 	size_t num;
+	size_t until;
 	va_list va;
 
 	return_val_if_fail (path != NULL, NULL);
@@ -247,14 +248,28 @@ p11_path_build (const char *path,
 	path = first;
 	va_start (va, path);
 	while (path != NULL) {
-		if (at != 0 && built[at - 1] != delim && path[0] != delim)
-			built[at++] = delim;
 		num = strlen (path);
+
+		/* Trim end of the path */
+		until = (at > 0) ? 0 : 1;
+		while (num > until && is_path_component_or_null (path[num - 1]))
+			num--;
+
+		if (at != 0) {
+			if (num == 0)
+				continue;
+			built[at++] = delim;
+		}
+
 		assert (at + num < len);
 		memcpy (built + at, path, num);
-
 		at += num;
+
 		path = va_arg (va, const char *);
+
+		/* Trim beginning of path */
+		while (path && path[0] && is_path_component_or_null (path[0]))
+			path++;
 	}
 	va_end (va);
 

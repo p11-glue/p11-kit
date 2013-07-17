@@ -282,20 +282,18 @@ p11_save_finish_file (p11_save_file *file,
 			if (!path)
 				ret = false;
 
-		} else {
-			if ((file->flags & P11_SAVE_OVERWRITE) &&
+		} else if ((file->flags & P11_SAVE_OVERWRITE) &&
 			    unlink (path) < 0 && errno != ENOENT) {
-				p11_message ("couldn't remove original file: %s: %s",
-				             path, strerror (errno));
-				ret = false;
-			}
+			p11_message ("couldn't remove original file: %s: %s",
+			             path, strerror (errno));
+			ret = false;
+		}
 
-			if (ret == true &&
-			    rename (file->temp, file->path) < 0) {
-				p11_message ("couldn't complete writing file: %s: %s",
-				             file->path, strerror (errno));
-				ret = false;
-			}
+		if (ret == true &&
+		    rename (file->temp, path) < 0) {
+			p11_message ("couldn't complete writing file: %s: %s",
+			             path, strerror (errno));
+			ret = false;
 		}
 
 		unlink (file->temp);
