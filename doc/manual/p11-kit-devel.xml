@@ -230,6 +230,16 @@ $ make install
 					<listitem><para>Specify the path to look for p11-kit config files. This
 					usually defaults to something like <literal>/etc/pkcs11</literal></para></listitem>
 				</varlistentry>
+				<varlistentry>
+					<term><option>--with-user-config</option></term>
+					<listitem><para>Specify the path to look for user specific p11-kit config files. If 
+					specify a path that begins with <literal>~/</literal> then this is expanded to the
+					home directory of the user running p11-kit. If you specify a path that begins with
+					<literal>~/.config/</literal> then this is expanded to the $XDG_CONFIG_HOME directory,
+					as outlined in the
+					<ulink url="http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html#variables">XDG Base Dir specification</ulink>.
+					This option defaults to <literal>~/.pkcs11</literal></para></listitem>
+				</varlistentry>
 			</variablelist>
 			<para></para>
 		</section>

@@ -1,6 +1,10 @@
 <?xml version='1.0'?>
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY sysdir SYSTEM "sysdir.xml">
+  <!ENTITY userdir SYSTEM "userdir.xml">
+]>
 
 <refentry id="pkcs11.conf">
 
@@ -232,13 +236,13 @@ x-custom : text
 	additional configuration or override the system configuration.</para>
 
 	<para>The system global configuration file is usually in
-	<literal>/etc/pkcs11/pkcs11.conf</literal> and the user global
-	configuration file is in <literal>~/.pkcs11/pkcs11.conf</literal> in the
+	<literal>&sysdir;/pkcs11.conf</literal> and the user global
+	configuration file is in <literal>&userdir;/pkcs11.conf</literal> in the
 	user's home directory.</para>
 
 	<para>The module config files are usually located in the
-	<literal>/etc/pkcs11/modules</literal> directory, with one configuration
-	file per module. In addition the <literal>~/.pkcs11/modules</literal> directory
+	<literal>&sysdir;/modules</literal> directory, with one configuration
+	file per module. In addition the <literal>&userdir;/modules</literal> directory
 	can be used for modules installed by the user.</para>
 
 	<para>Note that user configuration files are not loaded from the home

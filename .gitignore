@@ -80,6 +80,8 @@ x86_64-w64-mingw32
 /doc/manual/p11-kit.signals
 /doc/manual/p11-kit.types
 /doc/manual/tmpl/
+/doc/manual/sysdir.xml
+/doc/manual/userdir.xml
 /doc/manual/version.xml
 /doc/manual/xml/
 /doc/manual/*.5

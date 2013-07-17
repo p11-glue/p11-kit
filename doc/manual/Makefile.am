@@ -83,7 +83,11 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
-expand_content_files=
+expand_content_files= \
+	version.xml \
+	userdir.xml \
+	sysdir.xml \
+	$(NULL)
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
 # Only needed if you are using gtkdoc-scangobj to dynamically query widget
@@ -97,6 +101,14 @@ p11-kit-sections.txt: $(srcdir)/p11-kit-sections.txt
 	cp $(srcdir)/p11-kit-sections.txt p11-kit-sections.txt
 p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
 	cp $(srcdir)/p11-kit-overrides.txt p11-kit-overrides.txt
+
+# Generate our files with variables
+sysdir.xml:
+	echo -n $(p11_system_config) > "$@"
+userdir.xml:
+	echo -n $(p11_user_config) > "$@"
+version.xml:
+	echo -n $(VERSION) > "$@"
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make
@@ -140,6 +152,7 @@ CLEANFILES += \
 
 EXTRA_DIST += \
 	$(MAN_IN_FILES) \
-	version.xml.in \
+	sysdir.xml \
+	userdir.xml \
 	version.xml \
 	$(NULL)

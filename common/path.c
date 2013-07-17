@@ -91,17 +91,38 @@ p11_path_base (const char *path)
 	return strndup (beg, end - beg);
 }
 
+static inline bool
+is_path_component_or_null (char ch)
+{
+	return (ch == '\0' || ch == '/'
+#ifdef OS_WIN32
+			|| ch == '\\'
+#endif
+		);
+}
+
 static char *
 expand_homedir (const char *remainder)
 {
 	const char *env;
 
-	if (remainder[0] == '\0')
-		remainder = NULL;
-
 	if (getauxval (AT_SECURE)) {
 		errno = EPERM;
 		return NULL;
+	}
+
+	while (remainder[0] && is_path_component_or_null (remainder[0]))
+		remainder++;
+	if (remainder[0] == '\0')
+		remainder = NULL;
+
+	/* Expand $XDG_CONFIG_HOME */
+	if (remainder != NULL &&
+	    strncmp (remainder, ".config", 7) == 0 &&
+	    is_path_component_or_null (remainder[7])) {
+		env = getenv ("XDG_CONFIG_HOME");
+		if (env && env[0])
+			return p11_path_build (env, remainder + 8, NULL);
 	}
 
 	env = getenv ("HOME");
@@ -137,16 +158,6 @@ expand_homedir (const char *remainder)
 
 #endif /* OS_WIN32 */
 	}
-}
-
-static inline bool
-is_path_component_or_null (char ch)
-{
-	return (ch == '\0' || ch == '/'
-#ifdef OS_WIN32
-			|| ch == '\\'
-#endif
-		);
 }
 
 char *

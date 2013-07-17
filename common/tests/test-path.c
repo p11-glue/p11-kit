@@ -117,6 +117,12 @@ test_expand (void)
 	                       p11_path_expand ("~/my/path"));
 	check_equals_and_free ("/home/blah",
 	                       p11_path_expand ("~"));
+	putenv ("XDG_CONFIG_HOME=/my");
+	check_equals_and_free ("/my/path",
+	                       p11_path_expand ("~/.config/path"));
+	putenv ("XDG_CONFIG_HOME=");
+	check_equals_and_free ("/home/blah/.config/path",
+	                       p11_path_expand ("~/.config/path"));
 #else /* OS_WIN32 */
 	putenv ("HOME=C:\\Users\\blah");
 	check_equals_and_free ("C:\\Users\\blah\\path",

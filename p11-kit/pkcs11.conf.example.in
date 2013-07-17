@@ -2,7 +2,7 @@
 # place before use.
 
 # This setting controls whether to load user configuration from the
-# ~/.pkcs11 directory. Possible values:
+# @p11_user_config@ directory. Possible values:
 #    none: No user configuration
 #    merge: Merge the user config over the system configuration (default)
 #    only: Only user configuration, ignore system configuration
