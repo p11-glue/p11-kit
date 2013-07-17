@@ -48,6 +48,10 @@ extern char * (* p11_message_storage)      (void);
 void          p11_message                  (const char* msg,
                                             ...) GNUC_PRINTF (1, 2);
 
+void          p11_message_err              (int errnum,
+                                            const char* msg,
+                                            ...) GNUC_PRINTF (2, 3);
+
 void          p11_message_store            (const char* msg,
                                             size_t length);
 

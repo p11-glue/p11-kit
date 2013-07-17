@@ -226,8 +226,7 @@ loader_load_if_file (p11_token *token,
 
 	if (stat (path, &sb) < 0) {
 		if (errno == ENOENT) {
-			p11_message ("couldn't stat path: %s: %s",
-			             path, strerror (errno));
+			p11_message_err (errno, "couldn't stat path: %s", path);
 		}
 
 	} else if (!S_ISDIR (sb.st_mode)) {
@@ -254,8 +253,7 @@ loader_load_directory (p11_token *token,
 	/* First we load all the modules */
 	dir = opendir (directory);
 	if (!dir) {
-		p11_message ("couldn't list directory: %s: %s",
-		             directory, strerror (errno));
+		p11_message_err (errno, "couldn't list directory: %s", directory);
 		loader_not_loaded (token, directory);
 		return 0;
 	}
@@ -297,10 +295,8 @@ loader_load_path (p11_token *token,
 	int ret;
 
 	if (stat (path, &sb) < 0) {
-		if (errno != ENOENT) {
-			p11_message ("cannot access trust certificate path: %s: %s",
-			             path, strerror (errno));
-		}
+		if (errno != ENOENT)
+			p11_message_err (errno, "cannot access trust certificate path: %s", path);
 		loader_gone_file (token, path);
 		return 0;
 	}
@@ -413,8 +409,7 @@ p11_token_reload (p11_token *token,
 		if (errno == ENOENT) {
 			loader_gone_file (token, origin);
 		} else {
-			p11_message ("cannot access trust file: %s: %s",
-			             origin, strerror (errno));
+			p11_message_err (errno, "cannot access trust file: %s", origin);
 		}
 		return false;
 	}
@@ -459,7 +454,7 @@ check_directory (const char *path,
 		free (parent);
 		return ret;
 	default:
-		p11_message ("couldn't access: %s: %s", path, strerror (errno));
+		p11_message_err (errno, "couldn't access: %s", path);
 		return false;
 	}
 }
@@ -600,7 +595,7 @@ mkdir_with_parents (const char *path)
 		}
 		/* fall through */
 	default:
-		p11_message ("couldn't create directory: %s: %s", path, strerror (errno));
+		p11_message_err (errno, "couldn't create directory: %s", path);
 		return false;
 	}
 }

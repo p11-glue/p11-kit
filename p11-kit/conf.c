@@ -118,8 +118,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 			p11_debug ("config file is inaccessible");
 
 		} else {
-			p11_message ("couldn't open config file: %s: %s", filename,
-			             strerror (error));
+			p11_message_err (error, "couldn't open config file: %s", filename);
 			errno = error;
 			return NULL;
 		}
@@ -400,8 +399,7 @@ load_configs_from_directory (const char *directory,
 			p11_debug ("couldn't list inacessible module configs");
 			return true;
 		}
-		p11_message ("couldn't list directory: %s: %s", directory,
-		             strerror (error));
+		p11_message_err (error, "couldn't list directory: %s", directory);
 		errno = error;
 		return false;
 	}

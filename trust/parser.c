@@ -760,7 +760,7 @@ p11_parse_file (p11_parser *parser,
 
 	map = p11_mmap_open (filename, &data, &size);
 	if (map == NULL) {
-		p11_message ("couldn't open and map file: %s: %s", filename, strerror (errno));
+		p11_message_err (errno, "couldn't open and map file: %s", filename);
 		return P11_PARSE_FAILURE;
 	}
 
