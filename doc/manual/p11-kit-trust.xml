@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY sysdir SYSTEM "sysdir.xml">
+  <!ENTITY userdir SYSTEM "userdir.xml">
+]>
 
 <chapter xml:id="trust">
 <title>Trust Policy Module</title>
@@ -106,12 +110,12 @@ $ pkg-config --variable p11_trust_paths p11-kit-1
 		during the <link linkend="devel-building-configure">p11-kit
 		build</link>.</para></listitem>
 		<listitem><para>Disable loading trust policy information
-		from this module by adding a file to <literal>/etc/pkcs11/modules</literal>
+		from this module by adding a file to <literal>&sysdir;/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
 		<literal>trust-policy: no</literal> line.</para></listitem>
 
 		<listitem><para>Disable this module completely by
-		adding a file to <literal>/etc/pkcs11/modules</literal>
+		adding a file to <literal>&sysdir;/modules</literal>
 		called <literal>p11-kit-trust.module</literal> containing a
 		<literal>enable-in:</literal> line (without a value).</para></listitem>
 	</itemizedlist>

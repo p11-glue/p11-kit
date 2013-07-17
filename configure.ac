@@ -112,6 +112,11 @@ AC_ARG_WITH([system-config],
             [system_config_dir=$withval],
             [system_config_dir=$sysconfdir/pkcs11])
 
+AC_ARG_WITH([user-config],
+            [AS_HELP_STRING([--with-system-config], [Change PKCS#11 user config directory])],
+            [user_config_dir=$withval],
+            [user_config_dir="~/.pkcs11"])
+
 AC_ARG_WITH([module-path],
             [AS_HELP_STRING([--with-module-path], [Load modules with relative path names from here])],
             [module_path=$withval],
@@ -122,7 +127,7 @@ p11_system_config=$system_config_dir
 p11_system_config_file=$p11_system_config/pkcs11.conf
 p11_system_config_modules=$p11_system_config/modules
 p11_package_config_modules='${pkgdatadir}/modules'
-p11_user_config="~/.pkcs11"
+p11_user_config=$user_config_dir
 p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
 p11_module_path="$module_path"
@@ -455,7 +460,6 @@ AC_CONFIG_FILES([Makefile
 	common/tests/Makefile
 	doc/Makefile
 	doc/manual/Makefile
-	doc/manual/version.xml
 	po/Makefile.in
 	p11-kit/Makefile
 	p11-kit/tests/Makefile

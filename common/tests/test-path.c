@@ -130,6 +130,12 @@ test_expand (CuTest *tc)
 	                       p11_path_expand ("~"));
 	check_equals_and_free (tc, "/home/blah",
 	                       p11_path_expand ("~///"));
+	putenv ("XDG_CONFIG_HOME=/my");
+	check_equals_and_free (tc, "/my/path",
+	                       p11_path_expand ("~/.config/path"));
+	putenv ("XDG_CONFIG_HOME=");
+	check_equals_and_free (tc, "/home/blah/.config/path",
+	                       p11_path_expand ("~/.config/path"));
 #else /* OS_WIN32 */
 	putenv ("HOME=C:\\Users\\blah");
 	check_equals_and_free (tc, "C:\\Users\\blah\\path",

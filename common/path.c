@@ -116,6 +116,15 @@ expand_homedir (const char *remainder)
 	if (remainder[0] == '\0')
 		remainder = NULL;
 
+	/* Expand $XDG_CONFIG_HOME */
+	if (remainder != NULL &&
+	    strncmp (remainder, ".config", 7) == 0 &&
+	    is_path_component_or_null (remainder[7])) {
+		env = getenv ("XDG_CONFIG_HOME");
+		if (env && env[0])
+			return p11_path_build (env, remainder + 8, NULL);
+	}
+
 	env = getenv ("HOME");
 	if (env && env[0]) {
 		return p11_path_build (env, remainder, NULL);
