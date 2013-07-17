@@ -397,6 +397,7 @@ handles_are (CK_OBJECT_HANDLE *handles,
              ...)
 {
 	CK_OBJECT_HANDLE handle;
+	bool matched = true;
 	int count;
 	int num;
 	va_list va;
@@ -410,7 +411,7 @@ handles_are (CK_OBJECT_HANDLE *handles,
 
 	va_start (va, handles);
 
-	for (count = 0; true; count++) {
+	for (count = 0; matched; count++) {
 		handle = va_arg (va, CK_OBJECT_HANDLE);
 		if (handle == 0)
 			break;
@@ -421,12 +422,12 @@ handles_are (CK_OBJECT_HANDLE *handles,
 		}
 
 		if (handles[i] != handle)
-			return false;
+			matched = false;
 	}
 
 	va_end (va);
 
-	return (count == num);
+	return matched && (count == num);
 }
 
 static void

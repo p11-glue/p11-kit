@@ -87,12 +87,12 @@ struct p11_kit_iter {
 	CK_OBJECT_HANDLE object;
 
 	/* And various flags */
-	int searching : 1;
-	int searched : 1;
-	int iterating : 1;
-	int match_nothing : 1;
-	int keep_session : 1;
-	int preload_results : 1;
+	unsigned int searching : 1;
+	unsigned int searched : 1;
+	unsigned int iterating : 1;
+	unsigned int match_nothing : 1;
+	unsigned int keep_session : 1;
+	unsigned int preload_results : 1;
 };
 
 /**

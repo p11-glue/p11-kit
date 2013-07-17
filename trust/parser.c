@@ -454,7 +454,7 @@ build_openssl_extensions (p11_parser *parser,
 	 * Otherwise a 'TRUSTED CERTIFICATE' in an input directory is enough to
 	 * mark this as a trusted certificate.
 	 */
-	} else if (p11_dict_size (trust) > 0) {
+	} else if (trust && p11_dict_size (trust) > 0) {
 		trusted = CK_TRUE;
 		distrust = CK_FALSE;
 	}

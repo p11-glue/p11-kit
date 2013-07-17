@@ -102,7 +102,8 @@ p11_lexer_next (p11_lexer *lexer,
 	return_val_if_fail (lexer != NULL, false);
 
 	clear_state (lexer);
-	*failed = false;
+	if (failed)
+		*failed = false;
 
 	/* Go through lines and process them */
 	while (lexer->remaining != 0) {

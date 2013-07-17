@@ -143,6 +143,7 @@ p11_hash_murmur3 (void *hash,
 		h1 = rotl (h1, 13);
 		h1 = h1 * 5 + 0xe6546b64;
 	}
+	va_end (va);
 
 	/* tail */
 

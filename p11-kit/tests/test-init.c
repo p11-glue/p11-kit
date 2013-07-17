@@ -233,8 +233,11 @@ test_threaded_initialization (void)
 	module.C_Finalize = mock_C_Finalize__threaded_race;
 
 	memset (&data, 0, sizeof (data));
+
+	p11_mutex_lock (&race_mutex);
 	initialization_count = 0;
 	finalization_count = 0;
+	p11_mutex_unlock (&race_mutex);
 
 	p11_lock ();
 

@@ -728,7 +728,7 @@ index_select (p11_index *index,
               index_sink sink,
               void *data)
 {
-	index_bucket *buckets[NUM_BUCKETS];
+	index_bucket *selected[MAX_SELECT];
 	CK_OBJECT_HANDLE handle;
 	index_object *obj;
 	unsigned int hash;
@@ -741,10 +741,10 @@ index_select (p11_index *index,
 	for (n = 0, num = 0; n < count && num < MAX_SELECT; n++) {
 		if (is_indexable (index, match[n].type)) {
 			hash = p11_attr_hash (match + n);
-			buckets[num] = index->buckets + (hash % NUM_BUCKETS);
+			selected[num] = index->buckets + (hash % NUM_BUCKETS);
 
 			/* If any index is empty, then obviously no match */
-			if (!buckets[num]->num)
+			if (!selected[num]->num)
 				return;
 
 			num++;
@@ -761,15 +761,15 @@ index_select (p11_index *index,
 		return;
 	}
 
-	for (i = 0; i < buckets[0]->num; i++) {
+	for (i = 0; i < selected[0]->num; i++) {
 		/* A candidate match from first bucket */
-		handle = buckets[0]->elem[i];
+		handle = selected[0]->elem[i];
 
 		/* Check if the candidate is in other buckets */
 		for (j = 1; j < num; j++) {
-			assert (buckets[j]->elem); /* checked above */
-			at = binary_search (buckets[j]->elem, 0, buckets[j]->num, handle);
-			if (at >= buckets[j]->num || buckets[j]->elem[at] != handle) {
+			assert (selected[j]->elem); /* checked above */
+			at = binary_search (selected[j]->elem, 0, selected[j]->num, handle);
+			if (at >= selected[j]->num || selected[j]->elem[at] != handle) {
 				handle = 0;
 				break;
 			}
@@ -874,7 +874,7 @@ p11_index_snapshot (p11_index *index,
 
 	return_val_if_fail (index != NULL, NULL);
 
-	if (count < 0)
+	if (count < (CK_ULONG)0UL)
 		count = p11_attrs_count (attrs);
 
 	index_select (index, attrs, count, sink_any, &handles);

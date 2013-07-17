@@ -353,39 +353,39 @@ p11_trust_extract (int argc,
 			break;
 		case opt_filter:
 			if (!filter_argument (optarg, &uri, &match, &ex.flags))
-				return 2;
+				exit (2);
 			break;
 		case opt_purpose:
 			if (!purpose_argument (optarg, &ex))
-				return 2;
+				exit (2);
 			break;
 		case opt_format:
 			if (!format_argument (optarg, &format))
-				return 2;
+				exit (2);
 			break;
 		case 'h':
 			p11_tool_usage (usages, options);
-			return 0;
+			exit (0);
 		case '?':
-			return 2;
+			exit (2);
 		default:
 			assert_not_reached ();
 			break;
 		}
-	} while (opt != -1);
+	}
 
 	argc -= optind;
 	argv += optind;
 
 	if (argc != 1) {
 		p11_message ("specify one destination file or directory");
-		return 2;
+		exit (2);
 	}
 	ex.destination = argv[0];
 
 	if (!format) {
 		p11_message ("no output format specified");
-		return 2;
+		exit (2);
 	}
 
 	/* If nothing that was useful to enumerate was specified, then bail */
@@ -395,7 +395,7 @@ p11_trust_extract (int argc,
 	}
 
 	if (!validate_filter_and_format (&ex, format, match))
-		return 1;
+		exit (1);
 
 	if (uri && p11_kit_uri_any_unrecognized (uri))
 		p11_message ("uri contained unrecognized components, nothing will be extracted");
@@ -410,7 +410,7 @@ p11_trust_extract (int argc,
 
 	modules = p11_kit_modules_load_and_initialize (flags);
 	if (!modules)
-		return 1;
+		exit (1);
 
 	if (modules[0] == NULL)
 		p11_message ("no modules containing trust policy are registered");

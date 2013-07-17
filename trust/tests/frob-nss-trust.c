@@ -73,6 +73,7 @@ dump_object (P11KitIter *iter,
 	free (string);
 
 	free (label.pValue);
+	free (name);
 }
 
 static int

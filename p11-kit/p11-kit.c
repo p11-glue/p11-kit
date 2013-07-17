@@ -84,6 +84,9 @@ p11_kit_external (int argc,
 
 	/* At this point we have no command */
 	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
+
+	free (filename);
+	free (path);
 	return 2;
 }
 
@@ -109,6 +112,9 @@ p11_kit_extract (int argc,
 
 	/* At this point we have no command */
 	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
+
+	free (path);
+	free (args);
 	return 2;
 }
 
