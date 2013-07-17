@@ -357,7 +357,7 @@ p11_kit_pin_request (const char *pin_source,
 			if (callbacks == NULL)
 				callbacks = p11_dict_get (gl.pin_sources, P11_KIT_PIN_FALLBACK);
 
-			if (callbacks != NULL) {
+			if (callbacks != NULL && callbacks->num) {
 				snapshot = memdup (callbacks->elem, sizeof (void *) * callbacks->num);
 				snapshot_count = callbacks->num;
 				for (i = 0; snapshot && i < snapshot_count; i++)

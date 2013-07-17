@@ -110,7 +110,6 @@ lookup_extension (p11_builder *builder,
 	CK_OBJECT_CLASS klass = CKO_X_CERTIFICATE_EXTENSION;
 	CK_OBJECT_HANDLE obj;
 	CK_ATTRIBUTE *attrs;
-	unsigned char *ext;
 	void *value;
 	size_t length;
 	node_asn *node;
@@ -122,6 +121,8 @@ lookup_extension (p11_builder *builder,
 		{ CKA_INVALID },
 	};
 
+	assert (ext_len != NULL);
+
 	/* Look for a stapled certificate extension */
 	match[0].pValue = p11_attrs_find_value (cert, CKA_ID, &length);
 	if (match[0].pValue != NULL) {
@@ -132,9 +133,10 @@ lookup_extension (p11_builder *builder,
 		if (attrs != NULL) {
 			value = p11_attrs_find_value (attrs, CKA_VALUE, ext_len);
 			if (value != NULL) {
-				ext = memdup (value, *ext_len);
-				return_val_if_fail (ext != NULL, NULL);
-				return ext;
+				if (*ext_len)
+					value = memdup (value, *ext_len);
+				return_val_if_fail (value != NULL, NULL);
+				return value;
 			}
 		}
 	}
