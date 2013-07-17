@@ -29,6 +29,7 @@ CHECK_PROGS = \
 
 noinst_PROGRAMS = \
 	print-messages \
+	frob-setuid \
 	$(CHECK_PROGS)
 
 TESTS = $(CHECK_PROGS)

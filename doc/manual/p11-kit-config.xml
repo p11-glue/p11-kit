@@ -87,5 +87,8 @@ critical: yes
 
 	<para><link linkend="pkcs11.conf">See the manual page</link> for more details
 	on the format and available options.</para>
+
+	<para>Note that user configuration files are not loaded from the home
+	directory if running inside a setuid or setgid program.</para>
 </section>
 </chapter>

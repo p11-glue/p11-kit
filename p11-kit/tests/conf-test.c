@@ -46,6 +46,12 @@
 #include "p11-kit.h"
 #include "private.h"
 
+#ifdef OS_UNIX
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 static void
 test_parse_conf_1 (CuTest *tc)
 {
@@ -391,6 +397,115 @@ test_parse_boolean (CuTest *tc)
 	CuAssertIntEquals (tc, true, _p11_conf_parse_boolean ("!!!", true));
 }
 
+#ifdef OS_UNIX
+
+/*
+ * TODO: In git master and the post 0.19.x series, we should integrate this into
+ * our new testing code, rather than duplicating here and in test-compat.c
+ */
+
+static void
+copy_file (CuTest *tc,
+           const char *input,
+           int fd)
+{
+	p11_mmap *mmap;
+	const char *data;
+	ssize_t written;
+	size_t size;
+
+	mmap = p11_mmap_open (input, (void **)&data, &size);
+	CuAssertPtrNotNull (tc, mmap);
+
+	while (size > 0) {
+		written = write (fd, data, size);
+		CuAssertTrue (tc, written >= 0);
+
+		data += written;
+		size -= written;
+	}
+
+	p11_mmap_close (mmap);
+}
+
+static int
+run_process (CuTest *tc,
+             char *path)
+{
+	char *argv[] = { path, NULL };
+	pid_t child;
+	int status;
+
+	child = fork ();
+	CuAssertTrue (tc, child >= 0);
+
+	/* In the child process? */
+	if (child == 0) {
+		close (1); /* stdout */
+		execve (path, argv, NULL);
+		abort ();
+	}
+
+	if (waitpid (child, &status, 0) < 0)
+		CuFail (tc, "not reached");
+
+	CuAssertTrue (tc, !WIFSIGNALED (status));
+	CuAssertTrue (tc, WIFEXITED (status));
+	return WEXITSTATUS (status);
+}
+
+static void
+test_setuid (CuTest *tc)
+{
+	gid_t groups[128];
+	char *path;
+	gid_t group = 0;
+	int ret;
+	int fd;
+	int i;
+
+	/* This is the 'number' setting set in one.module user configuration. */
+	ret = run_process (tc, BUILDDIR "/frob-setuid");
+	CuAssertIntEquals (tc, ret, 33);
+
+	ret = getgroups (128, groups);
+	CuAssertTrue (tc, ret >= 0);
+	for (i = 0; i < ret; ++i) {
+		if (groups[i] != getgid ()) {
+			group = groups[i];
+			break;
+		}
+	}
+	if (i == ret) {
+		fprintf (stderr, "no suitable group, skipping test");
+		return;
+	}
+
+	path = strdup ("/tmp/frob-setuid.XXXXXX");
+	CuAssertPtrNotNull (tc, path);
+
+	fd = mkstemp (path);
+	CuAssertTrue (tc, fd >= 0);
+	copy_file (tc, BUILDDIR "/frob-setuid", fd);
+	if (fchown (fd, getuid (), group) < 0)
+		CuFail (tc, "fchown failed");
+	if (fchmod (fd, 02750) < 0)
+		CuFail (tc, "fchmod failed");
+	if (close (fd) < 0)
+		CuFail (tc, "close failed");
+
+	ret = run_process (tc, path);
+
+	/* This is the 'number' setting set in one.module system configuration. */
+	CuAssertIntEquals (tc, ret, 18);
+
+	if (unlink (path) < 0)
+		CuFail (tc, "unlink failed");
+	free (path);
+}
+
+#endif /* OS_UNIX */
+
 int
 main (void)
 {
@@ -416,6 +531,9 @@ main (void)
 	SUITE_ADD_TEST (suite, test_load_modules_user_only);
 	SUITE_ADD_TEST (suite, test_load_modules_user_none);
 	SUITE_ADD_TEST (suite, test_parse_boolean);
+#ifdef OS_UNIX
+	SUITE_ADD_TEST (suite, test_setuid);
+#endif
 
 	CuSuiteRun (suite);
 	CuSuiteSummary (suite, output);

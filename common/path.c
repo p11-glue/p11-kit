@@ -106,6 +106,11 @@ expand_homedir (const char *remainder)
 {
 	const char *env;
 
+	if (getauxval (AT_SECURE)) {
+		errno = EPERM;
+		return NULL;
+	}
+
 	while (remainder[0] && is_path_component_or_null (remainder[0]))
 		remainder++;
 	if (remainder[0] == '\0')

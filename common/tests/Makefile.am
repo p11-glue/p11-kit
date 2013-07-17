@@ -7,6 +7,7 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
+	-DBUILDDIR=\"$(abs_builddir)\" \
 	$(CUTEST_CFLAGS)
 
 LDADD = \
@@ -25,6 +26,7 @@ CHECK_PROGS = \
 	$(NULL)
 
 noinst_PROGRAMS = \
+	frob-getauxval \
 	$(CHECK_PROGS)
 
 if WITH_ASN1

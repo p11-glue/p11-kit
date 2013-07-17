@@ -295,4 +295,16 @@ time_t      timegm          (struct tm *tm);
 
 #endif /* HAVE_TIMEGM */
 
+#ifdef HAVE_GETAUXVAL
+
+#include <sys/auxv.h>
+
+#else /* !HAVE_GETAUXVAL */
+
+unsigned long     getauxval (unsigned long type);
+
+#define AT_SECURE 23
+
+#endif /* !HAVE_GETAUXVAL */
+
 #endif /* __COMPAT_H__ */
