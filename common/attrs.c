@@ -143,8 +143,13 @@ attrs_build (CK_ATTRIBUTE *attrs,
 		}
 
 		memcpy (attr, add, sizeof (CK_ATTRIBUTE));
-		if (!take_values)
-			attr->pValue = memdup (attr->pValue, attr->ulValueLen);
+		if (!take_values && attr->pValue != NULL) {
+			if (attr->ulValueLen == 0)
+				attr->pValue = malloc (1);
+			else
+				attr->pValue = memdup (attr->pValue, attr->ulValueLen);
+			return_val_if_fail (attr->pValue != NULL, NULL);
+		}
 	}
 
 	/* Mark this as the end */
