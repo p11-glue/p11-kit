@@ -1,3 +1,14 @@
+0.18.5 (stable)
+ * Add option to use freebl for hashing
+ * Fix some warnings and possible minor bugs higlighted by code scanners
+ * Don't load configs in home directories when running setuid or setgid
+ * Support treating ~/.config as $XDG_CONFIG_HOME
+ * Use $TMPDIR instead of $TEMP while testing
+ * Open files and fds with O_CLOEXEC
+ * Abort initialization if a critical module fails to load
+ * Don't use thread-unsafe functions: strerror, getpwuid
+ * Fix p11_kit_space_strlen() result when empty string
+
 0.18.4 (stable)
  * Cleanup related to external p11-kit tool commands
 
