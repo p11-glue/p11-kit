@@ -415,14 +415,14 @@ p11_kit_uri_clear_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 CK_ATTRIBUTE_PTR
 p11_kit_uri_get_attributes (P11KitUri *uri, CK_ULONG_PTR n_attrs)
 {
-	static CK_ATTRIBUTE empty = { CKA_INVALID, NULL, 0UL };
+	static const CK_ATTRIBUTE terminator = { CKA_INVALID, NULL, 0UL };
 
 	return_val_if_fail (uri != NULL, NULL);
 
 	if (!uri->attrs) {
 		if (n_attrs)
 			*n_attrs = 0;
-		return &empty;
+		return (CK_ATTRIBUTE_PTR)&terminator;
 	}
 
 	if (n_attrs)

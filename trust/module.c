@@ -333,9 +333,9 @@ sys_C_Finalize (CK_VOID_PTR reserved)
 static CK_RV
 sys_C_Initialize (CK_VOID_PTR init_args)
 {
-	static CK_C_INITIALIZE_ARGS def_args =
+	static const CK_C_INITIALIZE_ARGS def_args =
 		{ NULL, NULL, NULL, NULL, CKF_OS_LOCKING_OK, NULL, };
-	CK_C_INITIALIZE_ARGS *args = NULL;
+	const CK_C_INITIALIZE_ARGS *args = NULL;
 	int supplied_ok;
 	CK_RV rv;
 

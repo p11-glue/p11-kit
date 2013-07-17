@@ -822,9 +822,9 @@ data_populate (p11_builder *builder,
                p11_index *index,
                CK_ATTRIBUTE *data)
 {
-	static CK_ATTRIBUTE value = { CKA_VALUE, "", 0 };
-	static CK_ATTRIBUTE application = { CKA_APPLICATION, "", 0 };
-	static CK_ATTRIBUTE object_id = { CKA_OBJECT_ID, "", 0 };
+	static const CK_ATTRIBUTE value = { CKA_VALUE, "", 0 };
+	static const CK_ATTRIBUTE application = { CKA_APPLICATION, "", 0 };
+	static const CK_ATTRIBUTE object_id = { CKA_OBJECT_ID, "", 0 };
 	CK_ATTRIBUTE *attrs;
 
 	attrs = common_populate (builder, index, data);
@@ -1661,14 +1661,14 @@ replace_compat_for_cert (p11_builder *builder,
                          CK_OBJECT_HANDLE handle,
                          CK_ATTRIBUTE *attrs)
 {
-	static CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
-	static CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+	static const CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
+	static const CK_CERTIFICATE_TYPE x509 = CKC_X_509;
 	CK_ATTRIBUTE *value;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_VALUE, },
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CLASS, (void *)&certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, (void *)&x509, sizeof (x509) },
 		{ CKA_INVALID }
 	};
 
@@ -1762,32 +1762,32 @@ p11_builder_changed (void *bilder,
                      CK_OBJECT_HANDLE handle,
                      CK_ATTRIBUTE *attrs)
 {
-	static CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
-	static CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
-	static CK_CERTIFICATE_TYPE x509 = CKC_X_509;
+	static const CK_OBJECT_CLASS certificate = CKO_CERTIFICATE;
+	static const CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
+	static const CK_CERTIFICATE_TYPE x509 = CKC_X_509;
 
-	static CK_ATTRIBUTE match_cert[] = {
-		{ CKA_CLASS, &certificate, sizeof (certificate) },
-		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+	static const CK_ATTRIBUTE match_cert[] = {
+		{ CKA_CLASS, (void *)&certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, (void *)&x509, sizeof (x509) },
 		{ CKA_INVALID }
 	};
 
-	static CK_ATTRIBUTE match_eku[] = {
-		{ CKA_CLASS, &extension, sizeof (extension) },
+	static const CK_ATTRIBUTE match_eku[] = {
+		{ CKA_CLASS, (void *)&extension, sizeof (extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE,
 		  sizeof (P11_OID_EXTENDED_KEY_USAGE) },
 		{ CKA_INVALID }
 	};
 
-	static CK_ATTRIBUTE match_ku[] = {
-		{ CKA_CLASS, &extension, sizeof (extension) },
+	static const CK_ATTRIBUTE match_ku[] = {
+		{ CKA_CLASS, (void *)&extension, sizeof (extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_KEY_USAGE,
 		  sizeof (P11_OID_KEY_USAGE) },
 		{ CKA_INVALID }
 	};
 
-	static CK_ATTRIBUTE match_bc[] = {
-		{ CKA_CLASS, &extension, sizeof (extension) },
+	static const CK_ATTRIBUTE match_bc[] = {
+		{ CKA_CLASS, (void *)&extension, sizeof (extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS,
 		  sizeof (P11_OID_BASIC_CONSTRAINTS) },
 		{ CKA_INVALID }

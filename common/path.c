@@ -62,9 +62,9 @@ char *
 p11_path_base (const char *path)
 {
 #ifdef OS_WIN32
-	static const char *delims = "/\\";
+	const char *delims = "/\\";
 #else
-	static const char *delims = "/";
+	const char *delims = "/";
 #endif
 
 	const char *end;
@@ -191,9 +191,9 @@ p11_path_build (const char *path,
                 ...)
 {
 #ifdef OS_WIN32
-	static const char delim = '\\';
+	const char delim = '\\';
 #else
-	static const char delim = '/';
+	const char delim = '/';
 #endif
 	const char *first = path;
 	char *built;

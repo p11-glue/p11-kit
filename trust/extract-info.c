@@ -315,7 +315,7 @@ extract_info (P11KitIter *iter,
 	CK_ATTRIBUTE *attr;
 	CK_RV rv;
 
-	static CK_ATTRIBUTE attr_types[] = {
+	static const CK_ATTRIBUTE attr_types[] = {
 		{ CKA_ID, },
 		{ CKA_CLASS, },
 		{ CKA_CERTIFICATE_TYPE, },
