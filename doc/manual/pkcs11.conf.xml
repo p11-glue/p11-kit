@@ -6,7 +6,7 @@
   <!ENTITY userdir SYSTEM "userdir.xml">
 ]>
 
-<refentry id="pkcs11.conf">
+<refentry id="pkcs11-conf">
 
 <refentryinfo>
 	<title>pkcs11.conf</title>
@@ -32,7 +32,7 @@
 	<refpurpose>Configuration files for PKCS#11 modules</refpurpose>
 </refnamediv>
 
-<refsect1>
+<refsect1 id="pkcs11-conf-description">
 	<title>Description</title>
 	<para>The <command>pkcs11.conf</command> configuration files are a standard
 	way to configure PKCS#11 modules.</para>
@@ -254,7 +254,7 @@ x-custom : text
 	<literal>pkg-config</literal>.</para>
 </refsect1>
 
-<refsect1>
+<refsect1 id="pkcs11-conf-see-also">
 	<title>See also</title>
 	<simplelist type="inline">
 		<member><citerefentry><refentrytitle>p11-kit</refentrytitle><manvolnum>8</manvolnum></citerefentry></member>

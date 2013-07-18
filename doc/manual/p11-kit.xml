@@ -38,7 +38,7 @@
 	</cmdsynopsis>
 </refsynopsisdiv>
 
-<refsect1>
+<refsect1 id="p11-kit-description">
 	<title>Description</title>
 	<para><command>p11-kit</command> is a command line tool that
 	can be used to perform operations on PKCS#11 modules configured on the
@@ -62,7 +62,7 @@
 
 </refsect1>
 
-<refsect1>
+<refsect1 id="p11-kit-list-modules">
 	<title>List Modules</title>
 
 	<para>List system configured PKCS#11 modules.</para>
@@ -76,7 +76,7 @@ $ p11-kit list-modules
 
 </refsect1>
 
-<refsect1>
+<refsect1 id="p11-kit-extract">
 	<title>Extract</title>
 
 	<para>Extract certificates from configured PKCS#11 modules.</para>
@@ -205,7 +205,7 @@ $ p11-kit extract --format=x509-directory --filter=ca-anchors /path/to/directory
 
 </refsect1>
 
-<refsect1>
+<refsect1 id="p11-kit-extract-trust">
 	<title>Extract Trust</title>
 
 	<para>Extract standard trust information files.</para>
@@ -224,7 +224,7 @@ $ p11-kit extract-trust
 
 </refsect1>
 
-<refsect1>
+<refsect1 id="p11-kit-extract-bugs">
   <title>Bugs</title>
   <para>
     Please send bug reports to either the distribution bug tracker
@@ -233,7 +233,7 @@ $ p11-kit extract-trust
   </para>
 </refsect1>
 
-<refsect1>
+<refsect1 id="p11-kit-extract-see-also">
   <title>See also</title>
     <simplelist type="inline">
         <member><citerefentry><refentrytitle>pkcs11.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></member>
