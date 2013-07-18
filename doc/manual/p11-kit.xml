@@ -82,7 +82,7 @@ $ p11-kit list-modules
 	<para>Extract certificates from configured PKCS#11 modules.</para>
 
 <programlisting>
-$ p11-kit extract --format=x509-directory --filter=ca-certificates /path/to/directory
+$ p11-kit extract --format=x509-directory --filter=ca-anchors /path/to/directory
 </programlisting>
 
 	<para>You can specify the following options to control what to extract.
