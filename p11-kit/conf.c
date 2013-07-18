@@ -287,7 +287,7 @@ static char *
 calc_name_from_filename (const char *fname)
 {
 	/* We eventually want to settle on .module */
-	static const char const *suffix = ".module";
+	static const char *const suffix = ".module";
 	static const size_t suffix_len = 7;
 	const char *c = fname;
 	size_t fname_len;

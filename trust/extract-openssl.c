@@ -79,7 +79,7 @@ known_usages (p11_array *oids)
 	char *string;
 	int i;
 
-	static const char *strings[] = {
+	static const char *const strings[] = {
 		P11_OID_SERVER_AUTH_STR,
 		P11_OID_CLIENT_AUTH_STR,
 		P11_OID_CODE_SIGNING_STR,
