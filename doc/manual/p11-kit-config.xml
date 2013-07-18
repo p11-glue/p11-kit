@@ -80,7 +80,7 @@ critical: yes
 
 </section>
 
-<section>
+<section id="config-files">
 	<title>Configuration Files</title>
 
 	<para>A complete configuration consists of several files. These files are
