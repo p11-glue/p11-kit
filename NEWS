@@ -1,4 +1,22 @@
-0.19.0 (unstable)
+0.19.2 (unstable)
+ * Add basic 'trust anchor' command to store a new anchor
+ * Support for writing out trust token objects
+ * Port to use CKA_PUBLIC_KEY_INFO and updated trust store spec
+ * Add option to use freebl for hashing
+ * Implement reloading of token data
+ * Fix warnings and possible minor bugs higlighted by code scanners
+ * Don't load configs in home directories when running setuid or setgid
+ * Support treating ~/.config as $XDG_CONFIG_HOME
+ * Use $XDG_DATA_HOME/pkcs11 as default user config directory
+ * Use $TMPDIR instead of $TEMP while testing
+ * Open files and fds with O_CLOEXEC
+ * Abort initialization if a critical module fails to load
+ * Don't use thread-unsafe functions: strerror, getpwuid
+ * Fix p11_kit_space_strlen() result when empty string
+ * Refactoring of where various components live
+ * Build fixes
+
+0.19.1 (unstable)
  * Refactor API to be able to handle managed modules
  * Deprecate much of old p11-kit API
  * Implement concept of managed modules
