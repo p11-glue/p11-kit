@@ -86,13 +86,13 @@
 size_t
 p11_kit_space_strlen (const unsigned char *string, size_t max_length)
 {
-	size_t i = max_length - 1;
+	size_t i = max_length;
 
 	assert (string);
 
-	while (i > 0 && string[i] == ' ')
+	while (i > 0 && string[i - 1] == ' ')
 		--i;
-	return i + 1;
+	return i;
 }
 
 /**
