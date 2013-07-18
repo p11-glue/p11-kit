@@ -20,6 +20,7 @@ LDADD = \
 CHECK_PROGS = \
 	progname-test \
 	conf-test \
+	test-util \
 	uri-test \
 	pin-test \
 	test-init \
