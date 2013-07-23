@@ -8,7 +8,7 @@ CUTEST_CFLAGS = \
 
 CUTEST_LIBS = $(top_builddir)/build/libcutest.la
 
-MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet --trace-children=yes
+MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet
 
 LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes
 
