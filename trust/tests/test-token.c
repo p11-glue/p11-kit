@@ -305,6 +305,9 @@ test_load_already (void)
 	handle = p11_index_find (test.index, cert, -1);
 	assert (handle != 0);
 
+	/* Have to wait to make sure changes are detected */
+	p11_sleep_ms (1100);
+
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 0);
 	assert_num_eq (p11_index_find (test.index, cert, -1), handle);
@@ -330,6 +333,9 @@ test_load_unreadable (void)
 	assert (p11_index_find (test.index, cert, -1) != 0);
 
 	test_write_file (test.directory, "test.cer", "", 0);
+
+	/* Have to wait to make sure changes are detected */
+	p11_sleep_ms (1100);
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 0);
@@ -357,6 +363,9 @@ test_load_gone (void)
 
 	test_delete_file (test.directory, "test.cer");
 
+	/* Have to wait to make sure changes are detected */
+	p11_sleep_ms (1100);
+
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 0);
 	assert (p11_index_find (test.index, cert, -1) == 0);
@@ -377,6 +386,9 @@ test_load_found (void)
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 0);
 	assert (p11_index_find (test.index, cert, -1) == 0);
+
+	/* Have to wait to make sure changes are detected */
+	p11_sleep_ms (1100);
 
 	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
 	                 sizeof (test_cacert3_ca_der));
