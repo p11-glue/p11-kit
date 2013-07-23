@@ -23,6 +23,7 @@ CHECK_PROGS = \
 	test-buffer \
 	test-url \
 	test-path \
+	test-message \
 	$(NULL)
 
 noinst_PROGRAMS = \

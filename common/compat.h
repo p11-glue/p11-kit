@@ -312,3 +312,11 @@ unsigned long     getauxval (unsigned long type);
 #endif /* !HAVE_GETAUXVAL */
 
 #endif /* __COMPAT_H__ */
+
+#ifndef HAVE_STRERROR_R
+
+int         strerror_r      (int errnum,
+                             char *buf,
+                             size_t buflen);
+
+#endif /* HAVE_STRERROR_R */

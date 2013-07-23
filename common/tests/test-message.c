@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Collabora Ltd
+ * Copyright (c) 2013 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,38 +29,54 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- *
- * CONTRIBUTORS
- *  Stef Walter <stef@memberwebs.com>
+ * Author: Stef Walter <stefw@redhat.com>
  */
 
-#ifndef P11_MESSAGE_H_
-#define P11_MESSAGE_H_
+#include "config.h"
+#include "CuTest.h"
 
-#include "compat.h"
+#include "message.h"
 
-#include <sys/types.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define P11_MESSAGE_MAX 512
+static void
+test_with_err (CuTest *tc)
+{
+	const char *last;
+	char *expected;
 
-extern char * (* p11_message_storage)      (void);
+	errno = E2BIG;
+	p11_message_err (ENOENT, "Details: %s", "value");
+	last = p11_message_last ();
 
-void          p11_message                  (const char* msg,
-                                            ...) GNUC_PRINTF (1, 2);
+	if (asprintf (&expected, "Details: value: %s", strerror (ENOENT)) < 0)
+		assert (false);
+	CuAssertStrEquals (tc, expected, last);
+	free (expected);
+}
 
-void          p11_message_err              (int errnum,
-                                            const char* msg,
-                                            ...) GNUC_PRINTF (2, 3);
+int
+main (void)
+{
+	CuString *output = CuStringNew ();
+	CuSuite* suite = CuSuiteNew ();
+	int ret;
 
-void          p11_message_store            (const char* msg,
-                                            size_t length);
+	putenv ("P11_KIT_STRICT=1");
 
-const char *  p11_message_last             (void);
+	SUITE_ADD_TEST (suite, test_with_err);
 
-void          p11_message_clear            (void);
+	CuSuiteRun (suite);
+	CuSuiteSummary (suite, output);
+	CuSuiteDetails (suite, output);
+	printf ("%s\n", output->buffer);
+	ret = suite->failCount;
+	CuSuiteDelete (suite);
+	CuStringDelete (output);
 
-void          p11_message_quiet            (void);
-
-void          p11_message_loud             (void);
-
-#endif /* P11_MESSAGE_H_ */
+	return ret;
+}

@@ -108,8 +108,7 @@ p11_save_open_file (const char *path,
 
 	fd = mkstemp (temp);
 	if (fd < 0) {
-		p11_message ("couldn't create file: %s: %s",
-		             path, strerror (errno));
+		p11_message_err (errno, "couldn't create file: %s", path);
 		free (temp);
 		return NULL;
 	}
@@ -149,8 +148,7 @@ p11_save_write (p11_save_file *file,
 		if (res <= 0) {
 			if (errno == EAGAIN && errno == EINTR)
 				continue;
-			p11_message ("couldn't write to file: %s: %s",
-			             file->temp, strerror (errno));
+			p11_message_err (errno, "couldn't write to file: %s", file->temp);
 			return false;
 		} else {
 			written += res;
@@ -185,23 +183,20 @@ p11_save_finish_file (p11_save_file *file,
 	}
 
 	if (close (file->fd) < 0) {
-		p11_message ("couldn't write file: %s: %s",
-		             file->temp, strerror (errno));
+		p11_message_err (errno, "couldn't write file: %s", file->temp);
 		ret = false;
 
 #ifdef OS_UNIX
 	/* Set the mode of the file, readable by everyone, but not writable */
 	} else if (chmod (file->temp, S_IRUSR | S_IRGRP | S_IROTH) < 0) {
-		p11_message ("couldn't set file permissions: %s: %s",
-		             file->temp, strerror (errno));
+		p11_message_err (errno, "couldn't set file permissions: %s", file->temp);
 		close (file->fd);
 		ret = false;
 
 	/* Atomically rename the tempfile over the filename */
 	} else if (file->flags & P11_SAVE_OVERWRITE) {
 		if (rename (file->temp, file->path) < 0) {
-			p11_message ("couldn't complete writing file: %s: %s",
-			             file->path, strerror (errno));
+			p11_message_err (errno, "couldn't complete writing file: %s", file->path);
 			ret = false;
 		} else {
 			unlink (file->temp);
@@ -210,8 +205,7 @@ p11_save_finish_file (p11_save_file *file,
 	/* When not overwriting, link will fail if filename exists. */
 	} else {
 		if (link (file->temp, file->path) < 0) {
-			p11_message ("couldn't complete writing of file: %s: %s",
-			             file->path, strerror (errno));
+			p11_message_err (errno, "couldn't complete writing of file: %s", file->path);
 			ret = false;
 		}
 		unlink (file->temp);
@@ -222,16 +216,14 @@ p11_save_finish_file (p11_save_file *file,
 	} else {
 		if (file->flags & P11_SAVE_OVERWRITE) {
 			if (unlink (file->path) < 0 && errno != ENOENT) {
-				p11_message ("couldn't remove original file: %s: %s",
-				             file->path, strerror (errno));
+				p11_message_err (errno, "couldn't remove original file: %s", file->path);
 				ret = false;
 			}
 		}
 
 		if (ret == true) {
 			if (rename (file->temp, file->path) < 0) {
-				p11_message ("couldn't complete writing file: %s: %s",
-				             file->path, strerror (errno));
+				p11_message_err (errno, "couldn't complete writing file: %s", file->path);
 				ret = false;
 			}
 		}
@@ -264,7 +256,7 @@ p11_save_open_directory (const char *path,
 #endif
 		/* Some random error, report it */
 		if (errno != EEXIST) {
-			p11_message ("couldn't create directory: %s: %s", path, strerror (errno));
+			p11_message_err (errno, "couldn't create directory: %s", path);
 
 		/* The directory exists and we're not overwriting */
 		} else if (!(flags & P11_SAVE_OVERWRITE)) {
@@ -280,8 +272,7 @@ p11_save_open_directory (const char *path,
 		if (stat (path, &sb) >= 0) {
 			if ((sb.st_mode & S_IRWXU) != S_IRWXU &&
 			    chmod (path, S_IRWXU | sb.st_mode) < 0) {
-				p11_message ("couldn't make directory writable: %s: %s",
-				             path, strerror (errno));
+				p11_message_err (errno, "couldn't make directory writable: %s", path);
 				return NULL;
 			}
 		}
@@ -418,8 +409,7 @@ p11_save_symlink_in (p11_save_dir *dir,
 	unlink (path);
 
 	if (symlink (destination, path) < 0) {
-		p11_message ("couldn't create symlink: %s: %s",
-		             path, strerror (errno));
+		p11_message_err (errno, "couldn't create symlink: %s", path);
 		ret = false;
 	} else {
 		if (!p11_dict_set (dir->cache, name, name))
@@ -451,8 +441,7 @@ cleanup_directory (const char *directory,
 	/* First we load all the modules */
 	dir = opendir (directory);
 	if (!dir) {
-		p11_message ("couldn't list directory: %s: %s",
-		             directory, strerror (errno));
+		p11_message_err (errno, "couldn't list directory: %s", directory);
 		return false;
 	}
 
@@ -493,8 +482,7 @@ cleanup_directory (const char *directory,
 	p11_dict_iterate (remove, &iter);
 	while (p11_dict_next (&iter, (void **)&path, NULL)) {
 		if (unlink (path) < 0 && errno != ENOENT) {
-			p11_message ("couldn't remove file: %s: %s",
-			             path, strerror (errno));
+			p11_message_err (errno, "couldn't remove file: %s", path);
 			ret = false;
 			break;
 		}
@@ -522,8 +510,7 @@ p11_save_finish_directory (p11_save_dir *dir,
 		/* Try to set the mode of the directory to readable */
 		if (ret && chmod (dir->path, S_IRUSR | S_IXUSR | S_IRGRP |
 		                             S_IXGRP | S_IROTH | S_IXOTH) < 0) {
-			p11_message ("couldn't set directory permissions: %s: %s",
-			             dir->path, strerror (errno));
+			p11_message_err (errno, "couldn't set directory permissions: %s", dir->path);
 			ret = false;
 		}
 #endif /* OS_UNIX */

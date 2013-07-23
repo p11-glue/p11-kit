@@ -105,8 +105,7 @@ loader_load_directory (p11_token *token,
 	/* First we load all the modules */
 	dir = opendir (directory);
 	if (!dir) {
-		p11_message ("couldn't list directory: %s: %s",
-		             directory, strerror (errno));
+		p11_message_err (errno, "couldn't list directory: %s", directory);
 		return 0;
 	}
 
@@ -116,7 +115,7 @@ loader_load_directory (p11_token *token,
 		return_val_if_fail (path != NULL, -1);
 
 		if (stat (path, &sb) < 0) {
-			p11_message ("couldn't stat path: %s", path);
+			p11_message_err (errno, "couldn't stat path: %s", path);
 
 		} else if (!S_ISDIR (sb.st_mode)) {
 			ret = loader_load_file (token, path, &sb, flags);
@@ -164,8 +163,7 @@ loader_load_path (p11_token *token,
 			p11_message ("trust certificate path does not exist: %s",
 			             path);
 		} else {
-			p11_message ("cannot access trust certificate path: %s: %s",
-			             path, strerror (errno));
+			p11_message_err (errno, "cannot access trust certificate path: %s", path);
 		}
 
 		return 0;

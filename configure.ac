@@ -77,7 +77,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([getauxval issetugid getresuid])
-	AC_CHECK_FUNCS([strnstr memdup strndup])
+	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
 

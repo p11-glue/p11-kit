@@ -257,8 +257,7 @@ test_temp_directory (const char *templ)
 		return NULL;
 
 	if (!mkdtemp (directory)) {
-		p11_message ("couldn't create temp directory: %s: %s",
-		             directory, strerror (errno));
+		p11_message_err (errno, "couldn't create temp directory: %s", directory);
 		free (directory);
 		assert (0 && "not reached");
 	}

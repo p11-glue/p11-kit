@@ -797,3 +797,19 @@ getauxval (unsigned long type)
 }
 
 #endif /* HAVE_GETAUXVAL */
+
+#ifndef HAVE_STRERROR_R
+
+int
+strerror_r (int errnum,
+            char *buf,
+            size_t buflen)
+{
+#ifdef OS_WIN32
+	return strerror_s (buf, buflen, errnum);
+#else
+	#error no strerror_r implementation
+#endif
+}
+
+#endif /* HAVE_STRERROR_R */

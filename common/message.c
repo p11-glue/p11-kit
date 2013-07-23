@@ -92,6 +92,32 @@ p11_message_store (const char* msg,
 }
 
 void
+p11_message_err (int errnum,
+                 const char* msg,
+                 ...)
+{
+	char buffer[P11_MESSAGE_MAX];
+	char strerr[P11_MESSAGE_MAX];
+	va_list va;
+	size_t length;
+
+	va_start (va, msg);
+	length = vsnprintf (buffer, P11_MESSAGE_MAX - 1, msg, va);
+	va_end (va);
+
+	/* Was it truncated? */
+	if (length > P11_MESSAGE_MAX - 1)
+		length = P11_MESSAGE_MAX - 1;
+	buffer[length] = 0;
+
+	strncpy (strerr, "Unknown error", sizeof (strerr));
+	strerror_r (errnum, strerr, sizeof (strerr));
+	strerr[P11_MESSAGE_MAX - 1] = 0;
+
+	p11_message ("%s: %s", buffer, strerr);
+}
+
+void
 p11_message (const char* msg,
              ...)
 {

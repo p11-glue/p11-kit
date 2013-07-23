@@ -144,8 +144,7 @@ expand_homedir (const char *remainder)
 		}
 		if (ret < 0) {
 			error = errno;
-			p11_message ("couldn't lookup home directory for user %d: %s",
-				     getuid (), strerror (errno));
+			p11_message_err (errno, "couldn't lookup home directory for user %d", getuid ());
 			errno = error;
 			return NULL;
 		}
