@@ -159,12 +159,12 @@ anchor_store (char **files,
 	};
 
 	CK_ATTRIBUTE *attrs;
-	CK_FUNCTION_LIST *module;
+	CK_FUNCTION_LIST *module = NULL;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
 	p11_parser *parser;
 	p11_array *parsed;
-	CK_RV rv;
+	CK_RV rv = CKR_OK;
 	int ret;
 	int i, j;
 
