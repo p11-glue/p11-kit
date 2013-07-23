@@ -416,7 +416,7 @@ load_configs_from_directory (const char *directory,
 		{
 			if (stat (path, &st) < 0) {
 				error = errno;
-				p11_message ("couldn't stat path: %s", path);
+				p11_message_err (error, "couldn't stat path: %s", path);
 				free (path);
 				break;
 			}

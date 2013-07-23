@@ -381,7 +381,7 @@ p11_test_copy_setgid (const char *input)
 		}
 	}
 	if (i == ret) {
-		fprintf (stderr, "# no suitable group, skipping test");
+		fprintf (stderr, "# no suitable group, skipping test\n");
 		return NULL;
 	}
 

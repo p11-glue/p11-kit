@@ -35,61 +35,59 @@
 #include "config.h"
 #include "test.h"
 
-#include <errno.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "compat.h"
 
 static void
-test_strndup (void)
+test_success (void)
 {
-	char unterminated[] = { 't', 'e', 's', 't', 'e', 'r', 'o', 'n', 'i', 'o' };
-	char *res;
-
-	res = strndup (unterminated, 6);
-	assert_str_eq (res, "tester");
-	free (res);
-
-	res = strndup ("test", 6);
-	assert_str_eq (res, "test");
-	free (res);
+	/* Yup, nothing */
 }
 
-#ifdef OS_UNIX
 
 static void
-test_getauxval (void)
+test_failure (void)
 {
-	/* 23 is AT_SECURE */
-	const char *args[] = { BUILDDIR "/frob-getauxval", "23", NULL };
-	char *path;
-	int ret;
-
-	ret = p11_test_run_child (args, true);
-	assert_num_eq (ret, 0);
-
-	path = p11_test_copy_setgid (args[0]);
-	if (path == NULL)
-		return;
-
-	args[0] = path;
-	ret = p11_test_run_child (args, true);
-	assert_num_cmp (ret, !=, 0);
-
-	if (unlink (path) < 0)
-		assert_fail ("unlink failed", strerror (errno));
-	free (path);
+	if (getenv ("TEST_FAIL")) {
+		p11_test_fail (__FILE__, __LINE__, __FUNCTION__,
+		               "Unconditional test failure due to TEST_FAIL environment variable");
+	}
 }
 
-#endif /* OS_UNIX */
+static void
+test_memory (void)
+{
+	char *mem;
+
+	if (getenv ("TEST_FAIL")) {
+		mem = malloc (1);
+		free (mem);
+		*mem = 1;
+	}
+}
+
+
+static void
+test_leak (void)
+{
+	char *mem;
+
+	if (getenv ("TEST_FAIL")) {
+		mem = malloc (1);
+		*mem = 1;
+	}
+}
 
 int
 main (int argc,
       char *argv[])
 {
-	p11_test (test_strndup, "/compat/strndup");
-	p11_test (test_getauxval, "/compat/getauxval");
+	p11_test (test_success, "/test/success");
+
+	if (getenv ("TEST_FAIL")) {
+		p11_test (test_failure, "/test/failure");
+		p11_test (test_memory, "/test/memory");
+		p11_test (test_leak, "/test/leak");
+	}
+
 	return p11_test_run (argc, argv);
 }

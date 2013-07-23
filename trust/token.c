@@ -225,9 +225,8 @@ loader_load_if_file (p11_token *token,
 	struct stat sb;
 
 	if (stat (path, &sb) < 0) {
-		if (errno == ENOENT) {
+		if (errno != ENOENT)
 			p11_message_err (errno, "couldn't stat path: %s", path);
-		}
 
 	} else if (!S_ISDIR (sb.st_mode)) {
 		return loader_load_file (token, path, &sb);

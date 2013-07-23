@@ -240,7 +240,7 @@ type_date (p11_builder *builder,
 
 	date = attr->pValue;
 	memset (&tm, 0, sizeof (tm));
-	tm.tm_year = atoin ((char *)date->year, 4);
+	tm.tm_year = atoin ((char *)date->year, 4) - 1900;
 	tm.tm_mon = atoin ((char *)date->month, 2);
 	tm.tm_mday = atoin ((char *)date->day, 2);
 

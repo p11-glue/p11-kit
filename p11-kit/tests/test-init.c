@@ -73,6 +73,7 @@ mock_C_Initialize__with_fork (CK_VOID_PTR init_args)
 	/* Fork during the initialization */
 	child = fork ();
 	if (child == 0) {
+		close (1);
 		nanosleep (&ts, NULL);
 		exit (66);
 	}

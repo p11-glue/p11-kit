@@ -760,7 +760,9 @@ test_valid_dates (void)
 		{ CKA_INVALID },
 	};
 
-	memcpy (&date, "20001010", sizeof (date));
+	memcpy (date.year, "2000", sizeof (date.year));
+	memcpy (date.month, "10", sizeof (date.month));
+	memcpy (date.day, "10", sizeof (date.day));
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
@@ -791,11 +793,15 @@ test_invalid_dates (void)
 
 	p11_message_quiet ();
 
-	memcpy (&date, "AAAABBCC", sizeof (date));
+	memcpy (date.year, "AAAA", sizeof (date.year));
+	memcpy (date.month, "BB", sizeof (date.month));
+	memcpy (date.day, "CC", sizeof (date.day));
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
-	memcpy (&date, "20001580", sizeof (date));
+	memcpy (date.year, "2000", sizeof (date.year));
+	memcpy (date.month, "15", sizeof (date.month));
+	memcpy (date.day, "80", sizeof (date.day));
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 

@@ -5,7 +5,7 @@ TEST_CFLAGS = \
 	-DBUILDDIR=\"$(abs_builddir)\" \
 	-DP11_KIT_FUTURE_UNSTABLE_API
 
-MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet --trace-children=yes
+MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet
 
 LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes
 
