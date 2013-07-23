@@ -766,6 +766,7 @@ test_valid_dates (void)
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
+	p11_attrs_free (extra);
 	p11_attrs_free (attrs);
 	attrs = NULL;
 
@@ -773,6 +774,7 @@ test_valid_dates (void)
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
+	p11_attrs_free (extra);
 	p11_attrs_free (attrs);
 }
 
@@ -831,6 +833,7 @@ test_valid_name (void)
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
+	p11_attrs_free (extra);
 	p11_attrs_free (attrs);
 	attrs = NULL;
 
@@ -839,6 +842,7 @@ test_valid_name (void)
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
 
+	p11_attrs_free (extra);
 	p11_attrs_free (attrs);
 }
 

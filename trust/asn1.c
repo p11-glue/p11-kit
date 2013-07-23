@@ -327,8 +327,10 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 {
 	asn1_item *item;
 
-	if (cache == NULL)
+	if (cache == NULL) {
+		asn1_delete_structure (&node);
 		return;
+	}
 
 	return_if_fail (struct_name != NULL);
 	return_if_fail (der != NULL);

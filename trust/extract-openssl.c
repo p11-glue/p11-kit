@@ -672,6 +672,7 @@ p11_extract_openssl_directory (P11KitIter *iter,
 
 			free (filename);
 			free (path);
+			free (name);
 		}
 
 		if (!ret)

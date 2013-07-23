@@ -467,8 +467,10 @@ take_config_and_load_module_inlock (char **name,
 		return CKR_OK;
 
 	/* Take ownership of thes evariables */
+	p11_dict_free (mod->config);
 	mod->config = *config;
 	*config = NULL;
+	free (mod->name);
 	mod->name = *name;
 	*name = NULL;
 	mod->critical = critical;

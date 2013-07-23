@@ -676,6 +676,7 @@ p11_parser_free (p11_parser *parser)
 	return_if_fail (parser != NULL);
 	p11_persist_free (parser->persist);
 	p11_array_free (parser->parsed);
+	p11_array_free (parser->formats);
 	if (parser->asn1_owned)
 		p11_dict_free (parser->asn1_defs);
 	free (parser);

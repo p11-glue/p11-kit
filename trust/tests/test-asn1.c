@@ -142,10 +142,11 @@ test_asn1_free (void)
 	asn = p11_asn1_decode (defs, "PKIX1.ExtKeyUsageSyntax",
 	                       test_eku_server_and_client,
 	                       sizeof (test_eku_server_and_client), NULL);
-	assert_ptr_not_null (defs);
+	assert_ptr_not_null (asn);
 
 	p11_asn1_free (asn);
 	p11_asn1_free (NULL);
+	p11_dict_free (defs);
 }
 
 int

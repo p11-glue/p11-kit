@@ -37,6 +37,12 @@ LDADD = \
 
 CHECK_PROGS = \
 	test-digest \
+	test-asn1 \
+	test-base64 \
+	test-pem \
+	test-oid \
+	test-utf8 \
+	test-x509 \
 	test-persist \
 	test-index \
 	test-parser \
@@ -48,12 +54,6 @@ CHECK_PROGS = \
 	test-cer \
 	test-bundle \
 	test-openssl \
-	test-asn1 \
-	test-base64 \
-	test-pem \
-	test-oid \
-	test-utf8 \
-	test-x509 \
 	$(NULL)
 
 noinst_PROGRAMS = \

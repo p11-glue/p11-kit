@@ -396,6 +396,7 @@ p11_token_reload (p11_token *token,
 	CK_ATTRIBUTE *attr;
 	struct stat sb;
 	char *origin;
+	bool ret;
 
 	attr = p11_attrs_find (attrs, CKA_X_ORIGIN);
 	if (attr == NULL)
@@ -410,10 +411,14 @@ p11_token_reload (p11_token *token,
 		} else {
 			p11_message_err (errno, "cannot access trust file: %s", origin);
 		}
-		return false;
+		ret = false;
+
+	} else {
+		ret = loader_load_file (token, origin, &sb) > 0;
 	}
 
-	return loader_load_file (token, origin, &sb) > 0;
+	free (origin);
+	return ret;
 }
 
 static bool
@@ -676,6 +681,7 @@ on_index_store (void *data,
 
 	p11_buffer_uninit (&buffer);
 	p11_persist_free (persist);
+	free (other);
 
 	if (rv == CKR_OK) {
 		if (!p11_save_finish_file (file, &path, true))

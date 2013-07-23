@@ -1018,15 +1018,15 @@ build_for_schema (p11_builder *builder,
 		}
 	}
 
-	if (populate && schema->populate)
-		*extra = schema->populate (builder, index, merge);
-
 	/* Validate the result, before committing to the change. */
 	if (!loading && schema->validate) {
 		rv = (schema->validate) (builder, attrs, merge);
 		if (rv != CKR_OK)
 			return rv;
 	}
+
+	if (populate && schema->populate)
+		*extra = schema->populate (builder, index, merge);
 
 	return CKR_OK;
 }

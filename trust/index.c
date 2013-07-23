@@ -352,6 +352,7 @@ index_build (p11_index *index,
 
 		count = nmerge;
 		memcpy (built, merge, sizeof (CK_ATTRIBUTE) * nmerge);
+		p11_array_push (stack, merge);
 		merge_attrs (built, &count, *attrs, nattrs, stack);
 		merge_attrs (built, &count, extra, nextra, stack);
 
@@ -367,7 +368,6 @@ index_build (p11_index *index,
 			free (stack->elem[i]);
 		*attrs = built;
 	} else {
-		p11_attrs_free (merge);
 		p11_attrs_free (extra);
 		free (built);
 	}
