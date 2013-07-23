@@ -37,6 +37,12 @@
 
 #include "config.h"
 
+/*
+ * Oh god. glibc is nasty. Changes behavior and definitions of POSIX
+ * functions to completely different signatures depending on defines
+ */
+#define _POSIX_C_SOURCE 200112L
+
 #include "compat.h"
 #define P11_DEBUG_FLAG P11_DEBUG_LIB
 #include "debug.h"

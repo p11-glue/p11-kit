@@ -36,6 +36,7 @@
 
 #define P11_TEST_SOURCE 1
 
+#include "compat.h"
 #include "test.h"
 #include "debug.h"
 #include "path.h"

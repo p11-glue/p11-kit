@@ -39,6 +39,10 @@
 
 #include <sys/types.h>
 
+#ifdef _GNU_SOURCE
+#error Make the crap stop. _GNU_SOURCE is completely unportable and breaks all sorts of behavior
+#endif
+
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
 #else
@@ -266,7 +270,7 @@ char *     strconcat        (const char *first,
 
 #endif /* HAVE_STRCONCAT */
 
-#ifndef HAVE_ASPRINTF
+#if defined HAVE_DECL_ASPRINTF && !HAVE_DECL_ASPRINTF
 
 int        asprintf         (char **strp,
                              const char *fmt,
@@ -274,14 +278,14 @@ int        asprintf         (char **strp,
 
 #endif /* HAVE_ASPRINTF */
 
-#ifndef HAVE_VASPRINTF
+#if defined HAVE_DECL_VASPRINTF && !HAVE_DECL_VASPRINTF
 #include <stdarg.h>
 
 int        vasprintf        (char **strp,
                              const char *fmt,
                              va_list ap);
 
-#endif /* HAVE_VASPRINTF */
+#endif /* HAVE_DECL_VASPRINTF */
 
 #ifndef HAVE_GMTIME_R
 #include <time.h>

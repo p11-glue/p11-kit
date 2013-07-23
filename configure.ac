@@ -6,8 +6,6 @@ AC_INIT([p11-kit],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
 
-AC_USE_SYSTEM_EXTENSIONS
-
 # ------------------------------------------------------------------------------
 # p11-kit libtool versioning
 # CURRENT : REVISION : AGE
@@ -84,6 +82,8 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
+
+	AC_CHECK_DECLS([asprintf, vasprintf], [], [], [[#include <stdio.h>]])
 
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],
