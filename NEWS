@@ -1,3 +1,9 @@
+0.19.3 (unstable)
+ * Fix up problems with automake testing
+ * Fix a bunch of memory leaks in newly refactored code
+ * Don't use _GNU_SOURCE and the unportability it brings
+ * Testing fixes
+
 0.19.2 (unstable)
  * Add basic 'trust anchor' command to store a new anchor
  * Support for writing out trust token objects
