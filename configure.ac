@@ -6,8 +6,6 @@ AC_INIT([p11-kit],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
 
-AC_USE_SYSTEM_EXTENSIONS
-
 # ------------------------------------------------------------------------------
 # p11-kit libtool versioning
 # CURRENT : REVISION : AGE
@@ -83,6 +81,8 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
 
+	AC_CHECK_DECLS([asprintf, vasprintf], [], [], [[#include <stdio.h>]])
+
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],
 		[AC_DEFINE([HAVE_GMTIME_R], 1, [Whether gmtime_r() is available])],
@@ -91,7 +91,8 @@ if test "$os_unix" = "yes"; then
 	# Check if these are declared and/or available to link against
 	AC_CHECK_DECLS([program_invocation_short_name])
 	AC_MSG_CHECKING([whether program_invocation_short_name is available])
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <argp.h>]],
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#define _GNU_SOURCE
+	                                  #include <errno.h>]],
 	                                [[program_invocation_short_name = "test";]])],
 	               [AC_DEFINE([HAVE_PROGRAM_INVOCATION_SHORT_NAME], [1],
 	                          [Whether program_invocation_short_name available])
