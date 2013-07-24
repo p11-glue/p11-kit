@@ -532,7 +532,10 @@ main (void)
 	SUITE_ADD_TEST (suite, test_load_modules_user_none);
 	SUITE_ADD_TEST (suite, test_parse_boolean);
 #ifdef OS_UNIX
-	SUITE_ADD_TEST (suite, test_setuid);
+	/* Don't run this test when under fakeroot */
+	if (!getenv ("FAKED_MODE")) {
+		SUITE_ADD_TEST (suite, test_setuid);
+	}
 #endif
 
 	CuSuiteRun (suite);

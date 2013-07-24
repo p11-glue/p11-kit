@@ -176,7 +176,10 @@ main (void)
 
 	SUITE_ADD_TEST (suite, test_strndup);
 #ifdef OS_UNIX
-	SUITE_ADD_TEST (suite, test_getauxval);
+	/* Don't run this test when under fakeroot */
+	if (!getenv ("FAKED_MODE")) {
+		SUITE_ADD_TEST (suite, test_getauxval);
+	}
 #endif
 
 	CuSuiteRun (suite);
