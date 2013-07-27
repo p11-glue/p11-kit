@@ -100,9 +100,9 @@ if test "$os_unix" = "yes"; then
 	                AC_MSG_RESULT([yes])],
 	               [AC_MSG_RESULT([no])])
 	AC_CHECK_DECLS([__progname])
-	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *__progname; void main() { }])],
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname;]], [[__progname=(char*)0;]])],
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
-	AC_LINK_IFELSE([AC_LANG_SOURCE([extern int __libc_enable_secure; void main() { }])],
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int __libc_enable_secure;]], [[__libc_enable_secure = 0;]])],
 		[AC_DEFINE(HAVE___LIBC_ENABLE_SECURE, [1], [Whether __libc_enable_secure available])])
 fi
 
