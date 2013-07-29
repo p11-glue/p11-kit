@@ -99,7 +99,7 @@ if test "$os_unix" = "yes"; then
 	                AC_MSG_RESULT([yes])],
 	               [AC_MSG_RESULT([no])])
 	AC_CHECK_DECLS([__progname])
-	AC_LINK_IFELSE([AC_LANG_SOURCE([extern char *__progname; void main() { }])],
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname;]], [[__progname=(char*)0;]])],
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
 fi
 
