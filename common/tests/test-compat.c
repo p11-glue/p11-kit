@@ -90,6 +90,8 @@ main (int argc,
       char *argv[])
 {
 	p11_test (test_strndup, "/compat/strndup");
+#ifdef OS_UNIX
 	p11_test (test_getauxval, "/compat/getauxval");
+#endif
 	return p11_test_run (argc, argv);
 }
