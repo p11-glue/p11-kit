@@ -61,6 +61,7 @@ noinst_PROGRAMS = \
 	frob-token \
 	frob-nss-trust \
 	frob-cert \
+	frob-bc \
 	frob-ku \
 	frob-eku \
 	frob-ext \
