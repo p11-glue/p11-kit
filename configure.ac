@@ -111,6 +111,11 @@ AC_CHECK_LIB(intl, dgettext)
 # ------------------------------------------------------------------------------
 # PKCS#11 Directories
 
+AC_ARG_WITH([module-config],
+            [AS_HELP_STRING([--with-module-config], [Module configuration files shipped by packages])],
+            [module_config=$withval],
+            [module_config='${pkgdatadir}/modules'])
+
 AC_ARG_WITH([system-config],
             [AS_HELP_STRING([--with-system-config], [Change PKCS#11 system config directory])],
             [system_config_dir=$withval],
@@ -130,7 +135,7 @@ AC_ARG_WITH([module-path],
 p11_system_config=$system_config_dir
 p11_system_config_file=$p11_system_config/pkcs11.conf
 p11_system_config_modules=$p11_system_config/modules
-p11_package_config_modules='${pkgdatadir}/modules'
+p11_package_config_modules=$module_config
 p11_user_config=$user_config_dir
 p11_user_config_file="$p11_user_config/pkcs11.conf"
 p11_user_config_modules="$p11_user_config/modules"
