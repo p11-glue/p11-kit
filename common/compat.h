@@ -38,6 +38,7 @@
 #include "config.h"
 
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef _GNU_SOURCE
 #error Make the crap stop. _GNU_SOURCE is completely unportable and breaks all sorts of behavior
@@ -158,6 +159,7 @@ void      p11_dl_close       (void * dl);
 typedef struct _p11_mmap p11_mmap;
 
 p11_mmap *  p11_mmap_open   (const char *path,
+                             struct stat *sb,
                              void **data,
                              size_t *size);
 
@@ -220,6 +222,7 @@ char * p11_dl_error (void);
 typedef struct _p11_mmap p11_mmap;
 
 p11_mmap *  p11_mmap_open   (const char *path,
+                             struct stat *sb,
                              void **data,
                              size_t *size);
 

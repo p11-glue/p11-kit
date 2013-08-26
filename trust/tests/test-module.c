@@ -1108,7 +1108,7 @@ test_create_and_write (void)
 	/* The expected file name */
 	path = p11_path_build (test.directory, "yay.p11-kit", NULL);
 	p11_parser_formats (test.parser, p11_parser_format_persist, NULL);
-	ret = p11_parse_file (test.parser, path, 0);
+	ret = p11_parse_file (test.parser, path, NULL, 0);
 	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	free (path);
 
@@ -1164,7 +1164,7 @@ test_modify_and_write (void)
 
 	/* The expected file name */
 	path = p11_path_build (test.directory, "yay.p11-kit", NULL);
-	ret = p11_parse_file (test.parser, path, 0);
+	ret = p11_parse_file (test.parser, path, NULL, 0);
 	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	free (path);
 

@@ -350,7 +350,7 @@ copy_file (const char *input,
 	ssize_t written;
 	size_t size;
 
-	mmap = p11_mmap_open (input, (void **)&data, &size);
+	mmap = p11_mmap_open (input, NULL, (void **)&data, &size);
 	assert (mmap != NULL);
 
 	while (size > 0) {

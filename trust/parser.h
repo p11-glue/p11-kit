@@ -66,6 +66,7 @@ int           p11_parse_memory     (p11_parser *parser,
 
 int           p11_parse_file       (p11_parser *parser,
                                     const char *filename,
+                                    struct stat *sb,
                                     int flags);
 
 p11_array *   p11_parser_parsed    (p11_parser *parser);

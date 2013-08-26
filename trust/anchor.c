@@ -184,7 +184,7 @@ anchor_store (char **files,
 	                    NULL);
 
 	for (i = 0; i < nfiles; i++) {
-		ret = p11_parse_file (parser, files[i], P11_PARSE_FLAG_ANCHOR);
+		ret = p11_parse_file (parser, files[i], NULL, P11_PARSE_FLAG_ANCHOR);
 		switch (ret) {
 		case P11_PARSE_SUCCESS:
 			break;

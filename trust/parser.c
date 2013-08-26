@@ -749,6 +749,7 @@ p11_parse_memory (p11_parser *parser,
 int
 p11_parse_file (p11_parser *parser,
                 const char *filename,
+                struct stat *sb,
                 int flags)
 {
 	p11_mmap *map;
@@ -759,7 +760,7 @@ p11_parse_file (p11_parser *parser,
 	return_val_if_fail (parser != NULL, P11_PARSE_FAILURE);
 	return_val_if_fail (filename != NULL, P11_PARSE_FAILURE);
 
-	map = p11_mmap_open (filename, &data, &size);
+	map = p11_mmap_open (filename, sb, &data, &size);
 	if (map == NULL) {
 		p11_message_err (errno, "couldn't open and map file: %s", filename);
 		return P11_PARSE_FAILURE;

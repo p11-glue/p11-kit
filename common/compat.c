@@ -182,10 +182,11 @@ struct _p11_mmap {
 
 p11_mmap *
 p11_mmap_open (const char *path,
+               struct stat *sb,
                void **data,
                size_t *size)
 {
-	struct stat sb;
+	struct stat stb;
 	p11_mmap *map;
 
 	map = calloc (1, sizeof (p11_mmap));
@@ -198,13 +199,24 @@ p11_mmap_open (const char *path,
 		return NULL;
 	}
 
-	if (fstat (map->fd, &sb) < 0) {
+	if (sb == NULL) {
+		sb = &stb;
+		if (fstat (map->fd, &stb) < 0) {
+			close (map->fd);
+			free (map);
+			return NULL;
+		}
+	}
+
+	/* Workaround for broken ZFS on Linux */
+	if (S_ISDIR (sb->st_mode)) {
+		errno = EISDIR;
 		close (map->fd);
 		free (map);
 		return NULL;
 	}
 
-	map->size = sb.st_size;
+	map->size = sb->st_size;
 	map->data = mmap (NULL, map->size, PROT_READ, MAP_PRIVATE, map->fd, 0);
 	if (map->data == NULL) {
 		close (map->fd);
@@ -289,6 +301,7 @@ struct _p11_mmap {
 
 p11_mmap *
 p11_mmap_open (const char *path,
+               struct stat *sb,
                void **data,
                size_t *size)
 {
@@ -315,14 +328,18 @@ p11_mmap_open (const char *path,
 		return NULL;
 	}
 
-	if (!GetFileSizeEx (map->file, &large)) {
-		errn = GetLastError ();
-		CloseHandle (map->file);
-		free (map);
-		SetLastError (errn);
-		if (errn == ERROR_ACCESS_DENIED)
-			errno = EPERM;
-		return NULL;
+	if (sb == NULL) {
+		if (!GetFileSizeEx (map->file, &large)) {
+			errn = GetLastError ();
+			CloseHandle (map->file);
+			free (map);
+			SetLastError (errn);
+			if (errn == ERROR_ACCESS_DENIED)
+				errno = EPERM;
+			return NULL;
+		}
+	} else {
+		large.QuadPart = sb->st_size;
 	}
 
 	mapping = CreateFileMapping (map->file, NULL, PAGE_READONLY, 0, 0, NULL);

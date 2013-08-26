@@ -238,9 +238,11 @@ test_not_writable (void)
 {
 	p11_token *token;
 
-	token = p11_token_new (333, "/", "Label");
-	assert (!p11_token_is_writable (token));
-	p11_token_free (token);
+	if (getuid () != 0) {
+		token = p11_token_new (333, "/", "Label");
+		assert (!p11_token_is_writable (token));
+		p11_token_free (token);
+	}
 
 	token = p11_token_new (333, "", "Label");
 	assert (!p11_token_is_writable (token));
@@ -533,7 +535,7 @@ test_write_new (void)
 
 	/* The expected file name */
 	path = p11_path_build (test.directory, "Yay_.p11-kit", NULL);
-	ret = p11_parse_file (test.parser, path, 0);
+	ret = p11_parse_file (test.parser, path, NULL, 0);
 	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	free (path);
 
@@ -573,7 +575,7 @@ test_write_no_label (void)
 
 	/* The expected file name */
 	path = p11_path_build (test.directory, "data.p11-kit", NULL);
-	ret = p11_parse_file (test.parser, path, 0);
+	ret = p11_parse_file (test.parser, path, NULL, 0);
 	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	free (path);
 

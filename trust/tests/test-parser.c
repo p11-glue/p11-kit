@@ -118,7 +118,7 @@ test_parse_der_certificate (void)
 	};
 
 	p11_parser_formats (test.parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -146,7 +146,7 @@ test_parse_pem_certificate (void)
 	};
 
 	p11_parser_formats (test.parser, p11_parser_format_pem, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.pem",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.pem", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -173,7 +173,7 @@ test_parse_p11_kit_persist (void)
 	};
 
 	p11_parser_formats (test.parser, p11_parser_format_persist, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/input/verisign-v1.p11-kit",
+	ret = p11_parse_file (test.parser, SRCDIR "/input/verisign-v1.p11-kit", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -226,7 +226,7 @@ test_parse_openssl_trusted (void)
 	int i;
 
 	p11_parser_formats (test.parser, p11_parser_format_pem, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3-trusted.pem",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3-trusted.pem", NULL,
 	                      P11_PARSE_FLAG_ANCHOR);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -310,7 +310,7 @@ test_parse_openssl_distrusted (void)
 	 * so we parse this as an anchor, but expect it to be blacklisted
 	 */
 	p11_parser_formats (test.parser, p11_parser_format_pem, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/distrusted.pem", NULL,
 	                      P11_PARSE_FLAG_ANCHOR);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -350,7 +350,7 @@ test_parse_anchor (void)
 	int ret;
 
 	p11_parser_formats (test.parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/cacert3.der", NULL,
 	                      P11_PARSE_FLAG_ANCHOR);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -380,7 +380,7 @@ test_parse_thawte (void)
 	};
 
 	p11_parser_formats (test.parser, p11_parser_format_pem, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/thawte.pem",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/thawte.pem", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -401,7 +401,7 @@ test_parse_invalid_file (void)
 	p11_message_quiet ();
 
 	p11_parser_formats (test.parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (test.parser, "/nonexistant",
+	ret = p11_parse_file (test.parser, "/nonexistant", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_FAILURE, ret);
 
@@ -416,7 +416,7 @@ test_parse_unrecognized (void)
 	p11_message_quiet ();
 
 	p11_parser_formats (test.parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (test.parser, SRCDIR "/files/unrecognized-file.txt",
+	ret = p11_parse_file (test.parser, SRCDIR "/files/unrecognized-file.txt", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_UNRECOGNIZED, ret);
 
@@ -433,7 +433,7 @@ test_parse_no_asn1_cache (void)
 	assert_ptr_not_null (parser);
 
 	p11_parser_formats (parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (parser, SRCDIR "/files/cacert3.der", P11_PARSE_FLAG_NONE);
+	ret = p11_parse_file (parser, SRCDIR "/files/cacert3.der", NULL, P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
 	/* Should have gotten certificate  */

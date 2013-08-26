@@ -54,7 +54,8 @@ bool          _p11_conf_merge_defaults       (p11_dict *config,
                                               p11_dict *defaults);
 
 /* Returns a hash of char *key -> char *value */
-p11_dict * _p11_conf_parse_file           (const char *filename,
+p11_dict *    _p11_conf_parse_file           (const char *filename,
+                                              struct stat *sb,
                                               int flags);
 
 /* Returns a hash of char *key -> char *value */

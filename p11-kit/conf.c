@@ -92,7 +92,9 @@ _p11_conf_merge_defaults (p11_dict *map,
 }
 
 p11_dict *
-_p11_conf_parse_file (const char* filename, int flags)
+_p11_conf_parse_file (const char* filename,
+                      struct stat *sb,
+                      int flags)
 {
 	p11_dict *map = NULL;
 	void *data;
@@ -106,7 +108,7 @@ _p11_conf_parse_file (const char* filename, int flags)
 
 	p11_debug ("reading config file: %s", filename);
 
-	mmap = p11_mmap_open (filename, &data, &length);
+	mmap = p11_mmap_open (filename, sb, &data, &length);
 	if (mmap == NULL) {
 		error = errno;
 		if ((flags & CONF_IGNORE_MISSING) &&
@@ -215,7 +217,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 	 */
 
 	/* Load the main configuration */
-	config = _p11_conf_parse_file (system_conf, CONF_IGNORE_MISSING);
+	config = _p11_conf_parse_file (system_conf, NULL, CONF_IGNORE_MISSING);
 	if (!config)
 		goto finished;
 
@@ -240,7 +242,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 
 		/* Load up the user configuration, ignore selinux denying us access */
 		flags = CONF_IGNORE_MISSING | CONF_IGNORE_ACCESS_DENIED;
-		uconfig = _p11_conf_parse_file (path, flags);
+		uconfig = _p11_conf_parse_file (path, NULL, flags);
 		if (!uconfig) {
 			error = errno;
 			goto finished;
@@ -325,6 +327,7 @@ calc_name_from_filename (const char *fname)
 
 static bool
 load_config_from_file (const char *configfile,
+                       struct stat *sb,
                        const char *name,
                        p11_dict *configs,
                        int flags)
@@ -343,7 +346,7 @@ load_config_from_file (const char *configfile,
 		return_val_if_fail (key != NULL, false);
 	}
 
-	config = _p11_conf_parse_file (configfile, flags);
+	config = _p11_conf_parse_file (configfile, sb, flags);
 	if (!config) {
 		free (key);
 		return false;
@@ -408,22 +411,16 @@ load_configs_from_directory (const char *directory,
 		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, false);
 
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-		if(dp->d_type != DT_UNKNOWN) {
-			is_dir = (dp->d_type == DT_DIR);
-		} else
-#endif
-		{
-			if (stat (path, &st) < 0) {
-				error = errno;
-				p11_message_err (error, "couldn't stat path: %s", path);
-				free (path);
-				break;
-			}
-			is_dir = S_ISDIR (st.st_mode);
+		if (stat (path, &st) < 0) {
+			error = errno;
+			p11_message_err (error, "couldn't stat path: %s", path);
+			free (path);
+			break;
 		}
 
-		if (!is_dir && !load_config_from_file (path, dp->d_name, configs, flags)) {
+		is_dir = S_ISDIR (st.st_mode);
+
+		if (!is_dir && !load_config_from_file (path, &st, dp->d_name, configs, flags)) {
 			error = errno;
 			free (path);
 			break;

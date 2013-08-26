@@ -106,7 +106,7 @@ main (int argc,
 	ret = asn1_create_element (definitions, argv[1], &cert);
 	err_if_fail (ret, "Certificate");
 
-	map = p11_mmap_open (argv[3], &data, &size);
+	map = p11_mmap_open (argv[3], NULL, &data, &size);
 	if (map == NULL) {
 		fprintf (stderr, "couldn't open file: %s\n", argv[3]);
 		return 1;

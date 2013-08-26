@@ -512,11 +512,11 @@ cleanup_directory (const char *directory,
                    p11_dict *cache)
 {
 	struct dirent *dp;
+	struct stat st;
 	p11_dict *remove;
 	p11_dictiter iter;
 	char *path;
 	DIR *dir;
-	int skip;
 	bool ret;
 
 	/* First we load all the modules */
@@ -535,18 +535,8 @@ cleanup_directory (const char *directory,
 		if (asprintf (&path, "%s/%s", directory, dp->d_name) < 0)
 			return_val_if_reached (false);
 
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-		if(dp->d_type != DT_UNKNOWN) {
-			skip = (dp->d_type == DT_DIR);
-		} else
-#endif
-		{
-			struct stat st;
 
-			skip = (stat (path, &st) < 0) || S_ISDIR (st.st_mode);
-		}
-
-		if (!skip) {
+		if (stat (path, &st) >= 0 && !S_ISDIR (st.st_mode)) {
 			if (!p11_dict_set (remove, path, path))
 				return_val_if_reached (false);
 		} else {

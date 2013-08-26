@@ -58,7 +58,7 @@ test_parse_conf_1 (void)
 	p11_dict *map;
 	const char *value;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", 0);
+	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", NULL, 0);
 	assert_ptr_not_null (map);
 
 	value = p11_dict_get (map, "key1");
@@ -81,7 +81,7 @@ test_parse_ignore_missing (void)
 {
 	p11_dict *map;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", CONF_IGNORE_MISSING);
+	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", NULL, CONF_IGNORE_MISSING);
 	assert_ptr_not_null (map);
 
 	assert_num_eq (0, p11_dict_size (map));
@@ -94,7 +94,7 @@ test_parse_fail_missing (void)
 {
 	p11_dict *map;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", 0);
+	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", NULL, 0);
 	assert (map == NULL);
 	assert_ptr_not_null (p11_message_last ());
 }

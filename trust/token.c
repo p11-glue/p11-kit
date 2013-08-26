@@ -179,7 +179,7 @@ loader_load_file (p11_token *token,
 	else if (strcmp (filename, token->path) == 0 && !S_ISDIR (sb->st_mode))
 		flags = P11_PARSE_FLAG_ANCHOR;
 
-	ret = p11_parse_file (token->parser, filename, flags);
+	ret = p11_parse_file (token->parser, filename, sb, flags);
 
 	switch (ret) {
 	case P11_PARSE_SUCCESS:
