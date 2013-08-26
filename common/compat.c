@@ -206,7 +206,7 @@ p11_mmap_open (const char *path,
 
 	map->size = sb.st_size;
 	map->data = mmap (NULL, map->size, PROT_READ, MAP_PRIVATE, map->fd, 0);
-	if (data == NULL) {
+	if (map->data == NULL) {
 		close (map->fd);
 		free (map);
 		return NULL;
