@@ -46,6 +46,7 @@ extern "C" {
 #ifdef P11_KIT_FUTURE_UNSTABLE_API
 
 typedef struct p11_kit_iter P11KitIter;
+typedef P11KitIter p11_kit_iter;
 
 typedef enum {
 	P11_KIT_ITER_BUSY_SESSIONS = 1 << 1,

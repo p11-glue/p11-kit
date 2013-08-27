@@ -88,6 +88,7 @@ typedef P11KitUriResult p11_kit_uri_result_t;
 #endif
 
 typedef struct p11_kit_uri P11KitUri;
+typedef struct p11_kit_uri p11_kit_uri;
 
 CK_INFO_PTR         p11_kit_uri_get_module_info             (P11KitUri *uri);
 
