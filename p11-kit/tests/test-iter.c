@@ -1182,6 +1182,45 @@ test_many (void *flags)
 	assert (rv == CKR_OK);
 }
 
+static void
+test_destroy_object (void)
+{
+	CK_FUNCTION_LIST **modules;
+	P11KitIter *iter;
+	CK_OBJECT_HANDLE object;
+	CK_SESSION_HANDLE session;
+	CK_FUNCTION_LIST *module;
+	CK_ULONG size;
+	CK_RV rv;
+
+	modules = initialize_and_get_modules ();
+
+	iter = p11_kit_iter_new (NULL, P11_KIT_ITER_WANT_WRITABLE);
+
+	p11_kit_iter_begin (iter, modules);
+
+	/* Should have matched */
+	rv = p11_kit_iter_next (iter);
+	assert_num_eq (rv, CKR_OK);
+
+	object = p11_kit_iter_get_object (iter);
+	session = p11_kit_iter_get_session (iter);
+	module = p11_kit_iter_get_module (iter);
+
+	rv = (module->C_GetObjectSize) (session, object, &size);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = p11_kit_iter_destroy_object (iter);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = (module->C_GetObjectSize) (session, object, &size);
+	assert_num_eq (rv, CKR_OBJECT_HANDLE_INVALID);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1218,6 +1257,7 @@ main (int argc,
 	p11_test (test_load_attributes_fail_late, "/iter/test_load_attributes_fail_late");
 	p11_testx (test_many, "", "/iter/test-many");
 	p11_testx (test_many, "busy-sessions", "/iter/test-many-busy");
+	p11_test (test_destroy_object, "/iter/destroy-object");
 
 	return p11_test_run (argc, argv);
 }

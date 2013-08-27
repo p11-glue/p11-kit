@@ -99,6 +99,7 @@ CK_RV                 p11_kit_iter_load_attributes          (P11KitIter *iter,
 
 CK_SESSION_HANDLE     p11_kit_iter_keep_session             (P11KitIter *iter);
 
+CK_RV                 p11_kit_iter_destroy_object           (P11KitIter *iter);
 
 #endif /* P11_KIT_FUTURE_UNSTABLE_API */
 

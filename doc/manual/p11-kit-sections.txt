@@ -113,6 +113,7 @@ p11_kit_iter_get_session
 p11_kit_iter_keep_session
 p11_kit_iter_get_object
 p11_kit_iter_load_attributes
+p11_kit_iter_destroy_object
 p11_kit_iter_free
 P11KitIterBehavior
 </SECTION>

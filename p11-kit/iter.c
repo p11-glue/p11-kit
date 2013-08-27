@@ -731,6 +731,24 @@ p11_kit_iter_get_object (P11KitIter *iter)
 }
 
 /**
+ * p11_kit_iter_destroy_object:
+ * @iter: teh iterator
+ *
+ * Destory the current matching object.
+ *
+ * This can only be called after p11_kit_iter_next() succeeds.
+ *
+ * Returns: CKR_OK or a failure code
+ */
+CK_RV
+p11_kit_iter_destroy_object (P11KitIter *iter)
+{
+	return_val_if_fail (iter != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (iter->iterating, CKR_GENERAL_ERROR);
+	return (iter->module->C_DestroyObject) (iter->session, iter->object);
+}
+
+/**
  * p11_kit_iter_load_attributes:
  * @iter: the iterator
  * @template: (array length=count) (inout): the attributes to load
