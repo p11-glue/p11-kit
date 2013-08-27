@@ -121,7 +121,7 @@ bin_PROGRAMS = \
 	p11-kit
 
 p11_kit_SOURCES = \
-	list.c \
+	lists.c \
 	p11-kit.c \
 	$(NULL)
 
