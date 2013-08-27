@@ -84,6 +84,7 @@ struct p11_kit_iter {
 	CK_SLOT_ID slot;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
+	CK_TOKEN_INFO token_info;
 
 	/* And various flags */
 	unsigned int searching : 1;
@@ -434,7 +435,6 @@ call_all_filters (P11KitIter *iter,
 static CK_RV
 move_next_session (P11KitIter *iter)
 {
-	CK_TOKEN_INFO tinfo;
 	CK_ULONG session_flags;
 	CK_ULONG num_slots;
 	CK_INFO minfo;
@@ -479,14 +479,14 @@ move_next_session (P11KitIter *iter)
 		iter->slot = iter->slots[iter->saw_slots++];
 
 		assert (iter->module != NULL);
-		rv = (iter->module->C_GetTokenInfo) (iter->slot, &tinfo);
-		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &tinfo))
+		rv = (iter->module->C_GetTokenInfo) (iter->slot, &iter->token_info);
+		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &iter->token_info))
 			continue;
 
 		session_flags = CKF_SERIAL_SESSION;
 
 		/* Skip if the read/write on a read-only token */
-		if (iter->want_writable && (tinfo.flags & CKF_WRITE_PROTECTED) == 0)
+		if (iter->want_writable && (iter->token_info.flags & CKF_WRITE_PROTECTED) == 0)
 			session_flags |= CKF_RW_SESSION;
 
 		rv = (iter->module->C_OpenSession) (iter->slot, session_flags,
@@ -645,6 +645,23 @@ p11_kit_iter_get_slot (P11KitIter *iter)
 	return_val_if_fail (iter != NULL, 0);
 	return_val_if_fail (iter->iterating, 0);
 	return iter->slot;
+}
+
+/**
+ * p11_kit_iter_get_token:
+ * @iter: the iterator
+ *
+ * Get the token info for the token which the current matching object is on.
+ *
+ * This can only be called after p11_kit_iter_next(0 succeeds.
+ *
+ * Returns: the slot of the current matching object.
+ */
+CK_TOKEN_INFO *
+p11_kit_iter_get_token (P11KitIter *iter)
+{
+	return_val_if_fail (iter != NULL, NULL);
+	return &iter->token_info;
 }
 
 /**

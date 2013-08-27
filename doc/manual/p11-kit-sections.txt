@@ -107,6 +107,7 @@ p11_kit_iter_begin_with
 p11_kit_iter_next
 p11_kit_iter_get_module
 p11_kit_iter_get_slot
+p11_kit_iter_get_token
 p11_kit_iter_get_session
 p11_kit_iter_keep_session
 p11_kit_iter_get_object

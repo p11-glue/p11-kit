@@ -740,6 +740,37 @@ test_token_mismatch (void)
 }
 
 static void
+test_token_info (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	CK_TOKEN_INFO *info;
+	P11KitIter *iter;
+	char *string;
+	CK_RV rv;
+
+	modules = initialize_and_get_modules ();
+
+	iter = p11_kit_iter_new (NULL, 0);
+	p11_kit_iter_begin (iter, modules);
+
+	rv = p11_kit_iter_next (iter);
+	assert_num_eq (rv, CKR_OK);
+
+	info = p11_kit_iter_get_token (iter);
+	assert_ptr_not_null (info);
+
+	string = p11_kit_space_strdup (info->label, sizeof (info->label));
+	assert_ptr_not_null (string);
+
+	assert_str_eq (string, "TEST LABEL");
+
+	free (string);
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
 test_getslotlist_fail_first (void)
 {
 	CK_FUNCTION_LIST module;
@@ -1145,6 +1176,7 @@ main (int argc,
 	p11_test (test_keep_session, "/iter/test_keep_session");
 	p11_test (test_token_match, "/iter/test_token_match");
 	p11_test (test_token_mismatch, "/iter/test_token_mismatch");
+	p11_test (test_token_info, "/iter/token-info");
 	p11_test (test_module_match, "/iter/test_module_match");
 	p11_test (test_module_mismatch, "/iter/test_module_mismatch");
 	p11_test (test_getslotlist_fail_first, "/iter/test_getslotlist_fail_first");
