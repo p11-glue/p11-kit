@@ -748,8 +748,8 @@ p11_token_new (CK_SLOT_ID slot,
 
 	token->parser = p11_parser_new (p11_builder_get_cache (token->builder));
 	return_val_if_fail (token->parser != NULL, NULL);
-	p11_parser_formats (token->parser, p11_parser_format_pem,
-	                    p11_parser_format_x509, p11_parser_format_persist, NULL);
+	p11_parser_formats (token->parser, p11_parser_format_persist,
+	                    p11_parser_format_pem, p11_parser_format_x509, NULL);
 
 	token->loaded = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 	return_val_if_fail (token->loaded != NULL, NULL);
