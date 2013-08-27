@@ -99,9 +99,10 @@ p11_kit_be_loud
 p11_kit_destroyer
 P11KitIter
 p11_kit_iter_new
+p11_kit_iter_set_uri
 p11_kit_iter_add_callback
-p11_kit_iter_callback
 p11_kit_iter_add_filter
+p11_kit_iter_callback
 p11_kit_iter_begin
 p11_kit_iter_begin_with
 p11_kit_iter_next

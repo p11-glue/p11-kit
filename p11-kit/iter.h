@@ -70,6 +70,9 @@ void                  p11_kit_iter_add_filter               (P11KitIter *iter,
                                                              CK_ATTRIBUTE *matching,
                                                              CK_ULONG count);
 
+void                  p11_kit_iter_set_uri                  (P11KitIter *iter,
+                                                             P11KitUri *uri);
+
 void                  p11_kit_iter_begin                    (P11KitIter *iter,
                                                              CK_FUNCTION_LIST_PTR *modules);
 

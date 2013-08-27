@@ -519,6 +519,33 @@ test_uri_with_type (void)
 }
 
 static void
+test_set_uri (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	CK_RV rv;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	p11_kit_uri_set_unrecognized (uri, 1);
+	iter = p11_kit_iter_new (NULL, 0);
+	p11_kit_iter_set_uri (iter, uri);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	/* Nothing should have matched */
+	rv = p11_kit_iter_next (iter);
+	assert_num_eq (rv, CKR_CANCEL);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
 test_filter (void)
 {
 	CK_OBJECT_HANDLE objects[128];
@@ -1165,6 +1192,7 @@ main (int argc,
 	p11_test (test_all, "/iter/test_all");
 	p11_test (test_unrecognized, "/iter/test_unrecognized");
 	p11_test (test_uri_with_type, "/iter/test_uri_with_type");
+	p11_test (test_set_uri, "/iter/set-uri");
 	p11_test (test_session_flags, "/iter/test_session_flags");
 	p11_test (test_callback, "/iter/test_callback");
 	p11_test (test_callback_fails, "/iter/test_callback_fails");

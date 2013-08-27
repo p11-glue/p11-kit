@@ -127,10 +127,6 @@ p11_kit_iter_new (P11KitUri *uri,
                   P11KitIterBehavior behavior)
 {
 	P11KitIter *iter;
-	CK_ATTRIBUTE *attrs;
-	CK_TOKEN_INFO *tinfo;
-	CK_INFO *minfo;
-	CK_ULONG count;
 
 	iter = calloc (1, sizeof (P11KitIter));
 	return_val_if_fail (iter != NULL, NULL);
@@ -139,6 +135,39 @@ p11_kit_iter_new (P11KitUri *uri,
 	return_val_if_fail (iter->modules != NULL, NULL);
 
 	iter->want_writable = !!(behavior & P11_KIT_ITER_WANT_WRITABLE);
+	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);
+
+	p11_kit_iter_set_uri (iter, uri);
+	return iter;
+}
+
+/**
+ * p11_kit_iter_set_uri:
+ * @iter: the iterator
+ * @uri: (allow-none): a PKCS\#11 URI to filter on, or %NULL
+ *
+ * Set the PKCS\#11 uri for iterator. Only
+ * objects that match the @uri will be returned by the iterator.
+ * Relevant information in @uri is copied, and you need not keep
+ * @uri around.
+ *
+ * If no @uri is specified then the iterator will iterate over all
+ * objects, unless otherwise filtered.
+ *
+ * This function should be called at most once, and should be
+ * called before iterating begins.
+ *
+ */
+void
+p11_kit_iter_set_uri (P11KitIter *iter,
+                      P11KitUri *uri)
+{
+	CK_ATTRIBUTE *attrs;
+	CK_TOKEN_INFO *tinfo;
+	CK_INFO *minfo;
+	CK_ULONG count;
+
+	return_if_fail (iter != NULL);
 
 	if (uri != NULL) {
 
@@ -159,12 +188,10 @@ p11_kit_iter_new (P11KitUri *uri,
 		}
 	} else {
 		/* Match any module version number*/
+		memset (&iter->match_module, 0, sizeof (iter->match_module));
 		iter->match_module.libraryVersion.major = (CK_BYTE)-1;
 		iter->match_module.libraryVersion.minor = (CK_BYTE)-1;
 	}
-	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);
-
-	return iter;
 }
 
 /**
