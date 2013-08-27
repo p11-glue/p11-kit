@@ -49,6 +49,7 @@ typedef struct p11_kit_iter P11KitIter;
 
 typedef enum {
 	P11_KIT_ITER_BUSY_SESSIONS = 1 << 1,
+	P11_KIT_ITER_WANT_WRITABLE = 1 << 2,
 } P11KitIterBehavior;
 
 typedef CK_RV      (* p11_kit_iter_callback)                (P11KitIter *iter,
@@ -59,9 +60,6 @@ P11KitIter *          p11_kit_iter_new                      (P11KitUri *uri,
                                                              P11KitIterBehavior behavior);
 
 void                  p11_kit_iter_free                     (P11KitIter *iter);
-
-void                  p11_kit_iter_set_session_flags        (P11KitIter *iter,
-                                                             CK_FLAGS flags);
 
 void                  p11_kit_iter_add_callback             (P11KitIter *iter,
                                                              p11_kit_iter_callback callback,

@@ -576,9 +576,7 @@ test_session_flags (void)
 
 	modules = initialize_and_get_modules ();
 
-	iter = p11_kit_iter_new (NULL, 0);
-	p11_kit_iter_set_session_flags (iter, CKF_RW_SESSION);
-
+	iter = p11_kit_iter_new (NULL, P11_KIT_ITER_WANT_WRITABLE);
 	p11_kit_iter_begin (iter, modules);
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {

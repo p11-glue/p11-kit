@@ -64,7 +64,6 @@ struct p11_kit_iter {
 	CK_TOKEN_INFO match_token;
 	CK_ATTRIBUTE *match_attrs;
 	Callback *callbacks;
-	CK_FLAGS session_flags;
 
 	/* The input modules */
 	p11_array *modules;
@@ -93,12 +92,15 @@ struct p11_kit_iter {
 	unsigned int match_nothing : 1;
 	unsigned int keep_session : 1;
 	unsigned int preload_results : 1;
+	unsigned int want_writable : 1;
 };
 
 /**
  * P11KitIterBehavior:
  * @P11_KIT_ITER_BUSY_SESSIONS: Allow the iterator's sessions to be
- * in a busy state when the iterator returns an object.
+ *   in a busy state when the iterator returns an object.
+ * @P11_KIT_ITER_WANT_WRITABLE: Try to open read-write sessions when
+ *   iterating over obojects.
  *
  * Various flags controling the behavior of the iterator.
  */
@@ -135,6 +137,8 @@ p11_kit_iter_new (P11KitUri *uri,
 	iter->modules = p11_array_new (NULL);
 	return_val_if_fail (iter->modules != NULL, NULL);
 
+	iter->want_writable = !!(behavior & P11_KIT_ITER_WANT_WRITABLE);
+
 	if (uri != NULL) {
 
 		if (p11_kit_uri_any_unrecognized (uri)) {
@@ -157,28 +161,9 @@ p11_kit_iter_new (P11KitUri *uri,
 		iter->match_module.libraryVersion.major = (CK_BYTE)-1;
 		iter->match_module.libraryVersion.minor = (CK_BYTE)-1;
 	}
-
-	iter->session_flags = CKF_SERIAL_SESSION;
 	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);
 
 	return iter;
-}
-
-/**
- * p11_kit_iter_set_session_flags:
- * @iter: the iterator
- * @flags: set of session flags
- *
- * Set the PKCS\#11 session flags to be used when the iterator opens
- * new sessions.
- */
-void
-p11_kit_iter_set_session_flags (P11KitIter *iter,
-                                CK_FLAGS flags)
-{
-	return_if_fail (iter != NULL);
-	return_if_fail (!iter->iterating);
-	iter->session_flags = flags | CKF_SERIAL_SESSION;
 }
 
 /**
@@ -450,6 +435,7 @@ static CK_RV
 move_next_session (P11KitIter *iter)
 {
 	CK_TOKEN_INFO tinfo;
+	CK_ULONG session_flags;
 	CK_ULONG num_slots;
 	CK_INFO minfo;
 	CK_RV rv;
@@ -497,7 +483,13 @@ move_next_session (P11KitIter *iter)
 		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &tinfo))
 			continue;
 
-		rv = (iter->module->C_OpenSession) (iter->slot, iter->session_flags,
+		session_flags = CKF_SERIAL_SESSION;
+
+		/* Skip if the read/write on a read-only token */
+		if (iter->want_writable && (tinfo.flags & CKF_WRITE_PROTECTED) == 0)
+			session_flags |= CKF_RW_SESSION;
+
+		rv = (iter->module->C_OpenSession) (iter->slot, session_flags,
 		                                    NULL, NULL, &iter->session);
 		if (rv != CKR_OK)
 			return finish_iterating (iter, rv);

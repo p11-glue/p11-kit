@@ -99,7 +99,6 @@ p11_kit_be_loud
 p11_kit_destroyer
 P11KitIter
 p11_kit_iter_new
-p11_kit_iter_set_session_flags
 p11_kit_iter_add_callback
 p11_kit_iter_callback
 p11_kit_iter_add_filter
