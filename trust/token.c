@@ -673,7 +673,7 @@ on_index_store (void *data,
 
 	for (i = 0; rv == CKR_OK && other && other[i] != 0; i++) {
 		if (other[i] != handle) {
-			object = p11_index_lookup (index, handle);
+			object = p11_index_lookup (index, other[i]);
 			if (object != NULL)
 				rv = writer_put_object (file, persist, &buffer, object);
 		}
