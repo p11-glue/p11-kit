@@ -137,9 +137,13 @@ loader_gone_file (p11_token *token,
 
 	CK_RV rv;
 
+	p11_index_load (token->index);
+
 	/* Remove everything at this origin */
 	rv = p11_index_replace_all (token->index, origin, CKA_INVALID, NULL);
 	return_if_fail (rv == CKR_OK);
+
+	p11_index_finish (token->index);
 
 	/* No longer track info about this file */
 	loader_not_loaded (token, filename);
