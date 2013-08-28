@@ -77,7 +77,7 @@ setup (void *unused)
 	test.builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
 	assert_ptr_not_null (test.builder);
 
-	test.index = p11_index_new (p11_builder_build, NULL, p11_builder_changed, test.builder);
+	test.index = p11_index_new (p11_builder_build, NULL, NULL, p11_builder_changed, test.builder);
 	assert_ptr_not_null (test.index);
 }
 

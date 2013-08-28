@@ -80,6 +80,9 @@ struct _p11_index {
 	/* Called after each object ready to be stored */
 	p11_index_store_cb store;
 
+	/* Called after an object has been removed */
+	p11_index_remove_cb remove;
+
 	/* Called after objects change */
 	p11_index_notify_cb notify;
 
@@ -129,9 +132,18 @@ default_notify (void *data,
 
 }
 
+static CK_RV
+default_remove (void *data,
+                p11_index *index,
+                CK_ATTRIBUTE *attrs)
+{
+	return CKR_OK;
+}
+
 p11_index *
 p11_index_new (p11_index_build_cb build,
                p11_index_store_cb store,
+               p11_index_remove_cb remove,
                p11_index_notify_cb notify,
                void *data)
 {
@@ -146,10 +158,13 @@ p11_index_new (p11_index_build_cb build,
 		store = default_store;
 	if (notify == NULL)
 		notify = default_notify;
+	if (remove == NULL)
+		remove = default_remove;
 
 	index->build = build;
 	index->store = store;
 	index->notify = notify;
+	index->remove = remove;
 	index->data = data;
 
 	index->objects = p11_dict_new (p11_dict_ulongptr_hash,
@@ -578,11 +593,21 @@ p11_index_remove (p11_index *index,
                   CK_OBJECT_HANDLE handle)
 {
 	index_object *obj;
+	CK_RV rv;
 
 	return_val_if_fail (index != NULL, CKR_GENERAL_ERROR);
 
 	if (!p11_dict_steal (index->objects, &handle, NULL, (void **)&obj))
 		return CKR_OBJECT_HANDLE_INVALID;
+
+	rv = (index->remove) (index->data, index, obj->attrs);
+
+	/* If the writer failed the remove, then add it back */
+	if (rv != CKR_OK) {
+		if (!p11_dict_set (index->objects, &obj->handle, obj))
+			return_val_if_reached (CKR_HOST_MEMORY);
+		return rv;
+	}
 
 	/* This takes ownership of the attributes */
 	index_notify (index, handle, obj->attrs);

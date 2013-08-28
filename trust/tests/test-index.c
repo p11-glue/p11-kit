@@ -53,7 +53,7 @@ struct {
 static void
 setup (void *unused)
 {
-	test.index = p11_index_new (NULL, NULL, NULL, NULL);
+	test.index = p11_index_new (NULL, NULL, NULL, NULL, NULL);
 	assert_ptr_not_null (test.index);
 }
 
@@ -688,7 +688,7 @@ test_replace_all_build_fails (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (on_index_build_fail, NULL, NULL, &match);
+	index = p11_index_new (on_index_build_fail, NULL, NULL, NULL, &match);
 	assert_ptr_not_null (index);
 
 	array = p11_array_new (p11_attrs_free);
@@ -745,7 +745,7 @@ test_build_populate (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (on_build_populate, NULL, NULL, "blah");
+	index = p11_index_new (on_build_populate, NULL, NULL, NULL, "blah");
 	assert_ptr_not_null (index);
 
 	rv = p11_index_add (index, original, 2, &handle);
@@ -808,7 +808,7 @@ test_build_fail (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (on_build_fail, NULL, NULL, "testo");
+	index = p11_index_new (on_build_fail, NULL, NULL, NULL, "testo");
 	assert_ptr_not_null (index);
 
 	rv = p11_index_add (index, okay, 2, &handle);
@@ -872,7 +872,7 @@ test_change_called (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, NULL, on_change_check, "change-check");
+	index = p11_index_new (NULL, NULL, NULL, on_change_check, "change-check");
 	assert_ptr_not_null (index);
 
 	on_change_removing = false;
@@ -917,7 +917,7 @@ test_change_batch (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, NULL, on_change_check, "change-check");
+	index = p11_index_new (NULL, NULL, NULL, on_change_check, "change-check");
 	assert_ptr_not_null (index);
 
 	on_change_batching = true;
@@ -1008,7 +1008,7 @@ test_change_nested (void)
 	p11_index *index;
 	CK_RV rv;
 
-	index = p11_index_new (NULL, NULL, on_change_nested, "change-nested");
+	index = p11_index_new (NULL, NULL, NULL, on_change_nested, "change-nested");
 	assert_ptr_not_null (index);
 
 	on_change_called = 0;
@@ -1023,6 +1023,89 @@ test_change_nested (void)
 	assert (rv == CKR_OK);
 	p11_index_finish (index);
 	assert_num_eq (1, on_change_called);
+
+	p11_index_free (index);
+}
+
+static CK_RV
+on_remove_callback (void *data,
+                    p11_index *index,
+                    CK_ATTRIBUTE *attrs)
+{
+	int *removed = data;
+	assert_ptr_not_null (removed);
+	assert_num_eq (*removed, 0);
+	*removed = 1;
+	return CKR_OK;
+}
+
+static void
+test_remove_callback (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+
+	};
+
+	CK_OBJECT_HANDLE handle;
+	p11_index *index;
+	int removed = 0;
+	CK_RV rv;
+
+	index = p11_index_new (NULL, NULL, on_remove_callback, NULL, &removed);
+	assert_ptr_not_null (index);
+
+	rv = p11_index_add (index, original, 2, &handle);
+	assert_num_eq (rv, CKR_OK);
+
+	assert_ptr_not_null (p11_index_lookup (index, handle));
+
+	rv = p11_index_remove (index, handle);
+	assert_num_eq (rv, CKR_OK);
+
+	assert_num_eq (removed, 1);
+	assert_ptr_eq (p11_index_lookup (index, handle), NULL);
+
+	p11_index_free (index);
+}
+
+static CK_RV
+on_remove_fail (void *data,
+                p11_index *index,
+                CK_ATTRIBUTE *attrs)
+{
+	assert_str_eq (data, "remove-fail");
+	return CKR_DEVICE_REMOVED;
+}
+
+static void
+test_remove_fail (void)
+{
+	CK_ATTRIBUTE original[] = {
+		{ CKA_LABEL, "yay", 3 },
+		{ CKA_VALUE, "eight", 5 },
+		{ CKA_INVALID }
+
+	};
+
+	CK_OBJECT_HANDLE handle;
+	p11_index *index;
+	CK_RV rv;
+
+	index = p11_index_new (NULL, NULL, on_remove_fail, NULL, "remove-fail");
+	assert_ptr_not_null (index);
+
+	rv = p11_index_add (index, original, 2, &handle);
+	assert (rv == CKR_OK);
+
+	assert_ptr_not_null (p11_index_lookup (index, handle));
+
+	rv = p11_index_remove (index, handle);
+	assert_num_eq (rv, CKR_DEVICE_REMOVED);
+
+	assert_ptr_not_null (p11_index_lookup (index, handle));
 
 	p11_index_free (index);
 }
@@ -1054,6 +1137,8 @@ main (int argc,
 	p11_test (test_change_batch, "/index/change_batch");
 	p11_test (test_change_nested, "/index/change_nested");
 	p11_test (test_replace_all_build_fails, "/index/replace-all-build-fails");
+	p11_test (test_remove_callback, "/index/remove-callback");
+	p11_test (test_remove_fail, "/index/remove-fail");
 
 	return p11_test_run (argc, argv);
 }

@@ -742,6 +742,7 @@ p11_token_new (CK_SLOT_ID slot,
 
 	token->index = p11_index_new (on_index_build,
 	                              on_index_store,
+	                              NULL,
 	                              on_index_notify,
 	                              token);
 	return_val_if_fail (token->index != NULL, NULL);

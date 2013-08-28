@@ -53,6 +53,10 @@ typedef CK_RV   (* p11_index_store_cb)   (void *data,
                                           CK_OBJECT_HANDLE handle,
                                           CK_ATTRIBUTE **attrs);
 
+typedef CK_RV   (* p11_index_remove_cb)  (void *data,
+                                          p11_index *index,
+                                          CK_ATTRIBUTE *attrs);
+
 typedef void    (* p11_index_notify_cb)  (void *data,
                                           p11_index *index,
                                           CK_OBJECT_HANDLE handle,
@@ -60,6 +64,7 @@ typedef void    (* p11_index_notify_cb)  (void *data,
 
 p11_index *        p11_index_new         (p11_index_build_cb build,
                                           p11_index_store_cb store,
+                                          p11_index_remove_cb remove,
                                           p11_index_notify_cb notify,
                                           void *data);
 
