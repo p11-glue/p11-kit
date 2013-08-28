@@ -102,7 +102,7 @@ known_usages (p11_array *oids)
 }
 
 static bool
-load_usage_ext (p11_extract_info *ex,
+load_usage_ext (p11_enumerate *ex,
                 const unsigned char *ext_oid,
                 p11_array **oids)
 {
@@ -161,7 +161,7 @@ write_usages (node_asn *asn,
 }
 
 static bool
-write_trust_and_rejects (p11_extract_info *ex,
+write_trust_and_rejects (p11_enumerate *ex,
                          node_asn *asn)
 {
 	p11_array *trusts = NULL;
@@ -222,7 +222,7 @@ write_trust_and_rejects (p11_extract_info *ex,
 }
 
 static bool
-write_keyid (p11_extract_info *ex,
+write_keyid (p11_enumerate *ex,
              node_asn *asn)
 {
 	unsigned char *value = NULL;
@@ -245,7 +245,7 @@ write_keyid (p11_extract_info *ex,
 }
 
 static bool
-write_alias (p11_extract_info *ex,
+write_alias (p11_enumerate *ex,
              node_asn *asn)
 {
 	CK_ATTRIBUTE *label;
@@ -264,7 +264,7 @@ write_alias (p11_extract_info *ex,
 }
 
 static bool
-write_other (p11_extract_info *ex,
+write_other (p11_enumerate *ex,
              node_asn *asn)
 {
 	int ret;
@@ -276,7 +276,7 @@ write_other (p11_extract_info *ex,
 }
 
 static bool
-prepare_pem_contents (p11_extract_info *ex,
+prepare_pem_contents (p11_enumerate *ex,
                       p11_buffer *buffer)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
@@ -315,8 +315,8 @@ prepare_pem_contents (p11_extract_info *ex,
 }
 
 bool
-p11_extract_openssl_bundle (P11KitIter *iter,
-                            p11_extract_info *ex)
+p11_extract_openssl_bundle (p11_enumerate *ex,
+                            const char *destination)
 {
 	p11_save_file *file;
 	p11_buffer output;
@@ -326,13 +326,13 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 	bool first;
 	CK_RV rv;
 
-	file = p11_save_open_file (ex->destination, NULL, ex->flags);
+	file = p11_save_open_file (destination, NULL, ex->flags);
 	if (!file)
 		return false;
 
 	first = true;
 	p11_buffer_init (&output, 0);
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
 		p11_buffer_init (&buf, 1024);
 		if (!p11_buffer_reset (&output, 2048))
 			return_val_if_reached (false);
@@ -341,7 +341,7 @@ p11_extract_openssl_bundle (P11KitIter *iter,
 			if (!p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &output))
 				return_val_if_reached (false);
 
-			comment = p11_extract_info_comment (ex, first);
+			comment = p11_enumerate_comment (ex, first);
 			first = false;
 
 			ret = p11_save_write (file, comment, -1) &&
@@ -528,7 +528,7 @@ p11_openssl_canon_name_der (p11_dict *asn1_defs,
 #ifdef OS_UNIX
 
 static char *
-symlink_for_subject_hash (p11_extract_info *ex)
+symlink_for_subject_hash (p11_enumerate *ex)
 {
 	unsigned char md[P11_DIGEST_SHA1_LEN];
 	p11_buffer der;
@@ -561,7 +561,7 @@ symlink_for_subject_hash (p11_extract_info *ex)
 }
 
 static char *
-symlink_for_subject_old_hash (p11_extract_info *ex)
+symlink_for_subject_old_hash (p11_enumerate *ex)
 {
 	unsigned char md[P11_DIGEST_MD5_LEN];
 	CK_ATTRIBUTE *subject;
@@ -588,8 +588,8 @@ symlink_for_subject_old_hash (p11_extract_info *ex)
 #endif /* OS_UNIX */
 
 bool
-p11_extract_openssl_directory (P11KitIter *iter,
-                               p11_extract_info *ex)
+p11_extract_openssl_directory (p11_enumerate *ex,
+                               const char *destination)
 {
 	char *filename;
 	p11_save_file *file;
@@ -605,14 +605,14 @@ p11_extract_openssl_directory (P11KitIter *iter,
 	char *linkname;
 #endif
 
-	dir = p11_save_open_directory (ex->destination, ex->flags);
+	dir = p11_save_open_directory (destination, ex->flags);
 	if (dir == NULL)
 		return false;
 
 	p11_buffer_init (&buf, 0);
 	p11_buffer_init (&output, 0);
 
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
 		if (!p11_buffer_reset (&buf, 1024))
 			return_val_if_reached (false);
 		if (!p11_buffer_reset (&output, 2048))
@@ -622,7 +622,7 @@ p11_extract_openssl_directory (P11KitIter *iter,
 			if (!p11_pem_write (buf.data, buf.len, "TRUSTED CERTIFICATE", &output))
 				return_val_if_reached (false);
 
-			name = p11_extract_info_filename (ex);
+			name = p11_enumerate_filename (ex);
 			return_val_if_fail (name != NULL, false);
 
 			filename = NULL;

@@ -90,9 +90,7 @@ load_stapled_extension (p11_dict *stapled,
 }
 
 static p11_dict *
-load_stapled_extensions (p11_extract_info *ex,
-                         CK_FUNCTION_LIST_PTR module,
-                         CK_SESSION_HANDLE session,
+load_stapled_extensions (p11_enumerate *ex,
                          CK_ATTRIBUTE *spki)
 {
 	CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
@@ -119,7 +117,8 @@ load_stapled_extensions (p11_extract_info *ex,
 
 	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, match, 2);
-	p11_kit_iter_begin_with (iter, module, 0, session);
+	p11_kit_iter_begin_with (iter, p11_kit_iter_get_module (ex->iter),
+	                         0, p11_kit_iter_get_session (ex->iter));
 
 	while (rv == CKR_OK) {
 		rv = p11_kit_iter_next (iter);
@@ -148,7 +147,7 @@ load_stapled_extensions (p11_extract_info *ex,
 }
 
 static bool
-extract_purposes (p11_extract_info *ex)
+extract_purposes (p11_enumerate *ex)
 {
 	node_asn *ext = NULL;
 	unsigned char *value = NULL;
@@ -217,8 +216,7 @@ check_blacklisted (P11KitIter *iter,
 }
 
 static bool
-check_trust_flags (P11KitIter *iter,
-                   p11_extract_info *ex,
+check_trust_flags (p11_enumerate *ex,
                    CK_ATTRIBUTE *cert)
 {
 	CK_BBOOL trusted;
@@ -226,17 +224,17 @@ check_trust_flags (P11KitIter *iter,
 	int flags = 0;
 
 	/* If no extract trust flags, then just continue */
-	if (!(ex->flags & (P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST)))
+	if (!(ex->flags & (P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST)))
 		return true;
 
 	if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &trusted) &&
-	    trusted && !check_blacklisted (iter, cert)) {
-		flags |= P11_EXTRACT_ANCHORS;
+	    trusted && !check_blacklisted (ex->iter, cert)) {
+		flags |= P11_ENUMERATE_ANCHORS;
 	}
 
 	if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &distrusted) &&
 	    distrusted) {
-		flags |= P11_EXTRACT_BLACKLIST;
+		flags |= P11_ENUMERATE_BLACKLIST;
 	}
 
 	/* Any of the flags can match */
@@ -247,8 +245,7 @@ check_trust_flags (P11KitIter *iter,
 }
 
 static bool
-extract_certificate (P11KitIter *iter,
-                     p11_extract_info *ex)
+extract_certificate (p11_enumerate *ex)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_ATTRIBUTE *attr;
@@ -273,7 +270,7 @@ extract_certificate (P11KitIter *iter,
 	 * If collapsing and have already seen this certificate, and shouldn't
 	 * process it even again during this extract procedure.
 	 */
-	if (ex->flags & P11_EXTRACT_COLLAPSE) {
+	if (ex->flags & P11_ENUMERATE_COLLAPSE) {
 		if (!ex->already_seen) {
 			ex->already_seen = p11_dict_new (p11_attr_hash, p11_attr_equal,
 			                                 p11_attrs_free, NULL);
@@ -284,7 +281,7 @@ extract_certificate (P11KitIter *iter,
 			return false;
 	}
 
-	if (!check_trust_flags (iter, ex, attr)) {
+	if (!check_trust_flags (ex, attr)) {
 		p11_debug ("skipping certificate that doesn't match trust flags");
 		return false;
 	}
@@ -309,8 +306,7 @@ extract_certificate (P11KitIter *iter,
 }
 
 static bool
-extract_info (P11KitIter *iter,
-              p11_extract_info *ex)
+extract_info (p11_enumerate *ex)
 {
 	CK_ATTRIBUTE *attr;
 	CK_RV rv;
@@ -331,7 +327,7 @@ extract_info (P11KitIter *iter,
 	};
 
 	ex->attrs = p11_attrs_dup (attr_types);
-	rv = p11_kit_iter_load_attributes (iter, ex->attrs, p11_attrs_count (ex->attrs));
+	rv = p11_kit_iter_load_attributes (ex->iter, ex->attrs, p11_attrs_count (ex->attrs));
 
 	/* The attributes couldn't be loaded */
 	if (rv != CKR_OK && rv != CKR_ATTRIBUTE_TYPE_INVALID && rv != CKR_ATTRIBUTE_SENSITIVE) {
@@ -349,13 +345,12 @@ extract_info (P11KitIter *iter,
 		return false;
 	}
 
-	if (!extract_certificate (iter, ex))
+	if (!extract_certificate (ex))
 		return false;
 
 	attr = p11_attrs_find_valid (ex->attrs, CKA_X_PUBLIC_KEY_INFO);
 	if (attr) {
-		ex->stapled = load_stapled_extensions (ex, p11_kit_iter_get_module (iter),
-		                                       p11_kit_iter_get_session (iter), attr);
+		ex->stapled = load_stapled_extensions (ex, attr);
 		if (!ex->stapled)
 			return false;
 	}
@@ -367,7 +362,7 @@ extract_info (P11KitIter *iter,
 }
 
 static void
-extract_clear (p11_extract_info *ex)
+extract_clear (p11_enumerate *ex)
 {
 	ex->klass = (CK_ULONG)-1;
 
@@ -385,18 +380,18 @@ extract_clear (p11_extract_info *ex)
 	ex->purposes = NULL;
 }
 
-CK_RV
-p11_extract_info_load_filter (P11KitIter *iter,
-                              CK_BBOOL *matches,
-                              void *data)
+static CK_RV
+on_iterate_load_filter (p11_kit_iter *iter,
+                        CK_BBOOL *matches,
+                        void *data)
 {
-	p11_extract_info *ex = data;
+	p11_enumerate *ex = data;
 	int i;
 
 	extract_clear (ex);
 
 	/* Try to load the certificate and extensions */
-	if (!extract_info (iter, ex)) {
+	if (!extract_info (ex)) {
 		*matches = CK_FALSE;
 		return CKR_OK;
 	}
@@ -420,15 +415,20 @@ p11_extract_info_load_filter (P11KitIter *iter,
 }
 
 void
-p11_extract_info_init (p11_extract_info *ex)
+p11_enumerate_init (p11_enumerate *ex)
 {
-	memset (ex, 0, sizeof (p11_extract_info));
+	memset (ex, 0, sizeof (p11_enumerate));
 	ex->asn1_defs = p11_asn1_defs_load ();
 	return_if_fail (ex->asn1_defs != NULL);
+
+	ex->iter = p11_kit_iter_new (NULL, 0);
+	return_if_fail (ex->iter != NULL);
+
+	p11_kit_iter_add_callback (ex->iter, on_iterate_load_filter, ex, NULL);
 }
 
 void
-p11_extract_info_cleanup (p11_extract_info *ex)
+p11_enumerate_cleanup (p11_enumerate *ex)
 {
 	extract_clear (ex);
 
@@ -440,49 +440,185 @@ p11_extract_info_cleanup (p11_extract_info *ex)
 
 	p11_dict_free (ex->asn1_defs);
 	ex->asn1_defs = NULL;
+
+	p11_kit_iter_free (ex->iter);
+	ex->iter = NULL;
+
+	if (ex->modules) {
+		p11_kit_modules_finalize_and_release (ex->modules);
+		ex->modules = NULL;
+	}
+
+	if (ex->uri) {
+		p11_kit_uri_free (ex->uri);
+		ex->uri = NULL;
+	}
 }
 
-void
-p11_extract_info_limit_purpose (p11_extract_info *ex,
-                                const char *purpose)
+bool
+p11_enumerate_opt_filter (p11_enumerate *ex,
+                          const char *option)
 {
+	CK_ATTRIBUTE *attrs;
+	int ret;
+
+	CK_OBJECT_CLASS vcertificate = CKO_CERTIFICATE;
+	CK_ULONG vauthority = 2;
+	CK_CERTIFICATE_TYPE vx509 = CKC_X_509;
+
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &vcertificate, sizeof (vcertificate) };
+	CK_ATTRIBUTE authority = { CKA_CERTIFICATE_CATEGORY, &vauthority, sizeof (vauthority) };
+	CK_ATTRIBUTE x509= { CKA_CERTIFICATE_TYPE, &vx509, sizeof (vx509) };
+
+	if (strncmp (option, "pkcs11:", 7) == 0) {
+		if (ex->uri != NULL) {
+			p11_message ("a PKCS#11 URI has already been specified");
+			return false;
+		}
+
+		ex->uri = p11_kit_uri_new ();
+		ret = p11_kit_uri_parse (option, P11_KIT_URI_FOR_OBJECT_ON_TOKEN_AND_MODULE, ex->uri);
+		if (ret != P11_KIT_URI_OK) {
+			p11_message ("couldn't parse pkcs11 uri filter: %s", option);
+			return false;
+		}
+
+		if (p11_kit_uri_any_unrecognized (ex->uri))
+			p11_message ("uri contained unrecognized components, nothing will be extracted");
+
+		p11_kit_iter_set_uri (ex->iter, ex->uri);
+		ex->num_filters++;
+		return true;
+	}
+
+	if (strcmp (option, "ca-anchors") == 0) {
+		attrs = p11_attrs_build (NULL, &certificate, &authority, &x509, NULL);
+		ex->flags |= P11_ENUMERATE_ANCHORS | P11_ENUMERATE_COLLAPSE;
+
+	} else if (strcmp (option, "trust-policy") == 0) {
+		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		ex->flags |= P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_COLLAPSE;
+
+	} else if (strcmp (option, "blacklist") == 0) {
+		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		ex->flags |= P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_COLLAPSE;
+
+	} else if (strcmp (option, "certificates") == 0) {
+		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
+		ex->flags |= P11_ENUMERATE_COLLAPSE;
+
+	} else {
+		p11_message ("unsupported or unrecognized filter: %s", option);
+		return false;
+	}
+
+	p11_kit_iter_add_filter (ex->iter, attrs, p11_attrs_count (attrs));
+	ex->num_filters++;
+	return true;
+}
+
+static int
+is_valid_oid_rough (const char *string)
+{
+	size_t len;
+
+	len = strlen (string);
+
+	/* Rough check if a valid OID */
+	return (strspn (string, "0123456789.") == len &&
+	        !strstr (string, "..") && string[0] != '\0' && string[0] != '.' &&
+	        string[len - 1] != '.');
+}
+
+bool
+p11_enumerate_opt_purpose (p11_enumerate *ex,
+                           const char *option)
+{
+	const char *oid;
 	char *value;
+
+	if (strcmp (option, "server-auth") == 0) {
+		oid = P11_OID_SERVER_AUTH_STR;
+	} else if (strcmp (option, "client-auth") == 0) {
+		oid = P11_OID_CLIENT_AUTH_STR;
+	} else if (strcmp (option, "email-protection") == 0 || strcmp (option, "email") == 0) {
+		oid = P11_OID_EMAIL_PROTECTION_STR;
+	} else if (strcmp (option, "code-signing") == 0) {
+		oid = P11_OID_CODE_SIGNING_STR;
+	} else if (strcmp (option, "ipsec-end-system") == 0) {
+		oid = P11_OID_IPSEC_END_SYSTEM_STR;
+	} else if (strcmp (option, "ipsec-tunnel") == 0) {
+		oid = P11_OID_IPSEC_TUNNEL_STR;
+	} else if (strcmp (option, "ipsec-user") == 0) {
+		oid = P11_OID_IPSEC_USER_STR;
+	} else if (strcmp (option, "time-stamping") == 0) {
+		oid = P11_OID_TIME_STAMPING_STR;
+	} else if (is_valid_oid_rough (option)) {
+		oid = option;
+	} else {
+		p11_message ("unsupported or unregonized purpose: %s", option);
+		return false;
+	}
 
 	if (!ex->limit_to_purposes) {
 		ex->limit_to_purposes = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-		return_if_fail (ex->limit_to_purposes != NULL);
+		return_val_if_fail (ex->limit_to_purposes != NULL, false);
 	}
 
-	value = strdup (purpose);
-	return_if_fail (value != NULL);
-
+	value = strdup (oid);
+	return_val_if_fail (value != NULL, false);
 	if (!p11_dict_set (ex->limit_to_purposes, value, value))
-		return_if_reached ();
+		return_val_if_reached (false);
+
+	return true;
+}
+
+bool
+p11_enumerate_ready (p11_enumerate *ex,
+                     const char *def_filter)
+{
+	if (ex->num_filters == 0) {
+		if (!p11_enumerate_opt_filter (ex, def_filter))
+			return_val_if_reached (false);
+	}
+
+	/*
+	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
+	 * we get from modules explicitly marked as containing trust-policy.
+	 */
+	ex->modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
+	if (!ex->modules)
+		return false;
+	if (ex->modules[0] == NULL)
+		p11_message ("no modules containing trust policy are registered");
+
+	p11_kit_iter_begin (ex->iter, ex->modules);
+	return true;
 }
 
 static char *
-extract_label (p11_extract_info *extract)
+extract_label (p11_enumerate *ex)
 {
 	CK_ATTRIBUTE *attr;
 
 	/* Look for a label and just use that */
-	attr = p11_attrs_find_valid (extract->attrs, CKA_LABEL);
+	attr = p11_attrs_find_valid (ex->attrs, CKA_LABEL);
 	if (attr && attr->pValue && attr->ulValueLen)
 		return strndup (attr->pValue, attr->ulValueLen);
 
 	/* For extracting certificates */
-	if (extract->klass == CKO_CERTIFICATE)
+	if (ex->klass == CKO_CERTIFICATE)
 		return strdup ("certificate");
 
 	return strdup ("unknown");
 }
 
 char *
-p11_extract_info_filename (p11_extract_info *extract)
+p11_enumerate_filename (p11_enumerate *ex)
 {
 	char *label;
 
-	label = extract_label (extract);
+	label = extract_label (ex);
 	return_val_if_fail (label != NULL, NULL);
 
 	p11_path_canon (label);
@@ -490,8 +626,8 @@ p11_extract_info_filename (p11_extract_info *extract)
 }
 
 char *
-p11_extract_info_comment (p11_extract_info *ex,
-                          bool first)
+p11_enumerate_comment (p11_enumerate *ex,
+                       bool first)
 {
 	char *comment;
 	char *label;

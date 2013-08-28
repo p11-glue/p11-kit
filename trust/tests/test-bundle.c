@@ -59,8 +59,7 @@
 
 struct {
 	CK_FUNCTION_LIST module;
-	P11KitIter *iter;
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *directory;
 } test;
 
@@ -74,9 +73,7 @@ setup (void *unused)
 	rv = test.module.C_Initialize (NULL);
 	assert_num_eq (CKR_OK, rv);
 
-	test.iter = p11_kit_iter_new (NULL, 0);
-
-	p11_extract_info_init (&test.ex);
+	p11_enumerate_init (&test.ex);
 
 	test.directory = p11_test_directory ("test-extract");
 }
@@ -90,8 +87,7 @@ teardown (void *unused)
 		assert_not_reached ();
 	free (test.directory);
 
-	p11_extract_info_cleanup (&test.ex);
-	p11_kit_iter_free (test.iter);
+	p11_enumerate_cleanup (&test.ex);
 
 	rv = test.module.C_Finalize (NULL);
 	assert_num_eq (CKR_OK, rv);
@@ -118,66 +114,66 @@ static CK_ATTRIBUTE certificate_filter[] = {
 static void
 test_file (void)
 {
+	char *destination;
 	bool ret;
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
+	ret = p11_extract_pem_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem", SRCDIR "/files/cacert3.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_file_multiple (void)
 {
+	char *destination;
 	bool ret;
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
+	ret = p11_extract_pem_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem", SRCDIR "/files/cacert3-twice.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_file_without (void)
 {
+	char *destination;
 	bool ret;
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_pem_bundle (test.iter, &test.ex);
+	ret = p11_extract_pem_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_data (test.directory, "extract.pem", "", 0);
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
@@ -188,16 +184,14 @@ test_directory (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	/* Yes, this is a race, and why you shouldn't build software as root */
 	if (rmdir (test.directory) < 0)
 		assert_not_reached ();
-	test.ex.destination = test.directory;
 
-	ret = p11_extract_pem_directory (test.iter, &test.ex);
+	ret = p11_extract_pem_directory (&test.ex, test.directory);
 	assert_num_eq (true, ret);
 
 	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem", NULL));
@@ -210,16 +204,14 @@ test_directory_empty (void)
 {
 	bool ret;
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	/* Yes, this is a race, and why you shouldn't build software as root */
 	if (rmdir (test.directory) < 0)
 		assert_not_reached ();
-	test.ex.destination = test.directory;
 
-	ret = p11_extract_pem_directory (test.iter, &test.ex);
+	ret = p11_extract_pem_directory (&test.ex, test.directory);
 	assert_num_eq (true, ret);
 
 	test_check_directory (test.directory, (NULL, NULL));

@@ -50,7 +50,7 @@ CHECK_PROGS = \
 	test-token \
 	test-module \
 	test-save \
-	test-extract \
+	test-enumerate \
 	test-cer \
 	test-bundle \
 	test-openssl \
@@ -89,28 +89,28 @@ test_save_SOURCES = \
 	$(TRUST)/save.c \
 	$(NULL)
 
-test_extract_SOURCES = \
-	test-extract.c \
-	$(TRUST)/extract-info.c \
+test_enumerate_SOURCES = \
+	test-enumerate.c \
+	$(TRUST)/enumerate.c \
 	$(NULL)
 
 test_cer_SOURCES = \
 	test-cer.c \
-	$(TRUST)/extract-info.c \
+	$(TRUST)/enumerate.c \
 	$(TRUST)/extract-cer.c \
 	$(TRUST)/save.c \
 	$(NULL)
 
 test_bundle_SOURCES = \
 	test-bundle.c \
-	$(TRUST)/extract-info.c \
+	$(TRUST)/enumerate.c \
 	$(TRUST)/extract-pem.c \
 	$(TRUST)/save.c \
 	$(NULL)
 
 test_openssl_SOURCES = \
 	test-openssl.c \
-	$(TRUST)/extract-info.c \
+	$(TRUST)/enumerate.c \
 	$(TRUST)/extract-openssl.c \
 	$(TRUST)/save.c \
 	$(NULL)

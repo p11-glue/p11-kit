@@ -62,8 +62,7 @@
 
 struct {
 	CK_FUNCTION_LIST module;
-	P11KitIter *iter;
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *directory;
 } test;
 
@@ -77,9 +76,7 @@ setup (void *unused)
 	rv = test.module.C_Initialize (NULL);
 	assert_num_eq (CKR_OK, rv);
 
-	test.iter = p11_kit_iter_new (NULL, 0);
-
-	p11_extract_info_init (&test.ex);
+	p11_enumerate_init (&test.ex);
 
 	test.directory = p11_test_directory ("test-extract");
 }
@@ -93,8 +90,8 @@ teardown (void *unused)
 		assert_not_reached ();
 	free (test.directory);
 
-	p11_extract_info_cleanup (&test.ex);
-	p11_kit_iter_free (test.iter);
+	p11_enumerate_cleanup (&test.ex);
+	p11_kit_iter_free (test.ex.iter);
 
 	rv = test.module.C_Finalize (NULL);
 	assert_num_eq (CKR_OK, rv);
@@ -177,6 +174,7 @@ setup_objects (const CK_ATTRIBUTE *attrs,
 static void
 test_file (void)
 {
+	char *destination;
 	bool ret;
 
 	setup_objects (cacert3_authority_attrs,
@@ -184,48 +182,48 @@ test_file (void)
 	               extension_reject_email,
 	               NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_plain (void)
 {
+	char *destination;
 	bool ret;
 
 	setup_objects (cacert3_authority_attrs, NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-alias.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_keyid (void)
 {
+	char *destination;
 	bool ret;
 
 	static CK_ATTRIBUTE cacert3_plain[] = {
@@ -248,25 +246,25 @@ test_keyid (void)
 
 	setup_objects (cacert3_plain, extension_subject_key_identifier, NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-trusted-keyid.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_not_authority (void)
 {
+	char *destination;
 	bool ret;
 
 	static CK_ATTRIBUTE cacert3_not_trusted[] = {
@@ -279,25 +277,25 @@ test_not_authority (void)
 
 	setup_objects (cacert3_not_trusted, NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-not-trusted.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_distrust_all (void)
 {
+	char *destination;
 	bool ret;
 
 	static CK_ATTRIBUTE cacert3_blacklist[] = {
@@ -311,25 +309,25 @@ test_distrust_all (void)
 
 	setup_objects (cacert3_blacklist, NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
 	                 SRCDIR "/files/cacert3-distrust-all.pem");
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_file_multiple (void)
 {
+	char *destination;
 	bool ret;
 
 	setup_objects (cacert3_authority_attrs,
@@ -340,38 +338,37 @@ test_file_multiple (void)
 	setup_objects (verisign_v1_attrs,
 	               NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem", SRCDIR "/files/multiple.pem");
-	free (test.ex.destination);
+	free (destination);
 }
 
 static void
 test_file_without (void)
 {
+	char *destination;
 	bool ret;
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	if (asprintf (&test.ex.destination, "%s/%s", test.directory, "extract.pem") < 0)
+	if (asprintf (&destination, "%s/%s", test.directory, "extract.pem") < 0)
 		assert_not_reached ();
 
-	ret = p11_extract_openssl_bundle (test.iter, &test.ex);
+	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
 	test_check_data (test.directory, "extract.pem", "", 0);
 
-	free (test.ex.destination);
+	free (destination);
 }
 
 /* From extract-openssl.c */
@@ -587,16 +584,14 @@ test_directory (void)
 	setup_objects (cacert3_authority_attrs,
 	               NULL);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	/* Yes, this is a race, and why you shouldn't build software as root */
 	if (rmdir (test.directory) < 0)
 		assert_not_reached ();
-	test.ex.destination = test.directory;
 
-	ret = p11_extract_openssl_directory (test.iter, &test.ex);
+	ret = p11_extract_openssl_directory (&test.ex, test.directory);
 	assert_num_eq (true, ret);
 
 	test_check_directory (test.directory, ("Custom_Label.pem", "Custom_Label.1.pem",
@@ -621,16 +616,14 @@ test_directory_empty (void)
 {
 	bool ret;
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	/* Yes, this is a race, and why you shouldn't build software as root */
 	if (rmdir (test.directory) < 0)
 		assert_not_reached ();
-	test.ex.destination = test.directory;
 
-	ret = p11_extract_openssl_directory (test.iter, &test.ex);
+	ret = p11_extract_openssl_directory (&test.ex, test.directory);
 	assert_num_eq (true, ret);
 
 	test_check_directory (test.directory, (NULL, NULL));

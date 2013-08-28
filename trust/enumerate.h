@@ -34,42 +34,70 @@
 
 #include "config.h"
 
-#ifndef P11_EXTRACT_H_
-#define P11_EXTRACT_H_
+#ifndef P11_ENUMERATE_H_
+#define P11_ENUMERATE_H_
 
-#include "enumerate.h"
+#include "array.h"
+#include "asn1.h"
+#include "dict.h"
+#include "iter.h"
 #include "pkcs11.h"
 
 enum {
 	/* These overlap with the flags in save.h, so start higher */
-	P11_EXTRACT_COMMENT = 1 << 10,
+	P11_ENUMERATE_ANCHORS = 1 << 21,
+	P11_ENUMERATE_BLACKLIST = 1 << 22,
+	P11_ENUMERATE_COLLAPSE = 1 << 23,
 };
 
-typedef bool (* p11_extract_func)              (p11_enumerate *ex,
-                                                const char *destination);
+typedef struct {
+	CK_FUNCTION_LIST **modules;
+	p11_kit_iter *iter;
+	p11_kit_uri *uri;
 
-bool            p11_extract_x509_file          (p11_enumerate *ex,
-                                                const char *destination);
+	p11_dict *asn1_defs;
+	p11_dict *limit_to_purposes;
+	p11_dict *already_seen;
+	int num_filters;
+	int flags;
 
-bool            p11_extract_x509_directory     (p11_enumerate *ex,
-                                                const char *destination);
+	/*
+	 * Stuff below is parsed info for the current iteration.
+	 * Currently this information is generally all relevant
+	 * just for certificates.
+	 */
 
-bool            p11_extract_pem_bundle         (p11_enumerate *ex,
-                                                const char *destination);
+	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE *attrs;
 
-bool            p11_extract_pem_directory      (p11_enumerate *ex,
-                                                const char *destination);
+	/* Pre-parsed data for certificates */
+	node_asn *cert_asn;
+	const unsigned char *cert_der;
+	size_t cert_len;
 
-bool            p11_extract_jks_cacerts        (p11_enumerate *ex,
-                                                const char *destination);
+	/* DER OID -> CK_ATTRIBUTE list */
+	p11_dict *stapled;
 
-bool            p11_extract_openssl_bundle     (p11_enumerate *ex,
-                                                const char *destination);
+	/* Set of OID purposes as strings */
+	p11_array *purposes;
+} p11_enumerate;
 
-bool            p11_extract_openssl_directory  (p11_enumerate *ex,
-                                                const char *destination);
+char *          p11_enumerate_filename      (p11_enumerate *ex);
 
-int             p11_trust_extract              (int argc,
-                                                char **argv);
+char *          p11_enumerate_comment       (p11_enumerate *ex,
+                                             bool first);
 
-#endif /* P11_EXTRACT_H_ */
+void            p11_enumerate_init          (p11_enumerate *ex);
+
+bool            p11_enumerate_opt_filter    (p11_enumerate *ex,
+                                             const char *option);
+
+bool            p11_enumerate_opt_purpose   (p11_enumerate *ex,
+                                             const char *option);
+
+bool            p11_enumerate_ready         (p11_enumerate *ex,
+                                             const char *def_filter);
+
+void            p11_enumerate_cleanup       (p11_enumerate *ex);
+
+#endif /* P11_ENUMERATE_H_ */

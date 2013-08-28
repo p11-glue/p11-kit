@@ -97,8 +97,8 @@ trust_SOURCES = \
 	parser.c parser.h \
 	persist.c persist.h \
 	digest.c digest.h \
+	enumerate.c enumerate.h \
 	extract.c extract.h \
-	extract-info.c \
 	extract-jks.c \
 	extract-openssl.c \
 	extract-pem.c \

@@ -53,94 +53,94 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 static void
 test_file_name_for_label (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *name;
 
-	p11_extract_info_init (&ex);
+	p11_enumerate_init (&ex);
 
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
-	name = p11_extract_info_filename (&ex);
+	name = p11_enumerate_filename (&ex);
 	assert_str_eq ("The_Label_", name);
 	free (name);
 
-	p11_extract_info_cleanup (&ex);
+	p11_enumerate_cleanup (&ex);
 }
 
 static void
 test_file_name_for_class (void)
 {
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *name;
 
-	p11_extract_info_init (&ex);
+	p11_enumerate_init (&ex);
 
 	ex.klass = CKO_CERTIFICATE;
 
-	name = p11_extract_info_filename (&ex);
+	name = p11_enumerate_filename (&ex);
 	assert_str_eq ("certificate", name);
 	free (name);
 
 	ex.klass = CKO_DATA;
 
-	name = p11_extract_info_filename (&ex);
+	name = p11_enumerate_filename (&ex);
 	assert_str_eq ("unknown", name);
 	free (name);
 
-	p11_extract_info_cleanup (&ex);
+	p11_enumerate_cleanup (&ex);
 }
 
 static void
 test_comment_for_label (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *comment;
 
-	p11_extract_info_init (&ex);
+	p11_enumerate_init (&ex);
 
 	ex.flags = P11_EXTRACT_COMMENT;
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
-	comment = p11_extract_info_comment (&ex, true);
+	comment = p11_enumerate_comment (&ex, true);
 	assert_str_eq ("# The Label!\n", comment);
 	free (comment);
 
-	comment = p11_extract_info_comment (&ex, false);
+	comment = p11_enumerate_comment (&ex, false);
 	assert_str_eq ("\n# The Label!\n", comment);
 	free (comment);
 
-	p11_extract_info_cleanup (&ex);
+	p11_enumerate_cleanup (&ex);
 }
 
 static void
 test_comment_not_enabled (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
-	p11_extract_info ex;
+	p11_enumerate ex;
 	char *comment;
 
-	p11_extract_info_init (&ex);
+	p11_enumerate_init (&ex);
 
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
-	comment = p11_extract_info_comment (&ex, true);
+	comment = p11_enumerate_comment (&ex, true);
 	assert_ptr_eq (NULL, comment);
 
-	comment = p11_extract_info_comment (&ex, false);
+	comment = p11_enumerate_comment (&ex, false);
 	assert_ptr_eq (NULL, comment);
 
-	p11_extract_info_cleanup (&ex);
+	p11_enumerate_cleanup (&ex);
 }
 
 struct {
 	CK_FUNCTION_LIST module;
-	P11KitIter *iter;
-	p11_extract_info ex;
+	p11_enumerate ex;
 } test;
 
 static void
@@ -154,9 +154,7 @@ setup (void *unused)
 	rv = test.module.C_Initialize (NULL);
 	assert_num_eq (CKR_OK, rv);
 
-	test.iter = p11_kit_iter_new (NULL, 0);
-
-	p11_extract_info_init (&test.ex);
+	p11_enumerate_init (&test.ex);
 }
 
 static void
@@ -164,9 +162,7 @@ teardown (void *unused)
 {
 	CK_RV rv;
 
-	p11_extract_info_cleanup (&test.ex);
-
-	p11_kit_iter_free (test.iter);
+	p11_enumerate_cleanup (&test.ex);
 
 	rv = test.module.C_Finalize (NULL);
 	assert_num_eq (CKR_OK, rv);
@@ -234,11 +230,10 @@ test_info_simple_certificate (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
 	assert_num_eq (CKO_CERTIFICATE, test.ex.klass);
@@ -250,7 +245,7 @@ test_info_simple_certificate (void)
 	assert (memcmp (test.ex.cert_der, test_cacert3_ca_der, test.ex.cert_len) == 0);
 	assert_ptr_not_null (test.ex.cert_asn);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -264,14 +259,13 @@ test_info_limit_purposes (void)
 
 	/* This should not match the above, with the stapled certificat ext */
 	assert_ptr_eq (NULL, test.ex.limit_to_purposes);
-	p11_extract_info_limit_purpose (&test.ex, "1.1.1");
+	p11_enumerate_opt_purpose (&test.ex, "1.1.1");
 	assert_ptr_not_null (test.ex.limit_to_purposes);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -283,14 +277,13 @@ test_info_invalid_purposes (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_invalid);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	p11_kit_be_quiet ();
 
 	/* No results due to invalid purpose on certificate */
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_kit_be_loud ();
@@ -303,17 +296,16 @@ test_info_skip_non_certificate (void)
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	p11_message_quiet ();
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
 	assert_num_eq (CKO_CERTIFICATE, test.ex.klass);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_message_loud ();
@@ -327,13 +319,12 @@ test_limit_to_purpose_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
-	p11_extract_info_limit_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_enumerate_opt_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	p11_message_quiet ();
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
 	p11_message_loud ();
@@ -347,13 +338,12 @@ test_limit_to_purpose_no_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
-	p11_extract_info_limit_purpose (&test.ex, "3.3.3.3");
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_enumerate_opt_purpose (&test.ex, "3.3.3.3");
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
 	p11_message_quiet ();
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 
 	p11_message_loud ();
@@ -368,17 +358,16 @@ test_duplicate_extract (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -396,21 +385,20 @@ test_duplicate_distrusted (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
-	test.ex.flags = P11_EXTRACT_COLLAPSE;
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	test.ex.flags = P11_ENUMERATE_COLLAPSE;
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_kit_iter_load_attributes (test.iter, attrs, 1);
+	rv = p11_kit_iter_load_attributes (test.ex.iter, attrs, 1);
 	assert_num_eq (CKR_OK, rv);
 	assert (p11_attrs_findn_bool (attrs, 1, CKA_X_DISTRUSTED, &val));
 	assert_num_eq (val, CK_TRUE);
 	free (attrs[0].pValue);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -423,12 +411,11 @@ test_trusted_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags = P11_EXTRACT_ANCHORS;
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	test.ex.flags = P11_ENUMERATE_ANCHORS;
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -442,19 +429,18 @@ test_distrust_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags = P11_EXTRACT_BLACKLIST;
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	test.ex.flags = P11_ENUMERATE_BLACKLIST;
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
 	if (!p11_attrs_find_bool (test.ex.attrs, CKA_X_DISTRUSTED, &boolv))
 		boolv = CK_FALSE;
 	assert_num_eq (CK_TRUE, boolv);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 
@@ -467,15 +453,14 @@ test_anytrust_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags =  P11_EXTRACT_ANCHORS | P11_EXTRACT_BLACKLIST;
-	p11_kit_iter_add_callback (test.iter, p11_extract_info_load_filter, &test.ex, NULL);
-	p11_kit_iter_add_filter (test.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.iter, &test.module, 0, 0);
+	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST;
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = p11_kit_iter_next (test.iter);
+	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
 

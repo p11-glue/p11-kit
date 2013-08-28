@@ -210,8 +210,7 @@ add_alias (p11_buffer *buffer,
 }
 
 static bool
-prepare_jks_buffer (P11KitIter *iter,
-                    p11_extract_info *ex,
+prepare_jks_buffer (p11_enumerate *ex,
                     p11_buffer *buffer)
 {
 	const unsigned char magic[] = { 0xfe, 0xed, 0xfe, 0xed };
@@ -258,7 +257,7 @@ prepare_jks_buffer (P11KitIter *iter,
 	return_val_if_fail (aliases != NULL, false);
 
 	/* For every certificate */
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
 		count++;
 
 		/* The type of entry */
@@ -312,17 +311,17 @@ prepare_jks_buffer (P11KitIter *iter,
 }
 
 bool
-p11_extract_jks_cacerts (P11KitIter *iter,
-                         p11_extract_info *ex)
+p11_extract_jks_cacerts (p11_enumerate *ex,
+                         const char *destination)
 {
 	p11_buffer buffer;
 	p11_save_file *file;
 	bool ret;
 
 	p11_buffer_init (&buffer, 1024 * 10);
-	ret = prepare_jks_buffer (iter, ex, &buffer);
+	ret = prepare_jks_buffer (ex, &buffer);
 	if (ret) {
-		file = p11_save_open_file (ex->destination, NULL, ex->flags);
+		file = p11_save_open_file (destination, NULL, ex->flags);
 		ret = p11_save_write_and_finish (file, buffer.data, buffer.len);
 	}
 

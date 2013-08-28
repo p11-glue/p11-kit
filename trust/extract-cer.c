@@ -43,20 +43,20 @@
 #include <stdlib.h>
 
 bool
-p11_extract_x509_file (P11KitIter *iter,
-                       p11_extract_info *ex)
+p11_extract_x509_file (p11_enumerate *ex,
+                       const char *destination)
 {
 	bool found = false;
 	p11_save_file *file;
 	CK_RV rv;
 
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
 		if (found) {
 			p11_message ("multiple certificates found but could only write one to file");
 			break;
 		}
 
-		file = p11_save_open_file (ex->destination, NULL, ex->flags);
+		file = p11_save_open_file (destination, NULL, ex->flags);
 		if (!p11_save_write_and_finish (file, ex->cert_der, ex->cert_len))
 			return false;
 
@@ -78,8 +78,8 @@ p11_extract_x509_file (P11KitIter *iter,
 }
 
 bool
-p11_extract_x509_directory (P11KitIter *iter,
-                            p11_extract_info *ex)
+p11_extract_x509_directory (p11_enumerate *ex,
+                            const char *destination)
 {
 	p11_save_file *file;
 	p11_save_dir *dir;
@@ -87,12 +87,12 @@ p11_extract_x509_directory (P11KitIter *iter,
 	CK_RV rv;
 	bool ret;
 
-	dir = p11_save_open_directory (ex->destination, ex->flags);
+	dir = p11_save_open_directory (destination, ex->flags);
 	if (dir == NULL)
 		return false;
 
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
-		filename = p11_extract_info_filename (ex);
+	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
+		filename = p11_enumerate_filename (ex);
 		return_val_if_fail (filename != NULL, -1);
 
 		file = p11_save_open_file_in (dir, filename, ".cer");
