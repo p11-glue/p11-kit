@@ -658,6 +658,103 @@ test_modify_multiple (void)
 	test_check_attrs (third, parsed->elem[2]);
 }
 
+static void
+test_remove_one (void)
+{
+	const char *test_data =
+		"[p11-kit-object-v1]\n"
+		"class: data\n"
+		"label: \"first\"\n"
+		"value: \"1\"\n"
+		"\n";
+
+	CK_ATTRIBUTE match = { CKA_LABEL, "first", 5 };
+
+	CK_OBJECT_HANDLE handle;
+	CK_RV rv;
+
+	test_write_file (test.directory, "Test.p11-kit", test_data, strlen (test_data));
+	test_check_directory (test.directory, ("Test.p11-kit", NULL));
+
+	/* Reload now that we have this new file */
+	p11_token_load (test.token);
+
+	handle = p11_index_find (test.index, &match, 1);
+	assert_num_cmp (handle, !=, 0);
+
+	rv = p11_index_remove (test.index, handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* No other files in the test directory, all files gone */
+	test_check_directory (test.directory, (NULL, NULL));
+}
+
+static void
+test_remove_multiple (void)
+{
+	const char *test_data =
+		"[p11-kit-object-v1]\n"
+		"class: data\n"
+		"label: \"first\"\n"
+		"value: \"1\"\n"
+		"\n"
+		"[p11-kit-object-v1]\n"
+		"class: data\n"
+		"label: \"second\"\n"
+		"value: \"2\"\n"
+		"\n"
+		"[p11-kit-object-v1]\n"
+		"class: data\n"
+		"label: \"third\"\n"
+		"value: \"3\"\n";
+
+	CK_ATTRIBUTE first[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "first", 5 },
+		{ CKA_VALUE, "1", 1 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE third[] = {
+		{ CKA_CLASS, &data, sizeof (data) },
+		{ CKA_LABEL, "third", 5 },
+		{ CKA_VALUE, "3", 1 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE match = { CKA_LABEL, "second", 6 };
+
+	CK_OBJECT_HANDLE handle;
+	p11_array *parsed;
+	char *path;
+	int ret;
+	CK_RV rv;
+
+	test_write_file (test.directory, "Test.p11-kit", test_data, strlen (test_data));
+
+	/* Reload now that we have this new file */
+	p11_token_load (test.token);
+
+	handle = p11_index_find (test.index, &match, 1);
+	assert_num_cmp (handle, !=, 0);
+
+	rv = p11_index_remove (test.index, handle);
+	assert_num_eq (rv, CKR_OK);
+
+	/* Now read in the file and make sure it has all the objects */
+	path = p11_path_build (test.directory, "Test.p11-kit", NULL);
+	ret = p11_parse_file (test.parser, path, NULL, 0);
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
+	free (path);
+
+	parsed = p11_parser_parsed (test.parser);
+	assert_num_eq (parsed->num, 2);
+
+	/* The modified one will be first */
+	test_check_attrs (first, parsed->elem[0]);
+	test_check_attrs (third, parsed->elem[1]);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -685,6 +782,8 @@ main (int argc,
 	p11_test (test_write_new, "/token/write-new");
 	p11_test (test_write_no_label, "/token/write-no-label");
 	p11_test (test_modify_multiple, "/token/modify-multiple");
+	p11_test (test_remove_one, "/token/remove-one");
+	p11_test (test_remove_multiple, "/token/remove-multiple");
 
 	return p11_test_run (argc, argv);
 }

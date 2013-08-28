@@ -479,6 +479,25 @@ check_token_directory (p11_token *token)
 	return token->checked_path;
 }
 
+static bool
+writer_remove_origin (p11_token *token,
+                         CK_ATTRIBUTE *origin)
+{
+	bool ret = true;
+	char *path;
+
+	path = strndup (origin->pValue, origin->ulValueLen);
+	return_val_if_fail (path != NULL, false);
+
+	if (unlink (path) < 0) {
+		p11_message_err (errno, "couldn't remove file: %s", path);
+		ret = false;
+	}
+
+	free (path);
+	return ret;
+}
+
 static p11_save_file *
 writer_overwrite_origin (p11_token *token,
                          CK_ATTRIBUTE *origin)
@@ -701,6 +720,72 @@ on_index_store (void *data,
 	return rv;
 }
 
+static CK_RV
+on_index_remove (void *data,
+                 p11_index *index,
+                 CK_ATTRIBUTE *attrs)
+{
+	p11_token *token = data;
+	CK_OBJECT_HANDLE *other;
+	p11_persist *persist;
+	p11_buffer buffer;
+	CK_ATTRIBUTE *origin;
+	CK_ATTRIBUTE *object;
+	p11_save_file *file;
+	CK_RV rv = CKR_OK;
+	int i;
+
+	/* Signifies that data is being loaded, don't write out */
+	if (p11_index_loading (index))
+		return CKR_OK;
+
+	if (!check_token_directory (token))
+		return CKR_FUNCTION_FAILED;
+
+	/* We should have a file name */
+	origin = p11_attrs_find (attrs, CKA_X_ORIGIN);
+	return_val_if_fail (origin != NULL, CKR_GENERAL_ERROR);
+
+	/* If there are other objects in this file, then rewrite it */
+	other = p11_index_find_all (index, origin, 1);
+	if (other && other[0]) {
+		file = writer_overwrite_origin (token, origin);
+		if (file == NULL) {
+			free (other);
+			return CKR_GENERAL_ERROR;
+		}
+
+		persist = p11_persist_new ();
+		p11_buffer_init (&buffer, 1024);
+
+		rv = writer_put_header (file);
+		for (i = 0; rv == CKR_OK && other && other[i] != 0; i++) {
+			object = p11_index_lookup (index, other[i]);
+			if (object != NULL)
+				rv = writer_put_object (file, persist, &buffer, object);
+		}
+
+		if (rv == CKR_OK) {
+			if (!p11_save_finish_file (file, NULL, true))
+				rv = CKR_FUNCTION_FAILED;
+		} else {
+			p11_save_finish_file (file, NULL, false);
+		}
+
+		p11_persist_free (persist);
+		p11_buffer_uninit (&buffer);
+
+	/* Otherwise just remove the file */
+	} else {
+		if (!writer_remove_origin (token, origin))
+			rv = CKR_FUNCTION_FAILED;
+	}
+
+	free (other);
+
+	return rv;
+}
+
 static void
 on_index_notify (void *data,
                  p11_index *index,
@@ -746,7 +831,7 @@ p11_token_new (CK_SLOT_ID slot,
 
 	token->index = p11_index_new (on_index_build,
 	                              on_index_store,
-	                              NULL,
+	                              on_index_remove,
 	                              on_index_notify,
 	                              token);
 	return_val_if_fail (token->index != NULL, NULL);
