@@ -34,9 +34,12 @@
 
 #include "config.h"
 
+#define P11_DEBUG_FLAG P11_DEBUG_TOOL
+
 #include "anchor.h"
 #include "attrs.h"
 #include "debug.h"
+#include "iter.h"
 #include "message.h"
 #include "parser.h"
 #include "p11-kit.h"
@@ -46,6 +49,172 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+static p11_parser *
+create_arg_file_parser (void)
+{
+	p11_parser *parser;
+
+	parser = p11_parser_new (NULL);
+	return_val_if_fail (parser != NULL, NULL);
+
+	p11_parser_formats (parser,
+	                    p11_parser_format_x509,
+	                    p11_parser_format_pem,
+	                    NULL);
+
+	return parser;
+}
+
+static bool
+iter_match_anchor (p11_kit_iter *iter,
+                   CK_ATTRIBUTE *attrs)
+{
+	CK_ATTRIBUTE *attr;
+
+	attr = p11_attrs_find_valid (attrs, CKA_CLASS);
+	if (attr == NULL)
+		return false;
+
+	p11_kit_iter_add_filter (iter, attr, 1);
+
+	attr = p11_attrs_find_valid (attrs, CKA_VALUE);
+	if (attr == NULL)
+		return false;
+
+	p11_kit_iter_add_filter (iter, attr, 1);
+	return true;
+}
+
+static p11_array *
+uris_or_files_to_iters (int argc,
+                        char *argv[],
+                        int behavior)
+{
+	int flags = P11_KIT_URI_FOR_OBJECT_ON_TOKEN_AND_MODULE;
+	p11_parser *parser = NULL;
+	p11_array *iters;
+	p11_array *parsed;
+	p11_kit_uri *uri;
+	p11_kit_iter *iter;
+	int ret;
+	int i, j;
+
+	iters = p11_array_new ((p11_destroyer)p11_kit_iter_free);
+	return_val_if_fail (iters != NULL, NULL);
+
+	for (i = 0; i < argc; i++) {
+
+		/* A PKCS#11 URI */
+		if (strncmp (argv[i], "pkcs11:", 7) == 0) {
+			uri = p11_kit_uri_new ();
+			if (p11_kit_uri_parse (argv[i], flags, uri) != P11_KIT_URI_OK) {
+				p11_message ("invalid PKCS#11 uri: %s", argv[i]);
+				p11_kit_uri_free (uri);
+				break;
+			}
+
+			iter = p11_kit_iter_new (uri, behavior);
+			return_val_if_fail (iter != NULL, NULL);
+			p11_kit_uri_free (uri);
+
+			if (!p11_array_push (iters, iter))
+				return_val_if_reached (NULL);
+
+		} else {
+			if (parser == NULL)
+				parser = create_arg_file_parser ();
+
+			ret = p11_parse_file (parser, argv[i], NULL, P11_PARSE_FLAG_ANCHOR);
+			switch (ret) {
+			case P11_PARSE_SUCCESS:
+				p11_debug ("parsed file: %s", argv[i]);
+				break;
+			case P11_PARSE_UNRECOGNIZED:
+				p11_message ("unrecognized file format: %s", argv[i]);
+				break;
+			default:
+				p11_message ("failed to parse file: %s", argv[i]);
+				break;
+			}
+
+			if (ret != P11_PARSE_SUCCESS)
+				break;
+
+			parsed = p11_parser_parsed (parser);
+			for (j = 0; j < parsed->num; j++) {
+				iter = p11_kit_iter_new (NULL, behavior);
+				return_val_if_fail (iter != NULL, NULL);
+
+				iter_match_anchor (iter, parsed->elem[j]);
+				if (!p11_array_push (iters, iter))
+					return_val_if_reached (NULL);
+			}
+		}
+	}
+
+	if (parser)
+		p11_parser_free (parser);
+
+	if (argc != i) {
+		p11_array_free (iters);
+		return NULL;
+	}
+
+	return iters;
+}
+
+static p11_array *
+files_to_attrs (int argc,
+                char *argv[])
+{
+	p11_parser *parser;
+	p11_array *parsed;
+	p11_array *array;
+	int ret;
+	int i, j;
+
+	array = p11_array_new (p11_attrs_free);
+	return_val_if_fail (array != NULL, NULL);
+
+	parser = create_arg_file_parser ();
+	return_val_if_fail (parser != NULL, NULL);
+
+	for (i = 0; i < argc; i++) {
+		ret = p11_parse_file (parser, argv[i], NULL, P11_PARSE_FLAG_ANCHOR);
+		switch (ret) {
+		case P11_PARSE_SUCCESS:
+			p11_debug ("parsed file: %s", argv[i]);
+			break;
+		case P11_PARSE_UNRECOGNIZED:
+			p11_message ("unrecognized file format: %s", argv[i]);
+			break;
+		default:
+			p11_message ("failed to parse file: %s", argv[i]);
+			break;
+		}
+
+		if (ret != P11_PARSE_SUCCESS)
+			break;
+
+		parsed = p11_parser_parsed (parser);
+		for (j = 0; j < parsed->num; j++) {
+			if (!p11_array_push (array, parsed->elem[j]))
+				return_val_if_reached (NULL);
+			parsed->elem[j] = NULL;
+		}
+	}
+
+	p11_parser_free (parser);
+
+	if (ret == P11_PARSE_SUCCESS)
+		return array;
+
+	p11_array_free (array);
+	return NULL;
+
+}
 
 static CK_SESSION_HANDLE
 session_for_store_on_module (const char *name,
@@ -95,6 +264,8 @@ session_for_store_on_module (const char *name,
 			p11_message ("%s: couldn't open session: %s", name, p11_kit_strerror (rv));
 			session = 0;
 		}
+
+		p11_debug ("opened writable session on: %s", name);
 	}
 
 	free (slots);
@@ -147,85 +318,220 @@ session_for_store (CK_FUNCTION_LIST **module)
 	return session;
 }
 
-static int
-anchor_store (char **files,
-              int nfiles)
+static bool
+create_anchor (CK_FUNCTION_LIST *module,
+               CK_SESSION_HANDLE session,
+               CK_ATTRIBUTE *attrs)
 {
 	CK_BBOOL truev = CK_TRUE;
+	CK_OBJECT_HANDLE object;
+	char *string;
+	CK_RV rv;
 
 	CK_ATTRIBUTE basics[] = {
 		{ CKA_TOKEN, &truev, sizeof (truev) },
+		{ CKA_TRUSTED, &truev, sizeof (truev) },
 		{ CKA_INVALID, },
 	};
 
+	attrs = p11_attrs_merge (attrs, p11_attrs_dup (basics), true);
+	p11_attrs_remove (attrs, CKA_MODIFIABLE);
+
+	if (p11_debugging) {
+		string = p11_attrs_to_string (attrs, -1);
+		p11_debug ("storing: %s", string);
+		free (string);
+	}
+
+	rv = (module->C_CreateObject) (session, attrs,
+	                               p11_attrs_count (attrs), &object);
+
+	p11_attrs_free (attrs);
+
+	if (rv != CKR_OK) {
+		p11_message ("couldn't create object: %s", p11_kit_strerror (rv));
+		return false;
+	}
+
+	return true;
+}
+
+static bool
+modify_anchor (CK_FUNCTION_LIST *module,
+               CK_SESSION_HANDLE session,
+               CK_OBJECT_HANDLE object,
+               CK_ATTRIBUTE *attrs)
+{
+	CK_BBOOL truev = CK_TRUE;
+	CK_ATTRIBUTE *changes;
+	CK_ATTRIBUTE *label;
+	char *string;
+	CK_RV rv;
+
+	CK_ATTRIBUTE trusted = { CKA_TRUSTED, &truev, sizeof (truev) };
+
+	label = p11_attrs_find_valid (attrs, CKA_LABEL);
+	changes = p11_attrs_build (NULL, &trusted, label, NULL);
+	return_val_if_fail (attrs != NULL, FALSE);
+
+	/* Don't need the attributes anymore */
+	p11_attrs_free (attrs);
+
+	if (p11_debugging) {
+		string = p11_attrs_to_string (changes, -1);
+		p11_debug ("setting: %s", string);
+		free (string);
+	}
+
+	rv = (module->C_SetAttributeValue) (session, object, changes,
+	                                    p11_attrs_count (changes));
+
+	p11_attrs_free (changes);
+
+	if (rv != CKR_OK) {
+		p11_message ("couldn't create object: %s", p11_kit_strerror (rv));
+		return false;
+	}
+
+	return true;
+}
+
+static CK_OBJECT_HANDLE
+find_anchor (CK_FUNCTION_LIST *module,
+             CK_SESSION_HANDLE session,
+             CK_ATTRIBUTE *attrs)
+{
+	CK_OBJECT_HANDLE object = 0UL;
+	CK_ATTRIBUTE *attr;
+	p11_kit_iter *iter;
+
+	attr = p11_attrs_find_valid (attrs, CKA_CLASS);
+	return_val_if_fail (attr != NULL, 0);
+
+	iter = p11_kit_iter_new (NULL, 0);
+	return_val_if_fail (iter != NULL, 0);
+
+	if (iter_match_anchor (iter, attrs)) {
+		p11_kit_iter_begin_with (iter, module, 0, session);
+		if (p11_kit_iter_next (iter) == CKR_OK)
+			object = p11_kit_iter_get_object (iter);
+	}
+
+	p11_kit_iter_free (iter);
+
+	return object;
+}
+
+static int
+anchor_store (int argc,
+              char *argv[])
+{
 	CK_ATTRIBUTE *attrs;
 	CK_FUNCTION_LIST *module = NULL;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
-	p11_parser *parser;
-	p11_array *parsed;
 	CK_RV rv = CKR_OK;
-	int ret;
-	int i, j;
+	p11_array *anchors;
+	int i;
 
-	if (nfiles == 0) {
+	anchors = files_to_attrs (argc, argv);
+	if (anchors == NULL)
+		return 1;
+
+	if (anchors->num == 0) {
 		p11_message ("specify at least one anchor input file");
+		p11_array_free (anchors);
 		return 2;
 	}
 
 	session = session_for_store (&module);
-	if (session == 0UL)
+	if (session == 0UL) {
+		p11_array_free (anchors);
 		return 1;
-
-	parser = p11_parser_new (NULL);
-	p11_parser_formats (parser,
-	                    p11_parser_format_x509,
-	                    p11_parser_format_pem,
-	                    NULL);
-
-	for (i = 0; i < nfiles; i++) {
-		ret = p11_parse_file (parser, files[i], NULL, P11_PARSE_FLAG_ANCHOR);
-		switch (ret) {
-		case P11_PARSE_SUCCESS:
-			break;
-		case P11_PARSE_UNRECOGNIZED:
-			p11_message ("unrecognized file format: %s", files[i]);
-			break;
-		default:
-			p11_message ("failed to parse file: %s", files[i]);
-			break;
-		}
-
-		if (ret != P11_PARSE_SUCCESS)
-			break;
-
-		parsed = p11_parser_parsed (parser);
-		rv = CKR_OK;
-
-		for (j = 0; j < parsed->num; j++) {
-			attrs = p11_attrs_merge (parsed->elem[j], p11_attrs_dup (basics), true);
-			parsed->elem[j] = NULL;
-
-			rv = (module->C_CreateObject) (session, attrs,
-			                               p11_attrs_count (attrs), &object);
-
-			p11_attrs_free (attrs);
-
-			if (rv != CKR_OK) {
-				p11_message ("couldn't create object: %s", p11_kit_strerror (rv));
-				break;
-			}
-		}
-
-		if (rv != CKR_OK)
-			break;
 	}
 
+	for (i = 0; i < anchors->num; i++) {
+		attrs = anchors->elem[i];
+		anchors->elem[i] = NULL;
+
+		object = find_anchor (module, session, attrs);
+		if (object == 0) {
+			p11_debug ("don't yet have this anchor");
+			if (!create_anchor (module, session, attrs))
+				break;
+		} else {
+			p11_debug ("already have this anchor");
+			if (!modify_anchor (module, session, object, attrs))
+				break;
+		}
+	}
+
+	p11_array_free (anchors);
 	p11_kit_module_finalize (module);
 	p11_kit_module_release (module);
 
-	p11_parser_free (parser);
-	return (ret == P11_PARSE_SUCCESS && rv == CKR_OK) ? 0 : 1;
+	return (rv == CKR_OK) ? 0 : 1;
+}
+
+static bool
+remove_all (p11_kit_iter *iter)
+{
+	CK_RV rv;
+
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		p11_debug ("removing object: %lu", p11_kit_iter_get_object (iter));
+		rv = p11_kit_iter_destroy_object (iter);
+		switch (rv) {
+		case CKR_OK:
+			continue;
+		case CKR_TOKEN_WRITE_PROTECTED:
+		case CKR_SESSION_READ_ONLY:
+			p11_message ("couldn't remove read-only object");
+			continue;
+		default:
+			p11_message ("couldn't remove object: %s", p11_kit_strerror (rv));
+			break;
+		}
+	}
+
+	return (rv == CKR_CANCEL);
+}
+
+static int
+anchor_remove (int argc,
+               char *argv[])
+{
+	CK_FUNCTION_LIST **modules;
+	p11_array *iters;
+	p11_kit_iter *iter;
+	int ret = 0;
+	int i;
+
+	iters = uris_or_files_to_iters (argc, argv, P11_KIT_ITER_WANT_WRITABLE);
+	return_val_if_fail (iters != NULL, 1);
+
+	if (iters->num == 0) {
+		p11_message ("at least one file or uri must be specified");
+		p11_array_free (iters);
+		return 2;
+	}
+
+	modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
+	if (modules == NULL)
+		ret = 1;
+
+	for (i = 0; ret == 0 && i < iters->num; i++) {
+		iter = iters->elem[i];
+
+		p11_kit_iter_begin (iter, modules);
+		if (!remove_all (iter))
+			ret = 1;
+	}
+
+	p11_array_free (iters);
+	p11_kit_modules_finalize_and_release (modules);
+
+	return ret;
 }
 
 int
@@ -234,6 +540,7 @@ p11_trust_anchor (int argc,
 {
 	int action = 0;
 	int opt;
+	int ret;
 
 	enum {
 		opt_verbose = 'v',
@@ -241,10 +548,12 @@ p11_trust_anchor (int argc,
 		opt_help = 'h',
 
 		opt_store = 's',
+		opt_remove = 'r',
 	};
 
 	struct option options[] = {
 		{ "store", no_argument, NULL, opt_store },
+		{ "remove", no_argument, NULL, opt_remove },
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
@@ -261,6 +570,7 @@ p11_trust_anchor (int argc,
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
 		case opt_store:
+		case opt_remove:
 			if (action == 0) {
 				action = opt;
 			} else {
@@ -286,15 +596,18 @@ p11_trust_anchor (int argc,
 	argc -= optind;
 	argv += optind;
 
-	/* TODO: This should only be the default if a file is specified */
 	if (action == 0)
 		action = opt_store;
 
-	switch (action) {
-	case opt_store:
-		return anchor_store (argv, argc);
-	default:
-		assert_not_reached();
-		return -1;
-	}
+	/* Store is different, and only accepts files */
+	if (action == opt_store)
+		ret = anchor_store (argc, argv);
+
+	else if (action == opt_remove)
+		ret = anchor_remove (argc, argv);
+
+	else
+		assert_not_reached ();
+
+	return ret;
 }
