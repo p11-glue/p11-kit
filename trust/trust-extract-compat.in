@@ -7,20 +7,20 @@
 # trust module is used to modifiy trust anchors and related data.
 
 if [ $# -ne 0 ]; then
-	echo "usage: p11-kit extract-trust" >&2
+	echo "usage: trust extract-compat" >&2
 	exit 2
 fi
 
-echo "p11-kit: the placeholder extract-trust command has not been customized by your distribution." >&2
+echo "trust: the placeholder extract-compat command has not been customized by your distribution." >&2
 
 # You can use commands like this to extract data from trust modules
 # into appropriate locations for your distribution.
 #
-# p11-kit extract --format=openssl-bundle --filter=ca-anchors \
+# trust extract --format=openssl-bundle --filter=ca-anchors \
 # 	--overwrite /tmp/openssl-bundle.pem
-# p11-kit extract --format=pem-bundle --filter=ca-anchors --overwrite \
+# trust extract --format=pem-bundle --filter=ca-anchors --overwrite \
 # 	--purpose server-auth /tmp/server-auth-bundle.pem
-# p11-kit extract --format=java-cacerts --filter=ca-anchors --overwrite \
+# trust extract --format=java-cacerts --filter=ca-anchors --overwrite \
 # 	--purpose server-auth /tmp/cacerts
 
 exit 1

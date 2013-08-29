@@ -41,6 +41,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <getopt.h>
 #include <string.h>
 #include <stdio.h>
@@ -52,7 +53,7 @@
 int       p11_kit_list_modules    (int argc,
                                    char *argv[]);
 
-int       p11_kit_extract         (int argc,
+int       p11_kit_trust           (int argc,
                                    char *argv[]);
 
 int       p11_kit_external        (int argc,
@@ -60,10 +61,31 @@ int       p11_kit_external        (int argc,
 
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, "List modules and tokens" },
-	{ "extract", p11_kit_extract, "Extract certificates and trust" },
-	{ P11_TOOL_FALLBACK, p11_kit_external, "List modules and tokens" },
+	{ P11_TOOL_FALLBACK, p11_kit_external, NULL },
 	{ 0, }
 };
+
+int
+p11_kit_trust (int argc,
+               char *argv[])
+{
+	char **args;
+
+	args = calloc (argc + 2, sizeof (char *));
+	return_val_if_fail (args != NULL, 1);
+
+	args[0] = BINDIR "/trust";
+	memcpy (args + 1, argv, sizeof (char *) * argc);
+	args[argc + 1] = NULL;
+
+	execv (args[0], args);
+
+	/* At this point we have no command */
+	p11_message_err (errno, "couldn't run trust tool");
+
+	free (args);
+	return 2;
+}
 
 int
 p11_kit_external (int argc,
@@ -71,6 +93,14 @@ p11_kit_external (int argc,
 {
 	char *filename;
 	char *path;
+
+	/* These are trust commands, send them to that tool */
+	if (strcmp (argv[0], "extract") == 0) {
+		return p11_kit_trust (argc, argv);
+	} else if (strcmp (argv[0], "extract-trust") == 0) {
+		argv[0] = "extract-compat";
+		return p11_kit_trust (argc, argv);
+	}
 
 	if (!asprintf (&filename, "p11-kit-%s", argv[0]) < 0)
 		return_val_if_reached (1);
@@ -87,34 +117,6 @@ p11_kit_external (int argc,
 
 	free (filename);
 	free (path);
-	return 2;
-}
-
-int
-p11_kit_extract (int argc,
-                 char *argv[])
-{
-	char *path;
-	char **args;
-
-	args = calloc (argc + 2, sizeof (char *));
-	return_val_if_fail (args != NULL, 1);
-
-	args[0] = "trust";
-	memcpy (args + 1, argv, sizeof (char *) * argc);
-	args[argc + 1] = NULL;
-
-	/* Add our libexec directory to the path */
-	path = p11_path_build (BINDIR, args[0], NULL);
-	return_val_if_fail (path != NULL, 1);
-
-	execv (path, args);
-
-	/* At this point we have no command */
-	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
-
-	free (path);
-	free (args);
 	return 2;
 }
 

@@ -56,6 +56,7 @@
 static const p11_tool_command commands[] = {
 	{ "list", p11_trust_list, "List trust or certificates" },
 	{ "extract", p11_trust_extract, "Extract certificates and trust" },
+	{ "extract-compat", p11_trust_extract_compat, "Extract trust compatibility bundles" },
 	{ "anchor", p11_trust_anchor, "Add, remove, change trust anchors" },
 	{ 0, }
 };

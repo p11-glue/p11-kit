@@ -10,6 +10,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/common \
 	-DDATADIR=\"$(datadir)\" \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \
+	-DPRIVATEDIR=\"$(privatedir)\" \
 	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
@@ -111,7 +112,7 @@ trust_SOURCES = \
 
 externaldir = $(privatedir)
 external_SCRIPTS = \
-	p11-kit-extract-trust
+	trust-extract-compat
 
 EXTRA_DIST = \
 	p11-kit-trust.module

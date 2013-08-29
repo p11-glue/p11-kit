@@ -72,4 +72,7 @@ bool            p11_extract_openssl_directory  (p11_enumerate *ex,
 int             p11_trust_extract              (int argc,
                                                 char **argv);
 
+int             p11_trust_extract_compat       (int argc,
+                                                char *argv[]);
+
 #endif /* P11_EXTRACT_H_ */

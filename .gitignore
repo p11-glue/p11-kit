@@ -113,6 +113,7 @@ x86_64-w64-mingw32
 /tools/p11-kit
 
 /trust/trust
+/trust/trust-extract-compat
 /trust/p11-kit-extract-trust
 
 /p11-kit-?.?
