@@ -20,6 +20,7 @@
 		<title>Manual Pages</title>
 		<xi:include href="p11-kit.xml"/>
 		<xi:include href="pkcs11.conf.xml"/>
+		<xi:include href="trust.xml"/>
 	</chapter>
 
 	<chapter xml:id="reference">

@@ -6,12 +6,15 @@
   <!ENTITY userdir SYSTEM "userdir.xml">
 ]>
 
-<chapter xml:id="trust">
+<chapter xml:id="trust-module">
 <title>Trust Policy Module</title>
 
 	<para>The trust module provides system certificate anchors, blacklists
 	and other trust policy to crypto libraries applications. This
 	information is exposed as PKCS#11 objects.</para>
+
+	<para>You can use the <link linkend="trust">trust</link> command line
+	tool to examine and modify the trust policy store.</para>
 
 <section id="trust-files">
 	<title>Paths loaded by the Module</title>

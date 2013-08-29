@@ -114,6 +114,7 @@ version.xml:
 include $(top_srcdir)/gtk-doc.make
 
 if ENABLE_GTK_DOC
+man1_MANS = trust.1
 man8_MANS = p11-kit.8
 man5_MANS = pkcs11.conf.5
 
@@ -128,6 +129,8 @@ XSLTPROC_FLAGS = \
 XSLTPROC_MAN = \
 	$(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 
+.xml.1:
+	$(AM_V_GEN) $(XSLTPROC_MAN) $<
 .xml.5:
 	$(AM_V_GEN) $(XSLTPROC_MAN) $<
 .xml.8:
@@ -135,6 +138,7 @@ XSLTPROC_MAN = \
 
 else # ENABLE_GTK_DOC
 
+man1_MANS =
 man5_MANS =
 man8_MANS =
 

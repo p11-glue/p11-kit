@@ -84,6 +84,7 @@ x86_64-w64-mingw32
 /doc/manual/userdir.xml
 /doc/manual/version.xml
 /doc/manual/xml/
+/doc/manual/*.1
 /doc/manual/*.5
 /doc/manual/*.8
 

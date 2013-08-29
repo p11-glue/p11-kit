@@ -33,8 +33,7 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit extract</command> <arg choice="plain">--filter=&lt;what&gt;</arg>
-			<arg choice="plain">--format=&lt;type&gt;</arg> /path/to/destination
+		<command>p11-kit extract</command> ...
 	</cmdsynopsis>
 </refsynopsisdiv>
 
@@ -81,128 +80,8 @@ $ p11-kit list-modules
 
 	<para>Extract certificates from configured PKCS#11 modules.</para>
 
-<programlisting>
-$ p11-kit extract --format=x509-directory --filter=ca-anchors /path/to/directory
-</programlisting>
-
-	<para>You can specify the following options to control what to extract.
-	The <option>--filter</option> and <option>--format</option> arguments
-	should be specified. By default this command will not overwrite the
-	destination file or directory.</para>
-
-	<variablelist>
-		<varlistentry>
-			<term><option>--comment</option></term>
-			<listitem><para>Add identifying comments to PEM bundle output files
-			before each certificate.</para></listitem>
-		</varlistentry>
-		<varlistentry>
-			<term><option>--filter=&lt;what&gt;</option></term>
-			<listitem>
-			<para>Specifies what certificates to extract. You can specify the following values:
-			<variablelist>
-				<varlistentry>
-					<term><option>ca-anchors</option></term>
-					<listitem><para>Certificate anchors (default)</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>trust-policy</option></term>
-					<listitem><para>Anchors and blacklist</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>blacklist</option></term>
-					<listitem><para>Blacklisted certificates</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>certificates</option></term>
-					<listitem><para>All certificates</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>pkcs11:object=xx</option></term>
-					<listitem><para>A PKCS#11 URI</para></listitem>
-				</varlistentry>
-			</variablelist>
-			</para>
-
-			<para>If an output format is chosen that cannot support type what has been
-			specified by the filter, a message will be printed.</para>
-
-			<para>None of the available formats support storage of blacklist entries
-			that do not contain a full certificate. Thus any certificates blacklisted by
-			their issuer and serial number alone, are not included in the extracted
-			blacklist.</para>
-			</listitem>
-		</varlistentry>
-		<varlistentry>
-			<term><option>--format=&lt;type&gt;</option></term>
-			<listitem><para>The format of the destination file or directory.
-			You can specify one of the following values:
-			<variablelist>
-				<varlistentry>
-					<term><option>x509-file</option></term>
-					<listitem><para>DER X.509 certificate file</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>x509-directory</option></term>
-					<listitem><para>directory of X.509 certificates</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>pem-bundle</option></term>
-					<listitem><para>File containing one or more certificate PEM blocks</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>pem-directory</option></term>
-					<listitem><para>Directory PEM files each containing one certifiacte</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>openssl-bundle</option></term>
-					<listitem><para>OpenSSL specific PEM bundle of certificates</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>openssl-directory</option></term>
-					<listitem><para>Directory of OpenSSL specific PEM files</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>java-cacerts</option></term>
-					<listitem><para>Java keystore 'cacerts' certificate bundle</para></listitem>
-				</varlistentry>
-			</variablelist>
-			</para></listitem>
-		</varlistentry>
-		<varlistentry>
-			<term><option>--overwrite</option></term>
-			<listitem><para>Overwrite output file or directory.</para></listitem>
-		</varlistentry>
-		<varlistentry>
-			<term><option>--purpose=&lt;usage&gt;</option></term>
-			<listitem><para>Limit to certificates usable for the given purpose
-			You can specify one of the following values:
-			<variablelist>
-				<varlistentry>
-					<term><option>server-auth</option></term>
-					<listitem><para>For authenticating servers</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>client-auth</option></term>
-					<listitem><para>For authenticating clients</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>email</option></term>
-					<listitem><para>For email protection</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>code-signing</option></term>
-					<listitem><para>For authenticated signed code</para></listitem>
-				</varlistentry>
-				<varlistentry>
-					<term><option>1.2.3.4.5...</option></term>
-					<listitem><para>An arbitrary purpose OID</para></listitem>
-				</varlistentry>
-			</variablelist>
-			</para></listitem>
-		</varlistentry>
-	</variablelist>
-
+	<para>See <member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member>
+	for more information</para>
 </refsect1>
 
 <refsect1 id="p11-kit-extract-trust">
@@ -210,21 +89,11 @@ $ p11-kit extract --format=x509-directory --filter=ca-anchors /path/to/directory
 
 	<para>Extract standard trust information files.</para>
 
-<programlisting>
-$ p11-kit extract-trust
-</programlisting>
-
-	<para>OpenSSL, GnuTLS and Java cannot currently read trust information
-	directly from the trust policy module. This command extracts trust
-	information such as certificate anchors for use by these libraries.</para>
-
-	<para>What this command does, and where it extracts the files is
-	distribution or site specific. Packagers or administrators are expected
-	customize this command.</para>
-
+	<para>See <citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	for more information</para>
 </refsect1>
 
-<refsect1 id="p11-kit-extract-bugs">
+<refsect1 id="p11-kit-bugs">
   <title>Bugs</title>
   <para>
     Please send bug reports to either the distribution bug tracker
@@ -233,7 +102,7 @@ $ p11-kit extract-trust
   </para>
 </refsect1>
 
-<refsect1 id="p11-kit-extract-see-also">
+<refsect1 id="p11-kit-see-also">
   <title>See also</title>
     <simplelist type="inline">
         <member><citerefentry><refentrytitle>pkcs11.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></member>

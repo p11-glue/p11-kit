@@ -1,0 +1,368 @@
+<?xml version='1.0'?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+
+<refentry id="trust">
+
+<refentryinfo>
+	<title>trust</title>
+	<productname>p11-kit</productname>
+	<authorgroup>
+		<author>
+			<contrib>Maintainer</contrib>
+			<firstname>Stef</firstname>
+			<surname>Walter</surname>
+			<email>stef@thewalter.net</email>
+		</author>
+	</authorgroup>
+</refentryinfo>
+
+<refmeta>
+	<refentrytitle>trust</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="manual">User Commands</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+	<refname>trust</refname>
+	<refpurpose>Tool for operating on the trust policy store</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+	<cmdsynopsis>
+		<command>trust list</command>
+	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>trust extract</command> <arg choice="plain">--filter=&lt;what&gt;</arg>
+			<arg choice="plain">--format=&lt;type&gt;</arg> /path/to/destination
+	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>trust anchor</command> /path/to/certificate.crt
+	</cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1 id="trust-description">
+	<title>Description</title>
+	<para><command>trust</command> is a command line tool to examine and
+	modify the shared trust policy store.</para>
+
+	<para>See the various sub commands below. The following global options
+	can be used:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>-v, --verbose</option></term>
+			<listitem><para>Run in verbose mode with debug
+			output.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>-q, --quiet</option></term>
+			<listitem><para>Run in quiet mode without warning or
+			failure messages.</para></listitem>
+		</varlistentry>
+	</variablelist>
+
+</refsect1>
+
+<refsect1 id="trust-list">
+	<title>List</title>
+
+	<para>List trust policy store items.</para>
+
+<programlisting>
+$ trust list
+</programlisting>
+
+	<para>List information about the various items in the trust policy store.
+	Each item is listed with it's PKCS#11 URI and some descriptive information.</para>
+
+	<para>You can specify the following options to control what to list.</para>
+
+	<varlistentry>
+		<term><option>--filter=&lt;what&gt;</option></term>
+		<listitem>
+		<para>Specifies what certificates to extract. You can specify the following values:
+		<variablelist>
+			<varlistentry>
+				<term><option>ca-anchors</option></term>
+				<listitem><para>Certificate anchors</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>trust-policy</option></term>
+				<listitem><para>Anchors and blacklist (default)</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>blacklist</option></term>
+				<listitem><para>Blacklisted certificates</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>certificates</option></term>
+				<listitem><para>All certificates</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>pkcs11:object=xx</option></term>
+				<listitem><para>A PKCS#11 URI to filter with</para></listitem>
+			</varlistentry>
+		</variablelist>
+		</para>
+
+		<para>If an output format is chosen that cannot support type what has been
+		specified by the filter, a message will be printed.</para>
+
+		<para>None of the available formats support storage of blacklist entries
+		that do not contain a full certificate. Thus any certificates blacklisted by
+		their issuer and serial number alone, are not included in the extracted
+		blacklist.</para>
+		</listitem>
+	</varlistentry>
+	<varlistentry>
+		<term><option>--purpose=&lt;usage&gt;</option></term>
+		<listitem><para>Limit to certificates usable for the given purpose
+		You can specify one of the following values:
+		<variablelist>
+			<varlistentry>
+				<term><option>server-auth</option></term>
+				<listitem><para>For authenticating servers</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>client-auth</option></term>
+				<listitem><para>For authenticating clients</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>email</option></term>
+				<listitem><para>For email protection</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>code-signing</option></term>
+				<listitem><para>For authenticated signed code</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>1.2.3.4.5...</option></term>
+				<listitem><para>An arbitrary purpose OID</para></listitem>
+			</varlistentry>
+		</variablelist>
+		</para></listitem>
+	</varlistentry>
+
+</refsect1>
+
+<refsect1 id="trust-anchor">
+	<title>Anchor</title>
+
+	<para>Store or remove trust anchors.</para>
+
+<programlisting>
+$ trust anchor /path/to/certificate.crt
+$ trust anchor --remove /path/to/certificate.crt
+$ trust anchor --remove "pkcs11:id=%AA%BB%CC%DD%EE;object-type=cert"
+</programlisting>
+
+	<para>Store or remove trust anchors in the trust policy store. These are
+	usually root certificate authorities.</para>
+
+	<para>Specify either the <option>--store</option> or <option>--remove</option>
+	operations. If no operation is specified then <option>--store</option> is
+	assumed.</para>
+
+	<para>When storing, one or more certificate files are expected on the
+	command line. These are stored as anchors, unless they are already
+	present.</para>
+
+	<para>When removing an anchor, either specify certificate files or
+	PKCS#11 URI's on the command line. Matching anchors will be removed.</para>
+
+	<para>It may be that this command needs to be run as root in order to
+	modify the system trust policy store, if no user specific store is
+	available.</para>
+
+	<para>You can specify the following options.</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--remove</option></term>
+			<listitem><para>Remove one or more anchors from the trust
+			policy store. Specify certificate files or PKCS#11 URI's
+			on the command line.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--store</option></term>
+			<listitem><para>Store one or more anchors to the trust
+			policy store. Specify certificate files on the command
+			line.</para></listitem>
+		</varlistentry>
+	</variablelist>
+
+</refsect1>
+
+<refsect1 id="trust-extract">
+	<title>Extract</title>
+
+	<para>Extract trust policy from the shared trust policy store.</para>
+
+<programlisting>
+$ trust extract --format=x509-directory --filter=ca-anchors /path/to/directory
+</programlisting>
+
+	<para>You can specify the following options to control what to extract.
+	The <option>--filter</option> and <option>--format</option> arguments
+	should be specified. By default this command will not overwrite the
+	destination file or directory.</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--comment</option></term>
+			<listitem><para>Add identifying comments to PEM bundle output files
+			before each certificate.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--filter=&lt;what&gt;</option></term>
+			<listitem>
+			<para>Specifies what certificates to extract. You can specify the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>ca-anchors</option></term>
+					<listitem><para>Certificate anchors (default)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>trust-policy</option></term>
+					<listitem><para>Anchors and blacklist</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>blacklist</option></term>
+					<listitem><para>Blacklisted certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>certificates</option></term>
+					<listitem><para>All certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pkcs11:object=xx</option></term>
+					<listitem><para>A PKCS#11 URI</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para>
+
+			<para>If an output format is chosen that cannot support type what has been
+			specified by the filter, a message will be printed.</para>
+
+			<para>None of the available formats support storage of blacklist entries
+			that do not contain a full certificate. Thus any certificates blacklisted by
+			their issuer and serial number alone, are not included in the extracted
+			blacklist.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--format=&lt;type&gt;</option></term>
+			<listitem><para>The format of the destination file or directory.
+			You can specify one of the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>x509-file</option></term>
+					<listitem><para>DER X.509 certificate file</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>x509-directory</option></term>
+					<listitem><para>directory of X.509 certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pem-bundle</option></term>
+					<listitem><para>File containing one or more certificate PEM blocks</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pem-directory</option></term>
+					<listitem><para>Directory PEM files each containing one certifiacte</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>openssl-bundle</option></term>
+					<listitem><para>OpenSSL specific PEM bundle of certificates</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>openssl-directory</option></term>
+					<listitem><para>Directory of OpenSSL specific PEM files</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>java-cacerts</option></term>
+					<listitem><para>Java keystore 'cacerts' certificate bundle</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--overwrite</option></term>
+			<listitem><para>Overwrite output file or directory.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--purpose=&lt;usage&gt;</option></term>
+			<listitem><para>Limit to certificates usable for the given purpose
+			You can specify one of the following values:
+			<variablelist>
+				<varlistentry>
+					<term><option>server-auth</option></term>
+					<listitem><para>For authenticating servers</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>client-auth</option></term>
+					<listitem><para>For authenticating clients</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>email</option></term>
+					<listitem><para>For email protection</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>code-signing</option></term>
+					<listitem><para>For authenticated signed code</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>1.2.3.4.5...</option></term>
+					<listitem><para>An arbitrary purpose OID</para></listitem>
+				</varlistentry>
+			</variablelist>
+			</para></listitem>
+		</varlistentry>
+	</variablelist>
+
+</refsect1>
+
+<refsect1 id="trust-extract-compat">
+	<title>Extract Compat</title>
+
+	<para>Extract compatibility trust certificate bundles.</para>
+
+<programlisting>
+$ trust extract-compat
+</programlisting>
+
+	<para>OpenSSL, Java and some versions of GnuTLS cannot currently read
+	trust information directly from the trust policy store. This command
+	extracts trust information such as certificate anchors for use by
+	these libraries.</para>
+
+	<para>What this command does, and where it extracts the files is
+	distribution or site specific. Packagers or administrators are expected
+	customize this command.</para>
+
+</refsect1>
+
+<refsect1 id="trust-bugs">
+  <title>Bugs</title>
+  <para>
+    Please send bug reports to either the distribution bug tracker
+    or the upstream bug tracker at
+    <ulink url="https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit">https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit</ulink>.
+  </para>
+</refsect1>
+
+<refsect1 id="trust-see-also">
+  <title>See also</title>
+    <simplelist type="inline">
+        <member><citerefentry><refentrytitle>p11-kit</refentrytitle><manvolnum>8</manvolnum></citerefentry></member>
+    </simplelist>
+    <para>An explanatory document about storing trust policy:
+    <ulink url="http://p11-glue.freedesktop.org/doc/storing-trust-policy/">http://p11-glue.freedesktop.org/doc/storing-trust-policy/</ulink></para>
+    <para>
+    Further details available in the p11-kit online documentation at
+    <ulink url="http://p11-glue.freedesktop.org/doc/p11-kit/">http://p11-glue.freedesktop.org/doc/p11-kit/</ulink>.
+  </para>
+</refsect1>
+
+</refentry>
