@@ -104,7 +104,7 @@ trust_SOURCES = \
 	extract-openssl.c \
 	extract-pem.c \
 	extract-cer.c \
-	list.c \
+	list.c list.h \
 	openssl.asn openssl.asn.h \
 	save.c save.h \
 	trust.c \

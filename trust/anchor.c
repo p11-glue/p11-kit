@@ -172,7 +172,7 @@ files_to_attrs (int argc,
 	p11_parser *parser;
 	p11_array *parsed;
 	p11_array *array;
-	int ret;
+	int ret = P11_PARSE_SUCCESS;
 	int i, j;
 
 	array = p11_array_new (p11_attrs_free);

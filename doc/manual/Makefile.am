@@ -77,6 +77,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	p11-kit-trust.xml \
 	p11-kit.xml \
 	pkcs11.conf.xml \
+	trust.xml \
 	annotation-glossary.xml \
 	$(NULL)
 
@@ -147,9 +148,11 @@ endif # ENABLE_GTK_DOC
 MAN_IN_FILES = \
 	$(man8_MANS:.8=.xml) \
 	$(man5_MANS:.5=.xml) \
+	$(man1_MANS:.1=.xml) \
 	$(NULL)
 
 CLEANFILES += \
+	$(man1_MANS) \
 	$(man5_MANS) \
 	$(man8_MANS) \
 	$(NULL)

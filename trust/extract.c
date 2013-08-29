@@ -288,8 +288,8 @@ int
 p11_trust_extract_compat (int argc,
                           char *argv[])
 {
-	char *path;
-	char *path2;
+	char *path = NULL;
+	char *path2 = NULL;
 	int error;
 
 	argv[argc] = NULL;

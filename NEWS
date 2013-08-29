@@ -1,3 +1,13 @@
+0.19.4 (unstable)
+ * 'trust anchor' now adds/removes certificate anchors
+ * 'trust list' lists trust policy stuff
+ * 'p11-kit extract' is now 'trust extract'
+ * 'p11-kit extract-trust' is now 'trust extract-compat'
+ * Workarounds for working on broken zfsonlinux.org [#68525]
+ * Add --with-module-config parameter to the configure script [#68122]
+ * Add support for removing stored PKCS#11 objects in trust module
+ * Various debugging tweaks
+
 0.19.3 (unstable)
  * Fix up problems with automake testing
  * Fix a bunch of memory leaks in newly refactored code
