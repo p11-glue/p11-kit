@@ -1,3 +1,6 @@
+0.20.0 (stable)
+ * Doc fixes
+
 0.19.4 (unstable)
  * 'trust anchor' now adds/removes certificate anchors
  * 'trust list' lists trust policy stuff
