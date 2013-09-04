@@ -89,7 +89,7 @@ critical: yes
 	cannot make use of high level configuration APIs that you may find on a
 	modern desktop.</para>
 
-	<para><link linkend="pkcs11.conf">See the manual page</link> for more details
+	<para><link linkend="pkcs11-conf">See the manual page</link> for more details
 	on the format and available options.</para>
 
 	<para>Note that user configuration files are not loaded from the home

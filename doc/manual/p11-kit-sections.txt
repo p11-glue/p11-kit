@@ -5,6 +5,7 @@ P11_KIT_URI_SCHEME_LEN
 P11KitUriType
 P11KitUriResult
 P11KitUri
+p11_kit_uri
 p11_kit_uri_new
 p11_kit_uri_get_module_info
 p11_kit_uri_match_module_info
@@ -98,6 +99,7 @@ p11_kit_be_quiet
 p11_kit_be_loud
 p11_kit_destroyer
 P11KitIter
+p11_kit_iter
 p11_kit_iter_new
 p11_kit_iter_set_uri
 p11_kit_iter_add_callback
