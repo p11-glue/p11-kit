@@ -234,7 +234,7 @@ p11_kit_strerror (CK_RV rv)
 	case CKR_MUTEX_NOT_LOCKED:
 		return _("The data cannot be locked");
 	case CKR_FUNCTION_REJECTED:
-		return _("The signature request was rejected by the user");
+		return _("The request was rejected by the user");
 
 	default:
 		return _("Unknown error");
