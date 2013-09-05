@@ -40,6 +40,7 @@
 #include "attrs.h"
 #include "debug.h"
 #include "constants.h"
+#include "extract.h"
 #include "iter.h"
 #include "message.h"
 #include "parser.h"
@@ -425,14 +426,15 @@ find_anchor (CK_FUNCTION_LIST *module,
 
 static int
 anchor_store (int argc,
-              char *argv[])
+              char *argv[],
+              bool *changed)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_FUNCTION_LIST *module = NULL;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
-	CK_RV rv = CKR_OK;
 	p11_array *anchors;
+	int ret;
 	int i;
 
 	anchors = files_to_attrs (argc, argv);
@@ -451,19 +453,27 @@ anchor_store (int argc,
 		return 1;
 	}
 
-	for (i = 0; i < anchors->num; i++) {
+	for (i = 0, ret = 0; i < anchors->num; i++) {
 		attrs = anchors->elem[i];
 		anchors->elem[i] = NULL;
 
 		object = find_anchor (module, session, attrs);
 		if (object == 0) {
 			p11_debug ("don't yet have this anchor");
-			if (!create_anchor (module, session, attrs))
+			if (create_anchor (module, session, attrs)) {
+				*changed = true;
+			} else {
+				ret = 1;
 				break;
+			}
 		} else {
 			p11_debug ("already have this anchor");
-			if (!modify_anchor (module, session, object, attrs))
+			if (modify_anchor (module, session, object, attrs)) {
+				*changed = true;
+			} else {
+				ret = 1;
 				break;
+			}
 		}
 	}
 
@@ -471,7 +481,7 @@ anchor_store (int argc,
 	p11_kit_module_finalize (module);
 	p11_kit_module_release (module);
 
-	return (rv == CKR_OK) ? 0 : 1;
+	return ret;
 }
 
 static const char *
@@ -494,7 +504,8 @@ description_for_object_at_iter (p11_kit_iter *iter)
 }
 
 static bool
-remove_all (p11_kit_iter *iter)
+remove_all (p11_kit_iter *iter,
+            bool *changed)
 {
 	const char *desc;
 	CK_RV rv;
@@ -505,6 +516,9 @@ remove_all (p11_kit_iter *iter)
 		rv = p11_kit_iter_destroy_object (iter);
 		switch (rv) {
 		case CKR_OK:
+			*changed = true;
+			/* fall through */
+		case CKR_OBJECT_HANDLE_INVALID:
 			continue;
 		case CKR_TOKEN_WRITE_PROTECTED:
 		case CKR_SESSION_READ_ONLY:
@@ -523,7 +537,8 @@ remove_all (p11_kit_iter *iter)
 
 static int
 anchor_remove (int argc,
-               char *argv[])
+               char *argv[],
+               bool *changed)
 {
 	CK_FUNCTION_LIST **modules;
 	p11_array *iters;
@@ -548,7 +563,7 @@ anchor_remove (int argc,
 		iter = iters->elem[i];
 
 		p11_kit_iter_begin (iter, modules);
-		if (!remove_all (iter))
+		if (!remove_all (iter, changed))
 			ret = 1;
 	}
 
@@ -562,6 +577,7 @@ int
 p11_trust_anchor (int argc,
                   char **argv)
 {
+	bool changed = false;
 	int action = 0;
 	int opt;
 	int ret;
@@ -625,13 +641,19 @@ p11_trust_anchor (int argc,
 
 	/* Store is different, and only accepts files */
 	if (action == opt_store)
-		ret = anchor_store (argc, argv);
+		ret = anchor_store (argc, argv, &changed);
 
 	else if (action == opt_remove)
-		ret = anchor_remove (argc, argv);
+		ret = anchor_remove (argc, argv, &changed);
 
 	else
 		assert_not_reached ();
+
+	/* Extract the compat bundles after modification */
+	if (ret == 0 && changed) {
+		char *args[] = { argv[0], NULL };
+		ret = p11_trust_extract_compat (1, args);
+	}
 
 	return ret;
 }
