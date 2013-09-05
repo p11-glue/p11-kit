@@ -11,6 +11,12 @@ if [ $# -ne 0 ]; then
 	exit 2
 fi
 
+uid=$(id -u)
+if [ "$uid" != 0 ]; then
+        echo "trust: running as non-root user: skip extracting compat bundles" >&2
+        exit 0
+fi
+
 echo "trust: the placeholder extract-compat command has not been customized by your distribution." >&2
 
 # You can use commands like this to extract data from trust modules
