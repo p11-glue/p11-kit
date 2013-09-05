@@ -975,7 +975,7 @@ sys_C_DestroyObject (CK_SESSION_HANDLE handle,
 
 			if (rv == CKR_OK && p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &val) && !val) {
 				/* TODO: This should be replaced with CKR_ACTION_PROHIBITED */
-				rv = CKR_FUNCTION_REJECTED;
+				rv = CKR_ATTRIBUTE_READ_ONLY;
 			}
 
 			if (rv == CKR_OK)

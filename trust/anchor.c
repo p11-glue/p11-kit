@@ -508,6 +508,7 @@ remove_all (p11_kit_iter *iter)
 			continue;
 		case CKR_TOKEN_WRITE_PROTECTED:
 		case CKR_SESSION_READ_ONLY:
+		case CKR_ATTRIBUTE_READ_ONLY:
 			p11_message ("couldn't remove read-only %s", desc);
 			continue;
 		default:
