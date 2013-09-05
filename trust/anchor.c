@@ -39,6 +39,7 @@
 #include "anchor.h"
 #include "attrs.h"
 #include "debug.h"
+#include "constants.h"
 #include "iter.h"
 #include "message.h"
 #include "parser.h"
@@ -473,23 +474,45 @@ anchor_store (int argc,
 	return (rv == CKR_OK) ? 0 : 1;
 }
 
+static const char *
+description_for_object_at_iter (p11_kit_iter *iter)
+{
+	CK_OBJECT_CLASS klass;
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_INVALID },
+	};
+
+	const char *desc = "object";
+	CK_RV rv;
+
+	rv = p11_kit_iter_load_attributes (iter, attrs, 1);
+	if (rv == CKR_OK)
+		desc = p11_constant_nick (p11_constant_classes, klass);
+
+	return desc;
+}
+
 static bool
 remove_all (p11_kit_iter *iter)
 {
+	const char *desc;
 	CK_RV rv;
 
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
-		p11_debug ("removing object: %lu", p11_kit_iter_get_object (iter));
+		desc = description_for_object_at_iter (iter);
+		p11_debug ("removing %s: %lu", desc, p11_kit_iter_get_object (iter));
 		rv = p11_kit_iter_destroy_object (iter);
 		switch (rv) {
 		case CKR_OK:
 			continue;
 		case CKR_TOKEN_WRITE_PROTECTED:
 		case CKR_SESSION_READ_ONLY:
-			p11_message ("couldn't remove read-only object");
+			p11_message ("couldn't remove read-only %s", desc);
 			continue;
 		default:
-			p11_message ("couldn't remove object: %s", p11_kit_strerror (rv));
+			p11_message ("couldn't remove %s: %s", desc,
+			             p11_kit_strerror (rv));
 			break;
 		}
 	}
