@@ -69,6 +69,12 @@ IGNORE_HFILES= \
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png
 HTML_IMAGES=
 
+generate_files= \
+	version.xml \
+	userdir.xml \
+	sysdir.xml \
+	$(NULL)
+
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
 content_files=p11-kit-config.xml p11-kit-sharing.xml \
@@ -84,11 +90,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
-expand_content_files= \
-	version.xml \
-	userdir.xml \
-	sysdir.xml \
-	$(NULL)
+expand_content_files= $(generate_files)
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
 # Only needed if you are using gtkdoc-scangobj to dynamically query widget
@@ -105,11 +107,11 @@ p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
 
 # Generate our files with variables
 sysdir.xml:
-	echo -n $(p11_system_config) > "$@"
+	$(AM_V_GEN) echo -n $(p11_system_config) > "$@"
 userdir.xml:
-	echo -n $(p11_user_config) > "$@"
+	$(AM_V_GEN) echo -n $(p11_user_config) > "$@"
 version.xml:
-	echo -n $(VERSION) > "$@"
+	$(AM_V_GEN) echo -n $(VERSION) > "$@"
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make
@@ -130,11 +132,11 @@ XSLTPROC_FLAGS = \
 XSLTPROC_MAN = \
 	$(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 
-.xml.1:
+trust.1: trust.xml $(generate_files)
 	$(AM_V_GEN) $(XSLTPROC_MAN) $<
-.xml.5:
+pkcs11.conf.5: pkcs11.conf.xml $(generate_files)
 	$(AM_V_GEN) $(XSLTPROC_MAN) $<
-.xml.8:
+p11-kit.8: p11-kit.xml $(generate_files)
 	$(AM_V_GEN) $(XSLTPROC_MAN) $<
 
 else # ENABLE_GTK_DOC
