@@ -1,3 +1,9 @@
+0.20.1 (stable)
+ * Extract compat trust data after we've changes
+ * Skip compat extraction if running as non-root
+ * Better failure messages when removing anchors
+ * Build cleanup
+
 0.20.0 (stable)
  * Doc fixes
 
