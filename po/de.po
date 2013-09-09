@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
 "glue\n"
-"POT-Creation-Date: 2013-02-12 16:23+0100\n"
+"POT-Creation-Date: 2013-09-09 14:12+0200\n"
 "PO-Revision-Date: 2013-02-13 17:07+0000\n"
 "Last-Translator: Stef Walter <stefwalter@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/freedesktop/"
@@ -341,7 +341,8 @@ msgid "The data cannot be locked"
 msgstr "Die Daten können nicht gesperrt werden."
 
 #: p11-kit/messages.c:237
-msgid "The signature request was rejected by the user"
+#, fuzzy
+msgid "The request was rejected by the user"
 msgstr "Die Signaturanfrage wurde vom Benutzer zurückgewiesen."
 
 #: p11-kit/messages.c:240

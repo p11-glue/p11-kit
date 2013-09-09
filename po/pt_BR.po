@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
 "glue\n"
-"POT-Creation-Date: 2013-02-12 16:23+0100\n"
+"POT-Creation-Date: 2013-09-09 14:12+0200\n"
 "PO-Revision-Date: 2012-04-01 03:48+0000\n"
 "Last-Translator: Rafael Ferreira <rafael.f.f1@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/"
@@ -337,7 +337,8 @@ msgid "The data cannot be locked"
 msgstr "Os dados não podem ser travados"
 
 #: p11-kit/messages.c:237
-msgid "The signature request was rejected by the user"
+#, fuzzy
+msgid "The request was rejected by the user"
 msgstr "A requisição de assinatura foi rejeitado pelo usuário"
 
 #: p11-kit/messages.c:240

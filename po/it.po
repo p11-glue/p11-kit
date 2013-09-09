@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
 "glue\n"
-"POT-Creation-Date: 2013-02-12 16:23+0100\n"
+"POT-Creation-Date: 2013-09-09 14:12+0200\n"
 "PO-Revision-Date: 2013-01-30 21:13+0000\n"
 "Last-Translator: milo <milo@ubuntu.com>\n"
 "Language-Team: Italian (http://www.transifex.com/projects/p/freedesktop/"
@@ -338,7 +338,8 @@ msgid "The data cannot be locked"
 msgstr "I dati non possono essere bloccati"
 
 #: p11-kit/messages.c:237
-msgid "The signature request was rejected by the user"
+#, fuzzy
+msgid "The request was rejected by the user"
 msgstr "La richiesta di firma è stata rifiutata dall'utente"
 
 #: p11-kit/messages.c:240
