@@ -13,7 +13,6 @@ LDADD = \
 	$(top_builddir)/p11-kit/libp11-kit-testable.la \
 	$(top_builddir)/common/libp11-test.la \
 	$(top_builddir)/common/libp11-common.la \
-	$(CUTEST_LIBS) \
 	$(LTLIBINTL)
 
 CHECK_PROGS = \

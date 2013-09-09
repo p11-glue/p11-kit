@@ -8,8 +8,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/.. \
 	-I$(COMMON) \
 	-DBUILDDIR=\"$(abs_builddir)\" \
-	$(TEST_CFLAGS) \
-	$(CUTEST_CFLAGS)
+	$(TEST_CFLAGS)
 
 LDADD = \
 	$(NULL)
@@ -37,5 +36,4 @@ TESTS = $(CHECK_PROGS)
 
 LDADD += \
 	$(top_builddir)/common/libp11-test.la \
-	$(top_builddir)/common/libp11-common.la \
-	$(CUTEST_LIBS)
+	$(top_builddir)/common/libp11-common.la
