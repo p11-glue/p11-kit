@@ -422,6 +422,8 @@ test_build_certificate_staple_ca (void)
 	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
+	/* Adding the stapled extension *first*, and then the certificate */
+
 	/* Add a stapled certificate */
 	rv = p11_index_add (test.index, stapled, 4, NULL);
 	assert_num_eq (CKR_OK, rv);
@@ -440,6 +442,52 @@ test_build_certificate_staple_ca (void)
 	 */
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
+}
+
+static void
+test_build_certificate_staple_ca_backwards (void)
+{
+	CK_ULONG category = 2; /* CA */
+
+	CK_ATTRIBUTE stapled[] = {
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
+		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
+		{ CKA_VALUE, "\x30\x0f\x06\x03\x55\x1d\x13\x01\x01\xff\x04\x05\x30\x03\x01\x01\xff", 17 },
+		{ CKA_X_PUBLIC_KEY_INFO, (void *)entrust_public_key, sizeof (entrust_public_key) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_VALUE, (void *)entrust_pretend_ca, sizeof (entrust_pretend_ca) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_INVALID },
+	};
+
+	CK_RV rv;
+	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
+
+	/* Adding the certificate *first*, and then the stapled extension */
+
+	rv = p11_index_add (test.index, input, 4, &handle);
+	assert_num_eq (CKR_OK, rv);
+
+	/* Add a stapled certificate */
+	rv = p11_index_add (test.index, stapled, 4, NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	/*
+	 * Even though the certificate is not a valid CA, the presence of the
+	 * stapled certificate extension transforms it into a CA.
+	 */
+	attrs = p11_index_lookup (test.index, handle);
+	test_check_attrs (expected, attrs);
 }
 
 static void
@@ -2142,6 +2190,7 @@ main (int argc,
 	p11_test (test_build_certificate_non_ca, "/builder/build_certificate_non_ca");
 	p11_test (test_build_certificate_v1_ca, "/builder/build_certificate_v1_ca");
 	p11_test (test_build_certificate_staple_ca, "/builder/build_certificate_staple_ca");
+	p11_test (test_build_certificate_staple_ca_backwards, "/builder/build-certificate-staple-ca-backwards");
 	p11_test (test_build_certificate_no_type, "/builder/build_certificate_no_type");
 	p11_test (test_build_certificate_bad_type, "/builder/build_certificate_bad_type");
 	p11_test (test_build_extension, "/builder/build_extension");
