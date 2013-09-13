@@ -380,6 +380,106 @@ test_build_certificate_staple_ca (CuTest *cu)
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
 		{ CKA_VALUE, "\x30\x03\x01\x01\xFF", 5 },
+		{ CKA_ID, "\x55\xe4\x81\xd1\x11\x80\xbe\xd8\x89\xb9\x08\xa3\x31\xf9\xa1\x24\x09\x16\xb9\x70", 20 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_VALUE, (void *)entrust_pretend_ca, sizeof (entrust_pretend_ca) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
+	CK_RV rv;
+
+	setup (cu);
+
+	/* Adding the stapled extension *first*, and then the certificate */
+
+	/* Add a stapled certificate */
+	rv = p11_index_add (test.index, stapled, 4, NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	rv = p11_index_add (test.index, input, 4, &handle);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/*
+	 * Even though the certificate is not a valid CA, the presence of the
+	 * stapled certificate extension transforms it into a CA.
+	 */
+	attrs = p11_index_lookup (test.index, handle);
+	test_check_attrs (cu, expected, attrs);
+
+	teardown (cu);
+}
+
+static void
+test_build_certificate_staple_ca_backwards (CuTest *cu)
+{
+	CK_ULONG category = 2; /* CA */
+
+	CK_ATTRIBUTE stapled[] = {
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
+		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
+		{ CKA_VALUE, "\x30\x03\x01\x01\xFF", 5 },
+		{ CKA_ID, "\x55\xe4\x81\xd1\x11\x80\xbe\xd8\x89\xb9\x08\xa3\x31\xf9\xa1\x24\x09\x16\xb9\x70", 20 },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_VALUE, (void *)entrust_pretend_ca, sizeof (entrust_pretend_ca) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_CATEGORY, &category, sizeof (category) },
+		{ CKA_INVALID },
+	};
+
+	CK_RV rv;
+	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
+
+	setup (cu);
+
+	/* Adding the certificate *first*, and then the stapled extension */
+
+	rv = p11_index_add (test.index, input, 4, &handle);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/* Add a stapled certificate */
+	rv = p11_index_add (test.index, stapled, 4, NULL);
+	CuAssertIntEquals (cu, CKR_OK, rv);
+
+	/*
+	 * Even though the certificate is not a valid CA, the presence of the
+	 * stapled certificate extension transforms it into a CA.
+	 */
+	attrs = p11_index_lookup (test.index, handle);
+	test_check_attrs (cu, expected, attrs);
+
+	teardown (cu);
+}
+
+static void
+test_build_certificate_staple_ca_specific_id (CuTest *cu)
+{
+	CK_ULONG category = 2; /* CA */
+
+	CK_ATTRIBUTE stapled[] = {
+		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
+		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
+		{ CKA_VALUE, "\x30\x03\x01\x01\xFF", 5 },
 		{ CKA_ID, "the id", 6 },
 		{ CKA_INVALID },
 	};
@@ -398,24 +498,26 @@ test_build_certificate_staple_ca (CuTest *cu)
 	};
 
 	CK_ATTRIBUTE *attrs;
+	CK_OBJECT_HANDLE handle;
 	CK_RV rv;
 
 	setup (cu);
+
+	/* Adding the stapled extension *first*, and then the certificate */
 
 	/* Add a stapled certificate */
 	rv = p11_index_add (test.index, stapled, 4, NULL);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
-	attrs = NULL;
-	rv = p11_builder_build (test.builder, test.index, &attrs, p11_attrs_dup (input));
+	rv = p11_index_add (test.index, input, 4, &handle);
 	CuAssertIntEquals (cu, CKR_OK, rv);
 
 	/*
 	 * Even though the certificate is not a valid CA, the presence of the
 	 * stapled certificate extension transforms it into a CA.
 	 */
+	attrs = p11_index_lookup (test.index, handle);
 	test_check_attrs (cu, expected, attrs);
-	p11_attrs_free (attrs);
 
 	teardown (cu);
 }
@@ -1720,6 +1822,8 @@ main (void)
 	SUITE_ADD_TEST (suite, test_build_certificate_non_ca);
 	SUITE_ADD_TEST (suite, test_build_certificate_v1_ca);
 	SUITE_ADD_TEST (suite, test_build_certificate_staple_ca);
+	SUITE_ADD_TEST (suite, test_build_certificate_staple_ca_backwards);
+	SUITE_ADD_TEST (suite, test_build_certificate_staple_ca_specific_id);
 	SUITE_ADD_TEST (suite, test_build_certificate_no_type);
 	SUITE_ADD_TEST (suite, test_build_certificate_bad_type);
 	SUITE_ADD_TEST (suite, test_build_extension);
