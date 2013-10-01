@@ -447,7 +447,10 @@ main (int argc,
 	p11_test (test_load_modules_user_none, "/conf/test_load_modules_user_none");
 	p11_test (test_parse_boolean, "/conf/test_parse_boolean");
 #ifdef OS_UNIX
-	p11_test (test_setuid, "/conf/setuid");
+	/* Don't run this test when under fakeroot */
+	if (!getenv ("FAKED_MODE")) {
+		p11_test (test_setuid, "/conf/setuid");
+	}
 #endif
 	return p11_test_run (argc, argv);
 }
