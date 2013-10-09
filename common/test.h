@@ -130,6 +130,16 @@ int         p11_test_run            (int argc,
 
 char *      p11_test_directory      (const char *prefix);
 
+void        p11_test_directory_delete  (const char *directory);
+
+void        p11_test_file_write     (const char *directory,
+                                     const char *name,
+                                     const void *contents,
+                                     size_t length);
+
+void        p11_test_file_delete    (const char *directory,
+                                     const char *name);
+
 #ifdef OS_UNIX
 
 char *      p11_test_copy_setgid    (const char *path);

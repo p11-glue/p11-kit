@@ -90,7 +90,7 @@ teardown (void *path)
 static void
 teardown_temp (void *unused)
 {
-	test_delete_directory (test.directory);
+	p11_test_directory_delete (test.directory);
 	free (test.directory);
 	teardown (test.directory);
 }
@@ -299,8 +299,8 @@ test_load_already (void)
 	CK_OBJECT_HANDLE handle;
 	int ret;
 
-	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "test.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 1);
@@ -327,14 +327,14 @@ test_load_unreadable (void)
 
 	int ret;
 
-	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "test.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 1);
 	assert (p11_index_find (test.index, cert, -1) != 0);
 
-	test_write_file (test.directory, "test.cer", "", 0);
+	p11_test_file_write (test.directory, "test.cer", "", 0);
 
 	/* Have to wait to make sure changes are detected */
 	p11_sleep_ms (1100);
@@ -356,14 +356,14 @@ test_load_gone (void)
 
 	int ret;
 
-	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "test.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 1);
 	assert (p11_index_find (test.index, cert, -1) != 0);
 
-	test_delete_file (test.directory, "test.cer");
+	p11_test_file_delete (test.directory, "test.cer");
 
 	/* Have to wait to make sure changes are detected */
 	p11_sleep_ms (1100);
@@ -392,8 +392,8 @@ test_load_found (void)
 	/* Have to wait to make sure changes are detected */
 	p11_sleep_ms (1100);
 
-	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "test.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 1);
@@ -421,8 +421,8 @@ test_reload_changed (void)
 	int ret;
 
 	/* Just one file */
-	test_write_file (test.directory, "test.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "test.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 1);
@@ -430,12 +430,12 @@ test_reload_changed (void)
 	assert (handle != 0);
 
 	/* Replace the file with verisign */
-	test_write_file (test.directory, "test.cer", verisign_v1_ca,
-	                 sizeof (verisign_v1_ca));
+	p11_test_file_write (test.directory, "test.cer", verisign_v1_ca,
+	                     sizeof (verisign_v1_ca));
 
 	/* Add another file with cacert3, but not reloaded */
-	test_write_file (test.directory, "another.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "another.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
 
 	attrs = p11_index_lookup (test.index, handle);
 	assert_ptr_not_null (attrs);
@@ -467,10 +467,10 @@ test_reload_gone (void)
 	int ret;
 
 	/* Just one file */
-	test_write_file (test.directory, "cacert3.cer", test_cacert3_ca_der,
-	                 sizeof (test_cacert3_ca_der));
-	test_write_file (test.directory, "verisign.cer", verisign_v1_ca,
-	                 sizeof (verisign_v1_ca));
+	p11_test_file_write (test.directory, "cacert3.cer", test_cacert3_ca_der,
+	                     sizeof (test_cacert3_ca_der));
+	p11_test_file_write (test.directory, "verisign.cer", verisign_v1_ca,
+	                     sizeof (verisign_v1_ca));
 
 	ret = p11_token_load (test.token);
 	assert_num_eq (ret, 2);
@@ -478,8 +478,8 @@ test_reload_gone (void)
 	assert (handle != 0);
 	assert (p11_index_find (test.index, verisign, -1) != 0);
 
-	test_delete_file (test.directory, "cacert3.cer");
-	test_delete_file (test.directory, "verisign.cer");
+	p11_test_file_delete (test.directory, "cacert3.cer");
+	p11_test_file_delete (test.directory, "verisign.cer");
 
 	attrs = p11_index_lookup (test.index, handle);
 	assert_ptr_not_null (attrs);
@@ -633,7 +633,7 @@ test_modify_multiple (void)
 	int ret;
 	CK_RV rv;
 
-	test_write_file (test.directory, "Test.p11-kit", test_data, strlen (test_data));
+	p11_test_file_write (test.directory, "Test.p11-kit", test_data, strlen (test_data));
 
 	/* Reload now that we have this new file */
 	p11_token_load (test.token);
@@ -673,7 +673,7 @@ test_remove_one (void)
 	CK_OBJECT_HANDLE handle;
 	CK_RV rv;
 
-	test_write_file (test.directory, "Test.p11-kit", test_data, strlen (test_data));
+	p11_test_file_write (test.directory, "Test.p11-kit", test_data, strlen (test_data));
 	test_check_directory (test.directory, ("Test.p11-kit", NULL));
 
 	/* Reload now that we have this new file */
@@ -730,7 +730,7 @@ test_remove_multiple (void)
 	int ret;
 	CK_RV rv;
 
-	test_write_file (test.directory, "Test.p11-kit", test_data, strlen (test_data));
+	p11_test_file_write (test.directory, "Test.p11-kit", test_data, strlen (test_data));
 
 	/* Reload now that we have this new file */
 	p11_token_load (test.token);

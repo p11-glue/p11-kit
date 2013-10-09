@@ -42,6 +42,7 @@
 #include "path.h"
 
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -338,6 +339,88 @@ p11_test_directory (const char *prefix)
 	free (templ);
 	return directory;
 }
+
+void
+p11_test_file_write (const char *base,
+                     const char *name,
+                     const void *contents,
+                     size_t length)
+{
+	char *path = NULL;
+	FILE *f;
+
+	if (base) {
+		if (asprintf (&path, "%s/%s", base, name) < 0)
+			assert_not_reached ();
+		name = path;
+	}
+
+	f = fopen (name, "wb");
+	if (f == NULL) {
+		printf ("# couldn't open file for writing: %s: %s\n", name, strerror (errno));
+		free (path);
+		assert_not_reached ();
+	}
+
+	if (fwrite (contents, 1, length, f) != length ||
+	    fclose (f) != 0) {
+		printf ("# couldn't write to file: %s: %s\n", name, strerror (errno));
+		free (path);
+		assert_not_reached ();
+	}
+
+	free (path);
+}
+
+void
+p11_test_file_delete (const char *base,
+                      const char *name)
+{
+	char *path = NULL;
+
+	if (base) {
+		if (asprintf (&path, "%s/%s", base, name) < 0)
+			assert_not_reached ();
+		name = path;
+	}
+
+	if (unlink (name) < 0) {
+		printf ("# Couldn't delete file: %s\n", name);
+		free (path);
+		assert_not_reached ();
+	}
+
+	free (path);
+}
+
+void
+p11_test_directory_delete (const char *directory)
+{
+	struct dirent *dp;
+	DIR *dir;
+
+	dir = opendir (directory);
+	if (dir == NULL) {
+		printf ("# Couldn't open directory: %s\n", directory);
+		assert_not_reached ();
+	}
+
+	while ((dp = readdir (dir)) != NULL) {
+		if (strcmp (dp->d_name, ".") == 0 ||
+		    strcmp (dp->d_name, "..") == 0)
+			continue;
+
+		p11_test_file_delete (directory, dp->d_name);
+	}
+
+	closedir (dir);
+
+	if (rmdir (directory) < 0) {
+		printf ("# Couldn't remove directory: %s\n", directory);
+		assert_not_reached ();
+	}
+}
+
 
 #ifdef OS_UNIX
 
