@@ -38,6 +38,13 @@
 #include "compat.h"
 #include "pkcs11.h"
 
+/* These are global variables to be overridden in tests */
+extern const char *p11_config_system_file;
+extern const char *p11_config_user_file;
+extern const char *p11_config_package_modules;
+extern const char *p11_config_system_modules;
+extern const char *p11_config_user_modules;
+
 CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
                                                                  const char *user_conf,
                                                                  int *user_mode);

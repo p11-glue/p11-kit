@@ -172,6 +172,13 @@ static struct _Shared {
 	p11_dict *config;
 } gl = { NULL, NULL };
 
+/* These are global variables to be overridden in tests */
+const char *p11_config_system_file = P11_SYSTEM_CONFIG_FILE;
+const char *p11_config_user_file = P11_USER_CONFIG_FILE;
+const char *p11_config_package_modules = P11_PACKAGE_CONFIG_MODULES;
+const char *p11_config_system_modules = P11_SYSTEM_CONFIG_MODULES;
+const char *p11_config_user_modules = P11_USER_CONFIG_MODULES;
+
 /* -----------------------------------------------------------------------------
  * P11-KIT FUNCTIONALITY
  */
@@ -501,16 +508,16 @@ load_registered_modules_unlocked (void)
 		return CKR_OK;
 
 	/* Load the global configuration files */
-	config = _p11_conf_load_globals (P11_SYSTEM_CONFIG_FILE, P11_USER_CONFIG_FILE, &mode);
+	config = _p11_conf_load_globals (p11_config_system_file, p11_config_user_file, &mode);
 	if (config == NULL)
 		return CKR_GENERAL_ERROR;
 
 	assert (mode != CONF_USER_INVALID);
 
 	configs = _p11_conf_load_modules (mode,
-	                                  P11_PACKAGE_CONFIG_MODULES,
-	                                  P11_SYSTEM_CONFIG_MODULES,
-	                                  P11_USER_CONFIG_MODULES);
+	                                  p11_config_package_modules,
+	                                  p11_config_system_modules,
+	                                  p11_config_user_modules);
 	if (configs == NULL) {
 		rv = CKR_GENERAL_ERROR;
 		p11_dict_free (config);
