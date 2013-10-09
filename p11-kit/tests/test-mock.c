@@ -40,7 +40,6 @@
 #include "p11-kit.h"
 
 #include <sys/types.h>
-#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -224,7 +223,7 @@ test_get_mechanism_info (void)
 	module = setup_mock_module (NULL);
 
 	rv = (module->C_GetMechanismInfo) (MOCK_SLOT_ONE_ID, CKM_MOCK_CAPITALIZE, &info);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (512, info.ulMinKeySize);
 	assert_num_eq (4096, info.ulMaxKeySize);
 	assert_num_eq (CKF_ENCRYPT | CKF_DECRYPT, info.flags);
@@ -1641,6 +1640,7 @@ test_random (void)
 static void
 test_mock_add_tests (const char *prefix)
 {
+	p11_fixture (NULL, NULL);
 	p11_test (test_get_info, "%s/test_get_info", prefix);
 	p11_test (test_get_slot_list, "%s/test_get_slot_list", prefix);
 	p11_test (test_get_slot_info, "%s/test_get_slot_info", prefix);
