@@ -1,3 +1,8 @@
+0.18.6 (stable)
+ * Avoid using the non-thread-safe strerror() function
+ * Testing fixes
+ * Build fixes
+
 0.18.5 (stable)
  * Add option to use freebl for hashing
  * Fix some warnings and possible minor bugs higlighted by code scanners
