@@ -35,8 +35,6 @@
 #include "config.h"
 #include "compat.h"
 
-#include <libtasn1.h>
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
