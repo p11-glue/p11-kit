@@ -68,12 +68,21 @@ AC_C_BIGENDIAN
 AC_HEADER_STDBOOL
 
 if test "$os_unix" = "yes"; then
-	AC_CHECK_LIB(pthread, pthread_mutex_lock,,
-		[AC_MSG_ERROR([could not find pthread_mutex_lock])])
-	AC_SEARCH_LIBS([dlopen], [dl dld], [],
-		[AC_MSG_ERROR([could not find dlopen])])
-	AC_SEARCH_LIBS([nanosleep], [rt], [],
-		[AC_MSG_ERROR([could not find nanosleep])])
+	AC_CHECK_FUNC([pthread_mutexattr_init], , [
+		AC_CHECK_LIB(pthread, pthread_mutexattr_init, , [
+			AC_MSG_ERROR([could not find pthread_mutexattr_init])
+		])
+	])
+
+	AC_CHECK_FUNC([nanosleep], , [
+		AC_SEARCH_LIBS([nanosleep], [rt], , [
+			AC_MSG_ERROR([could not find nanosleep])
+		])
+	])
+
+	AC_SEARCH_LIBS([dlopen], [dl dld], [], [
+		AC_MSG_ERROR([could not find dlopen])
+	])
 
 	# These are thngs we can work around
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
