@@ -2526,7 +2526,7 @@ prefix_mechanism_init (CK_SESSION_HANDLE session,
 	if (method == CKA_SIGN || method == CKA_SIGN_RECOVER) {
 		if (key != MOCK_PRIVATE_KEY_PREFIX)
 			return CKR_KEY_HANDLE_INVALID;
-	} else if (method == CKA_VERIFY || CKA_VERIFY_RECOVER) {
+	} else if (method == CKA_VERIFY || method == CKA_VERIFY_RECOVER) {
 		if (key != MOCK_PUBLIC_KEY_PREFIX)
 			return CKR_KEY_HANDLE_INVALID;
 	} else {
