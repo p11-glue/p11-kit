@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Joe Hansen <joedalton2@yahoo.dk>, 2013
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2013-11-08 09:42+0100\n"
+"PO-Revision-Date: 2013-12-24 13:36+0000\n"
+"Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish (http://www.transifex.com/projects/p/freedesktop/language/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,324 +20,324 @@ msgstr ""
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr ""
+msgstr "Handlingen blev afbrudt"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr ""
+msgstr "Der er ikke nok hukommelse"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "Det angivne slot-id er ikke gyldigt"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr ""
+msgstr "Intern fejl"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr ""
+msgstr "Handlingen mislykkedes"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Ugyldige parametre"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr ""
+msgstr "Modulet kan ikke oprette krævede tråde"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr ""
+msgstr "Modulet kan ikke låse data korrekt"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr ""
+msgstr "Feltet er skrivebeskyttet"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Feltet er sensitivt kan ikke afsløres"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr ""
+msgstr "Feltet er ugyldigt eller findes ikke"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr ""
+msgstr "Ugyldigt værdi for felt"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr ""
+msgstr "Dataene er ikke gyldige eller blev ikke genkendt"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr ""
+msgstr "Dataene er for lange"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr ""
+msgstr "Der opstod en fejl på enheden"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr ""
+msgstr "Utilstrækkelig tilgængelig hukommelse på enheden"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr ""
+msgstr "Enheden blev fjernet eller frakoblet"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
+msgstr "De krypterede data er ikke gyldige eller blev ikke genkendt"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr ""
+msgstr "De krypterede data er for lange"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr ""
+msgstr "Denne handling er ikke understøttet"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr ""
+msgstr "Nøglen mangler eller er ugyldig"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr ""
+msgstr "Nøglen har forkert størrelse"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr ""
+msgstr "Nøglen har forkert type"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr ""
+msgstr "Ingen nøgle er krævet"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr ""
+msgstr "Nøglen er anderledes end tidligere"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr ""
+msgstr "En nøgle er krævet"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Kan ikke inkludere nøglen i sammendraget"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "Denne handling kan ikke udføres med denne nøgle"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Nøglen kan ikke omsluttes"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr ""
+msgstr "Kan ikke eksportere denne nøgle"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "Kryptomekanismen er ugyldig eller blev ikke genkendt"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "Kryptomekanismen har en ugyldig parameter"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr ""
+msgstr "Objektet mangler eller er ugyldigt"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "En anden handling foregår allerede"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "Der udføres ingen handling"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr ""
+msgstr "Adgangskoden eller PIN er ikke korrekt"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr ""
+msgstr "Adgangskoden eller PIN er ugyldig"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr ""
+msgstr "Adgangskoden eller PIN har forkert længde"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr ""
+msgstr "Adgangskoden eller PIN er udløbet"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr ""
+msgstr "Adgangskoden eller PIN er låst"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Sessionen er låst"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "For mange sessioner er aktive"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Sessionen er ugyldig"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Sessionen er skrivebeskyttet"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Der findes en åben session"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Der findes en skrivebeskyttet session"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Der findes en administratorsession"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "Underskriften er ugyldig eller ødelagt"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "Underskriften kunne ikke genkendes eller er ødelagt"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "Bestemte krævede felter mangler"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "Bestemte felter har ugyldige værdier"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "Enheden er ikke til stede eller frakoblet"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "Enheden er ugyldig eller kan ikke genkendes"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "Enheden er skrivebeskyttet"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "Kan ikke importere da nøglen er ugyldig"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "Kan ikke importere da nøglen har forkert størrelse"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "Kan ikke importere da nøglen har forkert type"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "Du er allerede logget ind"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "Ingen bruger har logget ind"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "Brugerens adgangskode eller PIN er ikke angivet"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "Brugeren er af ugyldig type"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "En anden bruger er allerede logget ind"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "For mange brugere af forskellige typer er logget ind"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "Kan ikke importere en ugyldig nøgle"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "Kan ikke importere en nøgle med forkert størrelse"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "Kan ikke eksportere da nøglen er ugyldig"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "Kan ikke eksportere da nøglen har forkert størrelse"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "Kan ikke eksportere da nøglen har forkert type"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "Kan ikke initialisere oprettelsesprogrammet for vilkårlige tal"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "Intet oprettelsesprogram for vilkårlige tal er tilgængeligt"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "Kryptomekanismen har en ugyldig parameter"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "Ikke nok plads til at lagre resultatet"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "Den lagrede tilstand er ugyldig"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Informationen er sensitiv og kan ikke afsløres"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "Tilstanden kan ikke gemmes"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "Modulet er ikke blevet initialiseret"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "Modulet er allerede blevet initialiseret"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "Kan ikke låse data"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr ""
+msgstr "Dataene kan ikke låses"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Forespørgslen blev afvist af brugeren"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr ""
+msgstr "Ukendt fejl"
