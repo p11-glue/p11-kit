@@ -860,7 +860,7 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 
 		} else {
 			template[i].pValue = realloc (original[i].pValue, template[i].ulValueLen);
-			return_val_if_fail (template[i].pValue != NULL, 0);
+			return_val_if_fail (template[i].pValue != NULL, CKR_HOST_MEMORY);
 		}
 	}
 
