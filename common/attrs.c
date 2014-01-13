@@ -508,12 +508,14 @@ unsigned int
 p11_attr_hash (const void *data)
 {
 	const CK_ATTRIBUTE *attr = data;
-	uint32_t hash;
+	uint32_t hash = 0;
 
-	p11_hash_murmur3 (&hash,
-	                  &attr->type, sizeof (attr->type),
-	                  attr->pValue, (size_t)attr->ulValueLen,
-	                  NULL);
+	if (attr != NULL) {
+		p11_hash_murmur3 (&hash,
+		                  &attr->type, sizeof (attr->type),
+		                  attr->pValue, (size_t)attr->ulValueLen,
+		                  NULL);
+	}
 
 	return hash;
 }

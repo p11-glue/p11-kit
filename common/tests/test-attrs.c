@@ -454,6 +454,9 @@ test_hash (void)
 	assert (p11_attr_hash (&overflow) != hash);
 	assert (p11_attr_hash (&null) != hash);
 	assert (p11_attr_hash (&content) != hash);
+
+	hash = p11_attr_hash (NULL);
+	assert (hash == 0);
 }
 
 static void
