@@ -749,6 +749,41 @@ p11_kit_iter_destroy_object (P11KitIter *iter)
 }
 
 /**
+ * p11_kit_iter_get_attributes:
+ * @iter: the iterator
+ * @template: (array length=count) (inout): the attributes to get
+ * @count: the number of attributes
+ *
+ * Get attributes for the current matching object.
+ *
+ * This calls <literal>C_GetAttributeValue</literal> for the object
+ * currently iterated to. Return value and attribute memory behavior
+ * is identical to the PKCS\#11 <literal>C_GetAttributeValue</literal>
+ * function.
+ *
+ * You might choose to use p11_kit_iter_load_attributes() for a more
+ * helpful variant.
+ *
+ * This can only be called after p11_kit_iter_next() succeeds.
+ *
+ * Returns: The result from <literal>C_GetAttributeValue</literal>.
+ */
+CK_RV
+p11_kit_iter_get_attributes (P11KitIter *iter,
+                             CK_ATTRIBUTE *template,
+                             CK_ULONG count)
+{
+	return_val_if_fail (iter != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (iter->iterating, CKR_GENERAL_ERROR);
+	return_val_if_fail (iter->module != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (iter->session != 0, CKR_GENERAL_ERROR);
+	return_val_if_fail (iter->object != 0, CKR_GENERAL_ERROR);
+
+	return (iter->module->C_GetAttributeValue) (iter->session, iter->object,
+	                                            template, count);
+}
+
+/**
  * p11_kit_iter_load_attributes:
  * @iter: the iterator
  * @template: (array length=count) (inout): the attributes to load

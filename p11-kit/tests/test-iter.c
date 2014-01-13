@@ -963,6 +963,72 @@ test_find_objects_fail (void)
 }
 
 static void
+test_get_attributes (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	CK_OBJECT_HANDLE object;
+	char label[128];
+	CK_ULONG klass;
+	CK_ULONG ulong;
+	CK_RV rv;
+	int at;
+
+	CK_ATTRIBUTE template[] = {
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_LABEL, label, sizeof (label) },
+		{ CKA_INVALID },
+	};
+
+	CK_ATTRIBUTE attrs[3];
+
+	modules = initialize_and_get_modules ();
+
+	iter = p11_kit_iter_new (NULL, 0);
+	p11_kit_iter_begin (iter, modules);
+
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		assert (sizeof (attrs) == sizeof (template));
+		memcpy (&attrs, &template, sizeof (attrs));
+
+		rv = p11_kit_iter_get_attributes (iter, attrs, 2);
+		assert (rv == CKR_OK);
+
+		object = p11_kit_iter_get_object (iter);
+		switch (object) {
+		case MOCK_DATA_OBJECT:
+			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_DATA);
+			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "TEST LABEL", -1));
+			break;
+		case MOCK_PUBLIC_KEY_CAPITALIZE:
+			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
+			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public Capitalize Key", -1));
+			break;
+		case MOCK_PUBLIC_KEY_PREFIX:
+			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
+			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public prefix key", -1));
+			break;
+		default:
+			assert_fail ("Unknown object matched", NULL);
+			break;
+		}
+
+		at++;
+	}
+
+	assert (rv == CKR_CANCEL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	assert_num_eq (9, at);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+
+
+static void
 test_load_attributes (void)
 {
 	CK_FUNCTION_LIST_PTR *modules;
@@ -1251,6 +1317,7 @@ main (int argc,
 	p11_test (test_open_session_fail, "/iter/test_open_session_fail");
 	p11_test (test_find_init_fail, "/iter/test_find_init_fail");
 	p11_test (test_find_objects_fail, "/iter/test_find_objects_fail");
+	p11_test (test_get_attributes, "/iter/get-attributes");
 	p11_test (test_load_attributes, "/iter/test_load_attributes");
 	p11_test (test_load_attributes_none, "/iter/test_load_attributes_none");
 	p11_test (test_load_attributes_fail_first, "/iter/test_load_attributes_fail_first");

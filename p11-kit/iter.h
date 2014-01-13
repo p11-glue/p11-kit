@@ -94,6 +94,10 @@ CK_SESSION_HANDLE     p11_kit_iter_get_session              (P11KitIter *iter);
 
 CK_OBJECT_HANDLE      p11_kit_iter_get_object               (P11KitIter *iter);
 
+CK_RV                 p11_kit_iter_get_attributes           (P11KitIter *iter,
+                                                             CK_ATTRIBUTE *template,
+                                                             CK_ULONG count);
+
 CK_RV                 p11_kit_iter_load_attributes          (P11KitIter *iter,
                                                              CK_ATTRIBUTE *template,
                                                              CK_ULONG count);
