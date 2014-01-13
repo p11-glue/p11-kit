@@ -577,7 +577,7 @@ bool
 p11_enumerate_ready (p11_enumerate *ex,
                      const char *def_filter)
 {
-	if (ex->num_filters == 0) {
+	if (def_filter && ex->num_filters == 0) {
 		if (!p11_enumerate_opt_filter (ex, def_filter))
 			return_val_if_reached (false);
 	}
@@ -586,7 +586,8 @@ p11_enumerate_ready (p11_enumerate *ex,
 	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
 	 * we get from modules explicitly marked as containing trust-policy.
 	 */
-	ex->modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
+	if (!ex->modules)
+		ex->modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
 	if (!ex->modules)
 		return false;
 	if (ex->modules[0] == NULL)

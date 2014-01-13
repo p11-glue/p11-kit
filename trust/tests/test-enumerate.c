@@ -140,6 +140,7 @@ test_comment_not_enabled (void)
 
 struct {
 	CK_FUNCTION_LIST module;
+	CK_FUNCTION_LIST_PTR modules[2];
 	p11_enumerate ex;
 } test;
 
@@ -155,12 +156,20 @@ setup (void *unused)
 	assert_num_eq (CKR_OK, rv);
 
 	p11_enumerate_init (&test.ex);
+
+	/* Prefill the modules */
+	test.modules[0] = &test.module;
+	test.modules[1] = NULL;
+	test.ex.modules = test.modules;
 }
 
 static void
 teardown (void *unused)
 {
 	CK_RV rv;
+
+	/* Don't free the modules */
+	test.ex.modules = NULL;
 
 	p11_enumerate_cleanup (&test.ex);
 
@@ -231,7 +240,7 @@ test_info_simple_certificate (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
@@ -263,7 +272,7 @@ test_info_limit_purposes (void)
 	assert_ptr_not_null (test.ex.limit_to_purposes);
 
 	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
@@ -278,7 +287,7 @@ test_info_invalid_purposes (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_invalid);
 
 	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	p11_kit_be_quiet ();
 
@@ -296,7 +305,7 @@ test_info_skip_non_certificate (void)
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	p11_message_quiet ();
 
@@ -320,7 +329,7 @@ test_limit_to_purpose_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_enumerate_opt_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	p11_message_quiet ();
 
@@ -339,7 +348,7 @@ test_limit_to_purpose_no_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
 	p11_enumerate_opt_purpose (&test.ex, "3.3.3.3");
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	p11_message_quiet ();
 
@@ -359,7 +368,7 @@ test_duplicate_extract (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
@@ -387,7 +396,7 @@ test_duplicate_distrusted (void)
 
 	test.ex.flags = P11_ENUMERATE_COLLAPSE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
@@ -413,7 +422,7 @@ test_trusted_match (void)
 
 	test.ex.flags = P11_ENUMERATE_ANCHORS;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
@@ -431,7 +440,7 @@ test_distrust_match (void)
 
 	test.ex.flags = P11_ENUMERATE_BLACKLIST;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
@@ -455,7 +464,7 @@ test_anytrust_match (void)
 
 	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
-	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+	p11_enumerate_ready (&test.ex, NULL);
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
