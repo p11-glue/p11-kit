@@ -178,6 +178,7 @@ teardown (void *unused)
 }
 
 static CK_OBJECT_CLASS certificate_class = CKO_CERTIFICATE;
+static CK_OBJECT_CLASS public_key_class = CKO_PUBLIC_KEY;
 static CK_OBJECT_CLASS extension_class = CKO_X_CERTIFICATE_EXTENSION;
 static CK_CERTIFICATE_TYPE x509_type = CKC_X_509;
 static CK_BBOOL truev = CK_TRUE;
@@ -188,6 +189,8 @@ static CK_ATTRIBUTE cacert3_trusted[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Cacert3 Here", 11 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
 	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_TRUSTED, &truev, sizeof (truev) },
 	{ CKA_ID, "ID1", 3 },
@@ -200,6 +203,15 @@ static CK_ATTRIBUTE cacert3_distrusted[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Another CaCert", 11 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
+	{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
+	{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
+	{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
+	{ CKA_INVALID },
+};
+
+static CK_ATTRIBUTE cacert3_distrusted_by_key[] = {
+	{ CKA_CLASS, &public_key_class, sizeof (public_key_class) },
+	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_X_DISTRUSTED, &truev, sizeof (truev) },
 	{ CKA_INVALID },
 };
@@ -454,9 +466,10 @@ test_distrust_match (void)
 }
 
 static void
-test_anytrust_match (void)
+test_override_by_issuer_serial (void)
 {
 	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_BBOOL distrusted = CK_FALSE;
 	CK_RV rv;
 
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
@@ -469,6 +482,27 @@ test_anytrust_match (void)
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_OK, rv);
 
+	assert (p11_attrs_find_bool (test.ex.attrs, CKA_X_DISTRUSTED, &distrusted));
+	assert_num_eq (CK_TRUE, distrusted);
+
+	rv = p11_kit_iter_next (test.ex.iter);
+	assert_num_eq (CKR_CANCEL, rv);
+}
+
+static void
+test_override_by_public_key (void)
+{
+	CK_ATTRIBUTE certificate = { CKA_CLASS, &certificate_class, sizeof (certificate_class) };
+	CK_RV rv;
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted_by_key);
+
+	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST;
+	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
+	p11_enumerate_ready (&test.ex, NULL);
+
+	/* No results returned, because distrust is not a cert */
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
 }
@@ -495,7 +529,8 @@ main (int argc,
 	p11_test (test_duplicate_distrusted, "/extract/test-duplicate-distrusted");
 	p11_test (test_trusted_match, "/extract/test_trusted_match");
 	p11_test (test_distrust_match, "/extract/test_distrust_match");
-	p11_test (test_anytrust_match, "/extract/test_anytrust_match");
+	p11_test (test_override_by_issuer_serial, "/extract/override-by-issuer-and-serial");
+	p11_test (test_override_by_public_key, "/extract/override-by-public-key");
 
 	return p11_test_run (argc, argv);
 }

@@ -61,6 +61,9 @@ typedef struct {
 	int num_filters;
 	int flags;
 
+	p11_dict *blacklist_issuer_serial;
+	p11_dict *blacklist_public_key;
+
 	/*
 	 * Stuff below is parsed info for the current iteration.
 	 * Currently this information is generally all relevant
