@@ -11,7 +11,6 @@ TRUST_DIR =
 endif
 
 SUBDIRS = \
-	build \
 	common \
 	p11-kit \
 	$(TRUST_DIR) \
@@ -64,7 +63,8 @@ upload-release: $(DIST_ARCHIVES)
 	scp $(DIST_ARCHIVES) $(DIST_ARCHIVES).sig $(WEBHOST):$(WEBBASE)/releases/
 
 EXTRA_DIST = \
-	config.rpath \
+	build/Makefile.tests \
+	build/Makefile.decl \
 	HACKING
 
 transifex:

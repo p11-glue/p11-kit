@@ -38,6 +38,7 @@ config.sub
 configure
 configure.tmp
 depcomp
+makefile
 install-sh
 INSTALL
 libtool
@@ -61,8 +62,14 @@ x86_64-w64-mingw32
 /x86_64_w64-mingw32/
 
 /build/m4/*.m4
+/build/common
 /build/coverage
 /build/coverage.info
+/build/doc/
+/build/p11-kit/
+/build/p11-kit-[0123456789]*/
+/build/po/
+/build/trust/
 /local
 
 /common/tests/hash-test

@@ -3,7 +3,7 @@
 # We copy everything into its final location, and those test files are
 # distributed in the tarballs
 
-TRUST = $(top_srcdir)/trust/tests
+TRUST = ../../trust/tests
 
 prepare-certs:
 	cp -v cacert3.der $(TRUST)/input/anchors

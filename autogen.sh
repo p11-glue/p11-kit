@@ -27,6 +27,7 @@ test -f configure.ac~ && mv configure.ac~ configure.ac
 
 autoreconf --force --install --verbose
 if test x"$NOCONFIGURE" = x; then
-  exec ./configure "$@"
+  cd build/
+  exec ../configure "$@"
 fi
 

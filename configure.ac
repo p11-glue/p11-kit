@@ -500,8 +500,6 @@ privatedir='${libdir}/p11-kit'
 AC_SUBST(privatedir)
 
 AC_CONFIG_FILES([Makefile
-	build/Makefile
-	build/certs/Makefile
 	common/Makefile
 	common/tests/Makefile
 	doc/Makefile

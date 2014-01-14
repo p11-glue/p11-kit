@@ -130,7 +130,8 @@ XSLTPROC_FLAGS = \
         --stringparam man.copyright.section.enabled 0
 
 XSLTPROC_MAN = \
-	$(XSLTPROC) $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
+	$(XSLTPROC) $(XSLTPROC_FLAGS) --path $(builddir) \
+	http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 
 trust.1: trust.xml $(generate_files)
 	$(AM_V_GEN) $(XSLTPROC_MAN) $<

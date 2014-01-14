@@ -23,7 +23,7 @@ configure()
 # Configure the local build. To control which arguments are used create a
 # CONFIG_SITE script as directed in the autoconf documentation:
 # http://www.gnu.org/software/autoconf/manual/autoconf.html#Site-Defaults
-configure ./local --prefix=/usr --enable-doc --enable-coverage $ARGS "$@"
+configure ./build --prefix=/usr --enable-doc --enable-coverage $ARGS "$@"
 
 # Configure the cross builds
 for cross in $CROSS; do
@@ -37,7 +37,7 @@ done
 
 	for target in all check clean distclean; do
 		echo "$target:"
-		echo '	$(MAKE) -C ./local' $target
+		echo '	$(MAKE) -C ./build' $target
 		echo '	@for dir in $(CROSS); do \'
 		echo '		$(MAKE) -C ./$$dir' $target '; \'
 		echo '	done'
@@ -46,7 +46,7 @@ done
 	for target in distcheck memcheck leakcheck hellcheck install upload-coverage \
 		coverage upload-doc upload-release transifex; do
 		echo "$target:"
-		echo '	$(MAKE) -C ./local' $target
+		echo '	$(MAKE) -C ./build' $target
 	done
 
 ) > ./makefile
