@@ -114,7 +114,7 @@ version.xml:
 	$(AM_V_GEN) echo -n $(VERSION) > "$@"
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
-include $(top_srcdir)/gtk-doc.make
+include $(top_srcdir)/build/gtk-doc.make
 
 if ENABLE_GTK_DOC
 man1_MANS = trust.1
