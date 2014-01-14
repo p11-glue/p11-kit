@@ -114,3 +114,9 @@ test_openssl_SOURCES = \
 	$(TRUST)/extract-openssl.c \
 	$(TRUST)/save.c \
 	$(NULL)
+
+noinst_SCRIPTS = \
+	test-extract
+
+installcheck-local:
+	sh $(builddir)/test-extract

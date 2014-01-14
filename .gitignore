@@ -56,8 +56,10 @@ x86_64-w64-mingw32
 
 /*/tests/test-*
 !/*/tests/test-*.[ch]
+!/*/tests/test-*.in
 /*/tests/frob-*
 !/*/tests/frob-*.[ch]
+!/*/tests/frob-*.in
 
 /x86_64_w64-mingw32/
 

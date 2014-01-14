@@ -512,6 +512,7 @@ AC_CONFIG_FILES([Makefile
 	trust/Makefile
 	trust/trust-extract-compat
 	trust/tests/Makefile
+	trust/tests/test-extract
 ])
 AC_OUTPUT
 
