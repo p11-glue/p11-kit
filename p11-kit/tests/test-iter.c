@@ -987,6 +987,7 @@ test_get_attributes (void)
 	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_begin (iter, modules);
 
+	at = 0;
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
 		assert (sizeof (attrs) == sizeof (template));
 		memcpy (&attrs, &template, sizeof (attrs));
