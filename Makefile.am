@@ -21,7 +21,9 @@ ACLOCAL_AMFLAGS = -I build/m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-doc \
-	--disable-coverage
+	--disable-coverage \
+	--enable-strict \
+	CFLAGS='-O2'
 
 dist-hook:
 	@if test -d "$(srcdir)/.git"; \
