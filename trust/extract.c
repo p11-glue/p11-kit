@@ -218,7 +218,7 @@ p11_trust_extract (int argc,
 		{ opt_overwrite, "overwrite output file or directory" },
 		{ opt_comment, "add comments to bundles if possible" },
 		{ opt_verbose, "show verbose debug output", },
-		{ opt_quiet, "supress command output", },
+		{ opt_quiet, "suppress command output", },
 		{ 0 },
 	};
 

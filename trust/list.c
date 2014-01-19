@@ -195,7 +195,7 @@ p11_trust_list (int argc,
 		  "usage"
 		},
 		{ opt_verbose, "show verbose debug output", },
-		{ opt_quiet, "supress command output", },
+		{ opt_quiet, "suppress command output", },
 		{ 0 },
 	};
 

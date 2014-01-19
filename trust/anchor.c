@@ -603,7 +603,7 @@ p11_trust_anchor (int argc,
 	p11_tool_desc usages[] = {
 		{ 0, "usage: trust anchor --store <file> ..." },
 		{ opt_verbose, "show verbose debug output", },
-		{ opt_quiet, "supress command output", },
+		{ opt_quiet, "suppress command output", },
 		{ 0 },
 	};
 

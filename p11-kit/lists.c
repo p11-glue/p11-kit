@@ -252,7 +252,7 @@ p11_kit_list_modules (int argc,
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit list" },
 		{ opt_verbose, "show verbose debug output", },
-		{ opt_quiet, "supress command output", },
+		{ opt_quiet, "suppress command output", },
 		{ 0 },
 	};
 
