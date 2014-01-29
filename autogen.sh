@@ -2,6 +2,10 @@
 
 set -e
 
+oldpwd=$(pwd)
+topdir=$(dirname $0)
+cd $topdir
+
 # Some boiler plate to get git setup as expected
 if test -d .git; then
 	if test -f .git/hooks/pre-commit.sample && \
@@ -27,7 +31,7 @@ test -f configure.ac~ && mv configure.ac~ configure.ac
 
 autoreconf --force --install --verbose
 if test x"$NOCONFIGURE" = x; then
-  cd build/
-  exec ../configure "$@"
+  cd $oldpwd
+  exec $topdir/configure "$@"
 fi
 
