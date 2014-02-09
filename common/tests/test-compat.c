@@ -83,6 +83,22 @@ test_getauxval (void)
 	free (path);
 }
 
+static void
+test_mmap (void)
+{
+	p11_mmap *map;
+	void *data;
+	size_t size;
+	char file[] = "emptyfileXXXXXX";
+	int fd = mkstemp (file);
+	close (fd);
+	/* mmap on empty file should work */
+	map = p11_mmap_open (file, NULL, &data, &size);
+	unlink (file);
+	assert_ptr_not_null (map);
+	p11_mmap_close (map);
+}
+
 #endif /* OS_UNIX */
 
 int
@@ -95,6 +111,7 @@ main (int argc,
 	if (!getenv ("FAKED_MODE")) {
 		p11_test (test_getauxval, "/compat/getauxval");
 	}
+	p11_test (test_mmap, "/compat/mmap");
 #endif
 	return p11_test_run (argc, argv);
 }

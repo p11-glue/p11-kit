@@ -216,9 +216,15 @@ p11_mmap_open (const char *path,
 		return NULL;
 	}
 
+	if (sb->st_size == 0) {
+		*data = "";
+		*size = 0;
+		return map;
+	}
+
 	map->size = sb->st_size;
 	map->data = mmap (NULL, map->size, PROT_READ, MAP_PRIVATE, map->fd, 0);
-	if (map->data == NULL) {
+	if (map->data == MAP_FAILED) {
 		close (map->fd);
 		free (map);
 		return NULL;
@@ -232,7 +238,8 @@ p11_mmap_open (const char *path,
 void
 p11_mmap_close (p11_mmap *map)
 {
-	munmap (map->data, map->size);
+	if (map->size)
+		munmap (map->data, map->size);
 	close (map->fd);
 	free (map);
 }
