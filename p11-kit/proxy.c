@@ -132,7 +132,6 @@ map_slot_to_real (Proxy *px,
 {
 	CK_RV rv;
 
-	assert (px != NULL);
 	assert (mapping != NULL);
 
 	p11_lock ();
@@ -158,7 +157,6 @@ map_session_to_real (Proxy *px,
 	CK_RV rv = CKR_OK;
 	Session *sess;
 
-	assert (px != NULL);
 	assert (handle != NULL);
 	assert (mapping != NULL);
 
