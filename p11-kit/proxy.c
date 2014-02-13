@@ -81,7 +81,7 @@ typedef struct {
 	Mapping *mappings;
 	unsigned int n_mappings;
 	p11_dict *sessions;
-	CK_FUNCTION_LIST **modules;
+	p11_array *inited;
 } Proxy;
 
 typedef struct _State {
@@ -92,6 +92,7 @@ typedef struct _State {
 	Proxy *px;
 } State;
 
+static CK_FUNCTION_LIST **all_modules = NULL;
 static State *all_instances = NULL;
 static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, FIRST_HANDLE, NULL };
 
@@ -186,7 +187,7 @@ static void
 proxy_free (Proxy *py)
 {
 	if (py) {
-		p11_kit_modules_finalize_and_release (py->modules);
+		p11_array_free (py->inited);
 		p11_dict_free (py->sessions);
 		free (py->mappings);
 		free (py);
@@ -274,28 +275,19 @@ proxy_create (Proxy **res)
 	py = calloc (1, sizeof (Proxy));
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);
 
-	p11_lock ();
+	py->inited = p11_array_new ((p11_destroyer)p11_kit_module_finalize);
+	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
 
-		/* WARNING: Reentrancy can occur here */
-		rv = p11_modules_load_inlock_reentrant (0, &py->modules);
-
-	p11_unlock ();
-
-	if (rv != CKR_OK) {
-		proxy_free (py);
-		free (py);
-		return rv;
-	}
-
-	rv = p11_kit_modules_initialize (py->modules, (p11_destroyer)p11_kit_module_release);
-	if (rv != CKR_OK) {
-		p11_kit_modules_release (py->modules);
-		free (py);
-		return rv;
-	}
-
-	for (f = py->modules; *f; ++f) {
+	for (f = all_modules; *f; ++f) {
 		funcs = *f;
+
+		rv = p11_kit_module_initialize (funcs);
+		if (rv != CKR_OK)
+			break;
+
+		/* Make note of everything we've initialized */
+		if (!p11_array_push (py->inited, funcs))
+			return_val_if_reached (CKR_HOST_MEMORY);
 
 		assert (funcs != NULL);
 		slots = NULL;
@@ -2364,13 +2356,25 @@ CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
+	CK_FUNCTION_LIST **loaded;
 	State *state;
 	CK_RV rv = CKR_OK;
 
 	p11_library_init_once ();
 	p11_lock ();
 
-	if (p11_virtual_can_wrap ()) {
+	if (all_modules == NULL) {
+		/* WARNING: Reentrancy can occur here */
+		rv = p11_modules_load_inlock_reentrant (0, &loaded);
+		if (rv == CKR_OK) {
+			if (all_modules == NULL)
+				all_modules = loaded;
+			else
+				p11_modules_release_inlock_reentrant (loaded);
+		}
+	}
+
+	if (rv == CKR_OK && p11_virtual_can_wrap ()) {
 		state = calloc (1, sizeof (State));
 		if (!state) {
 			rv = CKR_HOST_MEMORY;
@@ -2416,6 +2420,11 @@ p11_proxy_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_virtual_unwrap (state->wrapped);
+	}
+
+	if (all_modules) {
+		p11_kit_modules_release (all_modules);
+		all_modules = NULL;
 	}
 }
 
