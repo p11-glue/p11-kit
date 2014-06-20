@@ -519,27 +519,10 @@ strconcat (const char *first,
 
 #endif /* HAVE_STRCONCAT */
 
-#ifndef HAVE_ASPRINTF
-
-int
-asprintf (char **strp,
-          const char *fmt,
-          ...)
-{
-	va_list va;
-	int ret;
-
-	va_start (va, fmt);
-	ret = vasprintf (strp, fmt, va);
-	va_end (va);
-
-	return ret;
-}
-
-#endif /* HAVE_ASPRINTF */
-
 #ifndef HAVE_VASPRINTF
 #include <stdio.h>
+
+int vasprintf(char **strp, const char *fmt, va_list ap);
 
 int
 vasprintf (char **strp,
@@ -584,6 +567,27 @@ vasprintf (char **strp,
 }
 
 #endif /* HAVE_VASPRINTF */
+
+#ifndef HAVE_ASPRINTF
+
+int asprintf(char **strp, const char *fmt, ...);
+
+int
+asprintf (char **strp,
+          const char *fmt,
+          ...)
+{
+	va_list va;
+	int ret;
+
+	va_start (va, fmt);
+	ret = vasprintf (strp, fmt, va);
+	va_end (va);
+
+	return ret;
+}
+
+#endif /* HAVE_ASPRINTF */
 
 #ifndef HAVE_GMTIME_R
 
