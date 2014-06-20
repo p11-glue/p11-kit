@@ -22,7 +22,7 @@ P11KIT_AGE=0
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_AUX_DIR([build/litter])
-AM_INIT_AUTOMAKE([1.10 foreign serial-tests])
+AM_INIT_AUTOMAKE([1.12 foreign serial-tests])
 AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
