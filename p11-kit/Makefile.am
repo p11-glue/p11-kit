@@ -98,6 +98,11 @@ libp11_kit_testable_la_CFLAGS = \
 	$(LIBFFI_CFLAGS) \
 	$(NULL)
 
+# Proxy module is actually same as library, so install a link
+install-exec-hook:
+	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.so` $(DESTDIR)$(libdir)/p11-kit-proxy.so
+	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
+
 endif
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -111,11 +116,6 @@ EXTRA_DIST = \
 	pkcs11.conf.example.in \
 	docs.h \
 	$(NULL)
-
-# Proxy module is actually same as library, so install a link
-install-exec-hook:
-	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.so` $(DESTDIR)$(libdir)/p11-kit-proxy.so
-	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
 
 bin_PROGRAMS = \
 	p11-kit
