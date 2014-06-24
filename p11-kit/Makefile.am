@@ -21,6 +21,7 @@ inc_HEADERS = \
 	iter.h \
 	p11-kit.h \
 	pin.h \
+	remote.h \
 	uri.h \
 	$(NULL)
 
@@ -36,6 +37,7 @@ MODULE_SRCS = \
 	proxy.c proxy.h \
 	private.h \
 	messages.c \
+	remote.c \
 	rpc-transport.c rpc.h \
 	rpc-message.c rpc-message.h \
 	rpc-client.c rpc-server.c \

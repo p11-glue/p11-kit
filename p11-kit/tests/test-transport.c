@@ -68,7 +68,7 @@ setup_remote (void *unused)
 	test.user_config = p11_path_build (test.directory, "pkcs11.conf", NULL);
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
-	data = "remote: " BUILDDIR "/frob-server " BUILDDIR "/.libs/mock-two.so\n";
+	data = "remote: " BUILDDIR "/../p11-kit remote " BUILDDIR "/.libs/mock-two.so\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
 
 	p11_config_user_modules = test.user_modules;

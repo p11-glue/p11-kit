@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Red Hat Inc.
+ * Copyright (C) 2014 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,8 +37,9 @@
 #include "buffer.h"
 #include "compat.h"
 #include "debug.h"
-#include "p11-kit.h"
+#include "message.h"
 #include "rpc.h"
+#include "remote.h"
 #include "virtual.h"
 
 #include <assert.h>
@@ -46,77 +47,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int
-main (int argc,
-      char *argv[])
+p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
+                             int in_fd,
+                             int out_fd)
 {
-	CK_FUNCTION_LIST *funcs;
-	CK_C_GetFunctionList gfl;
 	p11_rpc_status status;
 	unsigned char version;
 	p11_virtual virt;
 	p11_buffer options;
 	p11_buffer buffer;
-	dl_module_t dl;
 	size_t state;
+	int ret = 1;
 	int code;
-	CK_RV rv;
 
-	p11_debug_init ();
+	return_val_if_fail (module != NULL, 1);
 
-	if (argc != 2) {
-		fprintf (stderr, "usage: frob-server module\n");
-		exit (2);
-	}
-
-	dl = p11_dl_open (argv[1]);
-	if (dl == NULL) {
-		fprintf (stderr, "couldn't load module: %s: %s\n",
-		         argv[1], p11_dl_error ());
-		exit (1);
-	}
-
-	gfl = p11_dl_symbol (dl, "C_GetFunctionList");
-	if (!gfl) {
-		fprintf (stderr, "couldn't find C_GetFunctionList entry point in module: %s: %s\n",
-		         argv[1], p11_dl_error ());
-		exit (1);
-	}
-
-	rv = gfl (&funcs);
-	if (rv != CKR_OK) {
-		fprintf (stderr, "call to C_GetFunctiontList failed in module: %s: %s\n",
-		         argv[1], p11_kit_strerror (rv));
-		exit (1);
-	}
-
-	p11_virtual_init (&virt, &p11_virtual_base, funcs, NULL);
 	p11_buffer_init (&options, 0);
 	p11_buffer_init (&buffer, 0);
 
-	switch (read (0, &version, 1)) {
+	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+
+	switch (read (in_fd, &version, 1)) {
 	case 0:
 		status = P11_RPC_EOF;
 		break;
 	case 1:
 		if (version != 0) {
-			fprintf (stderr, "unspported version received: %d", (int)version);
-			exit (1);
+			p11_message ("unspported version received: %d", (int)version);
+			goto out;
 		}
 		break;
 	default:
-		fprintf (stderr, "couldn't read creds: %s", strerror (errno));
-		exit (1);
+		p11_message_err (errno, "couldn't read credential byte");
+		goto out;
 	}
 
 	version = 0;
-	switch (write (1, &version, 1)) {
+	switch (write (out_fd, &version, out_fd)) {
 	case 1:
 		break;
 	default:
-		fprintf (stderr, "couldn't read creds: %s", strerror (errno));
-		exit (1);
+		p11_message_err (errno, "couldn't write credential byte");
+		goto out;
 	}
 
 	status = P11_RPC_OK;
@@ -125,7 +100,7 @@ main (int argc,
 		code = 0;
 
 		do {
-			status = p11_rpc_transport_read (0, &state, &code,
+			status = p11_rpc_transport_read (in_fd, &state, &code,
 			                                 &options, &buffer);
 		} while (status == P11_RPC_AGAIN);
 
@@ -133,23 +108,24 @@ main (int argc,
 		case P11_RPC_OK:
 			break;
 		case P11_RPC_EOF:
+			ret = 0;
 			continue;
 		case P11_RPC_AGAIN:
 			assert_not_reached ();
 		case P11_RPC_ERROR:
-			fprintf (stderr, "failed to read rpc message: %s\n", strerror (errno));
-			exit (1);
+			p11_message_err (errno, "failed to read rpc message");
+			goto out;
 		}
 
 		if (!p11_rpc_server_handle (&virt.funcs, &buffer, &buffer)) {
-			fprintf (stderr, "unexpected error handling rpc message\n");
-			exit (1);
+			p11_message ("unexpected error handling rpc message");
+			goto out;
 		}
 
 		state = 0;
 		options.len = 0;
 		do {
-			status = p11_rpc_transport_write (1, &state, code,
+			status = p11_rpc_transport_write (out_fd, &state, code,
 			                                  &options, &buffer);
 		} while (status == P11_RPC_AGAIN);
 
@@ -160,14 +136,16 @@ main (int argc,
 		case P11_RPC_AGAIN:
 			assert_not_reached ();
 		case P11_RPC_ERROR:
-			fprintf (stderr, "failed to write rpc message: %s\n", strerror (errno));
-			exit (1);
+			p11_message_err (errno, "failed to write rpc message");
+			goto out;
 		}
 	}
 
+out:
 	p11_buffer_uninit (&buffer);
 	p11_buffer_uninit (&options);
-	p11_dl_close (dl);
 
-	return 0;
+	p11_virtual_uninit (&virt);
+
+	return ret;
 }

@@ -43,9 +43,6 @@ CHECK_PROGS += \
 	test-transport \
 	$(NULL)
 
-noinst_PROGRAMS += \
-	frob-server
-
 endif
 
 TESTS = $(CHECK_PROGS)
