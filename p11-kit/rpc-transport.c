@@ -542,14 +542,16 @@ struct _p11_rpc_transport {
 };
 
 static void
-on_rpc_disconnect (p11_rpc_client_vtable *vtable,
-                   void *init_reserved)
+rpc_transport_disconnect (p11_rpc_client_vtable *vtable,
+                          void *init_reserved)
 {
 	p11_rpc_transport *rpc = (p11_rpc_transport *)vtable;
 
-	if (rpc->socket)
+	if (rpc->socket) {
+		rpc_socket_close (rpc->socket);
 		rpc_socket_unref (rpc->socket);
-	rpc->socket = NULL;
+		rpc->socket = NULL;
+	}
 }
 
 static bool
@@ -573,9 +575,9 @@ rpc_transport_uninit (p11_rpc_transport *rpc)
 }
 
 static CK_RV
-on_rpc_transport (p11_rpc_client_vtable *vtable,
-                  p11_buffer *request,
-                  p11_buffer *response)
+rpc_transport_buffer (p11_rpc_client_vtable *vtable,
+                      p11_buffer *request,
+                      p11_buffer *response)
 {
 	p11_rpc_transport *rpc = (p11_rpc_transport *)vtable;
 	CK_RV rv = CKR_OK;
@@ -632,7 +634,7 @@ typedef struct {
 } rpc_exec;
 
 static void
-wait_or_terminate (pid_t pid)
+rpc_exec_wait_or_terminate (pid_t pid)
 {
 	bool terminated = false;
 	int status;
@@ -672,8 +674,8 @@ wait_or_terminate (pid_t pid)
 }
 
 static void
-on_rpc_exec_disconnect (p11_rpc_client_vtable *vtable,
-                        void *fini_reserved)
+rpc_exec_disconnect (p11_rpc_client_vtable *vtable,
+                     void *fini_reserved)
 {
 	rpc_exec *rex = (rpc_exec *)vtable;
 
@@ -681,11 +683,11 @@ on_rpc_exec_disconnect (p11_rpc_client_vtable *vtable,
 		rpc_socket_close (rex->base.socket);
 
 	if (rex->pid)
-		wait_or_terminate (rex->pid);
+		rpc_exec_wait_or_terminate (rex->pid);
 	rex->pid = 0;
 
 	/* Do the common disconnect stuff */
-	on_rpc_disconnect (vtable, fini_reserved);
+	rpc_transport_disconnect (vtable, fini_reserved);
 }
 
 static int
@@ -699,8 +701,8 @@ set_cloexec_on_fd (void *data,
 }
 
 static CK_RV
-on_rpc_exec_connect (p11_rpc_client_vtable *vtable,
-                     void *init_reserved)
+rpc_exec_connect (p11_rpc_client_vtable *vtable,
+                  void *init_reserved)
 {
 	rpc_exec *rex = (rpc_exec *)vtable;
 	pid_t pid;
@@ -761,7 +763,7 @@ static void
 rpc_exec_free (void *data)
 {
 	rpc_exec *rex = data;
-	on_rpc_exec_disconnect (data, NULL);
+	rpc_exec_disconnect (data, NULL);
 	rpc_transport_uninit (&rex->base);
 	p11_array_free (rex->argv);
 	free (rex);
@@ -797,9 +799,9 @@ rpc_exec_init (const char *remote,
 	p11_array_push (argv, NULL);
 	rex->argv = argv;
 
-	rex->base.vtable.connect = on_rpc_exec_connect;
-	rex->base.vtable.disconnect = on_rpc_exec_disconnect;
-	rex->base.vtable.transport = on_rpc_transport;
+	rex->base.vtable.connect = rpc_exec_connect;
+	rex->base.vtable.disconnect = rpc_exec_disconnect;
+	rex->base.vtable.transport = rpc_transport_buffer;
 	rpc_transport_init (&rex->base, name, rpc_exec_free);
 
 	p11_debug ("initialized rpc exec: %s", remote);
@@ -813,24 +815,25 @@ p11_rpc_transport_new (p11_virtual *virt,
                        const char *remote,
                        const char *name)
 {
-	p11_rpc_transport *rpc;
+	p11_rpc_transport *rpc = NULL;
 
 	return_val_if_fail (virt != NULL, NULL);
 	return_val_if_fail (remote != NULL, NULL);
 	return_val_if_fail (name != NULL, NULL);
 
-#ifdef OS_UNIX
-	/* For now we assume it's all a command line */
-	rpc = rpc_exec_init (remote, name);
-
-#else /* !OS_WIN32 */
-	rpc = NULL;
+#ifdef OS_WIN32
 	p11_message ("Windows not yet supported for remote");
+	return NULL;
+#endif
 
-#endif /* OS_WIN32 */
+	/* This is a command we can execute */
+	if (remote[0] == '|') {
+		rpc = rpc_exec_init (remote + 1, name);
 
-	if (!rpc)
+	} else {
+		p11_message ("remote not supported: %s", remote);
 		return NULL;
+	}
 
 	if (!p11_rpc_client_init (virt, &rpc->vtable))
 		return_val_if_reached (NULL);

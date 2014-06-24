@@ -93,6 +93,21 @@ $ p11-kit list-modules
 	for more information</para>
 </refsect1>
 
+<refsect1 id="p11-kit-remote">
+	<title>Remote</title>
+
+	<para>Run a PKCS#11 module remotely.</para>
+
+<programlisting>
+$ p11-kit remote /path/to/pkcs11-module.so
+</programlisting>
+
+	<para>This is not meant to be run directly from a terminal. But rather in a
+	<option>remote</option> option in a
+	<citerefentry><refentrytitle>pkcs11.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+	file.</para>
+</refsect1>
+
 <refsect1 id="p11-kit-bugs">
   <title>Bugs</title>
   <para>

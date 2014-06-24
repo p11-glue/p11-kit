@@ -155,6 +155,19 @@ x-custom : text
 		</listitem>
 	</varlistentry>
 	<varlistentry>
+		<term><option>remote:</option></term>
+		<listitem>
+			<para>Instead of loading the PKCS#11 module locally, run the module
+			remotely.</para>
+			<para>Specify a command to run, prefixed with <literal>|</literal> a pipe.
+			The command must speak the p11-kit remoting protocol on its standard in
+			and standard out. For example:</para>
+<programlisting>
+remote: |ssh user@remote p11-kit remote /path/to/module.so
+</programlisting>
+		</listitem>
+	</varlistentry>
+	<varlistentry>
 		<term><option>trust-policy:</option></term>
 		<listitem>
 			<para>Set to <literal>yes</literal> to use use this module as a source
