@@ -131,6 +131,14 @@ x-custom : text
 			not present, then any process will load the module.</para>
 		</listitem>
 	</varlistentry>
+	<varlistentry id="option-isolated">
+		<term><option>isolated:</option></term>
+		<listitem>
+			<para>Set to <literal>yes</literal> to run this PKCS#11 module in its own
+			process. This is a simple way to set the <option>remote</option> to
+			accomplish the same thing.</para>
+		</listitem>
+	</varlistentry>
 	<varlistentry>
 		<term><option>managed:</option></term>
 		<listitem>

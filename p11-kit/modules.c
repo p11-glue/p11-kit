@@ -482,10 +482,12 @@ take_config_and_load_module_inlock (char **name,
                                     p11_dict **config,
                                     bool critical)
 {
-	const char *filename;
-	const char *remote;
+	const char *filename = NULL;
+	const char *remote = NULL;
+	char *value = NULL;
+	CK_RV rv = CKR_OK;
+	bool isolated;
 	Module *mod;
-	CK_RV rv;
 
 	assert (name);
 	assert (*name);
@@ -493,24 +495,40 @@ take_config_and_load_module_inlock (char **name,
 	assert (*config);
 
 	if (!is_module_enabled_unlocked (*name, *config))
-		return CKR_OK;
+		goto out;
 
 	remote = p11_dict_get (*config, "remote");
-	if (remote != NULL) {
-		rv = setup_module_for_remote_inlock (*name, remote, &mod);
-		if (rv != CKR_OK)
-			return rv;
-
-	} else {
+	if (remote == NULL) {
 		filename = p11_dict_get (*config, "module");
 		if (filename == NULL) {
 			p11_debug ("no module path for module, skipping: %s", *name);
-			return CKR_OK;
+			goto out;
 		}
+	}
+
+	/* The 'isolated' setting is just a simple way to configure remote */
+	isolated = _p11_conf_parse_boolean (p11_dict_get (*config, "isolated"), false);
+	if (isolated) {
+		if (remote) {
+			p11_message ("ignoring 'isolated' on module '%s' because 'remote' is set", *name);
+			isolated = false;
+		} else {
+			if (asprintf (&value, "|" BINDIR "/p11-kit remote '%s'", filename) < 0)
+				return_val_if_reached (CKR_DEVICE_ERROR);
+			remote = value;
+		}
+	}
+
+	if (remote != NULL) {
+		rv = setup_module_for_remote_inlock (*name, remote, &mod);
+		if (rv != CKR_OK)
+			goto out;
+
+	} else {
 
 		rv = load_module_from_file_inlock (*name, filename, &mod);
 		if (rv != CKR_OK)
-			return CKR_OK;
+			goto out;
 
 		/*
 		 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
@@ -529,7 +547,9 @@ take_config_and_load_module_inlock (char **name,
 	*name = NULL;
 	mod->critical = critical;
 
-	return CKR_OK;
+out:
+	free (value);
+	return rv;
 }
 
 static CK_RV

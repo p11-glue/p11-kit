@@ -99,6 +99,10 @@
 			purposes. See the <link linkend="option-log-calls"><literal>log-calls = yes</literal></link>
 			module configuration option.</para>
 		</listitem>
+		<listitem>
+			<para>Managed modules have the ability to be isolated in their own process
+			See the <link linkend="option-isolated"><literal>isolated = yes</literal></link>
+			module configuration option.</para>
 		</itemizedlist>
 	</section>
 </chapter>
