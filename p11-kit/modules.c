@@ -1985,6 +1985,8 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 				failure_callback (modules[i]);
 			out--;
 			free (name);
+		} else {
+			modules[out] = modules[i];
 		}
 	}
 
