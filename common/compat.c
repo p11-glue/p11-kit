@@ -844,7 +844,22 @@ strerror_r (int errnum,
             size_t buflen)
 {
 #ifdef OS_WIN32
+#if _WIN32_WINNT < 0x502 /* WinXP or older */
+	int n = sys_nerr;
+	const char *p;
+	if (errnum < 0 || errnum >= n)
+		p = sys_errlist[n];
+	else
+		p = sys_errlist[errnum];
+	if (buf == NULL || buflen == 0)
+		return EINVAL;
+	strncpy(buf, p, buflen);
+	buf[buflen-1] = 0;
+	return 0;
+#else /* Server 2003 or newer */
 	return strerror_s (buf, buflen, errnum);
+#endif /*_WIN32_WINNT*/
+
 #else
 	#error no strerror_r implementation
 #endif
