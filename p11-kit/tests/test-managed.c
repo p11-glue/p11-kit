@@ -42,6 +42,8 @@
 #include "p11-kit.h"
 #include "virtual.h"
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -194,6 +196,49 @@ test_separate_close_all_sessions (void)
 	teardown_mock_module (second);
 }
 
+static void
+test_fork_and_reinitialize (void)
+{
+	CK_FUNCTION_LIST *module;
+	CK_INFO info;
+	int status;
+	CK_RV rv;
+	pid_t pid;
+	int i;
+
+	module = setup_mock_module (NULL);
+	assert_ptr_not_null (module);
+
+	pid = fork ();
+	assert_num_cmp (pid, >=, 0);
+
+	/* The child */
+	if (pid == 0) {
+		rv = (module->C_Initialize) (NULL);
+		assert_num_eq (CKR_OK, rv);
+
+		for (i = 0; i < 32; i++) {
+			rv = (module->C_GetInfo) (&info);
+			assert_num_eq (CKR_OK, rv);
+		}
+
+		rv = (module->C_Finalize) (NULL);
+		assert_num_eq (CKR_OK, rv);
+
+		_exit (66);
+	}
+
+	for (i = 0; i < 128; i++) {
+		rv = (module->C_GetInfo) (&info);
+		assert_num_eq (CKR_OK, rv);
+	}
+
+	assert_num_eq (waitpid (pid, &status, 0), pid);
+	assert_num_eq (WEXITSTATUS (status), 66);
+
+	teardown_mock_module (module);
+}
+
 /* Bring in all the mock module tests */
 #include "test-mock.c"
 
@@ -207,6 +252,8 @@ main (int argc,
 	p11_test (test_initialize_finalize, "/managed/test_initialize_finalize");
 	p11_test (test_initialize_fail, "/managed/test_initialize_fail");
 	p11_test (test_separate_close_all_sessions, "/managed/test_separate_close_all_sessions");
+	p11_test (test_fork_and_reinitialize, "/managed/fork-and-reinitialize");
+
 	test_mock_add_tests ("/managed");
 
 	p11_kit_be_quiet ();

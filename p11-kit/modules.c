@@ -1384,7 +1384,7 @@ cleanup:
 typedef struct {
 	p11_virtual virt;
 	Module *mod;
-	bool initialized;
+	pid_t initialized;
 	p11_dict *sessions;
 } Managed;
 
@@ -1394,12 +1394,14 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 {
 	Managed *managed = ((Managed *)self);
 	p11_dict *sessions;
+	pid_t pid;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	if (managed->initialized) {
+	pid = getpid ();
+	if (managed->initialized == pid) {
 		rv = CKR_CRYPTOKI_ALREADY_INITIALIZED;
 
 	} else {
@@ -1412,7 +1414,7 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 			rv = initialize_module_inlock_reentrant (managed->mod);
 		if (rv == CKR_OK) {
 			managed->sessions = sessions;
-			managed->initialized = true;
+			managed->initialized = pid;
 		} else {
 			p11_dict_free (sessions);
 		}
@@ -1513,13 +1515,15 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 {
 	Managed *managed = ((Managed *)self);
 	CK_SESSION_HANDLE *sessions;
+	pid_t pid;
 	int count;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	if (!managed->initialized) {
+	pid = getpid ();
+	if (managed->initialized != pid) {
 		rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
 	} else {
@@ -1538,7 +1542,7 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 		rv = finalize_module_inlock_reentrant (managed->mod);
 
 		if (rv == CKR_OK) {
-			managed->initialized = false;
+			managed->initialized = 0;
 			p11_dict_free (managed->sessions);
 			managed->sessions = NULL;
 		}
