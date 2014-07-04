@@ -77,6 +77,8 @@ p11_kit_strerror
 p11_kit_message
 p11_kit_space_strdup
 p11_kit_space_strlen
+p11_kit_be_quiet
+p11_kit_be_loud
 <SUBSECTION Private>
 CK_FUNCTION_LIST_PTR
 CK_RV
@@ -95,8 +97,6 @@ p11_kit_uri_type_t
 <SECTION>
 <FILE>p11-kit-future</FILE>
 p11_kit_set_progname
-p11_kit_be_quiet
-p11_kit_be_loud
 p11_kit_destroyer
 P11KitIter
 p11_kit_iter
