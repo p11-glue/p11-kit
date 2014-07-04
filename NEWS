@@ -1,3 +1,13 @@
+0.20.3 (stable)
+ * Fix problems reinitializing managed modules after fork
+ * Fix bad bookeeping when fail initializing one of the modules
+ * Fix case where module would be unloaded while in use [#74919]
+ * Remove assertions when module used before initialized [#74919]
+ * Fix handling of mmap failure and mapping empty files [#74773]
+ * Stable p11_kit_be_quiet() and p11_kit_be_loud() functions
+ * Require automake 1.12 or later
+ * Build fixes for Windows [#76594 #74149]
+
 0.20.2 (stable)
  * Fix bug where blacklist didn't affect extracted ca-anchors if the anchor
    and blacklist were not in the same trust path (regression) [#73558]
