@@ -1,3 +1,7 @@
+0.20.4 (stable)
+ * Don't complain about C_Finalize after a fork
+ * Fix typo
+
 0.20.3 (stable)
  * Fix problems reinitializing managed modules after fork
  * Fix bad bookeeping when fail initializing one of the modules
