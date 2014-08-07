@@ -1524,7 +1524,14 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 
 	pid = getpid ();
 	if (managed->initialized != pid) {
-		rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+		/*
+		 * In theory we should be returning CKR_CRYPTOKI_NOT_INITIALIZED here
+		 * but enough callers are not completely aware of their forking.
+		 * So we just clean up any state we have, rather than forcing callers
+		 * to initialize just to finalize.
+		 */
+		p11_debug ("finalizing module in wrong process, skipping C_Finalize");
+		rv = CKR_OK;
 
 	} else {
 		sessions = managed_steal_sessions_inlock (managed->sessions, false, 0, &count);
@@ -1540,12 +1547,12 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 
 		/* WARNING: reentrancy can occur here */
 		rv = finalize_module_inlock_reentrant (managed->mod);
+	}
 
-		if (rv == CKR_OK) {
-			managed->initialized = 0;
-			p11_dict_free (managed->sessions);
-			managed->sessions = NULL;
-		}
+	if (rv == CKR_OK) {
+		managed->initialized = 0;
+		p11_dict_free (managed->sessions);
+		managed->sessions = NULL;
 	}
 
 	p11_unlock ();
