@@ -48,7 +48,10 @@ maybe_expand_array (p11_array *array,
 	if (length <= array->allocated)
 		return true;
 
-	new_allocated = array->allocated + 16;
+
+	new_allocated = array->allocated * 2;
+	if (new_allocated == 0)
+		new_allocated = 16;
 	if (new_allocated < length)
 		new_allocated = length;
 
