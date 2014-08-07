@@ -1,3 +1,9 @@
+0.21.1 (unstable)
+ * Add new 'isolate' pkcs11 config option [#80472]
+ * Add 'p11-kit remote' command for isolating modules [#54105]
+ * Don't complain about C_Finalize after a fork
+ * Other minor fixes
+
 0.20.3 (stable)
  * Fix problems reinitializing managed modules after fork
  * Fix bad bookeeping when fail initializing one of the modules
