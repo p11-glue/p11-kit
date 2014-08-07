@@ -1590,7 +1590,10 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 	p11_lock ();
 
 	pid = getpid ();
-	if (managed->initialized != pid) {
+	if (managed->initialized == 0) {
+		rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+
+	} else if (managed->initialized != pid) {
 		/*
 		 * In theory we should be returning CKR_CRYPTOKI_NOT_INITIALIZED here
 		 * but enough callers are not completely aware of their forking.
