@@ -70,4 +70,4 @@ EXTRA_DIST = \
 	HACKING
 
 transifex:
-	sh build/tx-update
+	cd $(srcdir) && sh build/tx-update
