@@ -281,10 +281,7 @@ p11_kit_list_modules (int argc,
 		}
 	}
 
-	argc -= optind;
-	argv += optind;
-
-	if (argc != 0) {
+	if (argc - optind != 0) {
 		p11_message ("extra arguments specified");
 		return 2;
 	}

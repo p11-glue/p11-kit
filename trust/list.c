@@ -230,10 +230,7 @@ p11_trust_list (int argc,
 		}
 	}
 
-	argc -= optind;
-	argv += optind;
-
-	if (argc != 0) {
+	if (argc - optind != 0) {
 		p11_message ("extra arguments passed to command");
 		exit (2);
 	}
