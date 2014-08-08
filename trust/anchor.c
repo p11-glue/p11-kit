@@ -631,7 +631,7 @@ p11_trust_anchor (int argc,
 			assert_not_reached ();
 			break;
 		}
-	} while (opt != -1);
+	};
 
 	argc -= optind;
 	argv += optind;
