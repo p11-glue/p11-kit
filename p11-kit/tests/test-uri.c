@@ -537,17 +537,20 @@ test_uri_build_with_attributes (void)
 	at.pValue = "The Label";
 	at.ulValueLen = 9;
 	ret = p11_kit_uri_set_attribute (uri, &at);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	at.type = CKA_ID;
 	at.pValue = "HELLO";
 	at.ulValueLen = 5;
 	ret = p11_kit_uri_set_attribute (uri, &at);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	klass = CKO_DATA;
 	at.type = CKA_CLASS;
 	at.pValue = &klass;
 	at.ulValueLen = sizeof (klass);
 	ret = p11_kit_uri_set_attribute (uri, &at);
+	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);

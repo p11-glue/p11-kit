@@ -376,8 +376,10 @@ test_threaded_initialization (void)
 	module.C_Initialize = mock_C_Initialize__threaded_race;
 	module.C_Finalize = mock_C_Finalize__threaded_race;
 
+	p11_mutex_lock (&race_mutex);
 	initialization_count = 0;
 	finalization_count = 0;
+	p11_mutex_unlock (&race_mutex);
 
 	for (i = 0; i < num_threads; i++) {
 		ret = p11_thread_create (&threads[i], initialization_thread, "thread-data");
@@ -404,8 +406,10 @@ test_threaded_initialization (void)
 	}
 
 	/* C_Initialize should have been called exactly once */
+	p11_mutex_lock (&race_mutex);
 	assert_num_eq (1, initialization_count);
 	assert_num_eq (1, finalization_count);
+	p11_mutex_unlock (&race_mutex);
 
 	assert (!mock_module_initialized ());
 }
@@ -478,7 +482,7 @@ test_load_and_initialize (void)
 	assert (ret == 0);
 
 	rv = p11_kit_finalize_module (module);
-	assert (ret == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 }
 
 int

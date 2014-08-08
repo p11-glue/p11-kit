@@ -87,11 +87,13 @@ main (int argc,
 	ret = asn1_der_coding (oid, "", buf, &len, message);
 	if (ret != ASN1_SUCCESS) {
 		fprintf (stderr, "asn1_der_coding: %s\n", message);
+		free (buf);
 		return 1;
 	}
 
 	fwrite (buf, 1, len, stdout);
 	fflush (stdout);
+	free (buf);
 
 	asn1_delete_structure (&oid);
 	asn1_delete_structure (&definitions);

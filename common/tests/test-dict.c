@@ -426,6 +426,7 @@ test_hash_add_check_lots_and_collisions (void)
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
+		assert (value != NULL);
 		*value = i;
 		if (!p11_dict_set (map, value, value))
 			assert_not_reached ();
@@ -454,6 +455,7 @@ test_hash_count (void)
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
+		assert (value != NULL);
 		*value = i;
 		if (!p11_dict_set (map, value, value))
 			assert_not_reached ();
@@ -483,6 +485,7 @@ test_hash_ulongptr (void)
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (unsigned long));
+		assert (value != NULL);
 		*value = i;
 		if (!p11_dict_set (map, value, value))
 			assert_not_reached ();
