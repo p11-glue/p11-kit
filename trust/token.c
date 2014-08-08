@@ -301,10 +301,10 @@ loader_load_path (p11_token *token,
 		if (errno != ENOENT)
 			p11_message_err (errno, "cannot access trust certificate path: %s", path);
 		loader_gone_file (token, path);
-		return 0;
-	}
+		*is_dir = false;
+		ret = 0;
 
-	if (S_ISDIR (sb.st_mode)) {
+	} else if (S_ISDIR (sb.st_mode)) {
 		*is_dir = true;
 		ret = 0;
 
