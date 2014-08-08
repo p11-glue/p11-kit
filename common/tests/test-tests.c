@@ -60,6 +60,7 @@ test_memory (void)
 
 	if (getenv ("TEST_FAIL")) {
 		mem = malloc (1);
+		assert (mem != NULL);
 		free (mem);
 		*mem = 1;
 	}
@@ -73,6 +74,7 @@ test_leak (void)
 
 	if (getenv ("TEST_FAIL")) {
 		mem = malloc (1);
+		assert (mem != NULL);
 		*mem = 1;
 	}
 }

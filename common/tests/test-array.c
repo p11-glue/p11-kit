@@ -151,6 +151,7 @@ test_remove_and_count (void)
 
 	for (i = 0; i < 20000; ++i) {
 		value = malloc (sizeof (int));
+		assert (value != NULL);
 		*value = i;
 		if (!p11_array_push (array, value))
 			assert_not_reached ();

@@ -87,6 +87,7 @@ main (int argc,
 	ret = asn1_der_coding (ext, "", buf, &len, message);
 	if (ret != ASN1_SUCCESS) {
 		fprintf (stderr, "asn1_der_coding: %s\n", message);
+		free (buf);
 		return 1;
 	}
 

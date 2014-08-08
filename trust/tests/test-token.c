@@ -91,8 +91,8 @@ static void
 teardown_temp (void *unused)
 {
 	p11_test_directory_delete (test.directory);
-	free (test.directory);
 	teardown (test.directory);
+	free (test.directory);
 }
 
 static void
