@@ -684,6 +684,7 @@ on_index_store (void *data,
 
 	if (file == NULL) {
 		free (origin);
+		free (other);
 		return CKR_GENERAL_ERROR;
 	}
 
