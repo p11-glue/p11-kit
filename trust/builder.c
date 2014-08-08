@@ -551,6 +551,7 @@ calc_certificate_category (p11_builder *builder,
                            CK_ATTRIBUTE *public_key,
                            CK_ULONG *category)
 {
+	CK_ATTRIBUTE *label;
 	unsigned char *ext;
 	size_t ext_len;
 	bool is_ca = 0;
@@ -570,7 +571,10 @@ calc_certificate_category (p11_builder *builder,
 		ret = p11_x509_parse_basic_constraints (builder->asn1_defs, ext, ext_len, &is_ca);
 		free (ext);
 		if (!ret) {
-			p11_message ("invalid basic constraints certificate extension");
+			label = p11_attrs_find_valid (cert, CKA_LABEL);
+			p11_message ("%.*s: invalid basic constraints certificate extension",
+				     label ? (int)label->ulValueLen : 7,
+				     label ? (char *)label->pValue : "unknown");
 			return false;
 		}
 
