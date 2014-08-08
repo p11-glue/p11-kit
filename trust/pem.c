@@ -85,10 +85,8 @@ pem_find_begin (const char *data,
 	if (type) {
 		pref += ARMOR_PREF_BEGIN_L;
 		assert (suff > pref);
-		*type = malloc (suff - pref + 1);
+		*type = strndup (pref, suff - pref);
 		return_val_if_fail (*type != NULL, NULL);
-		memcpy (*type, pref, suff - pref);
-		(*type)[suff - pref] = 0;
 	}
 
 	/* The byte after this ---BEGIN--- */
