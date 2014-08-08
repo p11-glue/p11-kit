@@ -378,7 +378,7 @@ load_module_from_file_inlock (const char *name,
 	/* If same module was loaded previously, just take over config */
 	if (prev != NULL) {
 		if (!name || prev->name || prev->config)
-			p11_debug ("duplicate module %s, using previous", path);
+			p11_debug ("duplicate module %s, using previous", name);
 		free_module_unlocked (mod);
 		mod = prev;
 
