@@ -125,6 +125,7 @@ list_iterate (p11_enumerate *ex,
 		if (attr && attr->pValue && attr->ulValueLen) {
 			string = strndup (attr->pValue, attr->ulValueLen);
 			printf ("    label: %s\n", string);
+			free (string);
 		}
 
 		if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &val) && val)
