@@ -507,7 +507,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	CK_ATTRIBUTE *value;
 	char *label = NULL;
 	node_asn *cert;
-	node_asn *aux;
+	node_asn *aux = NULL;
 	ssize_t cert_len;
 	size_t len;
 	int start;
@@ -529,10 +529,14 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
-	aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len, length - cert_len, message);
-	if (aux == NULL) {
-		asn1_delete_structure (&cert);
-		return P11_PARSE_UNRECOGNIZED;
+	/* OpenSSL sometimes outputs TRUSTED CERTIFICATE format without the CertAux supplement */
+	if (cert_len < length) {
+		aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len,
+		                       length - cert_len, message);
+		if (aux == NULL) {
+			asn1_delete_structure (&cert);
+			return P11_PARSE_UNRECOGNIZED;
+		}
 	}
 
 	/* The CKA_ID links related objects */
@@ -558,16 +562,18 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	                     value->pValue, value->ulValueLen);
 
 	/* Pull the label out of the CertAux */
-	len = 0;
-	label = p11_asn1_read (aux, "alias", &len);
-	if (label != NULL) {
-		attrs = p11_attrs_take (attrs, CKA_LABEL, label, strlen (label));
+	if (aux) {
+		len = 0;
+		label = p11_asn1_read (aux, "alias", &len);
+		if (label != NULL) {
+			attrs = p11_attrs_take (attrs, CKA_LABEL, label, strlen (label));
+			return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+		}
+
+		attrs = build_openssl_extensions (parser, attrs, &id, &public_key_info, aux,
+		                                  data + cert_len, length - cert_len);
 		return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 	}
-
-	attrs = build_openssl_extensions (parser, attrs, &id, &public_key_info, aux,
-	                                  data + cert_len, length - cert_len);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
 
 	sink_object (parser, attrs);
 	asn1_delete_structure (&aux);
