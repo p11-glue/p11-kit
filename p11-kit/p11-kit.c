@@ -108,7 +108,7 @@ p11_kit_external (int argc,
 		return p11_kit_trust (argc, argv);
 	}
 
-	if (!asprintf (&filename, "p11-kit-%s", argv[0]) < 0)
+	if (asprintf (&filename, "p11-kit-%s", argv[0]) < 0)
 		return_val_if_reached (1);
 
 	/* Add our libexec directory to the path */
