@@ -111,7 +111,7 @@ void        p11_test_fail           (const char *filename,
                                      int line,
                                      const char *function,
                                      const char *message,
-                                     ...) GNUC_PRINTF(4, 5);
+                                     ...) GNUC_PRINTF(4, 5) CLANG_ANALYZER_NORETURN;
 
 void        p11_test                (void (* function) (void),
                                      const char *name,
