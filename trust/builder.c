@@ -125,7 +125,7 @@ lookup_extension (p11_builder *builder,
 		{ CKA_INVALID },
 	};
 
-	if (public_key == NULL)
+	if (public_key == NULL || public_key->type == CKA_INVALID)
 		public_key = p11_attrs_find_valid (cert, CKA_X_PUBLIC_KEY_INFO);
 
 	/* Look for a stapled certificate extension */
