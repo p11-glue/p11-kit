@@ -2787,7 +2787,7 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 	 * p11_virtual_is_wrapper() recognizes this. This is in case the
 	 * destroyer callback tries to do something fancy.
 	 */
-	memset (&wrapper->bound, 0xFEEEFEEE, sizeof (wrapper->bound));
+	memset (&wrapper->bound, 0xFE, sizeof (wrapper->bound));
 
 	if (wrapper->destroyer)
 		(wrapper->destroyer) (wrapper->virt);
