@@ -206,6 +206,22 @@ p11_fixture (void (* setup) (void *),
 	test_push (&item);
 }
 
+static int
+should_run_test (int argc,
+                 char **argv,
+                 test_item *item)
+{
+	int i;
+	if (argc == 0)
+		return 1;
+	for (i = 0; i < argc; i++) {
+		if (strcmp (argv[i], item->x.test.name) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
 int
 p11_test_run (int argc,
               char **argv)
@@ -216,16 +232,28 @@ p11_test_run (int argc,
 	int count;
 	int ret = 0;
 	int setup;
+	int opt;
 
 	/* p11-kit specific stuff */
 	putenv ("P11_KIT_STRICT=1");
 	p11_debug_init ();
 
+	while ((opt = getopt (argc, argv, "")) != -1) {
+		switch (opt) {
+		default:
+			fprintf (stderr, "specify only test names on the command line\n");
+			return 2;
+		}
+	}
+
+	argc -= optind;
+	argv += optind;
+
 	assert (gl.number == 0);
 	gl.last = NULL;
 
 	for (item = gl.suite, count = 0; item != NULL; item = item->next) {
-		if (item->type == TEST)
+		if (item->type == TEST && should_run_test (argc, argv, item))
 			count++;
 	}
 
@@ -243,6 +271,10 @@ p11_test_run (int argc,
 		}
 
 		assert (item->type == TEST);
+
+		if (!should_run_test (argc, argv, item))
+			continue;
+
 		gl.last = item;
 		gl.number++;
 		setup = 0;
