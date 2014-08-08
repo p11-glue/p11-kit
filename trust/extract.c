@@ -289,7 +289,6 @@ p11_trust_extract_compat (int argc,
                           char *argv[])
 {
 	char *path = NULL;
-	char *path2 = NULL;
 	int error;
 
 	argv[argc] = NULL;
@@ -298,24 +297,22 @@ p11_trust_extract_compat (int argc,
 	 * For compatibility with people who deployed p11-kit 0.18.x
 	 * before trust stuff was put into its own branch.
 	 */
-	path2 = p11_path_build (PRIVATEDIR, "p11-kit-extract-trust", NULL);
-	return_val_if_fail (path2 != NULL, 1);
-	execv (path2, argv);
+	path = p11_path_build (PRIVATEDIR, "p11-kit-extract-trust", NULL);
+	return_val_if_fail (path != NULL, 1);
+	execv (path, argv);
 	error = errno;
-	free (path2);
 
 	if (error == ENOENT) {
+		free (path);
 		path = p11_path_build (PRIVATEDIR, "trust-extract-compat", NULL);
 		return_val_if_fail (path != NULL, 1);
 		execv (path, argv);
 		error = errno;
-		free (path);
 	}
 
 	/* At this point we have no command */
 	p11_message_err (error, "could not run %s command", path);
 
 	free (path);
-	free (path2);
 	return 2;
 }
