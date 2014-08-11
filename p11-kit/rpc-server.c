@@ -681,16 +681,18 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 		assert (p11_rpc_message_is_verified (msg));
 	}
 
-	memset (&init_args, 0, sizeof (init_args));
-	init_args.flags = CKF_OS_LOCKING_OK;
+	if (ret == CKR_OK) {
+		memset (&init_args, 0, sizeof (init_args));
+		init_args.flags = CKF_OS_LOCKING_OK;
 
-	func = self->C_Initialize;
-	assert (func != NULL);
-	ret = (func) (self, &init_args);
+		func = self->C_Initialize;
+		assert (func != NULL);
+		ret = (func) (self, &init_args);
 
-	/* Empty response */
-	if (ret == CKR_OK)
-		ret = call_ready (msg);
+		/* Empty response */
+		if (ret == CKR_OK)
+			ret = call_ready (msg);
+	}
 
 	p11_debug ("ret: %d", (int)ret);
 	return ret;

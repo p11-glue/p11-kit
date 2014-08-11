@@ -511,7 +511,6 @@ take_config_and_load_module_inlock (char **name,
 	if (isolated) {
 		if (remote) {
 			p11_message ("ignoring 'isolated' on module '%s' because 'remote' is set", *name);
-			isolated = false;
 		} else {
 			if (asprintf (&value, "|" BINDIR "/p11-kit remote '%s'", filename) < 0)
 				return_val_if_reached (CKR_DEVICE_ERROR);

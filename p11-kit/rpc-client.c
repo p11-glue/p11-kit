@@ -198,8 +198,8 @@ proto_read_attribute_array (p11_rpc_message *msg,
 {
 	uint32_t i, num, value, type;
 	CK_ATTRIBUTE_PTR attr;
-	const unsigned char *attrval;
-	size_t attrlen;
+	const unsigned char *attrval = NULL;
+	size_t attrlen = 0;
 	unsigned char validity;
 	CK_RV ret;
 

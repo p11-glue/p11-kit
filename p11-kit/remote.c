@@ -72,8 +72,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 
 	switch (read (in_fd, &version, 1)) {
 	case 0:
-		status = P11_RPC_EOF;
-		break;
+		goto out;
 	case 1:
 		if (version != 0) {
 			p11_message ("unspported version received: %d", (int)version);
