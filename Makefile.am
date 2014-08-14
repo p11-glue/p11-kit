@@ -61,8 +61,8 @@ upload-doc: all
 endif
 
 upload-release: $(DIST_ARCHIVES)
-	gpg --detach-sign --local-user 'stef@thewalter.net' $(DIST_ARCHIVES)
-	scp $(DIST_ARCHIVES) $(DIST_ARCHIVES).sig $(WEBHOST):$(WEBBASE)/releases/
+	gpg --detach-sign --local-user 'stef@thewalter.net' $<
+	scp $< $<.sig $(WEBHOST):$(WEBBASE)/releases/
 
 EXTRA_DIST = \
 	build/Makefile.tests \
