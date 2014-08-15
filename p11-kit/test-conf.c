@@ -58,7 +58,7 @@ test_parse_conf_1 (void)
 	p11_dict *map;
 	const char *value;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/test-1.conf", NULL, 0);
+	map = _p11_conf_parse_file (SRCDIR "/p11-kit/fixtures/test-1.conf", NULL, 0);
 	assert_ptr_not_null (map);
 
 	value = p11_dict_get (map, "key1");
@@ -81,7 +81,7 @@ test_parse_ignore_missing (void)
 {
 	p11_dict *map;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", NULL, CONF_IGNORE_MISSING);
+	map = _p11_conf_parse_file (SRCDIR "/p11-kit/fixtures/non-existant.conf", NULL, CONF_IGNORE_MISSING);
 	assert_ptr_not_null (map);
 
 	assert_num_eq (0, p11_dict_size (map));
@@ -94,7 +94,7 @@ test_parse_fail_missing (void)
 {
 	p11_dict *map;
 
-	map = _p11_conf_parse_file (SRCDIR "/files/non-existant.conf", NULL, 0);
+	map = _p11_conf_parse_file (SRCDIR "/p11-kit/fixtures/non-existant.conf", NULL, 0);
 	assert (map == NULL);
 	assert_ptr_not_null (p11_message_last ());
 }
@@ -134,8 +134,8 @@ test_load_globals_merge (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
-	                                 SRCDIR "/files/test-user.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-merge.conf",
+	                                 SRCDIR "/p11-kit/fixtures/test-user.conf",
 	                                 &user_mode);
 	assert_ptr_not_null (config);
 	assert (NULL == p11_message_last ());
@@ -156,8 +156,8 @@ test_load_globals_no_user (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-none.conf",
-	                                 SRCDIR "/files/test-user.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-none.conf",
+	                                 SRCDIR "/p11-kit/fixtures/test-user.conf",
 	                                 &user_mode);
 	assert_ptr_not_null (config);
 	assert (NULL == p11_message_last ());
@@ -178,8 +178,8 @@ test_load_globals_user_sets_only (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
-	                                 SRCDIR "/files/test-user-only.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-merge.conf",
+	                                 SRCDIR "/p11-kit/fixtures/test-user-only.conf",
 	                                 &user_mode);
 	assert_ptr_not_null (config);
 	assert (NULL == p11_message_last ());
@@ -200,8 +200,8 @@ test_load_globals_system_sets_only (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-only.conf",
-	                                 SRCDIR "/files/test-user.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-only.conf",
+	                                 SRCDIR "/p11-kit/fixtures/test-user.conf",
 	                                 &user_mode);
 	assert_ptr_not_null (config);
 	assert (NULL == p11_message_last ());
@@ -223,8 +223,8 @@ test_load_globals_system_sets_invalid (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-invalid.conf",
-	                                 SRCDIR "/files/non-existant.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-invalid.conf",
+	                                 SRCDIR "/p11-kit/fixtures/non-existant.conf",
 	                                 &user_mode);
 	error = errno;
 	assert_ptr_eq (NULL, config);
@@ -243,8 +243,8 @@ test_load_globals_user_sets_invalid (void)
 
 	p11_message_clear ();
 
-	config = _p11_conf_load_globals (SRCDIR "/files/test-system-merge.conf",
-	                                 SRCDIR "/files/test-user-invalid.conf",
+	config = _p11_conf_load_globals (SRCDIR "/p11-kit/fixtures/test-system-merge.conf",
+	                                 SRCDIR "/p11-kit/fixtures/test-user-invalid.conf",
 	                                 &user_mode);
 	error = errno;
 	assert_ptr_eq (NULL, config);
@@ -270,9 +270,9 @@ test_load_modules_merge (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
-	                                  SRCDIR "/files/package-modules",
-	                                  SRCDIR "/files/system-modules",
-	                                  SRCDIR "/files/user-modules");
+	                                  SRCDIR "/p11-kit/fixtures/package-modules",
+	                                  SRCDIR "/p11-kit/fixtures/system-modules",
+	                                  SRCDIR "/p11-kit/fixtures/user-modules");
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
@@ -303,9 +303,9 @@ test_load_modules_user_none (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_NONE,
-	                                  SRCDIR "/files/package-modules",
-	                                  SRCDIR "/files/system-modules",
-	                                  SRCDIR "/files/user-modules");
+	                                  SRCDIR "/p11-kit/fixtures/package-modules",
+	                                  SRCDIR "/p11-kit/fixtures/system-modules",
+	                                  SRCDIR "/p11-kit/fixtures/user-modules");
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
@@ -334,9 +334,9 @@ test_load_modules_user_only (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_ONLY,
-	                                  SRCDIR "/files/package-modules",
-	                                  SRCDIR "/files/system-modules",
-	                                  SRCDIR "/files/user-modules");
+	                                  SRCDIR "/p11-kit/fixtures/package-modules",
+	                                  SRCDIR "/p11-kit/fixtures/system-modules",
+	                                  SRCDIR "/p11-kit/fixtures/user-modules");
 	assert_ptr_not_null (configs);
 	assert_ptr_eq (NULL, (void *)p11_message_last ());
 
@@ -365,9 +365,9 @@ test_load_modules_no_user (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
-	                                  SRCDIR "/files/package-modules",
-	                                  SRCDIR "/files/system-modules",
-	                                  SRCDIR "/files/non-existant");
+	                                  SRCDIR "/p11-kit/fixtures/package-modules",
+	                                  SRCDIR "/p11-kit/fixtures/system-modules",
+	                                  SRCDIR "/p11-kit/fixtures/non-existant");
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 

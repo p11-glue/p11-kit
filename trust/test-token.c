@@ -760,8 +760,8 @@ main (int argc,
       char *argv[])
 {
 	p11_fixture (setup, teardown);
-	p11_testx (test_token_load, SRCDIR "/input", "/token/load");
-	p11_testx (test_token_flags, SRCDIR "/input", "/token/flags");
+	p11_testx (test_token_load, SRCDIR "/trust/input", "/token/load");
+	p11_testx (test_token_flags, SRCDIR "/trust/input", "/token/flags");
 	p11_testx (test_token_path, "/wheee", "/token/path");
 	p11_testx (test_token_label, "/wheee", "/token/label");
 	p11_testx (test_token_slot, "/unneeded", "/token/slot");

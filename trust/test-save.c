@@ -110,7 +110,7 @@ test_file_write (void)
 	assert_num_eq (true, ret);
 	free (filename);
 
-	test_check_file (test.directory, "extract-file", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "extract-file", SRCDIR "/trust/fixtures/cacert3.der");
 }
 
 static void
@@ -176,7 +176,7 @@ test_file_overwrite (void)
 	assert_num_eq (true, ret);
 	free (filename);
 
-	test_check_file (test.directory, "extract-file", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "extract-file", SRCDIR "/trust/fixtures/cacert3.der");
 }
 
 static void
@@ -198,8 +198,8 @@ test_file_unique (void)
 	assert_num_eq (true, ret);
 	free (filename);
 
-	test_check_file (test.directory, "extract-file", SRCDIR "/files/empty-file");
-	test_check_file (test.directory, "extract-file.1", SRCDIR "/files/cacert3.der");
+	test_check_file (test.directory, "extract-file", SRCDIR "/trust/fixtures/empty-file");
+	test_check_file (test.directory, "extract-file.1", SRCDIR "/trust/fixtures/cacert3.der");
 }
 
 static void
@@ -219,7 +219,7 @@ test_file_auto_empty (void)
 	assert_num_eq (true, ret);
 	free (filename);
 
-	test_check_file (test.directory, "extract-file", SRCDIR "/files/empty-file");
+	test_check_file (test.directory, "extract-file", SRCDIR "/trust/fixtures/empty-file");
 }
 
 static void
@@ -239,7 +239,7 @@ test_file_auto_length (void)
 	assert_num_eq (true, ret);
 	free (filename);
 
-	test_check_file (test.directory, "extract-file", SRCDIR "/files/simple-string");
+	test_check_file (test.directory, "extract-file", SRCDIR "/trust/fixtures/simple-string");
 }
 
 static void
@@ -362,7 +362,7 @@ test_directory_files (void)
 	                      "link.ext",
 #endif
 	                      NULL));
-	test_check_file (subdir, "blah.cer", SRCDIR "/files/cacert3.der");
+	test_check_file (subdir, "blah.cer", SRCDIR "/trust/fixtures/cacert3.der");
 	test_check_data (subdir, "file.txt", test_text, strlen (test_text));
 #ifdef OS_UNIX
 	test_check_symlink (subdir, "link.ext", "/the/destination");

@@ -40,11 +40,12 @@
 #include "constants.h"
 #include "debug.h"
 #include "enumerate.h"
-#include "iter.h"
 #include "list.h"
-#include "pkcs11x.h"
 #include "message.h"
+#include "pkcs11x.h"
 #include "tool.h"
+
+#include "p11-kit/iter.h"
 
 #include <assert.h>
 #include <stdlib.h>

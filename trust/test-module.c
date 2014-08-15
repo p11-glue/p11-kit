@@ -88,9 +88,9 @@ setup (void *unused)
 	assert (rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	paths = SRCDIR "/input" P11_PATH_SEP \
-		SRCDIR "/files/self-signed-with-ku.der" P11_PATH_SEP \
-		SRCDIR "/files/thawte.pem";
+	paths = SRCDIR "/trust/input" P11_PATH_SEP \
+		SRCDIR "/trust/fixtures/self-signed-with-ku.der" P11_PATH_SEP \
+		SRCDIR "/trust/fixtures/thawte.pem";
 	if (asprintf (&arguments, "paths='%s'", paths) < 0)
 		assert (false && "not reached");
 	args.pReserved = arguments;
@@ -266,9 +266,9 @@ test_get_slot_info (void)
 
 	/* These are the paths passed in in setup() */
 	const char *paths[] = {
-		SRCDIR "/input",
-		SRCDIR "/files/self-signed-with-ku.der",
-		SRCDIR "/files/thawte.pem"
+		SRCDIR "/trust/input",
+		SRCDIR "/trust/fixtures/self-signed-with-ku.der",
+		SRCDIR "/trust/fixtures/thawte.pem"
 	};
 
 	count = NUM_SLOTS;
@@ -314,8 +314,8 @@ test_get_token_info (void)
 
 	memset (&args, 0, sizeof (args));
 	args.pReserved = "paths='" \
-		SYSCONFDIR "/input" P11_PATH_SEP \
-		DATADIR "/files/blah" P11_PATH_SEP \
+		SYSCONFDIR "/trust/input" P11_PATH_SEP \
+		DATADIR "/trust/fixtures/blah" P11_PATH_SEP \
 		"/some/other/path/the-basename'";
 	args.flags = CKF_OS_LOCKING_OK;
 

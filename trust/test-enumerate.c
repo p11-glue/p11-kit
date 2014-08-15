@@ -534,3 +534,5 @@ main (int argc,
 
 	return p11_test_run (argc, argv);
 }
+
+#include "enumerate.c"

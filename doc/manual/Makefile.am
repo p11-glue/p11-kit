@@ -102,10 +102,10 @@ expand_content_files= $(generate_files)
 GTKDOC_LIBS=
 
 # Hacks around gtk-doc brokenness for out of tree builds
-p11-kit-sections.txt: $(srcdir)/p11-kit-sections.txt
-	cp $(srcdir)/p11-kit-sections.txt p11-kit-sections.txt
-p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
-	cp $(srcdir)/p11-kit-overrides.txt p11-kit-overrides.txt
+$(builddir)/p11-kit-sections.txt: $(srcdir)/p11-kit-sections.txt
+	cp $(srcdir)/p11-kit-sections.txt $(builddir)/p11-kit-sections.txt
+$(builddir)/p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
+	cp $(srcdir)/p11-kit-overrides.txt $(builddir)/p11-kit-overrides.txt
 
 # Generate our files with variables
 sysdir.xml:

@@ -234,7 +234,7 @@ test_pin_file (void)
 	p11_kit_pin_register_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
 	                               NULL, NULL);
 
-	pin = p11_kit_pin_request (SRCDIR "/files/test-pinfile", uri, "The token",
+	pin = p11_kit_pin_request (SRCDIR "/p11-kit/fixtures/test-pinfile", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
 	assert_ptr_not_null (pin);
@@ -243,7 +243,7 @@ test_pin_file (void)
 	assert (memcmp (ptr, "yogabbagabba", length) == 0);
 	p11_kit_pin_unref (pin);
 
-	pin = p11_kit_pin_request (SRCDIR "/files/nonexistant", uri, "The token",
+	pin = p11_kit_pin_request (SRCDIR "/p11-kit/fixtures/nonexistant", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
 	assert_ptr_eq (NULL, pin);
@@ -266,7 +266,7 @@ test_pin_file_large (void)
 	p11_kit_pin_register_callback (P11_KIT_PIN_FALLBACK, p11_kit_pin_file_callback,
 	                               NULL, NULL);
 
-	pin = p11_kit_pin_request (SRCDIR "/files/test-pinfile-large", uri, "The token",
+	pin = p11_kit_pin_request (SRCDIR "/p11-kit/fixtures/test-pinfile-large", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
 	error = errno;

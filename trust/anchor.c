@@ -41,11 +41,12 @@
 #include "debug.h"
 #include "constants.h"
 #include "extract.h"
-#include "iter.h"
 #include "message.h"
 #include "parser.h"
-#include "p11-kit.h"
 #include "tool.h"
+
+#include "p11-kit/iter.h"
+#include "p11-kit/p11-kit.h"
 
 #include <assert.h>
 #include <getopt.h>

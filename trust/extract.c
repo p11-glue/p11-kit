@@ -38,14 +38,15 @@
 #include "compat.h"
 #include "debug.h"
 #include "extract.h"
-#include "iter.h"
 #include "message.h"
 #include "oid.h"
 #include "path.h"
-#include "pkcs11.h"
 #include "pkcs11x.h"
 #include "save.h"
 #include "tool.h"
+
+#include "p11-kit/iter.h"
+#include "p11-kit/pkcs11.h"
 
 #include <assert.h>
 #include <ctype.h>

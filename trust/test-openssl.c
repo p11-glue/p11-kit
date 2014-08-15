@@ -192,7 +192,7 @@ test_file (void)
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-trusted-server-alias.pem");
 
 	free (destination);
 }
@@ -215,7 +215,7 @@ test_plain (void)
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-trusted-alias.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-trusted-alias.pem");
 
 	free (destination);
 }
@@ -256,7 +256,7 @@ test_keyid (void)
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-trusted-keyid.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-trusted-keyid.pem");
 
 	free (destination);
 }
@@ -287,7 +287,7 @@ test_not_authority (void)
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-not-trusted.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-not-trusted.pem");
 
 	free (destination);
 }
@@ -319,7 +319,7 @@ test_distrust_all (void)
 	assert_num_eq (true, ret);
 
 	test_check_file (test.directory, "extract.pem",
-	                 SRCDIR "/files/cacert3-distrust-all.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-distrust-all.pem");
 
 	free (destination);
 }
@@ -347,7 +347,7 @@ test_file_multiple (void)
 	ret = p11_extract_openssl_bundle (&test.ex, destination);
 	assert_num_eq (true, ret);
 
-	test_check_file (test.directory, "extract.pem", SRCDIR "/files/multiple.pem");
+	test_check_file (test.directory, "extract.pem", SRCDIR "/trust/fixtures/multiple.pem");
 	free (destination);
 }
 
@@ -600,9 +600,9 @@ test_directory (void)
 #endif
 	                                           NULL));
 	test_check_file (test.directory, "Custom_Label.pem",
-	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-trusted-server-alias.pem");
 	test_check_file (test.directory, "Custom_Label.1.pem",
-	                 SRCDIR "/files/cacert3-trusted-server-alias.pem");
+	                 SRCDIR "/trust/fixtures/cacert3-trusted-server-alias.pem");
 #ifdef OS_UNIX
 	test_check_symlink (test.directory, "e5662767.0", "Custom_Label.pem");
 	test_check_symlink (test.directory, "e5662767.1", "Custom_Label.1.pem");
@@ -656,3 +656,7 @@ main (int argc,
 
 	return p11_test_run (argc, argv);
 }
+
+#include "enumerate.c"
+#include "extract-openssl.c"
+#include "save.c"

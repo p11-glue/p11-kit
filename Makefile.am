@@ -1,21 +1,44 @@
 
-include $(top_srcdir)/build/Makefile.decl
-
+NULL =
 WEBHOST = anarchy.freedesktop.org
 WEBBASE = /srv/p11-glue.freedesktop.org/www
 
+AM_CPPFLAGS = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/common \
+	-DBINDIR=\"$(bindir)\" \
+	-DBUILDDIR=\"$(abs_builddir)\" \
+	-DDATADIR=\"$(datadir)\" \
+	-DPRIVATEDIR=\"$(privatedir)\" \
+	-DSRCDIR=\"$(abs_srcdir)\" \
+	-DSYSCONFDIR=\"$(sysconfdir)\" \
+	-DP11_KIT_FUTURE_UNSTABLE_API
+
+bin_PROGRAMS =
+
+CHECK_PROGS =
+
+EXTRA_DIST = HACKING
+
+incdir = $(includedir)/p11-kit-1/p11-kit
+inc_HEADERS =
+
+lib_LTLIBRARIES =
+
+noinst_LTLIBRARIES =
+noinst_PROGRAMS = $(CHECK_PROGS)
+noinst_SCRIPTS =
+
+TESTS = $(CHECK_PROGS)
+
+include common/Makefile.am
+include p11-kit/Makefile.am
+
 if WITH_TRUST_MODULE
-TRUST_DIR = trust
-else
-TRUST_DIR =
+include trust/Makefile.am
 endif
 
-SUBDIRS = \
-	common \
-	p11-kit \
-	$(TRUST_DIR) \
-	doc \
-	po
+SUBDIRS = . doc po
 
 ACLOCAL_AMFLAGS = -I build/m4
 
@@ -24,6 +47,22 @@ DISTCHECK_CONFIGURE_FLAGS = \
 	--disable-coverage \
 	--enable-strict \
 	CFLAGS='-O2'
+
+
+MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet
+
+LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes
+
+HELLCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=82 --quiet --tool=helgrind
+
+memcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(MEMCHECK_ENV)" check-TESTS
+
+leakcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(LEAKCHECK_ENV)" check-TESTS
+
+hellcheck: all
+	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(HELLCHECK_ENV)" check-TESTS
 
 dist-hook:
 	@if test -d "$(srcdir)/.git"; \
@@ -63,11 +102,6 @@ endif
 upload-release: $(DIST_ARCHIVES)
 	gpg --detach-sign --local-user 'stef@thewalter.net' $<
 	scp $< $<.sig $(WEBHOST):$(WEBBASE)/releases/
-
-EXTRA_DIST = \
-	build/Makefile.tests \
-	build/Makefile.decl \
-	HACKING
 
 transifex:
 	cd $(srcdir) && sh build/tx-update

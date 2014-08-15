@@ -503,19 +503,13 @@ privatedir='${libdir}/p11-kit'
 AC_SUBST(privatedir)
 
 AC_CONFIG_FILES([Makefile
-	common/Makefile
-	common/tests/Makefile
 	doc/Makefile
 	doc/manual/Makefile
 	po/Makefile.in
-	p11-kit/Makefile
-	p11-kit/tests/Makefile
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
-	trust/Makefile
 	trust/trust-extract-compat
-	trust/tests/Makefile
-	trust/tests/test-extract
+	trust/test-extract
 ])
 AC_OUTPUT
 
