@@ -238,11 +238,15 @@ test_not_writable (void)
 {
 	p11_token *token;
 
+#ifdef OS_UNIX
 	if (getuid () != 0) {
+#endif
 		token = p11_token_new (333, "/", "Label");
 		assert (!p11_token_is_writable (token));
 		p11_token_free (token);
+#ifdef OS_UNIX
 	}
+#endif
 
 	token = p11_token_new (333, "", "Label");
 	assert (!p11_token_is_writable (token));
