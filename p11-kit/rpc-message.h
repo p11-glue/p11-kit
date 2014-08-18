@@ -207,6 +207,8 @@ static const p11_rpc_call p11_rpc_calls[] = {
 #ifdef _DEBUG
 #define P11_RPC_CHECK_CALLS() \
 	{ int i; for (i = 0; i < P11_RPC_CALL_MAX; ++i) assert (p11_rpc_calls[i].call_id == i); }
+#else
+#define P11_RPC_CHECK_CALLS()
 #endif
 
 #define P11_RPC_HANDSHAKE \
