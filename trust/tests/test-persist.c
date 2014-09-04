@@ -48,6 +48,7 @@
 #include "message.h"
 #include "persist.h"
 #include "pkcs11.h"
+#include "pkcs11i.h"
 #include "pkcs11x.h"
 
 static void

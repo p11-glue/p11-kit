@@ -37,7 +37,7 @@
 
 #include "compat.h"
 #include "pkcs11.h"
-#include "pkcs11x.h"
+#include "pkcs11i.h"
 
 enum {
 	MOCK_DATA_OBJECT = 2,

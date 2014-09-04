@@ -42,6 +42,7 @@
 #include "debug.h"
 #include "hash.h"
 #include "pkcs11.h"
+#include "pkcs11i.h"
 #include "pkcs11x.h"
 
 #include <assert.h>

@@ -7,6 +7,7 @@ incdir = $(includedir)/p11-kit-1/p11-kit
 
 inc_HEADERS = \
 	pkcs11.h \
+	pkcs11x.h \
 	$(NULL)
 
 noinst_LTLIBRARIES = \
@@ -29,7 +30,7 @@ libp11_common_la_SOURCES = \
 	lexer.c lexer.h \
 	message.c message.h \
 	path.c path.h \
-	pkcs11.h pkcs11x.h \
+	pkcs11.h pkcs11x.h pkcs11i.h \
 	url.c url.h \
 	$(NULL)
 

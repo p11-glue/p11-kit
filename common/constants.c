@@ -38,6 +38,7 @@
 #include "constants.h"
 #include "debug.h"
 #include "pkcs11.h"
+#include "pkcs11i.h"
 #include "pkcs11x.h"
 
 #include <stdlib.h>

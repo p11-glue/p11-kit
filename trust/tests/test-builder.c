@@ -47,6 +47,7 @@
 #include "index.h"
 #include "message.h"
 #include "oid.h"
+#include "pkcs11i.h"
 #include "pkcs11x.h"
 
 struct {

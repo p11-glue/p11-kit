@@ -36,7 +36,7 @@
 #define __P11_VIRTUAL_H__
 
 #include "pkcs11.h"
-#include "pkcs11x.h"
+#include "pkcs11i.h"
 #include "array.h"
 
 typedef struct {
