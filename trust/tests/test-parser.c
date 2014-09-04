@@ -200,7 +200,7 @@ test_parse_openssl_trusted (void)
 	CK_ATTRIBUTE eku_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 		{ CKA_VALUE, "\x30\x16\x06\x03\x55\x1d\x25\x01\x01\xff\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 24 },
 		{ CKA_INVALID },
 	};
@@ -208,7 +208,7 @@ test_parse_openssl_trusted (void)
 	CK_ATTRIBUTE reject_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 		{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 28 },
 		{ CKA_INVALID },
 	};
@@ -280,7 +280,7 @@ test_parse_openssl_distrusted (void)
 	CK_ATTRIBUTE eku_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
 		{ CKA_VALUE, "\x30\x18\x06\x03\x55\x1d\x25\x01\x01\xff\x04\x0e\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x10", 26 },
 		{ CKA_INVALID },
 	};
@@ -288,7 +288,7 @@ test_parse_openssl_distrusted (void)
 	CK_ATTRIBUTE reject_extension[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension), },
 		{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)distrust_public_key, sizeof (distrust_public_key) },
 		{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x02", 28 },
 		{ CKA_INVALID },
 	};

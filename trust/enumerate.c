@@ -101,7 +101,7 @@ load_stapled_extensions (p11_enumerate *ex,
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_CLASS, &extension, sizeof (extension) },
-		{ CKA_X_PUBLIC_KEY_INFO, spki->pValue, spki->ulValueLen },
+		{ CKA_PUBLIC_KEY_INFO, spki->pValue, spki->ulValueLen },
 	};
 
 	CK_ATTRIBUTE template[] = {
@@ -286,7 +286,7 @@ extract_info (p11_enumerate *ex)
 		{ CKA_TRUSTED, },
 		{ CKA_CERTIFICATE_CATEGORY },
 		{ CKA_X_DISTRUSTED },
-		{ CKA_X_PUBLIC_KEY_INFO },
+		{ CKA_PUBLIC_KEY_INFO },
 		{ CKA_INVALID, },
 	};
 
@@ -312,7 +312,7 @@ extract_info (p11_enumerate *ex)
 	if (!extract_certificate (ex))
 		return false;
 
-	attr = p11_attrs_find_valid (ex->attrs, CKA_X_PUBLIC_KEY_INFO);
+	attr = p11_attrs_find_valid (ex->attrs, CKA_PUBLIC_KEY_INFO);
 	if (attr) {
 		ex->stapled = load_stapled_extensions (ex, attr);
 		if (!ex->stapled)
@@ -393,14 +393,14 @@ static bool
 public_key_equal (const void *one,
                   const void *two)
 {
-	return p11_attr_equal (p11_attrs_find_valid ((CK_ATTRIBUTE *)one, CKA_X_PUBLIC_KEY_INFO),
-	                       p11_attrs_find_valid ((CK_ATTRIBUTE *)two, CKA_X_PUBLIC_KEY_INFO));
+	return p11_attr_equal (p11_attrs_find_valid ((CK_ATTRIBUTE *)one, CKA_PUBLIC_KEY_INFO),
+	                       p11_attrs_find_valid ((CK_ATTRIBUTE *)two, CKA_PUBLIC_KEY_INFO));
 }
 
 static unsigned int
 public_key_hash (const void *data)
 {
-	return p11_attr_hash (p11_attrs_find_valid ((CK_ATTRIBUTE *)data, CKA_X_PUBLIC_KEY_INFO));
+	return p11_attr_hash (p11_attrs_find_valid ((CK_ATTRIBUTE *)data, CKA_PUBLIC_KEY_INFO));
 }
 
 static bool
@@ -438,7 +438,7 @@ blacklist_load (p11_enumerate *ex)
 
 	CK_ATTRIBUTE template[] = {
 		{ CKA_SERIAL_NUMBER, },
-		{ CKA_X_PUBLIC_KEY_INFO, },
+		{ CKA_PUBLIC_KEY_INFO, },
 		{ CKA_ISSUER, },
 	};
 
@@ -470,7 +470,7 @@ blacklist_load (p11_enumerate *ex)
 		}
 
 		/* A blacklisted item with a public key */
-		public_key = p11_attrs_find_valid (attrs, CKA_X_PUBLIC_KEY_INFO);
+		public_key = p11_attrs_find_valid (attrs, CKA_PUBLIC_KEY_INFO);
 		if (public_key != NULL) {
 			key = p11_attrs_build (NULL, public_key, NULL);
 			if (!public_key || !p11_dict_set (ex->blacklist_public_key, key, "x"))

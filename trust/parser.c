@@ -503,7 +503,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	CK_ATTRIBUTE *attrs;
 	CK_BYTE idv[ID_LENGTH];
 	CK_ATTRIBUTE id = { CKA_ID, idv, sizeof (idv) };
-	CK_ATTRIBUTE public_key_info = { CKA_X_PUBLIC_KEY_INFO };
+	CK_ATTRIBUTE public_key_info = { CKA_PUBLIC_KEY_INFO };
 	CK_ATTRIBUTE *value;
 	char *label = NULL;
 	node_asn *cert;

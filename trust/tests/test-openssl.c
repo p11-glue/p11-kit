@@ -108,7 +108,7 @@ static CK_ATTRIBUTE cacert3_authority_attrs[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Custom Label", 12 },
 	{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
-	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 	{ CKA_INVALID },
 };
@@ -119,7 +119,7 @@ static CK_ATTRIBUTE verisign_v1_attrs[] = {
 	{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 	{ CKA_LABEL, "Custom Label", 12 },
 	{ CKA_SUBJECT, (void *)verisign_v1_ca_subject, sizeof (verisign_v1_ca_subject) },
-	{ CKA_X_PUBLIC_KEY_INFO, (void *)verisign_v1_ca_public_key, sizeof (verisign_v1_ca_public_key) },
+	{ CKA_PUBLIC_KEY_INFO, (void *)verisign_v1_ca_public_key, sizeof (verisign_v1_ca_public_key) },
 	{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 	{ CKA_INVALID },
 };
@@ -127,7 +127,7 @@ static CK_ATTRIBUTE verisign_v1_attrs[] = {
 static CK_ATTRIBUTE extension_eku_server[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
-	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_VALUE, "\x30\x13\x06\x03\x55\x1d\x25\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x01", 21 },
 	{ CKA_INVALID },
 };
@@ -136,7 +136,7 @@ static CK_ATTRIBUTE extension_reject_email[] = {
 	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 	{ CKA_OBJECT_ID, (void *)P11_OID_OPENSSL_REJECT, sizeof (P11_OID_OPENSSL_REJECT) },
 	{ CKA_VALUE, "\x30\x1a\x06\x0a\x2b\x06\x01\x04\x01\x99\x77\x06\x0a\x01\x04\x0c\x30\x0a\x06\x08\x2b\x06\x01\x05\x05\x07\x03\x04", 28 },
-	{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 	{ CKA_INVALID },
 };
 
@@ -231,7 +231,7 @@ test_keyid (void)
 		{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
 		{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 		{ CKA_TRUSTED, &vtrue, sizeof (vtrue) },
 		{ CKA_INVALID },
 	};
@@ -239,7 +239,7 @@ test_keyid (void)
 	static CK_ATTRIBUTE extension_subject_key_identifier[] = {
 		{ CKA_CLASS, &extension_class, sizeof (extension_class) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_SUBJECT_KEY_IDENTIFIER, sizeof (P11_OID_SUBJECT_KEY_IDENTIFIER) },
-		{ CKA_X_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
 		{ CKA_VALUE, "\x30\x0e\x06\x03\x55\x1d\x0e\x04\x07\x00\x01\x02\x03\x04\x05\x06", 16 },
 		{ CKA_INVALID },
 	};
