@@ -49,7 +49,7 @@ test_constants (void *arg)
 	const p11_constant *constant = arg;
 	p11_dict *nicks, *names;
 	CK_ULONG check;
-	int i;
+	int i, j;
 
 	nicks = p11_constant_reverse (true);
 	names = p11_constant_reverse (false);
@@ -61,16 +61,16 @@ test_constants (void *arg)
 	for (i = 0; constant[i].value != CKA_INVALID; i++) {
 		assert_ptr_not_null (constant[i].name);
 
-		if (constant[i].nick) {
-			assert_str_eq (constant[i].nick,
+		if (constant[i].nicks[0]) {
+			assert_str_eq (constant[i].nicks[0],
 				       p11_constant_nick (constant, constant[i].value));
 		}
 
 		assert_str_eq (constant[i].name,
 			       p11_constant_name (constant, constant[i].value));
 
-		if (constant[i].nick) {
-			check = p11_constant_resolve (nicks, constant[i].nick);
+		for (j = 0; constant[i].nicks[j] != NULL; j++) {
+			check = p11_constant_resolve (nicks, constant[i].nicks[j]);
 			assert_num_eq (constant[i].value, check);
 		}
 
