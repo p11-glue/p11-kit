@@ -56,6 +56,7 @@ IGNORE_HFILES= \
 	mock.h \
 	modules.h \
 	pkcs11.h \
+	pkcs11i.h \
 	pkcs11x.h \
 	private.h \
 	proxy.h \

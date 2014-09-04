@@ -1,6 +1,7 @@
 
 inc_HEADERS += \
 	common/pkcs11.h \
+	common/pkcs11x.h \
 	$(NULL)
 
 noinst_LTLIBRARIES += \
@@ -23,7 +24,7 @@ libp11_common_la_SOURCES = \
 	common/lexer.c common/lexer.h \
 	common/message.c common/message.h \
 	common/path.c common/path.h \
-	common/pkcs11.h common/pkcs11x.h \
+	common/pkcs11.h common/pkcs11x.h common/pkcs11i.h \
 	common/url.c common/url.h \
 	$(NULL)
 

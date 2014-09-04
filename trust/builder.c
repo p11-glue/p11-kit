@@ -46,6 +46,7 @@
 #include "index.h"
 #include "message.h"
 #include "oid.h"
+#include "pkcs11i.h"
 #include "pkcs11x.h"
 #include "utf8.h"
 #include "x509.h"
