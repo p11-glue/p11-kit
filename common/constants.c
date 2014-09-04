@@ -50,7 +50,8 @@
  * test to verify everything is in order.
  */
 
-#define CT(x, n) { x, #x, n },
+#define CT(x, n) { x, #x, { n } },
+#define CT2(x, n, n2) { x, #x, { n, n2 } },
 
 const p11_constant p11_constant_types[] = {
 	CT (CKA_CLASS, "class")
@@ -254,10 +255,10 @@ const p11_constant p11_constant_asserts[] = {
 };
 
 const p11_constant p11_constant_categories[] = {
-	{ 0, "unspecified", "unspecified" },
-	{ 1, "token-user", "token-user" },
-	{ 2, "authority", "authority" },
-	{ 3, "other-entry", "other-entry" },
+	{ 0, "unspecified", { "unspecified" } },
+	{ 1, "token-user",  { "token-user" } },
+	{ 2, "authority",  { "authority" } },
+	{ 3, "other-entry",  { "other-entry" } },
 	{ CKA_INVALID },
 };
 
@@ -629,7 +630,7 @@ static const p11_constant *
 lookup_info (const p11_constant *table,
              CK_ATTRIBUTE_TYPE type)
 {
-	p11_constant match = { type, NULL, NULL };
+	p11_constant match = { type, NULL, { NULL } };
 	int length = -1;
 	int i;
 
@@ -657,7 +658,7 @@ p11_constant_nick (const p11_constant *constants,
                    CK_ULONG type)
 {
 	const p11_constant *constant = lookup_info (constants, type);
-	return constant ? constant->nick : NULL;
+	return constant ? constant->nicks[0] : NULL;
 }
 
 p11_dict *
@@ -665,9 +666,8 @@ p11_constant_reverse (bool nick)
 {
 	const p11_constant *table;
 	p11_dict *lookups;
-	void *string;
 	int length = -1;
-	int i, j;
+	int i, j, k;
 
 	lookups = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
 	return_val_if_fail (lookups != NULL, NULL);
@@ -678,14 +678,15 @@ p11_constant_reverse (bool nick)
 
 		for (j = 0; j < length; j++) {
 			if (nick) {
-				if (!table[j].nick)
-					continue;
-				string = (void *)table[j].nick;
+				for (k = 0; table[j].nicks[k] != NULL; k++) {
+					if (!p11_dict_set (lookups, (void *)table[j].nicks[k],
+					                   (void *)&table[j].value))
+						return_val_if_reached (NULL);
+				}
 			} else {
-				string = (void *)table[j].name;
+				if (!p11_dict_set (lookups, (void *)table[j].name, (void *)&table[j].value))
+					return_val_if_reached (NULL);
 			}
-			if (!p11_dict_set (lookups, string, (void *)&table[j].value))
-				return_val_if_reached (NULL);
 		}
 	}
 

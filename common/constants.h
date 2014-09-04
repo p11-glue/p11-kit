@@ -43,7 +43,7 @@
 typedef struct {
 	CK_ULONG value;
 	const char *name;
-	const char *nick;
+	const char *nicks[4];
 } p11_constant;
 
 const char *        p11_constant_name      (const p11_constant *constants,
