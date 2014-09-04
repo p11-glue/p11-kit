@@ -120,14 +120,14 @@ lookup_extension (p11_builder *builder,
 	node_asn *node;
 
 	CK_ATTRIBUTE match[] = {
-		{ CKA_X_PUBLIC_KEY_INFO, },
+		{ CKA_PUBLIC_KEY_INFO, },
 		{ CKA_OBJECT_ID, (void *)oid, p11_oid_length (oid) },
 		{ CKA_CLASS, &klass, sizeof (klass) },
 		{ CKA_INVALID },
 	};
 
 	if (public_key == NULL || public_key->type == CKA_INVALID)
-		public_key = p11_attrs_find_valid (cert, CKA_X_PUBLIC_KEY_INFO);
+		public_key = p11_attrs_find_valid (cert, CKA_PUBLIC_KEY_INFO);
 
 	/* Look for a stapled certificate extension */
 	if (public_key != NULL) {
@@ -651,7 +651,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 		end_date.ulValueLen = 0;
 
 	if (calc_element (node, der, der_len, "tbsCertificate.subjectPublicKeyInfo", public_key))
-		public_key->type = CKA_X_PUBLIC_KEY_INFO;
+		public_key->type = CKA_PUBLIC_KEY_INFO;
 	else
 		public_key->type = CKA_INVALID;
 	calc_element (node, der, der_len, "tbsCertificate.issuer.rdnSequence", &issuer);
@@ -783,7 +783,7 @@ const static builder_schema certificate_schema = {
 	  { CKA_HASH_OF_SUBJECT_PUBLIC_KEY, CREATE },
 	  { CKA_HASH_OF_ISSUER_PUBLIC_KEY, CREATE },
 	  { CKA_JAVA_MIDP_SECURITY_DOMAIN, CREATE, type_ulong },
-	  { CKA_X_PUBLIC_KEY_INFO, WANT, type_der_key },
+	  { CKA_PUBLIC_KEY_INFO, WANT, type_der_key },
 	  { CKA_INVALID },
 	}, certificate_populate, certificate_validate,
 };
@@ -823,7 +823,7 @@ const static builder_schema extension_schema = {
 	NORMAL_BUILD,
 	{ COMMON_ATTRS,
 	  { CKA_VALUE, REQUIRE | CREATE, type_der_ext },
-	  { CKA_X_PUBLIC_KEY_INFO, REQUIRE | CREATE, type_der_key },
+	  { CKA_PUBLIC_KEY_INFO, REQUIRE | CREATE, type_der_key },
 	  { CKA_OBJECT_ID, CREATE | WANT, type_der_oid },
 	  { CKA_ID, CREATE | MODIFY },
 	  { CKA_INVALID },
@@ -1718,7 +1718,7 @@ replace_compat_for_ext (p11_builder *builder,
 	CK_ATTRIBUTE *public_key;
 	int i;
 
-	public_key = p11_attrs_find_valid (attrs, CKA_X_PUBLIC_KEY_INFO);
+	public_key = p11_attrs_find_valid (attrs, CKA_PUBLIC_KEY_INFO);
 	if (public_key == NULL)
 		return;
 
@@ -1749,7 +1749,7 @@ update_related_category (p11_builder *builder,
 		{ CKA_INVALID, },
 	};
 
-	public_key = p11_attrs_find_valid (attrs, CKA_X_PUBLIC_KEY_INFO);
+	public_key = p11_attrs_find_valid (attrs, CKA_PUBLIC_KEY_INFO);
 	if (public_key == NULL)
 		return;
 

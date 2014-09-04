@@ -98,6 +98,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_EXPONENT_1, "exponent-1")
 	CT (CKA_EXPONENT_2, "exponent-2")
 	CT (CKA_COEFFICIENT, "coefficient")
+	CT2 (CKA_PUBLIC_KEY_INFO, "public-key-info", "x-public-key-info")
 	CT (CKA_PRIME, "prime")
 	CT (CKA_SUBPRIME, "subprime")
 	CT (CKA_BASE, "base")
@@ -176,7 +177,6 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_X_PEER, "x-peer")
 	CT (CKA_X_DISTRUSTED, "x-distrusted")
 	CT (CKA_X_CRITICAL, "x-critical")
-	CT (CKA_X_PUBLIC_KEY_INFO, "x-public-key-info")
 	{ CKA_INVALID },
 };
 

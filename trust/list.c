@@ -146,7 +146,7 @@ list_iterate (p11_enumerate *ex,
 		}
 
 		if (details) {
-			attr = p11_attrs_find_valid (ex->attrs, CKA_X_PUBLIC_KEY_INFO);
+			attr = p11_attrs_find_valid (ex->attrs, CKA_PUBLIC_KEY_INFO);
 			if (attr) {
 				p11_buffer_init (&buf, 1024);
 				bytes = attr->pValue;
