@@ -114,6 +114,7 @@ lookup_extension (p11_builder *builder,
 	CK_OBJECT_CLASS klass = CKO_X_CERTIFICATE_EXTENSION;
 	CK_OBJECT_HANDLE obj;
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *label;
 	void *value;
 	size_t length;
 	node_asn *node;
@@ -137,7 +138,15 @@ lookup_extension (p11_builder *builder,
 			value = p11_attrs_find_value (attrs, CKA_VALUE, &length);
 			if (value != NULL) {
 				node = decode_or_get_asn1 (builder, "PKIX1.Extension", value, length);
-				return_val_if_fail (node != NULL, NULL);
+				if (node == NULL) {
+					label = p11_attrs_find_valid (attrs, CKA_LABEL);
+					if (label == NULL)
+						label = p11_attrs_find_valid (cert, CKA_LABEL);
+					p11_message ("%.*s: invalid certificate extension",
+							label ? (int)label->ulValueLen : 7,
+							label ? (char *)label->pValue : "unknown");
+					return NULL;
+				}
 				return p11_asn1_read (node, "extnValue", ext_len);
 			}
 		}
