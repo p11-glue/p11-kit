@@ -1,3 +1,10 @@
+0.20.5 (stable)
+ * Don't use invalid keys for looking up stapled extensions [#82328]
+ * Better error messages when invalid certificate extensions
+ * Fix parsing of some odd OpenSSL TRUSTED CERTIFICATE files
+ * Fix some leaks, and memory issues
+ * Silence some clang scanner warnings
+
 0.20.4 (stable)
  * Don't complain about C_Finalize after a fork
  * Fix typo
