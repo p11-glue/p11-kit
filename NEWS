@@ -1,3 +1,13 @@
+0.21.2 (unstable)
+ * Don't use invalid keys for looking up stapled extensions [#82328]
+ * Better error messages when invalid certificate extensions
+ * Fix parsing of some odd OpenSSL TRUSTED CERTIFICATE files
+ * Fix some leaks, and memory issues
+ * Silence some clang scanner warnings
+ * Fix build against older pthread implementations [#82617]
+ * Move to a non-recursive Makefile
+ * Can now specify which tests to run on command line
+
 0.21.1 (unstable)
  * Add new 'isolate' pkcs11 config option [#80472]
  * Add 'p11-kit remote' command for isolating modules [#54105]
