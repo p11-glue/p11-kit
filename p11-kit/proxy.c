@@ -186,8 +186,6 @@ map_session_to_real (Proxy *px,
 static void
 proxy_free (Proxy *py)
 {
-	int i;
-
 	if (py) {
 		p11_kit_modules_finalize (py->inited);
 		free (py->inited);
@@ -281,7 +279,6 @@ proxy_create (Proxy **res)
 {
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
-	CK_FUNCTION_LIST **modules;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
 	CK_RV rv = CKR_OK;
@@ -291,7 +288,7 @@ proxy_create (Proxy **res)
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);
 
 	py->inited = modules_dup (all_modules);
-	return_val_if_fail (modules != NULL, CKR_HOST_MEMORY);
+	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
 
 	rv = p11_kit_modules_initialize (py->inited, NULL);
 
