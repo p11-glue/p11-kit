@@ -1,3 +1,7 @@
+0.20.6 (stable)
+ * Make the p11-kit-proxy.so module respect critical = no [#83651]
+ * Build fix for FreeBSD [#75674]
+
 0.20.5 (stable)
  * Don't use invalid keys for looking up stapled extensions [#82328]
  * Better error messages when invalid certificate extensions
