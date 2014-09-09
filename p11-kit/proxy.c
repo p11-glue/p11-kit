@@ -81,7 +81,7 @@ typedef struct {
 	Mapping *mappings;
 	unsigned int n_mappings;
 	p11_dict *sessions;
-	p11_array *inited;
+	CK_FUNCTION_LIST **inited;
 } Proxy;
 
 typedef struct _State {
@@ -186,8 +186,11 @@ map_session_to_real (Proxy *px,
 static void
 proxy_free (Proxy *py)
 {
+	int i;
+
 	if (py) {
-		p11_array_free (py->inited);
+		p11_kit_modules_finalize (py->inited);
+		free (py->inited);
 		p11_dict_free (py->sessions);
 		free (py->mappings);
 		free (py);
@@ -262,11 +265,23 @@ proxy_C_Finalize (CK_X_FUNCTION_LIST *self,
 	return rv;
 }
 
+static CK_FUNCTION_LIST **
+modules_dup (CK_FUNCTION_LIST **modules)
+{
+	int count = 0;
+
+	while (modules[count] != NULL)
+		count++;
+
+	return memdup (modules, sizeof (CK_FUNCTION_LIST *) * (count + 1));
+}
+
 static CK_RV
 proxy_create (Proxy **res)
 {
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
+	CK_FUNCTION_LIST **modules;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
 	CK_RV rv = CKR_OK;
@@ -275,49 +290,44 @@ proxy_create (Proxy **res)
 	py = calloc (1, sizeof (Proxy));
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);
 
-	py->inited = p11_array_new ((p11_destroyer)p11_kit_module_finalize);
-	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
+	py->inited = modules_dup (all_modules);
+	return_val_if_fail (modules != NULL, CKR_HOST_MEMORY);
 
-	for (f = all_modules; *f; ++f) {
-		funcs = *f;
+	rv = p11_kit_modules_initialize (py->inited, NULL);
 
-		rv = p11_kit_module_initialize (funcs);
-		if (rv != CKR_OK)
-			break;
+	if (rv == CKR_OK) {
+		for (f = py->inited; *f; ++f) {
+			funcs = *f;
+			assert (funcs != NULL);
+			slots = NULL;
 
-		/* Make note of everything we've initialized */
-		if (!p11_array_push (py->inited, funcs))
-			return_val_if_reached (CKR_HOST_MEMORY);
+			/* Ask module for its slots */
+			rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
+			if (rv == CKR_OK && count) {
+				slots = calloc (sizeof (CK_SLOT_ID), count);
+				rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
+			}
 
-		assert (funcs != NULL);
-		slots = NULL;
+			if (rv != CKR_OK) {
+				free (slots);
+				break;
+			}
 
-		/* Ask module for its slots */
-		rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
-		if (rv == CKR_OK && count) {
-			slots = calloc (sizeof (CK_SLOT_ID), count);
-			rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
-		}
+			return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
 
-		if (rv != CKR_OK) {
+			py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
+			return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
+
+			/* And now add a mapping for each of those slots */
+			for (i = 0; i < count; ++i) {
+				py->mappings[py->n_mappings].funcs = funcs;
+				py->mappings[py->n_mappings].wrap_slot = py->n_mappings + MAPPING_OFFSET;
+				py->mappings[py->n_mappings].real_slot = slots[i];
+				++py->n_mappings;
+			}
+
 			free (slots);
-			break;
 		}
-
-		return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
-
-		py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
-		return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
-
-		/* And now add a mapping for each of those slots */
-		for (i = 0; i < count; ++i) {
-			py->mappings[py->n_mappings].funcs = funcs;
-			py->mappings[py->n_mappings].wrap_slot = py->n_mappings + MAPPING_OFFSET;
-			py->mappings[py->n_mappings].real_slot = slots[i];
-			++py->n_mappings;
-		}
-
-		free (slots);
 	}
 
 	if (rv != CKR_OK) {
