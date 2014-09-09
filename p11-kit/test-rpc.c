@@ -47,7 +47,9 @@
 #include "virtual.h"
 
 #include <sys/types.h>
+#ifdef OS_UNIX
 #include <sys/wait.h>
+#endif
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -963,6 +965,8 @@ test_simultaneous_functions (void)
 	p11_mutex_uninit (&delay_mutex);
 }
 
+#ifdef OS_UNIX
+
 static void
 test_fork_and_reinitialize (void)
 {
@@ -1005,6 +1009,8 @@ test_fork_and_reinitialize (void)
 
 	teardown_mock_module (rpc_module);
 }
+
+#endif /* OS_UNIX */
 
 #include "test-mock.c"
 
@@ -1053,7 +1059,10 @@ main (int argc,
 	p11_test (test_get_info_stand_in, "/rpc/get-info-stand-in");
 	p11_test (test_get_slot_list_no_device, "/rpc/get-slot-list-no-device");
 	p11_test (test_simultaneous_functions, "/rpc/simultaneous-functions");
+
+#ifdef OS_UNIX
 	p11_test (test_fork_and_reinitialize, "/rpc/fork-and-reinitialize");
+#endif
 
 	test_mock_add_tests ("/rpc");
 

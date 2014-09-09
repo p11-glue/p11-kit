@@ -44,7 +44,9 @@
 #include "rpc.h"
 
 #include <sys/types.h>
+#ifdef OS_UNIX
 #include <sys/wait.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -61,7 +63,11 @@ setup_remote (void *unused)
 
 	test.directory = p11_test_directory ("p11-test-config");
 	test.user_modules = p11_path_build (test.directory, "modules", NULL);
+#ifdef OS_UNIX
 	if (mkdir (test.user_modules, 0700) < 0)
+#else
+	if (mkdir (test.user_modules) < 0)
+#endif
 		assert_not_reached ();
 
 	data = "user-config: only\n";
@@ -196,6 +202,8 @@ test_simultaneous_functions (void)
 	p11_kit_modules_release (modules);
 }
 
+#ifdef OS_UNIX
+
 static void
 test_fork_and_reinitialize (void)
 {
@@ -248,6 +256,7 @@ test_fork_and_reinitialize (void)
 	p11_kit_modules_release (modules);
 }
 
+#endif /* OS_UNIX */
 
 #include "test-mock.c"
 
@@ -273,7 +282,10 @@ main (int argc,
 	p11_fixture (setup_remote, teardown_remote);
 	p11_test (test_basic_exec, "/transport/basic");
 	p11_test (test_simultaneous_functions, "/transport/simultaneous-functions");
+
+#ifdef OS_UNIX
 	p11_test (test_fork_and_reinitialize, "/transport/fork-and-reinitialize");
+#endif
 
 	test_mock_add_tests ("/transport");
 

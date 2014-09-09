@@ -43,7 +43,9 @@
 #include "virtual.h"
 
 #include <sys/types.h>
+#ifdef OS_UNIX
 #include <sys/wait.h>
+#endif
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -196,6 +198,8 @@ test_separate_close_all_sessions (void)
 	teardown_mock_module (second);
 }
 
+#ifdef OS_UNIX
+
 static void
 test_fork_and_reinitialize (void)
 {
@@ -239,6 +243,8 @@ test_fork_and_reinitialize (void)
 	teardown_mock_module (module);
 }
 
+#endif /* OS_UNIX */
+
 /* Bring in all the mock module tests */
 #include "test-mock.c"
 
@@ -252,7 +258,10 @@ main (int argc,
 	p11_test (test_initialize_finalize, "/managed/test_initialize_finalize");
 	p11_test (test_initialize_fail, "/managed/test_initialize_fail");
 	p11_test (test_separate_close_all_sessions, "/managed/test_separate_close_all_sessions");
+
+#ifdef OS_UNIX
 	p11_test (test_fork_and_reinitialize, "/managed/fork-and-reinitialize");
+#endif
 
 	test_mock_add_tests ("/managed");
 
