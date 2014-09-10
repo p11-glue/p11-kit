@@ -233,7 +233,7 @@ test_parse_openssl_trusted (void)
 	/*
 	 * Should have gotten:
 	 * - 1 certificate
-	 * - 2 stapled extensions
+	 * - 2 attached extensions
 	 */
 	assert_num_eq (3, test.parsed->num);
 
@@ -317,7 +317,7 @@ test_parse_openssl_distrusted (void)
 	/*
 	 * Should have gotten:
 	 * - 1 certificate
-	 * - 2 stapled extensions
+	 * - 2 attached extensions
 	 */
 	assert_num_eq (3, test.parsed->num);
 	cert = parsed_attrs (certificate_match, -1);

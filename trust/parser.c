@@ -251,13 +251,13 @@ extension_attrs (p11_parser *parser,
 }
 
 static CK_ATTRIBUTE *
-stapled_attrs (p11_parser *parser,
-               CK_ATTRIBUTE *id,
-               CK_ATTRIBUTE *public_key_info,
-               const char *oid_str,
-               const unsigned char *oid_der,
-               bool critical,
-               node_asn *ext)
+attached_attrs (p11_parser *parser,
+                CK_ATTRIBUTE *id,
+                CK_ATTRIBUTE *public_key_info,
+                const char *oid_str,
+                const unsigned char *oid_der,
+                bool critical,
+                node_asn *ext)
 {
 	CK_ATTRIBUTE *attrs;
 	unsigned char *der;
@@ -302,13 +302,13 @@ load_seq_of_oid_str (node_asn *node,
 }
 
 static CK_ATTRIBUTE *
-stapled_eku_attrs (p11_parser *parser,
-                   CK_ATTRIBUTE *id,
-                   CK_ATTRIBUTE *public_key_info,
-                   const char *oid_str,
-                   const unsigned char *oid_der,
-                   bool critical,
-                   p11_dict *oid_strs)
+attached_eku_attrs (p11_parser *parser,
+                    CK_ATTRIBUTE *id,
+                    CK_ATTRIBUTE *public_key_info,
+                    const char *oid_str,
+                    const unsigned char *oid_der,
+                    bool critical,
+                    p11_dict *oid_strs)
 {
 	CK_ATTRIBUTE *attrs;
 	p11_dictiter iter;
@@ -353,7 +353,7 @@ stapled_eku_attrs (p11_parser *parser,
 	}
 
 
-	attrs = stapled_attrs (parser, id, public_key_info, oid_str, oid_der, critical, dest);
+	attrs = attached_attrs (parser, id, public_key_info, oid_str, oid_der, critical, dest);
 	asn1_delete_structure (&dest);
 
 	return attrs;
@@ -416,10 +416,10 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (trust) {
-		attrs = stapled_eku_attrs (parser, id, public_key_info,
-		                           P11_OID_EXTENDED_KEY_USAGE_STR,
-		                           P11_OID_EXTENDED_KEY_USAGE,
-		                           true, trust);
+		attrs = attached_eku_attrs (parser, id, public_key_info,
+		                            P11_OID_EXTENDED_KEY_USAGE_STR,
+		                            P11_OID_EXTENDED_KEY_USAGE,
+		                            true, trust);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}
@@ -433,10 +433,10 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	if (reject && p11_dict_size (reject) > 0) {
-		attrs = stapled_eku_attrs (parser, id, public_key_info,
-		                           P11_OID_OPENSSL_REJECT_STR,
-		                           P11_OID_OPENSSL_REJECT,
-		                           false, reject);
+		attrs = attached_eku_attrs (parser, id, public_key_info,
+		                            P11_OID_OPENSSL_REJECT_STR,
+		                            P11_OID_OPENSSL_REJECT,
+		                            false, reject);
 		return_val_if_fail (attrs != NULL, NULL);
 		sink_object (parser, attrs);
 	}

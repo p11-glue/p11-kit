@@ -130,7 +130,7 @@ lookup_extension (p11_builder *builder,
 	if (public_key == NULL || public_key->type == CKA_INVALID)
 		public_key = p11_attrs_find_valid (cert, CKA_PUBLIC_KEY_INFO);
 
-	/* Look for a stapled certificate extension */
+	/* Look for an attached certificate extension */
 	if (public_key != NULL) {
 		memcpy (match, public_key, sizeof (CK_ATTRIBUTE));
 		obj = p11_index_find (index, match, -1);
@@ -592,7 +592,7 @@ calc_certificate_category (p11_builder *builder,
 		/*
 		 * If there is no basic constraints extension, and the CA version is
 		 * v1, and is self-signed, then we assume this is a certificate authority.
-		 * So we add a BasicConstraints stapled certificate extension
+		 * So we add a BasicConstraints attached certificate extension
 		 */
 		is_ca = 1;
 

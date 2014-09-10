@@ -110,8 +110,8 @@ load_usage_ext (p11_enumerate *ex,
 	node_asn *ext = NULL;
 	size_t length;
 
-	if (ex->stapled)
-		ext = p11_dict_get (ex->stapled, ext_oid);
+	if (ex->attached)
+		ext = p11_dict_get (ex->attached, ext_oid);
 	if (ext == NULL) {
 		*oids = NULL;
 		return true;
@@ -230,8 +230,8 @@ write_keyid (p11_enumerate *ex,
 	size_t length = 0;
 	int ret;
 
-	if (ex->stapled)
-		ext = p11_dict_get (ex->stapled, P11_OID_SUBJECT_KEY_IDENTIFIER);
+	if (ex->attached)
+		ext = p11_dict_get (ex->attached, P11_OID_SUBJECT_KEY_IDENTIFIER);
 	if (ext != NULL) {
 		value = p11_asn1_read (ext, "extnValue", &length);
 		return_val_if_fail (value != NULL, false);

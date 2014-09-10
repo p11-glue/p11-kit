@@ -278,7 +278,7 @@ test_info_limit_purposes (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_server_client);
 
-	/* This should not match the above, with the stapled certificat ext */
+	/* This should not match the above, with the attached certificat ext */
 	assert_ptr_eq (NULL, test.ex.limit_to_purposes);
 	p11_enumerate_opt_purpose (&test.ex, "1.1.1");
 	assert_ptr_not_null (test.ex.limit_to_purposes);

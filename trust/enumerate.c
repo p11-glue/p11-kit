@@ -51,10 +51,10 @@
 #include <string.h>
 
 static bool
-load_stapled_extension (p11_dict *stapled,
-                        p11_dict *asn1_defs,
-                        const unsigned char *der,
-                        size_t len)
+load_attached_extension (p11_dict *attached,
+                         p11_dict *asn1_defs,
+                         const unsigned char *der,
+                         size_t len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	node_asn *ext;
@@ -66,7 +66,7 @@ load_stapled_extension (p11_dict *stapled,
 
 	ext = p11_asn1_decode (asn1_defs, "PKIX1.Extension", der, len, message);
 	if (ext == NULL) {
-		p11_message ("couldn't parse stapled certificate extension: %s", message);
+		p11_message ("couldn't parse attached certificate extension: %s", message);
 		return false;
 	}
 
@@ -83,21 +83,21 @@ load_stapled_extension (p11_dict *stapled,
 	oid = memdup (der + start, length);
 	return_val_if_fail (oid != NULL, false);
 
-	if (!p11_dict_set (stapled, oid, ext))
+	if (!p11_dict_set (attached, oid, ext))
 		return_val_if_reached (false);
 
 	return true;
 }
 
 static p11_dict *
-load_stapled_extensions (p11_enumerate *ex,
-                         CK_ATTRIBUTE *spki)
+load_attached_extensions (p11_enumerate *ex,
+                          CK_ATTRIBUTE *spki)
 {
 	CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
 	CK_ATTRIBUTE *attrs;
 	P11KitIter *iter;
 	CK_RV rv = CKR_OK;
-	p11_dict *stapled;
+	p11_dict *attached;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_CLASS, &extension, sizeof (extension) },
@@ -108,12 +108,12 @@ load_stapled_extensions (p11_enumerate *ex,
 		{ CKA_VALUE, },
 	};
 
-	stapled = p11_dict_new (p11_oid_hash, p11_oid_equal,
+	attached = p11_dict_new (p11_oid_hash, p11_oid_equal,
 	                        free, p11_asn1_free);
 
 	/* No ID to use, just short circuit */
 	if (!spki->pValue || !spki->ulValueLen)
-		return stapled;
+		return attached;
 
 	iter = p11_kit_iter_new (NULL, 0);
 	p11_kit_iter_add_filter (iter, match, 2);
@@ -126,9 +126,9 @@ load_stapled_extensions (p11_enumerate *ex,
 			attrs = p11_attrs_buildn (NULL, template, 1);
 			rv = p11_kit_iter_load_attributes (iter, attrs, 1);
 			if (rv == CKR_OK) {
-				if (!load_stapled_extension (stapled, ex->asn1_defs,
-				                             attrs[0].pValue,
-				                             attrs[0].ulValueLen)) {
+				if (!load_attached_extension (attached, ex->asn1_defs,
+				                              attrs[0].pValue,
+				                              attrs[0].ulValueLen)) {
 					rv = CKR_GENERAL_ERROR;
 				}
 			}
@@ -137,13 +137,13 @@ load_stapled_extensions (p11_enumerate *ex,
 	}
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("couldn't load stapled extensions for certificate: %s", p11_kit_strerror (rv));
-		p11_dict_free (stapled);
-		stapled = NULL;
+		p11_message ("couldn't load attached extensions for certificate: %s", p11_kit_strerror (rv));
+		p11_dict_free (attached);
+		attached = NULL;
 	}
 
 	p11_kit_iter_free (iter);
-	return stapled;
+	return attached;
 }
 
 static bool
@@ -153,8 +153,8 @@ extract_purposes (p11_enumerate *ex)
 	unsigned char *value = NULL;
 	size_t length;
 
-	if (ex->stapled) {
-		ext = p11_dict_get (ex->stapled, P11_OID_EXTENDED_KEY_USAGE);
+	if (ex->attached) {
+		ext = p11_dict_get (ex->attached, P11_OID_EXTENDED_KEY_USAGE);
 		if (ext != NULL) {
 			value = p11_asn1_read (ext, "extnValue", &length);
 			return_val_if_fail (value != NULL, false);
@@ -314,8 +314,8 @@ extract_info (p11_enumerate *ex)
 
 	attr = p11_attrs_find_valid (ex->attrs, CKA_PUBLIC_KEY_INFO);
 	if (attr) {
-		ex->stapled = load_stapled_extensions (ex, attr);
-		if (!ex->stapled)
+		ex->attached = load_attached_extensions (ex, attr);
+		if (!ex->attached)
 			return false;
 	}
 
@@ -337,8 +337,8 @@ extract_clear (p11_enumerate *ex)
 	ex->cert_der = NULL;
 	ex->cert_len = 0;
 
-	p11_dict_free (ex->stapled);
-	ex->stapled = NULL;
+	p11_dict_free (ex->attached);
+	ex->attached = NULL;
 
 	p11_array_free (ex->purposes);
 	ex->purposes = NULL;

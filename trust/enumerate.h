@@ -80,7 +80,7 @@ typedef struct {
 	size_t cert_len;
 
 	/* DER OID -> CK_ATTRIBUTE list */
-	p11_dict *stapled;
+	p11_dict *attached;
 
 	/* Set of OID purposes as strings */
 	p11_array *purposes;

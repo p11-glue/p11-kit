@@ -399,7 +399,7 @@ test_build_certificate_staple_ca (void)
 {
 	CK_ULONG category = 2; /* CA */
 
-	CK_ATTRIBUTE stapled[] = {
+	CK_ATTRIBUTE attached[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
 		{ CKA_VALUE, "\x30\x0f\x06\x03\x55\x1d\x13\x01\x01\xff\x04\x05\x30\x03\x01\x01\xff", 17 },
@@ -423,10 +423,10 @@ test_build_certificate_staple_ca (void)
 	CK_ATTRIBUTE *extra;
 	CK_RV rv;
 
-	/* Adding the stapled extension *first*, and then the certificate */
+	/* Adding the attached extension *first*, and then the certificate */
 
-	/* Add a stapled certificate */
-	rv = p11_index_add (test.index, stapled, 4, NULL);
+	/* Add a attached certificate */
+	rv = p11_index_add (test.index, attached, 4, NULL);
 	assert_num_eq (CKR_OK, rv);
 
 	attrs = NULL;
@@ -439,7 +439,7 @@ test_build_certificate_staple_ca (void)
 
 	/*
 	 * Even though the certificate is not a valid CA, the presence of the
-	 * stapled certificate extension transforms it into a CA.
+	 * attached certificate extension transforms it into a CA.
 	 */
 	test_check_attrs (expected, attrs);
 	p11_attrs_free (attrs);
@@ -450,7 +450,7 @@ test_build_certificate_staple_ca_backwards (void)
 {
 	CK_ULONG category = 2; /* CA */
 
-	CK_ATTRIBUTE stapled[] = {
+	CK_ATTRIBUTE attached[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
 		{ CKA_VALUE, "\x30\x0f\x06\x03\x55\x1d\x13\x01\x01\xff\x04\x05\x30\x03\x01\x01\xff", 17 },
@@ -474,18 +474,18 @@ test_build_certificate_staple_ca_backwards (void)
 	CK_ATTRIBUTE *attrs;
 	CK_OBJECT_HANDLE handle;
 
-	/* Adding the certificate *first*, and then the stapled extension */
+	/* Adding the certificate *first*, and then the attached extension */
 
 	rv = p11_index_add (test.index, input, 4, &handle);
 	assert_num_eq (CKR_OK, rv);
 
-	/* Add a stapled certificate */
-	rv = p11_index_add (test.index, stapled, 4, NULL);
+	/* Add a attached certificate */
+	rv = p11_index_add (test.index, attached, 4, NULL);
 	assert_num_eq (CKR_OK, rv);
 
 	/*
 	 * Even though the certificate is not a valid CA, the presence of the
-	 * stapled certificate extension transforms it into a CA.
+	 * attached certificate extension transforms it into a CA.
 	 */
 	attrs = p11_index_lookup (test.index, handle);
 	test_check_attrs (expected, attrs);
@@ -2074,7 +2074,7 @@ test_changed_staple_ca (void)
 {
 	CK_ULONG category = 0;
 
-	CK_ATTRIBUTE stapled[] = {
+	CK_ATTRIBUTE attached[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_BASIC_CONSTRAINTS, sizeof (P11_OID_BASIC_CONSTRAINTS) },
 		{ CKA_VALUE, "\x30\x0c\x06\x03\x55\x1d\x13\x04\x05\x30\x03\x01\x01\xff", 14 },
@@ -2108,8 +2108,8 @@ test_changed_staple_ca (void)
 	category = 0;
 	assert (p11_index_find (test.index, match, -1) == 0);
 
-	/* Add a stapled basic constraint */
-	rv = p11_index_add (test.index, stapled, 4, NULL);
+	/* Add a attached basic constraint */
+	rv = p11_index_add (test.index, attached, 4, NULL);
 	assert_num_eq (CKR_OK, rv);
 
 	/* Now should be a CA */
@@ -2122,7 +2122,7 @@ test_changed_staple_ca (void)
 static void
 test_changed_staple_ku (void)
 {
-	CK_ATTRIBUTE stapled_ds_and_np[] = {
+	CK_ATTRIBUTE attached_ds_and_np[] = {
 		{ CKA_CLASS, &certificate_extension, sizeof (certificate_extension) },
 		{ CKA_OBJECT_ID, (void *)P11_OID_KEY_USAGE, sizeof (P11_OID_KEY_USAGE) },
 		{ CKA_VALUE, "\x30\x0c\x06\x03\x55\x1d\x0f\x04\x05\x03\x03\x07\xc0\x00", 14 },
@@ -2168,7 +2168,7 @@ test_changed_staple_ku (void)
 	p11_index_load (test.index);
 	rv = p11_index_take (test.index, p11_attrs_dup (input), NULL);
 	assert_num_eq (CKR_OK, rv);
-	rv = p11_index_take (test.index, p11_attrs_dup (stapled_ds_and_np), NULL);
+	rv = p11_index_take (test.index, p11_attrs_dup (attached_ds_and_np), NULL);
 	assert_num_eq (CKR_OK, rv);
 	p11_index_finish (test.index);
 
