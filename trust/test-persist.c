@@ -400,6 +400,32 @@ test_pem_middle (void)
 }
 
 static void
+test_pem_public_key (void)
+{
+	const char *output = "[p11-kit-object-v1]\n"
+	                    "id: \"292c92\"\n"
+	    "-----BEGIN PUBLIC KEY-----\n"
+	   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAryQICCl6NZ5gDKrnSztO\n"
+	   "3Hy8PEUcuyvg/ikC+VcIo2SFFSf18a3IMYldIugqqqZCs4/4uVW3sbdLs/6PfgdX\n"
+	   "7O9D22ZiFWHPYA2k2N744MNiCD1UE+tJyllUhSblK48bn+v1oZHCM0nYQ2NqUkvS\n"
+	   "j+hwUU3RiWl7x3D2s9wSdNt7XUtW05a/FXehsPSiJfKvHJJnGOX0BgTvkLnkAOTd\n"
+	   "OrUZ/wK69Dzu4IvrN4vs9Nes8vbwPa/ddZEzGR0cQMt0JBkhk9kU/qwqUseP1QRJ\n"
+	   "5I1jR4g8aYPL/ke9K35PxZWuDp3U0UPAZ3PjFAh+5T+fc7gzCs9dPzSHloruU+gl\n"
+	   "FQIDAQAB\n"
+           "-----END PUBLIC KEY-----\n\n";
+
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_ID, "292c92", 6, },
+		{ CKA_PUBLIC_KEY_INFO, &example_public_key, sizeof (example_public_key) },
+		{ CKA_INVALID },
+	};
+
+	check_read_success (output, (attrs, NULL));
+	check_write_success (output, (attrs, NULL));
+}
+
+
+static void
 test_pem_invalid (void)
 {
 	const char *input = "[p11-kit-object-v1]\n"
@@ -594,6 +620,7 @@ main (int argc,
 	p11_test (test_multiple, "/persist/multiple");
 	p11_test (test_pem_block, "/persist/pem_block");
 	p11_test (test_pem_middle, "/persist/pem-middle");
+	p11_test (test_pem_public_key, "/persist/pem-public-key");
 	p11_test (test_pem_invalid, "/persist/pem_invalid");
 	p11_test (test_pem_unsupported, "/persist/pem_unsupported");
 	p11_test (test_pem_first, "/persist/pem_first");

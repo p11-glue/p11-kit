@@ -557,6 +557,15 @@ certificate_to_attributes (const unsigned char *der,
 	return p11_attrs_build (NULL, &klass, &certificate_type, &value, NULL);
 }
 
+static CK_ATTRIBUTE *
+public_key_to_attributes (const unsigned char *der,
+                          size_t length)
+{
+	/* Eventually we might choose to contribute a class here ... */
+	CK_ATTRIBUTE public_key = { CKA_PUBLIC_KEY_INFO, (void *)der, length };
+	return p11_attrs_build (NULL, &public_key, NULL);
+}
+
 typedef struct {
 	p11_lexer *lexer;
 	CK_ATTRIBUTE *attrs;
@@ -574,6 +583,11 @@ on_pem_block (const char *type,
 
 	if (strcmp (type, "CERTIFICATE") == 0) {
 		attrs = certificate_to_attributes (contents, length);
+		pb->attrs = p11_attrs_merge (pb->attrs, attrs, false);
+		pb->result = true;
+
+	} else if (strcmp (type, "PUBLIC KEY") == 0) {
+		attrs = public_key_to_attributes (contents, length);
 		pb->attrs = p11_attrs_merge (pb->attrs, attrs, false);
 		pb->result = true;
 
@@ -697,10 +711,12 @@ p11_persist_write (p11_persist *persist,
 {
 	char string[sizeof (CK_ULONG) * 4];
 	CK_ATTRIBUTE *cert_value;
+	CK_ATTRIBUTE *spki_value;
 	const char *nick;
 	int i;
 
 	cert_value = find_certificate_value (attrs);
+	spki_value = p11_attrs_find_valid (attrs, CKA_PUBLIC_KEY_INFO);
 
 	p11_buffer_add (buf, "[" PERSIST_HEADER "]\n", -1);
 
@@ -711,6 +727,11 @@ p11_persist_write (p11_persist *persist,
 		    (attrs[i].type == CKA_CLASS ||
 		     attrs[i].type == CKA_CERTIFICATE_TYPE ||
 		     attrs[i].type == CKA_VALUE))
+			continue;
+
+		/* These are written later? */
+		if (spki_value != NULL &&
+		    attrs[i].type == CKA_PUBLIC_KEY_INFO)
 			continue;
 
 		/* These are never written */
@@ -736,6 +757,9 @@ p11_persist_write (p11_persist *persist,
 
 	if (cert_value != NULL) {
 		if (!p11_pem_write (cert_value->pValue, cert_value->ulValueLen, "CERTIFICATE", buf))
+			return_val_if_reached (false);
+	} else if (spki_value != NULL) {
+		if (!p11_pem_write (spki_value->pValue, spki_value->ulValueLen, "PUBLIC KEY", buf))
 			return_val_if_reached (false);
 	}
 

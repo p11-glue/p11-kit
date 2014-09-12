@@ -22,10 +22,15 @@ constants are available.
 
 PEM blocks can be present within an object, and these contribute certain
 PKCS#11 attributes to the object. The attributes that come from PEM blocks
-never override those explicitly specified. A 'CERTIFICATE' type PEM block
-contributes the 'value', 'class', 'certificate-type', 'subject', 'issuer'
-'start-date', 'end-date', 'id', 'certificate-category', 'check-value',
-'serial-number' attributes with appropriate values.
+never override those explicitly specified.
+
+A 'CERTIFICATE' type PEM block contributes the 'value', 'class',
+'certificate-type', 'subject', 'issuer' 'start-date', 'end-date', 'id',
+'certificate-category', 'check-value', 'serial-number', 'public-key-info'
+attributes with appropriate values.
+
+A 'PUBLIC KEY' type PEM block contributes the 'public-key-info' attribute
+with an appropriate value.
 
 Comments starting with a '#' and blank lines are ignored.
 
