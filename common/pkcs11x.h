@@ -137,7 +137,7 @@ typedef CK_ULONG                        CK_TRUST;
 
 /* From the 2.40 draft */
 #ifndef CKA_PUBLIC_KEY_INFO
-#define CKA_PUBLIC_KEY_INFO                          0x00000173UL
+#define CKA_PUBLIC_KEY_INFO                          0x00000129UL
 #endif
 
 #endif /* CRYPTOKI_X_VENDOR_DEFINED */
