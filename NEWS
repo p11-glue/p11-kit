@@ -1,3 +1,8 @@
+0.20.7 (stable)
+ * New public pkcs11x.h header containing extensions [#83495]
+ * Export necessary defines to lookup attached extensions [#83495]
+ * Build fixes
+
 0.20.6 (stable)
  * Make the p11-kit-proxy.so module respect critical = no [#83651]
  * Build fix for FreeBSD [#75674]
