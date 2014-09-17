@@ -1,3 +1,11 @@
+0.21.3 (unstable)
+ * New public pkcs11x.h header containing extensions [#83495]
+ * Export necessary defines to lookup attached extensions [#83495]
+ * Use term 'attached extensions' rather than 'stabled extensions'
+ * Make proxy module respect 'critical = no' [#83651]
+ * Show public-key-info in 'trust list --details'
+ * Build fixes [#75674 ...]
+
 0.21.2 (unstable)
  * Don't use invalid keys for looking up stapled extensions [#82328]
  * Better error messages when invalid certificate extensions
