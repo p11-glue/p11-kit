@@ -20,7 +20,6 @@ MODULE_SRCS = \
 	p11-kit/private.h \
 	p11-kit/proxy.c p11-kit/proxy.h \
 	p11-kit/messages.c \
-	p11-kit/remote.c \
 	p11-kit/rpc-transport.c p11-kit/rpc.h \
 	p11-kit/rpc-message.c p11-kit/rpc-message.h \
 	p11-kit/rpc-client.c p11-kit/rpc-server.c \
@@ -117,6 +116,18 @@ p11_kit_p11_kit_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	$(LTLIBINTL) \
+	$(NULL)
+
+private_PROGRAMS += p11-kit-remote
+
+p11_kit_remote_SOURCES = \
+	p11-kit/remote.c \
+	$(NULL)
+
+p11_kit_remote_LDADD = \
+	libp11-tool.la \
+	libp11-common.la \
+	libp11-kit.la \
 	$(NULL)
 
 # Tests ----------------------------------------------------------------

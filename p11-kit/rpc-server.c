@@ -41,6 +41,7 @@
 #include "library.h"
 #include "private.h"
 #include "message.h"
+#include "remote.h"
 #include "rpc.h"
 #include "rpc-message.h"
 
@@ -1900,4 +1901,104 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 
 	p11_rpc_message_clear (&msg);
 	return true;
+}
+
+int
+p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
+                             int in_fd,
+                             int out_fd)
+{
+	p11_rpc_status status;
+	unsigned char version;
+	p11_virtual virt;
+	p11_buffer options;
+	p11_buffer buffer;
+	size_t state;
+	int ret = 1;
+	int code;
+
+	return_val_if_fail (module != NULL, 1);
+
+	p11_buffer_init (&options, 0);
+	p11_buffer_init (&buffer, 0);
+
+	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+
+	switch (read (in_fd, &version, 1)) {
+	case 0:
+		goto out;
+	case 1:
+		if (version != 0) {
+			p11_message ("unspported version received: %d", (int)version);
+			goto out;
+		}
+		break;
+	default:
+		p11_message_err (errno, "couldn't read credential byte");
+		goto out;
+	}
+
+	version = 0;
+	switch (write (out_fd, &version, out_fd)) {
+	case 1:
+		break;
+	default:
+		p11_message_err (errno, "couldn't write credential byte");
+		goto out;
+	}
+
+	status = P11_RPC_OK;
+	while (status == P11_RPC_OK) {
+		state = 0;
+		code = 0;
+
+		do {
+			status = p11_rpc_transport_read (in_fd, &state, &code,
+			                                 &options, &buffer);
+		} while (status == P11_RPC_AGAIN);
+
+		switch (status) {
+		case P11_RPC_OK:
+			break;
+		case P11_RPC_EOF:
+			ret = 0;
+			continue;
+		case P11_RPC_AGAIN:
+			assert_not_reached ();
+		case P11_RPC_ERROR:
+			p11_message_err (errno, "failed to read rpc message");
+			goto out;
+		}
+
+		if (!p11_rpc_server_handle (&virt.funcs, &buffer, &buffer)) {
+			p11_message ("unexpected error handling rpc message");
+			goto out;
+		}
+
+		state = 0;
+		options.len = 0;
+		do {
+			status = p11_rpc_transport_write (out_fd, &state, code,
+			                                  &options, &buffer);
+		} while (status == P11_RPC_AGAIN);
+
+		switch (status) {
+		case P11_RPC_OK:
+			break;
+		case P11_RPC_EOF:
+		case P11_RPC_AGAIN:
+			assert_not_reached ();
+		case P11_RPC_ERROR:
+			p11_message_err (errno, "failed to write rpc message");
+			goto out;
+		}
+	}
+
+out:
+	p11_buffer_uninit (&buffer);
+	p11_buffer_uninit (&options);
+
+	p11_virtual_uninit (&virt);
+
+	return ret;
 }

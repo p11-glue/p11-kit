@@ -34,13 +34,12 @@
 
 #include "config.h"
 
-#include "buffer.h"
 #include "compat.h"
 #include "debug.h"
 #include "message.h"
-#include "rpc.h"
+#include "p11-kit.h"
 #include "remote.h"
-#include "virtual.h"
+#include "tool.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -50,101 +49,63 @@
 #include <unistd.h>
 
 int
-p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
-                             int in_fd,
-                             int out_fd)
+main (int argc,
+      char *argv[])
 {
-	p11_rpc_status status;
-	unsigned char version;
-	p11_virtual virt;
-	p11_buffer options;
-	p11_buffer buffer;
-	size_t state;
-	int ret = 1;
-	int code;
+	CK_FUNCTION_LIST *module;
+	int opt;
+	int ret;
 
-	return_val_if_fail (module != NULL, 1);
+	enum {
+		opt_verbose = 'v',
+		opt_help = 'h',
+	};
 
-	p11_buffer_init (&options, 0);
-	p11_buffer_init (&buffer, 0);
+	struct option options[] = {
+		{ "verbose", no_argument, NULL, opt_verbose },
+		{ "help", no_argument, NULL, opt_help },
+		{ 0 },
+	};
 
-	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+	p11_tool_desc usages[] = {
+		{ 0, "usage: p11-kit remote <module>" },
+		{ 0 },
+	};
 
-	switch (read (in_fd, &version, 1)) {
-	case 0:
-		goto out;
-	case 1:
-		if (version != 0) {
-			p11_message ("unspported version received: %d", (int)version);
-			goto out;
-		}
-		break;
-	default:
-		p11_message_err (errno, "couldn't read credential byte");
-		goto out;
-	}
-
-	version = 0;
-	switch (write (out_fd, &version, out_fd)) {
-	case 1:
-		break;
-	default:
-		p11_message_err (errno, "couldn't write credential byte");
-		goto out;
-	}
-
-	status = P11_RPC_OK;
-	while (status == P11_RPC_OK) {
-		state = 0;
-		code = 0;
-
-		do {
-			status = p11_rpc_transport_read (in_fd, &state, &code,
-			                                 &options, &buffer);
-		} while (status == P11_RPC_AGAIN);
-
-		switch (status) {
-		case P11_RPC_OK:
+	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
+		switch (opt) {
+		case opt_verbose:
+			p11_kit_be_loud ();
 			break;
-		case P11_RPC_EOF:
-			ret = 0;
-			continue;
-		case P11_RPC_AGAIN:
+		case opt_help:
+		case '?':
+			p11_tool_usage (usages, options);
+			return 0;
+		default:
 			assert_not_reached ();
-		case P11_RPC_ERROR:
-			p11_message_err (errno, "failed to read rpc message");
-			goto out;
-		}
-
-		if (!p11_rpc_server_handle (&virt.funcs, &buffer, &buffer)) {
-			p11_message ("unexpected error handling rpc message");
-			goto out;
-		}
-
-		state = 0;
-		options.len = 0;
-		do {
-			status = p11_rpc_transport_write (out_fd, &state, code,
-			                                  &options, &buffer);
-		} while (status == P11_RPC_AGAIN);
-
-		switch (status) {
-		case P11_RPC_OK:
 			break;
-		case P11_RPC_EOF:
-		case P11_RPC_AGAIN:
-			assert_not_reached ();
-		case P11_RPC_ERROR:
-			p11_message_err (errno, "failed to write rpc message");
-			goto out;
 		}
 	}
 
-out:
-	p11_buffer_uninit (&buffer);
-	p11_buffer_uninit (&options);
+	argc -= optind;
+	argv += optind;
 
-	p11_virtual_uninit (&virt);
+	if (argc != 1) {
+		p11_message ("specify the module to remote");
+		return 2;
+	}
+
+	if (isatty (0)) {
+		p11_message ("the 'remote' tool is not meant to be run from a terminal");
+		return 2;
+	}
+
+	module = p11_kit_module_load (argv[0], 0);
+	if (module == NULL)
+		return 1;
+
+	ret = p11_kit_remote_serve_module (module, 0, 1);
+	p11_kit_module_release (module);
 
 	return ret;
 }

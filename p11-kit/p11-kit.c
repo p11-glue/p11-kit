@@ -39,7 +39,6 @@
 #include "message.h"
 #include "path.h"
 #include "p11-kit.h"
-#include "remote.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -61,12 +60,9 @@ int       p11_kit_trust           (int argc,
 int       p11_kit_external        (int argc,
                                    char *argv[]);
 
-int       p11_kit_remote          (int argc,
-                                   char *argv[]);
-
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, "List modules and tokens" },
-	{ "remote", p11_kit_remote, "Run a specific PKCS#11 module remotely" },
+	{ "remote", p11_kit_external, "Run a specific PKCS#11 module remotely" },
 	{ P11_TOOL_FALLBACK, p11_kit_external, NULL },
 	{ 0, }
 };
@@ -130,69 +126,6 @@ p11_kit_external (int argc,
 	free (path);
 	return 2;
 }
-
-int
-p11_kit_remote (int argc,
-                char *argv[])
-{
-	CK_FUNCTION_LIST *module;
-	int opt;
-	int ret;
-
-	enum {
-		opt_verbose = 'v',
-		opt_help = 'h',
-	};
-
-	struct option options[] = {
-		{ "verbose", no_argument, NULL, opt_verbose },
-		{ "help", no_argument, NULL, opt_help },
-		{ 0 },
-	};
-
-	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit remote <module>" },
-		{ 0 },
-	};
-
-	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
-		switch (opt) {
-		case opt_verbose:
-			p11_kit_be_loud ();
-			break;
-		case opt_help:
-		case '?':
-			p11_tool_usage (usages, options);
-			return 0;
-		default:
-			assert_not_reached ();
-			break;
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (argc != 1) {
-		p11_message ("specify the module to remote");
-		return 2;
-	}
-
-	if (isatty (0)) {
-		p11_message ("the 'remote' tool is not meant to be run from a terminal");
-		return 2;
-	}
-
-	module = p11_kit_module_load (argv[0], 0);
-	if (module == NULL)
-		return 1;
-
-	ret = p11_kit_remote_serve_module (module, 0, 1);
-	p11_kit_module_release (module);
-
-	return ret;
-}
-
 
 int
 main (int argc,
