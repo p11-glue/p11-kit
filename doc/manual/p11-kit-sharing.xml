@@ -100,8 +100,9 @@
 			module configuration option.</para>
 		</listitem>
 		<listitem>
-			<para>Managed modules have the ability to be isolated in their own process
-			See the <link linkend="option-isolated"><literal>isolated = yes</literal></link>
+			<para>Managed modules have the ability to be remoted to another machine or
+			isolated in their own process.
+			See the <link linkend="option-remote"><literal>remote = ...</literal></link>
 			module configuration option.</para>
 		</listitem>
 		</itemizedlist>
