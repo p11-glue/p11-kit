@@ -1,3 +1,9 @@
+0.22.0 (stable)
+ * Remove the 'isolated = yes' option due to unclear semantics
+   replacement forth coming in later versions.
+ * Use secure_getenv() where necessary
+ * Run separate binary for 'p11-kit remote' command
+
 0.21.3 (unstable)
  * New public pkcs11x.h header containing extensions [#83495]
  * Export necessary defines to lookup attached extensions [#83495]
