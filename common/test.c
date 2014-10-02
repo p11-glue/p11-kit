@@ -322,7 +322,7 @@ expand_tempdir (const char *name)
 {
 	const char *env;
 
-	env = getenv ("TMPDIR");
+	env = secure_getenv ("TMPDIR");
 	if (env && env[0]) {
 		return p11_path_build (env, name, NULL);
 

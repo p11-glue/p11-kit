@@ -845,6 +845,14 @@ getauxval (unsigned long type)
 
 #endif /* HAVE_GETAUXVAL */
 
+char *
+secure_getenv (const char *name)
+{
+	if (getauxval (AT_SECURE))
+		return NULL;
+	return getenv (name);
+}
+
 #ifndef HAVE_STRERROR_R
 
 int

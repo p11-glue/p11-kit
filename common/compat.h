@@ -317,6 +317,8 @@ unsigned long     getauxval (unsigned long type);
 
 #endif /* !HAVE_GETAUXVAL */
 
+char *            secure_getenv (const char *name);
+
 #ifndef HAVE_STRERROR_R
 
 int         strerror_r      (int errnum,

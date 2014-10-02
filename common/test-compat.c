@@ -84,6 +84,32 @@ test_getauxval (void)
 }
 
 static void
+test_secure_getenv (void)
+{
+	const char *args[] = { BUILDDIR "/frob-getenv", "BLAH", NULL };
+	char *path;
+	int ret;
+
+	setenv ("BLAH", "5", 1);
+
+	ret = p11_test_run_child (args, true);
+	assert_num_eq (ret, 5);
+
+	path = p11_test_copy_setgid (args[0]);
+	if (path == NULL)
+		return;
+
+	args[0] = path;
+	ret = p11_test_run_child (args, true);
+	assert_num_cmp (ret, ==, 0);
+
+/*	if (unlink (path) < 0)
+		assert_fail ("unlink failed", strerror (errno));
+		*/
+	free (path);
+}
+
+static void
 test_mmap (void)
 {
 	p11_mmap *map;
@@ -110,6 +136,7 @@ main (int argc,
 	/* Don't run this test when under fakeroot */
 	if (!getenv ("FAKED_MODE")) {
 		p11_test (test_getauxval, "/compat/getauxval");
+		p11_test (test_secure_getenv, "/compat/secure_getenv");
 	}
 	p11_test (test_mmap, "/compat/mmap");
 #endif

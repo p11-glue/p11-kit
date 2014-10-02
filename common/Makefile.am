@@ -99,7 +99,13 @@ test_tests_LDADD = $(common_LIBS)
 test_url_SOURCES = common/test-url.c
 test_url_LDADD = $(common_LIBS)
 
-noinst_PROGRAMS += frob-getauxval
+noinst_PROGRAMS += \
+	frob-getauxval \
+	frob-getenv \
+	$(NULL)
 
 frob_getauxval_SOURCES = common/frob-getauxval.c
 frob_getauxval_LDADD = $(common_LIBS)
+
+frob_getenv_SOURCES = common/frob-getenv.c
+frob_getenv_LDADD = $(common_LIBS)

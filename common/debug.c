@@ -36,6 +36,7 @@
 
 #include "config.h"
 
+#include "compat.h"
 #include "debug.h"
 
 #include <assert.h>
@@ -76,7 +77,7 @@ parse_environ_flags (void)
 	const char *q;
 	int i;
 
-	env = getenv ("P11_KIT_STRICT");
+	env = secure_getenv ("P11_KIT_STRICT");
 	if (env && env[0] != '\0')
 		debug_strict = true;
 
