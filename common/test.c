@@ -532,7 +532,7 @@ p11_test_run_child (const char **argv,
 	if (child == 0) {
 		if (quiet_out)
 			close (1); /* stdout */
-		execve (argv[0], (char **)argv, NULL);
+		execv (argv[0], (char **)argv);
 		assert_not_reached ();
 	}
 
