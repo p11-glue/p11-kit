@@ -97,6 +97,7 @@ int
 p11_kit_external (int argc,
                   char *argv[])
 {
+	const char *private_dir;
 	char *filename;
 	char *path;
 
@@ -111,8 +112,12 @@ p11_kit_external (int argc,
 	if (asprintf (&filename, "p11-kit-%s", argv[0]) < 0)
 		return_val_if_reached (1);
 
+	private_dir = secure_getenv ("P11_KIT_PRIVATEDIR");
+	if (!private_dir || !private_dir[0])
+		private_dir = PRIVATEDIR;
+
 	/* Add our libexec directory to the path */
-	path = p11_path_build (PRIVATEDIR, filename, NULL);
+	path = p11_path_build (private_dir, filename, NULL);
 	return_val_if_fail (path != NULL, 1);
 
 	argv[argc] = NULL;
