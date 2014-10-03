@@ -82,6 +82,7 @@ typedef struct {
 	unsigned int n_mappings;
 	p11_dict *sessions;
 	CK_FUNCTION_LIST **inited;
+	unsigned int forkid;
 } Proxy;
 
 typedef struct _State {
@@ -95,6 +96,8 @@ typedef struct _State {
 static CK_FUNCTION_LIST **all_modules = NULL;
 static State *all_instances = NULL;
 static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, FIRST_HANDLE, NULL };
+
+#define PROXY_VALID(px) ((px) && (px)->forkid == p11_forkid)
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
@@ -137,7 +140,7 @@ map_slot_to_real (Proxy *px,
 
 	p11_lock ();
 
-		if (!px)
+		if (!PROXY_VALID (px))
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		else
 			rv = map_slot_unlocked (px, *slot, mapping);
@@ -163,7 +166,7 @@ map_session_to_real (Proxy *px,
 
 	p11_lock ();
 
-		if (!px) {
+		if (!PROXY_VALID (px)) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (px->sessions);
@@ -195,40 +198,6 @@ proxy_free (Proxy *py)
 	}
 }
 
-void
-p11_proxy_after_fork (void)
-{
-	p11_array *array;
-	State *state;
-	unsigned int i;
-
-	/*
-	 * After a fork the callers are supposed to call C_Initialize and all.
-	 * In addition the underlying libraries may change their state so free
-	 * up any mappings and all
-	 */
-
-	array = p11_array_new (NULL);
-
-	p11_lock ();
-
-		if (global.px)
-			p11_array_push (array, global.px);
-		global.px = NULL;
-
-		for (state = all_instances; state != NULL; state = state->next) {
-			if (state->px)
-				p11_array_push (array, state->px);
-			state->px = NULL;
-		}
-
-	p11_unlock ();
-
-	for (i = 0; i < array->num; i++)
-		proxy_free (array->elem[i]);
-	p11_array_free (array);
-}
-
 static CK_RV
 proxy_C_Finalize (CK_X_FUNCTION_LIST *self,
                   CK_VOID_PTR reserved)
@@ -247,8 +216,10 @@ proxy_C_Finalize (CK_X_FUNCTION_LIST *self,
 	} else {
 		p11_lock ();
 
-			if (!state->px) {
+			if (!PROXY_VALID (state->px)) {
 				rv = CKR_CRYPTOKI_NOT_INITIALIZED;
+				py = state->px;
+				state->px = NULL;
 			} else if (state->px->refs-- == 1) {
 				py = state->px;
 				state->px = NULL;
@@ -286,6 +257,8 @@ proxy_create (Proxy **res)
 
 	py = calloc (1, sizeof (Proxy));
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);
+
+	py->forkid = p11_forkid;
 
 	py->inited = modules_dup (all_modules);
 	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
@@ -357,10 +330,13 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 
 	p11_lock ();
 
-		if (state->px == NULL)
+		if (!PROXY_VALID (state->px)) {
 			initialize = true;
-		else
+			proxy_free (state->px);
+			state->px = NULL;
+		} else {
 			state->px->refs++;
+		}
 
 	p11_unlock ();
 
@@ -402,7 +378,7 @@ proxy_C_GetInfo (CK_X_FUNCTION_LIST *self,
 
 	p11_lock ();
 
-		if (!state->px)
+		if (!PROXY_VALID (state->px))
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
 	p11_unlock ();
@@ -438,7 +414,7 @@ proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
 
 	p11_lock ();
 
-		if (!state->px) {
+		if (!PROXY_VALID (state->px)) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			index = 0;
@@ -586,7 +562,7 @@ proxy_C_OpenSession (CK_X_FUNCTION_LIST *self,
 	if (rv == CKR_OK) {
 		p11_lock ();
 
-			if (!state->px) {
+			if (!PROXY_VALID (state->px)) {
 				/*
 				 * The underlying module should have returned an error, so this
 				 * code should never be reached with properly behaving modules.
@@ -650,7 +626,7 @@ proxy_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 
 	p11_lock ();
 
-		if (!state->px) {
+		if (!PROXY_VALID (state->px)) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (state->px->sessions != NULL);

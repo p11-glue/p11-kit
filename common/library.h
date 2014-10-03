@@ -44,6 +44,8 @@
 
 extern p11_mutex_t p11_library_mutex;
 
+extern unsigned int p11_forkid;
+
 #define       p11_lock()                   p11_mutex_lock (&p11_library_mutex);
 
 #define       p11_unlock()                 p11_mutex_unlock (&p11_library_mutex);

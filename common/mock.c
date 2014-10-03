@@ -46,6 +46,7 @@
 #include "debug.h"
 #include "dict.h"
 #include "array.h"
+#include "library.h"
 
 #include <assert.h>
 #include <ctype.h>

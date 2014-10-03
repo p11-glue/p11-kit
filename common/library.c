@@ -63,6 +63,8 @@ p11_mutex_t p11_library_mutex;
 pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
 #endif
 
+unsigned int p11_forkid = 1;
+
 static char *
 thread_local_message (void)
 {
@@ -103,6 +105,13 @@ _p11_library_get_thread_local (void)
 	return local;
 }
 
+static void
+count_forks (void)
+{
+	/* Thread safe, executed in child, one thread exists */
+	p11_forkid++;
+}
+
 void
 p11_library_init_impl (void)
 {
@@ -111,6 +120,8 @@ p11_library_init_impl (void)
 	p11_mutex_init (&p11_library_mutex);
 	pthread_key_create (&thread_local, free);
 	p11_message_storage = thread_local_message;
+
+	pthread_atfork (NULL, NULL, count_forks);
 }
 
 void
