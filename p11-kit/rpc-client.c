@@ -56,7 +56,7 @@
 typedef struct {
 	p11_mutex_t mutex;
 	p11_rpc_client_vtable *vtable;
-	pid_t initialized_pid;
+	unsigned int initialized_forkid;
 	bool initialize_done;
 } rpc_client;
 
@@ -80,7 +80,7 @@ call_prepare (rpc_client *module,
 	assert (module != NULL);
 	assert (msg != NULL);
 
-	if (module->initialized_pid == 0)
+	if (module->initialized_forkid != p11_forkid)
 		return CKR_CRYPTOKI_NOT_INITIALIZED;
 	if (!module->initialize_done)
 		return CKR_DEVICE_REMOVED;
@@ -850,7 +850,6 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	void *reserved = NULL;
 	CK_RV ret = CKR_OK;
 	p11_rpc_message msg;
-	pid_t pid;
 
 	assert (module != NULL);
 	p11_debug ("C_Initialize: enter");
@@ -886,10 +885,9 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 
 	p11_mutex_lock (&module->mutex);
 
-	pid = getpid ();
-	if (module->initialized_pid != 0) {
+	if (module->initialized_forkid != 0) {
 		/* This process has called C_Initialize already */
-		if (pid == module->initialized_pid) {
+		if (p11_forkid == module->initialized_forkid) {
 			p11_message ("C_Initialize called twice for same process");
 			ret = CKR_CRYPTOKI_ALREADY_INITIALIZED;
 			goto done;
@@ -902,12 +900,12 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 
 	/* Successfully initialized */
 	if (ret == CKR_OK) {
-		module->initialized_pid = pid;
+		module->initialized_forkid = p11_forkid;
 		module->initialize_done = true;
 
 	/* Server doesn't exist, initialize but don't call */
 	} else if (ret == CKR_DEVICE_REMOVED) {
-		module->initialized_pid = pid;
+		module->initialized_forkid = p11_forkid;
 		module->initialize_done = false;
 		ret = CKR_OK;
 		goto done;
@@ -928,7 +926,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 done:
 	/* If failed then unmark initialized */
 	if (ret != CKR_OK && ret != CKR_CRYPTOKI_ALREADY_INITIALIZED)
-		module->initialized_pid = 0;
+		module->initialized_forkid = 0;
 
 	/* If we told our caller that we're initialized, but not really, then finalize */
 	if (ret != CKR_OK && module->initialize_done) {
@@ -952,7 +950,7 @@ rpc_C_Finalize (CK_X_FUNCTION_LIST *self,
 	p11_rpc_message msg;
 
 	p11_debug ("C_Finalize: enter");
-	return_val_if_fail (module->initialized_pid != 0, CKR_CRYPTOKI_NOT_INITIALIZED);
+	return_val_if_fail (module->initialized_forkid == p11_forkid, CKR_CRYPTOKI_NOT_INITIALIZED);
 	return_val_if_fail (!reserved, CKR_ARGUMENTS_BAD);
 
 	p11_mutex_lock (&module->mutex);
@@ -970,7 +968,7 @@ rpc_C_Finalize (CK_X_FUNCTION_LIST *self,
 		(module->vtable->disconnect) (module->vtable, reserved);
 	}
 
-	module->initialized_pid = 0;
+	module->initialized_forkid = 0;
 
 	p11_mutex_unlock (&module->mutex);
 

@@ -35,8 +35,6 @@
 #ifndef __P11_PROXY_H__
 #define __P11_PROXY_H__
 
-void       p11_proxy_after_fork                      (void);
-
 bool       p11_proxy_module_check                    (CK_FUNCTION_LIST_PTR module);
 
 void       p11_proxy_module_cleanup                  (void);

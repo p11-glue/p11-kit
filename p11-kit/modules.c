@@ -158,7 +158,7 @@ typedef struct _Module {
 
 	/* Initialization, mutex must be held */
 	p11_mutex_t initialize_mutex;
-	bool initialize_called;
+	unsigned int initialize_called;
 	p11_thread_id_t initialize_thread;
 } Module;
 
@@ -247,7 +247,6 @@ free_module_unlocked (void *data)
 		p11_debug_precond ("module unloaded without C_Finalize having been "
 		                   "called for each C_Initialize");
 	} else {
-		assert (!mod->initialize_called);
 		assert (mod->initialize_thread == 0);
 	}
 
@@ -633,7 +632,7 @@ initialize_module_inlock_reentrant (Module *mod)
 	p11_unlock ();
 	p11_mutex_lock (&mod->initialize_mutex);
 
-	if (!mod->initialize_called) {
+	if (mod->initialize_called != p11_forkid) {
 		p11_debug ("C_Initialize: calling");
 
 		rv = mod->virt.funcs.C_Initialize (&mod->virt.funcs,
@@ -643,10 +642,12 @@ initialize_module_inlock_reentrant (Module *mod)
 
 		/* Module was initialized and C_Finalize should be called */
 		if (rv == CKR_OK)
-			mod->initialize_called = true;
+			mod->initialize_called = p11_forkid;
+		else
+			mod->initialize_called = 0;
 
 		/* Module was already initialized, we don't call C_Finalize */
-		else if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
+		if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
 			rv = CKR_OK;
 	}
 
@@ -664,31 +665,6 @@ initialize_module_inlock_reentrant (Module *mod)
 	mod->initialize_thread = 0;
 	return rv;
 }
-
-#ifdef OS_UNIX
-
-static void
-reinitialize_after_fork (void)
-{
-	p11_dictiter iter;
-	Module *mod;
-
-	p11_debug ("forked");
-
-	p11_lock ();
-
-		if (gl.modules) {
-			p11_dict_iterate (gl.modules, &iter);
-			while (p11_dict_next (&iter, (void **)&mod, NULL))
-				mod->initialize_called = false;
-		}
-
-	p11_unlock ();
-
-	p11_proxy_after_fork ();
-}
-
-#endif /* OS_UNIX */
 
 static CK_RV
 init_globals_unlocked (void)
@@ -719,9 +695,6 @@ init_globals_unlocked (void)
 	if (once)
 		return CKR_OK;
 
-#ifdef OS_UNIX
-	pthread_atfork (NULL, NULL, reinitialize_after_fork);
-#endif
 	once = true;
 
 	return CKR_OK;
@@ -777,9 +750,9 @@ finalize_module_inlock_reentrant (Module *mod)
 	p11_unlock ();
 	p11_mutex_lock (&mod->initialize_mutex);
 
-	if (mod->initialize_called) {
+	if (mod->initialize_called == p11_forkid) {
 		mod->virt.funcs.C_Finalize (&mod->virt.funcs, NULL);
-		mod->initialize_called = false;
+		mod->initialize_called = 0;
 	}
 
 	p11_mutex_unlock (&mod->initialize_mutex);
@@ -1437,7 +1410,7 @@ cleanup:
 typedef struct {
 	p11_virtual virt;
 	Module *mod;
-	pid_t initialized;
+	unsigned int initialized;
 	p11_dict *sessions;
 } Managed;
 
@@ -1447,14 +1420,12 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 {
 	Managed *managed = ((Managed *)self);
 	p11_dict *sessions;
-	pid_t pid;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	pid = getpid ();
-	if (managed->initialized == pid) {
+	if (managed->initialized == p11_forkid) {
 		rv = CKR_CRYPTOKI_ALREADY_INITIALIZED;
 
 	} else {
@@ -1467,7 +1438,7 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 			rv = initialize_module_inlock_reentrant (managed->mod);
 		if (rv == CKR_OK) {
 			managed->sessions = sessions;
-			managed->initialized = pid;
+			managed->initialized = p11_forkid;
 		} else {
 			p11_dict_free (sessions);
 		}
@@ -1568,18 +1539,16 @@ managed_C_Finalize (CK_X_FUNCTION_LIST *self,
 {
 	Managed *managed = ((Managed *)self);
 	CK_SESSION_HANDLE *sessions;
-	pid_t pid;
 	int count;
 	CK_RV rv;
 
 	p11_debug ("in");
 	p11_lock ();
 
-	pid = getpid ();
 	if (managed->initialized == 0) {
 		rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	} else if (managed->initialized != pid) {
+	} else if (managed->initialized != p11_forkid) {
 		/*
 		 * In theory we should be returning CKR_CRYPTOKI_NOT_INITIALIZED here
 		 * but enough callers are not completely aware of their forking.

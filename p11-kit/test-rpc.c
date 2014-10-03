@@ -353,17 +353,15 @@ test_byte_array_static (void)
 }
 
 static p11_virtual base;
-static pid_t rpc_initialized = 0;
+static unsigned int rpc_initialized = 0;
 
 static CK_RV
 rpc_initialize (p11_rpc_client_vtable *vtable,
                 void *init_reserved)
 {
-	pid_t pid = getpid ();
-
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_cmp (pid, !=, rpc_initialized);
-	rpc_initialized = pid;
+	assert_num_cmp (p11_forkid, !=, rpc_initialized);
+	rpc_initialized = p11_forkid;
 
 	return CKR_OK;
 }
@@ -372,10 +370,8 @@ static CK_RV
 rpc_initialize_fails (p11_rpc_client_vtable *vtable,
                       void *init_reserved)
 {
-	pid_t pid = getpid ();
-
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_cmp (pid, !=, rpc_initialized);
+	assert_num_cmp (p11_forkid, !=, rpc_initialized);
 	return CKR_FUNCTION_FAILED;
 }
 
@@ -383,10 +379,8 @@ static CK_RV
 rpc_initialize_device_removed (p11_rpc_client_vtable *vtable,
                                void *init_reserved)
 {
-	pid_t pid = getpid ();
-
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_cmp (pid, !=, rpc_initialized);
+	assert_num_cmp (p11_forkid, !=, rpc_initialized);
 	return CKR_DEVICE_REMOVED;
 }
 
@@ -410,10 +404,8 @@ static void
 rpc_finalize (p11_rpc_client_vtable *vtable,
               void *fini_reserved)
 {
-	pid_t pid = getpid ();
-
 	assert_str_eq (vtable->data, "vtable-data");
-	assert_num_cmp (pid, ==, rpc_initialized);
+	assert_num_cmp (p11_forkid, ==, rpc_initialized);
 	rpc_initialized = 0;
 }
 
@@ -421,7 +413,6 @@ static void
 test_initialize (void)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport, rpc_finalize };
-	pid_t pid = getpid ();
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -435,11 +426,11 @@ test_initialize (void)
 
 	rv = mixin.funcs.C_Initialize (&mixin.funcs, NULL);
 	assert (rv == CKR_OK);
-	assert_num_eq (pid, rpc_initialized);
+	assert_num_eq (p11_forkid, rpc_initialized);
 
 	rv = mixin.funcs.C_Finalize (&mixin.funcs, NULL);
 	assert (rv == CKR_OK);
-	assert_num_cmp (pid, !=, rpc_initialized);
+	assert_num_cmp (p11_forkid, !=, rpc_initialized);
 
 	p11_virtual_uninit (&mixin);
 }

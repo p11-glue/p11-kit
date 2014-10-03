@@ -76,7 +76,7 @@ test_initialize_finalize (void)
 	assert (rv == CKR_OK);
 
 	rv = proxy->C_Finalize (NULL);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	p11_proxy_module_cleanup ();
 }
