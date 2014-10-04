@@ -315,7 +315,7 @@ test_get_token_info (void)
 	memset (&args, 0, sizeof (args));
 	args.pReserved = "paths='" \
 		SYSCONFDIR "/trust/input" P11_PATH_SEP \
-		DATADIR "/trust/fixtures/blah" P11_PATH_SEP \
+		DATA_DIR "/trust/fixtures/blah" P11_PATH_SEP \
 		"/some/other/path/the-basename'";
 	args.flags = CKF_OS_LOCKING_OK;
 

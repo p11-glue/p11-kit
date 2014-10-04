@@ -8,7 +8,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/common \
 	-DBINDIR=\"$(bindir)\" \
 	-DBUILDDIR=\"$(abs_builddir)\" \
-	-DDATADIR=\"$(datadir)\" \
+	-DDATA_DIR=\"$(datadir)\" \
 	-DPRIVATEDIR=\"$(privatedir)\" \
 	-DSRCDIR=\"$(abs_srcdir)\" \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \

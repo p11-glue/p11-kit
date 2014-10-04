@@ -196,7 +196,7 @@ create_tokens_inlock (p11_array *tokens,
 		const char *label;
 	} labels[] = {
 		{ "~/", "User Trust" },
-		{ DATADIR, "Default Trust" },
+		{ DATA_DIR, "Default Trust" },
 		{ SYSCONFDIR, "System Trust" },
 		{ NULL },
 	};
