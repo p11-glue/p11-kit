@@ -52,6 +52,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef OS_UNIX
 #include <sys/socket.h>
@@ -63,6 +64,10 @@
 
 #ifdef OS_WIN32
 #include <winsock2.h>
+#endif
+
+#ifndef EPROTO
+#define EPROTO EIO
 #endif
 
 typedef struct {
