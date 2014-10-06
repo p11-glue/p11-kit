@@ -13,9 +13,9 @@ AC_INIT([p11-kit],
 #   +1    :     0    :  0   == removed an interface. Breaks old apps.
 #    ?    :    +1    :  ?   == internal changes that doesn't break anything.
 
-P11KIT_CURRENT=0
+P11KIT_CURRENT=1
 P11KIT_REVISION=0
-P11KIT_AGE=0
+P11KIT_AGE=1
 
 # ------------------------------------------------------------------------------
 
