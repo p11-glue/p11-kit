@@ -15,6 +15,13 @@ libtrust_data_la_SOURCES = \
 	trust/x509.c trust/x509.h \
 	$(NULL)
 
+libtrust_data_la_CFLAGS = \
+	$(LIBTASN1_CFLAGS)
+
+libtrust_data_la_LIBADD = \
+	$(LIBTASN1_LIBS) \
+	$(NULL)
+
 TRUST_SRCS = \
 	trust/builder.c trust/builder.h \
 	trust/digest.c trust/digest.h \
@@ -58,6 +65,12 @@ libtrust_testable_la_LDFLAGS = \
 	-no-undefined
 
 libtrust_testable_la_SOURCES = $(TRUST_SRCS)
+
+libtrust_testable_la_CFLAGS = \
+	$(LIBTASN1_CFLAGS)
+
+libtrust_testable_la_LIBADD = \
+	$(LIBTASN1_LIBS)
 
 bin_PROGRAMS += trust/trust
 
@@ -107,6 +120,10 @@ asn:
 
 # Tests ----------------------------------------------------------------
 
+trust_CFLAGS = \
+        $(LIBTASN1_CFLAGS) \
+	$(NULL)
+
 trust_LIBS = \
 	libtrust-testable.la \
 	libtrust-data.la \
@@ -150,39 +167,51 @@ CHECK_PROGS += \
 
 test_asn1_SOURCES = trust/test-asn1.c
 test_asn1_LDADD = $(trust_LIBS)
+test_asn1_CFLAGS = $(trust_CFLAGS)
 
 test_base64_SOURCES = trust/test-base64.c
 test_base64_LDADD = $(trust_LIBS)
+test_base64_CFLAGS = $(trust_CFLAGS)
 
 test_builder_SOURCES = trust/test-builder.c
 test_builder_LDADD = $(trust_LIBS)
+test_builder_CFLAGS = $(trust_CFLAGS)
 
 test_bundle_SOURCES = trust/test-bundle.c
 test_bundle_LDADD = $(trust_LIBS)
+test_bundle_CFLAGS = $(trust_CFLAGS)
 
 test_cer_SOURCES = trust/test-cer.c
 test_cer_LDADD = $(trust_LIBS)
+test_cer_CFLAGS = $(trust_CFLAGS)
 
 test_digest_SOURCES = trust/test-digest.c
 test_digest_LDADD = $(trust_LIBS)
+test_digest_CFLAGS = $(trust_CFLAGS)
 
 test_enumerate_SOURCES = trust/test-enumerate.c
 test_enumerate_LDADD = $(trust_LIBS)
+test_enumerate_CFLAGS = $(trust_CFLAGS)
 
 test_index_SOURCES = trust/test-index.c
 test_index_LDADD = $(trust_LIBS)
+test_index_CFLAGS = $(trust_CFLAGS)
 
 test_module_SOURCES = trust/test-module.c
 test_module_LDADD = $(trust_LIBS)
+test_module_CFLAGS = $(trust_CFLAGS)
 
 test_oid_SOURCES = trust/test-oid.c
 test_oid_LDADD = $(trust_LIBS)
+test_oid_CFLAGS = $(trust_CFLAGS)
 
 test_openssl_SOURCES = trust/test-openssl.c
 test_openssl_LDADD = $(trust_LIBS)
+test_openssl_CFLAGS = $(trust_CFLAGS)
 
 test_parser_SOURCES = trust/test-parser.c
 test_parser_LDADD = $(trust_LIBS)
+test_parser_CFLAGS = $(trust_CFLAGS)
 
 test_pem_SOURCES = trust/test-pem.c
 test_pem_LDADD = $(trust_LIBS)
@@ -195,12 +224,14 @@ test_save_LDADD = $(trust_LIBS)
 
 test_token_SOURCES = trust/test-token.c
 test_token_LDADD = $(trust_LIBS)
+test_token_CFLAGS = $(trust_CFLAGS)
 
 test_utf8_SOURCES = trust/test-utf8.c
 test_utf8_LDADD = $(trust_LIBS)
 
 test_x509_SOURCES = trust/test-x509.c
 test_x509_LDADD = $(trust_LIBS)
+test_x509_CFLAGS = $(trust_CFLAGS)
 
 noinst_PROGRAMS += \
 	frob-pow \
@@ -216,18 +247,23 @@ noinst_PROGRAMS += \
 
 frob_bc_SOURCES = trust/frob-bc.c
 frob_bc_LDADD = $(trust_LIBS)
+frob_bc_CFLAGS = $(trust_CFLAGS)
 
 frob_cert_SOURCES = trust/frob-cert.c
 frob_cert_LDADD = $(trust_LIBS)
+frob_cert_CFLAGS = $(trust_CFLAGS)
 
 frob_eku_SOURCES = trust/frob-eku.c
 frob_eku_LDADD = $(trust_LIBS)
+frob_eku_CFLAGS = $(trust_CFLAGS)
 
 frob_ext_SOURCES = trust/frob-ext.c
 frob_ext_LDADD = $(trust_LIBS)
+frob_ext_CFLAGS = $(trust_CFLAGS)
 
 frob_ku_SOURCES = trust/frob-ku.c
 frob_ku_LDADD = $(trust_LIBS)
+frob_ku_CFLAGS = $(trust_CFLAGS)
 
 frob_nss_trust_SOURCES = trust/frob-nss-trust.c
 frob_nss_trust_LDADD = \
@@ -238,12 +274,15 @@ frob_nss_trust_LDADD = \
 
 frob_oid_SOURCES = trust/frob-oid.c
 frob_oid_LDADD = $(trust_LIBS)
+frob_oid_CFLAGS = $(trust_CFLAGS)
 
 frob_pow_SOURCES = trust/frob-pow.c
 frob_pow_LDADD = $(trust_LIBS)
+frob_pow_CFLAGS = $(trust_CFLAGS)
 
 frob_token_SOURCES = trust/frob-token.c
 frob_token_LDADD = $(trust_LIBS)
+frob_token_CFLAGS = $(trust_CFLAGS)
 
 noinst_SCRIPTS += trust/test-extract
 
