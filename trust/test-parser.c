@@ -247,7 +247,6 @@ test_parse_openssl_trusted (void)
 		assert_ptr_not_null (object);
 
 		test_check_attrs (expected[i], object);
-		test_check_id (cert, object);
 	}
 }
 
@@ -329,7 +328,6 @@ test_parse_openssl_distrusted (void)
 		assert_ptr_not_null (object);
 
 		test_check_attrs (expected[i], object);
-		test_check_id (cert, object);
 	}
 }
 

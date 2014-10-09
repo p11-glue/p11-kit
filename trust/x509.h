@@ -46,7 +46,7 @@ unsigned char *  p11_x509_find_extension            (node_asn *cert,
                                                      size_t der_len,
                                                      size_t *ext_len);
 
-bool             p11_x509_calc_keyid                (node_asn *cert,
+bool             p11_x509_hash_subject_public_key   (node_asn *cert,
                                                      const unsigned char *der,
                                                      size_t der_len,
                                                      unsigned char *keyid);
@@ -64,6 +64,11 @@ bool             p11_x509_parse_key_usage           (p11_dict *asn1_defs,
 p11_array *      p11_x509_parse_extended_key_usage  (p11_dict *asn1_defs,
                                                      const unsigned char *ext_der,
                                                      size_t ext_len);
+
+unsigned char *  p11_x509_parse_subject_key_identifier  (p11_dict *asn1_defs,
+                                                         const unsigned char *ext_der,
+                                                         size_t ext_len,
+                                                         size_t *keyid_len);
 
 char *           p11_x509_parse_dn_name             (p11_dict *asn_defs,
                                                      const unsigned char *der,

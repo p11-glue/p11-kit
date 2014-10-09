@@ -610,13 +610,18 @@ calc_certificate_category (p11_builder *builder,
 }
 
 static CK_ATTRIBUTE *
-certificate_value_attrs (CK_ATTRIBUTE *attrs,
+certificate_value_attrs (p11_builder *builder,
+                         CK_ATTRIBUTE *attrs,
                          node_asn *node,
                          const unsigned char *der,
                          size_t der_len,
                          CK_ATTRIBUTE *public_key)
 {
 	unsigned char checksum[P11_DIGEST_SHA1_LEN];
+	unsigned char *keyid = NULL;
+	size_t keyid_len;
+	unsigned char *ext = NULL;
+	size_t ext_len;
 	CK_BBOOL falsev = CK_FALSE;
 	CK_ULONG zero = 0UL;
 	CK_BYTE checkv[3];
@@ -637,7 +642,7 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE issuer = { CKA_ISSUER, "", 0 };
 	CK_ATTRIBUTE serial_number = { CKA_SERIAL_NUMBER, "", 0 };
 	CK_ATTRIBUTE label = { CKA_LABEL };
-	CK_ATTRIBUTE id = { CKA_ID, checksum, sizeof (checksum) };
+	CK_ATTRIBUTE id = { CKA_ID, NULL, 0 };
 
 	return_val_if_fail (attrs != NULL, NULL);
 
@@ -660,9 +665,23 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 		subject.type = CKA_INVALID;
 	calc_element (node, der, der_len, "tbsCertificate.serialNumber", &serial_number);
 
-	if (!node || !p11_x509_calc_keyid (node, der, der_len, checksum)) {
+	/* Try to build a keyid from an extension */
+	if (node) {
+		ext = p11_x509_find_extension (node, P11_OID_SUBJECT_KEY_IDENTIFIER, der, der_len, &ext_len);
+		if (ext) {
+			keyid = p11_x509_parse_subject_key_identifier (builder->asn1_defs, ext,
+			                                               ext_len, &keyid_len);
+			id.pValue = keyid;
+			id.ulValueLen = keyid_len;
+		}
+	}
+
+	if (!node || !p11_x509_hash_subject_public_key (node, der, der_len, checksum))
 		hash_of_subject_public_key.ulValueLen = 0;
-		id.type = CKA_INVALID;
+
+	if (id.pValue == NULL) {
+		id.pValue = hash_of_subject_public_key.pValue;
+		id.ulValueLen = hash_of_subject_public_key.ulValueLen;
 	}
 
 	if (node) {
@@ -690,6 +709,8 @@ certificate_value_attrs (CK_ATTRIBUTE *attrs,
 				 NULL);
 	return_val_if_fail (attrs != NULL, NULL);
 
+	free (ext);
+	free (keyid);
 	free (labelv);
 	return attrs;
 }
@@ -716,7 +737,7 @@ certificate_populate (p11_builder *builder,
 	if (der != NULL)
 		node = decode_or_get_asn1 (builder, "PKIX1.Certificate", der, der_len);
 
-	attrs = certificate_value_attrs (attrs, node, der, der_len, &public_key);
+	attrs = certificate_value_attrs (builder, attrs, node, der, der_len, &public_key);
 	return_val_if_fail (attrs != NULL, NULL);
 
 	if (!calc_certificate_category (builder, index, cert, &public_key, &categoryv))
@@ -794,14 +815,27 @@ extension_populate (p11_builder *builder,
                     p11_index *index,
                     CK_ATTRIBUTE *extension)
 {
-	CK_ATTRIBUTE object_id = { CKA_OBJECT_ID };
+	unsigned char checksum[P11_DIGEST_SHA1_LEN];
+	CK_ATTRIBUTE object_id = { CKA_INVALID };
+	CK_ATTRIBUTE id = { CKA_INVALID };
 	CK_ATTRIBUTE *attrs = NULL;
+
 	void *der;
 	size_t len;
 	node_asn *asn;
 
 	attrs = common_populate (builder, index, extension);
 	return_val_if_fail (attrs != NULL, NULL);
+
+	if (!p11_attrs_find_valid (attrs, CKA_ID)) {
+		der = p11_attrs_find_value (extension, CKA_PUBLIC_KEY_INFO, &len);
+		return_val_if_fail (der != NULL, NULL);
+
+		p11_digest_sha1 (checksum, der, len, NULL);
+		id.pValue = checksum;
+		id.ulValueLen = sizeof (checksum);
+		id.type = CKA_ID;
+	}
 
 	/* Pull the object id out of the extension if not present */
 	if (!p11_attrs_find_valid (attrs, CKA_OBJECT_ID)) {
@@ -811,11 +845,12 @@ extension_populate (p11_builder *builder,
 		asn = decode_or_get_asn1 (builder, "PKIX1.Extension", der, len);
 		return_val_if_fail (asn != NULL, NULL);
 
-		if (calc_element (asn, der, len, "extnID", &object_id)) {
-			attrs = p11_attrs_build (attrs, &object_id, NULL);
-			return_val_if_fail (attrs != NULL, NULL);
-		}
+		if (calc_element (asn, der, len, "extnID", &object_id))
+			object_id.type = CKA_OBJECT_ID;
 	}
+
+	attrs = p11_attrs_build (attrs, &object_id, &id, NULL);
+	return_val_if_fail (attrs != NULL, NULL);
 
 	return attrs;
 }

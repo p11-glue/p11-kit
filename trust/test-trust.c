@@ -131,6 +131,8 @@ test_check_attrs_msg (const char *file,
 	CK_OBJECT_CLASS klass;
 	CK_ATTRIBUTE *attr;
 
+	assert (expected != NULL);
+
 	if (!p11_attrs_find_ulong (expected, CKA_CLASS, &klass))
 		klass = CKA_INVALID;
 

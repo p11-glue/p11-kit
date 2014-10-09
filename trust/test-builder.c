@@ -160,7 +160,7 @@ test_build_certificate (void)
 		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
 		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
 		{ CKA_LABEL, "the label", 9 },
-		{ CKA_ID, "\xf0""a\xd8?\x95\x8fMx\xb1G\xb3\x13""9\x97\x8e\xa9\xc2Q\xba\x9b", 20},
+		{ CKA_ID, "u\xa8q`L\x88\x13\xf0x\xd9\x89w\xb5m\xc5\x89\xdf\xbc\xb1z", 20},
 		{ CKA_INVALID },
 	};
 

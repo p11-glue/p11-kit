@@ -92,10 +92,10 @@ p11_x509_find_extension (node_asn *cert,
 }
 
 bool
-p11_x509_calc_keyid (node_asn *cert,
-                     const unsigned char *der,
-                     size_t der_len,
-                     unsigned char *keyid)
+p11_x509_hash_subject_public_key (node_asn *cert,
+                                  const unsigned char *der,
+                                  size_t der_len,
+                                  unsigned char *keyid)
 {
 	int start, end;
 	size_t len;
@@ -103,7 +103,6 @@ p11_x509_calc_keyid (node_asn *cert,
 
 	return_val_if_fail (cert != NULL, NULL);
 	return_val_if_fail (der != NULL, NULL);
-	return_val_if_fail (keyid != NULL, NULL);
 
 	ret = asn1_der_decoding_startEnd (cert, der, der_len, "tbsCertificate.subjectPublicKeyInfo", &start, &end);
 	return_val_if_fail (ret == ASN1_SUCCESS, false);
@@ -112,6 +111,29 @@ p11_x509_calc_keyid (node_asn *cert,
 	len = (end - start) + 1;
 	p11_digest_sha1 (keyid, (der + start), len, NULL);
 	return true;
+}
+
+unsigned char *
+p11_x509_parse_subject_key_identifier  (p11_dict *asn1_defs,
+                                        const unsigned char *ext_der,
+                                        size_t ext_len,
+                                        size_t *keyid_len)
+{
+	unsigned char *keyid;
+	node_asn *ext;
+
+	return_val_if_fail (keyid_len != NULL, false);
+
+	ext = p11_asn1_decode (asn1_defs, "PKIX1.SubjectKeyIdentifier", ext_der, ext_len, NULL);
+	if (ext == NULL)
+		return NULL;
+
+	keyid = p11_asn1_read (ext, "", keyid_len);
+	return_val_if_fail (keyid != NULL, NULL);
+
+	asn1_delete_structure (&ext);
+
+	return keyid;
 }
 
 bool
