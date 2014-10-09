@@ -1,3 +1,9 @@
+0.22.1 (stable)
+ * Use SubjectKeyIdentifier for CKA_ID when available [#84761]
+ * Allow 'BEGIN PuBLIC KEY' PEM blocks in .p11-kit files
+ * Bump libtool library version
+ * Build fixes [#84665 ...]
+
 0.22.0 (stable)
  * Remove the 'isolated = yes' option due to unclear semantics
    replacement forth coming in later versions.
