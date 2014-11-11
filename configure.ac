@@ -93,6 +93,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
 	AC_CHECK_FUNCS([timegm])
 	AC_CHECK_FUNCS([fdwalk])
+	AC_CHECK_FUNCS([setenv])
 
 	AC_CHECK_DECLS([asprintf, vasprintf], [], [], [[#include <stdio.h>]])
 

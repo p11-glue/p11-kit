@@ -165,6 +165,10 @@ p11_mmap *  p11_mmap_open   (const char *path,
 
 void        p11_mmap_close  (p11_mmap *map);
 
+#ifndef HAVE_SETENV
+#define setenv(n, v, z) _putenv_s(n, v)
+#endif /* HAVE_SETENV */
+
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------
