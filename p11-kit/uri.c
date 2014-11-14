@@ -62,7 +62,7 @@
  * <code><literallayout>
  *      pkcs11:token=The\%20Software\%20PKCS\#11\%20softtoken;
  *          manufacturer=Snake\%20Oil,\%20Inc.;serial=;object=my-certificate;
- *          model=1.0;object-type=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
+ *          model=1.0;type=cert;id=\%69\%95\%3e\%5c\%f4\%bd\%ec\%91
  * </literallayout></code>
  *
  * You can use p11_kit_uri_parse() to parse such a URI, and p11_kit_uri_format()
@@ -902,7 +902,8 @@ parse_class_attribute (const char *name, const char *start, const char *end,
 	assert (start <= end);
 
 	if (strcmp ("objecttype", name) != 0 &&
-	    strcmp ("object-type", name) != 0)
+	    strcmp ("object-type", name) != 0 &&
+	    strcmp ("type", name) != 0)
 		return 0;
 
 	value = key_decode (start, end);

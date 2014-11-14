@@ -159,6 +159,32 @@ test_uri_parse_with_label_and_klass (void)
 }
 
 static void
+test_uri_parse_with_label_and_new_klass (void)
+{
+	CK_ATTRIBUTE_PTR attr;
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:object=Test%20Label;type=cert", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == strlen ("Test Label"));
+	assert (memcmp (attr->pValue, "Test Label", attr->ulValueLen) == 0);
+
+	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
+	assert_ptr_not_null (attr);
+	assert (attr->ulValueLen == sizeof (CK_OBJECT_CLASS));
+	assert (*((CK_OBJECT_CLASS_PTR)attr->pValue) == CKO_CERTIFICATE);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_parse_with_empty_label (void)
 {
 	CK_ATTRIBUTE_PTR attr;
@@ -1273,6 +1299,7 @@ main (int argc,
 	p11_test (test_uri_parse_with_empty_label, "/uri/test_uri_parse_with_empty_label");
 	p11_test (test_uri_parse_with_empty_id, "/uri/test_uri_parse_with_empty_id");
 	p11_test (test_uri_parse_with_label_and_klass, "/uri/test_uri_parse_with_label_and_klass");
+	p11_test (test_uri_parse_with_label_and_new_klass, "/uri/parse-with-label-and-new-class");
 	p11_test (test_uri_parse_with_id, "/uri/test_uri_parse_with_id");
 	p11_test (test_uri_parse_with_bad_string_encoding, "/uri/test_uri_parse_with_bad_string_encoding");
 	p11_test (test_uri_parse_with_bad_hex_encoding, "/uri/test_uri_parse_with_bad_hex_encoding");
