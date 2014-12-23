@@ -1237,6 +1237,7 @@ test_uri_get_set_attributes (void)
 
 	p11_kit_uri_free (uri);
 }
+
 static void
 test_uri_pin_source (void)
 {
@@ -1271,6 +1272,57 @@ test_uri_pin_source (void)
 
 	pin_source = p11_kit_uri_get_pin_source (uri);
 	assert_str_eq ("blah/blah", pin_source);
+
+	p11_kit_uri_free (uri);
+}
+
+
+static void
+test_uri_pin_value (void)
+{
+	P11KitUri *uri;
+	const char *pin_value;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	p11_kit_uri_set_pin_value (uri, "123456");
+
+	pin_value = p11_kit_uri_get_pin_value (uri);
+	assert_str_eq ("123456", pin_value);
+
+	p11_kit_uri_set_pin_value (uri, "1*&#%&@(");
+
+	pin_value = p11_kit_uri_get_pin_value (uri);
+	assert_str_eq ("1*&#%&@(", pin_value);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "pkcs11:pin-value=1%2a%26%23%25%26%40%28") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:pin-value=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	pin_value = p11_kit_uri_get_pin_value (uri);
+	assert_str_eq ("blah/blah", pin_value);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_pin_value_bad (void)
+{
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:pin-value=blahblah%2", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
 
 	p11_kit_uri_free (uri);
 }
@@ -1334,6 +1386,8 @@ main (int argc,
 	p11_test (test_uri_get_set_attribute, "/uri/test_uri_get_set_attribute");
 	p11_test (test_uri_get_set_attributes, "/uri/test_uri_get_set_attributes");
 	p11_test (test_uri_pin_source, "/uri/test_uri_pin_source");
+	p11_test (test_uri_pin_value, "/uri/pin-value");
+	p11_test (test_uri_pin_value_bad, "/uri/pin-value-bad");
 	p11_test (test_uri_free_null, "/uri/test_uri_free_null");
 	p11_test (test_uri_message, "/uri/test_uri_message");
 
