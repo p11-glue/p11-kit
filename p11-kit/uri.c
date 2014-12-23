@@ -879,7 +879,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
-		if (!format_attribute_class (&buffer, &is_first, "object-type",
+		if (!format_attribute_class (&buffer, &is_first, "type",
 		                             p11_kit_uri_get_attribute (uri, CKA_CLASS))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}

@@ -194,7 +194,7 @@ test_uri_parse_with_empty_label (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=;object-type=cert", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=;type=cert", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
@@ -207,7 +207,7 @@ test_uri_parse_with_empty_label (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object-type=cert", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:type=cert", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
@@ -226,7 +226,7 @@ test_uri_parse_with_empty_id (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:id=;object-type=cert", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:id=;type=cert", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_ID);
@@ -239,7 +239,7 @@ test_uri_parse_with_empty_id (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object-type=cert", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:type=cert", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_ID);
@@ -605,7 +605,7 @@ test_uri_build_with_attributes (void)
 	p11_kit_uri_free (check);
 
 	assert (strstr (string, "object=The%20Label") != NULL);
-	assert (strstr (string, "object-type=data") != NULL);
+	assert (strstr (string, "type=data") != NULL);
 	assert (strstr (string, "id=%48%45%4c%4c%4f") != NULL);
 
 	free (string);
@@ -622,7 +622,7 @@ test_uri_parse_private_key (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object-type=private", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:type=private", P11_KIT_URI_FOR_OBJECT, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -643,7 +643,7 @@ test_uri_parse_secret_key (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object-type=secret-key", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:type=secret-key", P11_KIT_URI_FOR_OBJECT, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -706,7 +706,7 @@ test_uri_parse_parse_unknown_object_type (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object-type=unknown", P11_KIT_URI_FOR_OBJECT, uri);
+	ret = p11_kit_uri_parse ("pkcs11:type=unknown", P11_KIT_URI_FOR_OBJECT, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_CLASS);
@@ -774,7 +774,7 @@ test_uri_build_object_type_cert (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "object-type=cert") != NULL);
+	assert (strstr (string, "type=cert") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
@@ -800,7 +800,7 @@ test_uri_build_object_type_private (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "object-type=private") != NULL);
+	assert (strstr (string, "type=private") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
@@ -826,7 +826,7 @@ test_uri_build_object_type_public (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "object-type=public") != NULL);
+	assert (strstr (string, "type=public") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
@@ -852,7 +852,7 @@ test_uri_build_object_type_secret (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "object-type=secret-key") != NULL);
+	assert (strstr (string, "type=secret-key") != NULL);
 
 	p11_kit_uri_free (uri);
 	free (string);
@@ -1060,7 +1060,7 @@ test_uri_match_attributes (void)
 	uri = p11_kit_uri_new ();
 	assert_ptr_not_null (uri);
 
-	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;object-type=data", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:object=Fancy;id=Blah;type=data", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	ret = p11_kit_uri_match_attributes (uri, attrs, 4);
