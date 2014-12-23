@@ -144,6 +144,7 @@ struct p11_kit_uri {
 	CK_TOKEN_INFO token;
 	CK_ATTRIBUTE *attrs;
 	char *pin_source;
+	char *pin_value;
 };
 
 static char *
@@ -540,6 +541,39 @@ p11_kit_uri_any_unrecognized (P11KitUri *uri)
 }
 
 /**
+ * p11_kit_uri_get_pin_value:
+ * @uri: The URI
+ *
+ * Get the 'pin-value' part of the URI. This is used by some applications to
+ * read the PIN for logging into a PKCS\#11 token.
+ *
+ * Returns: The pin-value or %NULL if not present.
+ */
+const char*
+p11_kit_uri_get_pin_value (P11KitUri *uri)
+{
+	return_val_if_fail (uri != NULL, NULL);
+	return uri->pin_value;
+}
+
+/**
+ * p11_kit_uri_set_pin_value:
+ * @uri: The URI
+ * @pin: The new pin-value
+ *
+ * Set the 'pin-value' part of the URI. This is used by some applications to
+ * specify the PIN for logging into a PKCS\#11 token.
+ */
+void
+p11_kit_uri_set_pin_value (P11KitUri *uri, const char *pin)
+{
+	return_if_fail (uri != NULL);
+	free (uri->pin_value);
+	uri->pin_value = pin ? strdup (pin) : NULL;
+}
+
+
+/**
  * p11_kit_uri_get_pin_source:
  * @uri: The URI
  *
@@ -859,6 +893,14 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
+	if (uri->pin_value) {
+		if (!format_encode_string (&buffer, &is_first, "pin-value",
+		                           (const unsigned char*)uri->pin_value,
+		                           strlen (uri->pin_value), 0)) {
+			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+		}
+	}
+
 	return_val_if_fail (p11_buffer_ok (&buffer), P11_KIT_URI_UNEXPECTED);
 	*string = p11_buffer_steal (&buffer, NULL);
 	return P11_KIT_URI_OK;
@@ -1091,6 +1133,13 @@ parse_extra_info (const char *name, const char *start, const char *end,
 		free (uri->pin_source);
 		uri->pin_source = (char*)pin_source;
 		return 1;
+	} else if (strcmp (name, "pin-value") == 0) {
+		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (pin_source == NULL)
+			return P11_KIT_URI_BAD_ENCODING;
+		free (uri->pin_value);
+		uri->pin_value = (char*)pin_source;
+		return 1;
 	}
 
 	return 0;
@@ -1153,6 +1202,8 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->unrecognized = 0;
 	free (uri->pin_source);
 	uri->pin_source = NULL;
+	free (uri->pin_value);
+	uri->pin_value = NULL;
 
 	for (;;) {
 		spos = strchr (string, ';');
@@ -1213,6 +1264,7 @@ p11_kit_uri_free (P11KitUri *uri)
 
 	p11_attrs_free (uri->attrs);
 	free (uri->pin_source);
+	free (uri->pin_value);
 	free (uri);
 }
 
