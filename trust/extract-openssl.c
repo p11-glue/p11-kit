@@ -587,6 +587,45 @@ symlink_for_subject_old_hash (p11_enumerate *ex)
 
 #endif /* OS_UNIX */
 
+/*
+ * The OpenSSL style c_rehash stuff
+ *
+ * Different versions of openssl build these hashes differently
+ * so output both of them. Shouldn't cause confusion, because
+ * multiple certificates can hash to the same link anyway,
+ * and this is the reason for the trailing number after the dot.
+ *
+ * The trailing number is incremented p11_save_symlink_in() if it
+ * conflicts with something we've already written out.
+ *
+ * On Windows no symlinks.
+ */
+bool
+p11_openssl_symlink (p11_enumerate *ex,
+                     p11_save_dir *dir,
+                     const char *filename)
+{
+	bool ret = true;
+#ifdef OS_UNIX
+	char *linkname;
+
+	linkname = symlink_for_subject_hash (ex);
+	if (linkname) {
+		ret = p11_save_symlink_in (dir, linkname, ".0", filename);
+		free (linkname);
+	}
+
+	if (ret) {
+		linkname = symlink_for_subject_old_hash (ex);
+		if (linkname) {
+			ret = p11_save_symlink_in (dir, linkname, ".0", filename);
+			free (linkname);
+		}
+	}
+#endif /* OS_UNIX */
+	return ret;
+}
+
 bool
 p11_extract_openssl_directory (p11_enumerate *ex,
                                const char *destination)
@@ -600,10 +639,6 @@ p11_extract_openssl_directory (p11_enumerate *ex,
 	char *path;
 	char *name;
 	CK_RV rv;
-
-#ifdef OS_UNIX
-	char *linkname;
-#endif
 
 	dir = p11_save_open_directory (destination, ex->flags);
 	if (dir == NULL)
@@ -637,38 +672,7 @@ p11_extract_openssl_directory (p11_enumerate *ex,
 				if (ret)
 					filename = p11_path_base (path);
 			}
-
-			/*
-			 * The OpenSSL style c_rehash stuff
-			 *
-			 * Different versions of openssl build these hashes differently
-			 * so output both of them. Shouldn't cause confusion, because
-			 * multiple certificates can hash to the same link anyway,
-			 * and this is the reason for the trailing number after the dot.
-			 *
-			 * The trailing number is incremented p11_save_symlink_in() if it
-			 * conflicts with something we've already written out.
-			 *
-			 * On Windows no symlinks.
-			 */
-
-#ifdef OS_UNIX
-			if (ret) {
-				linkname = symlink_for_subject_hash (ex);
-				if (linkname) {
-					ret = p11_save_symlink_in (dir, linkname, ".0", filename);
-					free (linkname);
-				}
-			}
-
-			if (ret) {
-				linkname = symlink_for_subject_old_hash (ex);
-				if (linkname) {
-					ret = p11_save_symlink_in (dir, linkname, ".0", filename);
-					free (linkname);
-				}
-			}
-#endif /* OS_UNIX */
+			ret = p11_openssl_symlink(ex, dir, filename);
 
 			free (filename);
 			free (path);

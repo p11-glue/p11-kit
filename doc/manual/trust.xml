@@ -270,7 +270,11 @@ $ trust extract --format=x509-directory --filter=ca-anchors /path/to/directory
 				</varlistentry>
 				<varlistentry>
 					<term><option>pem-directory</option></term>
-					<listitem><para>Directory PEM files each containing one certifiacte</para></listitem>
+					<listitem><para>Directory of PEM files each containing one certificate</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>pem-directory-hash</option></term>
+					<listitem><para>Directory of PEM files each containing one certificate, with hash symlinks</para></listitem>
 				</varlistentry>
 				<varlistentry>
 					<term><option>openssl-bundle</option></term>

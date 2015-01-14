@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "extract.h"
 #include "message.h"
+#include "path.h"
 #include "pem.h"
 #include "save.h"
 
@@ -98,15 +99,18 @@ p11_extract_pem_bundle (p11_enumerate *ex,
 	return ret;
 }
 
-bool
-p11_extract_pem_directory (p11_enumerate *ex,
-                           const char *destination)
+static bool
+extract_pem_directory (p11_enumerate *ex,
+                       const char *destination,
+                       bool hash)
 {
 	p11_save_file *file;
 	p11_save_dir *dir;
 	p11_buffer buf;
 	bool ret = true;
 	char *filename;
+	char *path;
+	char *name;
 	CK_RV rv;
 
 	dir = p11_save_open_directory (destination, ex->flags);
@@ -121,14 +125,25 @@ p11_extract_pem_directory (p11_enumerate *ex,
 		if (!p11_pem_write (ex->cert_der, ex->cert_len, "CERTIFICATE", &buf))
 			return_val_if_reached (false);
 
-		filename = p11_enumerate_filename (ex);
-		return_val_if_fail (filename != NULL, false);
+		name = p11_enumerate_filename (ex);
+		return_val_if_fail (name != NULL, false);
 
-		file = p11_save_open_file_in (dir, filename, ".pem");
-		free (filename);
+		path = NULL;
 
-		ret = p11_save_write_and_finish (file, buf.data, buf.len);
+		file = p11_save_open_file_in (dir, name, ".pem");
+		ret = p11_save_write (file, buf.data, buf.len);
 
+		if (!p11_save_finish_file (file, &path, ret))
+			ret = false;
+
+		if (ret && hash) {
+			filename = p11_path_base (path);
+			ret = p11_openssl_symlink(ex, dir, filename);
+			free (filename);
+		}
+
+		free (path);
+		free (name);
 		if (!ret)
 			break;
 	}
@@ -141,5 +156,23 @@ p11_extract_pem_directory (p11_enumerate *ex,
 	}
 
 	p11_save_finish_directory (dir, ret);
+	return ret;
+}
+
+bool
+p11_extract_pem_directory (p11_enumerate *ex,
+                           const char *destination)
+{
+	bool ret = true;
+	ret = extract_pem_directory (ex, destination, false);
+	return ret;
+}
+
+bool
+p11_extract_pem_directory_hash (p11_enumerate *ex,
+                           const char *destination)
+{
+	bool ret = true;
+	ret = extract_pem_directory (ex, destination, true);
 	return ret;
 }

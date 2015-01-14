@@ -39,6 +39,7 @@
 
 #include "enumerate.h"
 #include "pkcs11.h"
+#include "save.h"
 
 enum {
 	/* These overlap with the flags in save.h, so start higher */
@@ -60,6 +61,9 @@ bool            p11_extract_pem_bundle         (p11_enumerate *ex,
 bool            p11_extract_pem_directory      (p11_enumerate *ex,
                                                 const char *destination);
 
+bool            p11_extract_pem_directory_hash (p11_enumerate *ex,
+                                                const char *destination);
+
 bool            p11_extract_jks_cacerts        (p11_enumerate *ex,
                                                 const char *destination);
 
@@ -75,4 +79,8 @@ int             p11_trust_extract              (int argc,
 int             p11_trust_extract_compat       (int argc,
                                                 char *argv[]);
 
+/* from extract-openssl.c but also used in extract-pem.c */
+bool            p11_openssl_symlink            (p11_enumerate *ex,
+                                                p11_save_dir *dir,
+                                                const char *filename);
 #endif /* P11_EXTRACT_H_ */

@@ -217,6 +217,39 @@ test_directory_empty (void)
 	test_check_directory (test.directory, (NULL, NULL));
 }
 
+static void
+test_directory_hash (void)
+{
+	bool ret;
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_authority_attrs);
+
+	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
+	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
+
+	/* Yes, this is a race, and why you shouldn't build software as root */
+	if (rmdir (test.directory) < 0)
+		assert_not_reached ();
+
+	ret = p11_extract_pem_directory_hash (&test.ex, test.directory);
+	assert_num_eq (true, ret);
+
+	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem",
+#ifdef OS_UNIX
+                                           "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0",
+#endif
+                                           NULL));
+	test_check_file (test.directory, "Cacert3_Here.pem", SRCDIR "/trust/fixtures/cacert3.pem");
+	test_check_file (test.directory, "Cacert3_Here.1.pem", SRCDIR "/trust/fixtures/cacert3.pem");
+#ifdef OS_UNIX
+	test_check_symlink (test.directory, "e5662767.0", "Cacert3_Here.pem");
+	test_check_symlink (test.directory, "e5662767.1", "Cacert3_Here.1.pem");
+	test_check_symlink (test.directory, "590d426f.0", "Cacert3_Here.pem");
+	test_check_symlink (test.directory, "590d426f.1", "Cacert3_Here.1.pem");
+#endif
+}
+
 int
 main (int argc,
       char *argv[])
@@ -229,9 +262,11 @@ main (int argc,
 	p11_test (test_file_without, "/pem/test_file_without");
 	p11_test (test_directory, "/pem/test_directory");
 	p11_test (test_directory_empty, "/pem/test_directory_empty");
+	p11_test (test_directory_hash, "/pem/test_directory_hash");
 	return p11_test_run (argc, argv);
 }
 
 #include "enumerate.c"
 #include "extract-pem.c"
+#include "extract-openssl.c"
 #include "save.c"

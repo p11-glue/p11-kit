@@ -44,6 +44,7 @@
 #include "pkcs11x.h"
 #include "save.h"
 #include "tool.h"
+#include "digest.h"
 
 #include "p11-kit/iter.h"
 #include "p11-kit/pkcs11.h"
@@ -77,6 +78,7 @@ format_argument (const char *optarg,
 		{ "x509-directory", p11_extract_x509_directory, },
 		{ "pem-bundle", p11_extract_pem_bundle, },
 		{ "pem-directory", p11_extract_pem_directory },
+		{ "pem-directory-hash", p11_extract_pem_directory_hash },
 		{ "java-cacerts", p11_extract_jks_cacerts },
 		{ "openssl-bundle", p11_extract_openssl_bundle },
 		{ "openssl-directory", p11_extract_openssl_directory },
@@ -198,13 +200,14 @@ p11_trust_extract (int argc,
 		},
 		{ opt_format,
 		  "format to extract to\n"
-		  "  x509-file         DER X.509 certificate file\n"
-		  "  x509-directory    directory of X.509 certificates\n"
-		  "  pem-bundle        file containing multiple PEM blocks\n"
-		  "  pem-directory     directory of PEM files\n"
-		  "  openssl-bundle    OpenSSL specific PEM bundle\n"
-		  "  openssl-directory directory of OpenSSL specific files\n"
-		  "  java-cacerts      java keystore cacerts file",
+		  "  x509-file           DER X.509 certificate file\n"
+		  "  x509-directory      directory of X.509 certificates\n"
+		  "  pem-bundle          file containing multiple PEM blocks\n"
+		  "  pem-directory       directory of PEM files\n"
+		  "  pem-directory-hash  directory of PEM files with hash links\n"
+		  "  openssl-bundle      OpenSSL specific PEM bundle\n"
+		  "  openssl-directory   directory of OpenSSL specific files\n"
+		  "  java-cacerts        java keystore cacerts file",
 		  "type"
 		},
 		{ opt_purpose,
