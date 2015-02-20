@@ -1,3 +1,8 @@
+0.23.1 (devel)
+ * Use new PKCS#11 URI draft fields for URIs [#86474 #87582]
+ * Add pem-directory-hash extract format
+ * Build fixes
+
 0.22.1 (stable)
  * Use SubjectKeyIdentifier for CKA_ID when available [#84761]
  * Allow 'BEGIN PuBLIC KEY' PEM blocks in .p11-kit files
