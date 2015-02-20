@@ -146,8 +146,6 @@ struct p11_kit_uri {
 	char *pin_source;
 };
 
-const static char WHITESPACE[] = " \n\r\v";
-
 static char *
 key_decode (const char *value, const char *end)
 {
@@ -162,9 +160,9 @@ key_decode (const char *value, const char *end)
 	key[length] = '\0';
 
 	/* Do we have any whitespace? Strip it out. */
-	if (strcspn (key, WHITESPACE) != length) {
+	if (strcspn (key, P11_URL_WHITESPACE) != length) {
 		for (at = key, pos = key; pos != key + length + 1; ++pos) {
-			if (!strchr (WHITESPACE, *pos))
+			if (!strchr (P11_URL_WHITESPACE, *pos))
 				*(at++) = *pos;
 		}
 		*at = '\0';
@@ -997,7 +995,7 @@ atoin (const char *start, const char *end)
 {
 	int ret = 0;
 	while (start != end) {
-		if (strchr (WHITESPACE, *start)) {
+		if (strchr (P11_URL_WHITESPACE, *start)) {
 			start++;
 			continue;
 		}
