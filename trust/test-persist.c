@@ -356,7 +356,7 @@ test_pem_block (void)
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_ID, "292c92", 6, },
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
-		{ CKA_VALUE, &verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_VALUE, (unsigned char *)&verisign_v1_ca, sizeof (verisign_v1_ca) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
 		{ CKA_INVALID },
 	};
@@ -392,7 +392,7 @@ test_pem_middle (void)
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
-		{ CKA_VALUE, &verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_VALUE, (unsigned char *)&verisign_v1_ca, sizeof (verisign_v1_ca) },
 		{ CKA_INVALID },
 	};
 
@@ -416,7 +416,7 @@ test_pem_public_key (void)
 
 	CK_ATTRIBUTE attrs[] = {
 		{ CKA_ID, "292c92", 6, },
-		{ CKA_PUBLIC_KEY_INFO, &example_public_key, sizeof (example_public_key) },
+		{ CKA_PUBLIC_KEY_INFO, (unsigned char *)&example_public_key, sizeof (example_public_key) },
 		{ CKA_INVALID },
 	};
 
