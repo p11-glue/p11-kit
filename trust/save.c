@@ -233,7 +233,6 @@ p11_save_finish_file (p11_save_file *file,
 	/* Set the mode of the file, readable by everyone, but not writable */
 	} else if (chmod (file->temp, S_IRUSR | S_IRGRP | S_IROTH) < 0) {
 		p11_message_err (errno, "couldn't set file permissions: %s", file->temp);
-		close (file->fd);
 		ret = false;
 
 	/* Atomically rename the tempfile over the filename */
