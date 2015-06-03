@@ -360,8 +360,10 @@ rpc_socket_read (rpc_socket *sock,
 	p11_mutex_lock (&sock->read_lock);
 
 	if (!sock->read_creds) {
-		if (read_all (sock->fd, &dummy, 1) != 1)
+		if (read_all (sock->fd, &dummy, 1) != 1) {
+			p11_mutex_unlock (&sock->read_lock);
 			return CKR_DEVICE_ERROR;
+		}
 		sock->read_creds = true;
 	}
 
