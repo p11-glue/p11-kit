@@ -52,6 +52,9 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#endif
 
 /* This is the proxy module entry point in proxy.c, and linked to this test */
 CK_RV C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list);
@@ -110,6 +113,44 @@ test_initialize_multiple (void)
 	p11_proxy_module_cleanup ();
 }
 
+#ifndef _WIN32
+static void
+test_deinit_after_fork (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_RV rv;
+	pid_t pid;
+	int st;
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize(NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	pid = fork ();
+	if (!pid) {
+		exit(0);
+	}
+	assert (pid != -1);
+	waitpid(pid, &st, 0);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
+
+	/* If the assertion fails, p11_kit_failed() doesn't return. So make
+	 * sure we do all the cleanup before the (expected) failure, or it
+	 * causes all the *later* tests to fail too! */
+	if (!WIFEXITED (st) || WEXITSTATUS(st) != 0)
+		assert_fail("Child failed to C_Initialize() and C_Finalize()", NULL);
+
+}
+#endif
+
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
@@ -128,7 +169,7 @@ setup_mock_module (CK_SESSION_HANDLE *session)
 	mock_slots_all = 32;
 	rv = proxy->C_GetSlotList (CK_FALSE, slots, &mock_slots_all);
 	assert (rv == CKR_OK);
-	assert (mock_slots_all >= 2);
+	assert_num_cmp (mock_slots_all, >=, 2);
 
 	/* Assume this is the slot we want to deal with */
 	mock_slot_one_id = slots[0];
@@ -188,6 +229,9 @@ main (int argc,
 
 	p11_test (test_initialize_finalize, "/proxy/initialize-finalize");
 	p11_test (test_initialize_multiple, "/proxy/initialize-multiple");
+#ifndef _WIN32
+	p11_test (test_deinit_after_fork, "/proxy/deinit-after-fork");
+#endif
 
 	test_mock_add_tests ("/proxy");
 
