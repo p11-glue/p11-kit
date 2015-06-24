@@ -98,6 +98,7 @@ static State *all_instances = NULL;
 static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, FIRST_HANDLE, NULL };
 
 #define PROXY_VALID(px) ((px) && (px)->forkid == p11_forkid)
+#define PROXY_FORKED(px) ((px) && (px)->forkid != p11_forkid)
 
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Proxy Module        "
@@ -187,10 +188,11 @@ map_session_to_real (Proxy *px,
 }
 
 static void
-proxy_free (Proxy *py)
+proxy_free (Proxy *py, unsigned finalize)
 {
 	if (py) {
-		p11_kit_modules_finalize (py->inited);
+		if (finalize)
+			p11_kit_modules_finalize (py->inited);
 		free (py->inited);
 		p11_dict_free (py->sessions);
 		free (py->mappings);
@@ -227,7 +229,7 @@ proxy_C_Finalize (CK_X_FUNCTION_LIST *self,
 
 		p11_unlock ();
 
-		proxy_free (py);
+		proxy_free (py, 1);
 	}
 
 	p11_debug ("out: %lu", rv);
@@ -301,7 +303,7 @@ proxy_create (Proxy **res)
 	}
 
 	if (rv != CKR_OK) {
-		proxy_free (py);
+		proxy_free (py, 1);
 		return rv;
 	}
 
@@ -331,8 +333,13 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 	p11_lock ();
 
 		if (!PROXY_VALID (state->px)) {
+			unsigned call_finalize = 1;
+
 			initialize = true;
-			proxy_free (state->px);
+			if (PROXY_FORKED(state->px))
+				call_finalize = 0;
+			proxy_free (state->px, call_finalize);
+
 			state->px = NULL;
 		} else {
 			state->px->refs++;
@@ -360,7 +367,7 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 
 	p11_unlock ();
 
-	proxy_free (py);
+	proxy_free (py, 1);
 	p11_debug ("out: 0");
 	return rv;
 }
