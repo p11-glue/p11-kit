@@ -54,6 +54,13 @@
  * not be defined. This is checked in configure.ac
  */
 
+/*
+ * Since libffi uses shared memory to store that, releasing it
+ * will cause issues on any other child or parent process that relies
+ * on that. Don't release it.
+ */
+#define LIBFFI_FREE_CLOSURES 0
+
 #include "ffi.h"
 #ifndef FFI_CLOSURES
 #error "FFI_CLOSURES should be checked in configure.ac"
@@ -2718,6 +2725,7 @@ init_wrapper_funcs (Wrapper *wrapper)
 	return true;
 }
 
+#if LIBFFI_FREE_CLOSURES
 static void
 uninit_wrapper_funcs (Wrapper *wrapper)
 {
@@ -2726,6 +2734,7 @@ uninit_wrapper_funcs (Wrapper *wrapper)
 	for (i = 0; i < wrapper->ffi_used; i++)
 		ffi_closure_free (wrapper->ffi_closures[i]);
 }
+#endif
 
 CK_FUNCTION_LIST *
 p11_virtual_wrap (p11_virtual *virt,
@@ -2792,7 +2801,9 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 	if (wrapper->destroyer)
 		(wrapper->destroyer) (wrapper->virt);
 
+#if LIBFFI_FREE_CLOSURES
 	uninit_wrapper_funcs (wrapper);
+#endif
 	free (wrapper);
 }
 
