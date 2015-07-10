@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Red Hat Inc
+ * Copyright (c) 2012, 2015 Red Hat Inc
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 #include "debug.h"
 #include "library.h"
@@ -126,6 +127,25 @@ lookup_module_with_name (CK_FUNCTION_LIST_PTR_PTR modules,
 	return match;
 }
 
+static CK_FUNCTION_LIST_PTR
+lookup_module_with_filename (CK_FUNCTION_LIST_PTR_PTR modules,
+                             const char *name)
+{
+	CK_FUNCTION_LIST_PTR match = NULL;
+	char *module_name;
+	int i;
+
+	for (i = 0; match == NULL && modules[i] != NULL; i++) {
+		module_name = p11_kit_module_get_filename (modules[i]);
+		assert_ptr_not_null (module_name);
+		if (strcmp (basename(module_name), name) == 0)
+			match = modules[i];
+		free (module_name);
+	}
+
+	return match;
+}
+
 static void
 test_disable (void)
 {
@@ -154,6 +174,23 @@ test_disable (void)
 	finalize_and_free_modules (modules);
 
 	p11_kit_set_progname (NULL);
+}
+
+static void
+test_filename (void)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+
+	/*
+	 * The module four should be present, as we don't match any prognames
+	 * that it has disabled.
+	 */
+
+	modules = initialize_and_get_modules ();
+#ifndef _WIN32
+	assert (lookup_module_with_filename (modules, "mock-four.so") != NULL);
+#endif
+	finalize_and_free_modules (modules);
 }
 
 static void
@@ -398,6 +435,7 @@ main (int argc,
 {
 	p11_library_init ();
 
+	p11_test (test_filename, "/modules/test_filename");
 	p11_test (test_no_duplicates, "/modules/test_no_duplicates");
 	p11_test (test_disable, "/modules/test_disable");
 	p11_test (test_disable_later, "/modules/test_disable_later");

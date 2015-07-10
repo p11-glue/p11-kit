@@ -146,6 +146,7 @@ typedef struct _Module {
 
 	/* Registered modules */
 	char *name;
+	char *filename;
 	p11_dict *config;
 	bool critical;
 
@@ -256,6 +257,7 @@ free_module_unlocked (void *data)
 	p11_mutex_uninit (&mod->initialize_mutex);
 	p11_dict_free (mod->config);
 	free (mod->name);
+	free (mod->filename);
 	free (mod);
 }
 
@@ -363,6 +365,8 @@ load_module_from_file_inlock (const char *name,
 	p11_debug ("loading module %s%sfrom path: %s",
 	           name ? name : "", name ? " " : "", path);
 
+	mod->filename = strdup (path);
+
 	rv = dlopen_and_get_function_list (mod, path, &funcs);
 	free (expand);
 
@@ -410,6 +414,7 @@ setup_module_for_remote_inlock (const char *name,
 		return CKR_DEVICE_ERROR;
 	}
 
+	mod->filename = NULL;
 	mod->loaded_module = rpc;
 	mod->loaded_destroy = p11_rpc_transport_free;
 
@@ -1147,6 +1152,46 @@ p11_kit_module_get_name (CK_FUNCTION_LIST *module)
 			mod = module_for_functions_inlock (module);
 			if (mod && mod->name)
 				name = strdup (mod->name);
+		}
+
+	p11_unlock ();
+
+	return name;
+}
+
+/**
+ * p11_kit_module_get_filename:
+ * @module: pointer to a loaded module
+ *
+ * Get the configured name of the PKCS\#11 module.
+ *
+ * Configured modules are loaded by p11_kit_modules_load(). The module
+ * passed to this function can be either managed or unmanaged. Non
+ * configured modules will return %NULL.
+ *
+ * Use free() to release the return value when you're done with it.
+ *
+ * Returns: a newly allocated string containing the module name, or
+ *     <code>NULL</code> if the module is not a configured module
+ */
+char *
+p11_kit_module_get_filename (CK_FUNCTION_LIST *module)
+{
+	Module *mod;
+	char *name = NULL;
+
+	return_val_if_fail (module != NULL, NULL);
+
+	p11_library_init_once ();
+
+	p11_lock ();
+
+		p11_message_clear ();
+
+		if (gl.modules) {
+			mod = module_for_functions_inlock (module);
+			if (mod && mod->filename)
+				name = strdup (mod->filename);
 		}
 
 	p11_unlock ();
