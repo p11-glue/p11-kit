@@ -64,6 +64,9 @@
 
 #ifdef OS_WIN32
 #include <winsock2.h>
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 #endif
 
 #ifndef EPROTO
