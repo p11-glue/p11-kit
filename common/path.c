@@ -133,18 +133,18 @@ expand_homedir (const char *remainder)
 #ifdef OS_UNIX
 		char buf[1024];
 		struct passwd pws;
-		struct passwd *pwd;
-		int error = 0;
+		struct passwd *pwd = NULL;
+		int error;
 		int ret;
 
+		errno = 0;
 		ret = getpwuid_r (getuid (), &pws, buf, sizeof (buf), &pwd);
-		if (ret == 0 && !pwd) {
-			ret = -1;
-			errno = ESRCH;
-		}
-		if (ret < 0) {
-			error = errno;
-			p11_message_err (errno, "couldn't lookup home directory for user %d", getuid ());
+		if (pwd == NULL) {
+			if (ret == 0)
+				error = ESRCH;
+			else
+				error = errno;
+			p11_message_err (error, "couldn't lookup home directory for user %d", getuid ());
 			errno = error;
 			return NULL;
 		}
