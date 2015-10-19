@@ -244,7 +244,7 @@ void
 p11_dict_clear (p11_dict *dict)
 {
 	dictbucket *bucket, *next;
-	int i;
+	unsigned int i;
 
 	/* Free all entries in the array */
 	for (i = 0; i < dict->num_buckets; ++i) {
