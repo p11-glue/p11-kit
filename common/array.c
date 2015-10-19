@@ -118,7 +118,7 @@ p11_array_remove (p11_array *array,
 void
 p11_array_clear (p11_array *array)
 {
-	int i;
+	unsigned int i;
 
 	if (array->destroyer) {
 		for (i = 0; i < array->num; i++)
