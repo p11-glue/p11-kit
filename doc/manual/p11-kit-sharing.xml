@@ -15,7 +15,7 @@
 
 		<para>An example: An application might use GnuTLS for
 		TLS connections, and use libgcr for display of certificates. Both of
-		these want to load (and initialze) the same PKCS#11 modules. There are
+		these want to load (and initialize) the same PKCS#11 modules. There are
 		many places where this situation occurs, including large applications
 		like Evolution which due to their dependencies end up using both NSS and
 		GnuTLS.</para>
@@ -25,7 +25,7 @@
 		When consumer B initializes the module (also using C_Initialize),
 		the error code <literal>CKR_CRYPTOKI_ALREADY_INITIALIZED</literal>
 		is correctly returned. This is normal PKCS#11 specification
-		defined behavior for when a module is initalized twice in the
+		defined behavior for when a module is initialized twice in the
 		same process. If consumer B is aware of this situation they may
 		choose to ignore this error code.</para>
 

@@ -138,7 +138,7 @@ x-custom : text
 			p11-kit. Making a module unmanaged is not recommended, and will cause
 			problems if multiple callers in a single process share a PKCS#11 module.</para>
 
-			<para>This argument is optonal and defaults to <literal>yes</literal>.</para>
+			<para>This argument is optional and defaults to <literal>yes</literal>.</para>
 		</listitem>
 	</varlistentry>
 	<varlistentry>
@@ -146,7 +146,7 @@ x-custom : text
 		<listitem>
 			<para>The value should be an integer. When lists of modules are
 			returned to a caller of p11-kit, modules with a higher number are sorted
-			first. When applications search modules for for certificates, keys and
+			first. When applications search modules for certificates, keys and
 			trust policy information, this setting will affect what find
 			first.</para>
 			<para>This argument is optional, and defaults to zero. Modules
@@ -181,7 +181,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 			<para>Set to <literal>yes</literal> to write a log to stderr of all the
 			calls into the module. This is only supported for managed modules.</para>
 
-			<para>This argument is optonal and defaults to <literal>no</literal>.</para>
+			<para>This argument is optional and defaults to <literal>no</literal>.</para>
 		</listitem>
 	</varlistentry>
 	</variablelist>
@@ -220,7 +220,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 			problems if multiple callers in a single process share a PKCS#11
 			module.</para>
 
-			<para>This argument is optonal.</para>
+			<para>This argument is optional.</para>
 		</listitem>
 	</varlistentry>
 	<varlistentry>
