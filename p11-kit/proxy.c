@@ -415,7 +415,7 @@ proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
 	Mapping *mapping;
 	CK_ULONG index;
 	CK_RV rv = CKR_OK;
-	int i;
+	unsigned int i;
 
 	return_val_if_fail (count != NULL, CKR_ARGUMENTS_BAD);
 
