@@ -622,37 +622,6 @@ gmtime_r (const time_t *timep,
 
 #endif /* HAVE_GMTIME_R */
 
-#ifndef HAVE_TIMEGM
-
-time_t
-timegm (struct tm *tm)
-{
-	time_t tl, tb;
-	struct tm tg;
-
-	tl = mktime (tm);
-	if (tl == -1) {
-		tm->tm_hour--;
-		tl = mktime (tm);
-		if (tl == -1)
-			return -1;
-		tl += 3600;
-	}
-	gmtime_r (&tl, &tg);
-	tg.tm_isdst = 0;
-	tb = mktime (&tg);
-	if (tb == -1) {
-		tg.tm_hour--;
-		tb = mktime (&tg);
-		if (tb == -1)
-			return -1;
-		tb += 3600;
-	}
-	return (tl - (tb - tl));
-}
-
-#endif /* HAVE_TIMEGM */
-
 #if !defined(HAVE_MKDTEMP) || !defined(HAVE_MKSTEMP)
 #include <sys/stat.h>
 #include <fcntl.h>

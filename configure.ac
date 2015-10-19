@@ -91,7 +91,6 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getauxval issetugid getresuid secure_getenv])
 	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([asprintf vasprintf vsnprintf])
-	AC_CHECK_FUNCS([timegm])
 	AC_CHECK_FUNCS([fdwalk])
 	AC_CHECK_FUNCS([setenv])
 
