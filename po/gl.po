@@ -1,22 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
-# Fran Diéguez <frandieguez@ubuntu.com>, 2012.
+# Fran Diéguez <frandieguez@ubuntu.com>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-04-14 18:34+0000\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2013-11-20 10:27+0000\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
-"Language-Team: Galician <proxecto@trasno.net>\n"
-"Language: gl\n"
+"Language-Team: Galician (http://www.transifex.com/freedesktop/p11-kit/language/gl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: gl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: p11-kit/messages.c:78
@@ -29,7 +28,7 @@ msgstr "Non hai memoria dispoñíbel dabondo"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr "O ID de slot especificado non é válido"
+msgstr "O ID do slot especificado non é válido"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
@@ -117,7 +116,7 @@ msgstr "Non se precisa chave"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr "A chave cambiou"
+msgstr "A chave é diferente da anterior"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
@@ -141,7 +140,7 @@ msgstr "Non é posíbel exportar esta chave"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "O mecanismo de criptografía non é válida ou non se recoñece"
+msgstr "O mecanismo de criptografía non é válido ou non se recoñece"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
@@ -165,7 +164,7 @@ msgstr "O contrasinal ou PIN é incorrecto"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr "O contrasinal ou PIn non é válido"
+msgstr "O contrasinal ou PIN non é válido"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
@@ -281,11 +280,11 @@ msgstr "Non é posíbel importar unha chave de tamaño incorrecto"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr "Non é posíbel a chave porque non é válida"
+msgstr "Non é posíbel exportar a chave porque non é válida"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Non é posíbel a chave porque ten un tamaño incorrecto "
+msgstr "Non é posíbel exportar a chave porque ten un tamaño incorrecto "
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
@@ -336,9 +335,8 @@ msgid "The data cannot be locked"
 msgstr "Non é posíbel bloquear os datos"
 
 #: p11-kit/messages.c:237
-#, fuzzy
 msgid "The request was rejected by the user"
-msgstr "A sinatura solicitada foi rexeitada polo usuario"
+msgstr "A solicitude foi rexeitada polo usuario"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"

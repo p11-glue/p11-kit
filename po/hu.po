@@ -1,22 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
-# Gabor Kelemen <kelemeng at gnome dot hu>, 2012.
+# Gabor Kelemen <kelemeng at gnome dot hu>, 2012
+# kelemeng <kelemeng@ubuntu.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-05-03 23:26+0000\n"
-"Last-Translator: kelemeng <kelemeng@gnome.hu>\n"
-"Language-Team: Hungarian <openscope@googlegroups.com>\n"
-"Language: hu\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2014-03-02 02:04+0000\n"
+"Last-Translator: kelemeng <kelemeng@ubuntu.com>\n"
+"Language-Team: Hungarian (http://www.transifex.com/freedesktop/p11-kit/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: p11-kit/messages.c:78
@@ -336,9 +336,8 @@ msgid "The data cannot be locked"
 msgstr "Az adatok nem zárolhatók"
 
 #: p11-kit/messages.c:237
-#, fuzzy
 msgid "The request was rejected by the user"
-msgstr "A felhasználó elutasította az aláíráskérést"
+msgstr "A felhasználó elutasította a kérést"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"

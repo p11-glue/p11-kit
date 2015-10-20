@@ -1,345 +1,345 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2011
+# Stas Solovey <whats_up@tut.by>, 2013
+# Yuri Kozlov <yuray@komyakino.ru>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Russian (http://www.transifex.com/projects/p/freedesktop/"
-"language/ru/)\n"
-"Language: ru\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2014-03-29 13:45+0000\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
+"Language-Team: Russian (http://www.transifex.com/freedesktop/p11-kit/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr ""
+msgstr "Действие было отменено"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr ""
+msgstr "Недостаточно свободной памяти"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "Указанный идентификатор слота не действителен"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr ""
+msgstr "Внутренняя ошибка"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr ""
+msgstr "Сбой при выполнении операции"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Недопустимые аргументы"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr ""
+msgstr "Модуль не может создать необходимые потоки"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr ""
+msgstr "Модуль не может блокировать данные должным образом"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr ""
+msgstr "Поле доступно только для чтения"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Поле содержит важную информацию и не может быть показано"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr ""
+msgstr "Поле не действительно или не существует"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr ""
+msgstr "Недействительное значение для поля"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr ""
+msgstr "Данные неверны или не распознаны"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr ""
+msgstr "Данные слишком длинные"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr ""
+msgstr "На устройстве произошла ошибка"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr ""
+msgstr "На устройстве недостаточно свободной памяти"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr ""
+msgstr "Устройство было удалено или отключено"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
+msgstr "Зашифрованные данные неверны или не распознаны"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr ""
+msgstr "Зашифрованные данные слишком длинные"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr ""
+msgstr "Операция не поддерживается"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr ""
+msgstr "Ключ отсутствует или неверен"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr ""
+msgstr "Ключ имеет неправильный размер"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr ""
+msgstr "Ключ имеет неправильный тип"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr ""
+msgstr "Ключ не требуется"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr ""
+msgstr "Ключ отличается от предыдущего"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr ""
+msgstr "Необходим ключ"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Невозможно включить ключ в каталог"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "Операция не может быть выполнена с данным ключом"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Ключ не может быть обернут"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr ""
+msgstr "Невозможно экспортировать данный ключ"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "Механизм шифрования неверен или не распознан"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "Механизм шифрования имеет неверный параметр"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr ""
+msgstr "Объект отсутствует или неверен"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "В данный момент выполняется другое действие"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "В данный момент никаких других операций не проводится"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr ""
+msgstr "Пароль или PIN неверен"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr ""
+msgstr "Пароль или PIN недействителен"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr ""
+msgstr "Пароль или PIN недопустимой длины"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr ""
+msgstr "Пароль или PIN устарел"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr ""
+msgstr "Пароль или PIN заблокирован"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Сеанс закрыт"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "Слишком много активных сеансов"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Сеанс некорректен"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Сеанс доступен только для чтения"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Есть открытый сеанс"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Есть сеанс только для чтения"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Есть административный сеанс"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "Подпись плоха или повреждена"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "Подпись не распознана или повреждена"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "Определённые необходимые поля отсутствуют"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "Некоторые поля имеют неверные значения"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "Устройство отсутствует или отключено"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "Устройство неверно или неопознаваемо"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "Устройство защищено от записи"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "Не удалось импортировать, поскольку ключ неверен"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "Не удалось импортировать, поскольку ключ неправильной длины"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "Не удалось импортировать, поскольку ключ неправильного типа"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "Вы уже вошли"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "Нет вошедших пользователей"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "Пароль пользователя, или его PIN не установлен"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "Пользователь неверного типа"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "Другой пользователь уже вошёл"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "Слишком ного пользователей различных типов вошли в систему"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "Не удалось импортировать неверный ключ"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "Не удалось импортировать ключ неверного размера"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "Не удалось экспортировать, потому что ключ неверен"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "Не удалось экспортировать, потому что ключ имеет неверный размер"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "Не удалось экспортировать, потому что ключ имеет неправильный тип"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "Не могу инициализировать генератор случайных чисел"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "Генератор случайных чисел недоступен"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "Механизм шифрования имеет неверный параметр"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "Недостаточно места для сохранения результата"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "Сохранённое состояние неверно"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Информация засекречена и не может быть показана"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "Состояние не может быть сохранено"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "Модуль не был инициализирован"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "Модуль уже инициализирован"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "Не удалось заблокировать данные"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr ""
+msgstr "Данные не могут быть заблокированы"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Запрос отклонён пользователем"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr ""
+msgstr "Неизвестная ошибка"

@@ -1,344 +1,343 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
+# Maria Mavridou <mavridou@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Greek (http://www.transifex.com/projects/p/freedesktop/"
-"language/el/)\n"
-"Language: el\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2014-04-21 19:51+0000\n"
+"Last-Translator: thanos <tomtryf@gmail.com>\n"
+"Language-Team: Greek (http://www.transifex.com/freedesktop/p11-kit/language/el/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: el\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr ""
+msgstr "Η λειτουργία ακυρώθηκε"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr ""
+msgstr "Ανεπαρκής διαθέσιμη μνήμη"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "H καθορισμένη ταυτότητα υποδοχής δεν είναι έγκυρη"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr ""
+msgstr "Εσωτερικό σφάλμα"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr ""
+msgstr "Η λειτουργία απέτυχε"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Άκυρα ορίσματα"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr ""
+msgstr "Η μονάδα δεν μπορεί να δημιουργήσει τα αναγκαία νήματα εκτέλεσης"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr ""
+msgstr "Η μονάδα δεν μπορεί να κλειδώσει τα δεδομένα σωστά "
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr ""
+msgstr "Το πεδίο είναι μόνο για ανάγνωση"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Το πεδίο είναι ευαίσθητο και δεν μπορεί να αποκαλυφθεί"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr ""
+msgstr "Το πεδίο δεν είναι έγκυρο ή δεν υπάρχει"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr ""
+msgstr "Μη έγκυρη τιμή για το πεδίο"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr ""
+msgstr "Τα δεδομένα δεν είναι έγκυρα ή δεν αναγνωρίζονται"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr ""
+msgstr "Τα δεδομένα είναι πολύ μεγάλα"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr ""
+msgstr "Παρουσιάστηκε σφάλμα στη συσκευή"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr ""
+msgstr "Ανεπαρκής διαθέσιμη μνήμη στη συσκευή"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr ""
+msgstr "Η συσκευή απομακρύνθηκε ή αποσυνδέθηκε"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
+msgstr "Τα κρυπτογραφημένα δεδομένα δεν είναι έγκυρα ή δεν αναγνωρίζονται"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr ""
+msgstr "Τα κρυπτογραφημένα δεδομένα είναι πολύ μεγάλα"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr ""
+msgstr "Δεν υποστηρίζεται αυτή η λειτουργία"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr ""
+msgstr "Το κλειδί λείπει ή δεν είναι έγκυρο"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr ""
+msgstr "Το κλειδί έχει λάθος μέγεθος"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr ""
+msgstr "Το κλειδί είναι λάθος τύπου"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr ""
+msgstr "Δεν απαιτείται κλειδί"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr ""
+msgstr "Το κλειδί είναι διαφορετικό από πριν"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr ""
+msgstr "Απαιτείται ένα κλειδί"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Το κλειδί δεν μπορεί να συμπεριληφθεί στη σύνοψη"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "Αυτή η λειτουργία δεν μπορεί να γίνει με αυτό το κλειδί"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Το κλειδί δεν μπορεί να αναδιπλωθεί"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr ""
+msgstr "Το κλειδί δεν μπορεί να εξαχθεί"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "Ο κρυπτογραφικός μηχανισμός δεν είναι έγκυρος ή δεν αναγνωρίζεται"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "Ο κρυπτογραφικός μηχανισμός έχει ένα μη έγκυρο όρισμα"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr ""
+msgstr "Το αντικείμενο λείπει ή δεν είναι έγκυρο"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "Μια άλλη λειτουργία ήδη πραγματοποιείται"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "Καμιά λειτουργία δεν πραγματοποιείται"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN είναι λανθασμένο"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN δεν είναι έγκυρο"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN έχει μη έγκυρο μήκος"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN έχει λήξει"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN έχει κλειδωθεί"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Η συνεδρία είναι κλειστή"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "Πάρα πολλές συνεδρίες είναι ενεργές"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Η συνεδρία δεν είναι έγκυρη"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Η συνεδρία είναι μόνο για ανάγνωση"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Υπάρχει μια ανοιχτή συνεδρία"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Υπάρχει μια συνεδρία μόνο για ανάγνωση"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Υπάρχει μια συνεδρία διαχειριστή"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "Η υπογραφή είναι κακή ή κατεστραμμένη"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "Η υπογραφή δεν αναγνωρίζεται ή είναι κατεστραμμένη"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "Ορισμένα από τα απαιτούμενα πεδία λείπουν"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "Ορισμένα πεδία έχουν μη έγκυρες τιμές"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "Η συσκευή δεν υπάρχει ή έχει αποσυνδεθεί"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "Η συσκευή δεν είναι έγκυρη ή δεν αναγνωρίζεται"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "Η συσκευή έχει προστασία εγγραφής"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εισαγωγή, διότι το κλειδί δεν είναι έγκυρο"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εισαγωγή, διότι το κλειδί είναι το λάθος μεγέθους"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εισαγωγή, διότι το κλειδί είναι λάθος τύπου"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "Είστε ήδη συνδεδεμένος"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "Κανένας χρήστης δεν έχει συνδεθεί"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "Ο κωδικός πρόσβασης ή το PIN του χρήστη δεν έχουν οριστεί"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "Ο χρήστης είναι μη έγκυρου τύπου"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "Ένας άλλος χρήστης είναι ήδη συνδεδεμένος"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "Πάρα πολλοί χρήστες διαφόρων τύπων είναι συνδεδεμένοι"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εισαγωγή ενός μη έγκυρου κλειδιού"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εισαγωγή ενός κλειδού λάθους μεγέθους"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εξαγωγή διότι το κλειδί δεν είναι έγκυρο"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εξαγωγή διότι το κλειδί είναι λάθους μεγέθους"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εξαγωγή διότι το κλειδί είναι λάθος τύπου"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "Αδύνατη η αρχικοποίηση της γεννήτριας τυχαίων αριθμών"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "Δεν υπάρχει γεννήτρια τυχαίων αριθμών"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "Ο κρυπτογραφικός μηχανισμός δεν έχει έγκυρη παράμετρο"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "Δεν υπάρχει αρκετός χώρος για να αποθηκεύσετε το αποτέλεσμα"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "Η αποθηκευμένη αναφορά δεν είναι έγκυρη"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Η πληροφορία είναι ευαίσθητη και δεν μπορεί να αποκαλυφθεί"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "Η αναφορά δεν μπορεί να σωθεί"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "Η μονάδα δεν έχει προετοιμαστεί"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "Η μονάδα έχει ήδη προετοιμαστεί"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "Δεν μπορείτε να κλειδώσετε τα δεδομένα"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr ""
+msgstr "Τα δεδομένα δεν μπορούν να κλειδωθούν"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Η αίτηση απορρίφθηκε από το χρήστη"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr ""
+msgstr "Άγνωστο σφάλμα"

@@ -1,24 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
-# Martin Srebotnjak <miles@filmsi.net>, 2012.
+# Martin Srebotnjak <miles@filmsi.net>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2012-06-04 06:55+0000\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2013-11-20 10:27+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
-"Language-Team: Slovenian <lugos-slo@lugos.si>\n"
-"Language: sl\n"
+"Language-Team: Slovenian (http://www.transifex.com/freedesktop/p11-kit/language/sl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
-"%100==4 ? 2 : 3);\n"
+"Language: sl\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -337,9 +335,8 @@ msgid "The data cannot be locked"
 msgstr "Podatkov ni mogoče zakleniti"
 
 #: p11-kit/messages.c:237
-#, fuzzy
 msgid "The request was rejected by the user"
-msgstr "Zahtevo po podpisu je zavrnil uporabnik"
+msgstr "Zahtevo je zavrnil uporabnik"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"

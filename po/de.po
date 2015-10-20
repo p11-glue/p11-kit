@@ -1,23 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
-# Mario Blättermann <mario.blaettermann@gmail.com>, 2012.
+# Ettore Atalan <atalanttore@googlemail.com>, 2014
+# Mario Blättermann <mario.blaettermann@gmail.com>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-"
-"glue\n"
-"POT-Creation-Date: 2013-09-09 14:12+0200\n"
-"PO-Revision-Date: 2013-02-13 17:07+0000\n"
-"Last-Translator: Stef Walter <stefwalter@gmail.com>\n"
-"Language-Team: German (http://www.transifex.com/projects/p/freedesktop/"
-"language/de/)\n"
-"Language: de\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
+"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"PO-Revision-Date: 2014-09-22 15:30+0000\n"
+"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
+"Language-Team: German (http://www.transifex.com/freedesktop/p11-kit/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: p11-kit/messages.c:78
@@ -90,9 +89,7 @@ msgstr "Das Gerät wurde entfernt oder abgezogen."
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
-"Die verschlüsselten Daten sind nicht gültig oder konnten nicht erkannt "
-"werden."
+msgstr "Die verschlüsselten Daten sind nicht gültig oder konnten nicht erkannt werden."
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
@@ -144,9 +141,7 @@ msgstr "Dieser Schlüssel kann nicht exportiert werden."
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
-"Der kryptografische Mechanismus ist ungültig oder konnte nicht erkannt "
-"werden."
+msgstr "Der kryptografische Mechanismus ist ungültig oder konnte nicht erkannt werden."
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
@@ -341,9 +336,8 @@ msgid "The data cannot be locked"
 msgstr "Die Daten können nicht gesperrt werden."
 
 #: p11-kit/messages.c:237
-#, fuzzy
 msgid "The request was rejected by the user"
-msgstr "Die Signaturanfrage wurde vom Benutzer zurückgewiesen."
+msgstr "Der Anfrage wurde vom Benutzer abgelehnt"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"

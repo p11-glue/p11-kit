@@ -56,10 +56,8 @@ done
 
 # Setup associations
 for lang in $(lingua_langs); do
-	if [ ! -f "po/$lang.po" ]; then
-		tx set -r $TX_RESOURCE -l $lang po/$lang.po
-		pull_again="yes"
-	fi
+	tx set -r $TX_RESOURCE -l $lang po/$lang.po
+	pull_again="yes"
 done
 
 # Pull and get all translations
