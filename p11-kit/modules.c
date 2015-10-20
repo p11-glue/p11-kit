@@ -1689,9 +1689,13 @@ managed_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 
 	self = &managed->mod->virt.funcs;
 	managed_close_sessions (self, stolen, count);
-	free (stolen);
+	if (stolen) {
+		free (stolen);
+		return CKR_OK;
+	} else {
+		return CKR_GENERAL_ERROR;
+	}
 
-	return stolen ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 static void
