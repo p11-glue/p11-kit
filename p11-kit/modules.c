@@ -488,7 +488,6 @@ take_config_and_load_module_inlock (char **name,
 {
 	const char *filename = NULL;
 	const char *remote = NULL;
-	char *value = NULL;
 	CK_RV rv = CKR_OK;
 	Module *mod;
 
@@ -538,7 +537,6 @@ take_config_and_load_module_inlock (char **name,
 	mod->critical = critical;
 
 out:
-	free (value);
 	return rv;
 }
 
