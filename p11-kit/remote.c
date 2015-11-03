@@ -100,7 +100,7 @@ main (int argc,
 		return 2;
 	}
 
-	module = p11_kit_module_load (argv[0], 0);
+	module = p11_kit_module_load (argv[0], P11_KIT_MODULE_REMOTING);
 	if (module == NULL)
 		return 1;
 

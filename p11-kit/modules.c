@@ -292,6 +292,7 @@ alloc_module_unlocked (void)
 static CK_RV
 dlopen_and_get_function_list (Module *mod,
                               const char *path,
+                              int flags,
                               CK_FUNCTION_LIST **funcs)
 {
 	CK_C_GetFunctionList gfl;
@@ -331,9 +332,11 @@ dlopen_and_get_function_list (Module *mod,
 		return rv;
 	}
 
-	if (p11_proxy_module_check (*funcs)) {
-		p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
-		return CKR_FUNCTION_FAILED;
+	if (!(flags & P11_KIT_MODULE_REMOTING)) {
+		if (p11_proxy_module_check (*funcs)) {
+			p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
+			return CKR_FUNCTION_FAILED;
+		}
 	}
 
 	p11_virtual_init (&mod->virt, &p11_virtual_base, *funcs, NULL);
@@ -344,6 +347,7 @@ dlopen_and_get_function_list (Module *mod,
 static CK_RV
 load_module_from_file_inlock (const char *name,
                               const char *path,
+                              int flags,
                               Module **result)
 {
 	CK_FUNCTION_LIST *funcs;
@@ -369,7 +373,7 @@ load_module_from_file_inlock (const char *name,
 
 	mod->filename = strdup (path);
 
-	rv = dlopen_and_get_function_list (mod, path, &funcs);
+	rv = dlopen_and_get_function_list (mod, path, flags, &funcs);
 	free (expand);
 
 	if (rv != CKR_OK) {
@@ -517,7 +521,7 @@ take_config_and_load_module_inlock (char **name,
 
 	} else {
 
-		rv = load_module_from_file_inlock (*name, filename, &mod);
+		rv = load_module_from_file_inlock (*name, filename, 0, &mod);
 		if (rv != CKR_OK)
 			goto out;
 	}
@@ -2414,7 +2418,7 @@ p11_kit_module_load (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, flags, &mod);
 			if (rv == CKR_OK) {
 				/* WARNING: Reentrancy can occur here */
 				rv = prepare_module_inlock_reentrant (mod, flags, &module);
@@ -2680,7 +2684,7 @@ p11_kit_load_initialize_module (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, 0, &mod);
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */
