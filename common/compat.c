@@ -171,7 +171,7 @@ p11_mutex_init (p11_mutex_t *mutex)
 	int ret;
 
 	pthread_mutexattr_init (&attr);
-	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_DEFAULT);
+	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
 	ret = pthread_mutex_init (mutex, &attr);
 	assert (ret == 0);
 	pthread_mutexattr_destroy (&attr);
