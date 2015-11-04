@@ -2978,7 +2978,7 @@ mock_C_VerifyFinal (CK_SESSION_HANDLE session,
 	len = snprintf (buffer, sizeof (buffer), "%lu", sess->hash_count);
 	length = sess->n_sign_prefix + len;
 
-	if (!signature || signature_len != length)
+	if (signature_len != length)
 		return CKR_SIGNATURE_LEN_RANGE;
 
 	if (memcmp (signature, sess->sign_prefix, sess->n_sign_prefix) != 0 ||
