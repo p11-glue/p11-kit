@@ -193,6 +193,7 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		the_objects = p11_dict_new (p11_dict_direct_hash,
 		                            p11_dict_direct_equal,
 		                            NULL, p11_attrs_free);
+		return_if_fail (the_objects != NULL);
 	}
 
 	p11_dict_clear (the_objects);
