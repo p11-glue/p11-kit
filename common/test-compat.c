@@ -117,6 +117,7 @@ test_mmap (void)
 	size_t size;
 	char file[] = "emptyfileXXXXXX";
 	int fd = mkstemp (file);
+	assert (fd >= 0);
 	close (fd);
 	/* mmap on empty file should work */
 	map = p11_mmap_open (file, NULL, &data, &size);
