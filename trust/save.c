@@ -145,7 +145,7 @@ p11_save_write (p11_save_file *file,
 	while (written < length) {
 		res = write (file->fd, buf + written, length - written);
 		if (res <= 0) {
-			if (errno == EAGAIN && errno == EINTR)
+			if (errno == EAGAIN || errno == EINTR)
 				continue;
 			p11_message_err (errno, "couldn't write to file: %s", file->temp);
 			return false;
