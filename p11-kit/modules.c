@@ -2326,17 +2326,15 @@ p11_module_load_inlock_reentrant (CK_FUNCTION_LIST *module,
 		}
 
 		/* If this was newly allocated, add it to the list */
-		if (rv == CKR_OK && allocated) {
+		if (allocated) {
 			if (!p11_dict_set (gl.modules, allocated, allocated) ||
 			    !p11_dict_set (gl.unmanaged_by_funcs, module, allocated))
 				return_val_if_reached (CKR_HOST_MEMORY);
 			allocated = NULL;
 		}
 
-		if (rv == CKR_OK) {
 			/* WARNING: Reentrancy can occur here */
 			rv = prepare_module_inlock_reentrant (mod, flags, result);
-		}
 
 		free (allocated);
 	}
