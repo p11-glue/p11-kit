@@ -2353,12 +2353,15 @@ p11_module_load_inlock_reentrant (CK_FUNCTION_LIST *module,
 
 /**
  * p11_kit_module_load:
- * @module_path: full file path of module library
+ * @module_path: relative or full file path of module library
  * @flags: flags to use when loading the module
  *
  * Load an arbitrary PKCS\#11 module from a dynamic library file, and
  * initialize it. Normally using the p11_kit_modules_load() function
  * is preferred.
+ *
+ * A full file path or just (path/)filename relative to
+ * P11_MODULE_PATH are accepted.
  *
  * Using this function to load modules allows coordination between multiple
  * callers of the same module in a single process. If @flags contains the
