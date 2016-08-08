@@ -57,6 +57,14 @@ is_module_empty (P11KitUri *uri)
 }
 
 static int
+is_slot_empty (P11KitUri *uri)
+{
+	CK_SLOT_INFO_PTR slot = p11_kit_uri_get_slot_info (uri);
+	return (slot->slotDescription[0] == 0 &&
+	        slot->manufacturerID[0] == 0);
+}
+
+static int
 is_token_empty (P11KitUri *uri)
 {
 	CK_TOKEN_INFO_PTR token = p11_kit_uri_get_token_info (uri);
@@ -87,6 +95,7 @@ test_uri_parse (void)
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	assert (is_module_empty (uri));
+	assert (is_slot_empty (uri));
 	assert (is_token_empty (uri));
 	assert (are_attributes_empty (uri));
 
@@ -122,6 +131,7 @@ test_uri_parse_with_label (void)
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	assert (is_module_empty (uri));
+	assert (is_slot_empty (uri));
 	assert (is_token_empty (uri));
 
 	attr = p11_kit_uri_get_attribute (uri, CKA_LABEL);
@@ -429,6 +439,27 @@ test_uri_parse_with_library_bad_encoding (void)
 }
 
 static void
+test_uri_parse_with_slot (void)
+{
+	P11KitUri *uri = NULL;
+	CK_SLOT_INFO_PTR slot;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:slot-description=Slot%20Description;slot-manufacturer=Me",
+	                         P11_KIT_URI_FOR_SLOT, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	slot = p11_kit_uri_get_slot_info (uri);
+	assert (is_space_string (slot->slotDescription, sizeof (slot->slotDescription), "Slot Description"));
+	assert (is_space_string (slot->manufacturerID, sizeof (slot->manufacturerID), "Me"));
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_build_empty (void)
 {
 	P11KitUri *uri;
@@ -610,6 +641,43 @@ test_uri_build_with_attributes (void)
 
 	free (string);
 	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_build_with_slot_info (void)
+{
+	char *string = NULL;
+	P11KitUri *uri;
+	P11KitUri *check;
+	CK_SLOT_INFO_PTR slot;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	slot = p11_kit_uri_get_slot_info (uri);
+	set_space_string (slot->slotDescription, sizeof (slot->slotDescription), "The Slot Description");
+	set_space_string (slot->manufacturerID, sizeof (slot->manufacturerID), "Me");
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert_ptr_not_null (string);
+
+	check = p11_kit_uri_new ();
+	assert_ptr_not_null (check);
+
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_SLOT, check);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	p11_kit_uri_match_slot_info (check, p11_kit_uri_get_slot_info (uri));
+
+	p11_kit_uri_free (uri);
+	p11_kit_uri_free (check);
+
+	assert (strstr (string, "slot-description=The%20Slot%20Description") != NULL);
+	assert (strstr (string, "slot-manufacturer=Me") != NULL);
+
+	free (string);
 }
 
 static void
@@ -1361,11 +1429,13 @@ main (int argc,
 	p11_test (test_uri_parse_with_spaces, "/uri/test_uri_parse_with_spaces");
 	p11_test (test_uri_parse_with_library, "/uri/test_uri_parse_with_library");
 	p11_test (test_uri_parse_with_library_bad_encoding, "/uri/test_uri_parse_with_library_bad_encoding");
+	p11_test (test_uri_parse_with_slot, "/uri/test_uri_parse_with_slot");
 	p11_test (test_uri_build_empty, "/uri/test_uri_build_empty");
 	p11_test (test_uri_build_with_token_info, "/uri/test_uri_build_with_token_info");
 	p11_test (test_uri_build_with_token_null_info, "/uri/test_uri_build_with_token_null_info");
 	p11_test (test_uri_build_with_token_empty_info, "/uri/test_uri_build_with_token_empty_info");
 	p11_test (test_uri_build_with_attributes, "/uri/test_uri_build_with_attributes");
+	p11_test (test_uri_build_with_slot_info, "/uri/test_uri_build_with_slot_info");
 	p11_test (test_uri_parse_private_key, "/uri/test_uri_parse_private_key");
 	p11_test (test_uri_parse_secret_key, "/uri/test_uri_parse_secret_key");
 	p11_test (test_uri_parse_library_version, "/uri/test_uri_parse_library_version");

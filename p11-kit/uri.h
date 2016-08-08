@@ -59,6 +59,7 @@ typedef enum {
 typedef enum {
 	P11_KIT_URI_FOR_OBJECT =  (1 << 1),
 	P11_KIT_URI_FOR_TOKEN =   (1 << 2),
+	P11_KIT_URI_FOR_SLOT =    (1 << 5),
 	P11_KIT_URI_FOR_MODULE =  (1 << 3),
 
 	P11_KIT_URI_FOR_MODULE_WITH_VERSION =
@@ -94,6 +95,11 @@ CK_INFO_PTR         p11_kit_uri_get_module_info             (P11KitUri *uri);
 
 int                 p11_kit_uri_match_module_info           (P11KitUri *uri,
                                                              CK_INFO_PTR info);
+
+CK_SLOT_INFO_PTR    p11_kit_uri_get_slot_info               (P11KitUri *uri);
+
+int                 p11_kit_uri_match_slot_info             (P11KitUri *uri,
+                                                             CK_SLOT_INFO_PTR slot_info);
 
 CK_TOKEN_INFO_PTR   p11_kit_uri_get_token_info              (P11KitUri *uri);
 

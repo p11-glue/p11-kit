@@ -58,6 +58,9 @@ void        _p11_set_progname_unlocked                          (const char *pro
 int          p11_match_uri_module_info                          (CK_INFO_PTR one,
                                                                  CK_INFO_PTR two);
 
+int          p11_match_uri_slot_info                            (CK_SLOT_INFO_PTR  one,
+                                                                 CK_SLOT_INFO_PTR  two);
+
 int          p11_match_uri_token_info                           (CK_TOKEN_INFO_PTR one,
                                                                  CK_TOKEN_INFO_PTR two);
 

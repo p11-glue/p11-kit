@@ -90,6 +90,7 @@
  * P11KitUriType:
  * @P11_KIT_URI_FOR_OBJECT: The URI represents one or more objects
  * @P11_KIT_URI_FOR_TOKEN: The URI represents one or more tokens
+ * @P11_KIT_URI_FOR_SLOT: The URI represents one or more slots
  * @P11_KIT_URI_FOR_MODULE: The URI represents one or more modules
  * @P11_KIT_URI_FOR_MODULE_WITH_VERSION: The URI represents a module with
  *     a specific version.
@@ -141,6 +142,7 @@
 struct p11_kit_uri {
 	bool unrecognized;
 	CK_INFO module;
+	CK_SLOT_INFO slot;
 	CK_TOKEN_INFO token;
 	CK_ATTRIBUTE *attrs;
 	char *pin_source;
@@ -258,6 +260,68 @@ p11_kit_uri_match_module_info (P11KitUri *uri, CK_INFO_PTR info)
 		return 0;
 
 	return p11_match_uri_module_info (&uri->module, info);
+}
+
+/**
+ * p11_kit_uri_get_slot_info:
+ * @uri: the URI
+ *
+ * Get the <code>CK_SLOT_INFO</code> structure associated with this URI.
+ *
+ * If this is a parsed URI, then the fields corresponding to slot parts of
+ * the URI will be filled in. Any slot URI parts that were missing will have
+ * their fields filled with zeros.
+ *
+ * If the caller wishes to setup information for building a URI, then relevant
+ * fields should be filled in. Fields that should not appear as parts in the
+ * resulting URI should be filled with zeros.
+ *
+ * Returns: A pointer to the <code>CK_INFO</code> structure.
+ */
+CK_SLOT_INFO_PTR
+p11_kit_uri_get_slot_info (P11KitUri *uri)
+{
+	return_val_if_fail (uri != NULL, NULL);
+	return &uri->slot;
+}
+
+int
+p11_match_uri_slot_info (CK_SLOT_INFO_PTR one,
+			 CK_SLOT_INFO_PTR two)
+{
+	return (match_struct_string (one->slotDescription,
+				     two->slotDescription,
+				     sizeof (one->slotDescription)) &&
+		match_struct_string (one->manufacturerID,
+				     two->manufacturerID,
+				     sizeof (one->manufacturerID)));
+}
+
+/**
+ * p11_kit_uri_match_slot_info:
+ * @uri: the URI
+ * @slot_info: the structure to match against the URI
+ *
+ * Match a <code>CK_SLOT_INFO</code> structure against the slot parts of this
+ * URI.
+ *
+ * Only the fields of the <code>CK_SLOT_INFO</code> structure that are valid
+ * for use in a URI will be matched. A URI part that was not specified in the
+ * URI will match any value in the structure. If during the URI parsing any
+ * unrecognized parts were encountered then this match will fail.
+ *
+ * Returns: 1 if the URI matches, 0 if not.
+ */
+int
+p11_kit_uri_match_slot_info (P11KitUri *uri, CK_SLOT_INFO_PTR slot_info)
+{
+	return_val_if_fail (uri != NULL, 0);
+	return_val_if_fail (slot_info != NULL, 0);
+
+	if (uri->unrecognized)
+		return 0;
+
+	return p11_match_uri_slot_info (&uri->slot, slot_info);
 }
 
 /**
@@ -852,6 +916,17 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
+	if ((uri_type & P11_KIT_URI_FOR_SLOT) == P11_KIT_URI_FOR_SLOT) {
+		if (!format_struct_string (&buffer, &is_first, "slot-description",
+		                           uri->slot.slotDescription,
+		                           sizeof (uri->slot.slotDescription)) ||
+		    !format_struct_string (&buffer, &is_first, "slot-manufacturer",
+		                           uri->slot.manufacturerID,
+		                           sizeof (uri->slot.manufacturerID))) {
+			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+		}
+	}
+
 	if ((uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN) {
 		if (!format_struct_string (&buffer, &is_first, "model",
 		                           uri->token.model,
@@ -1078,6 +1153,30 @@ parse_struct_version (const char *start, const char *end, CK_VERSION_PTR version
 }
 
 static int
+parse_slot_info (const char *name_start, const char *name_end,
+                 const char *start, const char *end,
+                 P11KitUri *uri)
+{
+	unsigned char *where;
+	size_t length;
+
+	assert (name_start <= name_end);
+	assert (start <= end);
+
+	if (memcmp ("slot-description", name_start, name_end - name_start) == 0) {
+		where = uri->slot.slotDescription;
+		length = sizeof (uri->slot.slotDescription);
+	} else if (memcmp ("slot-manufacturer", name_start, name_end - name_start) == 0) {
+		where = uri->slot.manufacturerID;
+		length = sizeof (uri->slot.manufacturerID);
+	} else {
+		return 0;
+	}
+
+	return parse_struct_info (where, length, start, end, uri);
+}
+
+static int
 parse_module_version_info (const char *name_start, const char *name_end,
 			   const char *start, const char *end,
 			   P11KitUri *uri)
@@ -1239,6 +1338,8 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 			ret = parse_class_attribute (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN)
 			ret = parse_token_info (string, epos, epos + 1, spos, uri);
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_SLOT) == P11_KIT_URI_FOR_SLOT)
+			ret = parse_slot_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE)
 			ret = parse_module_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION)
