@@ -1396,6 +1396,51 @@ test_uri_pin_value_bad (void)
 }
 
 static void
+test_uri_slot_id (void)
+{
+	P11KitUri *uri;
+	CK_SLOT_ID slot_id;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	p11_kit_uri_set_slot_id (uri, 12345);
+
+	slot_id = p11_kit_uri_get_slot_id (uri);
+	assert_num_eq (12345, slot_id);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "pkcs11:slot-id=12345") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:slot-id=67890", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	slot_id = p11_kit_uri_get_slot_id (uri);
+	assert_num_eq (67890, slot_id);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_slot_id_bad (void)
+{
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:slot-id=123^456", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_BAD_SYNTAX, ret);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_free_null (void)
 {
 	p11_kit_uri_free (NULL);
@@ -1458,6 +1503,8 @@ main (int argc,
 	p11_test (test_uri_pin_source, "/uri/test_uri_pin_source");
 	p11_test (test_uri_pin_value, "/uri/pin-value");
 	p11_test (test_uri_pin_value_bad, "/uri/pin-value-bad");
+	p11_test (test_uri_slot_id, "/uri/slot-id");
+	p11_test (test_uri_slot_id_bad, "/uri/slot-id-bad");
 	p11_test (test_uri_free_null, "/uri/test_uri_free_null");
 	p11_test (test_uri_message, "/uri/test_uri_message");
 

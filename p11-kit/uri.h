@@ -101,6 +101,10 @@ CK_SLOT_INFO_PTR    p11_kit_uri_get_slot_info               (P11KitUri *uri);
 int                 p11_kit_uri_match_slot_info             (P11KitUri *uri,
                                                              CK_SLOT_INFO_PTR slot_info);
 
+CK_SLOT_ID          p11_kit_uri_get_slot_id                 (P11KitUri *uri);
+void                p11_kit_uri_set_slot_id                 (P11KitUri *uri,
+                                                             CK_SLOT_ID slot_id);
+
 CK_TOKEN_INFO_PTR   p11_kit_uri_get_token_info              (P11KitUri *uri);
 
 int                 p11_kit_uri_match_token_info            (P11KitUri *uri,

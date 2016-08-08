@@ -147,6 +147,7 @@ struct p11_kit_uri {
 	CK_ATTRIBUTE *attrs;
 	char *pin_source;
 	char *pin_value;
+	CK_SLOT_ID slot_id;
 };
 
 static char *
@@ -322,6 +323,36 @@ p11_kit_uri_match_slot_info (P11KitUri *uri, CK_SLOT_INFO_PTR slot_info)
 		return 0;
 
 	return p11_match_uri_slot_info (&uri->slot, slot_info);
+}
+
+/**
+ * p11_kit_uri_get_slot_id:
+ * @uri: The URI
+ *
+ * Get the 'slot-id' part of the URI.
+ *
+ * Returns: The slot-id or <code>(CK_SLOT_ID)-1</code> if not set.
+ */
+CK_SLOT_ID
+p11_kit_uri_get_slot_id (P11KitUri *uri)
+{
+	return_val_if_fail (uri != NULL, (CK_SLOT_ID)-1);
+	return uri->slot_id;
+}
+
+/**
+ * p11_kit_uri_set_slot_id:
+ * @uri: The URI
+ * @slot_id: The new slot-id
+ *
+ * Set the 'slot-id' part of the URI.
+ */
+void
+p11_kit_uri_set_slot_id (P11KitUri  *uri,
+			 CK_SLOT_ID  slot_id)
+{
+	return_if_fail (uri != NULL);
+	uri->slot_id = slot_id;
 }
 
 /**
@@ -717,6 +748,7 @@ p11_kit_uri_new (void)
 	/* So that it matches anything */
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
+	uri->slot_id = (CK_SLOT_ID)-1;
 
 	return uri;
 }
@@ -855,6 +887,22 @@ format_struct_version (p11_buffer *buffer,
 	return format_raw_string (buffer, is_first, name, buf);
 }
 
+static bool
+format_ulong (p11_buffer *buffer,
+	      bool *is_first,
+	      const char *name,
+	      CK_ULONG value)
+{
+	char buf[64];
+
+	/* Not set */
+	if (value == (CK_ULONG)-1)
+		return true;
+
+	snprintf (buf, sizeof (buf), "%lu", value);
+	return format_raw_string (buffer, is_first, name, buf);
+}
+
 /**
  * p11_kit_uri_format:
  * @uri: The URI.
@@ -922,7 +970,9 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		                           sizeof (uri->slot.slotDescription)) ||
 		    !format_struct_string (&buffer, &is_first, "slot-manufacturer",
 		                           uri->slot.manufacturerID,
-		                           sizeof (uri->slot.manufacturerID))) {
+		                           sizeof (uri->slot.manufacturerID)) ||
+		    !format_ulong (&buffer, &is_first, "slot-id",
+				   uri->slot_id)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1106,10 +1156,10 @@ parse_token_info (const char *name_start, const char *name_end,
 	return parse_struct_info (where, length, start, end, uri);
 }
 
-static int
+static long
 atoin (const char *start, const char *end)
 {
-	int ret = 0;
+	long ret = 0;
 	while (start != end) {
 		if (*start < '0' || *start > '9')
 			return -1;
@@ -1174,6 +1224,25 @@ parse_slot_info (const char *name_start, const char *name_end,
 	}
 
 	return parse_struct_info (where, length, start, end, uri);
+}
+
+static int
+parse_slot_id (const char *name_start, const char *name_end,
+	       const char *start, const char *end,
+	       P11KitUri *uri)
+{
+	assert (name_start <= name_end);
+	assert (start <= end);
+
+	if (memcmp ("slot-id", name_start, name_end - name_start) == 0) {
+		long val;
+		val = atoin (start, end);
+		if (val < 0)
+			return P11_KIT_URI_BAD_SYNTAX;
+		uri->slot_id = (CK_SLOT_ID)val;
+		return 1;
+	}
+	return 0;
 }
 
 static int
@@ -1315,6 +1384,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->pin_source = NULL;
 	free (uri->pin_value);
 	uri->pin_value = NULL;
+	uri->slot_id = (CK_SLOT_ID)-1;
 
 	for (;;) {
 		spos = strchr (string, ';');
@@ -1340,6 +1410,8 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 			ret = parse_token_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_SLOT) == P11_KIT_URI_FOR_SLOT)
 			ret = parse_slot_info (string, epos, epos + 1, spos, uri);
+		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_SLOT) == P11_KIT_URI_FOR_SLOT)
+			ret = parse_slot_id (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE)
 			ret = parse_module_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION)
