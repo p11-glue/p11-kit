@@ -110,11 +110,11 @@ $(builddir)/p11-kit-overrides.txt: $(srcdir)/p11-kit-overrides.txt
 
 # Generate our files with variables
 sysdir.xml:
-	$(AM_V_GEN) echo -n $(p11_system_config) > "$@"
+	$(AM_V_GEN) echo -n '$(p11_system_config)' > "$@"
 userdir.xml:
-	$(AM_V_GEN) echo -n $(p11_user_config) > "$@"
+	$(AM_V_GEN) echo -n '$(p11_user_config)' > "$@"
 version.xml:
-	$(AM_V_GEN) echo -n $(VERSION) > "$@"
+	$(AM_V_GEN) echo -n '$(VERSION)' > "$@"
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/build/gtk-doc.make
@@ -158,6 +158,7 @@ MAN_IN_FILES = \
 	$(NULL)
 
 CLEANFILES += \
+	$(generate_files) \
 	$(man1_MANS) \
 	$(man5_MANS) \
 	$(man8_MANS) \
@@ -165,7 +166,4 @@ CLEANFILES += \
 
 EXTRA_DIST += \
 	$(MAN_IN_FILES) \
-	sysdir.xml \
-	userdir.xml \
-	version.xml \
 	$(NULL)
