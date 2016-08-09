@@ -243,7 +243,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 <refsect1 id="config-locations">
 	<title>Configuration Files</title>
 
-	<para>Each configured PKCS#11 module is has its own config file. These
+	<para>Each configured PKCS#11 module has its own config file. These
 	files are placed in a directory. In addition a global config file exists.
 	There is a system configuration consisting of the various module config
 	files and a file for global configuration. Optionally each user can provide
