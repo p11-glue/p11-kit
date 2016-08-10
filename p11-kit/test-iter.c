@@ -767,6 +767,80 @@ test_slot_mismatch (void)
 }
 
 static void
+test_slot_match_by_id (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	char *string;
+	CK_RV rv;
+	int count;
+	int ret;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	ret = asprintf (&string, "pkcs11:slot-id=%lu", MOCK_SLOT_ONE_ID);
+	assert (ret > 0);
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_SLOT, uri);
+	free (string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	iter = p11_kit_iter_new (uri, 0);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK)
+		count++;
+
+	assert (rv == CKR_CANCEL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	assert_num_eq (9, count);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
+test_slot_mismatch_by_id (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	CK_RV rv;
+	int count;
+	int ret;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	ret = p11_kit_uri_parse ("pkcs11:slot-id=0", P11_KIT_URI_FOR_SLOT, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	iter = p11_kit_iter_new (uri, 0);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK)
+		count++;
+
+	assert (rv == CKR_CANCEL);
+
+	/* Nothing should have matched */
+	assert_num_eq (0, count);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
 test_slot_info (void)
 {
 	CK_FUNCTION_LIST_PTR *modules;
@@ -1415,6 +1489,8 @@ main (int argc,
 	p11_test (test_token_info, "/iter/token-info");
 	p11_test (test_slot_match, "/iter/test_slot_match");
 	p11_test (test_slot_mismatch, "/iter/test_slot_mismatch");
+	p11_test (test_slot_match_by_id, "/iter/test_slot_match_by_id");
+	p11_test (test_slot_mismatch_by_id, "/iter/test_slot_mismatch_by_id");
 	p11_test (test_slot_info, "/iter/slot-info");
 	p11_test (test_module_match, "/iter/test_module_match");
 	p11_test (test_module_mismatch, "/iter/test_module_mismatch");

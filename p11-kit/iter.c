@@ -64,6 +64,7 @@ struct p11_kit_iter {
 	CK_SLOT_INFO match_slot;
 	CK_TOKEN_INFO match_token;
 	CK_ATTRIBUTE *match_attrs;
+	CK_SLOT_ID match_slot_id;
 	Callback *callbacks;
 
 	/* The input modules */
@@ -181,6 +182,8 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 			attrs = p11_kit_uri_get_attributes (uri, &count);
 			iter->match_attrs = p11_attrs_buildn (NULL, attrs, count);
 
+			iter->match_slot_id = p11_kit_uri_get_slot_id (uri);
+
 			minfo = p11_kit_uri_get_module_info (uri);
 			if (minfo != NULL)
 				memcpy (&iter->match_module, minfo, sizeof (CK_INFO));
@@ -194,10 +197,11 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 				memcpy (&iter->match_token, tinfo, sizeof (CK_TOKEN_INFO));
 		}
 	} else {
-		/* Match any module version number*/
+		/* Match any module version number and slot ID */
 		memset (&iter->match_module, 0, sizeof (iter->match_module));
 		iter->match_module.libraryVersion.major = (CK_BYTE)-1;
 		iter->match_module.libraryVersion.minor = (CK_BYTE)-1;
+		iter->match_slot_id = (CK_SLOT_ID)-1;
 	}
 }
 
@@ -513,6 +517,8 @@ move_next_session (P11KitIter *iter)
 		iter->slot = iter->slots[iter->saw_slots++];
 
 		assert (iter->module != NULL);
+		if (iter->match_slot_id != (CK_SLOT_ID)-1 && iter->slot != iter->match_slot_id)
+			continue;
 		rv = (iter->module->C_GetSlotInfo) (iter->slot, &iter->slot_info);
 		if (rv != CKR_OK || !p11_match_uri_slot_info (&iter->match_slot, &iter->slot_info))
 			continue;
