@@ -88,6 +88,8 @@ CK_FUNCTION_LIST_PTR  p11_kit_iter_get_module               (P11KitIter *iter);
 
 CK_SLOT_ID            p11_kit_iter_get_slot                 (P11KitIter *iter);
 
+CK_SLOT_INFO *        p11_kit_iter_get_slot_info            (P11KitIter *iter);
+
 CK_TOKEN_INFO *       p11_kit_iter_get_token                (P11KitIter *iter);
 
 CK_SESSION_HANDLE     p11_kit_iter_get_session              (P11KitIter *iter);

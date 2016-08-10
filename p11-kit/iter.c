@@ -61,6 +61,7 @@ struct p11_kit_iter {
 
 	/* Iterator matching data */
 	CK_INFO match_module;
+	CK_SLOT_INFO match_slot;
 	CK_TOKEN_INFO match_token;
 	CK_ATTRIBUTE *match_attrs;
 	Callback *callbacks;
@@ -84,6 +85,7 @@ struct p11_kit_iter {
 	CK_SLOT_ID slot;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
+	CK_SLOT_INFO slot_info;
 	CK_TOKEN_INFO token_info;
 
 	/* And various flags */
@@ -164,6 +166,7 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 {
 	CK_ATTRIBUTE *attrs;
 	CK_TOKEN_INFO *tinfo;
+	CK_SLOT_INFO *sinfo;
 	CK_INFO *minfo;
 	CK_ULONG count;
 
@@ -181,6 +184,10 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 			minfo = p11_kit_uri_get_module_info (uri);
 			if (minfo != NULL)
 				memcpy (&iter->match_module, minfo, sizeof (CK_INFO));
+
+			sinfo = p11_kit_uri_get_slot_info (uri);
+			if (sinfo != NULL)
+				memcpy (&iter->match_slot, sinfo, sizeof (CK_SLOT_INFO));
 
 			tinfo = p11_kit_uri_get_token_info (uri);
 			if (tinfo != NULL)
@@ -506,6 +513,9 @@ move_next_session (P11KitIter *iter)
 		iter->slot = iter->slots[iter->saw_slots++];
 
 		assert (iter->module != NULL);
+		rv = (iter->module->C_GetSlotInfo) (iter->slot, &iter->slot_info);
+		if (rv != CKR_OK || !p11_match_uri_slot_info (&iter->match_slot, &iter->slot_info))
+			continue;
 		rv = (iter->module->C_GetTokenInfo) (iter->slot, &iter->token_info);
 		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &iter->token_info))
 			continue;
@@ -672,6 +682,23 @@ p11_kit_iter_get_slot (P11KitIter *iter)
 	return_val_if_fail (iter != NULL, 0);
 	return_val_if_fail (iter->iterating, 0);
 	return iter->slot;
+}
+
+/**
+ * p11_kit_iter_get_slot_info:
+ * @iter: the iterator
+ *
+ * Get the slot info for the slot which the current matching object is on.
+ *
+ * This can only be called after p11_kit_iter_next() succeeds.
+ *
+ * Returns: the slot of the current matching object.
+ */
+CK_SLOT_INFO *
+p11_kit_iter_get_slot_info (P11KitIter *iter)
+{
+	return_val_if_fail (iter != NULL, NULL);
+	return &iter->slot_info;
 }
 
 /**
