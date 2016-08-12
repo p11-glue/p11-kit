@@ -1288,7 +1288,7 @@ build_trust_object_eku (CK_ATTRIBUTE *object,
 	else
 		neutral = allow;
 
-	/* The value set if a purpose is explictly rejected */
+	/* The value set if a purpose is explicitly rejected */
 	disallow = CKT_NSS_NOT_TRUSTED;
 
 	for (i = 0; eku_attribute_map[i].type != CKA_INVALID; i++) {

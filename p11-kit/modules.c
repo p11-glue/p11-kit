@@ -745,7 +745,7 @@ finalize_module_inlock_reentrant (Module *mod)
 		return CKR_OK;
 
 	/*
-	 * Becuase of the mutex unlock below, we temporarily increase
+	 * Because of the mutex unlock below, we temporarily increase
 	 * the ref count. This prevents module from being freed out
 	 * from ounder us.
 	 */
@@ -1951,7 +1951,7 @@ p11_modules_load_inlock_reentrant (int flags,
  * If @flags contains the %P11_KIT_MODULE_CRITICAL flag then the
  * modules will all be treated as 'critical', regardless of the module
  * configuration. This means that a failure to load any module will
- * cause this funtion to fail.
+ * cause this function to fail.
  *
  * For unmanaged modules there is no guarantee to the state of the
  * modules. Other callers may be using the modules. Using unmanaged

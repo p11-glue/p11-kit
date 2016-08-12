@@ -502,7 +502,7 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	int ret;
 
 	/*
-	 * This OpenSSL format is a wierd. It's just two DER structures
+	 * This OpenSSL format is weird. It's just two DER structures
 	 * placed end to end without any wrapping SEQ. So calculate the
 	 * length of the first DER TLV we see and try to parse that as
 	 * the X.509 certificate.

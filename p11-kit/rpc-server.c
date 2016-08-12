@@ -862,7 +862,7 @@ rpc_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 {
 	CK_SLOT_ID slot_id;
 
-	/* Slot id becomes appartment so lower layers can tell clients apart. */
+	/* Slot id becomes apartment so lower layers can tell clients apart. */
 
 	BEGIN_CALL (CloseAllSessions);
 		IN_ULONG (slot_id);

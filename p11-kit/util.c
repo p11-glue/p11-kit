@@ -57,7 +57,7 @@
  * @title: Future
  * @short_description: Future Unstable API
  *
- * API that is not yet stable enough to be enabled by default. In all likelyhood
+ * API that is not yet stable enough to be enabled by default. In all likelihood
  * this will be included in the next release. To use this API you must define a
  * MACRO. See the p11-kit.h header for more details.
  */

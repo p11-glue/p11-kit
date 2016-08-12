@@ -103,7 +103,7 @@ struct p11_kit_iter {
  * @P11_KIT_ITER_WANT_WRITABLE: Try to open read-write sessions when
  *   iterating over obojects.
  *
- * Various flags controling the behavior of the iterator.
+ * Various flags controlling the behavior of the iterator.
  */
 
 /**
@@ -680,7 +680,7 @@ p11_kit_iter_get_slot (P11KitIter *iter)
  *
  * Get the token info for the token which the current matching object is on.
  *
- * This can only be called after p11_kit_iter_next(0 succeeds.
+ * This can only be called after p11_kit_iter_next() succeeds.
  *
  * Returns: the slot of the current matching object.
  */
@@ -732,9 +732,9 @@ p11_kit_iter_get_object (P11KitIter *iter)
 
 /**
  * p11_kit_iter_destroy_object:
- * @iter: teh iterator
+ * @iter: the iterator
  *
- * Destory the current matching object.
+ * Destroy the current matching object.
  *
  * This can only be called after p11_kit_iter_next() succeeds.
  *
