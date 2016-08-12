@@ -1480,6 +1480,8 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 		else
 			rv = initialize_module_inlock_reentrant (managed->mod);
 		if (rv == CKR_OK) {
+			if (managed->sessions)
+				p11_dict_free (managed->sessions);
 			managed->sessions = sessions;
 			managed->initialized = p11_forkid;
 		} else {

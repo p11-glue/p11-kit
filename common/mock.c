@@ -422,9 +422,12 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 		/* We store CK_ULONG as pointers here, so verify that they fit */
 		assert (sizeof (CK_ULONG) <= sizeof (void *));
 
+		free (the_pin);
 		the_pin = (CK_UTF8CHAR_PTR)strdup ("booo");
 		n_the_pin = 4;
 
+		if (the_sessions)
+			p11_dict_free (the_sessions);
 		the_sessions = p11_dict_new (p11_dict_direct_hash,
 		                             p11_dict_direct_equal,
 		                             NULL, free_session);
