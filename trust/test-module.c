@@ -221,13 +221,14 @@ test_multi_initialize (void)
 	rv = C_GetFunctionList (&module);
 	assert_num_eq (rv, CKR_OK);
 
+	args.pReserved = "paths='" SYSCONFDIR "/trust/input'";
 	rv = module->C_Initialize (&args);
 	assert_num_eq (rv, CKR_OK);
 
 	count = 8;
 	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
 	assert_num_eq (rv, CKR_OK);
-	assert_num_cmp (count, >, 0);
+	assert_num_cmp (count, ==, 1);
 
 	rv = module->C_OpenSession (slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
 	assert_num_eq (rv, CKR_OK);
