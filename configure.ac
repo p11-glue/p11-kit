@@ -111,6 +111,9 @@ if test "$os_unix" = "yes"; then
 		[AC_DEFINE(HAVE___PROGNAME, [1], [Whether __progname available])])
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int __libc_enable_secure;]], [[__libc_enable_secure = 0;]])],
 		[AC_DEFINE(HAVE___LIBC_ENABLE_SECURE, [1], [Whether __libc_enable_secure available])])
+	AC_CHECK_TYPES([sighandler_t, sig_t, __sighandler_t], [], [],
+		[[#include <sys/types.h>
+		  #include <signal.h>]])
 fi
 
 # These are thngs we can work around
