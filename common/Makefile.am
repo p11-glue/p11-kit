@@ -41,6 +41,12 @@ libp11_tool_la_SOURCES = \
 	common/tool.c common/tool.h \
 	$(NULL)
 
+if !OS_WIN32
+libp11_tool_la_SOURCES += \
+	common/unix-peer.c common/unix-peer.h \
+	$(NULL)
+endif
+
 # Tests ----------------------------------------------------------------
 
 common_LIBS = \
