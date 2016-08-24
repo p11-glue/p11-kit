@@ -43,8 +43,11 @@
 #include "p11-kit.h"
 #include "rpc.h"
 
+#include <errno.h>
 #include <sys/types.h>
 #ifdef OS_UNIX
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #endif
 #include <stdlib.h>
@@ -54,6 +57,9 @@ struct {
 	char *directory;
 	char *user_config;
 	char *user_modules;
+#ifdef OS_UNIX
+	pid_t pid;
+#endif
 } test;
 
 static void
@@ -136,6 +142,113 @@ teardown_mock_module (CK_FUNCTION_LIST *module)
 	p11_kit_module_release (module);
 	teardown_remote (NULL);
 }
+
+#ifdef OS_UNIX
+
+static void
+launch_server (void)
+{
+	int fd, nfd, rc;
+	socklen_t sa_len;
+	struct sockaddr_un sa;
+	fd_set fds;
+	char *argv[3];
+
+	memset (&sa, 0, sizeof (sa));
+	sa.sun_family = AF_UNIX;
+
+	snprintf (sa.sun_path, sizeof (sa.sun_path), "%s/pkcs11",
+		  test.directory);
+
+	remove (sa.sun_path);
+	fd = socket (AF_UNIX, SOCK_STREAM, 0);
+	assert_num_cmp (fd, !=, -1);
+
+	rc = bind (fd, (struct sockaddr *)&sa, SUN_LEN (&sa));
+	assert_num_cmp (rc, !=, -1);
+
+	rc = listen (fd, 1024);
+	assert_num_cmp (rc, !=, -1);
+
+	FD_ZERO (&fds);
+	FD_SET (fd, &fds);
+	rc = select (fd + 1, &fds, NULL, NULL, NULL);
+	assert_num_cmp (rc, !=, -1);
+
+	assert (FD_ISSET (fd, &fds));
+
+	nfd = accept (fd, (struct sockaddr *)&sa, &sa_len);
+	assert_num_cmp (rc, !=, -1);
+	close (fd);
+
+	rc = dup2 (nfd, STDIN_FILENO);
+	assert_num_cmp (rc, !=, -1);
+
+	rc = dup2 (nfd, STDOUT_FILENO);
+	assert_num_cmp (rc, !=, -1);
+
+	argv[0] = "p11-kit-remote";
+	argv[1] = BUILDDIR "/.libs/mock-two.so";
+	argv[2] = NULL;
+
+	rc = execv (BUILDDIR "/p11-kit-remote", argv);
+	assert_num_cmp (rc, !=, -1);
+}
+
+static void
+setup_remote_unix (void *unused)
+{
+	char *data;
+	char *path;
+	pid_t pid;
+
+	test.directory = p11_test_directory ("p11-test-config");
+	test.user_modules = p11_path_build (test.directory, "modules", NULL);
+	if (mkdir (test.user_modules, 0700) < 0)
+		assert_not_reached ();
+
+	data = "user-config: only\n";
+	test.user_config = p11_path_build (test.directory, "pkcs11.conf", NULL);
+	p11_test_file_write (NULL, test.user_config, data, strlen (data));
+
+	pid = fork ();
+	switch (pid) {
+	case -1:
+		assert_not_reached ();
+		break;
+	case 0:
+		launch_server ();
+		exit (0);
+		break;
+	default:
+		test.pid = pid;
+	}
+
+	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
+
+	if (asprintf (&path, "%s/pkcs11", test.directory) < 0)
+		assert_not_reached ();
+	data = p11_path_encode (path);
+	assert_ptr_not_null (data);
+	free (path);
+	path = data;
+	if (asprintf (&data, "remote: unix:path=%s\n", path) < 0)
+		assert_not_reached ();
+	free (path);
+	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
+	free (data);
+
+	p11_config_user_modules = test.user_modules;
+	p11_config_user_file = test.user_config;
+}
+
+static void
+teardown_remote_unix (void *unused)
+{
+	kill (test.pid, SIGKILL);
+}
+
+#endif /* OS_UNIX */
 
 static void
 test_basic_exec (void)
@@ -314,6 +427,11 @@ main (int argc,
 #endif
 
 	test_mock_add_tests ("/transport");
+
+#ifdef OS_UNIX
+	p11_fixture (setup_remote_unix, teardown_remote_unix);
+	p11_test (test_basic_exec, "/transport/unix/basic");
+#endif
 
 	return  p11_test_run (argc, argv);
 }
