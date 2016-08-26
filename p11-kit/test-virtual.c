@@ -162,7 +162,6 @@ main (int argc,
 	mock_module_init ();
 	p11_library_init ();
 
-	assert (p11_virtual_can_wrap ());
 	p11_test (test_initialize, "/virtual/test_initialize");
 	p11_test (test_fall_through, "/virtual/test_fall_through");
 	p11_test (test_get_function_list, "/virtual/test_get_function_list");

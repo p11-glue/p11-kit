@@ -193,17 +193,6 @@ if test "$with_libffi" != "no"; then
 	AC_SUBST(LIBFFI_CFLAGS)
 	AC_SUBST(LIBFFI_LIBS)
 
-	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS $LIBFFI_CFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <ffi.h>],
-	                  [ #if FFI_CLOSURES
-	                    #else
-	                    #error no closures
-	                    #endif
-	                  ])],
-	[], [AC_MSG_ERROR([the libffi on this system has no support for closures.])])
-	CFLAGS="$SAVE_CFLAGS"
-
 	with_libffi="yes"
 fi
 

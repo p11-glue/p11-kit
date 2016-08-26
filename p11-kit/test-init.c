@@ -402,16 +402,14 @@ main (int argc,
 	p11_library_init ();
 
 	/* These only work when managed */
-	if (p11_virtual_can_wrap ()) {
-		p11_test (test_recursive_initialization, "/init/test_recursive_initialization");
-		p11_test (test_threaded_initialization, "/init/test_threaded_initialization");
-		p11_test (test_mutexes, "/init/test_mutexes");
-		p11_test (test_load_and_initialize, "/init/test_load_and_initialize");
+	p11_test (test_recursive_initialization, "/init/test_recursive_initialization");
+	p11_test (test_threaded_initialization, "/init/test_threaded_initialization");
+	p11_test (test_mutexes, "/init/test_mutexes");
+	p11_test (test_load_and_initialize, "/init/test_load_and_initialize");
 
 #ifdef OS_UNIX
-		p11_test (test_fork_initialization, "/init/test_fork_initialization");
+	p11_test (test_fork_initialization, "/init/test_fork_initialization");
 #endif
-	}
 
 	p11_test (test_initalize_fail, "/init/test_initalize_fail");
 	p11_test (test_finalize_fail, "/init/test_finalize_fail");

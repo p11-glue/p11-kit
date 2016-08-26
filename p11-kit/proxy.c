@@ -2365,7 +2365,7 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 		}
 	}
 
-	if (rv == CKR_OK && p11_virtual_can_wrap ()) {
+	if (rv == CKR_OK) {
 		state = calloc (1, sizeof (State));
 		if (!state) {
 			rv = CKR_HOST_MEMORY;

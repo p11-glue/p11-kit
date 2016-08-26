@@ -45,6 +45,7 @@
 #include "p11-kit.h"
 #include "private.h"
 #include "proxy.h"
+#include "virtual.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -251,6 +252,7 @@ void
 _p11_kit_init (void)
 {
 	p11_library_init_once ();
+	p11_virtual_init_fixed ();
 }
 
 #ifdef __GNUC__
@@ -260,6 +262,7 @@ void
 _p11_kit_fini (void)
 {
 	p11_proxy_module_cleanup ();
+	p11_virtual_uninit_fixed ();
 	p11_library_uninit ();
 }
 
@@ -277,12 +280,14 @@ DllMain (HINSTANCE instance,
 	switch (reason) {
 	case DLL_PROCESS_ATTACH:
 		p11_library_init ();
+		p11_virtual_init_fixed ();
 		break;
 	case DLL_THREAD_DETACH:
 		p11_library_thread_cleanup ();
 		break;
 	case DLL_PROCESS_DETACH:
 		p11_proxy_module_cleanup ();
+		p11_virtual_uninit_fixed ();
 		p11_library_uninit ();
 		break;
 	default:

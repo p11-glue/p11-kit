@@ -40,13 +40,14 @@
 #include "debug.h"
 #include "library.h"
 #include "virtual.h"
+#include "virtual-fixed.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WITH_FFI
+#if defined(WITH_FFI) && WITH_FFI
 
 /*
  * We use libffi to build closures. Note that even with libffi certain
@@ -62,8 +63,6 @@
 #define LIBFFI_FREE_CLOSURES 0
 
 #include "ffi.h"
-#ifndef FFI_CLOSURES
-#error "FFI_CLOSURES should be checked in configure.ac"
 #endif
 
 /* There are 66 functions in PKCS#11, with a maximum of 8 args */
@@ -78,11 +77,46 @@ typedef struct {
 	p11_virtual *virt;
 	p11_destroyer destroyer;
 
+#if defined(FFI_CLOSURES) && FFI_CLOSURES
 	/* A list of our libffi built closures, for cleanup later */
 	ffi_closure *ffi_closures[MAX_FUNCTIONS];
 	ffi_cif ffi_cifs[MAX_FUNCTIONS];
 	int ffi_used;
+#endif	/* FFI_CLOSURES */
+
+	/* The index in fixed_closures, or -1 when libffi closures are used */
+	int fixed_index;
 } Wrapper;
+
+static p11_mutex_t fixed_mutex;
+static CK_FUNCTION_LIST *fixed_closures[P11_VIRTUAL_MAX_FIXED];
+
+static Wrapper          *create_fixed_wrapper   (p11_virtual         *virt,
+                                                 size_t               index,
+                                                 p11_destroyer        destroyer);
+static CK_FUNCTION_LIST *
+                         p11_virtual_wrap_fixed (p11_virtual         *virt,
+                                                 p11_destroyer        destroyer);
+static void
+                         p11_virtual_unwrap_fixed
+                                                (CK_FUNCTION_LIST_PTR module);
+
+void
+p11_virtual_init_fixed (void)
+{
+	p11_lock ();
+	p11_mutex_init (&fixed_mutex);
+	memset (fixed_closures, 0, sizeof (fixed_closures));
+	p11_unlock ();
+}
+
+void
+p11_virtual_uninit_fixed (void)
+{
+	p11_lock ();
+	p11_mutex_uninit (&fixed_mutex);
+	p11_unlock ();
+}
 
 static CK_RV
 short_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
@@ -95,6 +129,8 @@ short_C_CancelFunction (CK_SESSION_HANDLE handle)
 {
 	return CKR_FUNCTION_NOT_PARALLEL;
 }
+
+#if defined(FFI_CLOSURES) && FFI_CLOSURES
 
 static void
 binding_C_GetFunctionList (ffi_cif *cif,
@@ -930,7 +966,7 @@ binding_C_GenerateRandom (ffi_cif *cif,
 	                                *(CK_ULONG *)args[2]);
 }
 
-#endif /* WITH_FFI */
+#endif /* FFI_CLOSURES */
 
 static CK_RV
 stack_C_Initialize (CK_X_FUNCTION_LIST *self,
@@ -2494,16 +2530,12 @@ p11_virtual_uninit (p11_virtual *virt)
 		(virt->lower_destroy) (virt->lower_module);
 }
 
-#ifdef WITH_FFI
-
 typedef struct {
 	const char *name;
-	void *binding_function;
 	void *stack_fallback;
 	size_t virtual_offset;
 	void *base_fallback;
 	size_t module_offset;
-	ffi_type *types[MAX_ARGS];
 } FunctionInfo;
 
 #define STRUCT_OFFSET(struct_type, member) \
@@ -2514,77 +2546,77 @@ typedef struct {
 	(*(member_type*) STRUCT_MEMBER_P ((struct_p), (struct_offset)))
 
 #define FUNCTION(name) \
-	#name, binding_C_##name, \
+	#name, \
 	stack_C_##name, STRUCT_OFFSET (CK_X_FUNCTION_LIST, C_##name), \
 	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST, C_##name)
 
 static const FunctionInfo function_info[] = {
-	{ FUNCTION (Initialize), { &ffi_type_pointer, NULL } },
-	{ FUNCTION (Finalize), { &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetInfo), { &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetSlotList), { &ffi_type_uchar, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetSlotInfo), { &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetTokenInfo), { &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (WaitForSlotEvent), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetMechanismList), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetMechanismInfo), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (InitToken), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (InitPIN), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (SetPIN), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (OpenSession), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (CloseSession), { &ffi_type_ulong, NULL } },
-	{ FUNCTION (CloseAllSessions), { &ffi_type_ulong, NULL } },
-	{ FUNCTION (GetSessionInfo), { &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetOperationState), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SetOperationState), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_ulong, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Login), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Logout), { &ffi_type_ulong, NULL } },
-	{ FUNCTION (CreateObject), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (CopyObject), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DestroyObject), { &ffi_type_ulong, &ffi_type_ulong, NULL } },
-	{ FUNCTION (GetObjectSize), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GetAttributeValue), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (SetAttributeValue), { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (FindObjectsInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (FindObjects), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (FindObjectsFinal), { &ffi_type_ulong, NULL } },
-	{ FUNCTION (EncryptInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Encrypt), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (EncryptUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (EncryptFinal), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DecryptInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Decrypt), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DecryptUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DecryptFinal), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DigestInit), { &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (Digest), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DigestUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (DigestKey), { &ffi_type_ulong, &ffi_type_ulong, NULL } },
-	{ FUNCTION (DigestFinal), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SignInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Sign), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SignUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (SignFinal), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SignRecoverInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (SignRecover), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (VerifyInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (Verify), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (VerifyUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (VerifyFinal), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (VerifyRecoverInit), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (VerifyRecover), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DigestEncryptUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DecryptDigestUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SignEncryptUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DecryptVerifyUpdate), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GenerateKey), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (GenerateKeyPair), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (WrapKey), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-	{ FUNCTION (UnwrapKey), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (DeriveKey), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
-	{ FUNCTION (SeedRandom), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ FUNCTION (GenerateRandom), { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-	{ 0, }
+        { FUNCTION (Initialize) },
+        { FUNCTION (Finalize) },
+        { FUNCTION (GetInfo) },
+        { FUNCTION (GetSlotList) },
+        { FUNCTION (GetSlotInfo) },
+        { FUNCTION (GetTokenInfo) },
+        { FUNCTION (GetMechanismList) },
+        { FUNCTION (GetMechanismInfo) },
+        { FUNCTION (InitToken) },
+        { FUNCTION (InitPIN) },
+        { FUNCTION (SetPIN) },
+        { FUNCTION (OpenSession) },
+        { FUNCTION (CloseSession) },
+        { FUNCTION (CloseAllSessions) },
+        { FUNCTION (GetSessionInfo) },
+        { FUNCTION (GetOperationState) },
+        { FUNCTION (SetOperationState) },
+        { FUNCTION (Login) },
+        { FUNCTION (Logout) },
+        { FUNCTION (CreateObject) },
+        { FUNCTION (CopyObject) },
+        { FUNCTION (DestroyObject) },
+        { FUNCTION (GetObjectSize) },
+        { FUNCTION (GetAttributeValue) },
+        { FUNCTION (SetAttributeValue) },
+        { FUNCTION (FindObjectsInit) },
+        { FUNCTION (FindObjects) },
+        { FUNCTION (FindObjectsFinal) },
+        { FUNCTION (EncryptInit) },
+        { FUNCTION (Encrypt) },
+        { FUNCTION (EncryptUpdate) },
+        { FUNCTION (EncryptFinal) },
+        { FUNCTION (DecryptInit) },
+        { FUNCTION (Decrypt) },
+        { FUNCTION (DecryptUpdate) },
+        { FUNCTION (DecryptFinal) },
+        { FUNCTION (DigestInit) },
+        { FUNCTION (Digest) },
+        { FUNCTION (DigestUpdate) },
+        { FUNCTION (DigestKey) },
+        { FUNCTION (DigestFinal) },
+        { FUNCTION (SignInit) },
+        { FUNCTION (Sign) },
+        { FUNCTION (SignUpdate) },
+        { FUNCTION (SignFinal) },
+        { FUNCTION (SignRecoverInit) },
+        { FUNCTION (SignRecover) },
+        { FUNCTION (VerifyInit) },
+        { FUNCTION (Verify) },
+        { FUNCTION (VerifyUpdate) },
+        { FUNCTION (VerifyFinal) },
+        { FUNCTION (VerifyRecoverInit) },
+        { FUNCTION (VerifyRecover) },
+        { FUNCTION (DigestEncryptUpdate) },
+        { FUNCTION (DecryptDigestUpdate) },
+        { FUNCTION (SignEncryptUpdate) },
+        { FUNCTION (DecryptVerifyUpdate) },
+        { FUNCTION (GenerateKey) },
+        { FUNCTION (GenerateKeyPair) },
+        { FUNCTION (WrapKey) },
+        { FUNCTION (UnwrapKey) },
+        { FUNCTION (DeriveKey) },
+        { FUNCTION (SeedRandom) },
+        { FUNCTION (GenerateRandom) },
+        { FUNCTION (WaitForSlotEvent) },
+        { 0, }
 };
 
 static bool
@@ -2620,6 +2652,82 @@ lookup_fall_through (p11_virtual *virt,
 
 	return false;
 }
+
+#if defined(FFI_CLOSURES) && FFI_CLOSURES
+typedef struct {
+	void *function;
+	ffi_type *types[MAX_ARGS+1];
+} BindingInfo;
+
+static const BindingInfo binding_info[] = {
+        { binding_C_Initialize, { &ffi_type_pointer, NULL } },
+        { binding_C_Finalize, { &ffi_type_pointer, NULL } },
+        { binding_C_GetInfo, { &ffi_type_pointer, NULL } },
+        { binding_C_GetSlotList, { &ffi_type_uchar, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_GetSlotInfo, { &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_GetTokenInfo, { &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_GetMechanismList, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_GetMechanismInfo, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_InitToken, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_InitPIN, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SetPIN, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_OpenSession, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_CloseSession, { &ffi_type_ulong, NULL } },
+        { binding_C_CloseAllSessions, { &ffi_type_ulong, NULL } },
+        { binding_C_GetSessionInfo, { &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_GetOperationState, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SetOperationState, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_ulong, &ffi_type_ulong, NULL } },
+        { binding_C_Login, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_Logout, { &ffi_type_ulong, NULL } },
+        { binding_C_CreateObject, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_CopyObject, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_DestroyObject, { &ffi_type_ulong, &ffi_type_ulong, NULL } },
+        { binding_C_GetObjectSize, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_GetAttributeValue, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SetAttributeValue, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_FindObjectsInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_FindObjects, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_FindObjectsFinal, { &ffi_type_ulong, NULL } },
+        { binding_C_EncryptInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_Encrypt, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_EncryptUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_EncryptFinal, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_Decrypt, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptFinal, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DigestInit, { &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_Digest, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DigestUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_DigestKey, { &ffi_type_ulong, &ffi_type_ulong, NULL } },
+        { binding_C_DigestFinal, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SignInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_Sign, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SignUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SignFinal, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SignRecoverInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SignRecover, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_VerifyInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_Verify, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyFinal, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyRecoverInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyRecover, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DigestEncryptUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptDigestUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SignEncryptUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptVerifyUpdate, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_GenerateKey, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_GenerateKeyPair, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_WrapKey, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_UnwrapKey, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_DeriveKey, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, NULL } },
+        { binding_C_SeedRandom, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_GenerateRandom, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_WaitForSlotEvent, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { 0, }
+};
+
 
 static bool
 bind_ffi_closure (Wrapper *wrapper,
@@ -2698,9 +2806,10 @@ init_wrapper_funcs (Wrapper *wrapper)
 		 * fall through, then this returns the original module function.
 		 */
 		if (!lookup_fall_through (wrapper->virt, info, bound)) {
+			const BindingInfo *binding = binding_info + i;
 			if (!bind_ffi_closure (wrapper, over,
-			                       info->binding_function,
-			                       (ffi_type **)info->types, bound))
+			                       binding->function,
+			                       (ffi_type **)binding->types, bound))
 				return_val_if_reached (false);
 		}
 	}
@@ -2725,7 +2834,7 @@ init_wrapper_funcs (Wrapper *wrapper)
 	return true;
 }
 
-#if LIBFFI_FREE_CLOSURES
+#if defined(LIBFFI_FREE_CLOSURES) && LIBFFI_FREE_CLOSURES
 static void
 uninit_wrapper_funcs (Wrapper *wrapper)
 {
@@ -2753,7 +2862,7 @@ p11_virtual_wrap (p11_virtual *virt,
 	wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
 
 	if (!init_wrapper_funcs (wrapper))
-		return_val_if_reached (NULL);
+		return p11_virtual_wrap_fixed (virt, destroyer);
 
 	assert ((void *)wrapper == (void *)&wrapper->bound);
 	assert (p11_virtual_is_wrapper (&wrapper->bound));
@@ -2761,11 +2870,16 @@ p11_virtual_wrap (p11_virtual *virt,
 	return &wrapper->bound;
 }
 
-bool
-p11_virtual_can_wrap (void)
+#else /* !FFI_CLOSURES */
+
+CK_FUNCTION_LIST *
+p11_virtual_wrap (p11_virtual *virt,
+                  p11_destroyer destroyer)
 {
-	return TRUE;
+	return p11_virtual_wrap_fixed (virt, destroyer);
 }
+
+#endif /* !FFI_CLOSURES */
 
 bool
 p11_virtual_is_wrapper (CK_FUNCTION_LIST_PTR module)
@@ -2791,6 +2905,9 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 	/* The bound CK_FUNCTION_LIST_PTR sits at the front of Context */
 	wrapper = (Wrapper *)module;
 
+	if (wrapper->fixed_index >= 0)
+		p11_virtual_unwrap_fixed (module);
+
 	/*
 	 * Make sure that the CK_FUNCTION_LIST_PTR is invalid, and that
 	 * p11_virtual_is_wrapper() recognizes this. This is in case the
@@ -2801,40 +2918,11 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 	if (wrapper->destroyer)
 		(wrapper->destroyer) (wrapper->virt);
 
-#if LIBFFI_FREE_CLOSURES
+#if defined(LIBFFI_FREE_CLOSURES) && LIBFFI_FREE_CLOSURES
 	uninit_wrapper_funcs (wrapper);
 #endif
 	free (wrapper);
 }
-
-#else /* !WITH_FFI */
-
-CK_FUNCTION_LIST *
-p11_virtual_wrap (p11_virtual *virt,
-                  p11_destroyer destroyer)
-{
-	assert_not_reached ();
-}
-
-bool
-p11_virtual_can_wrap (void)
-{
-	return FALSE;
-}
-
-bool
-p11_virtual_is_wrapper (CK_FUNCTION_LIST_PTR module)
-{
-	return FALSE;
-}
-
-void
-p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
-{
-	assert_not_reached ();
-}
-
-#endif /* !WITH_FFI */
 
 CK_X_FUNCTION_LIST p11_virtual_stack = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
@@ -2973,3 +3061,305 @@ CK_X_FUNCTION_LIST p11_virtual_base = {
 	base_C_GenerateRandom,
 	base_C_WaitForSlotEvent
 };
+
+P11_VIRTUAL_FIXED_FUNCTIONS(0)
+P11_VIRTUAL_FIXED_FUNCTIONS(1)
+P11_VIRTUAL_FIXED_FUNCTIONS(2)
+P11_VIRTUAL_FIXED_FUNCTIONS(3)
+P11_VIRTUAL_FIXED_FUNCTIONS(4)
+P11_VIRTUAL_FIXED_FUNCTIONS(5)
+P11_VIRTUAL_FIXED_FUNCTIONS(6)
+P11_VIRTUAL_FIXED_FUNCTIONS(7)
+P11_VIRTUAL_FIXED_FUNCTIONS(8)
+P11_VIRTUAL_FIXED_FUNCTIONS(9)
+P11_VIRTUAL_FIXED_FUNCTIONS(10)
+P11_VIRTUAL_FIXED_FUNCTIONS(11)
+P11_VIRTUAL_FIXED_FUNCTIONS(12)
+P11_VIRTUAL_FIXED_FUNCTIONS(13)
+P11_VIRTUAL_FIXED_FUNCTIONS(14)
+P11_VIRTUAL_FIXED_FUNCTIONS(15)
+P11_VIRTUAL_FIXED_FUNCTIONS(16)
+P11_VIRTUAL_FIXED_FUNCTIONS(17)
+P11_VIRTUAL_FIXED_FUNCTIONS(18)
+P11_VIRTUAL_FIXED_FUNCTIONS(19)
+P11_VIRTUAL_FIXED_FUNCTIONS(20)
+P11_VIRTUAL_FIXED_FUNCTIONS(21)
+P11_VIRTUAL_FIXED_FUNCTIONS(22)
+P11_VIRTUAL_FIXED_FUNCTIONS(23)
+P11_VIRTUAL_FIXED_FUNCTIONS(24)
+P11_VIRTUAL_FIXED_FUNCTIONS(25)
+P11_VIRTUAL_FIXED_FUNCTIONS(26)
+P11_VIRTUAL_FIXED_FUNCTIONS(27)
+P11_VIRTUAL_FIXED_FUNCTIONS(28)
+P11_VIRTUAL_FIXED_FUNCTIONS(29)
+P11_VIRTUAL_FIXED_FUNCTIONS(30)
+P11_VIRTUAL_FIXED_FUNCTIONS(31)
+P11_VIRTUAL_FIXED_FUNCTIONS(32)
+P11_VIRTUAL_FIXED_FUNCTIONS(33)
+P11_VIRTUAL_FIXED_FUNCTIONS(34)
+P11_VIRTUAL_FIXED_FUNCTIONS(35)
+P11_VIRTUAL_FIXED_FUNCTIONS(36)
+P11_VIRTUAL_FIXED_FUNCTIONS(37)
+P11_VIRTUAL_FIXED_FUNCTIONS(38)
+P11_VIRTUAL_FIXED_FUNCTIONS(39)
+P11_VIRTUAL_FIXED_FUNCTIONS(40)
+P11_VIRTUAL_FIXED_FUNCTIONS(41)
+P11_VIRTUAL_FIXED_FUNCTIONS(42)
+P11_VIRTUAL_FIXED_FUNCTIONS(43)
+P11_VIRTUAL_FIXED_FUNCTIONS(44)
+P11_VIRTUAL_FIXED_FUNCTIONS(45)
+P11_VIRTUAL_FIXED_FUNCTIONS(46)
+P11_VIRTUAL_FIXED_FUNCTIONS(47)
+P11_VIRTUAL_FIXED_FUNCTIONS(48)
+P11_VIRTUAL_FIXED_FUNCTIONS(49)
+P11_VIRTUAL_FIXED_FUNCTIONS(50)
+P11_VIRTUAL_FIXED_FUNCTIONS(51)
+P11_VIRTUAL_FIXED_FUNCTIONS(52)
+P11_VIRTUAL_FIXED_FUNCTIONS(53)
+P11_VIRTUAL_FIXED_FUNCTIONS(54)
+P11_VIRTUAL_FIXED_FUNCTIONS(55)
+P11_VIRTUAL_FIXED_FUNCTIONS(56)
+P11_VIRTUAL_FIXED_FUNCTIONS(57)
+P11_VIRTUAL_FIXED_FUNCTIONS(58)
+P11_VIRTUAL_FIXED_FUNCTIONS(59)
+P11_VIRTUAL_FIXED_FUNCTIONS(60)
+P11_VIRTUAL_FIXED_FUNCTIONS(61)
+P11_VIRTUAL_FIXED_FUNCTIONS(62)
+P11_VIRTUAL_FIXED_FUNCTIONS(63)
+
+CK_FUNCTION_LIST p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {
+	P11_VIRTUAL_FIXED_INITIALIZER(0), \
+	P11_VIRTUAL_FIXED_INITIALIZER(1), \
+	P11_VIRTUAL_FIXED_INITIALIZER(2), \
+	P11_VIRTUAL_FIXED_INITIALIZER(3), \
+	P11_VIRTUAL_FIXED_INITIALIZER(4), \
+	P11_VIRTUAL_FIXED_INITIALIZER(5), \
+	P11_VIRTUAL_FIXED_INITIALIZER(6), \
+	P11_VIRTUAL_FIXED_INITIALIZER(7), \
+	P11_VIRTUAL_FIXED_INITIALIZER(8), \
+	P11_VIRTUAL_FIXED_INITIALIZER(9), \
+	P11_VIRTUAL_FIXED_INITIALIZER(10), \
+	P11_VIRTUAL_FIXED_INITIALIZER(11), \
+	P11_VIRTUAL_FIXED_INITIALIZER(12), \
+	P11_VIRTUAL_FIXED_INITIALIZER(13), \
+	P11_VIRTUAL_FIXED_INITIALIZER(14), \
+	P11_VIRTUAL_FIXED_INITIALIZER(15), \
+	P11_VIRTUAL_FIXED_INITIALIZER(16), \
+	P11_VIRTUAL_FIXED_INITIALIZER(17), \
+	P11_VIRTUAL_FIXED_INITIALIZER(18), \
+	P11_VIRTUAL_FIXED_INITIALIZER(19), \
+	P11_VIRTUAL_FIXED_INITIALIZER(20), \
+	P11_VIRTUAL_FIXED_INITIALIZER(21), \
+	P11_VIRTUAL_FIXED_INITIALIZER(22), \
+	P11_VIRTUAL_FIXED_INITIALIZER(23), \
+	P11_VIRTUAL_FIXED_INITIALIZER(24), \
+	P11_VIRTUAL_FIXED_INITIALIZER(25), \
+	P11_VIRTUAL_FIXED_INITIALIZER(26), \
+	P11_VIRTUAL_FIXED_INITIALIZER(27), \
+	P11_VIRTUAL_FIXED_INITIALIZER(28), \
+	P11_VIRTUAL_FIXED_INITIALIZER(29), \
+	P11_VIRTUAL_FIXED_INITIALIZER(30), \
+	P11_VIRTUAL_FIXED_INITIALIZER(31), \
+	P11_VIRTUAL_FIXED_INITIALIZER(32), \
+	P11_VIRTUAL_FIXED_INITIALIZER(33), \
+	P11_VIRTUAL_FIXED_INITIALIZER(34), \
+	P11_VIRTUAL_FIXED_INITIALIZER(35), \
+	P11_VIRTUAL_FIXED_INITIALIZER(36), \
+	P11_VIRTUAL_FIXED_INITIALIZER(37), \
+	P11_VIRTUAL_FIXED_INITIALIZER(38), \
+	P11_VIRTUAL_FIXED_INITIALIZER(39), \
+	P11_VIRTUAL_FIXED_INITIALIZER(40), \
+	P11_VIRTUAL_FIXED_INITIALIZER(41), \
+	P11_VIRTUAL_FIXED_INITIALIZER(42), \
+	P11_VIRTUAL_FIXED_INITIALIZER(43), \
+	P11_VIRTUAL_FIXED_INITIALIZER(44), \
+	P11_VIRTUAL_FIXED_INITIALIZER(45), \
+	P11_VIRTUAL_FIXED_INITIALIZER(46), \
+	P11_VIRTUAL_FIXED_INITIALIZER(47), \
+	P11_VIRTUAL_FIXED_INITIALIZER(48), \
+	P11_VIRTUAL_FIXED_INITIALIZER(49), \
+	P11_VIRTUAL_FIXED_INITIALIZER(50), \
+	P11_VIRTUAL_FIXED_INITIALIZER(51), \
+	P11_VIRTUAL_FIXED_INITIALIZER(52), \
+	P11_VIRTUAL_FIXED_INITIALIZER(53), \
+	P11_VIRTUAL_FIXED_INITIALIZER(54), \
+	P11_VIRTUAL_FIXED_INITIALIZER(55), \
+	P11_VIRTUAL_FIXED_INITIALIZER(56), \
+	P11_VIRTUAL_FIXED_INITIALIZER(57), \
+	P11_VIRTUAL_FIXED_INITIALIZER(58), \
+	P11_VIRTUAL_FIXED_INITIALIZER(59), \
+	P11_VIRTUAL_FIXED_INITIALIZER(60), \
+	P11_VIRTUAL_FIXED_INITIALIZER(61), \
+	P11_VIRTUAL_FIXED_INITIALIZER(62), \
+	P11_VIRTUAL_FIXED_INITIALIZER(63)
+};
+
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(0)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(1)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(2)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(3)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(4)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(5)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(6)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(7)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(8)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(9)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(10)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(11)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(12)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(13)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(14)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(15)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(16)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(17)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(18)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(19)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(20)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(21)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(22)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(23)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(24)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(25)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(26)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(27)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(28)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(29)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(30)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(31)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(32)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(33)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(34)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(35)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(36)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(37)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(38)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(39)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(40)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(41)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(42)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(43)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(44)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(45)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(46)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(47)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(48)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(49)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(50)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(51)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(52)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(53)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(54)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(55)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(56)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(57)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(58)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(59)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(60)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(61)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(62)
+P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(63)
+
+static CK_FUNCTION_LIST *
+p11_virtual_wrap_fixed (p11_virtual *virt,
+			p11_destroyer destroyer)
+{
+	CK_FUNCTION_LIST *result = NULL;
+	size_t i;
+
+	p11_mutex_lock (&fixed_mutex);
+	for (i = 0; i < P11_VIRTUAL_MAX_FIXED; i++) {
+		if (fixed_closures[i] == NULL) {
+			Wrapper *wrapper;
+			wrapper = create_fixed_wrapper (virt, i, destroyer);
+			result = &wrapper->bound;
+			fixed_closures[i] = result;
+			break;
+		}
+	}
+	p11_mutex_unlock (&fixed_mutex);
+
+	return result;
+}
+
+static void
+p11_virtual_unwrap_fixed (CK_FUNCTION_LIST_PTR module)
+{
+	size_t i;
+
+	p11_mutex_lock (&fixed_mutex);
+	for (i = 0; i < P11_VIRTUAL_MAX_FIXED; i++) {
+		if (fixed_closures[i] == module) {
+			fixed_closures[i] = NULL;
+			break;
+		}
+	}
+	p11_mutex_unlock (&fixed_mutex);
+}
+
+static bool
+init_wrapper_funcs_fixed (Wrapper *wrapper, CK_FUNCTION_LIST *fixed)
+{
+       const FunctionInfo *info;
+       void **bound_to, **bound_from;
+       int i;
+
+       for (i = 0; function_info[i].name != NULL; i++) {
+               info = function_info + i;
+
+               /* Address to where we're placing the bound function */
+               bound_to = &STRUCT_MEMBER (void *, &wrapper->bound, info->module_offset);
+               bound_from = &STRUCT_MEMBER (void *, fixed, info->module_offset);
+
+               /*
+                * See if we can just shoot straight through to the module function
+                * without wrapping at all. If all the stacked virtual modules just
+                * fall through, then this returns the original module function.
+                */
+               if (!lookup_fall_through (wrapper->virt, info, bound_to))
+                       *bound_to = *bound_from;
+       }
+
+       /* Always bind the C_GetFunctionList function itself */
+       wrapper->bound.C_GetFunctionList = fixed->C_GetFunctionList;
+
+       /*
+        * These functions are used as a marker to indicate whether this is
+        * one of our CK_FUNCTION_LIST_PTR sets of functions or not. These
+        * functions are defined to always have the same standard implementation
+        * in PKCS#11 2.x so we don't need to call through to the base for
+        * these guys.
+        */
+       wrapper->bound.C_CancelFunction = short_C_CancelFunction;
+       wrapper->bound.C_GetFunctionStatus = short_C_GetFunctionStatus;
+
+       return true;
+}
+
+static Wrapper *
+create_fixed_wrapper (p11_virtual *virt,
+		      size_t index,
+		      p11_destroyer destroyer)
+{
+       Wrapper *wrapper;
+
+       return_val_if_fail (virt != NULL, NULL);
+
+       wrapper = calloc (1, sizeof (Wrapper));
+       return_val_if_fail (wrapper != NULL, NULL);
+
+       wrapper->virt = virt;
+       wrapper->destroyer = destroyer;
+       wrapper->bound.version.major = CRYPTOKI_VERSION_MAJOR;
+       wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
+       wrapper->fixed_index = index;
+
+       if (!init_wrapper_funcs_fixed (wrapper, &p11_virtual_fixed[index])) {
+	       free (wrapper);
+               return NULL;
+       }
+
+       assert ((void *)wrapper == (void *)&wrapper->bound);
+       assert (p11_virtual_is_wrapper (&wrapper->bound));
+       assert (wrapper->bound.C_GetFunctionList != NULL);
+       return wrapper;
+}

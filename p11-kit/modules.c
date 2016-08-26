@@ -1758,22 +1758,11 @@ lookup_managed_option (Module *mod,
 	value = _p11_conf_parse_boolean (string, def_value);
 
 	if (!supported && value != supported) {
-		if (!p11_virtual_can_wrap ()) {
-			/*
-			 * This is because libffi dependency was not built. The libffi dependency
-			 * is highly recommended and building without it results in a large loss
-			 * of functionality.
-			 */
-			p11_message ("the '%s' option for module '%s' is not supported on this system",
-			             option, mod->name);
-		} else {
-			/*
-			 * This is because the module is running in unmanaged mode, so turn off the
-			 */
-			p11_message ("the '%s' option for module '%s' is only supported for managed modules",
-			             option, mod->name);
-		}
-		return false;
+	  /*
+	   * This is because the module is running in unmanaged mode, so turn off the
+	   */
+	  p11_message ("the '%s' option for module '%s' is only supported for managed modules",
+		       option, mod->name);
 	}
 
 	return value;
@@ -1855,7 +1844,7 @@ prepare_module_inlock_reentrant (Module *mod,
 		is_managed = false;
 		with_log = false;
 	} else {
-		is_managed = lookup_managed_option (mod, p11_virtual_can_wrap (), "managed", true);
+		is_managed = lookup_managed_option (mod, true, "managed", true);
 		with_log = lookup_managed_option (mod, is_managed, "log-calls", false);
 	}
 
@@ -1871,7 +1860,8 @@ prepare_module_inlock_reentrant (Module *mod,
 		}
 
 		*module = p11_virtual_wrap (virt, destroyer);
-		return_val_if_fail (*module != NULL, CKR_GENERAL_ERROR);
+		if (*module == NULL)
+			return CKR_GENERAL_ERROR;
 
 		if (!p11_dict_set (gl.managed_by_closure, *module, mod))
 			return_val_if_reached (CKR_HOST_MEMORY);
