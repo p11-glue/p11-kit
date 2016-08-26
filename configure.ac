@@ -43,6 +43,8 @@ if test "$enable_static" = "yes"; then
 	AC_MSG_ERROR([p11-kit cannot be used as a static library])
 fi
 
+AM_PATH_PYTHON([3.5], , [:])
+
 AC_MSG_CHECKING([for win32])
 case "$host" in
 	*-*-mingw*)

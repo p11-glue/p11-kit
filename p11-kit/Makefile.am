@@ -8,6 +8,15 @@ inc_HEADERS += \
 	p11-kit/uri.h \
 	$(NULL)
 
+BUILT_SOURCES = p11-kit/virtual.c
+
+p11-kit/virtual.c: common/pkcs11.h common/pkcs11i.h p11-kit/virtual.c.template p11-kit/gen-wrapper.py
+	$(AM_V_GEN) { echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
+		$(PYTHON) $(srcdir)/p11-kit/gen-wrapper.py \
+		$(srcdir)/p11-kit/virtual.c.template \
+		$(srcdir)/common/pkcs11.h $(srcdir)/common/pkcs11i.h; \
+		} > $@-t && mv $@-t $@
+
 MODULE_SRCS = \
 	p11-kit/util.c \
 	p11-kit/conf.c p11-kit/conf.h \
@@ -100,6 +109,9 @@ example_DATA = p11-kit/pkcs11.conf.example
 
 EXTRA_DIST += \
 	p11-kit/docs.h \
+	p11-kit/gen-wrapper.py \
+	p11-kit/virtual.c \
+	p11-kit/virtual.c.template \
 	$(NULL)
 
 bin_PROGRAMS += p11-kit/p11-kit
