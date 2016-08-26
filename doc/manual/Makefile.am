@@ -64,6 +64,7 @@ IGNORE_HFILES= \
 	rpc-message.h \
 	util.h \
 	virtual.h \
+	virtual-fixed.h \
 	array.h \
 	compat.h \
 	$(NULL)

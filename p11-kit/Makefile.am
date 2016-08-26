@@ -25,6 +25,7 @@ MODULE_SRCS = \
 	p11-kit/rpc-client.c p11-kit/rpc-server.c \
 	p11-kit/uri.c \
 	p11-kit/virtual.c p11-kit/virtual.h \
+	p11-kit/virtual-fixed.h \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES += \
@@ -212,8 +213,6 @@ print_messages_LDADD = $(p11_kit_LIBS)
 frob_setuid_SOURCES = p11-kit/frob-setuid.c
 frob_setuid_LDADD = $(p11_kit_LIBS)
 
-if WITH_FFI
-
 CHECK_PROGS += \
 	test-virtual \
 	test-managed \
@@ -232,8 +231,6 @@ test_transport_LDADD = $(p11_kit_LIBS)
 
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
-
-endif
 
 noinst_LTLIBRARIES += \
 	mock-one.la \
