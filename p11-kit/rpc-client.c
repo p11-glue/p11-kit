@@ -857,7 +857,10 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	if (init_args != NULL) {
 		int supplied_ok;
 
-		/* pReserved must be NULL */
+		/*
+		 * pReserved is either a string or NULL.  Other cases
+		 * should be rejected by the caller of this function.
+		 */
 		args = init_args;
 
 		/* ALL supplied function pointers need to have the value either NULL or non-NULL. */
@@ -919,6 +922,17 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	if (ret == CKR_OK)
 		if (!p11_rpc_message_write_byte_array (&msg, P11_RPC_HANDSHAKE, P11_RPC_HANDSHAKE_LEN))
 			ret = CKR_HOST_MEMORY;
+	if (ret == CKR_OK) {
+		if (!p11_rpc_message_write_byte (&msg, reserved != NULL))
+			ret = CKR_HOST_MEMORY;
+	}
+	if (ret == CKR_OK) {
+		char *reserved_string = "";
+		if (reserved != NULL)
+			reserved_string = (char *) reserved;
+		if (!p11_rpc_message_write_byte_array (&msg, (CK_BYTE_PTR) reserved_string, strlen (reserved_string) + 1))
+			ret = CKR_HOST_MEMORY;
+	}
 	if (ret == CKR_OK)
 		ret = call_run (module, &msg);
 	call_done (module, &msg, ret);

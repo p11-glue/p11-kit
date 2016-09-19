@@ -518,14 +518,14 @@ take_config_and_load_module_inlock (char **name,
 		rv = load_module_from_file_inlock (*name, filename, &mod);
 		if (rv != CKR_OK)
 			goto out;
-
-		/*
-		 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
-		 * 'x-init-reserved' setting in the config. This only works with specific
-		 * PKCS#11 modules, and is non-standard use of that field.
-		 */
-		mod->init_args.pReserved = p11_dict_get (*config, "x-init-reserved");
 	}
+
+	/*
+	 * We support setting of CK_C_INITIALIZE_ARGS.pReserved from
+	 * 'x-init-reserved' setting in the config. This only works with specific
+	 * PKCS#11 modules, and is non-standard use of that field.
+	 */
+	mod->init_args.pReserved = p11_dict_get (*config, "x-init-reserved");
 
 	/* Take ownership of thes evariables */
 	p11_dict_free (mod->config);
@@ -610,7 +610,7 @@ load_registered_modules_unlocked (void)
 }
 
 static CK_RV
-initialize_module_inlock_reentrant (Module *mod)
+initialize_module_inlock_reentrant (Module *mod, CK_C_INITIALIZE_ARGS *init_args)
 {
 	CK_RV rv = CKR_OK;
 	p11_thread_id_t self;
@@ -638,8 +638,12 @@ initialize_module_inlock_reentrant (Module *mod)
 	if (mod->initialize_called != p11_forkid) {
 		p11_debug ("C_Initialize: calling");
 
+		/* The init_args argument takes precedence over mod->init_args */
+		if (init_args == NULL)
+			init_args = &mod->init_args;
+
 		rv = mod->virt.funcs.C_Initialize (&mod->virt.funcs,
-		                                   &mod->init_args);
+						   init_args);
 
 		p11_debug ("C_Initialize: result: %lu", rv);
 
@@ -793,7 +797,7 @@ initialize_registered_inlock_reentrant (void)
 			if (mod->name == NULL || !is_module_enabled_unlocked (mod->name, mod->config))
 				continue;
 
-			rv = initialize_module_inlock_reentrant (mod);
+			rv = initialize_module_inlock_reentrant (mod, NULL);
 			if (rv != CKR_OK) {
 				if (mod->critical) {
 					p11_message ("initialization of critical module '%s' failed: %s",
@@ -1478,7 +1482,7 @@ managed_C_Initialize (CK_X_FUNCTION_LIST *self,
 		if (!sessions)
 			rv = CKR_HOST_MEMORY;
 		else
-			rv = initialize_module_inlock_reentrant (managed->mod);
+			rv = initialize_module_inlock_reentrant (managed->mod, init_args);
 		if (rv == CKR_OK) {
 			if (managed->sessions)
 				p11_dict_free (managed->sessions);
@@ -2294,7 +2298,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 		if (rv == CKR_OK) {
 			mod = p11_dict_get (gl.unmanaged_by_funcs, module);
 			assert (mod != NULL);
-			rv = initialize_module_inlock_reentrant (mod);
+			rv = initialize_module_inlock_reentrant (mod, NULL);
 			if (rv != CKR_OK) {
 				p11_message ("module initialization failed: %s", p11_kit_strerror (rv));
 				p11_module_release_inlock_reentrant (module);
@@ -2674,7 +2678,7 @@ p11_kit_load_initialize_module (const char *module_path,
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */
-				rv = initialize_module_inlock_reentrant (mod);
+				rv = initialize_module_inlock_reentrant (mod, NULL);
 			}
 		}
 

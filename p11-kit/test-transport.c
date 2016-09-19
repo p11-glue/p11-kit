@@ -77,6 +77,8 @@ setup_remote (void *unused)
 	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit remote " BUILDDIR "/.libs/mock-two.so\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit remote " BUILDDIR "/.libs/mock-five.so\nx-init-reserved: initialize-arg";
+	p11_test_file_write (test.user_modules, "init-arg.module", data, strlen (data));
 
 	p11_config_user_modules = test.user_modules;
 	p11_config_user_file = test.user_config;
@@ -144,6 +146,27 @@ test_basic_exec (void)
 	modules = p11_kit_modules_load (NULL, 0);
 
 	module = p11_kit_module_for_name (modules, "remote");
+	assert (module != NULL);
+
+	rv = p11_kit_module_initialize (module);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = p11_kit_module_finalize (module);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_kit_modules_release (modules);
+}
+
+static void
+test_basic_exec_with_init_arg (void)
+{
+	CK_FUNCTION_LIST **modules;
+	CK_FUNCTION_LIST *module;
+	CK_RV rv;
+
+	modules = p11_kit_modules_load (NULL, 0);
+
+	module = p11_kit_module_for_name (modules, "init-arg");
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
@@ -282,6 +305,7 @@ main (int argc,
 
 	p11_fixture (setup_remote, teardown_remote);
 	p11_test (test_basic_exec, "/transport/basic");
+	p11_test (test_basic_exec_with_init_arg, "/transport/init-arg");
 	p11_test (test_simultaneous_functions, "/transport/simultaneous-functions");
 
 #ifdef OS_UNIX

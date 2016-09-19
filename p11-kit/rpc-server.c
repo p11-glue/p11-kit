@@ -662,6 +662,9 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	CK_C_INITIALIZE_ARGS init_args;
 	CK_BYTE_PTR handshake;
 	CK_ULONG n_handshake;
+	CK_BYTE reserved_present = 0;
+	CK_BYTE_PTR reserved = NULL;
+	CK_ULONG n_reserved;
 	CK_RV ret = CKR_OK;
 
 	p11_debug ("C_Initialize: enter");
@@ -678,6 +681,15 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 			p11_message ("invalid handshake received from connecting module");
 			ret = CKR_GENERAL_ERROR;
 		}
+	}
+
+	if (ret == CKR_OK) {
+		if (!p11_rpc_message_read_byte (msg, &reserved_present))
+			ret = PARSE_ERROR;
+	}
+
+	if (ret == CKR_OK) {
+		ret = proto_read_byte_array (msg, &reserved, &n_reserved);
 
 		assert (p11_rpc_message_is_verified (msg));
 	}
@@ -685,6 +697,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	if (ret == CKR_OK) {
 		memset (&init_args, 0, sizeof (init_args));
 		init_args.flags = CKF_OS_LOCKING_OK;
+		init_args.pReserved = reserved_present ? reserved : NULL;
 
 		func = self->C_Initialize;
 		assert (func != NULL);

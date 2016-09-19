@@ -137,7 +137,7 @@ typedef struct {
 
 static const p11_rpc_call p11_rpc_calls[] = {
 	{ P11_RPC_CALL_ERROR,                  "ERROR",                  NULL,      "u"                    },
-	{ P11_RPC_CALL_C_Initialize,           "C_Initialize",           "ay",      ""                     },
+	{ P11_RPC_CALL_C_Initialize,           "C_Initialize",           "ayyay",   ""                     },
 	{ P11_RPC_CALL_C_Finalize,             "C_Finalize",             "",        ""                     },
 	{ P11_RPC_CALL_C_GetInfo,              "C_GetInfo",              "",        "vsusv"                },
 	{ P11_RPC_CALL_C_GetSlotList,          "C_GetSlotList",          "yfu",     "au"                   },

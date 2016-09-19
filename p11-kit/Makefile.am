@@ -222,7 +222,8 @@ noinst_LTLIBRARIES += \
 	mock-one.la \
 	mock-two.la \
 	mock-three.la \
-	mock-four.la
+	mock-four.la \
+	mock-five.la
 
 mock_one_la_SOURCES = p11-kit/mock-module-ep.c
 mock_one_la_LIBADD = libp11-test.la libp11-common.la
@@ -241,6 +242,10 @@ mock_three_la_LIBADD = $(mock_one_la_LIBADD)
 mock_four_la_SOURCES = $(mock_one_la_SOURCES)
 mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_five_la_SOURCES = p11-kit/mock-module-ep3.c
+mock_five_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_five_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST += \
 	p11-kit/fixtures \
