@@ -1031,6 +1031,13 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	return P11_KIT_URI_OK;
 }
 
+static bool
+str_range_equal (const char *input, const char *start, const char *end)
+{
+	return strlen (input) == end - start &&
+		memcmp (input, start, end - start) == 0;
+}
+
 static int
 parse_string_attribute (const char *name_start, const char *name_end,
 			const char *start, const char *end,
@@ -1043,9 +1050,9 @@ parse_string_attribute (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("id", name_start, name_end - name_start) == 0)
+	if (str_range_equal ("id", name_start, name_end))
 		type = CKA_ID;
-	else if (memcmp ("object", name_start, name_end - name_start) == 0)
+	else if (str_range_equal ("object", name_start, name_end))
 		type = CKA_LABEL;
 	else
 		return 0;
@@ -1069,22 +1076,22 @@ parse_class_attribute (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("objecttype", name_start, name_end - name_start) != 0 &&
-	    memcmp ("object-type", name_start, name_end - name_start) != 0 &&
-	    memcmp ("type", name_start, name_end - name_start) != 0)
+	if (!str_range_equal ("objecttype", name_start, name_end) &&
+	    !str_range_equal ("object-type", name_start, name_end) &&
+	    !str_range_equal ("type", name_start, name_end))
 		return 0;
 
-	if (memcmp ("cert", start, end - start) == 0)
+	if (str_range_equal ("cert", start, end))
 		klass = CKO_CERTIFICATE;
-	else if (memcmp ("public", start, end - start) == 0)
+	else if (str_range_equal ("public", start, end))
 		klass = CKO_PUBLIC_KEY;
-	else if (memcmp ("private", start, end - start) == 0)
+	else if (str_range_equal ("private", start, end))
 		klass = CKO_PRIVATE_KEY;
-	else if (memcmp ("secretkey", start, end - start) == 0)
+	else if (str_range_equal ("secretkey", start, end))
 		klass = CKO_SECRET_KEY;
-	else if (memcmp ("secret-key", start, end - start) == 0)
+	else if (str_range_equal ("secret-key", start, end))
 		klass = CKO_SECRET_KEY;
-	else if (memcmp ("data", start, end - start) == 0)
+	else if (str_range_equal ("data", start, end))
 		klass = CKO_DATA;
 	else {
 		uri->unrecognized = true;
@@ -1137,16 +1144,16 @@ parse_token_info (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("model", name_start, name_end - name_start) == 0) {
+	if (str_range_equal ("model", name_start, name_end)) {
 		where = uri->token.model;
 		length = sizeof (uri->token.model);
-	} else if (memcmp ("manufacturer", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("manufacturer", name_start, name_end)) {
 		where = uri->token.manufacturerID;
 		length = sizeof (uri->token.manufacturerID);
-	} else if (memcmp ("serial", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("serial", name_start, name_end)) {
 		where = uri->token.serialNumber;
 		length = sizeof (uri->token.serialNumber);
-	} else if (memcmp ("token", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("token", name_start, name_end)) {
 		where = uri->token.label;
 		length = sizeof (uri->token.label);
 	} else {
@@ -1213,10 +1220,10 @@ parse_slot_info (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("slot-description", name_start, name_end - name_start) == 0) {
+	if (str_range_equal ("slot-description", name_start, name_end)) {
 		where = uri->slot.slotDescription;
 		length = sizeof (uri->slot.slotDescription);
-	} else if (memcmp ("slot-manufacturer", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("slot-manufacturer", name_start, name_end)) {
 		where = uri->slot.manufacturerID;
 		length = sizeof (uri->slot.manufacturerID);
 	} else {
@@ -1234,7 +1241,7 @@ parse_slot_id (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("slot-id", name_start, name_end - name_start) == 0) {
+	if (str_range_equal ("slot-id", name_start, name_end)) {
 		long val;
 		val = atoin (start, end);
 		if (val < 0)
@@ -1253,7 +1260,7 @@ parse_module_version_info (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("library-version", name_start, name_end - name_start) == 0)
+	if (str_range_equal ("library-version", name_start, name_end))
 		return parse_struct_version (start, end,
 		                             &uri->module.libraryVersion);
 
@@ -1271,10 +1278,10 @@ parse_module_info (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("library-description", name_start, name_end - name_start) == 0) {
+	if (str_range_equal ("library-description", name_start, name_end)) {
 		where = uri->module.libraryDescription;
 		length = sizeof (uri->module.libraryDescription);
-	} else if (memcmp ("library-manufacturer", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("library-manufacturer", name_start, name_end)) {
 		where = uri->module.manufacturerID;
 		length = sizeof (uri->module.manufacturerID);
 	} else {
@@ -1294,15 +1301,15 @@ parse_extra_info (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	if (memcmp ("pinfile", name_start, name_end - name_start) == 0 ||
-	    memcmp ("pin-source", name_start, name_end - name_start) == 0) {
+	if (str_range_equal ("pinfile", name_start, name_end) ||
+	    str_range_equal ("pin-source", name_start, name_end)) {
 		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
 		if (pin_source == NULL)
 			return P11_KIT_URI_BAD_ENCODING;
 		free (uri->pin_source);
 		uri->pin_source = (char*)pin_source;
 		return 1;
-	} else if (memcmp ("pin-value", name_start, name_end - name_start) == 0) {
+	} else if (str_range_equal ("pin-value", name_start, name_end)) {
 		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
 		if (pin_source == NULL)
 			return P11_KIT_URI_BAD_ENCODING;
@@ -1364,7 +1371,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		free (allocated);
 		return P11_KIT_URI_BAD_SCHEME;
 	}
-	ret = memcmp (string, P11_KIT_URI_SCHEME, strlen (P11_KIT_URI_SCHEME));
+	ret = strncmp (string, P11_KIT_URI_SCHEME, strlen (P11_KIT_URI_SCHEME));
 	if (ret != 0) {
 		free (allocated);
 		return P11_KIT_URI_BAD_SCHEME;
