@@ -580,6 +580,7 @@ proxy_C_OpenSession (CK_X_FUNCTION_LIST *self,
 
 			} else {
 				sess = calloc (1, sizeof (Session));
+				return_val_if_fail (sess != NULL, CKR_HOST_MEMORY);
 				sess->wrap_slot = map.wrap_slot;
 				sess->real_session = *handle;
 				sess->wrap_session = ++state->last_handle; /* TODO: Handle wrapping, and then collisions */
