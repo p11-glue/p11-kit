@@ -138,7 +138,7 @@ test_get_function_list (void)
 	p11_virtual virt;
 	CK_RV rv;
 
-	p11_virtual_init (&virt, &p11_virtual_base, &mock_x_module_no_slots, NULL);
+	p11_virtual_init (&virt, &p11_virtual_base, &mock_module_no_slots, NULL);
 	module = p11_virtual_wrap (&virt, NULL);
 	assert_ptr_not_null (module);
 
