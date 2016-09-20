@@ -84,7 +84,6 @@ static void
 teardown (void *path)
 {
 	p11_token_free (test.token);
-	memset (&test, 0, sizeof (test));
 }
 
 static void
@@ -93,6 +92,7 @@ teardown_temp (void *unused)
 	p11_test_directory_delete (test.directory);
 	teardown (test.directory);
 	free (test.directory);
+	memset (&test, 0, sizeof (test));
 }
 
 static void
