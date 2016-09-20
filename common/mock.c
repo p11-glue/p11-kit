@@ -919,6 +919,7 @@ mock_C_OpenSession (CK_SLOT_ID slot_id,
 		return CKR_SESSION_PARALLEL_NOT_SUPPORTED;
 
 	sess = calloc (1, sizeof (Session));
+	return_val_if_fail (sess != NULL, CKR_HOST_MEMORY);
 	sess->handle = ++unique_identifier;
 	sess->info.flags = flags;
 	sess->info.slotID = slot_id;
