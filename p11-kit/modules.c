@@ -251,6 +251,8 @@ free_module_unlocked (void *data)
 		assert (mod->initialize_thread == 0);
 	}
 
+	p11_virtual_uninit (&mod->virt);
+
 	if (mod->loaded_destroy)
 		mod->loaded_destroy (mod->loaded_module);
 
