@@ -163,6 +163,7 @@ rpc_socket_unref (rpc_socket *sock)
 	rpc_socket_close (sock);
 	p11_mutex_uninit (&sock->write_lock);
 	p11_mutex_uninit (&sock->read_lock);
+	free (sock);
 }
 
 static bool
