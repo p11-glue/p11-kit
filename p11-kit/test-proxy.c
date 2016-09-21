@@ -115,42 +115,6 @@ test_initialize_multiple (void)
 
 #ifndef _WIN32
 static void
-test_deinit_after_fork (void)
-{
-	CK_FUNCTION_LIST_PTR proxy;
-	CK_RV rv;
-	pid_t pid;
-	int st;
-
-	rv = C_GetFunctionList (&proxy);
-	assert (rv == CKR_OK);
-
-	assert (p11_proxy_module_check (proxy));
-
-	rv = proxy->C_Initialize(NULL);
-	assert_num_eq (rv, CKR_OK);
-
-	pid = fork ();
-	if (!pid) {
-		exit(0);
-	}
-	assert (pid != -1);
-	waitpid(pid, &st, 0);
-
-	rv = proxy->C_Finalize (NULL);
-	assert_num_eq (rv, CKR_OK);
-
-	p11_proxy_module_cleanup ();
-
-	/* If the assertion fails, p11_kit_failed() doesn't return. So make
-	 * sure we do all the cleanup before the (expected) failure, or it
-	 * causes all the *later* tests to fail too! */
-	if (!WIFEXITED (st) || WEXITSTATUS(st) != 0)
-		assert_fail("Child failed to C_Initialize() and C_Finalize()", NULL);
-
-}
-
-static void
 test_initialize_child (void)
 {
 	CK_FUNCTION_LIST_PTR proxy;
@@ -286,7 +250,6 @@ main (int argc,
 	p11_test (test_initialize_finalize, "/proxy/initialize-finalize");
 	p11_test (test_initialize_multiple, "/proxy/initialize-multiple");
 #ifndef _WIN32
-	p11_test (test_deinit_after_fork, "/proxy/deinit-after-fork");
 	p11_test (test_initialize_child, "/proxy/initialize-child");
 #endif
 
