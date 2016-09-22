@@ -221,6 +221,8 @@ test_utf8_fail (void)
 		{ "Good news everyone\x88", -1 },
 		{ "Bad \xe0v following chars should be |0x80", -1 },
 		{ "Truncated \xe0", -1 },
+		{ "Surrogate \xed\xa0\x80", -1, },
+		{ "Out of range \xf4\x90\x80\x80", -1, },
 	};
 
 	for (i = 0; i < ELEMS (fixtures); i++) {

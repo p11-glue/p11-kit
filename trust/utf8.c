@@ -156,6 +156,12 @@ utf8_to_uchar (const char *str,
 		 */
 		return -1;
 	}
+	if ((uch >= 0xd800 && uch <= 0xdfff) || uch > 0x10ffff) {
+		/*
+		 * Malformed input; invalid code points.
+		 */
+		return -1;
+	}
 
 	*uc = uch;
 	return want;
