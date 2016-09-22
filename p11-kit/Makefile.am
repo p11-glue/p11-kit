@@ -99,8 +99,6 @@ exampledir = $(p11_system_config)
 example_DATA = p11-kit/pkcs11.conf.example
 
 EXTRA_DIST += \
-	p11-kit/p11-kit-1.pc.in \
-	p11-kit/pkcs11.conf.example.in \
 	p11-kit/docs.h \
 	$(NULL)
 
