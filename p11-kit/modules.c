@@ -658,6 +658,10 @@ initialize_module_inlock_reentrant (Module *mod, CK_C_INITIALIZE_ARGS *init_args
 		/* Module was already initialized, we don't call C_Finalize */
 		if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED)
 			rv = CKR_OK;
+
+		/* Matches the init count in finalize_module_inlock_reentrant() */
+		if (rv == CKR_OK)
+			mod->init_count = 0;
 	}
 
 	p11_mutex_unlock (&mod->initialize_mutex);
