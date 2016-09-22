@@ -71,7 +71,7 @@ p11_url_decode (const char *value,
 		 */
 		if (*value == '%') {
 			value++;
-			if (value + 2 > end) {
+			if (end - value < 2) {
 				free (result);
 				return NULL;
 			}

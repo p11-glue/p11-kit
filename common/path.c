@@ -214,7 +214,9 @@ p11_path_build (const char *path,
 	len = 1;
 	va_start (va, path);
 	while (path != NULL) {
+		size_t old_len = len;
 		len += strlen (path) + 1;
+		return_val_if_fail (len >= old_len, NULL);
 		path = va_arg (va, const char *);
 	}
 	va_end (va);
