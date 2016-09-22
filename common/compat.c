@@ -41,6 +41,7 @@
 #define _XOPEN_SOURCE 700
 
 #include "compat.h"
+#include "debug.h"
 
 #include <assert.h>
 #include <dirent.h>
@@ -503,8 +504,11 @@ strconcat (const char *first,
 
 	va_start (va, first);
 
-	for (arg = first; arg; arg = va_arg (va, const char*))
-	       length += strlen (arg);
+	for (arg = first; arg; arg = va_arg (va, const char*)) {
+		size_t old_length = length;
+		length += strlen (arg);
+		return_val_if_fail (length >= old_length, NULL);
+	}
 
 	va_end (va);
 

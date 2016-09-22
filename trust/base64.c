@@ -43,9 +43,11 @@
 #include "config.h"
 
 #include "base64.h"
+#include "debug.h"
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -99,6 +101,7 @@ p11_b64_pton (const char *src,
 			state = 1;
 			break;
 		case 1:
+			return_val_if_fail (tarindex < INT_MAX, -1);
 			if (target) {
 				if ((size_t) tarindex + 1 >= targsize)
 					return (-1);
@@ -110,6 +113,7 @@ p11_b64_pton (const char *src,
 			state = 2;
 			break;
 		case 2:
+			return_val_if_fail (tarindex < INT_MAX, -1);
 			if (target) {
 				if ((size_t) tarindex + 1 >= targsize)
 					return (-1);
@@ -121,6 +125,7 @@ p11_b64_pton (const char *src,
 			state = 3;
 			break;
 		case 3:
+			return_val_if_fail (tarindex < INT_MAX, -1);
 			if (target) {
 				if ((size_t) tarindex >= targsize)
 					return (-1);
