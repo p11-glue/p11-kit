@@ -147,6 +147,9 @@ validate_filter_and_format (p11_enumerate *ex,
 		 */
 
 		if (!ex->limit_to_purposes) {
+			p11_message ("format requires a purpose, specify it with --purpose; defaulting to 'server-auth'");
+			p11_enumerate_opt_purpose (ex, "server-auth");
+		} else if (p11_dict_size (ex->limit_to_purposes) > 1) {
 			p11_message ("format does not support multiple purposes, defaulting to 'server-auth'");
 			p11_enumerate_opt_purpose (ex, "server-auth");
 		}
@@ -191,7 +194,7 @@ p11_trust_extract (int argc,
 		{ 0, "usage: trust extract --format=<output> <destination>" },
 		{ opt_filter,
 		  "filter of what to export\n"
-		  "  ca-anchors        certificate anchors (default)\n"
+		  "  ca-anchors        certificate anchors\n"
 		  "  blacklist         blacklisted certificates\n"
 		  "  trust-policy      anchors and blacklist\n"
 		  "  certificates      all certificates\n"
