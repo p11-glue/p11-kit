@@ -405,6 +405,23 @@ test_load_found (void)
 }
 
 static void
+test_load_contrived (void)
+{
+	int ret;
+	p11_index *index;
+
+	p11_test_file_write (test.directory, "contrived.der", test_contrived_der,
+	                     sizeof (test_contrived_der));
+
+	ret = p11_token_load (test.token);
+	assert_num_eq (ret, 1);
+
+	index = p11_token_index (test.token);
+	ret = p11_index_size (index);
+	assert_num_eq (ret, 3);
+}
+
+static void
 test_reload_changed (void)
 {
 	CK_ATTRIBUTE cacert3[] = {
@@ -780,6 +797,7 @@ main (int argc,
 	p11_test (test_load_already, "/token/load-already");
 	p11_test (test_load_unreadable, "/token/load-unreadable");
 	p11_test (test_load_gone, "/token/load-gone");
+	p11_test (test_load_contrived, "/token/load-contrived");
 	p11_test (test_reload_changed, "/token/reload-changed");
 	p11_test (test_reload_gone, "/token/reload-gone");
 	p11_test (test_reload_no_origin, "/token/reload-no-origin");
