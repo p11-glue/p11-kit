@@ -24,4 +24,4 @@ install:
 script:
   - docker exec $CONTAINER sh -c "cd /srcdir && NOCONFIGURE=1 ./autogen.sh"
   - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --prefix=/usr --libdir=/usr/lib64"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && make && make check"
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && make V=1 && make check V=1"
