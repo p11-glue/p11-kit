@@ -2,6 +2,11 @@ sudo: required
 
 language: c
 
+env:
+  - BUILD_OPTS=
+  - BUILD_OPTS="CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'
+  - BUILD_OPTS="CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'
+
 services:
   - docker
 
@@ -11,6 +16,7 @@ before_install:
   - docker exec $CONTAINER dnf -y install 'dnf-command(builddep)'
   - docker exec $CONTAINER dnf -y builddep p11-kit
   - docker exec $CONTAINER dnf -y install gettext-devel libtool make
+  - docker exec $CONTAINER dnf -y install libasan libubsan
   - docker exec $CONTAINER useradd user
   - docker exec $CONTAINER mkdir /builddir
   - docker exec $CONTAINER chown -R user /builddir
@@ -23,5 +29,5 @@ install:
 
 script:
   - docker exec $CONTAINER sh -c "cd /srcdir && NOCONFIGURE=1 ./autogen.sh"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --prefix=/usr --libdir=/usr/lib64"
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --prefix=/usr --libdir=/usr/lib64 CFLAGS=\"$CFLAGS\" CXXFLAGS=\"$CXXFLAGS\" LDFLAGS=\"$LDFLAGS\" LIBS=\"$LIBS\""
   - docker exec $CONTAINER su - user sh -c "cd /builddir && make V=1 && make check V=1"
