@@ -87,6 +87,9 @@ int                    p11_kit_module_get_flags             (CK_FUNCTION_LIST *m
 CK_FUNCTION_LIST *     p11_kit_module_load                  (const char *module_path,
                                                              int flags);
 
+CK_FUNCTION_LIST *     p11_kit_module_remote                (const char *remote,
+                                                             int flags);
+
 CK_RV                  p11_kit_module_initialize            (CK_FUNCTION_LIST *module);
 
 CK_RV                  p11_kit_module_finalize              (CK_FUNCTION_LIST *module);
