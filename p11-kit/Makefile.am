@@ -28,7 +28,8 @@ MODULE_SRCS = \
 	$(inc_HEADERS)
 
 lib_LTLIBRARIES += \
-	libp11-kit.la
+	libp11-kit.la \
+	p11-kit-remote-proxy.la
 
 libp11_kit_la_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
@@ -53,6 +54,17 @@ libp11_kit_la_LIBADD = \
 	$(LIBFFI_LIBS) \
 	$(LTLIBINTL) \
 	$(NULL)
+
+p11_kit_remote_proxy_la_SOURCES = \
+	p11-kit/remote-proxy.c
+
+p11_kit_remote_proxy_la_LDFLAGS = \
+	-module \
+	-avoid-version \
+	-export-symbols-regex '^C_GetFunctionList'
+
+p11_kit_remote_proxy_la_LIBADD = \
+	libp11-kit.la
 
 noinst_LTLIBRARIES += \
 	libp11-kit-testable.la
