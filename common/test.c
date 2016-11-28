@@ -501,7 +501,7 @@ p11_test_copy_setgid (const char *input)
 		return NULL;
 	}
 
-	path = strdup ("/tmp/test-setgid.XXXXXX");
+	path = strdup (BUILDDIR "/test-setgid.XXXXXX");
 	assert (path != NULL);
 
 	fd = mkstemp (path);
