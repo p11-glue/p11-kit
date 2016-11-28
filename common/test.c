@@ -483,11 +483,12 @@ char *
 p11_test_copy_setgid (const char *input)
 {
 	gid_t groups[128];
-		char *path;
-		gid_t group = 0;
-		int ret;
-		int fd;
-		int i;
+	char *path;
+	gid_t group = 0;
+	int ret;
+	int fd;
+	int i;
+	char *tmpdir;
 
 	ret = getgroups (128, groups);
 	for (i = 0; i < ret; ++i) {
@@ -501,8 +502,11 @@ p11_test_copy_setgid (const char *input)
 		return NULL;
 	}
 
-	path = strdup ("/tmp/test-setgid.XXXXXX");
-	assert (path != NULL);
+	tmpdir = getenv ("TMPDIR");
+	if (tmpdir == NULL)
+		tmpdir = "/tmp";
+
+	assert (asprintf (&path, "%s/test-setgid.XXXXXX", tmpdir) >= 0);
 
 	fd = mkstemp (path);
 	assert (fd >= 0);
