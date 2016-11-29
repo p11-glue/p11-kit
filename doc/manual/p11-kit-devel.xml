@@ -91,7 +91,7 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 		<para>You can download
 		<ulink url="http://p11-glue.freedesktop.org/releases/">tarballs
 		of the releases</ulink> of p11-kit or
-		<ulink url="http://cgit.freedesktop.org/p11-glue/p11-kit/">check
+		<ulink url="https://github.com/p11-glue/p11-kit/">check
 		out the source code from git</ulink>. This documentation will not
 		go into all the details of how to get your development environment
 		set up and instead focus on the what's unique to compiling p11-kit.</para>
