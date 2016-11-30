@@ -41,6 +41,7 @@
 #include "modules.h"
 #include "p11-kit.h"
 #include "virtual.h"
+#include "virtual-fixed.h"
 
 #include <sys/types.h>
 #ifdef OS_UNIX
@@ -54,17 +55,22 @@
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
-	CK_FUNCTION_LIST_PTR module;
+	CK_FUNCTION_LIST_PTR module = NULL;
 	CK_RV rv;
 
 	p11_lock ();
 
 	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
-	assert (rv == CKR_OK);
-	assert_ptr_not_null (module);
-	assert (p11_virtual_is_wrapper (module));
 
 	p11_unlock ();
+
+	if (rv == CKR_OK) {
+		assert_ptr_not_null (module);
+		assert (p11_virtual_is_wrapper (module));
+	} else {
+		assert_ptr_eq (NULL, module);
+		return NULL;
+	}
 
 	rv = p11_kit_module_initialize (module);
 	assert (rv == CKR_OK);
@@ -168,7 +174,9 @@ test_separate_close_all_sessions (void)
 	CK_RV rv;
 
 	first = setup_mock_module (&s1);
+	assert_ptr_not_null (first);
 	second = setup_mock_module (&s2);
+	assert_ptr_not_null (second);
 
 	rv = first->C_GetSessionInfo (s1, &info);
 	assert (rv == CKR_OK);
@@ -196,6 +204,38 @@ test_separate_close_all_sessions (void)
 
 	teardown_mock_module (first);
 	teardown_mock_module (second);
+}
+
+#define MAX_MODS (P11_VIRTUAL_MAX_FIXED+10)
+static void
+test_max_session_load (void)
+{
+	CK_FUNCTION_LIST *list[MAX_MODS];
+	CK_SESSION_HANDLE s1;
+	CK_SESSION_INFO info;
+	CK_RV rv;
+	unsigned i;
+	unsigned registered = 0;
+
+	for (i = 0; i < MAX_MODS; i++) {
+		list[i] = setup_mock_module (&s1);
+		if (list[i] != NULL)
+			registered++;
+	}
+
+	assert_num_cmp (registered + 1, >=, P11_VIRTUAL_MAX_FIXED);
+
+	for (i = 0; i < registered; i++) {
+		rv = list[i]->C_GetSessionInfo (s1, &info);
+		assert (rv == CKR_OK);
+
+		list[i]->C_CloseAllSessions (MOCK_SLOT_ONE_ID);
+		assert (rv == CKR_OK);
+	}
+
+	for (i = 0; i < registered; i++) {
+		teardown_mock_module (list[i]);
+	}
 }
 
 #ifdef OS_UNIX
@@ -258,6 +298,7 @@ main (int argc,
 	p11_test (test_initialize_finalize, "/managed/test_initialize_finalize");
 	p11_test (test_initialize_fail, "/managed/test_initialize_fail");
 	p11_test (test_separate_close_all_sessions, "/managed/test_separate_close_all_sessions");
+	p11_test (test_max_session_load, "/managed/test_max_session_load");
 
 #ifdef OS_UNIX
 	p11_test (test_fork_and_reinitialize, "/managed/fork-and-reinitialize");
