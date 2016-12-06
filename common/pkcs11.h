@@ -716,6 +716,9 @@ typedef unsigned long ck_mechanism_type_t;
 #define CKM_CAMELLIA_ECB_ENCRYPT_DATA (0x556UL)
 #define CKM_CAMELLIA_CBC_ENCRYPT_DATA (0x557UL)
 
+#define CKM_AES_KEY_WRAP (0x2109UL)
+#define CKM_AES_KEY_WRAP_PAD (0x210aUL)
+
 struct ck_mechanism
 {
   ck_mechanism_type_t mechanism;
