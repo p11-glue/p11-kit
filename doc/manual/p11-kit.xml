@@ -80,7 +80,8 @@ $ p11-kit list-modules
 
 	<para>Extract certificates from configured PKCS#11 modules.</para>
 
-	<para>See <member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member>
+	<para>This operation has been moved to a separate command <command>trust extract</command>.
+	See <member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member>
 	for more information</para>
 </refsect1>
 
@@ -89,7 +90,8 @@ $ p11-kit list-modules
 
 	<para>Extract standard trust information files.</para>
 
-	<para>See <citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	<para>This operation has been moved to a separate command <command>trust extract-compat</command>.
+	See <citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	for more information</para>
 </refsect1>
 
