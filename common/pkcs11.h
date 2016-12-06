@@ -179,6 +179,12 @@ extern "C" {
 #define unlock_mutex UnlockMutex
 #define reserved pReserved
 
+#define ck_rsa_pkcs_mgf_type_t CK_RSA_PKCS_MGF_TYPE
+#define ck_rsa_pkcs_oaep_source_type_t CK_RSA_PKCS_OAEP_SOURCE_TYPE
+#define hash_alg hashAlg
+#define source_data pSourceData
+#define source_data_len ulSourceDataLen
+
 #endif	/* CRYPTOKI_COMPAT */
 
 
@@ -733,6 +739,17 @@ struct ck_mechanism_info
   unsigned long min_key_size;
   unsigned long max_key_size;
   ck_flags_t flags;
+};
+
+typedef unsigned long ck_rsa_pkcs_mgf_type_t;
+typedef unsigned long ck_rsa_pkcs_oaep_source_type_t;
+
+struct ck_rsa_pkcs_oaep_params {
+  ck_mechanism_type_t hash_alg;
+  ck_rsa_pkcs_mgf_type_t mgf;
+  ck_rsa_pkcs_oaep_source_type_t source;
+  void *source_data;
+  unsigned long source_data_len;
 };
 
 #define CKF_HW			(1UL << 0)
@@ -1304,6 +1321,9 @@ typedef struct ck_function_list **CK_FUNCTION_LIST_PTR_PTR;
 
 typedef struct ck_c_initialize_args CK_C_INITIALIZE_ARGS;
 typedef struct ck_c_initialize_args *CK_C_INITIALIZE_ARGS_PTR;
+
+typedef struct ck_rsa_pkcs_oaep_params CK_RSA_PKCS_OAEP_PARAM;
+typedef struct ck_rsa_pkcs_oaep_params *CK_RSA_PKCS_OAEP_PARAMS_PTR;
 
 #define NULL_PTR NULL
 
