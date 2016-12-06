@@ -59,13 +59,10 @@ extern "C" {
 
 
 /* The version of cryptoki we implement.  The revision is changed with
-   each modification of this file.  If you do not use the "official"
-   version of this file, please consider deleting the revision macro
-   (you may use a macro with a different name to keep track of your
-   versions).  */
+   each modification of this file.  */
 #define CRYPTOKI_VERSION_MAJOR		2
-#define CRYPTOKI_VERSION_MINOR		20
-#define CRYPTOKI_VERSION_REVISION	6
+#define CRYPTOKI_VERSION_MINOR		40
+#define P11_KIT_CRYPTOKI_VERSION_REVISION	0
 
 
 /* Compatibility interface is default, unless CRYPTOKI_GNU is
