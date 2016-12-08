@@ -93,12 +93,22 @@ install-exec-hook:
 	done
 	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
 
+install-data-hook:
+	$(MKDIR_P) $(DESTDIR)$(systemduserdir)/sockets.target.wants
+	$(LN_S) -f ../p11-kit-remote.socket $(DESTDIR)$(systemduserdir)/sockets.target.wants/p11-kit-remote.socket
+
 uninstall-local:
 	for i in so dylib; do \
 		rm -f $(DESTDIR)$(libdir)/p11-kit-proxy.$$i; \
 	done
+	rm -f $(DESTDIR)$(systemduserdir)/sockets.target.wants/p11-kit-remote.socket
 
 endif
+
+systemduserdir = $(prefix)/lib/systemd/user
+systemduser_DATA = \
+	p11-kit/p11-kit-remote.socket \
+	p11-kit/p11-kit-remote@.service
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit/p11-kit-1.pc
@@ -108,6 +118,7 @@ example_DATA = p11-kit/pkcs11.conf.example
 
 EXTRA_DIST += \
 	p11-kit/docs.h \
+	p11-kit/p11-kit-remote.socket \
 	$(NULL)
 
 bin_PROGRAMS += p11-kit/p11-kit

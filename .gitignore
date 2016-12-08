@@ -102,6 +102,7 @@ x86_64-w64-mingw32
 /p11-kit/p11-kit.pc
 /p11-kit/p11-kit-1.pc
 /p11-kit/pkcs11.conf.example
+/p11-kit/p11-kit-remote@.service
 
 /po/POTFILES
 /po/stamp-po
