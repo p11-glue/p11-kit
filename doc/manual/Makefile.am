@@ -52,6 +52,7 @@ IGNORE_HFILES= \
 	conf.h \
 	debug.h \
 	dict.h \
+	filter.h \
 	log.h \
 	mock.h \
 	modules.h \

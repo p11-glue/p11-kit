@@ -13,6 +13,7 @@ MODULE_SRCS = \
 	p11-kit/conf.c p11-kit/conf.h \
 	p11-kit/iter.c \
 	p11-kit/log.c p11-kit/log.h \
+	p11-kit/filter.c p11-kit/filter.h \
 	p11-kit/modules.c p11-kit/modules.h \
 	p11-kit/pkcs11.h \
 	p11-kit/pin.c \
@@ -217,11 +218,15 @@ CHECK_PROGS += \
 	test-virtual \
 	test-managed \
 	test-log \
+	test-filter \
 	test-transport \
 	$(NULL)
 
 test_log_SOURCES = p11-kit/test-log.c
 test_log_LDADD = $(p11_kit_LIBS)
+
+test_filter_SOURCES = p11-kit/test-filter.c
+test_filter_LDADD = $(p11_kit_LIBS)
 
 test_managed_SOURCES = p11-kit/test-managed.c
 test_managed_LDADD = $(p11_kit_LIBS)
