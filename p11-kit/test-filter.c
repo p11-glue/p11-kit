@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 2016 Red Hat Inc
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above
+ *       copyright notice, this list of conditions and the
+ *       following disclaimer.
+ *     * Redistributions in binary form must reproduce the
+ *       above copyright notice, this list of conditions and
+ *       the following disclaimer in the documentation and/or
+ *       other materials provided with the distribution.
+ *     * The names of contributors to this software may not be
+ *       used to endorse or promote products derived from this
+ *       software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ *
+ * Author: Daiki Ueno
+ */
+
+#include "config.h"
+#include "test.h"
+
+#include "dict.h"
+#include "library.h"
+#include "filter.h"
+#include "mock.h"
+#include "modules.h"
+#include "p11-kit.h"
+#include "virtual.h"
+
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+static CK_TOKEN_INFO TOKEN_ONE = {
+	"TEST LABEL                      ",
+	"TEST MANUFACTURER               ",
+	"TEST MODEL      ",
+	"TEST SERIAL     ",
+	CKF_LOGIN_REQUIRED | CKF_USER_PIN_INITIALIZED | CKF_CLOCK_ON_TOKEN | CKF_TOKEN_INITIALIZED,
+	1,
+	2,
+	3,
+	4,
+	5,
+	6,
+	7,
+	8,
+	9,
+	10,
+	{ 75, 175 },
+	{ 85, 185 },
+	{ '1', '9', '9', '9', '0', '5', '2', '5', '0', '9', '1', '9', '5', '9', '0', '0' }
+};
+
+static void
+test_allowed (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	p11_virtual virt;
+	p11_virtual *filter;
+	CK_ULONG count;
+	CK_RV rv;
+
+	p11_virtual_init (&virt, &p11_virtual_base, &mock_module, NULL);
+	filter = p11_filter_subclass (&virt, NULL);
+	module = p11_virtual_wrap (filter, (p11_destroyer)p11_virtual_uninit);
+	assert_ptr_not_null (module);
+
+	p11_filter_allow_token (filter, &TOKEN_ONE);
+
+	rv = (module->C_Initialize) (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (count, 1);
+
+	rv = (module->C_Finalize) (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_virtual_unwrap (module);
+	p11_filter_release (filter);
+}
+
+static void
+test_denied (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	p11_virtual virt;
+	p11_virtual *filter;
+	CK_ULONG count;
+	CK_RV rv;
+
+	p11_virtual_init (&virt, &p11_virtual_base, &mock_module, NULL);
+	filter = p11_filter_subclass (&virt, NULL);
+	module = p11_virtual_wrap (filter, (p11_destroyer)p11_virtual_uninit);
+	assert_ptr_not_null (module);
+
+	p11_filter_deny_token (filter, &TOKEN_ONE);
+
+	rv = (module->C_Initialize) (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (count, 0);
+
+	rv = (module->C_Finalize) (NULL);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_virtual_unwrap (module);
+	p11_filter_release (filter);
+}
+
+int
+main (int argc,
+      char *argv[])
+{
+	p11_library_init ();
+	mock_module_init ();
+
+	p11_test (test_allowed, "/filter/test_allowed");
+	p11_test (test_denied, "/filter/test_denied");
+
+	return p11_test_run (argc, argv);
+}
