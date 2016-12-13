@@ -11,6 +11,7 @@ datarootdir=@datarootdir@
 datadir=@datadir@
 sysconfdir=@sysconfdir@
 libdir=@libdir@
+libexecdir=@libexecdir@
 privatedir=@privatedir@
 with_trust_paths=@with_trust_paths@
 script=$(basename $0)
