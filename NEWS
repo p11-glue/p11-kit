@@ -1,3 +1,13 @@
+0.23.3 (devel)
+ * Install private executables in libexecdir [#98817]
+ * Fix link error of proxy module on macOS [#98022]
+ * Use new PKCS#11 URI specification for URIs [#97245]
+ * Support x-init-reserved argument of C_Initialize() in remote modules [#80519]
+ * Incorporate changes from PKCS#11 2.40 specification
+ * Bump libtool library version
+ * Documentation fixes
+ * Build fixes [#87192 ...]
+
 0.23.2 (devel)
  * Fix forking issues with libffi [#90289 ...]
  * Updated translations

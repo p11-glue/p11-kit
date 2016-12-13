@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
-	[0.23.2],
+	[0.23.3],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],
 	[p11-kit],
 	[http://p11-glue.freedesktop.org/p11-kit.html])
@@ -13,9 +13,9 @@ AC_INIT([p11-kit],
 #   +1    :     0    :  0   == removed an interface. Breaks old apps.
 #    ?    :    +1    :  ?   == internal changes that doesn't break anything.
 
-P11KIT_CURRENT=1
+P11KIT_CURRENT=2
 P11KIT_REVISION=0
-P11KIT_AGE=1
+P11KIT_AGE=2
 
 # ------------------------------------------------------------------------------
 
