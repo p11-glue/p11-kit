@@ -103,9 +103,8 @@ test_secure_getenv (void)
 	ret = p11_test_run_child (args, true);
 	assert_num_cmp (ret, ==, 0);
 
-/*	if (unlink (path) < 0)
+	if (unlink (path) < 0)
 		assert_fail ("unlink failed", strerror (errno));
-		*/
 	free (path);
 }
 
