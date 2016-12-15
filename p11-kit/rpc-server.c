@@ -1942,7 +1942,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 		goto out;
 	case 1:
 		if (version != 0) {
-			p11_message ("unspported version received: %d", (int)version);
+			p11_message ("unsupported version received: %d", (int)version);
 			goto out;
 		}
 		break;
