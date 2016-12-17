@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Red Hat Inc.
+ * Copyright (c) 2013,2016 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -48,6 +48,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 static CK_FUNCTION_LIST_PTR_PTR
 initialize_and_get_modules (void)
@@ -697,6 +699,44 @@ test_module_mismatch (void)
 }
 
 static void
+test_module_only (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	CK_RV rv;
+	int count;
+	int ret;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	ret = p11_kit_uri_parse ("pkcs11:library-description=MOCK%20LIBRARY", P11_KIT_URI_FOR_MODULE, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_MODULES | P11_KIT_ITER_WITHOUT_OBJECTS);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		P11KitIterKind kind = p11_kit_iter_get_kind (iter);
+		assert_num_eq (P11_KIT_ITER_KIND_MODULE, kind);
+		count++;
+	}
+
+	assert (rv == CKR_CANCEL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	assert_num_eq (3, count);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
 test_slot_match (void)
 {
 	CK_FUNCTION_LIST_PTR *modules;
@@ -760,6 +800,44 @@ test_slot_mismatch (void)
 
 	/* Nothing should have matched */
 	assert_num_eq (0, count);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
+test_slot_only (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	CK_RV rv;
+	int count;
+	int ret;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	ret = p11_kit_uri_parse ("pkcs11:slot-manufacturer=TEST%20MANUFACTURER", P11_KIT_URI_FOR_SLOT, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_SLOTS | P11_KIT_ITER_WITHOUT_OBJECTS);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		P11KitIterKind kind = p11_kit_iter_get_kind (iter);
+		assert_num_eq (P11_KIT_ITER_KIND_SLOT, kind);
+		count++;
+	}
+
+	assert (rv == CKR_CANCEL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	assert_num_eq (3, count);
 
 	p11_kit_iter_free (iter);
 
@@ -936,6 +1014,44 @@ test_token_mismatch (void)
 
 	/* Nothing should have matched */
 	assert_num_eq (0, count);
+
+	p11_kit_iter_free (iter);
+
+	finalize_and_free_modules (modules);
+}
+
+static void
+test_token_only (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	P11KitUri *uri;
+	CK_RV rv;
+	int count;
+	int ret;
+
+	modules = initialize_and_get_modules ();
+
+	uri = p11_kit_uri_new ();
+	ret = p11_kit_uri_parse ("pkcs11:manufacturer=TEST%20MANUFACTURER", P11_KIT_URI_FOR_TOKEN, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
+	p11_kit_uri_free (uri);
+
+	p11_kit_iter_begin (iter, modules);
+
+	count = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		P11KitIterKind kind = p11_kit_iter_get_kind (iter);
+		assert_num_eq (P11_KIT_ITER_KIND_TOKEN, kind);
+		count++;
+	}
+
+	assert (rv == CKR_CANCEL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	assert_num_eq (3, count);
 
 	p11_kit_iter_free (iter);
 
@@ -1464,6 +1580,41 @@ test_destroy_object (void)
 	finalize_and_free_modules (modules);
 }
 
+/* Test all combinations of P11_KIT_ITER_WITH_{TOKENS,SLOTS,MODULES}
+ * and P11_KIT_ITER_WITHOUT_OBJECTS, against three modules, each
+ * with 1 slot, and 3 public objects */
+static void
+test_exhaustive_match (void)
+{
+	CK_FUNCTION_LIST_PTR *modules;
+	P11KitIter *iter;
+	CK_RV rv;
+	int counts[] = {
+		9, 12, 12, 15, 12, 15, 15, 18, 0, 3, 3, 6, 3, 6, 6, 9
+	};
+	int count;
+	int i;
+
+	for (i = 0; i < ELEMS (counts); i++) {
+		modules = initialize_and_get_modules ();
+
+		iter = p11_kit_iter_new (NULL, (P11KitIterBehavior) i << 3);
+		p11_kit_iter_begin (iter, modules);
+
+		count = 0;
+		while ((rv = p11_kit_iter_next (iter)) == CKR_OK)
+			count++;
+
+		assert (rv == CKR_CANCEL);
+
+		assert_num_eq (counts[i], count);
+
+		p11_kit_iter_free (iter);
+
+		finalize_and_free_modules (modules);
+	}
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1487,13 +1638,16 @@ main (int argc,
 	p11_test (test_token_match, "/iter/test_token_match");
 	p11_test (test_token_mismatch, "/iter/test_token_mismatch");
 	p11_test (test_token_info, "/iter/token-info");
+	p11_test (test_token_only, "/iter/test_token_only");
 	p11_test (test_slot_match, "/iter/test_slot_match");
 	p11_test (test_slot_mismatch, "/iter/test_slot_mismatch");
 	p11_test (test_slot_match_by_id, "/iter/test_slot_match_by_id");
 	p11_test (test_slot_mismatch_by_id, "/iter/test_slot_mismatch_by_id");
 	p11_test (test_slot_info, "/iter/slot-info");
+	p11_test (test_slot_only, "/iter/test_slot_only");
 	p11_test (test_module_match, "/iter/test_module_match");
 	p11_test (test_module_mismatch, "/iter/test_module_mismatch");
+	p11_test (test_module_only, "/iter/test_module_only");
 	p11_test (test_getslotlist_fail_first, "/iter/test_getslotlist_fail_first");
 	p11_test (test_getslotlist_fail_late, "/iter/test_getslotlist_fail_late");
 	p11_test (test_open_session_fail, "/iter/test_open_session_fail");
@@ -1507,6 +1661,7 @@ main (int argc,
 	p11_testx (test_many, "", "/iter/test-many");
 	p11_testx (test_many, "busy-sessions", "/iter/test-many-busy");
 	p11_test (test_destroy_object, "/iter/destroy-object");
+	p11_test (test_exhaustive_match, "/iter/test_exhaustive_match");
 
 	return p11_test_run (argc, argv);
 }

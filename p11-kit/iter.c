@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Red Hat Inc.
+ * Copyright (C) 2013,2016 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,7 +55,7 @@ typedef struct _Callback {
 /**
  * P11KitIter:
  *
- * Used to iterate over PKCS\#11 objects.
+ * Used to iterate over PKCS\#11 objects, tokens, slots, and modules.
  */
 struct p11_kit_iter {
 
@@ -82,12 +82,15 @@ struct p11_kit_iter {
 	CK_ULONG saw_objects;
 
 	/* The current iteration */
+	P11KitIterKind kind;
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
 	CK_SLOT_INFO slot_info;
 	CK_TOKEN_INFO token_info;
+	int move_next_session_state;
+	int iter_next_state;
 
 	/* And various flags */
 	unsigned int searching : 1;
@@ -97,14 +100,33 @@ struct p11_kit_iter {
 	unsigned int keep_session : 1;
 	unsigned int preload_results : 1;
 	unsigned int want_writable : 1;
+	unsigned int with_modules : 1;
+	unsigned int with_slots : 1;
+	unsigned int with_tokens : 1;
+	unsigned int with_objects : 1;
 };
+
+/**
+ * P11KitIterKind:
+ * @P11_KIT_ITER_KIND_MODULE: The iterator is pointing to a module.
+ * @P11_KIT_ITER_KIND_SLOT: The iterator is pointing to a slot.
+ * @P11_KIT_ITER_KIND_TOKEN: The iterator is pointing to a token.
+ * @P11_KIT_ITER_KIND_OBJECT: The iterator is pointing to an object.
+ * @P11_KIT_ITER_KIND_UNKNOWN: The iterator doesn't point to anything.
+ *
+ * The kind of the current match.
+ */
 
 /**
  * P11KitIterBehavior:
  * @P11_KIT_ITER_BUSY_SESSIONS: Allow the iterator's sessions to be
  *   in a busy state when the iterator returns an object.
  * @P11_KIT_ITER_WANT_WRITABLE: Try to open read-write sessions when
- *   iterating over obojects.
+ *   iterating over objects.
+ * @P11_KIT_ITER_WITH_MODULES: Stop at each module while iterating.
+ * @P11_KIT_ITER_WITH_SLOTS: Stop at each slot while iterating.
+ * @P11_KIT_ITER_WITH_TOKENS: Stop at each token while iterating.
+ * @P11_KIT_ITER_WITHOUT_OBJECTS: Ignore objects while iterating.
  *
  * Various flags controlling the behavior of the iterator.
  */
@@ -139,6 +161,10 @@ p11_kit_iter_new (P11KitUri *uri,
 
 	iter->want_writable = !!(behavior & P11_KIT_ITER_WANT_WRITABLE);
 	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);
+	iter->with_modules = !!(behavior & P11_KIT_ITER_WITH_MODULES);
+	iter->with_slots = !!(behavior & P11_KIT_ITER_WITH_SLOTS);
+	iter->with_tokens = !!(behavior & P11_KIT_ITER_WITH_TOKENS);
+	iter->with_objects = !(behavior & P11_KIT_ITER_WITHOUT_OBJECTS);
 
 	p11_kit_iter_set_uri (iter, uri);
 	return iter;
@@ -334,6 +360,9 @@ finish_iterating (P11KitIter *iter,
 	p11_array_clear (iter->modules);
 
 	iter->iterating = 0;
+	iter->move_next_session_state = 0;
+	iter->iter_next_state = 0;
+	iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
 	return rv;
 }
 
@@ -470,6 +499,10 @@ call_all_filters (P11KitIter *iter,
 	return CKR_OK;
 }
 
+#define COROUTINE_BEGIN(name) switch (iter->name ## _state) { case 0:
+#define COROUTINE_RETURN(name,i,x) do { iter->name ## _state = i; return x; case i:; } while (0)
+#define COROUTINE_END(name) }
+
 static CK_RV
 move_next_session (P11KitIter *iter)
 {
@@ -477,6 +510,8 @@ move_next_session (P11KitIter *iter)
 	CK_ULONG num_slots;
 	CK_INFO minfo;
 	CK_RV rv;
+
+	COROUTINE_BEGIN (move_next_session);
 
 	finish_slot (iter);
 
@@ -497,23 +532,31 @@ move_next_session (P11KitIter *iter)
 		if (rv != CKR_OK || !p11_match_uri_module_info (&iter->match_module, &minfo))
 			continue;
 
-		rv = (iter->module->C_GetSlotList) (CK_TRUE, NULL, &num_slots);
-		if (rv != CKR_OK)
-			return finish_iterating (iter, rv);
+		if (iter->with_modules) {
+			iter->kind = P11_KIT_ITER_KIND_MODULE;
+			COROUTINE_RETURN (move_next_session, 1, CKR_OK);
+		}
 
-		iter->slots = realloc (iter->slots, sizeof (CK_SLOT_ID) * (num_slots + 1));
-		return_val_if_fail (iter->slots != NULL, CKR_HOST_MEMORY);
+		if (iter->with_slots || iter->with_tokens || iter->with_objects) {
+			rv = (iter->module->C_GetSlotList) (CK_TRUE, NULL, &num_slots);
+			if (rv != CKR_OK)
+				return finish_iterating (iter, rv);
 
-		rv = (iter->module->C_GetSlotList) (CK_TRUE, iter->slots, &num_slots);
-		if (rv != CKR_OK)
-			return finish_iterating (iter, rv);
+			iter->slots = realloc (iter->slots, sizeof (CK_SLOT_ID) * (num_slots + 1));
+			return_val_if_fail (iter->slots != NULL, CKR_HOST_MEMORY);
 
-		iter->num_slots = num_slots;
-		assert (iter->saw_slots == 0);
+			rv = (iter->module->C_GetSlotList) (CK_TRUE, iter->slots, &num_slots);
+			if (rv != CKR_OK)
+				return finish_iterating (iter, rv);
+
+			iter->num_slots = num_slots;
+			assert (iter->saw_slots == 0);
+		}
 	}
 
 	/* Move to the next slot, and open a session on it */
-	while (iter->saw_slots < iter->num_slots) {
+	while ((iter->with_slots || iter->with_tokens || iter->with_objects) &&
+	       iter->saw_slots < iter->num_slots) {
 		iter->slot = iter->slots[iter->saw_slots++];
 
 		assert (iter->module != NULL);
@@ -522,9 +565,17 @@ move_next_session (P11KitIter *iter)
 		rv = (iter->module->C_GetSlotInfo) (iter->slot, &iter->slot_info);
 		if (rv != CKR_OK || !p11_match_uri_slot_info (&iter->match_slot, &iter->slot_info))
 			continue;
+		if (iter->with_slots) {
+			iter->kind = P11_KIT_ITER_KIND_SLOT;
+			COROUTINE_RETURN (move_next_session, 2, CKR_OK);
+		}
 		rv = (iter->module->C_GetTokenInfo) (iter->slot, &iter->token_info);
 		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &iter->token_info))
 			continue;
+		if (iter->with_tokens) {
+			iter->kind = P11_KIT_ITER_KIND_TOKEN;
+			COROUTINE_RETURN (move_next_session, 3, CKR_OK);
+		}
 
 		session_flags = CKF_SERIAL_SESSION;
 
@@ -537,11 +588,17 @@ move_next_session (P11KitIter *iter)
 		if (rv != CKR_OK)
 			return finish_iterating (iter, rv);
 
-		if (iter->session != 0)
+		if (iter->session != 0) {
+			iter->move_next_session_state = 0;
+			iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
 			return CKR_OK;
+		}
 	}
 
+	COROUTINE_END (move_next_session);
+
 	/* Otherwise try again */
+	iter->move_next_session_state = 0;
 	return move_next_session (iter);
 }
 
@@ -572,9 +629,14 @@ p11_kit_iter_next (P11KitIter *iter)
 
 	return_val_if_fail (iter->iterating, CKR_OPERATION_NOT_INITIALIZED);
 
+	COROUTINE_BEGIN (iter_next);
+
 	iter->object = 0;
 
 	if (iter->match_nothing)
+		return finish_iterating (iter, CKR_CANCEL);
+
+	if (!(iter->with_modules || iter->with_slots || iter->with_tokens || iter->with_objects))
 		return finish_iterating (iter, CKR_CANCEL);
 
 	/*
@@ -582,26 +644,39 @@ p11_kit_iter_next (P11KitIter *iter)
 	 * Note that we pass each object through the filters, and only
 	 * assume it's iterated if it matches
 	 */
-	while (iter->saw_objects < iter->num_objects) {
+	while (iter->with_objects && iter->saw_objects < iter->num_objects) {
 		iter->object = iter->objects[iter->saw_objects++];
 
 		rv = call_all_filters (iter, &matches);
 		if (rv != CKR_OK)
 			return finish_iterating (iter, rv);
 
-		if (matches)
-			return CKR_OK;
+		if (matches && iter->with_objects) {
+			iter->kind = P11_KIT_ITER_KIND_OBJECT;
+			COROUTINE_RETURN (iter_next, 1, CKR_OK);
+		}
 	}
 
-	/* If we have finished searching then move to next session */
-	if (iter->searched) {
-		rv = move_next_session (iter);
-		if (rv != CKR_OK)
-			return finish_iterating (iter, rv);
+	/* Move to next session, if we have finished searching
+	 * objects, or we are looking for modules/slots/tokens */
+	if ((iter->with_objects && iter->searched) ||
+	    (!iter->with_objects &&
+	     (iter->with_modules || iter->with_slots || iter->with_tokens))) {
+		/* Use iter->kind as the sentinel to detect the case where
+		 * any match (except object) is successful in
+		 * move_next_session() */
+		do {
+			iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
+			rv = move_next_session (iter);
+			if (rv != CKR_OK)
+				return finish_iterating (iter, rv);
+			if (iter->kind != P11_KIT_ITER_KIND_UNKNOWN)
+				COROUTINE_RETURN (iter_next, 2, CKR_OK);
+		} while (iter->move_next_session_state > 0);
 	}
 
 	/* Ready to start searching */
-	if (!iter->searching && !iter->searched) {
+	if (iter->with_objects && !iter->searching && !iter->searched) {
 		count = p11_attrs_count (iter->match_attrs);
 		rv = (iter->module->C_FindObjectsInit) (iter->session, iter->match_attrs, count);
 		if (rv != CKR_OK)
@@ -611,7 +686,7 @@ p11_kit_iter_next (P11KitIter *iter)
 	}
 
 	/* If we have searched on this session then try to continue */
-	if (iter->searching) {
+	if (iter->with_objects && iter->searching) {
 		assert (iter->module != NULL);
 		assert (iter->session != 0);
 		iter->num_objects = 0;
@@ -650,8 +725,32 @@ p11_kit_iter_next (P11KitIter *iter)
 		}
 	}
 
+	COROUTINE_END (iter_next);
+
 	/* Try again */
+	iter->iter_next_state = 0;
+	iter->move_next_session_state = 0;
+	iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
 	return p11_kit_iter_next (iter);
+}
+
+/**
+ * p11_kit_iter_get_kind:
+ * @iter: the iterator
+ *
+ * Get the kind of the current match (a module, slot, token, or an
+ * object).
+ *
+ * This can only be called after p11_kit_iter_next() succeeds.
+ *
+ * Returns: a #P11KitIterKind value
+ */
+P11KitIterKind
+p11_kit_iter_get_kind (P11KitIter *iter)
+{
+	return_val_if_fail (iter != NULL, P11_KIT_ITER_KIND_UNKNOWN);
+	return_val_if_fail (iter->iterating, P11_KIT_ITER_KIND_UNKNOWN);
+	return iter->kind;
 }
 
 /**
