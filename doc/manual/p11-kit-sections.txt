@@ -123,6 +123,7 @@ p11_kit_iter_callback
 p11_kit_iter_begin
 p11_kit_iter_begin_with
 p11_kit_iter_next
+p11_kit_iter_get_kind
 p11_kit_iter_get_module
 p11_kit_iter_get_slot
 p11_kit_iter_get_slot_info
@@ -134,6 +135,7 @@ p11_kit_iter_get_attributes
 p11_kit_iter_load_attributes
 p11_kit_iter_destroy_object
 p11_kit_iter_free
+P11KitIterKind
 P11KitIterBehavior
 p11_kit_remote_serve_module
 </SECTION>
