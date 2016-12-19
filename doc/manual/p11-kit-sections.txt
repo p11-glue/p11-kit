@@ -74,6 +74,7 @@ p11_kit_module_release
 p11_kit_module_for_name
 p11_kit_module_get_name
 p11_kit_module_get_flags
+p11_kit_module_get_filename
 p11_kit_config_option
 </SECTION>
 
@@ -94,7 +95,11 @@ CK_ATTRIBUTE_TYPE
 CK_FLAGS
 CK_FUNCTION_LIST
 CK_INFO_PTR
+CK_SLOT_INFO_PTR
 CK_TOKEN_INFO_PTR
+CK_SLOT_ID
+CK_SESSION_HANDLE
+CK_BBOOL
 CK_ULONG
 p11_kit_uri_result_t
 p11_kit_uri_type_t
@@ -116,10 +121,12 @@ p11_kit_iter_begin_with
 p11_kit_iter_next
 p11_kit_iter_get_module
 p11_kit_iter_get_slot
+p11_kit_iter_get_slot_info
 p11_kit_iter_get_token
 p11_kit_iter_get_session
 p11_kit_iter_keep_session
 p11_kit_iter_get_object
+p11_kit_iter_get_attributes
 p11_kit_iter_load_attributes
 p11_kit_iter_destroy_object
 p11_kit_iter_free
