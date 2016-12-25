@@ -138,6 +138,7 @@ p11_kit_iter_free
 P11KitIterKind
 P11KitIterBehavior
 p11_kit_remote_serve_module
+p11_kit_remote_serve_token
 </SECTION>
 
 <SECTION>
