@@ -37,6 +37,7 @@
 
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
+#include "filter.h"
 #include "pkcs11.h"
 #include "library.h"
 #include "private.h"
@@ -2012,6 +2013,42 @@ out:
 	p11_buffer_uninit (&options);
 
 	p11_virtual_uninit (&virt);
+
+	return ret;
+}
+
+int
+p11_kit_remote_serve_token (CK_FUNCTION_LIST *module,
+			    CK_TOKEN_INFO *token,
+			    int in_fd,
+			    int out_fd)
+{
+	p11_virtual virt;
+	p11_virtual *filter = NULL;
+	CK_FUNCTION_LIST *filtered = NULL;
+	int ret = 1;
+
+	return_val_if_fail (module != NULL, 1);
+	return_val_if_fail (token != NULL, 1);
+
+	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+	filter = p11_filter_subclass (&virt, NULL);
+	if (filter == NULL)
+		goto out;
+
+	filtered = p11_virtual_wrap (filter, (p11_destroyer)p11_virtual_uninit);
+	if (filtered == NULL)
+		goto out;
+
+	p11_filter_allow_token (filter, token);
+
+	ret = p11_kit_remote_serve_module (filtered, in_fd, out_fd);
+
+ out:
+	if (filtered != NULL)
+		p11_virtual_unwrap (filtered);
+	if (filter != NULL)
+		p11_filter_release (filter);
 
 	return ret;
 }
