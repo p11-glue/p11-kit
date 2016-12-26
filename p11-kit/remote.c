@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat Inc.
+ * Copyright (C) 2014,2016 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +36,7 @@
 
 #include "compat.h"
 #include "debug.h"
+#include "iter.h"
 #include "message.h"
 #include "p11-kit.h"
 #include "remote.h"
@@ -48,11 +49,73 @@
 #include <string.h>
 #include <unistd.h>
 
+static int
+serve_module_from_uri (const char *uri_string)
+{
+	CK_FUNCTION_LIST **modules;
+	CK_FUNCTION_LIST *module;
+	P11KitIter *iter = NULL;
+	P11KitUri *uri;
+	CK_TOKEN_INFO *token;
+	int ret = 1;
+	CK_RV rv;
+
+	modules = p11_kit_modules_load_and_initialize (0);
+	if (modules == NULL)
+		return 1;
+
+	uri = p11_kit_uri_new ();
+	if (uri == NULL)
+		goto out;
+	ret = p11_kit_uri_parse (uri_string, P11_KIT_URI_FOR_TOKEN, uri);
+	if (ret != P11_KIT_URI_OK) {
+		p11_kit_uri_free (uri);
+		goto out;
+	}
+
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_TOKENS);
+	p11_kit_uri_free (uri);
+	if (iter == NULL)
+		goto out;
+
+	p11_kit_iter_begin (iter, modules);
+	rv = p11_kit_iter_next (iter);
+	if (rv != CKR_OK)
+		goto out;
+
+	module = p11_kit_iter_get_module (iter);
+	token = p11_kit_iter_get_token (iter);
+	p11_kit_modules_finalize (modules);
+
+	ret = p11_kit_remote_serve_token (module, token, 0, 1);
+
+ out:
+	p11_kit_iter_free (iter);
+	p11_kit_modules_release (modules);
+
+	return ret;
+}
+
+static int
+serve_module_from_file (const char *file)
+{
+	CK_FUNCTION_LIST *module;
+	int ret;
+
+	module = p11_kit_module_load (file, 0);
+	if (module == NULL)
+		return 1;
+
+	ret = p11_kit_remote_serve_module (module, 0, 1);
+	p11_kit_module_release (module);
+
+	return ret;
+}
+
 int
 main (int argc,
       char *argv[])
 {
-	CK_FUNCTION_LIST *module;
 	int opt;
 	int ret;
 
@@ -100,12 +163,10 @@ main (int argc,
 		return 2;
 	}
 
-	module = p11_kit_module_load (argv[0], 0);
-	if (module == NULL)
-		return 1;
-
-	ret = p11_kit_remote_serve_module (module, 0, 1);
-	p11_kit_module_release (module);
+	if (strncmp (argv[0], "pkcs11:", 7) == 0)
+		ret = serve_module_from_uri (argv[0]);
+	else
+		ret = serve_module_from_file (argv[0]);
 
 	return ret;
 }
