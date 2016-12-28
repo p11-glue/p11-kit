@@ -1393,17 +1393,14 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->pin_value = NULL;
 	uri->slot_id = (CK_SLOT_ID)-1;
 
+	/* Parse the path. */
 	for (;;) {
-		spos = strchr (string, ';');
-		if (spos == NULL) {
-			spos = string + strlen (string);
-			assert (*spos == '\0');
-			if (spos == string)
-				break;
-		}
+		spos = string + strcspn (string, ";?");
+		if (spos == string)
+			break;
 
 		epos = strchr (string, '=');
-		if (epos == NULL || spos == string || epos == string || epos >= spos) {
+		if (epos == NULL || epos == string || epos >= spos) {
 			free (allocated);
 			return P11_KIT_URI_BAD_SYNTAX;
 		}
@@ -1423,8 +1420,6 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 			ret = parse_module_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION)
 			ret = parse_module_version_info (string, epos, epos + 1, spos, uri);
-		if (ret == 0)
-			ret = parse_extra_info (string, epos, epos + 1, spos, uri);
 
 		if (ret < 0) {
 			free (allocated);
@@ -1433,9 +1428,42 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		if (ret == 0)
 			uri->unrecognized = true;
 
+		string = spos;
 		if (*spos == '\0')
 			break;
-		string = spos + 1;
+		if (*spos == '?')
+			break;
+		string++;
+	}
+
+	/* Parse the query. */
+	for (;;) {
+		if (*string == '\0')
+			break;
+		string++;
+		spos = strchr (string, '&');
+		if (spos == NULL) {
+			spos = string + strlen (string);
+			assert (*spos == '\0');
+			if (spos == string)
+				break;
+		}
+
+		epos = strchr (string, '=');
+		if (epos == NULL || spos == string || epos == string || epos >= spos) {
+			free (allocated);
+			return P11_KIT_URI_BAD_SYNTAX;
+		}
+
+		ret = parse_extra_info (string, epos, epos + 1, spos, uri);
+		if (ret < 0) {
+			free (allocated);
+			return ret;
+		}
+		if (ret == 0)
+			uri->unrecognized = true;
+
+		string = spos;
 	}
 
 	free (allocated);
