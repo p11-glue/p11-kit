@@ -1368,7 +1368,7 @@ test_uri_pin_value (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "pkcs11:pin-value=1%2a%26%23%25%26%40%28") != NULL);
+	assert (strstr (string, "pkcs11:?pin-value=1%2a%26%23%25%26%40%28") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:?pin-value=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);

@@ -753,21 +753,32 @@ p11_kit_uri_new (void)
 	return uri;
 }
 
+enum uri_sep {
+	sep_path = '\0',
+	sep_pattr = ';',
+	sep_query = '?',
+	sep_qattr = '&',
+};
+
 static void
 format_name_equals (p11_buffer *buffer,
-                    bool *is_first,
+                    enum uri_sep *sep,
                     const char *name)
 {
-	if (!*is_first)
-		p11_buffer_add (buffer, ";", 1);
+	if (*sep)
+		p11_buffer_add (buffer, sep, 1);
 	p11_buffer_add (buffer, name, -1);
 	p11_buffer_add (buffer, "=", 1);
-	*is_first = false;
+
+	if (*sep == sep_path)
+		*sep = sep_pattr;
+	else if (*sep == sep_query)
+		*sep = sep_qattr;
 }
 
 static bool
 format_raw_string (p11_buffer *buffer,
-                   bool *is_first,
+                   enum uri_sep *sep,
                    const char *name,
                    const char *value)
 {
@@ -775,7 +786,7 @@ format_raw_string (p11_buffer *buffer,
 	if (!value)
 		return true;
 
-	format_name_equals (buffer, is_first, name);
+	format_name_equals (buffer, sep, name);
 	p11_buffer_add (buffer, value, -1);
 
 	return p11_buffer_ok (buffer);
@@ -783,7 +794,7 @@ format_raw_string (p11_buffer *buffer,
 
 static bool
 format_encode_string (p11_buffer *buffer,
-                      bool *is_first,
+                      enum uri_sep *sep,
                       const char *name,
                       const unsigned char *value,
                       size_t n_value,
@@ -793,7 +804,7 @@ format_encode_string (p11_buffer *buffer,
 	if (!value)
 		return true;
 
-	format_name_equals (buffer, is_first, name);
+	format_name_equals (buffer, sep, name);
 	p11_url_encode (value, value + n_value, force ? "" : P11_URL_VERBATIM, buffer);
 
 	return p11_buffer_ok (buffer);
@@ -802,7 +813,7 @@ format_encode_string (p11_buffer *buffer,
 
 static bool
 format_struct_string (p11_buffer *buffer,
-                      bool *is_first,
+                      enum uri_sep *sep,
                       const char *name,
                       const unsigned char *value,
                       size_t value_max)
@@ -814,12 +825,12 @@ format_struct_string (p11_buffer *buffer,
 		return true;
 
 	len = p11_kit_space_strlen (value, value_max);
-	return format_encode_string (buffer, is_first, name, value, len, false);
+	return format_encode_string (buffer, sep, name, value, len, false);
 }
 
 static bool
 format_attribute_string (p11_buffer *buffer,
-                         bool *is_first,
+                         enum uri_sep *sep,
                          const char *name,
                          CK_ATTRIBUTE_PTR attr,
                          bool force)
@@ -828,14 +839,14 @@ format_attribute_string (p11_buffer *buffer,
 	if (attr == NULL)
 		return true;
 
-	return format_encode_string (buffer, is_first, name,
+	return format_encode_string (buffer, sep, name,
 	                             attr->pValue, attr->ulValueLen,
 	                             force);
 }
 
 static bool
 format_attribute_class (p11_buffer *buffer,
-                        bool *is_first,
+                        enum uri_sep *sep,
                         const char *name,
                         CK_ATTRIBUTE_PTR attr)
 {
@@ -867,12 +878,12 @@ format_attribute_class (p11_buffer *buffer,
 		return true;
 	}
 
-	return format_raw_string (buffer, is_first, name, value);
+	return format_raw_string (buffer, sep, name, value);
 }
 
 static bool
 format_struct_version (p11_buffer *buffer,
-                       bool *is_first,
+                       enum uri_sep *sep,
                        const char *name,
                        CK_VERSION_PTR version)
 {
@@ -884,12 +895,12 @@ format_struct_version (p11_buffer *buffer,
 
 	snprintf (buf, sizeof (buf), "%d.%d",
 	          (int)version->major, (int)version->minor);
-	return format_raw_string (buffer, is_first, name, buf);
+	return format_raw_string (buffer, sep, name, buf);
 }
 
 static bool
 format_ulong (p11_buffer *buffer,
-	      bool *is_first,
+	      enum uri_sep *sep,
 	      const char *name,
 	      CK_ULONG value)
 {
@@ -900,7 +911,7 @@ format_ulong (p11_buffer *buffer,
 		return true;
 
 	snprintf (buf, sizeof (buf), "%lu", value);
-	return format_raw_string (buffer, is_first, name, buf);
+	return format_raw_string (buffer, sep, name, buf);
 }
 
 /**
@@ -935,7 +946,7 @@ int
 p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 {
 	p11_buffer buffer;
-	bool is_first = true;
+	enum uri_sep sep = sep_path;
 
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 	return_val_if_fail (string != NULL, P11_KIT_URI_UNEXPECTED);
@@ -947,10 +958,10 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	p11_buffer_add (&buffer, ":", 1);
 
 	if ((uri_type & P11_KIT_URI_FOR_MODULE) == P11_KIT_URI_FOR_MODULE) {
-		if (!format_struct_string (&buffer, &is_first, "library-description",
+		if (!format_struct_string (&buffer, &sep, "library-description",
 		                           uri->module.libraryDescription,
 		                           sizeof (uri->module.libraryDescription)) ||
-		    !format_struct_string (&buffer, &is_first, "library-manufacturer",
+		    !format_struct_string (&buffer, &sep, "library-manufacturer",
 		                           uri->module.manufacturerID,
 		                           sizeof (uri->module.manufacturerID))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
@@ -958,36 +969,36 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION) {
-		if (!format_struct_version (&buffer, &is_first, "library-version",
+		if (!format_struct_version (&buffer, &sep, "library-version",
 		                            &uri->module.libraryVersion)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_SLOT) == P11_KIT_URI_FOR_SLOT) {
-		if (!format_struct_string (&buffer, &is_first, "slot-description",
+		if (!format_struct_string (&buffer, &sep, "slot-description",
 		                           uri->slot.slotDescription,
 		                           sizeof (uri->slot.slotDescription)) ||
-		    !format_struct_string (&buffer, &is_first, "slot-manufacturer",
+		    !format_struct_string (&buffer, &sep, "slot-manufacturer",
 		                           uri->slot.manufacturerID,
 		                           sizeof (uri->slot.manufacturerID)) ||
-		    !format_ulong (&buffer, &is_first, "slot-id",
+		    !format_ulong (&buffer, &sep, "slot-id",
 				   uri->slot_id)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_TOKEN) == P11_KIT_URI_FOR_TOKEN) {
-		if (!format_struct_string (&buffer, &is_first, "model",
+		if (!format_struct_string (&buffer, &sep, "model",
 		                           uri->token.model,
 		                           sizeof (uri->token.model)) ||
-		    !format_struct_string (&buffer, &is_first, "manufacturer",
+		    !format_struct_string (&buffer, &sep, "manufacturer",
 		                           uri->token.manufacturerID,
 		                           sizeof (uri->token.manufacturerID)) ||
-		    !format_struct_string (&buffer, &is_first, "serial",
+		    !format_struct_string (&buffer, &sep, "serial",
 		                           uri->token.serialNumber,
 		                           sizeof (uri->token.serialNumber)) ||
-		    !format_struct_string (&buffer, &is_first, "token",
+		    !format_struct_string (&buffer, &sep, "token",
 		                           uri->token.label,
 		                           sizeof (uri->token.label))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
@@ -995,23 +1006,25 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	}
 
 	if ((uri_type & P11_KIT_URI_FOR_OBJECT) == P11_KIT_URI_FOR_OBJECT) {
-		if (!format_attribute_string (&buffer, &is_first, "id",
+		if (!format_attribute_string (&buffer, &sep, "id",
 		                              p11_kit_uri_get_attribute (uri, CKA_ID),
 		                              true) ||
-		    !format_attribute_string (&buffer, &is_first, "object",
+		    !format_attribute_string (&buffer, &sep, "object",
 		                              p11_kit_uri_get_attribute (uri, CKA_LABEL),
 		                              false)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
-		if (!format_attribute_class (&buffer, &is_first, "type",
+		if (!format_attribute_class (&buffer, &sep, "type",
 		                             p11_kit_uri_get_attribute (uri, CKA_CLASS))) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
+	sep = sep_query;
+
 	if (uri->pin_source) {
-		if (!format_encode_string (&buffer, &is_first, "pin-source",
+		if (!format_encode_string (&buffer, &sep, "pin-source",
 		                           (const unsigned char*)uri->pin_source,
 		                           strlen (uri->pin_source), 0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
@@ -1019,7 +1032,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	}
 
 	if (uri->pin_value) {
-		if (!format_encode_string (&buffer, &is_first, "pin-value",
+		if (!format_encode_string (&buffer, &sep, "pin-value",
 		                           (const unsigned char*)uri->pin_value,
 		                           strlen (uri->pin_value), 0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
