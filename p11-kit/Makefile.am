@@ -87,8 +87,16 @@ libp11_kit_testable_la_CFLAGS = \
 
 # Proxy module is actually same as library, so install a link
 install-exec-hook:
-	$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.{so,dylib}` $(DESTDIR)$(libdir)/p11-kit-proxy.so
+	for i in so dylib; do \
+		test -f $(DESTDIR)$(libdir)/libp11-kit.$$i && \
+			$(LN_S) -f `readlink $(DESTDIR)$(libdir)/libp11-kit.$$i` $(DESTDIR)$(libdir)/p11-kit-proxy.$$i || true; \
+	done
 	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
+
+uninstall-local:
+	for i in so dylib; do \
+		rm -f $(DESTDIR)$(libdir)/p11-kit-proxy.$$i; \
+	done
 
 endif
 
