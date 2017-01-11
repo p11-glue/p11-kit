@@ -32,6 +32,9 @@ noinst_SCRIPTS =
 
 TESTS = $(CHECK_PROGS)
 
+moduledir = $(p11_module_path)
+module_LTLIBRARIES =
+
 include common/Makefile.am
 include p11-kit/Makefile.am
 

@@ -289,6 +289,16 @@ alloc_module_unlocked (void)
 	return mod;
 }
 
+#ifdef __GNUC__
+bool       p11_proxy_module_check                    (CK_FUNCTION_LIST_PTR module) __attribute__((weak));
+
+bool
+p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
+{
+	return false;
+}
+#endif
+
 static CK_RV
 dlopen_and_get_function_list (Module *mod,
                               const char *path,

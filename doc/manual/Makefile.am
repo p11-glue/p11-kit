@@ -60,6 +60,7 @@ IGNORE_HFILES= \
 	pkcs11i.h \
 	pkcs11x.h \
 	private.h \
+	client.h \
 	proxy.h \
 	rpc.h \
 	rpc-message.h \

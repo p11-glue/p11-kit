@@ -8,7 +8,7 @@ inc_HEADERS += \
 	p11-kit/uri.h \
 	$(NULL)
 
-MODULE_SRCS = \
+COMMON_SRCS = \
 	p11-kit/util.c \
 	p11-kit/conf.c p11-kit/conf.h \
 	p11-kit/iter.c \
@@ -19,7 +19,6 @@ MODULE_SRCS = \
 	p11-kit/pin.c \
 	p11-kit/pkcs11.h \
 	p11-kit/private.h \
-	p11-kit/proxy.c p11-kit/proxy.h \
 	p11-kit/messages.c \
 	p11-kit/rpc-transport.c p11-kit/rpc.h \
 	p11-kit/rpc-message.c p11-kit/rpc-message.h \
@@ -32,7 +31,7 @@ MODULE_SRCS = \
 lib_LTLIBRARIES += \
 	libp11-kit.la
 
-libp11_kit_la_CFLAGS = \
+COMMON_CFLAGS = \
 	-DP11_SYSTEM_CONFIG_FILE=\""$(p11_system_config_file)"\" \
 	-DP11_SYSTEM_CONFIG_MODULES=\""$(p11_system_config_modules)"\" \
 	-DP11_PACKAGE_CONFIG_MODULES=\""$(p11_package_config_modules)"\" \
@@ -42,26 +41,44 @@ libp11_kit_la_CFLAGS = \
 	$(LIBFFI_CFLAGS) \
 	$(NULL)
 
-libp11_kit_la_LDFLAGS = \
-	-no-undefined \
-	-version-info $(P11KIT_LT_RELEASE) \
-	-export-symbols-regex '^C_GetFunctionList|^p11_kit_'
-
-libp11_kit_la_SOURCES = $(MODULE_SRCS)
-
-libp11_kit_la_LIBADD = \
+COMMON_LIBS = \
 	libp11-common.la \
 	libp11-library.la \
 	$(LIBFFI_LIBS) \
 	$(LTLIBINTL) \
 	$(NULL)
 
+libp11_kit_la_CFLAGS = $(COMMON_CFLAGS)
+
+libp11_kit_la_LDFLAGS = \
+	-no-undefined \
+	-version-info $(P11KIT_LT_RELEASE) \
+	-export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+
+libp11_kit_la_SOURCES = \
+	p11-kit/proxy.c p11-kit/proxy.h p11-kit/proxy-init.c
+	$(NULL)
+
+libp11_kit_la_LIBADD = \
+	libp11-kit-internal.la \
+	$(COMMON_LIBS) \
+	$(NULL)
+
 noinst_LTLIBRARIES += \
-	libp11-kit-testable.la
+	libp11-kit-internal.la \
+	libp11-kit-testable.la \
+	$(NULL)
+
+libp11_kit_internal_la_LDFLAGS = -no-undefined
+libp11_kit_internal_la_CFLAGS = $(COMMON_CFLAGS)
+libp11_kit_internal_la_SOURCES = $(COMMON_SRCS)
 
 libp11_kit_testable_la_LDFLAGS = -no-undefined
-libp11_kit_testable_la_SOURCES = $(MODULE_SRCS)
-libp11_kit_testable_la_LIBADD = $(libp11_kit_la_LIBADD)
+libp11_kit_testable_la_SOURCES = \
+	$(libp11_kit_internal_la_SOURCES) \
+	$(libp11_kit_la_SOURCES) \
+	$(NULL)
+libp11_kit_testable_la_LIBADD = $(COMMON_LIBS)
 
 if OS_WIN32
 
@@ -111,6 +128,25 @@ systemduserdir = $(prefix)/lib/systemd/user
 systemduser_DATA = \
 	p11-kit/p11-kit-remote.socket \
 	p11-kit/p11-kit-remote@.service
+
+if !OS_WIN32
+module_LTLIBRARIES += \
+	p11-kit-client.la
+
+p11_kit_client_la_LDFLAGS = \
+	-no-undefined -module -avoid-version \
+	-version-info $(P11KIT_LT_RELEASE) \
+	-export-symbols-regex '^C_GetFunctionList' \
+	$(NULL)
+
+p11_kit_client_la_CFLAGS = $(COMMON_CFLAGS)
+
+p11_kit_client_la_SOURCES = \
+	p11-kit/client.c p11-kit/client.h p11-kit/client-init.c \
+	$(NULL)
+
+p11_kit_client_la_LIBADD = $(libp11_kit_la_LIBADD)
+endif
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = p11-kit/p11-kit-1.pc
