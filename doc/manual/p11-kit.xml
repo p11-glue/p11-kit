@@ -35,6 +35,9 @@
 	<cmdsynopsis>
 		<command>p11-kit extract</command> ...
 	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>p11-kit server</command> ...
+	</cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1 id="p11-kit-description">
@@ -83,6 +86,20 @@ $ p11-kit list-modules
 	<para>This operation has been moved to a separate command <command>trust extract</command>.
 	See <member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member>
 	for more information</para>
+</refsect1>
+
+<refsect1 id="p11-kit-server">
+	<title>Server</title>
+
+	<para>Run a server process that exposes PKCS#11 module remotely.</para>
+
+<programlisting>
+$ p11-kit server /path/to/pkcs11-module.so
+$ p11-kit server pkcs11:token-uri
+</programlisting>
+
+	<para>This launches a server that exposes the given PKCS#11 module or token on a local socket. To access the socket, use <literal>p11-kit-client.so</literal> module. The server address and PID are printed as a shell-script snippet which sets the appropriate environment variable: <literal>P11_KIT_SERVER_ADDRESS</literal> and <literal>P11_KIT_SERVER_PID</literal>.</para>
+
 </refsect1>
 
 <refsect1 id="p11-kit-extract-trust">

@@ -73,7 +73,7 @@ serve_module_from_uri (const char *uri_string)
 		goto out;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_TOKENS);
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
 	p11_kit_uri_free (uri);
 	if (iter == NULL)
 		goto out;

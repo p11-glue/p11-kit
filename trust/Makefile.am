@@ -38,8 +38,7 @@ TRUST_SRCS = \
 configdir = $(p11_package_config_modules)
 config_DATA = trust/p11-kit-trust.module
 
-moduledir = $(p11_module_path)
-module_LTLIBRARIES = \
+module_LTLIBRARIES += \
 	p11-kit-trust.la
 
 p11_kit_trust_la_CFLAGS = \

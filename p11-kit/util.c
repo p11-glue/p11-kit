@@ -44,7 +44,6 @@
 #include "message.h"
 #include "p11-kit.h"
 #include "private.h"
-#include "proxy.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -237,59 +236,3 @@ _p11_get_progname_unlocked (void)
 		return NULL;
 	return p11_my_progname;
 }
-
-#ifdef OS_UNIX
-
-void _p11_kit_init (void);
-
-void _p11_kit_fini (void);
-
-#ifdef __GNUC__
-__attribute__((constructor))
-#endif
-void
-_p11_kit_init (void)
-{
-	p11_library_init_once ();
-}
-
-#ifdef __GNUC__
-__attribute__((destructor))
-#endif
-void
-_p11_kit_fini (void)
-{
-	p11_proxy_module_cleanup ();
-	p11_library_uninit ();
-}
-
-#endif /* OS_UNIX */
-
-#ifdef OS_WIN32
-
-BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
-
-BOOL WINAPI
-DllMain (HINSTANCE instance,
-         DWORD reason,
-         LPVOID reserved)
-{
-	switch (reason) {
-	case DLL_PROCESS_ATTACH:
-		p11_library_init ();
-		break;
-	case DLL_THREAD_DETACH:
-		p11_library_thread_cleanup ();
-		break;
-	case DLL_PROCESS_DETACH:
-		p11_proxy_module_cleanup ();
-		p11_library_uninit ();
-		break;
-	default:
-		break;
-	}
-
-	return TRUE;
-}
-
-#endif /* OS_WIN32 */
