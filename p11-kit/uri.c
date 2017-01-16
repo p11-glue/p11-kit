@@ -765,8 +765,10 @@ format_name_equals (p11_buffer *buffer,
                     enum uri_sep *sep,
                     const char *name)
 {
-	if (*sep)
-		p11_buffer_add (buffer, sep, 1);
+	if (*sep) {
+		char c = *sep;
+		p11_buffer_add (buffer, &c, 1);
+	}
 	p11_buffer_add (buffer, name, -1);
 	p11_buffer_add (buffer, "=", 1);
 
