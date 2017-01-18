@@ -145,9 +145,11 @@ struct p11_kit_uri {
 	CK_SLOT_INFO slot;
 	CK_TOKEN_INFO token;
 	CK_ATTRIBUTE *attrs;
+	CK_SLOT_ID slot_id;
 	char *pin_source;
 	char *pin_value;
-	CK_SLOT_ID slot_id;
+	char *module_name;
+	char *module_path;
 };
 
 static char *
@@ -727,6 +729,71 @@ p11_kit_uri_set_pinfile (P11KitUri *uri, const char *pinfile)
 	p11_kit_uri_set_pin_source (uri, pinfile);
 }
 
+
+/**
+ * p11_kit_uri_get_module_name:
+ * @uri: The URI
+ *
+ * Get the 'module-name' part of the URI. This is used by some
+ * applications to explicitly specify the name of a PKCS\#11 module.
+ *
+ * Returns: The module-name or %NULL if not present.
+ */
+const char*
+p11_kit_uri_get_module_name (P11KitUri *uri)
+{
+	return_val_if_fail (uri != NULL, NULL);
+	return uri->module_name;
+}
+
+/**
+ * p11_kit_uri_set_module_name:
+ * @uri: The URI
+ * @name: The new module-name
+ *
+ * Set the 'module-name' part of the URI. This is used by some
+ * applications to explicitly specify the name of a PKCS\#11 module.
+ */
+void
+p11_kit_uri_set_module_name (P11KitUri *uri, const char *name)
+{
+	return_if_fail (uri != NULL);
+	free (uri->module_name);
+	uri->module_name = name ? strdup (name) : NULL;
+}
+
+/**
+ * p11_kit_uri_get_module_path:
+ * @uri: The URI
+ *
+ * Get the 'module-path' part of the URI. This is used by some
+ * applications to explicitly specify the path of a PKCS\#11 module.
+ *
+ * Returns: The module-path or %NULL if not present.
+ */
+const char*
+p11_kit_uri_get_module_path (P11KitUri *uri)
+{
+	return_val_if_fail (uri != NULL, NULL);
+	return uri->module_path;
+}
+
+/**
+ * p11_kit_uri_set_module_path:
+ * @uri: The URI
+ * @path: The new module-path
+ *
+ * Set the 'module-path' part of the URI. This is used by some
+ * applications to explicitly specify the path of a PKCS\#11 module.
+ */
+void
+p11_kit_uri_set_module_path (P11KitUri *uri, const char *path)
+{
+	return_if_fail (uri != NULL);
+	free (uri->module_path);
+	uri->module_path = path ? strdup (path) : NULL;
+}
+
 /**
  * p11_kit_uri_new:
  *
@@ -1041,6 +1108,22 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
+	if (uri->module_name) {
+		if (!format_encode_string (&buffer, &sep, "module-name",
+		                           (const unsigned char*)uri->module_name,
+		                           strlen (uri->module_name), 0)) {
+			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+		}
+	}
+
+	if (uri->module_path) {
+		if (!format_encode_string (&buffer, &sep, "module-path",
+		                           (const unsigned char*)uri->module_path,
+		                           strlen (uri->module_path), 0)) {
+			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+		}
+	}
+
 	return_val_if_fail (p11_buffer_ok (&buffer), P11_KIT_URI_UNEXPECTED);
 	*string = p11_buffer_steal (&buffer, NULL);
 	return P11_KIT_URI_OK;
@@ -1311,25 +1394,39 @@ parse_extra_info (const char *name_start, const char *name_end,
 		  const char *start, const char *end,
 		  P11KitUri *uri)
 {
-	unsigned char *pin_source;
+	unsigned char *value;
 
 	assert (name_start <= name_end);
 	assert (start <= end);
 
 	if (str_range_equal ("pinfile", name_start, name_end) ||
 	    str_range_equal ("pin-source", name_start, name_end)) {
-		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
-		if (pin_source == NULL)
+		value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (value == NULL)
 			return P11_KIT_URI_BAD_ENCODING;
 		free (uri->pin_source);
-		uri->pin_source = (char*)pin_source;
+		uri->pin_source = (char*)value;
 		return 1;
 	} else if (str_range_equal ("pin-value", name_start, name_end)) {
-		pin_source = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
-		if (pin_source == NULL)
+		value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (value == NULL)
 			return P11_KIT_URI_BAD_ENCODING;
 		free (uri->pin_value);
-		uri->pin_value = (char*)pin_source;
+		uri->pin_value = (char*)value;
+		return 1;
+	} else if (str_range_equal ("module-name", name_start, name_end)) {
+		value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (value == NULL)
+			return P11_KIT_URI_BAD_ENCODING;
+		free (uri->module_name);
+		uri->module_name = (char*)value;
+		return 1;
+	} else if (str_range_equal ("module-path", name_start, name_end)) {
+		value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+		if (value == NULL)
+			return P11_KIT_URI_BAD_ENCODING;
+		free (uri->module_path);
+		uri->module_path = (char*)value;
 		return 1;
 	}
 
@@ -1402,11 +1499,15 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->unrecognized = 0;
+	uri->slot_id = (CK_SLOT_ID)-1;
 	free (uri->pin_source);
 	uri->pin_source = NULL;
 	free (uri->pin_value);
 	uri->pin_value = NULL;
-	uri->slot_id = (CK_SLOT_ID)-1;
+	free (uri->module_name);
+	uri->module_name = NULL;
+	free (uri->module_path);
+	uri->module_path = NULL;
 
 	/* Parse the path. */
 	for (;;) {
@@ -1500,6 +1601,8 @@ p11_kit_uri_free (P11KitUri *uri)
 	p11_attrs_free (uri->attrs);
 	free (uri->pin_source);
 	free (uri->pin_value);
+	free (uri->module_name);
+	free (uri->module_path);
 	free (uri);
 }
 
