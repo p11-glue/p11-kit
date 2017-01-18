@@ -30,6 +30,10 @@ p11_kit_uri_get_pin_source
 p11_kit_uri_set_pin_source
 p11_kit_uri_get_pinfile
 p11_kit_uri_set_pinfile
+p11_kit_uri_get_module_name
+p11_kit_uri_set_module_name
+p11_kit_uri_get_module_path
+p11_kit_uri_set_module_path
 p11_kit_uri_format
 p11_kit_uri_parse
 p11_kit_uri_free

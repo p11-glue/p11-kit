@@ -153,6 +153,16 @@ void                p11_kit_uri_set_pinfile                 (P11KitUri *uri,
 
 #endif /* P11_KIT_DISABLE_DEPRECATED */
 
+const char*         p11_kit_uri_get_module_name             (P11KitUri *uri);
+
+void                p11_kit_uri_set_module_name             (P11KitUri *uri,
+                                                             const char *name);
+
+const char*         p11_kit_uri_get_module_path             (P11KitUri *uri);
+
+void                p11_kit_uri_set_module_path             (P11KitUri *uri,
+                                                             const char *path);
+
 void                p11_kit_uri_set_unrecognized            (P11KitUri *uri,
                                                              int unrecognized);
 

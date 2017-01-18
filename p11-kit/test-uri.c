@@ -1396,6 +1396,117 @@ test_uri_pin_value_bad (void)
 }
 
 static void
+test_uri_module_name (void)
+{
+	P11KitUri *uri;
+	const char *module_name;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	p11_kit_uri_set_module_name (uri, "123456");
+
+	module_name = p11_kit_uri_get_module_name (uri);
+	assert_str_eq ("123456", module_name);
+
+	p11_kit_uri_set_module_name (uri, "1*&#%&@(");
+
+	module_name = p11_kit_uri_get_module_name (uri);
+	assert_str_eq ("1*&#%&@(", module_name);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "pkcs11:?module-name=1%2a%26%23%25%26%40%28") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:?module-name=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	module_name = p11_kit_uri_get_module_name (uri);
+	assert_str_eq ("blah/blah", module_name);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_module_name_bad (void)
+{
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("pkcs11:?module-name=blahblah%2", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_BAD_ENCODING, ret);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_module_path (void)
+{
+	P11KitUri *uri;
+	const char *module_path;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	p11_kit_uri_set_module_path (uri, "/my-module-path");
+
+	module_path = p11_kit_uri_get_module_path (uri);
+	assert_str_eq ("/my-module-path", module_path);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "module-path=%2fmy-module-path") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:?module-path=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	module_path = p11_kit_uri_get_module_path (uri);
+	assert_str_eq ("blah/blah", module_path);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
+test_uri_module_name_and_path (void)
+{
+	P11KitUri *uri;
+	const char *module_name;
+	const char *module_path;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	p11_kit_uri_set_module_name (uri, "123456");
+	p11_kit_uri_set_module_path (uri, "/my-module-path");
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "pkcs11:?module-name=123456&module-path=%2fmy-module-path") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:?module-name=1%2a%26%23%25%26%40%28&module-path=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	module_name = p11_kit_uri_get_module_name (uri);
+	assert_str_eq ("1*&#%&@(", module_name);
+	module_path = p11_kit_uri_get_module_path (uri);
+	assert_str_eq ("blah/blah", module_path);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_slot_id (void)
 {
 	P11KitUri *uri;
@@ -1503,6 +1614,10 @@ main (int argc,
 	p11_test (test_uri_pin_source, "/uri/test_uri_pin_source");
 	p11_test (test_uri_pin_value, "/uri/pin-value");
 	p11_test (test_uri_pin_value_bad, "/uri/pin-value-bad");
+	p11_test (test_uri_module_name, "/uri/module-name");
+	p11_test (test_uri_module_name_bad, "/uri/module-name-bad");
+	p11_test (test_uri_module_path, "/uri/module-path");
+	p11_test (test_uri_module_name_and_path, "/uri/module-name-and-path");
 	p11_test (test_uri_slot_id, "/uri/slot-id");
 	p11_test (test_uri_slot_id_bad, "/uri/slot-id-bad");
 	p11_test (test_uri_free_null, "/uri/test_uri_free_null");
