@@ -40,6 +40,10 @@
  */
 #define _XOPEN_SOURCE 700
 
+#if defined(HAVE_ISSETUGID) && defined(__FreeBSD__)
+#define __BSD_VISIBLE 1
+#endif
+
 #include "compat.h"
 #include "debug.h"
 
