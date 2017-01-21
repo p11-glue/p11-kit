@@ -39,6 +39,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static void
 test_with_err (void)

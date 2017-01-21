@@ -780,7 +780,7 @@ test_slot_match_by_id (void)
 	modules = initialize_and_get_modules ();
 
 	uri = p11_kit_uri_new ();
-	ret = asprintf (&string, "pkcs11:slot-id=%lu", MOCK_SLOT_ONE_ID);
+	ret = asprintf (&string, "pkcs11:slot-id=%d", MOCK_SLOT_ONE_ID);
 	assert (ret > 0);
 	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_SLOT, uri);
 	free (string);
