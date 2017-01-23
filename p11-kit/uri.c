@@ -1390,9 +1390,9 @@ parse_module_info (const char *name_start, const char *name_end,
 }
 
 static int
-parse_extra_info (const char *name_start, const char *name_end,
-		  const char *start, const char *end,
-		  P11KitUri *uri)
+parse_pin_query (const char *name_start, const char *name_end,
+		 const char *start, const char *end,
+		 P11KitUri *uri)
 {
 	unsigned char *value;
 
@@ -1414,7 +1414,22 @@ parse_extra_info (const char *name_start, const char *name_end,
 		free (uri->pin_value);
 		uri->pin_value = (char*)value;
 		return 1;
-	} else if (str_range_equal ("module-name", name_start, name_end)) {
+	}
+
+	return 0;
+}
+
+static int
+parse_module_query (const char *name_start, const char *name_end,
+		    const char *start, const char *end,
+		    P11KitUri *uri)
+{
+	unsigned char *value;
+
+	assert (name_start <= name_end);
+	assert (start <= end);
+
+	if (str_range_equal ("module-name", name_start, name_end)) {
 		value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
 		if (value == NULL)
 			return P11_KIT_URI_BAD_ENCODING;
@@ -1536,6 +1551,10 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 			ret = parse_module_info (string, epos, epos + 1, spos, uri);
 		if (ret == 0 && (uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION)
 			ret = parse_module_version_info (string, epos, epos + 1, spos, uri);
+		/* Accept 'pin-source' and 'pin-value' in path
+		 * attributes for backward compatibility.  */
+		if (ret == 0)
+			ret = parse_pin_query (string, epos, epos + 1, spos, uri);
 
 		if (ret < 0) {
 			free (allocated);
@@ -1571,7 +1590,9 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 			return P11_KIT_URI_BAD_SYNTAX;
 		}
 
-		ret = parse_extra_info (string, epos, epos + 1, spos, uri);
+		ret = parse_pin_query (string, epos, epos + 1, spos, uri);
+		if (ret == 0)
+			ret = parse_module_query (string, epos, epos + 1, spos, uri);
 		if (ret < 0) {
 			free (allocated);
 			return ret;
