@@ -32,6 +32,10 @@
  * Author: Daiki Ueno
  */
 
+#ifndef __P11_VIRTUAL_FIXED_H__
+#define __P11_VIRTUAL_FIXED_H__
+
+/* The maximum number of precompiled closures.  */
 #define P11_VIRTUAL_MAX_FIXED 64
 
 #define P11_VIRTUAL_FIXED_FUNCTIONS(fixed_index)	\
@@ -1133,3 +1137,8 @@ fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list) \
 	short_C_CancelFunction, \
 	fixed ## fixed_index ## _C_WaitForSlotEvent \
 }
+
+void                    p11_virtual_fixed_init   (void);
+void                    p11_virtual_fixed_uninit (void);
+
+#endif /* __P11_VIRTUAL_FIXED_H__ */
