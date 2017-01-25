@@ -133,6 +133,7 @@ static void
 teardown_mock_module (CK_FUNCTION_LIST *module)
 {
 	p11_kit_module_finalize (module);
+	p11_kit_module_release (module);
 	teardown_remote (NULL);
 }
 
