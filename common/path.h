@@ -66,4 +66,8 @@ bool         p11_path_prefix    (const char *string,
 
 void         p11_path_canon     (char *name);
 
+char *       p11_path_encode    (const char *path);
+
+char *       p11_path_decode    (const char *path);
+
 #endif /* P11_PATH_H__ */
