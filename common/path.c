@@ -38,9 +38,11 @@
 
 #include "config.h"
 
+#include "buffer.h"
 #include "debug.h"
 #include "message.h"
 #include "path.h"
+#include "url.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -324,4 +326,35 @@ p11_path_canon (char *name)
 		if (strchr (VALID, name[i]) == NULL)
 			name[i] = '_';
 	}
+}
+
+char *
+p11_path_encode (const char *path)
+{
+	static const char *VALID =
+		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_/\\";
+	p11_buffer buf;
+	char *result;
+
+	return_val_if_fail (path != NULL, NULL);
+
+	if (!p11_buffer_init_null (&buf, strlen (path)))
+		return_val_if_reached (NULL);
+
+	p11_url_encode ((unsigned char *)path,
+			(unsigned char *)path + strlen (path),
+			VALID,
+			&buf);
+	return_val_if_fail (p11_buffer_ok (&buf), NULL);
+
+	result = p11_buffer_steal (&buf, NULL);
+	p11_buffer_uninit (&buf);
+
+	return result;
+}
+
+char *
+p11_path_decode (const char *path)
+{
+	return (char *) p11_url_decode (path, path + strlen (path), "", NULL);
 }

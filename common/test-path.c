@@ -200,6 +200,26 @@ test_canon (void)
 	free (test);
 }
 
+static void
+test_encode (void)
+{
+	char *test;
+
+	test = p11_path_encode ("2309haonutb;/AOE@#$O ");
+	assert_str_eq (test, "2309haonutb%3b/AOE%40%23%24O%20");
+	free (test);
+}
+
+static void
+test_decode (void)
+{
+	char *test;
+
+	test = p11_path_decode ("2309haonutb%3b/AOE%40%23%24O%20");
+	assert_str_eq (test, "2309haonutb;/AOE@#$O ");
+	free (test);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -211,6 +231,8 @@ main (int argc,
 	p11_test (test_parent, "/path/parent");
 	p11_test (test_prefix, "/path/prefix");
 	p11_test (test_canon, "/path/canon");
+	p11_test (test_encode, "/path/encode");
+	p11_test (test_decode, "/path/decode");
 
 	return p11_test_run (argc, argv);
 }
