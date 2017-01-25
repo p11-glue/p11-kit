@@ -63,8 +63,4 @@ bool                    p11_virtual_is_wrapper (CK_FUNCTION_LIST *module);
 
 void                    p11_virtual_unwrap     (CK_FUNCTION_LIST *module);
 
-void                    p11_virtual_init_fixed (void);
-void                    p11_virtual_uninit_fixed
-                                               (void);
-
 #endif /* __P11_VIRTUAL_H__ */

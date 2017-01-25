@@ -102,7 +102,7 @@ static void
                                                 (CK_FUNCTION_LIST_PTR module);
 
 void
-p11_virtual_init_fixed (void)
+p11_virtual_fixed_init (void)
 {
 	p11_lock ();
 	p11_mutex_init (&fixed_mutex);
@@ -111,7 +111,7 @@ p11_virtual_init_fixed (void)
 }
 
 void
-p11_virtual_uninit_fixed (void)
+p11_virtual_fixed_uninit (void)
 {
 	p11_lock ();
 	p11_mutex_uninit (&fixed_mutex);
