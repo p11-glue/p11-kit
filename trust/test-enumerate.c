@@ -62,6 +62,7 @@ test_file_name_for_label (void)
 	char *name;
 
 	p11_enumerate_init (&ex);
+	ex.flags |= P11_ENUMERATE_CORRELATE;
 
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
@@ -79,6 +80,7 @@ test_file_name_for_class (void)
 	char *name;
 
 	p11_enumerate_init (&ex);
+	ex.flags |= P11_ENUMERATE_CORRELATE;
 
 	ex.klass = CKO_CERTIFICATE;
 
@@ -104,7 +106,7 @@ test_comment_for_label (void)
 
 	p11_enumerate_init (&ex);
 
-	ex.flags = P11_EXTRACT_COMMENT;
+	ex.flags = P11_EXTRACT_COMMENT | P11_ENUMERATE_CORRELATE;
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
 	comment = p11_enumerate_comment (&ex, true);
@@ -127,6 +129,7 @@ test_comment_not_enabled (void)
 
 	p11_enumerate_init (&ex);
 
+	ex.flags |= P11_ENUMERATE_CORRELATE;
 	ex.attrs = p11_attrs_build (NULL, &label, NULL);
 
 	comment = p11_enumerate_comment (&ex, true);
@@ -156,6 +159,7 @@ setup (void *unused)
 	assert_num_eq (CKR_OK, rv);
 
 	p11_enumerate_init (&test.ex);
+	test.ex.flags |= P11_ENUMERATE_CORRELATE;
 
 	/* Prefill the modules */
 	test.modules[0] = &test.module;
@@ -406,7 +410,7 @@ test_duplicate_distrusted (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 
-	test.ex.flags = P11_ENUMERATE_COLLAPSE;
+	test.ex.flags = P11_ENUMERATE_COLLAPSE | P11_ENUMERATE_CORRELATE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
 	p11_enumerate_ready (&test.ex, NULL);
 
@@ -432,7 +436,7 @@ test_trusted_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags = P11_ENUMERATE_ANCHORS;
+	test.ex.flags = P11_ENUMERATE_ANCHORS | P11_ENUMERATE_CORRELATE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
 	p11_enumerate_ready (&test.ex, NULL);
 
@@ -450,7 +454,7 @@ test_distrust_match (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags = P11_ENUMERATE_BLACKLIST;
+	test.ex.flags = P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_CORRELATE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
 	p11_enumerate_ready (&test.ex, NULL);
 
@@ -475,7 +479,7 @@ test_override_by_issuer_serial (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted);
 
-	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST;
+	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_CORRELATE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
 	p11_enumerate_ready (&test.ex, NULL);
 
@@ -498,7 +502,7 @@ test_override_by_public_key (void)
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_distrusted_by_key);
 
-	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST;
+	test.ex.flags =  P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_CORRELATE;
 	p11_kit_iter_add_filter (test.ex.iter, &certificate, 1);
 	p11_enumerate_ready (&test.ex, NULL);
 

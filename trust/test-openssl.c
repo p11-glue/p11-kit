@@ -77,6 +77,7 @@ setup (void *unused)
 	assert_num_eq (CKR_OK, rv);
 
 	p11_enumerate_init (&test.ex);
+	test.ex.flags |= P11_ENUMERATE_CORRELATE;
 
 	test.directory = p11_test_directory ("test-extract");
 }
