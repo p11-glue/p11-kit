@@ -94,6 +94,7 @@ trust_trust_SOURCES = \
 	trust/parser.c trust/parser.h \
 	trust/persist.c trust/persist.h \
 	trust/digest.c trust/digest.h \
+	trust/dump.c trust/dump.h \
 	trust/enumerate.c trust/enumerate.h \
 	trust/extract.c trust/extract.h \
 	trust/extract-jks.c \

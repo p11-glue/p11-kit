@@ -39,6 +39,9 @@
 	<cmdsynopsis>
 		<command>trust anchor</command> /path/to/certificate.crt
 	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>trust dump</command>
+	</cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1 id="trust-description">
@@ -346,6 +349,42 @@ $ trust extract-compat
 	customize this command.</para>
 
 </refsect1>
+
+<refsect1 id="trust-dump">
+	<title>Dump</title>
+
+	<para>Dump PKCS#11 items in the various tokens.</para>
+
+<programlisting>
+$ trust dump
+</programlisting>
+
+	<para>Dump information about the various PKCS#11 items in the tokens.
+	Each item is dumped with it's PKCS#11 URI and information in the .p11-kit
+	persistence format.</para>
+
+	<para>You can specify the following options to control what to dump.</para>
+
+	<varlistentry>
+		<term><option>--filter=&lt;what&gt;</option></term>
+		<listitem>
+		<para>Specifies what certificates to extract. You can specify the following values:
+		<variablelist>
+			<varlistentry>
+				<term><option>all</option></term>
+				<listitem><para>All objects. This is the default</para></listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>pkcs11:object=xx</option></term>
+				<listitem><para>A PKCS#11 URI to filter with</para></listitem>
+			</varlistentry>
+		</variablelist>
+		</para>
+		</listitem>
+	</varlistentry>
+
+</refsect1>
+
 
 <refsect1 id="trust-bugs">
   <title>Bugs</title>
