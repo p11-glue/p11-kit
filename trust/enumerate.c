@@ -599,6 +599,9 @@ p11_enumerate_opt_filter (p11_enumerate *ex,
 		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
 		ex->flags |= P11_ENUMERATE_COLLAPSE;
 
+	} else if (strcmp (option, "all") == 0) {
+		attrs = p11_attrs_build (NULL, NULL);
+
 	} else {
 		p11_message ("unsupported or unrecognized filter: %s", option);
 		return false;
