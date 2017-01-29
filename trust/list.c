@@ -253,6 +253,7 @@ p11_trust_list (int argc,
 	if (!p11_enumerate_ready (&ex, "trust-policy"))
 		exit (1);
 
+	ex.flags |= P11_ENUMERATE_CORRELATE;
 	ret = list_iterate (&ex, details) ? 0 : 1;
 
 	p11_enumerate_cleanup (&ex);

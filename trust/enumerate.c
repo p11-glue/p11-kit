@@ -308,23 +308,25 @@ extract_info (p11_enumerate *ex)
 		return false;
 
 	/* If a certificate then  */
-	if (ex->klass != CKO_CERTIFICATE) {
-		p11_message ("skipping non-certificate object");
-		return false;
-	}
+	if (ex->flags & P11_ENUMERATE_CORRELATE) {
+		if (ex->klass != CKO_CERTIFICATE) {
+			p11_message ("skipping non-certificate object");
+			return false;
+		}
 
-	if (!extract_certificate (ex))
-		return false;
+		if (!extract_certificate (ex))
+			return false;
 
-	attr = p11_attrs_find_valid (ex->attrs, CKA_PUBLIC_KEY_INFO);
-	if (attr) {
-		ex->attached = load_attached_extensions (ex, attr);
-		if (!ex->attached)
+		attr = p11_attrs_find_valid (ex->attrs, CKA_PUBLIC_KEY_INFO);
+		if (attr) {
+			ex->attached = load_attached_extensions (ex, attr);
+			if (!ex->attached)
+				return false;
+		}
+
+		if (!extract_purposes (ex))
 			return false;
 	}
-
-	if (!extract_purposes (ex))
-		return false;
 
 	return true;
 }
