@@ -37,6 +37,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_TOOL
 
 #include "attrs.h"
+#include "constants.h"
 #include "debug.h"
 #include "oid.h"
 #include "dict.h"
@@ -268,29 +269,32 @@ extract_certificate (p11_enumerate *ex)
 	return true;
 }
 
+static CK_ATTRIBUTE *
+prepare_attr_types (void)
+{
+	CK_ATTRIBUTE *attrs;
+	int i, count;
+
+	/* Count the number of attributes we know about */
+	for (count = 0; p11_constant_types[count].value != CKA_INVALID; count++);
+
+	attrs = calloc (count + 1, sizeof (CK_ATTRIBUTE));
+	return_val_if_fail (attrs != NULL, NULL);
+
+	for (i = 0; i < count; i++)
+		attrs[i].type = p11_constant_types[i].value;
+	attrs[count].type = CKA_INVALID;
+
+	return attrs;
+}
+
 static bool
 extract_info (p11_enumerate *ex)
 {
 	CK_ATTRIBUTE *attr;
 	CK_RV rv;
 
-	static const CK_ATTRIBUTE attr_types[] = {
-		{ CKA_ID, },
-		{ CKA_CLASS, },
-		{ CKA_CERTIFICATE_TYPE, },
-		{ CKA_LABEL, },
-		{ CKA_VALUE, },
-		{ CKA_SUBJECT, },
-		{ CKA_ISSUER, },
-		{ CKA_SERIAL_NUMBER, },
-		{ CKA_TRUSTED, },
-		{ CKA_CERTIFICATE_CATEGORY },
-		{ CKA_X_DISTRUSTED },
-		{ CKA_PUBLIC_KEY_INFO },
-		{ CKA_INVALID, },
-	};
-
-	ex->attrs = p11_attrs_dup (attr_types);
+	ex->attrs = prepare_attr_types ();
 	rv = p11_kit_iter_load_attributes (ex->iter, ex->attrs, p11_attrs_count (ex->attrs));
 
 	/* The attributes couldn't be loaded */
