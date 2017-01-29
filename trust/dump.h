@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2013, Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,43 +29,15 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>
+ * Author: Stef Walter <stefw@redhat.com>
  */
 
 #include "config.h"
 
-#include "anchor.h"
-#include "dump.h"
-#include "extract.h"
-#include "list.h"
+#ifndef P11_DUMP_H_
+#define P11_DUMP_H_
 
-#include "buffer.h"
-#include "compat.h"
-#include "debug.h"
-#include "message.h"
-#include "path.h"
-#include "tool.h"
+int             p11_trust_dump                 (int argc,
+                                                char **argv);
 
-#include <assert.h>
-#include <ctype.h>
-#include <getopt.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-static const p11_tool_command commands[] = {
-	{ "list", p11_trust_list, "List trust or certificates" },
-	{ "extract", p11_trust_extract, "Extract certificates and trust" },
-	{ "extract-compat", p11_trust_extract_compat, "Extract trust compatibility bundles" },
-	{ "anchor", p11_trust_anchor, "Add, remove, change trust anchors" },
-	{ "dump", p11_trust_dump, "Dump trust objects in internal format" },
-	{ 0, }
-};
-
-int
-main (int argc,
-      char *argv[])
-{
-	return p11_tool_main (argc, argv, commands);
-}
+#endif /* P11_DUMP_H_ */
