@@ -137,7 +137,7 @@ format_string (CK_ATTRIBUTE *attr,
 
 	p11_buffer_add (buf, "\"", 1);
 	value = attr->pValue;
-	p11_url_encode (value, value + attr->ulValueLen, P11_URL_VERBATIM, buf);
+	p11_url_encode (value, value + attr->ulValueLen, P11_URL_VERBATIM " ", buf);
 	p11_buffer_add (buf, "\"", 1);
 }
 
