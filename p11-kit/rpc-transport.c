@@ -835,8 +835,8 @@ p11_rpc_transport_new (p11_virtual *virt,
 
 #ifdef OS_WIN32
 	p11_message ("Windows not yet supported for remote");
-	return NULL;
-#endif
+	return rpc;
+#else
 
 	/* This is a command we can execute */
 	if (remote[0] == '|') {
@@ -851,6 +851,7 @@ p11_rpc_transport_new (p11_virtual *virt,
 		return_val_if_reached (NULL);
 
 	return rpc;
+#endif
 }
 
 void
