@@ -14,6 +14,7 @@
 	<xi:include href="p11-kit-config.xml"/>
 	<xi:include href="p11-kit-sharing.xml"/>
 	<xi:include href="p11-kit-proxy.xml"/>
+	<xi:include href="p11-kit-remote-proxy.xml"/>
 	<xi:include href="p11-kit-trust.xml"/>
 
 	<chapter xml:id="tools">

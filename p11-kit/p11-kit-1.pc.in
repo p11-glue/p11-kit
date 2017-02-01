@@ -10,6 +10,7 @@ p11_module_configs=@p11_package_config_modules@
 p11_module_path=@p11_module_path@
 p11_trust_paths=@with_trust_paths@
 proxy_module=@libdir@/p11-kit-proxy.so
+remote_proxy_module=@libdir@/p11-kit-remote-proxy.so
 
 # This is for compatibility. Other packages were using this to determine
 # the directory they should install their module configs to, so override

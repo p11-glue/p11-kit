@@ -292,6 +292,7 @@ alloc_module_unlocked (void)
 static CK_RV
 dlopen_and_get_function_list (Module *mod,
                               const char *path,
+                              int flags,
                               CK_FUNCTION_LIST **funcs)
 {
 	CK_C_GetFunctionList gfl;
@@ -331,9 +332,11 @@ dlopen_and_get_function_list (Module *mod,
 		return rv;
 	}
 
-	if (p11_proxy_module_check (*funcs)) {
-		p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
-		return CKR_FUNCTION_FAILED;
+	if (!(flags & P11_KIT_MODULE_REMOTING)) {
+		if (p11_proxy_module_check (*funcs)) {
+			p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
+			return CKR_FUNCTION_FAILED;
+		}
 	}
 
 	p11_virtual_init (&mod->virt, &p11_virtual_base, *funcs, NULL);
@@ -344,6 +347,7 @@ dlopen_and_get_function_list (Module *mod,
 static CK_RV
 load_module_from_file_inlock (const char *name,
                               const char *path,
+                              int flags,
                               Module **result)
 {
 	CK_FUNCTION_LIST *funcs;
@@ -369,7 +373,7 @@ load_module_from_file_inlock (const char *name,
 
 	mod->filename = strdup (path);
 
-	rv = dlopen_and_get_function_list (mod, path, &funcs);
+	rv = dlopen_and_get_function_list (mod, path, flags, &funcs);
 	free (expand);
 
 	if (rv != CKR_OK) {
@@ -517,7 +521,7 @@ take_config_and_load_module_inlock (char **name,
 
 	} else {
 
-		rv = load_module_from_file_inlock (*name, filename, &mod);
+		rv = load_module_from_file_inlock (*name, filename, 0, &mod);
 		if (rv != CKR_OK)
 			goto out;
 	}
@@ -2404,7 +2408,7 @@ p11_kit_module_load (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, flags, &mod);
 			if (rv == CKR_OK) {
 				/* WARNING: Reentrancy can occur here */
 				rv = prepare_module_inlock_reentrant (mod, flags, &module);
@@ -2426,6 +2430,65 @@ p11_kit_module_load (const char *module_path,
 	p11_debug ("out: %s", module ? "success" : "fail");
 	return module;
 
+}
+
+/**
+ * p11_kit_module_remote:
+ * @remote: a remote module specifier
+ * @flags: flags to use when loading the module
+ *
+ * Setup a PKCS\#11 module for remoting and initialize it.
+ *
+ * A command (prefixed with "|") or a file descriptor (digits only) is
+ * accepted. The standard input and output of the command or the file
+ * descriptor are used for communication via the p11-kit remoting protocol.
+ *
+ * If @flags contains the %P11_KIT_MODULE_UNMANAGED flag, then the module
+ * will be not be set up in 'managed' mode and not be coordinated. This
+ * is not recommended for general usage.
+ *
+ * The module should be released with p11_kit_module_release().
+ *
+ * If this function fails, then an error message will be available via the
+ * p11_kit_message() function.
+ *
+ * Returns: the remote module PKCS\#11 functions or %NULL on failure
+ */
+CK_FUNCTION_LIST *
+p11_kit_module_remote (const char *remote,
+                       int flags)
+{
+	CK_FUNCTION_LIST *module = NULL;
+	CK_RV rv;
+	Module *mod;
+
+	return_val_if_fail (remote != NULL, NULL);
+
+	p11_library_init_once ();
+
+	/* WARNING: This function must be reentrant */
+	p11_debug ("in");
+
+	p11_lock ();
+
+		p11_message_clear ();
+
+		rv = init_globals_unlocked ();
+		if (rv == CKR_OK) {
+
+			rv = setup_module_for_remote_inlock ("remote", remote, &mod);
+			if (rv == CKR_OK) {
+				/* WARNING: Reentrancy can occur here */
+				rv = prepare_module_inlock_reentrant (mod, flags, &module);
+				if (rv != CKR_OK)
+					module = NULL;
+			}
+		}
+
+	p11_unlock ();
+
+	p11_debug ("out: %s", module ? "success" : "fail");
+	return module;
 }
 
 /**
@@ -2670,7 +2733,7 @@ p11_kit_load_initialize_module (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, 0, &mod);
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */

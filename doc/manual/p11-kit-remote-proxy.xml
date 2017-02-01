@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<chapter xml:id="remote-proxy">
+	<title>Remote Proxy Module</title>
+
+	<para>While the proxy module exposes the configured modules, the remoting
+	functionality of <literal>p11-kit</literal> often needs to be set up
+	dynamically (while the module for an actual token is selected by the remote
+	end).</para>
+
+	<para>To allow use of the remoting capability for PKCS#11 consumers that don't
+	link to p11-kit, a separate proxy module is provided that can be used in place
+	of an ordinary PKCS#11 module. It proxies the PKCS#11 calls to a remote specified
+	by the <envar>P11_REMOTE</envar> environment variable, using the same syntax as
+	a <literal>remote</literal> module in the configuration file.</para>
+</chapter>

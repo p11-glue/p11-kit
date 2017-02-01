@@ -57,6 +57,7 @@ enum {
 	P11_KIT_MODULE_UNMANAGED = 1 << 0,
 	P11_KIT_MODULE_CRITICAL = 1 << 1,
 	P11_KIT_MODULE_TRUSTED = 1 << 2,
+	P11_KIT_MODULE_REMOTING = 1 << 3,
 };
 
 typedef void        (* p11_kit_destroyer)                   (void *data);
@@ -84,6 +85,9 @@ char *                 p11_kit_module_get_name              (CK_FUNCTION_LIST *m
 int                    p11_kit_module_get_flags             (CK_FUNCTION_LIST *module);
 
 CK_FUNCTION_LIST *     p11_kit_module_load                  (const char *module_path,
+                                                             int flags);
+
+CK_FUNCTION_LIST *     p11_kit_module_remote                (const char *remote,
                                                              int flags);
 
 CK_RV                  p11_kit_module_initialize            (CK_FUNCTION_LIST *module);
