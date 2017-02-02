@@ -200,6 +200,7 @@ format_bool (CK_ATTRIBUTE *attr,
 	case CKA_HAS_RESET:
 	case CKA_COLOR:
 	case CKA_X_DISTRUSTED:
+	case CKA_NSS_MOZILLA_CA_POLICY:
 		break;
 	default:
 		return false;

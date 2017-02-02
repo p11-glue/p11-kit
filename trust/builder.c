@@ -792,6 +792,7 @@ const static builder_schema certificate_schema = {
 	  { CKA_CERTIFICATE_TYPE, REQUIRE | CREATE, type_ulong },
 	  { CKA_TRUSTED, CREATE | WANT, type_bool },
 	  { CKA_X_DISTRUSTED, CREATE | WANT, type_bool },
+	  { CKA_NSS_MOZILLA_CA_POLICY, CREATE | WANT, type_bool },
 	  { CKA_CERTIFICATE_CATEGORY, CREATE | WANT, type_ulong },
 	  { CKA_CHECK_VALUE, CREATE | WANT, },
 	  { CKA_START_DATE, CREATE | MODIFY | WANT, type_date },
