@@ -174,7 +174,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_CERT_SHA1_HASH, "cert-sha1-hash")
 	CT (CKA_CERT_MD5_HASH, "cert-md5-hash")
 	CT (CKA_X_ASSERTION_TYPE, "x-assertion-type")
-	CT (CKA_X_CERTIFICATE_VALUE, "x-cetrificate-value")
+	CT (CKA_X_CERTIFICATE_VALUE, "x-certificate-value")
 	CT (CKA_X_PURPOSE, "x-purpose")
 	CT (CKA_X_PEER, "x-peer")
 	CT (CKA_X_DISTRUSTED, "x-distrusted")
