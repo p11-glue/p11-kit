@@ -154,6 +154,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_NSS_PQG_H, "nss-pqg-h")
 	CT (CKA_NSS_PQG_SEED_BITS, "nss-pqg-seed-bits")
 	CT (CKA_NSS_MODULE_SPEC, "nss-module-spec")
+	CT (CKA_NSS_MOZILLA_CA_POLICY, "nss-mozilla-ca-policy")
 	CT (CKA_TRUST_DIGITAL_SIGNATURE, "trust-digital-signature")
 	CT (CKA_TRUST_NON_REPUDIATION, "trust-non-repudiation")
 	CT (CKA_TRUST_KEY_ENCIPHERMENT, "trust-key-encipherment")
