@@ -285,6 +285,7 @@ p11_trust_extract (int argc,
 	if (!p11_enumerate_ready (&ex, "ca-anchors"))
 		exit (1);
 
+	ex.flags |= P11_ENUMERATE_CORRELATE;
 	ret = (format) (&ex, argv[0]) ? 0 : 1;
 
 	p11_enumerate_cleanup (&ex);
