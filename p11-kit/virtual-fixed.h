@@ -1138,7 +1138,4 @@ fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list) \
 	fixed ## fixed_index ## _C_WaitForSlotEvent \
 }
 
-void                    p11_virtual_fixed_init   (void);
-void                    p11_virtual_fixed_uninit (void);
-
 #endif /* __P11_VIRTUAL_FIXED_H__ */

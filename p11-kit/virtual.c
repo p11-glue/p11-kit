@@ -88,7 +88,6 @@ typedef struct {
 	int fixed_index;
 } Wrapper;
 
-static p11_mutex_t fixed_mutex;
 static CK_FUNCTION_LIST *fixed_closures[P11_VIRTUAL_MAX_FIXED];
 
 static Wrapper          *create_fixed_wrapper   (p11_virtual         *virt,
@@ -100,23 +99,6 @@ static CK_FUNCTION_LIST *
 static void
                          p11_virtual_unwrap_fixed
                                                 (CK_FUNCTION_LIST_PTR module);
-
-void
-p11_virtual_fixed_init (void)
-{
-	p11_lock ();
-	p11_mutex_init (&fixed_mutex);
-	memset (fixed_closures, 0, sizeof (fixed_closures));
-	p11_unlock ();
-}
-
-void
-p11_virtual_fixed_uninit (void)
-{
-	p11_lock ();
-	p11_mutex_uninit (&fixed_mutex);
-	p11_unlock ();
-}
 
 static CK_RV
 short_C_GetFunctionStatus (CK_SESSION_HANDLE handle)
@@ -2860,6 +2842,7 @@ p11_virtual_wrap (p11_virtual *virt,
 	wrapper->destroyer = destroyer;
 	wrapper->bound.version.major = CRYPTOKI_VERSION_MAJOR;
 	wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
+	wrapper->fixed_index = -1;
 
 	if (!init_wrapper_funcs (wrapper))
 		return p11_virtual_wrap_fixed (virt, destroyer);
@@ -3266,7 +3249,7 @@ p11_virtual_wrap_fixed (p11_virtual *virt,
 	CK_FUNCTION_LIST *result = NULL;
 	size_t i;
 
-	p11_mutex_lock (&fixed_mutex);
+	p11_mutex_lock (&p11_virtual_mutex);
 	for (i = 0; i < P11_VIRTUAL_MAX_FIXED; i++) {
 		if (fixed_closures[i] == NULL) {
 			Wrapper *wrapper;
@@ -3276,7 +3259,7 @@ p11_virtual_wrap_fixed (p11_virtual *virt,
 			break;
 		}
 	}
-	p11_mutex_unlock (&fixed_mutex);
+	p11_mutex_unlock (&p11_virtual_mutex);
 
 	return result;
 }
@@ -3286,14 +3269,14 @@ p11_virtual_unwrap_fixed (CK_FUNCTION_LIST_PTR module)
 {
 	size_t i;
 
-	p11_mutex_lock (&fixed_mutex);
+	p11_mutex_lock (&p11_virtual_mutex);
 	for (i = 0; i < P11_VIRTUAL_MAX_FIXED; i++) {
 		if (fixed_closures[i] == module) {
 			fixed_closures[i] = NULL;
 			break;
 		}
 	}
-	p11_mutex_unlock (&fixed_mutex);
+	p11_mutex_unlock (&p11_virtual_mutex);
 }
 
 static bool
