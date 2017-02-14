@@ -59,6 +59,8 @@ static p11_local * _p11_library_get_thread_local (void);
 
 p11_mutex_t p11_library_mutex;
 
+p11_mutex_t p11_virtual_mutex;
+
 #ifdef OS_UNIX
 pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
 #endif
@@ -118,6 +120,7 @@ p11_library_init_impl (void)
 	p11_debug_init ();
 	p11_debug ("initializing library");
 	p11_mutex_init (&p11_library_mutex);
+	p11_mutex_init (&p11_virtual_mutex);
 	pthread_key_create (&thread_local, free);
 	p11_message_storage = thread_local_message;
 

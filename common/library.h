@@ -44,6 +44,9 @@
 
 extern p11_mutex_t p11_library_mutex;
 
+/* Used in virtual.c to maintain the global list of precompiled closures */
+extern p11_mutex_t p11_virtual_mutex;
+
 extern unsigned int p11_forkid;
 
 #define       p11_lock()                   p11_mutex_lock (&p11_library_mutex);
