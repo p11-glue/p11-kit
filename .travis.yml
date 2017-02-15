@@ -3,9 +3,14 @@ sudo: required
 language: c
 
 env:
-  - BUILD_OPTS=
-  - BUILD_OPTS="CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'
-  - BUILD_OPTS="CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64"
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
+  - BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine"
+
+matrix:
+  allow_failures:
+    - env: BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine"
 
 services:
   - docker
@@ -17,6 +22,7 @@ before_install:
   - docker exec $CONTAINER dnf -y builddep p11-kit
   - docker exec $CONTAINER dnf -y install gettext-devel libtool make
   - docker exec $CONTAINER dnf -y install libasan libubsan
+  - docker exec $CONTAINER dnf -y install mingw64-gcc mingw64-libffi mingw64-libtasn1 wine
   - docker exec $CONTAINER useradd user
   - docker exec $CONTAINER mkdir /builddir
   - docker exec $CONTAINER chown -R user /builddir
@@ -29,5 +35,5 @@ install:
 
 script:
   - docker exec $CONTAINER sh -c "cd /srcdir && NOCONFIGURE=1 ./autogen.sh"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --prefix=/usr --libdir=/usr/lib64 --enable-strict CFLAGS=\"$CFLAGS\" CXXFLAGS=\"$CXXFLAGS\" LDFLAGS=\"$LDFLAGS\" LIBS=\"$LIBS\""
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && make V=1 && make check V=1"
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --enable-strict $BUILD_OPTS"
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && make V=1 && make check V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
