@@ -199,6 +199,8 @@ on_unique_try_rename (void *data,
 		return -1;
 	}
 
+	free (file->temp);
+	file->temp = strdup (path);
 	return 1; /* All done */
 }
 
@@ -279,13 +281,14 @@ p11_save_finish_file (p11_save_file *file,
 			ret = false;
 		}
 
-		if (ret == true &&
-		    rename (file->temp, path) < 0) {
-			p11_message_err (errno, "couldn't complete writing file: %s", path);
-			ret = false;
-		}
+		if (ret == true && strcmp (file->temp, path) != 0) {
+			if (rename (file->temp, path) < 0) {
+				p11_message_err (errno, "couldn't complete writing file: %s", path);
+				ret = false;
+			}
 
-		unlink (file->temp);
+			unlink (file->temp);
+		}
 
 #endif /* OS_WIN32 */
 	}
