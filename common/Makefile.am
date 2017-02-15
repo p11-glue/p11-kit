@@ -61,7 +61,11 @@ CHECK_PROGS += \
 	test-path \
 	test-lexer \
 	test-message \
+	test-argv \
 	$(NULL)
+
+test_argv_SOURCES = common/test-argv.c
+test_argv_LDADD = $(common_LIBS)
 
 test_array_SOURCES = common/test-array.c
 test_array_LDADD = $(common_LIBS)
