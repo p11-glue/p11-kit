@@ -105,7 +105,7 @@ p11_kit_external (int argc,
 		return p11_kit_trust (argc, argv);
 	}
 
-	if (asprintf (&filename, "p11-kit-%s", argv[0]) < 0)
+	if (asprintf (&filename, "p11-kit-%s%s", argv[0], EXEEXT) < 0)
 		return_val_if_reached (1);
 
 	private_dir = secure_getenv ("P11_KIT_PRIVATEDIR");
@@ -116,6 +116,11 @@ p11_kit_external (int argc,
 	path = p11_path_build (private_dir, filename, NULL);
 	return_val_if_fail (path != NULL, 1);
 
+	/* Windows execv() requires the first element of ARGV must be
+	 * the executable name */
+#ifdef OS_WIN32
+	argv[0] = path;
+#endif
 	argv[argc] = NULL;
 	execv (path, argv);
 

@@ -75,9 +75,9 @@ setup_remote (void *unused)
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
 	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
-	data = "remote: |" BUILDDIR "/p11-kit/p11-kit remote " BUILDDIR "/.libs/mock-two.so\n";
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-two" SHLEXT "\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
-	data = "remote: |" BUILDDIR "/p11-kit/p11-kit remote " BUILDDIR "/.libs/mock-five.so\nx-init-reserved: initialize-arg";
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
 	p11_test_file_write (test.user_modules, "init-arg.module", data, strlen (data));
 
 	p11_config_user_modules = test.user_modules;
