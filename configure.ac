@@ -488,6 +488,8 @@ esac
 AC_DEFINE_UNQUOTED(SHLEXT, ["$SHLEXT"], [File extension for shared libraries])
 AC_SUBST(SHLEXT)
 
+AC_DEFINE_UNQUOTED(EXEEXT, ["$EXEEXT"], [File extension for executables])
+
 privatedir='${libexecdir}/p11-kit'
 AC_SUBST(privatedir)
 
