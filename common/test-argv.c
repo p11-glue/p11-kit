@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Red Hat Inc.
+ * Copyright (C) 2017 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,87 +29,86 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@redhat.com>
+ * Author: Daiki Ueno
  */
 
 #include "config.h"
 
-#include "argv.h"
-#include "debug.h"
-
-#include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
-bool
-p11_argv_parse (const char *string,
-                void (*sink) (char *, void *),
-                void *argument)
+#include "argv.h"
+#include "test.h"
+
+struct {
+	char *foo;
+	char *bar;
+} test;
+
+static void
+on_argv_parsed (char *argument, void *data)
 {
-	char quote = '\0';
-	char *src, *dup, *at, *arg;
-	bool ret = true;
+	char *value;
 
-	return_val_if_fail (string != NULL, false);
-	return_val_if_fail (sink != NULL, false);
+	value = argument + strcspn (argument, ":=");
+	if (!*value)
+		value = NULL;
+	else
+		*(value++) = 0;
 
-	src = dup = strdup (string);
-	return_val_if_fail (dup != NULL, false);
-
-	arg = at = src;
-	for (src = dup; *src; src++) {
-
-		/* Matching quote */
-		if (quote == *src) {
-			quote = '\0';
-
-		/* Inside of quotes */
-		} else if (quote != '\0') {
-			if (*src == '\\') {
-				src++;
-				if (!*src) {
-					ret = false;
-					goto done;
-				}
-				if (*src != quote)
-					*at++ = '\\';
-			}
-			*at++ = *src;
-
-		/* Space, not inside of quotes */
-		} else if (isspace (*src)) {
-			*at = 0;
-			sink (arg, argument);
-			arg = at;
-
-		/* Other character outside of quotes */
-		} else {
-			switch (*src) {
-			case '\'':
-			case '"':
-				quote = *src;
-				break;
-			case '\\':
-				*at++ = *src++;
-				if (!*src) {
-					ret = false;
-					goto done;
-				}
-			/* fall through */
-			default:
-				*at++ = *src;
-				break;
-			}
-		}
+	if (strcmp (argument, "foo") == 0) {
+		test.foo = value ? strdup (value) : NULL;
+	} else if (strcmp (argument, "bar") == 0) {
+		test.bar = value ? strdup (value) : NULL;
 	}
+}
 
+static void
+setup (void *data)
+{
+	memset (&test, 0, sizeof (test));
+}
 
-	if (at != arg) {
-		*at = 0;
-		sink (arg, argument);
-	}
+static void
+teardown (void *data)
+{
+	free (test.foo);
+	free (test.bar);
+}
 
-done:
-	free (dup);
-	return ret;
+static void
+test_parse (void)
+{
+	p11_argv_parse ("foo=foo bar=bar", on_argv_parsed, NULL);
+	assert_str_eq ("foo", test.foo);
+	assert_str_eq ("bar", test.bar);
+}
+
+static void
+test_parse_quote (void)
+{
+	p11_argv_parse ("foo='foo bar' bar=\"bar baz\"", on_argv_parsed, NULL);
+	assert_str_eq ("foo bar", test.foo);
+	assert_str_eq ("bar baz", test.bar);
+}
+
+static void
+test_parse_backslash (void)
+{
+	p11_argv_parse ("foo='\\this\\isn\\'t\\a\\path' bar=bar",
+			on_argv_parsed, NULL);
+	assert_str_eq ("\\this\\isn't\\a\\path", test.foo);
+	assert_str_eq ("bar", test.bar);
+}
+
+int
+main (int argc,
+      char *argv[])
+{
+	p11_fixture (setup, teardown);
+	p11_test (test_parse, "/argv/parse");
+	p11_test (test_parse_quote, "/argv/parse_quote");
+	p11_test (test_parse_backslash, "/argv/parse_backslash");
+	return p11_test_run (argc, argv);
 }
