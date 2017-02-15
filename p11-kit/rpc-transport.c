@@ -51,6 +51,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -64,6 +65,8 @@
 #endif
 
 #ifdef OS_WIN32
+#include <process.h>
+#include <signal.h>
 #include <winsock2.h>
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
@@ -75,8 +78,11 @@
 #endif
 
 typedef struct {
-	/* Never changes */
-	int fd;
+	/* Never changes.  On Unix, these are identical, as it is
+	 * backed by a socket.  On Windows, it is another file
+	 * descriptor, as they are backed by two pipes */
+	int read_fd;
+	int write_fd;
 
 	/* Protected by the lock */
 	p11_mutex_t write_lock;
@@ -100,7 +106,8 @@ rpc_socket_new (int fd)
 	sock = calloc (1, sizeof (rpc_socket));
 	return_val_if_fail (sock != NULL, NULL);
 
-	sock->fd = fd;
+	sock->read_fd = fd;
+	sock->write_fd = fd;
 	sock->last_code = 0x10;
 	sock->read_creds = false;
 	sock->sent_creds = false;
@@ -129,7 +136,7 @@ static bool
 rpc_socket_is_open (rpc_socket *sock)
 {
 	assert (sock != NULL);
-	return sock->fd >= 0;
+	return sock->read_fd >= 0;
 }
 #endif
 
@@ -137,9 +144,14 @@ static void
 rpc_socket_close (rpc_socket *sock)
 {
 	assert (sock != NULL);
-	if (sock->fd != -1)
-		close (sock->fd);
-	sock->fd = -1;
+	if (sock->read_fd != -1)
+		close (sock->read_fd);
+	sock->read_fd = -1;
+#ifdef OS_WIN32
+	if (sock->write_fd != -1)
+		close (sock->write_fd);
+	sock->write_fd = -1;
+#endif
 }
 
 static void
@@ -234,7 +246,7 @@ rpc_socket_write_inlock (rpc_socket *sock,
 
 	/* Place holder byte, will later carry unix credentials (on some systems) */
 	if (!sock->sent_creds) {
-		if (write_all (sock->fd, &dummy, 1) != 1) {
+		if (write_all (sock->write_fd, &dummy, 1) != 1) {
 			p11_message_err (errno, "couldn't send socket credentials");
 			return CKR_DEVICE_ERROR;
 		}
@@ -245,9 +257,9 @@ rpc_socket_write_inlock (rpc_socket *sock,
 	p11_rpc_buffer_encode_uint32 (header + 4, options->len);
 	p11_rpc_buffer_encode_uint32 (header + 8, buffer->len);
 
-	if (!write_all (sock->fd, header, 12) ||
-	    !write_all (sock->fd, options->data, options->len) ||
-	    !write_all (sock->fd, buffer->data, buffer->len))
+	if (!write_all (sock->write_fd, header, 12) ||
+	    !write_all (sock->write_fd, options->data, options->len) ||
+	    !write_all (sock->write_fd, buffer->data, buffer->len))
 		return CKR_DEVICE_ERROR;
 
 	return CKR_OK;
@@ -352,7 +364,13 @@ rpc_socket_read (rpc_socket *sock,
 	CK_RV ret = CKR_DEVICE_ERROR;
 	unsigned char header[12];
 	unsigned char dummy;
+#ifdef OS_UNIX
 	fd_set rfds;
+#endif
+#ifdef OS_WIN32
+	HANDLE handle;
+	DWORD mode;
+#endif
 
 	assert (code != NULL);
 	assert (buffer != NULL);
@@ -365,7 +383,7 @@ rpc_socket_read (rpc_socket *sock,
 	p11_mutex_lock (&sock->read_lock);
 
 	if (!sock->read_creds) {
-		if (read_all (sock->fd, &dummy, 1) != 1) {
+		if (read_all (sock->read_fd, &dummy, 1) != 1) {
 			p11_mutex_unlock (&sock->read_lock);
 			return CKR_DEVICE_ERROR;
 		}
@@ -375,7 +393,7 @@ rpc_socket_read (rpc_socket *sock,
 	for (;;) {
 		/* No message header has been read yet? ... read one in */
 		if (sock->read_code == 0) {
-			if (!read_all (sock->fd, header, 12))
+			if (!read_all (sock->read_fd, header, 12))
 				break;
 
 			/* Decode and check the message header */
@@ -399,8 +417,8 @@ rpc_socket_read (rpc_socket *sock,
 			}
 
 			/* Read in the the options first, and then data */
-			if (!read_all (sock->fd, buffer->data, sock->read_olen) ||
-			    !read_all (sock->fd, buffer->data, sock->read_dlen))
+			if (!read_all (sock->read_fd, buffer->data, sock->read_olen) ||
+			    !read_all (sock->read_fd, buffer->data, sock->read_dlen))
 				break;
 
 			buffer->len = sock->read_dlen;
@@ -420,11 +438,17 @@ rpc_socket_read (rpc_socket *sock,
 			p11_mutex_unlock (&sock->read_lock);
 
 			/* Used as a simple wait */
+#ifdef OS_UNIX
 			FD_ZERO (&rfds);
-			FD_SET (sock->fd, &rfds);
-			if (select (sock->fd + 1, &rfds, NULL, NULL, NULL) < 0)
+			FD_SET (sock->read_fd, &rfds);
+			if (select (sock->read_fd + 1, &rfds, NULL, NULL, NULL) < 0)
 				p11_message ("couldn't use select to wait on rpc socket");
-
+#endif
+#ifdef OS_WIN32
+			handle = (HANDLE) _get_osfhandle (sock->read_fd);
+			if (!ReadFile (handle, NULL, 0, &mode, NULL))
+				p11_message ("couldn't use select to wait on rpc pipe");
+#endif
 			p11_mutex_lock (&sock->read_lock);
 		}
 	}
@@ -610,8 +634,12 @@ rpc_transport_buffer (p11_rpc_client_vtable *vtable,
 	/* Get the next socket reply code */
 	call_code = sock->last_code++;
 
-	if (sock->fd == -1)
+	if (sock->read_fd == -1)
 		rv = CKR_DEVICE_ERROR;
+#ifdef OS_WIN32
+	if (sock->write_fd == -1)
+		rv = CKR_DEVICE_ERROR;
+#endif
 	if (rv == CKR_OK)
 		rv = rpc_socket_write_inlock (sock, call_code, &rpc->options, request);
 
@@ -624,11 +652,18 @@ rpc_transport_buffer (p11_rpc_client_vtable *vtable,
 		p11_mutex_lock (&sock->write_lock);
 	}
 
-	if (rv != CKR_OK && sock->fd != -1) {
+	if (rv != CKR_OK && sock->read_fd != -1) {
 		p11_message ("closing socket due to protocol failure");
-		close (sock->fd);
-		sock->fd = -1;
+		close (sock->read_fd);
+		sock->read_fd = -1;
 	}
+#ifdef OS_WIN32
+	if (rv != CKR_OK && sock->write_fd != -1) {
+		p11_message ("closing socket due to protocol failure");
+		close (sock->write_fd);
+		sock->write_fd = -1;
+	}
+#endif
 
 	sock->refs--;
 	assert (sock->refs > 0);
@@ -771,6 +806,191 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	return CKR_OK;
 }
 
+#endif /* OS_UNIX */
+
+#ifdef OS_WIN32
+
+typedef struct {
+	p11_rpc_transport base;
+	p11_array *argv;
+	HANDLE pid;
+} rpc_exec;
+
+static void
+rpc_exec_wait_or_terminate (HANDLE pid)
+{
+	DWORD status;
+	int ret;
+	int i;
+
+
+	for (i = 0; i < 3 * 1000; i += 100) {
+		ret = WaitForSingleObject (pid, 10000);
+		if (ret == WAIT_OBJECT_0)
+			break;
+	}
+
+	if (ret != WAIT_OBJECT_0) {
+		p11_message ("process %p did not exit, terminating", pid);
+		if (!TerminateProcess (pid, SIGTERM))
+			p11_message ("couldn't terminate process %p", pid);
+		ret = WaitForSingleObject (pid, 0);
+	}
+
+	if (ret != WAIT_OBJECT_0) {
+		p11_message ("failed to wait for executed child: %p", pid);
+		status = 0;
+	} else if (!GetExitCodeProcess (pid, &status)) {
+		p11_message ("failed to get the exit status of %p", pid);
+	} else if (status == 0) {
+		p11_debug ("process %p exited with status 0", pid);
+	} else {
+		p11_message ("process %p exited with status %lu", pid, status);
+	}
+
+	CloseHandle (pid);
+}
+
+static void
+rpc_exec_disconnect (p11_rpc_client_vtable *vtable,
+                     void *fini_reserved)
+{
+	rpc_exec *rex = (rpc_exec *)vtable;
+
+	if (rex->base.socket)
+		rpc_socket_close (rex->base.socket);
+
+	if (rex->pid != INVALID_HANDLE_VALUE)
+		rpc_exec_wait_or_terminate (rex->pid);
+	rex->pid = INVALID_HANDLE_VALUE;
+
+	/* Do the common disconnect stuff */
+	rpc_transport_disconnect (vtable, fini_reserved);
+}
+
+static int
+set_cloexec_on_fd (int fd)
+{
+	HANDLE handle;
+
+	handle = (HANDLE) _get_osfhandle (fd);
+	if (!SetHandleInformation (handle, HANDLE_FLAG_INHERIT, 0))
+		return -1;
+
+	return 0;
+}
+
+static CK_RV
+rpc_exec_connect (p11_rpc_client_vtable *vtable,
+                  void *init_reserved)
+{
+	rpc_exec *rex = (rpc_exec *)vtable;
+	intptr_t pid = -1;
+	int pw[2] = { -1, -1 }, pr[2] = { -1, -1 };
+	int fds[2] = { -1, -1 };
+	CK_RV rv = CKR_OK;
+
+	p11_debug ("executing rpc transport: %s", (char *)rex->argv->elem[0]);
+
+	setvbuf (stdout, NULL, _IONBF, 0 );
+
+	if (_pipe (pw, 256, _O_BINARY) == -1 ||
+	    set_cloexec_on_fd (pw[1]) == -1) {
+		p11_message_err (errno, "failed to create pipe for remote");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+
+	if (_pipe (pr, 256, _O_BINARY) == -1 ||
+	    set_cloexec_on_fd (pr[0]) == -1) {
+		p11_message_err (errno, "failed to create pipe for remote");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+
+	/* Save the original stdin and stdout */
+	fds[0] = dup (STDIN_FILENO);
+	if (fds[0] == -1) {
+		p11_message_err (errno, "failed to duplicate stdin");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+	/* FIXME: Shouldn't we close STDIN_FILENO? */
+
+	fds[1] = dup (STDOUT_FILENO);
+	if (fds[1] == -1) {
+		p11_message_err (errno, "failed to duplicate stdout");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+	/* FIXME: Shouldn't we close STDOUT_FILENO */
+
+	/* Temporarily redirect pipe descriptors to stdin/stdout for child */
+	if (dup2 (pw[0], STDIN_FILENO) == -1 ||
+	    dup2 (pr[1], STDOUT_FILENO) == -1) {
+		p11_message_err (errno, "failed to duplicate child end of pipe");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+
+	pid = _spawnv (P_NOWAIT,
+		       rex->argv->elem[0],
+		       (const char * const *)rex->argv->elem);
+
+	if (pid == -1) {
+		p11_message_err (errno, "failed to spawn remote");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+
+	close (pw[0]);
+	pw[0] = -1;
+	close (pr[1]);
+	pr[1] = -1;
+
+	/* Restore the original stdin and stdout */
+	if (dup2 (fds[0], STDIN_FILENO) == -1 ||
+	    dup2 (fds[1], STDOUT_FILENO) == -1) {
+		p11_message_err (errno, "failed to restore file descriptors");
+		rv = CKR_DEVICE_ERROR;
+		goto out;
+	}
+
+	close (fds[0]);
+	fds[0] = -1;
+	close (fds[1]);
+	fds[1] = -1;
+
+	rex->pid = (HANDLE) pid;
+	rex->base.socket = rpc_socket_new (pr[0]);
+	return_val_if_fail (rex->base.socket != NULL, CKR_GENERAL_ERROR);
+	rex->base.socket->write_fd = pw[1];
+
+ out:
+	if (rv != CKR_OK) {
+		if (pid != -1) {
+			TerminateProcess ((HANDLE) pid, SIGTERM);
+			CloseHandle ((HANDLE) pid);
+		}
+		if (pw[0] != -1)
+			close (pw[0]);
+		if (pw[1] != -1)
+			close (pw[1]);
+		if (pr[0] != -1)
+			close (pr[0]);
+		if (pr[1] != -1)
+			close (pr[1]);
+		if (fds[0] != -1)
+			close (fds[0]);
+		if (fds[1] != -1)
+			close (fds[1]);
+	}
+
+	return rv;
+}
+
+#endif /* OS_WIN32 */
+
 static void
 rpc_exec_free (void *data)
 {
@@ -810,6 +1030,9 @@ rpc_exec_init (const char *remote,
 
 	p11_array_push (argv, NULL);
 	rex->argv = argv;
+#ifdef OS_WIN32
+	rex->pid = INVALID_HANDLE_VALUE;
+#endif
 
 	rex->base.vtable.connect = rpc_exec_connect;
 	rex->base.vtable.disconnect = rpc_exec_disconnect;
@@ -819,8 +1042,6 @@ rpc_exec_init (const char *remote,
 	p11_debug ("initialized rpc exec: %s", remote);
 	return &rex->base;
 }
-
-#endif /* OS_UNIX */
 
 p11_rpc_transport *
 p11_rpc_transport_new (p11_virtual *virt,
@@ -832,11 +1053,6 @@ p11_rpc_transport_new (p11_virtual *virt,
 	return_val_if_fail (virt != NULL, NULL);
 	return_val_if_fail (remote != NULL, NULL);
 	return_val_if_fail (name != NULL, NULL);
-
-#ifdef OS_WIN32
-	p11_message ("Windows not yet supported for remote");
-	return rpc;
-#else
 
 	/* This is a command we can execute */
 	if (remote[0] == '|') {
@@ -851,7 +1067,6 @@ p11_rpc_transport_new (p11_virtual *virt,
 		return_val_if_reached (NULL);
 
 	return rpc;
-#endif
 }
 
 void
