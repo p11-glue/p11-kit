@@ -131,7 +131,7 @@ test_expand (void)
 	                    p11_path_expand ("~/.config/path"));
 #else /* OS_WIN32 */
 	putenv ("HOME=C:\\Users\\blah");
-	assert_str_eq_free ("C:\\Users\\blah\\path",
+	assert_str_eq_free ("C:\\Users\\blah\\my/path",
 	                    p11_path_expand ("~/my/path"));
 	assert_str_eq_free ("C:\\Users\\blah\\path",
 	                    p11_path_expand ("~\\path"));
