@@ -612,7 +612,7 @@ p11_trust_anchor (int argc,
 	bool changed = false;
 	int action = 0;
 	int opt;
-	int ret;
+	int ret = 0;
 
 	enum {
 		opt_verbose = 'v',
