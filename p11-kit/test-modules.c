@@ -222,9 +222,7 @@ test_filename (void)
 	 */
 
 	modules = initialize_and_get_modules ();
-#ifndef _WIN32
-	assert (lookup_module_with_filename (modules, "mock-four.so") != NULL);
-#endif
+	assert (lookup_module_with_filename (modules, "mock-four" SHLEXT) != NULL);
 	finalize_and_free_modules (modules);
 }
 
