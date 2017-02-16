@@ -179,6 +179,7 @@ p11_library_init (void)
 	p11_debug_init ();
 	p11_debug ("initializing library");
 	p11_mutex_init (&p11_library_mutex);
+	p11_mutex_init (&p11_virtual_mutex);
 	thread_local = TlsAlloc ();
 	if (thread_local == TLS_OUT_OF_INDEXES)
 		p11_debug ("couldn't setup tls");
@@ -210,6 +211,7 @@ p11_library_uninit (void)
 		LocalFree (data);
 		TlsFree (thread_local);
 	}
+	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
 }
 
