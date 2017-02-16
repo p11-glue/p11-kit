@@ -672,7 +672,7 @@ _gettemp (char *path,
 
 	/* Fill space with random characters */
 	while (trv >= path && *trv == 'X') {
-		rnd = rand () % sizeof (padchar) - 1;
+		rnd = rand () % (sizeof (padchar) - 1);
 		*trv-- = padchar[rnd];
 	}
 	start = trv + 1;
