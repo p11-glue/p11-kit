@@ -144,6 +144,7 @@ p11_library_uninit (void)
 
 	p11_message_storage = dont_store_message;
 	pthread_key_delete (thread_local);
+	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
 }
 
