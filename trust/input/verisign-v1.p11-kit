@@ -1,5 +1,6 @@
 [p11-kit-object-v1]
 trusted: true
+modifiable: false
 
 -----BEGIN CERTIFICATE-----
 MIICPDCCAaUCED9pHoGc8JpK83P/uUii5N0wDQYJKoZIhvcNAQEFBQAwXzELMAkG
