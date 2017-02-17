@@ -1,3 +1,20 @@
+0.23.4 (devel)
+ * Recognize query attributes defined in PKCS#11 URI (RFC7512) [PR#31,
+   PR#37, PR#52]
+ * The trust policy module now recognizes CKA_NSS_MOZILLA_CA_POLICY
+   attribute, used by Firefox [#99453, PR#46]
+ * Add 'trust dump' command to dump all PKCS#11 objects in the
+   persistence format [PR#44]
+ * New experimental 'p11-kit server' command that allows PKCS#11
+   forwarding through a Unix domain socket.  A client-side module
+   p11-kit-client.so is also provided [PR#15]
+ * Add systemd unit files for exporting the proxy module through a
+   Unix domain socket [PR#35]
+ * New P11KitIter API to iterate over slots, tokens, and modules in
+   addition to objects [PR#28]
+ * libffi dependency is now optional [PR#9]
+ * Build fixes for FreeBSD, macOS, and Windows [PR#32, PR#39, PR#45]
+
 0.23.3 (devel)
  * Install private executables in libexecdir [#98817]
  * Fix link error of proxy module on macOS [#98022]
