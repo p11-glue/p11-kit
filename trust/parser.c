@@ -610,6 +610,7 @@ p11_parser_format_persist (p11_parser *parser,
 {
 	CK_BBOOL modifiablev = CK_TRUE;
 	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *attr;
 	p11_array *objects;
 	bool ret;
 	int i;
@@ -630,7 +631,14 @@ p11_parser_format_persist (p11_parser *parser,
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
 	if (ret) {
 		for (i = 0; i < objects->num; i++) {
-			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
+			/* By default, we mark objects read from a persist
+			 * file as modifiable, as the persist format is
+			 * writable.  However, if CKA_MODIFIABLE is explictly
+			 * set in the file, respect the setting.  */
+			attrs = objects->elem[i];
+			attr = p11_attrs_find_valid (objects->elem[i], CKA_MODIFIABLE);
+			if (!attr)
+				attrs = p11_attrs_build (attrs, &modifiable, NULL);
 			sink_object (parser, attrs);
 		}
 	}
