@@ -34,6 +34,8 @@ p11_kit_uri_get_module_name
 p11_kit_uri_set_module_name
 p11_kit_uri_get_module_path
 p11_kit_uri_set_module_path
+p11_kit_uri_get_vendor_query
+p11_kit_uri_set_vendor_query
 p11_kit_uri_format
 p11_kit_uri_parse
 p11_kit_uri_free

@@ -163,6 +163,12 @@ const char*         p11_kit_uri_get_module_path             (P11KitUri *uri);
 void                p11_kit_uri_set_module_path             (P11KitUri *uri,
                                                              const char *path);
 
+const char*         p11_kit_uri_get_vendor_query            (P11KitUri *uri,
+							     const char *name);
+int                 p11_kit_uri_set_vendor_query            (P11KitUri *uri,
+							     const char *name,
+							     const char *value);
+
 void                p11_kit_uri_set_unrecognized            (P11KitUri *uri,
                                                              int unrecognized);
 
