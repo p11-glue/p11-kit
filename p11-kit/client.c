@@ -96,6 +96,17 @@ get_runtime_directory (char **directoryp)
 	}
 
 	/* We can't use /run/user/<UID>, fallback to ~/.cache.  */
+	envvar = secure_getenv ("XDG_CACHE_HOME");
+
+	if (envvar != NULL && envvar[0] != '\0') {
+		directory = strdup (envvar);
+		if (!directory)
+			return CKR_HOST_MEMORY;
+
+		*directoryp = directory;
+		return CKR_OK;
+	}
+
 	if (getpwuid_r (uid, &pwbuf, buf, sizeof buf, &pw) < 0 ||
 	    pw == NULL || pw->pw_dir == NULL || *pw->pw_dir != '/')
 		return CKR_GENERAL_ERROR;
