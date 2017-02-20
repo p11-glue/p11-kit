@@ -1507,6 +1507,45 @@ test_uri_module_name_and_path (void)
 }
 
 static void
+test_uri_vendor_query (void)
+{
+	P11KitUri *uri;
+	const char *value;
+	char *string;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_set_vendor_query (uri, "my-query-one", "123456");
+	assert_num_eq (1, ret);
+	value = p11_kit_uri_get_vendor_query (uri, "my-query-one");
+	assert_str_eq ("123456", value);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert (strstr (string, "my-query-one=123456") != NULL);
+	free (string);
+
+	ret = p11_kit_uri_parse ("pkcs11:?my-query-two=some-value", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	value = p11_kit_uri_get_vendor_query (uri, "my-query-two");
+	assert_str_eq ("some-value", value);
+
+	ret = p11_kit_uri_set_vendor_query (uri, "my-query-two", "other-value");
+	assert_num_eq (1, ret);
+
+	value = p11_kit_uri_get_vendor_query (uri, "my-query-two");
+	assert_str_eq ("other-value", value);
+
+	ret = p11_kit_uri_set_vendor_query (uri, "my-query-three", NULL);
+	assert_num_eq (0, ret);
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_slot_id (void)
 {
 	P11KitUri *uri;
@@ -1618,6 +1657,7 @@ main (int argc,
 	p11_test (test_uri_module_name_bad, "/uri/module-name-bad");
 	p11_test (test_uri_module_path, "/uri/module-path");
 	p11_test (test_uri_module_name_and_path, "/uri/module-name-and-path");
+	p11_test (test_uri_vendor_query, "/uri/vendor-query");
 	p11_test (test_uri_slot_id, "/uri/slot-id");
 	p11_test (test_uri_slot_id_bad, "/uri/slot-id-bad");
 	p11_test (test_uri_free_null, "/uri/test_uri_free_null");

@@ -38,6 +38,7 @@
 #include "buffer.h"
 #define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
+#include "dict.h"
 #include "message.h"
 #include "pkcs11.h"
 #include "private.h"
@@ -150,6 +151,7 @@ struct p11_kit_uri {
 	char *pin_value;
 	char *module_name;
 	char *module_path;
+	p11_dict *qattrs;
 };
 
 static char *
@@ -795,6 +797,49 @@ p11_kit_uri_set_module_path (P11KitUri *uri, const char *path)
 }
 
 /**
+ * p11_kit_uri_get_vendor_query:
+ * @uri: The URI
+ * @name: The name of vendor query
+ *
+ * Get the vendor query part of the URI, identified by @name. This is
+ * used by some applications to explicitly specify the path of a
+ * PKCS\#11 module.
+ *
+ * Returns: The value of vendor query or %NULL if not present.
+ */
+const char*
+p11_kit_uri_get_vendor_query (P11KitUri *uri, const char *name)
+{
+	return_val_if_fail (uri != NULL, NULL);
+	return p11_dict_get (uri->qattrs, name);
+}
+
+/**
+ * p11_kit_uri_set_vendor_query:
+ * @uri: The URI
+ * @name: The name of vendor query
+ * @value: (allow-none): The value of vendor query
+ *
+ * Set the vendor query part of the URI, identified by @name. This is
+ * used by some applications to explicitly specify the path of a
+ * PKCS\#11 module.
+ *
+ * Returns: 1 if the vendor query is set or removed, 0 if not.
+ */
+int
+p11_kit_uri_set_vendor_query (P11KitUri *uri, const char *name,
+			      const char *value)
+{
+	return_val_if_fail (uri != NULL, 0);
+	return_val_if_fail (name != NULL, 0);
+
+	if (value == NULL)
+		return p11_dict_remove (uri->qattrs, name);
+
+	return p11_dict_set (uri->qattrs, strdup (name), strdup (value));
+}
+
+/**
  * p11_kit_uri_new:
  *
  * Create a new blank PKCS\#11 URI.
@@ -816,6 +861,7 @@ p11_kit_uri_new (void)
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->slot_id = (CK_SLOT_ID)-1;
+	uri->qattrs = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
 
 	return uri;
 }
@@ -1121,6 +1167,23 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		                           (const unsigned char*)uri->module_path,
 		                           strlen (uri->module_path), 0)) {
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+		}
+	}
+
+	if (uri->qattrs) {
+		p11_dictiter iter;
+		void *_key;
+		void *_value;
+
+		p11_dict_iterate (uri->qattrs, &iter);
+		while (p11_dict_next (&iter, &_key, &_value)) {
+			char *key = _key;
+			char *value = _value;
+			if (!format_encode_string (&buffer, &sep, key,
+						   (const unsigned char *) value,
+						   strlen (value), 0)) {
+				return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+			}
 		}
 	}
 
@@ -1448,6 +1511,37 @@ parse_module_query (const char *name_start, const char *name_end,
 	return 0;
 }
 
+static int
+parse_vendor_query (const char *name_start, const char *name_end,
+		    const char *start, const char *end,
+		    P11KitUri *uri)
+{
+	unsigned char *name;
+	unsigned char *value;
+
+	assert (name_start <= name_end);
+	assert (start <= end);
+
+	/* FIXME: Should we limit the characters in NAME, according to
+	 * the specification?  */
+	name = malloc (name_end - name_start + 1);
+	if (name == NULL)
+		return P11_KIT_URI_BAD_ENCODING;
+	memcpy (name, name_start, name_end - name_start);
+	name[name_end - name_start] = '\0';
+
+	value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
+	if (value == NULL) {
+		free (name);
+		return P11_KIT_URI_BAD_ENCODING;
+	}
+
+	if (!p11_dict_set (uri->qattrs, name, value))
+		return 1;
+
+	return 0;
+}
+
 /**
  * p11_kit_uri_parse:
  * @string: The string to parse
@@ -1523,6 +1617,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->module_name = NULL;
 	free (uri->module_path);
 	uri->module_path = NULL;
+	p11_dict_clear (uri->qattrs);
 
 	/* Parse the path. */
 	for (;;) {
@@ -1593,12 +1688,12 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		ret = parse_pin_query (string, epos, epos + 1, spos, uri);
 		if (ret == 0)
 			ret = parse_module_query (string, epos, epos + 1, spos, uri);
+		if (ret == 0)
+			ret = parse_vendor_query (string, epos, epos + 1, spos, uri);
 		if (ret < 0) {
 			free (allocated);
 			return ret;
 		}
-		if (ret == 0)
-			uri->unrecognized = true;
 
 		string = spos;
 	}
@@ -1624,6 +1719,7 @@ p11_kit_uri_free (P11KitUri *uri)
 	free (uri->pin_value);
 	free (uri->module_name);
 	free (uri->module_path);
+	p11_dict_free (uri->qattrs);
 	free (uri);
 }
 
