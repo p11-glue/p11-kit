@@ -1065,7 +1065,7 @@ rpc_unix_connect (p11_rpc_client_vtable *vtable,
 	}
 
 	if (connect (fd, (struct sockaddr *)&run->sa, sizeof (run->sa)) < 0) {
-		p11_message_err (errno, "failed to connect to socket");
+		p11_debug ("failed to connect to socket: %s", strerror (errno));
 		close (fd);
 		return CKR_DEVICE_REMOVED;
 	}
