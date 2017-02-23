@@ -45,6 +45,7 @@
 
 #include <errno.h>
 #include <sys/types.h>
+#include <signal.h>
 #ifdef OS_UNIX
 #include <sys/socket.h>
 #include <sys/un.h>
