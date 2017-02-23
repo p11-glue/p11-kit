@@ -91,6 +91,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([fdwalk])
 	AC_CHECK_FUNCS([setenv])
+	AC_CHECK_FUNCS([getpeereid])
 
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],
