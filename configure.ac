@@ -503,7 +503,6 @@ AC_CONFIG_FILES([Makefile
 	po/Makefile.in
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
-	p11-kit/p11-kit-remote@.service
 	trust/trust-extract-compat
 	trust/test-extract
 ])

@@ -19,6 +19,8 @@ private_PROGRAMS =
 
 CHECK_PROGS =
 
+CLEANFILES =
+
 EXTRA_DIST = HACKING
 
 incdir = $(includedir)/p11-kit-1/p11-kit
