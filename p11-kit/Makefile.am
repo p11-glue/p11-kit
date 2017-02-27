@@ -112,6 +112,25 @@ install-exec-hook:
 	done
 	$(MKDIR_P) $(DESTDIR)$(p11_package_config_modules)
 
+endif
+
+if WITH_SYSTEMD
+systemduserdir = $(prefix)/lib/systemd/user
+systemduser_DATA = \
+	p11-kit/p11-kit-remote.socket \
+	p11-kit/p11-kit-remote@.service
+
+CLEANFILES += p11-kit/p11-kit-remote@.service
+
+EXTRA_DIST += \
+	p11-kit/p11-kit-remote.socket \
+	p11-kit/p11-kit-remote@.service.in
+
+p11-kit/p11-kit-remote@.service: p11-kit/p11-kit-remote@.service.in
+	$(AM_V_GEN) sed -e 's|@bindir[@]|$(bindir)|g' \
+			-e 's|@libdir[@]|$(libdir)|g' $< > $@.tmp && \
+		mv $@.tmp $@
+
 install-data-hook:
 	$(MKDIR_P) $(DESTDIR)$(systemduserdir)/sockets.target.wants
 	$(LN_S) -f ../p11-kit-remote.socket $(DESTDIR)$(systemduserdir)/sockets.target.wants/p11-kit-remote.socket
@@ -121,13 +140,7 @@ uninstall-local:
 		rm -f $(DESTDIR)$(libdir)/p11-kit-proxy.$$i; \
 	done
 	rm -f $(DESTDIR)$(systemduserdir)/sockets.target.wants/p11-kit-remote.socket
-
 endif
-
-systemduserdir = $(prefix)/lib/systemd/user
-systemduser_DATA = \
-	p11-kit/p11-kit-remote.socket \
-	p11-kit/p11-kit-remote@.service
 
 if !OS_WIN32
 module_LTLIBRARIES += \
@@ -154,17 +167,8 @@ pkgconfig_DATA = p11-kit/p11-kit-1.pc
 exampledir = $(p11_system_config)
 example_DATA = p11-kit/pkcs11.conf.example
 
-p11-kit/p11-kit-remote@.service: p11-kit/p11-kit-remote@.service.in
-	$(AM_V_GEN) sed -e 's|@bindir[@]|$(bindir)|g' \
-			-e 's|@libdir[@]|$(libdir)|g' $< > $@.tmp && \
-		mv $@.tmp $@
-
-CLEANFILES += p11-kit/p11-kit-remote@.service
-
 EXTRA_DIST += \
 	p11-kit/docs.h \
-	p11-kit/p11-kit-remote.socket \
-	p11-kit/p11-kit-remote@.service.in \
 	$(NULL)
 
 bin_PROGRAMS += p11-kit/p11-kit
