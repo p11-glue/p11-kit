@@ -204,6 +204,19 @@ fi
 AM_CONDITIONAL(WITH_FFI, test "$with_libffi" = "yes")
 
 # --------------------------------------------------------------------
+# systemd
+
+AC_ARG_WITH([systemd],
+            AS_HELP_STRING([--without-systemd],
+                           [Don't install systemd unit files]))
+
+if test "$with_systemd" != "no"; then
+	PKG_CHECK_EXISTS([systemd], [with_systemd=yes], [with_systemd=no])
+fi
+
+AM_CONDITIONAL(WITH_SYSTEMD, test "$with_systemd" = "yes")
+
+# --------------------------------------------------------------------
 # Hash implementation
 
 AC_ARG_WITH([hash-impl],
