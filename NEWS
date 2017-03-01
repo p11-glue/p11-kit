@@ -1,3 +1,8 @@
+0.23.5 (devel)
+ * Fix license notice of common/unix-peer.c [PR#58]
+ * Remove systemd unit files for now [PR#60]
+ * Build fixes for FreeBSD [PR#56]
+
 0.23.4 (devel)
  * Recognize query attributes defined in PKCS#11 URI (RFC7512) [PR#31,
    PR#37, PR#52]
