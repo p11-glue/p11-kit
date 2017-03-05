@@ -137,7 +137,7 @@ AC_ARG_WITH([system-config],
             [system_config_dir=$sysconfdir/pkcs11])
 
 AC_ARG_WITH([user-config],
-            [AS_HELP_STRING([--with-system-config], [Change PKCS#11 user config directory])],
+            [AS_HELP_STRING([--with-user-config], [Change PKCS#11 user config directory])],
             [user_config_dir=$withval],
             [user_config_dir="~/.config/pkcs11"])
 
