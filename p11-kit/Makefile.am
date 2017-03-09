@@ -174,19 +174,24 @@ p11_kit_remote_LDADD = \
 	libp11-kit.la \
 	$(NULL)
 
-if !OS_WIN32
 private_PROGRAMS += p11-kit-server
 
 p11_kit_server_SOURCES = \
 	p11-kit/server.c \
 	$(NULL)
 
+if OS_WIN32
+	WIN32_LIBS = -ladvapi32
+else
+	WIN32_LIBS =
+endif
+
 p11_kit_server_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit.la \
+	$(WIN32_LIBS) \
 	$(NULL)
-endif
 
 # Tests ----------------------------------------------------------------
 
