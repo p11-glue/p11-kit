@@ -1953,7 +1953,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 	}
 
 	version = 0;
-	switch (write (out_fd, &version, out_fd)) {
+	switch (write (out_fd, &version, 1)) {
 	case 1:
 		break;
 	default:
