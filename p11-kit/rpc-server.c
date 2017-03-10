@@ -38,6 +38,7 @@
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
 #include "filter.h"
+#include "iter.h"
 #include "pkcs11.h"
 #include "library.h"
 #include "private.h"
@@ -45,6 +46,7 @@
 #include "remote.h"
 #include "rpc.h"
 #include "rpc-message.h"
+#include "uri.h"
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -1924,6 +1926,16 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	return true;
 }
 
+/**
+ * p11_kit_remote_serve_module:
+ * @module: a pointer to a loaded module
+ * @in_fd: input fd
+ * @out_fd: output fd
+ *
+ * Run a module on a given pair of input/output FDs.
+ *
+ * Returns: 0 if success, non-zero otherwise.
+ */
 int
 p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
                              int in_fd,
@@ -2024,6 +2036,19 @@ out:
 	return ret;
 }
 
+/**
+ * p11_kit_remote_serve_token:
+ * @module: a pointer to a loaded module
+ * @token: a token info
+ * @in_fd: input fd
+ * @out_fd: output fd
+ *
+ * Run a token wrapped in a module on a given pair of input/output FDs.
+ *
+ * Returns: 0 if success, non-zero otherwise.
+ *
+ * Deprecated: use p11_kit_remote_serve_tokens()
+ */
 int
 p11_kit_remote_serve_token (CK_FUNCTION_LIST *module,
 			    CK_TOKEN_INFO *token,
@@ -2048,6 +2073,123 @@ p11_kit_remote_serve_token (CK_FUNCTION_LIST *module,
 		goto out;
 
 	p11_filter_allow_token (filter, token);
+
+	ret = p11_kit_remote_serve_module (filtered, in_fd, out_fd);
+
+ out:
+	if (filtered != NULL)
+		p11_virtual_unwrap (filtered);
+	if (filter != NULL)
+		p11_filter_release (filter);
+
+	return ret;
+}
+
+/* Find a module providing a token */
+static CK_FUNCTION_LIST *
+find_module (const char *token)
+{
+	CK_FUNCTION_LIST **modules = NULL, *module = NULL;
+	P11KitUri *uri = NULL;
+	P11KitIter *iter = NULL;
+	CK_RV rv;
+
+	modules = p11_kit_modules_load_and_initialize (0);
+	if (modules == NULL)
+		goto out;
+
+	uri = p11_kit_uri_new ();
+	if (uri == NULL)
+		goto out;
+
+	if (p11_kit_uri_parse (token, P11_KIT_URI_FOR_TOKEN, uri) !=
+	    P11_KIT_URI_OK)
+		goto out;
+
+	iter = p11_kit_iter_new (uri,
+				 P11_KIT_ITER_WITH_TOKENS |
+				 P11_KIT_ITER_WITHOUT_OBJECTS);
+	p11_kit_uri_free (uri);
+	uri = NULL;
+	if (iter == NULL)
+		goto out;
+
+	p11_kit_iter_begin (iter, modules);
+	rv = p11_kit_iter_next (iter);
+	if (rv != CKR_OK)
+		goto out;
+
+	module = p11_kit_iter_get_module (iter);
+
+ out:
+	p11_kit_iter_free (iter);
+	p11_kit_modules_release (modules);
+
+	return module;
+}
+
+/**
+ * p11_kit_remote_serve_tokens:
+ * @tokens: a list of token URIs
+ * @n_tokens: the length of @tokens
+ * @module: (nullable): a PKCS\#11 module that provides the tokens
+ * @in_fd: input fd
+ * @out_fd: output fd
+ *
+ * Expose tokens on a given pair of input/output FDs.  All the tokens
+ * must be provided by the same module.
+ *
+ * Returns: 0 if success, non-zero otherwise.
+ */
+int
+p11_kit_remote_serve_tokens (const char **tokens,
+			     size_t n_tokens,
+			     CK_FUNCTION_LIST *module,
+			     int in_fd,
+			     int out_fd)
+{
+	p11_virtual virt;
+	p11_virtual *filter = NULL;
+	CK_FUNCTION_LIST *filtered = NULL;
+	int ret = 1;
+	size_t i;
+
+	return_val_if_fail (tokens != NULL, 2);
+	return_val_if_fail (n_tokens > 0, 2);
+	return_val_if_fail (in_fd >= 0, 2);
+	return_val_if_fail (out_fd >= 0, 2);
+
+	if (!module)
+		module = find_module (tokens[0]);
+
+	/* Create a virtual module that provides only the specified tokens */
+	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+	filter = p11_filter_subclass (&virt, NULL);
+	if (filter == NULL)
+		goto out;
+
+	for (i = 0; i < n_tokens; i++) {
+		P11KitUri *uri;
+		CK_TOKEN_INFO *token;
+
+		uri = p11_kit_uri_new ();
+		if (uri == NULL)
+			goto out;
+
+		if (p11_kit_uri_parse (tokens[i], P11_KIT_URI_FOR_TOKEN, uri) !=
+		    P11_KIT_URI_OK) {
+			p11_kit_uri_free (uri);
+			goto out;
+		}
+
+		token = p11_kit_uri_get_token_info (uri);
+		p11_filter_allow_token (filter, token);
+		p11_kit_uri_free (uri);
+	}
+
+	filtered = p11_virtual_wrap (filter, (p11_destroyer)p11_virtual_uninit);
+	if (filtered == NULL)
+		goto out;
 
 	ret = p11_kit_remote_serve_module (filtered, in_fd, out_fd);
 

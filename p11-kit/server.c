@@ -75,9 +75,11 @@ static unsigned children_avail = 0;
 static bool quiet = false;
 
 typedef struct {
-	char *module_or_token;
-	char *socket_name;
+	const char **tokens;
+	size_t n_tokens;
+	const char *provider;
 
+	const char *socket_name;
 	uid_t uid;
 	gid_t gid;
 
@@ -243,17 +245,14 @@ server_free (Server *server)
 {
 	if (server == NULL)
 		return;
-	if (server->module_or_token)
-		free (server->module_or_token);
-	if (server->socket_name)
-		free (server->socket_name);
 	if (server->socket >= 0)
 		close (server->socket);
 	free (server);
 }
 
 static Server *
-server_new (const char *module_or_token, const char *socket_name)
+server_new (const char **tokens, size_t n_tokens, const char *provider,
+	    const char *socket_name)
 {
 	Server *server;
 
@@ -262,18 +261,9 @@ server_new (const char *module_or_token, const char *socket_name)
 	if (server == NULL)
 		return NULL;
 
-	server->module_or_token = strdup (module_or_token);
-	if (server->module_or_token == NULL) {
-		server_free (server);
-		return NULL;
-	}
-
-	server->socket_name = strdup (socket_name);
-	if (server->socket_name == NULL) {
-		server_free (server);
-		return NULL;
-	}
-
+	server->tokens = tokens;
+	server->n_tokens = n_tokens;
+	server->socket_name = socket_name;
 	server->socket = -1;
 
 	return server;
@@ -291,7 +281,8 @@ server_loop (Server *server,
 	struct sockaddr_un sa;
 	fd_set rd_set;
 	sigset_t emptyset, blockset;
-	char *args[] = { "p11-kit-remote", NULL, NULL };
+	char **args;
+	size_t n_args, i;
 	int max_fd;
 	int errn;
 
@@ -396,11 +387,32 @@ server_loop (Server *server,
 				fdwalk (set_cloexec_on_fd, &max_fd);
 
 				/* Execute 'p11-kit remote'; this shouldn't return */
-				args[1] = (char *) server->module_or_token;
-				exec_external (2, args);
+				args = calloc (3 + server->n_tokens + 1, sizeof (char *));
+				if (args == NULL) {
+					errn = errno;
+					p11_message_err (errn, "couldn't allocate memory for 'p11-kit remote' arguments");
+					_exit (errn);
+				}
+
+				n_args = 0;
+				args[n_args] = "p11-kit-remote";
+				n_args++;
+
+				if (server->provider) {
+					args[n_args] = "--provider";
+					n_args++;
+					args[n_args] = (char *)server->provider;
+					n_args++;
+				}
+
+				for (i = 0; i < server->n_tokens; i++, n_args++)
+					args[n_args] = (char *)server->tokens[i];
+
+				exec_external (n_args, args);
+				free (args);
 
 				errn = errno;
-				p11_message_err (errn, "couldn't execute 'p11-kit remote' for module '%s'", server->module_or_token);
+				p11_message_err (errn, "couldn't execute 'p11-kit remote'");
 				_exit (errn);
 			default:
 				children_avail++;
@@ -419,7 +431,6 @@ int
 main (int argc,
       char *argv[])
 {
-	char *module_or_token;
 	char *socket_base = NULL, *socket_name = NULL;
 	uid_t uid = -1, run_as_uid = -1;
 	gid_t gid = -1, run_as_gid = -1;
@@ -429,6 +440,7 @@ main (int argc,
 	bool foreground = false;
 	struct timespec *timeout = NULL, ts;
 	char *name = NULL;
+	char *provider = NULL;
 	Server *server = NULL;
 	int ret = 0;
 
@@ -443,6 +455,7 @@ main (int argc,
 		opt_foreground = 'f',
 		opt_timeout = 't',
 		opt_name = 'n',
+		opt_provider = 'p'
 	};
 
 	struct option options[] = {
@@ -456,11 +469,12 @@ main (int argc,
 		{ "run-as-group", required_argument, NULL, opt_run_as_group },
 		{ "timeout", required_argument, NULL, opt_timeout },
 		{ "name", required_argument, NULL, opt_name },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit server <module-or-token>" },
+		{ 0, "usage: p11-kit server <token> ..." },
 		{ opt_foreground, "run the server in foreground" },
 		{ opt_user, "specify user who can connect to the socket" },
 		{ opt_group, "specify group who can connect to the socket" },
@@ -468,6 +482,7 @@ main (int argc,
 		{ opt_run_as_group, "specify group who runs the server" },
 		{ opt_timeout, "exit if no connection until the given timeout" },
 		{ opt_name, "specify name of the socket (default: pkcs11-<pid>)" },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -522,6 +537,9 @@ main (int argc,
 		case opt_foreground:
 			foreground = true;
 			break;
+		case opt_provider:
+			provider = optarg;
+			break;
 		case opt_help:
 		case '?':
 			p11_tool_usage (usages, options);
@@ -535,12 +553,10 @@ main (int argc,
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1) {
+	if (argc < 1) {
 		p11_tool_usage (usages, options);
 		return 2;
 	}
-
-	module_or_token = argv[0];
 
 	if (run_as_gid != -1) {
 		if (setgid (run_as_gid) == -1) {
@@ -598,7 +614,7 @@ main (int argc,
 		socket_name = strdup (name);
 	}
 
-	server = server_new (module_or_token, socket_name);
+	server = server_new ((const char **)argv, argc, provider, socket_name);
 	free (socket_name);
 	if (server == NULL) {
 		ret = 1;
