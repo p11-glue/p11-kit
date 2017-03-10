@@ -131,7 +131,7 @@ main (int argc,
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit remote <module>" },
+		{ 0, "usage: p11-kit remote <module-or-token>" },
 		{ 0 },
 	};
 
@@ -154,7 +154,7 @@ main (int argc,
 	argv += optind;
 
 	if (argc != 1) {
-		p11_message ("specify the module to remote");
+		p11_message ("specify the module or token URI to remote");
 		return 2;
 	}
 
