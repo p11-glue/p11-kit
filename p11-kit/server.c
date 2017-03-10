@@ -75,13 +75,13 @@ static unsigned children_avail = 0;
 static bool quiet = false;
 
 typedef struct {
-	char *module_name;
+	char *module_or_token;
+	char *socket_name;
 
 	uid_t uid;
 	gid_t gid;
 
-	char *pkcs11_address;
-	int pkcs11_socket;
+	int socket;
 } Server;
 
 static SIGHANDLER_T
@@ -238,40 +238,45 @@ check_credentials (int fd,
 	return true;
 }
 
-static Server *
-server_new (const char *module_name, const char *socket_base, const char *socket_name, uid_t uid, gid_t gid)
-{
-	Server *server = calloc (1, sizeof (Server));
-	char *name;
-
-	server->module_name = strdup (module_name);
-	return_val_if_fail (server->module_name != NULL, NULL);
-
-	server->uid = uid;
-	server->gid = gid;
-
-	if (socket_name != NULL)
-		name = strdup (socket_name);
-	else if (asprintf (&name, "pkcs11-%d", getpid ()) < 0)
-		return_val_if_reached (NULL);
-
-	server->pkcs11_address = p11_path_build (socket_base, name, NULL);
-	free (name);
-
-	return_val_if_fail (server->pkcs11_address != NULL, NULL);
-	server->pkcs11_socket = -1;
-
-	return server;
-}
-
 static void
 server_free (Server *server)
 {
-	free (server->module_name);
-	free (server->pkcs11_address);
-	if (server->pkcs11_socket >= 0)
-		close (server->pkcs11_socket);
+	if (server == NULL)
+		return;
+	if (server->module_or_token)
+		free (server->module_or_token);
+	if (server->socket_name)
+		free (server->socket_name);
+	if (server->socket >= 0)
+		close (server->socket);
 	free (server);
+}
+
+static Server *
+server_new (const char *module_or_token, const char *socket_name)
+{
+	Server *server;
+
+	server = calloc (1, sizeof (Server));
+
+	if (server == NULL)
+		return NULL;
+
+	server->module_or_token = strdup (module_or_token);
+	if (server->module_or_token == NULL) {
+		server_free (server);
+		return NULL;
+	}
+
+	server->socket_name = strdup (socket_name);
+	if (server->socket_name == NULL) {
+		server_free (server);
+		return NULL;
+	}
+
+	server->socket = -1;
+
+	return server;
 }
 
 static int
@@ -299,8 +304,8 @@ server_loop (Server *server,
 	ocsignal (SIGTERM, handle_term);
 	ocsignal (SIGINT, handle_term);
 
-	server->pkcs11_socket = create_socket (server->pkcs11_address, server->uid, server->gid);
-	if (server->pkcs11_socket == -1)
+	server->socket = create_socket (server->socket_name, server->uid, server->gid);
+	if (server->socket == -1)
 		return 1;
 
 	/* run as daemon */
@@ -321,9 +326,9 @@ server_loop (Server *server,
 		}
 	}
 
-	rc = listen (server->pkcs11_socket, 1024);
+	rc = listen (server->socket, 1024);
 	if (rc == -1) {
-		p11_message_err (errno, "could not listen to socket %s", server->pkcs11_address);
+		p11_message_err (errno, "could not listen to socket %s", server->socket_name);
 		return 1;
 	}
 
@@ -332,7 +337,7 @@ server_loop (Server *server,
 	if (!quiet) {
 		char *path;
 
-		path = p11_path_encode (server->pkcs11_address);
+		path = p11_path_encode (server->socket_name);
 		printf ("P11_KIT_SERVER_ADDRESS=unix:path=%s\n", path);
 		free (path);
 		printf ("P11_KIT_SERVER_PID=%d\n", getpid ());
@@ -348,23 +353,23 @@ server_loop (Server *server,
 			break;
 
 		FD_ZERO (&rd_set);
-		FD_SET (server->pkcs11_socket, &rd_set);
+		FD_SET (server->socket, &rd_set);
 
-		ret = pselect (server->pkcs11_socket + 1, &rd_set, NULL, NULL, timeout, &emptyset);
+		ret = pselect (server->socket + 1, &rd_set, NULL, NULL, timeout, &emptyset);
 		if (ret == -1 && errno == EINTR)
 			continue;
 
 		if (ret == 0 && children_avail == 0) { /* timeout */
-			p11_message ("no connections to %s for %lu secs, exiting", server->pkcs11_address, timeout->tv_sec);
+			p11_message ("no connections to %s for %lu secs, exiting", server->socket_name, timeout->tv_sec);
 			break;
 		}
 
-		if (FD_ISSET (server->pkcs11_socket, &rd_set)) {
+		if (FD_ISSET (server->socket, &rd_set)) {
 			sa_len = sizeof (sa);
-			cfd = accept (server->pkcs11_socket, (struct sockaddr *)&sa, &sa_len);
+			cfd = accept (server->socket, (struct sockaddr *)&sa, &sa_len);
 			if (cfd == -1) {
 				if (errno != EINTR)
-					p11_message_err (errno, "could not accept from socket %s", server->pkcs11_address);
+					p11_message_err (errno, "could not accept from socket %s", server->socket_name);
 				continue;
 			}
 
@@ -391,11 +396,11 @@ server_loop (Server *server,
 				fdwalk (set_cloexec_on_fd, &max_fd);
 
 				/* Execute 'p11-kit remote'; this shouldn't return */
-				args[1] = (char *) server->module_name;
+				args[1] = (char *) server->module_or_token;
 				exec_external (2, args);
 
 				errn = errno;
-				p11_message_err (errn, "couldn't execute 'p11-kit remote' for module '%s'", server->module_name);
+				p11_message_err (errn, "couldn't execute 'p11-kit remote' for module '%s'", server->module_or_token);
 				_exit (errn);
 			default:
 				children_avail++;
@@ -405,7 +410,7 @@ server_loop (Server *server,
 		}
 	}
 
-	remove (server->pkcs11_address);
+	remove (server->socket_name);
 
 	return ret;
 }
@@ -414,8 +419,8 @@ int
 main (int argc,
       char *argv[])
 {
-	char *module_name;
-	char *socket_base;
+	char *module_or_token;
+	char *socket_base = NULL, *socket_name = NULL;
 	uid_t uid = -1, run_as_uid = -1;
 	gid_t gid = -1, run_as_gid = -1;
 	int opt;
@@ -423,9 +428,9 @@ main (int argc,
 	const struct group *grp;
 	bool foreground = false;
 	struct timespec *timeout = NULL, ts;
-	const char *name = NULL;
-	Server *server;
-	int ret;
+	char *name = NULL;
+	Server *server = NULL;
+	int ret = 0;
 
 	enum {
 		opt_verbose = 'v',
@@ -455,14 +460,14 @@ main (int argc,
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit server <token> [<directory>]" },
+		{ 0, "usage: p11-kit server <module-or-token>" },
 		{ opt_foreground, "run the server in foreground" },
 		{ opt_user, "specify user who can connect to the socket" },
 		{ opt_group, "specify group who can connect to the socket" },
 		{ opt_run_as_user, "specify user who runs the server" },
 		{ opt_run_as_group, "specify group who runs the server" },
 		{ opt_timeout, "exit if no connection until the given timeout" },
-		{ opt_name, "specify name of the socket (default: pkcs11-<pid>" },
+		{ opt_name, "specify name of the socket (default: pkcs11-<pid>)" },
 		{ 0 },
 	};
 
@@ -530,49 +535,89 @@ main (int argc,
 	argc -= optind;
 	argv += optind;
 
-	if (!(argc >= 1 && argc <= 2)) {
+	if (argc != 1) {
 		p11_tool_usage (usages, options);
 		return 2;
 	}
 
-	module_name = argv[0];
-
-	if (argc == 2)
-		socket_base = argv[1];
-	else {
-		const char *runtime_dir = secure_getenv ("XDG_RUNTIME_DIR");
-		if (!runtime_dir || !runtime_dir[0]) {
-			p11_message_err (errno, "cannot determine runtime directory");
-			return 1;
-		}
-		socket_base = p11_path_build (runtime_dir, "p11-kit", NULL);
-		return_val_if_fail (socket_base != NULL, 1);
-		mkdir (socket_base, 0700);
-	}
+	module_or_token = argv[0];
 
 	if (run_as_gid != -1) {
 		if (setgid (run_as_gid) == -1) {
 			p11_message_err (errno, "cannot set gid to %u", (unsigned)run_as_gid);
-			return 1;
+			ret = 1;
+			goto out;
 		}
 
 		if (setgroups (1, &run_as_gid) == -1) {
 			p11_message_err (errno, "cannot setgroups to %u", (unsigned)run_as_gid);
-			return 1;
+			ret = 1;
+			goto out;
 		}
 	}
 
 	if (run_as_uid != -1) {
 		if (setuid (run_as_uid) == -1) {
 			p11_message_err (errno, "cannot set uid to %u", (unsigned)run_as_uid);
-			return 1;
+			ret = 1;
+			goto out;
 		}
 	}
 
-	server = server_new (module_name, socket_base, name, uid, gid);
+	if (name == NULL) {
+		const char *runtime_dir;
+
+		if (asprintf (&name, "pkcs11-%d", getpid ()) < 0) {
+			ret = 1;
+			goto out;
+		}
+
+		runtime_dir = secure_getenv ("XDG_RUNTIME_DIR");
+		if (!runtime_dir || !runtime_dir[0]) {
+			p11_message_err (errno, "cannot determine runtime directory");
+			ret = 1;
+			goto out;
+		}
+
+		socket_base = p11_path_build (runtime_dir, "p11-kit", NULL);
+		if (socket_base == NULL) {
+			ret = 1;
+			goto out;
+		}
+
+		if (mkdir (socket_base, 0700) == -1 && errno != EEXIST) {
+			p11_message_err (errno, "cannot create %s", socket_base);
+			ret = 1;
+			goto out;
+		}
+
+		socket_name = p11_path_build (socket_base, name, NULL);
+		free (socket_base);
+		free (name);
+	} else {
+		socket_name = strdup (name);
+	}
+
+	server = server_new (module_or_token, socket_name);
+	free (socket_name);
+	if (server == NULL) {
+		ret = 1;
+		goto out;
+	}
+
+	server->uid = uid;
+	server->gid = gid;
 	ret = server_loop (server, foreground, timeout);
+
+ out:
 	server_free (server);
-	remove (socket_base);
+
+	if (socket_name)
+		free (socket_name);
+	if (socket_base) {
+		remove (socket_base);
+		free (socket_base);
+	}
 
 	return ret;
 }
