@@ -47,8 +47,22 @@ int                    p11_kit_remote_serve_module          (CK_FUNCTION_LIST *m
 							     int in_fd,
 							     int out_fd);
 
+#ifndef P11_KIT_DISABLE_DEPRECATED
+
 int		       p11_kit_remote_serve_token	    (CK_FUNCTION_LIST *module,
 							     CK_TOKEN_INFO *token,
+							     int in_fd,
+							     int out_fd);
+
+#endif /* P11_KIT_DISABLE_DEPRECATED */
+
+int                    p11_kit_remote_serve_tokens          (const char **tokens,
+							     size_t n_tokens,
+							     CK_FUNCTION_LIST *module,
+							     int in_fd,
+							     int out_fd);
+
+int                    p11_kit_remote_serve                 (const char *module_or_token,
 							     int in_fd,
 							     int out_fd);
 

@@ -49,89 +49,30 @@
 #include <string.h>
 #include <unistd.h>
 
-static int
-serve_module_from_uri (const char *uri_string)
-{
-	CK_FUNCTION_LIST **modules;
-	CK_FUNCTION_LIST *module;
-	P11KitIter *iter = NULL;
-	P11KitUri *uri;
-	CK_TOKEN_INFO *token;
-	int ret = 1;
-	CK_RV rv;
-
-	modules = p11_kit_modules_load_and_initialize (0);
-	if (modules == NULL)
-		return 1;
-
-	uri = p11_kit_uri_new ();
-	if (uri == NULL)
-		goto out;
-	ret = p11_kit_uri_parse (uri_string, P11_KIT_URI_FOR_TOKEN, uri);
-	if (ret != P11_KIT_URI_OK) {
-		p11_kit_uri_free (uri);
-		goto out;
-	}
-
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
-	p11_kit_uri_free (uri);
-	if (iter == NULL)
-		goto out;
-
-	p11_kit_iter_begin (iter, modules);
-	rv = p11_kit_iter_next (iter);
-	if (rv != CKR_OK)
-		goto out;
-
-	module = p11_kit_iter_get_module (iter);
-	token = p11_kit_iter_get_token (iter);
-	p11_kit_modules_finalize (modules);
-
-	ret = p11_kit_remote_serve_token (module, token, 0, 1);
-
- out:
-	p11_kit_iter_free (iter);
-	p11_kit_modules_release (modules);
-
-	return ret;
-}
-
-static int
-serve_module_from_file (const char *file)
-{
-	CK_FUNCTION_LIST *module;
-	int ret;
-
-	module = p11_kit_module_load (file, 0);
-	if (module == NULL)
-		return 1;
-
-	ret = p11_kit_remote_serve_module (module, 0, 1);
-	p11_kit_module_release (module);
-
-	return ret;
-}
-
 int
 main (int argc,
       char *argv[])
 {
 	int opt;
-	int ret;
+	char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
 		opt_help = 'h',
+		opt_provider = 'p'
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "help", no_argument, NULL, opt_help },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit remote <module-or-token>" },
+		{ 0, "usage: p11-kit remote <module>\n"
+		     "       p11-kit remote [-p <provider>] <token> ..." },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -144,6 +85,9 @@ main (int argc,
 		case '?':
 			p11_tool_usage (usages, options);
 			return 0;
+		case opt_provider:
+			provider = optarg;
+			break;
 		default:
 			assert_not_reached ();
 			break;
@@ -153,8 +97,8 @@ main (int argc,
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1) {
-		p11_message ("specify the module or token URI to remote");
+	if (argc < 1) {
+		p11_message ("specify a module or tokens to remote");
 		return 2;
 	}
 
@@ -163,10 +107,40 @@ main (int argc,
 		return 2;
 	}
 
-	if (strncmp (argv[0], "pkcs11:", 7) == 0)
-		ret = serve_module_from_uri (argv[0]);
-	else
-		ret = serve_module_from_file (argv[0]);
+	if (strncmp (argv[0], "pkcs11:", 7) == 0) {
+		CK_FUNCTION_LIST *module = NULL;
+		int ret;
 
-	return ret;
+		if (provider) {
+			module = p11_kit_module_load (provider, 0);
+			if (module == NULL)
+				return 1;
+		}
+
+		ret = p11_kit_remote_serve_tokens ((const char **)argv, argc,
+						   module,
+						   STDIN_FILENO, STDOUT_FILENO);
+		if (module)
+			p11_kit_module_release (module);
+
+		return ret;
+	} else {
+		CK_FUNCTION_LIST *module;
+		int ret;
+
+		if (argc != 1) {
+			p11_message ("only one module can be specified");
+			return 2;
+		}
+
+		module = p11_kit_module_load (argv[0], 0);
+		if (module == NULL)
+			return 1;
+
+		ret = p11_kit_remote_serve_module (module,
+						   STDIN_FILENO, STDOUT_FILENO);
+		p11_kit_module_release (module);
+
+		return ret;
+	}
 }
