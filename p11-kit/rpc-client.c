@@ -196,11 +196,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
                             CK_ATTRIBUTE_PTR arr,
                             CK_ULONG len)
 {
-	uint32_t i, num, value, type;
-	CK_ATTRIBUTE_PTR attr;
-	const unsigned char *attrval = NULL;
-	size_t attrlen = 0;
-	unsigned char validity;
+	uint32_t i, num;
 	CK_RV ret;
 
 	assert (len != 0);
@@ -229,62 +225,49 @@ proto_read_attribute_array (p11_rpc_message *msg,
 
 	/* We need to go ahead and read everything in all cases */
 	for (i = 0; i < num; ++i) {
+		size_t offset = msg->parsed;
+		CK_ATTRIBUTE temp;
 
-		/* The attribute type */
-		p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &type);
-
-		/* Attribute validity */
-		p11_rpc_buffer_get_byte (msg->input, &msg->parsed, &validity);
-
-		/* And the data itself */
-		if (validity) {
-			if (p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value) &&
-			    p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &attrval, &attrlen)) {
-				if (attrval && value != attrlen) {
-					p11_message ("attribute length does not match attribute data");
-					return PARSE_ERROR;
-				}
-				attrlen = value;
-			}
+		memset (&temp, 0, sizeof (temp));
+		if (!p11_rpc_buffer_get_attribute (msg->input, &offset, &temp)) {
+			msg->parsed = offset;
+			return PARSE_ERROR;
 		}
-
-		/* Don't act on this data unless no errors */
-		if (p11_buffer_failed (msg->input))
-			break;
 
 		/* Try and stuff it in the output data */
 		if (arr) {
-			attr = &(arr[i]);
-			if (attr->type != type) {
+			CK_ATTRIBUTE *attr = &(arr[i]);
+
+			if (temp.type != attr->type) {
 				p11_message ("returned attributes in invalid order");
+				msg->parsed = offset;
 				return PARSE_ERROR;
 			}
 
-			if (validity) {
+			if (temp.ulValueLen != ((CK_ULONG)-1)) {
 				/* Just requesting the attribute size */
 				if (!attr->pValue) {
-					attr->ulValueLen = attrlen;
+					attr->ulValueLen = temp.ulValueLen;
 
 				/* Wants attribute data, but too small */
-				} else if (attr->ulValueLen < attrlen) {
-					attr->ulValueLen = attrlen;
+				} else if (attr->ulValueLen < temp.ulValueLen) {
+					attr->ulValueLen = temp.ulValueLen;
 					ret = CKR_BUFFER_TOO_SMALL;
-
-				/* Wants attribute data, value is null */
-				} else if (attrval == NULL) {
-					attr->ulValueLen = 0;
 
 				/* Wants attribute data, enough space */
 				} else {
-					attr->ulValueLen = attrlen;
-					memcpy (attr->pValue, attrval, attrlen);
+					size_t offset2 = msg->parsed;
+					if (!p11_rpc_buffer_get_attribute (msg->input, &offset2, attr)) {
+						msg->parsed = offset2;
+						return PARSE_ERROR;
+					}
 				}
-
-			/* Not a valid attribute */
 			} else {
-				attr->ulValueLen = ((CK_ULONG)-1);
+				attr->ulValueLen = temp.ulValueLen;
 			}
 		}
+
+		msg->parsed = offset;
 	}
 
 	if (p11_buffer_failed (msg->input))

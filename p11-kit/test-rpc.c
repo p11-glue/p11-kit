@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012 Stefan Walter
- * Copyright (c) 2012 Red Hat Inc.
+ * Copyright (C) 2012-2017 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -350,6 +350,221 @@ test_byte_array_static (void)
 	assert_num_eq (40, next);
 	assert_num_eq (32, length);
 	assert (memcmp (data + 8, val, 32) == 0);
+}
+
+static void
+test_byte_value (void)
+{
+	p11_buffer buffer;
+	unsigned char bytes[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+	                          0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+	                          0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+	                          0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F };
+
+	char val[16];
+	size_t offset = 0;
+	CK_ULONG val_size;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_byte_value(&buffer, bytes, sizeof(bytes));
+	assert (p11_buffer_failed (&buffer));
+
+	p11_buffer_reset (&buffer, 0);
+
+	p11_rpc_buffer_add_byte_value(&buffer, bytes, 1);
+	assert (!p11_buffer_failed (&buffer));
+
+	ret = p11_rpc_buffer_get_byte_value(&buffer, &offset, val, &val_size);
+	assert_num_eq (true, ret);
+
+	assert_num_eq (bytes[0], val[0]);
+
+	/* Read out of bound */
+	ret = p11_rpc_buffer_get_byte_value(&buffer, &offset, val, &val_size);
+	assert_num_eq (false, ret);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_ulong_value (void)
+{
+	p11_buffer buffer;
+	p11_buffer buf = { (unsigned char *)"pad0\x00\x00\x00\x00\x23\x45\x67\x89", 12, };
+	CK_ULONG val = 0xFFFFFFFF;
+	uint64_t val64 = 0xFFFFFFFFFFFFFFFF;
+	size_t offset = 0;
+	CK_ULONG val_size;
+	bool ret;
+
+	offset = 4;
+	ret = p11_rpc_buffer_get_ulong_value(&buf, &offset, &val, &val_size);
+	assert_num_eq (true, ret);
+	assert_num_eq (12, offset);
+	assert_num_eq (sizeof(val), val_size);
+	assert_num_eq (0x23456789, val);
+
+	p11_buffer_init (&buffer, 0);
+
+	offset = 0;
+	val_size = 8;
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	assert_num_eq (0, ret);
+	assert_num_eq (0, offset);
+	assert_num_eq (sizeof(val), val_size);
+	assert (0xFFFFFFFFFFFFFFFF == val64);
+
+	p11_buffer_reset (&buffer, 0);
+
+	p11_buffer_add (&buffer, (unsigned char *)"padding", 7);
+
+	val64 = 0x0123456708ABCDEF;
+	p11_rpc_buffer_add_ulong_value (&buffer, &val64, sizeof(val64));
+	assert (!p11_buffer_failed (&buffer));
+
+	assert_num_eq (15, buffer.len);
+
+	val64 = 0xFFFFFFFFFFFFFFFF;
+	offset = 7;
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	assert_num_eq (true, ret);
+	assert_num_eq (15, offset);
+	assert (0x0123456708ABCDEF == val64);
+
+	/* Read out of bound */
+	val64 = 0xFFFFFFFFFFFFFFFF;
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	assert_num_eq (false, ret);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_attribute_array_value (void)
+{
+	p11_buffer buffer;
+	CK_BBOOL truev = CK_TRUE;
+	char labelv[] = "label";
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_MODIFIABLE, &truev, sizeof (truev) },
+		{ CKA_LABEL, labelv, sizeof (labelv) }
+	};
+	CK_BBOOL boolv = CK_FALSE;
+	char strv[] = "\0\0\0\0\0";
+	CK_ATTRIBUTE val[] = {
+		{ CKA_MODIFIABLE, &boolv, sizeof (boolv) },
+		{ CKA_LABEL, strv, sizeof (strv) }
+	};
+	CK_ULONG val_size;
+	size_t offset = 0, offset2;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_attribute_array_value(&buffer, attrs, sizeof(attrs));
+	assert (!p11_buffer_failed (&buffer));
+
+	offset2 = offset;
+	ret = p11_rpc_buffer_get_attribute_array_value(&buffer, &offset, NULL, &val_size);
+	assert_num_eq (true, ret);
+
+	offset = offset2;
+	ret = p11_rpc_buffer_get_attribute_array_value(&buffer, &offset, val, &val_size);
+	assert_num_eq (true, ret);
+	assert_num_eq (val[0].type, CKA_MODIFIABLE);
+	assert_num_eq (*(CK_BBOOL *)val[0].pValue, CK_TRUE);
+	assert_num_eq (val[0].ulValueLen, sizeof (truev));
+	assert_num_eq (val[1].type, CKA_LABEL);
+	assert_str_eq (val[1].pValue, "label");
+	assert_num_eq (val[1].ulValueLen, sizeof (labelv));
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_mechanism_type_array_value (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE mechs[] = { CKM_RSA_PKCS, CKM_DSA, CKM_SHA256_RSA_PKCS };
+	CK_MECHANISM_TYPE val[3];
+	CK_ULONG val_size;
+	size_t offset = 0, offset2;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_mechanism_type_array_value(&buffer, mechs, sizeof(mechs));
+	assert (!p11_buffer_failed (&buffer));
+
+	offset2 = offset;
+	ret = p11_rpc_buffer_get_mechanism_type_array_value(&buffer, &offset, NULL, &val_size);
+	assert_num_eq (true, ret);
+
+	offset = offset2;
+	ret = p11_rpc_buffer_get_mechanism_type_array_value(&buffer, &offset, val, &val_size);
+	assert_num_eq (true, ret);
+	assert_num_eq (val[0], CKM_RSA_PKCS);
+	assert_num_eq (val[1], CKM_DSA);
+	assert_num_eq (val[2], CKM_SHA256_RSA_PKCS);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_date_value (void)
+{
+	p11_buffer buffer;
+	CK_DATE date, val;
+	size_t offset = 0;
+	CK_ULONG val_size;
+	bool ret;
+
+	memcpy (date.year, "2017", 4);
+	memcpy (date.month, "05", 2);
+	memcpy (date.day, "16", 2);
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_date_value(&buffer, &date, sizeof(date));
+	assert (!p11_buffer_failed (&buffer));
+
+	ret = p11_rpc_buffer_get_date_value(&buffer, &offset, &val, &val_size);
+	assert_num_eq (true, ret);
+
+	assert (memcmp (val.year, date.year, 4) == 0);
+	assert (memcmp (val.month, date.month, 2) == 0);
+	assert (memcmp (val.day, date.day, 2) == 0);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_byte_array_value (void)
+{
+	p11_buffer buffer;
+	unsigned char bytes[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+	                          0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+	                          0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+	                          0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F };
+
+	unsigned char val[32];
+	size_t offset = 0;
+	CK_ULONG val_size;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_byte_array_value(&buffer, bytes, sizeof(bytes));
+	assert (!p11_buffer_failed (&buffer));
+
+	ret = p11_rpc_buffer_get_byte_array_value(&buffer, &offset, val, &val_size);
+	assert_num_eq (true, ret);
+
+	assert_num_eq (bytes[0], val[0]);
+
+	p11_buffer_uninit (&buffer);
 }
 
 static p11_virtual base;
@@ -1036,6 +1251,12 @@ main (int argc,
 	p11_test (test_byte_array_null, "/rpc/byte-array-null");
 	p11_test (test_byte_array_too_long, "/rpc/byte-array-too-long");
 	p11_test (test_byte_array_static, "/rpc/byte-array-static");
+	p11_test (test_byte_value, "/rpc/byte-value");
+	p11_test (test_ulong_value, "/rpc/ulong-value");
+	p11_test (test_attribute_array_value, "/rpc/attribute-array-value");
+	p11_test (test_mechanism_type_array_value, "/rpc/mechanism-type-array-value");
+	p11_test (test_date_value, "/rpc/date-value");
+	p11_test (test_byte_array_value, "/rpc/byte-array-value");
 
 	p11_test (test_initialize_fails_on_client, "/rpc/initialize-fails-on-client");
 	p11_test (test_initialize_fails_on_server, "/rpc/initialize-fails-on-server");
