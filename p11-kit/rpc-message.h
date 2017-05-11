@@ -216,6 +216,18 @@ static const p11_rpc_call p11_rpc_calls[] = {
 #define P11_RPC_HANDSHAKE_LEN \
 	(strlen ((char *)P11_RPC_HANDSHAKE))
 
+typedef enum _p11_rpc_value_type {
+	P11_RPC_VALUE_BYTE = 0,
+	P11_RPC_VALUE_ULONG,
+	P11_RPC_VALUE_ATTRIBUTE_ARRAY,
+	P11_RPC_VALUE_MECHANISM_TYPE_ARRAY,
+	P11_RPC_VALUE_DATE,
+	P11_RPC_VALUE_BYTE_ARRAY
+} p11_rpc_value_type;
+
+typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
+typedef bool (*p11_rpc_value_decoder) (p11_buffer *, size_t *, void *, CK_ULONG *);
+
 typedef enum _p11_rpc_message_type {
 	P11_RPC_REQUEST = 1,
 	P11_RPC_RESPONSE
@@ -366,5 +378,70 @@ void             p11_rpc_buffer_add_uint64               (p11_buffer *buffer,
 bool             p11_rpc_buffer_get_uint64               (p11_buffer *buf,
                                                           size_t *offset,
                                                           uint64_t *val);
+
+void             p11_rpc_buffer_add_attribute            (p11_buffer *buffer,
+							  const CK_ATTRIBUTE *attr);
+
+bool             p11_rpc_buffer_get_attribute            (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_ATTRIBUTE *attr);
+
+void             p11_rpc_buffer_add_byte_value           (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_byte_value           (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_ulong_value          (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_ulong_value          (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_attribute_array_value
+                                                         (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_attribute_array_value
+                                                         (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_mechanism_type_array_value
+                                                         (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_mechanism_type_array_value
+                                                         (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_date_value           (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_date_value           (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_byte_array_value     (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_byte_array_value     (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
 
 #endif /* _RPC_MESSAGE_H */

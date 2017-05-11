@@ -35,6 +35,7 @@
 
 #include "config.h"
 
+#define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
 #include "library.h"
 #include "message.h"
@@ -43,6 +44,8 @@
 
 #include <assert.h>
 #include <string.h>
+
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 void
 p11_rpc_message_init (p11_rpc_message *msg,
@@ -255,8 +258,6 @@ p11_rpc_message_write_attribute_array (p11_rpc_message *msg,
                                        CK_ULONG num)
 {
 	CK_ULONG i;
-	CK_ATTRIBUTE_PTR attr;
-	unsigned char validity;
 
 	assert (num == 0 || arr != NULL);
 	assert (msg != NULL);
@@ -268,22 +269,8 @@ p11_rpc_message_write_attribute_array (p11_rpc_message *msg,
 	/* Write the number of items */
 	p11_rpc_buffer_add_uint32 (msg->output, num);
 
-	for (i = 0; i < num; ++i) {
-		attr = &(arr[i]);
-
-		/* The attribute type */
-		p11_rpc_buffer_add_uint32 (msg->output, attr->type);
-
-		/* Write out the attribute validity */
-		validity = (((CK_LONG)attr->ulValueLen) == -1) ? 0 : 1;
-		p11_rpc_buffer_add_byte (msg->output, validity);
-
-		/* The attribute length and value */
-		if (validity) {
-			p11_rpc_buffer_add_uint32 (msg->output, attr->ulValueLen);
-			p11_rpc_buffer_add_byte_array (msg->output, attr->pValue, attr->ulValueLen);
-		}
-	}
+	for (i = 0; i < num; ++i)
+		p11_rpc_buffer_add_attribute (msg->output, &(arr[i]));
 
 	return !p11_buffer_failed (msg->output);
 }
@@ -766,5 +753,491 @@ p11_rpc_buffer_get_byte_array (p11_buffer *buf,
 		*length = len;
 	*offset = off + len;
 
+	return true;
+}
+
+static p11_rpc_value_type
+map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
+{
+	switch (type) {
+	case CKA_TOKEN:
+	case CKA_PRIVATE:
+	case CKA_TRUSTED:
+	case CKA_SENSITIVE:
+	case CKA_ENCRYPT:
+	case CKA_DECRYPT:
+	case CKA_WRAP:
+	case CKA_UNWRAP:
+	case CKA_SIGN:
+	case CKA_SIGN_RECOVER:
+	case CKA_VERIFY:
+	case CKA_VERIFY_RECOVER:
+	case CKA_DERIVE:
+	case CKA_EXTRACTABLE:
+	case CKA_LOCAL:
+	case CKA_NEVER_EXTRACTABLE:
+	case CKA_ALWAYS_SENSITIVE:
+	case CKA_MODIFIABLE:
+	case CKA_COPYABLE:
+	case CKA_SECONDARY_AUTH: /* Deprecated */
+	case CKA_ALWAYS_AUTHENTICATE:
+	case CKA_WRAP_WITH_TRUSTED:
+	case CKA_RESET_ON_INIT:
+	case CKA_HAS_RESET:
+	case CKA_COLOR:
+		return P11_RPC_VALUE_BYTE;
+	case CKA_CLASS:
+	case CKA_CERTIFICATE_TYPE:
+	case CKA_CERTIFICATE_CATEGORY:
+	case CKA_JAVA_MIDP_SECURITY_DOMAIN:
+	case CKA_KEY_TYPE:
+	case CKA_MODULUS_BITS:
+	case CKA_PRIME_BITS:
+	case CKA_SUB_PRIME_BITS:
+	case CKA_VALUE_BITS:
+	case CKA_VALUE_LEN:
+	case CKA_KEY_GEN_MECHANISM:
+	case CKA_AUTH_PIN_FLAGS: /* Deprecated */
+	case CKA_HW_FEATURE_TYPE:
+	case CKA_PIXEL_X:
+	case CKA_PIXEL_Y:
+	case CKA_RESOLUTION:
+	case CKA_CHAR_ROWS:
+	case CKA_CHAR_COLUMNS:
+	case CKA_BITS_PER_PIXEL:
+	case CKA_MECHANISM_TYPE:
+		return P11_RPC_VALUE_ULONG;
+	case CKA_WRAP_TEMPLATE:
+	case CKA_UNWRAP_TEMPLATE:
+		return P11_RPC_VALUE_ATTRIBUTE_ARRAY;
+	case CKA_ALLOWED_MECHANISMS:
+		return P11_RPC_VALUE_MECHANISM_TYPE_ARRAY;
+	case CKA_START_DATE:
+	case CKA_END_DATE:
+		return P11_RPC_VALUE_DATE;
+	default:
+		p11_debug ("cannot determine the type of attribute value for %lu; assuming byte array",
+			   type);
+		/* fallthrough */
+	case CKA_LABEL:
+	case CKA_APPLICATION:
+	case CKA_VALUE:
+	case CKA_OBJECT_ID:
+	case CKA_ISSUER:
+	case CKA_SERIAL_NUMBER:
+	case CKA_AC_ISSUER:
+	case CKA_OWNER:
+	case CKA_ATTR_TYPES:
+	case CKA_URL:
+	case CKA_HASH_OF_SUBJECT_PUBLIC_KEY:
+	case CKA_HASH_OF_ISSUER_PUBLIC_KEY:
+	case CKA_CHECK_VALUE:
+	case CKA_SUBJECT:
+	case CKA_ID:
+	case CKA_MODULUS:
+	case CKA_PUBLIC_EXPONENT:
+	case CKA_PRIVATE_EXPONENT:
+	case CKA_PRIME_1:
+	case CKA_PRIME_2:
+	case CKA_EXPONENT_1:
+	case CKA_EXPONENT_2:
+	case CKA_COEFFICIENT:
+	case CKA_PRIME:
+	case CKA_SUBPRIME:
+	case CKA_BASE:
+	case CKA_EC_PARAMS:
+		/* same as CKA_ECDSA_PARAMS */
+	case CKA_EC_POINT:
+	case CKA_CHAR_SETS:
+	case CKA_ENCODING_METHODS:
+	case CKA_MIME_TYPES:
+	case CKA_REQUIRED_CMS_ATTRIBUTES:
+	case CKA_DEFAULT_CMS_ATTRIBUTES:
+	case CKA_SUPPORTED_CMS_ATTRIBUTES:
+		return P11_RPC_VALUE_BYTE_ARRAY;
+	}
+}
+
+void
+p11_rpc_buffer_add_byte_value (p11_buffer *buffer,
+			       const void *value,
+			       CK_ULONG value_length)
+{
+	CK_BYTE byte_value;
+
+	/* Check if value can be converted to CK_BYTE. */
+	if (value_length > sizeof (CK_BYTE)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	memcpy (&byte_value, value, value_length);
+
+	/* Check if byte_value can be converted to uint8_t. */
+	if (byte_value > UINT8_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_byte (buffer, byte_value);
+}
+
+void
+p11_rpc_buffer_add_ulong_value (p11_buffer *buffer,
+				const void *value,
+				CK_ULONG value_length)
+{
+	CK_ULONG ulong_value;
+
+	/* Check if value can be converted to CK_ULONG. */
+	if (value_length > sizeof (CK_ULONG)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	memcpy (&ulong_value, value, value_length);
+
+	/* Check if ulong_value can be converted to uint64_t. */
+	if (ulong_value > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, ulong_value);
+}
+
+void
+p11_rpc_buffer_add_attribute_array_value (p11_buffer *buffer,
+					  const void *value,
+					  CK_ULONG value_length)
+{
+	const CK_ATTRIBUTE *attrs = value;
+	size_t count = value_length / sizeof (CK_ATTRIBUTE);
+	size_t i;
+
+	/* Check if count can be converted to uint32_t. */
+	if (count > UINT32_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	/* Write the number of items */
+	p11_rpc_buffer_add_uint32 (buffer, count);
+
+	/* Actually write the attributes.  */
+	for (i = 0; i < count; i++) {
+		const CK_ATTRIBUTE *attr = &(attrs[i]);
+		p11_rpc_buffer_add_attribute (buffer, attr);
+	}
+}
+
+void
+p11_rpc_buffer_add_mechanism_type_array_value (p11_buffer *buffer,
+					       const void *value,
+					       CK_ULONG value_length)
+{
+	const CK_MECHANISM_TYPE *mechs = value;
+	size_t count = value_length / sizeof (CK_MECHANISM_TYPE);
+	size_t i;
+
+	/* Check if count can be converted to uint32_t. */
+	if (count > UINT32_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	/* Write the number of items */
+	p11_rpc_buffer_add_uint32 (buffer, count);
+
+	for (i = 0; i < count; i++) {
+		if (mechs[i] > UINT64_MAX) {
+			p11_buffer_fail (buffer);
+			return;
+		}
+		p11_rpc_buffer_add_uint64 (buffer, mechs[i]);
+	}
+}
+
+void
+p11_rpc_buffer_add_date_value (p11_buffer *buffer,
+			       const void *value,
+			       CK_ULONG value_length)
+{
+	CK_DATE date_value;
+	unsigned char array[8];
+
+	/* Check if value can be converted to CK_DATE. */
+	if (value_length > sizeof (CK_DATE)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&date_value, value, value_length);
+	memcpy (array, date_value.year, 4);
+	memcpy (array + 4, date_value.month, 2);
+	memcpy (array + 6, date_value.day, 2);
+
+	p11_rpc_buffer_add_byte_array (buffer, array, 8);
+}
+
+void
+p11_rpc_buffer_add_byte_array_value (p11_buffer *buffer,
+				     const void *value,
+				     CK_ULONG value_length)
+{
+	/* Check if value length can be converted to uint32_t, as
+	 * p11_rpc_buffer_add_byte_array expects. */
+	if (value_length > UINT32_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_byte_array (buffer, value, value_length);
+}
+
+void
+p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
+{
+	unsigned char validity;
+	static const p11_rpc_value_encoder encoders[] = {
+		p11_rpc_buffer_add_byte_value,
+		p11_rpc_buffer_add_ulong_value,
+		p11_rpc_buffer_add_attribute_array_value,
+		p11_rpc_buffer_add_mechanism_type_array_value,
+		p11_rpc_buffer_add_date_value,
+		p11_rpc_buffer_add_byte_array_value
+	};
+	p11_rpc_value_encoder encoder;
+	p11_rpc_value_type value_type;
+
+	/* The attribute type */
+	if (attr->type > UINT32_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	p11_rpc_buffer_add_uint32 (buffer, attr->type);
+
+	/* Write out the attribute validity */
+	validity = (((CK_LONG)attr->ulValueLen) == -1) ? 0 : 1;
+	p11_rpc_buffer_add_byte (buffer, validity);
+
+	if (!validity)
+		return;
+
+	/* The attribute length */
+	if (attr->ulValueLen > UINT32_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	p11_rpc_buffer_add_uint32 (buffer, attr->ulValueLen);
+
+	/* The attribute value */
+	value_type = map_attribute_to_value_type (attr->type);
+	assert (value_type < ELEMS (encoders));
+	encoder = encoders[value_type];
+	assert (encoder != NULL);
+	encoder (buffer, attr->pValue, attr->ulValueLen);
+}
+
+bool
+p11_rpc_buffer_get_byte_value (p11_buffer *buffer,
+			       size_t *offset,
+			       void *value,
+			       CK_ULONG *value_length)
+{
+	unsigned char val;
+
+	if (!p11_rpc_buffer_get_byte (buffer, offset, &val))
+		return false;
+
+	if (value) {
+		CK_BYTE byte_value = val;
+		memcpy (value, &byte_value, sizeof (CK_BYTE));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_BYTE);
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_ulong_value (p11_buffer *buffer,
+				size_t *offset,
+				void *value,
+				CK_ULONG *value_length)
+{
+	uint64_t val;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+
+	if (value) {
+		CK_ULONG ulong_value = val;
+		memcpy (value, &ulong_value, sizeof (CK_ULONG));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_ULONG);
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_attribute_array_value (p11_buffer *buffer,
+					  size_t *offset,
+					  void *value,
+					  CK_ULONG *value_length)
+{
+	uint32_t count, i;
+	CK_ATTRIBUTE *attr, temp;
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
+		return false;
+
+	if (!value) {
+		memset (&temp, 0, sizeof (CK_ATTRIBUTE));
+		attr = &temp;
+	} else
+		attr = value;
+
+	for (i = 0; i < count; i++) {
+		if (!p11_rpc_buffer_get_attribute (buffer, offset, attr))
+			return false;
+		if (value)
+			attr++;
+	}
+
+	if (value_length)
+		*value_length = count * sizeof (CK_ATTRIBUTE);
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_mechanism_type_array_value (p11_buffer *buffer,
+					       size_t *offset,
+					       void *value,
+					       CK_ULONG *value_length)
+{
+	uint32_t count, i;
+	CK_MECHANISM_TYPE *mech, temp;
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
+		return false;
+
+	if (!value) {
+		memset (&temp, 0, sizeof (CK_MECHANISM_TYPE));
+		mech = &temp;
+	} else
+		mech = value;
+
+	for (i = 0; i < count; i++) {
+		CK_ULONG len;
+		if (!p11_rpc_buffer_get_ulong_value (buffer, offset, mech, &len))
+			return false;
+		if (value)
+			mech++;
+	}
+
+	if (value_length)
+		*value_length = count * sizeof (CK_MECHANISM_TYPE);
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_date_value (p11_buffer *buffer,
+			       size_t *offset,
+			       void *value,
+			       CK_ULONG *value_length)
+{
+	CK_DATE date_value;
+	const unsigned char *array;
+	size_t array_length;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset,
+					    &array, &array_length) ||
+	    array_length != 8)
+		return false;
+
+	if (value) {
+		memcpy (date_value.year, array, 4);
+		memcpy (date_value.month, array + 4, 2);
+		memcpy (date_value.day, array + 6, 2);
+		memcpy (value, &date_value, sizeof (CK_DATE));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_DATE);
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
+				     size_t *offset,
+				     void *value,
+				     CK_ULONG *value_length)
+{
+	const unsigned char *val;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &val, &len))
+		return false;
+
+	if (val && value)
+		memcpy (value, val, len);
+
+	if (value_length)
+		*value_length = len;
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_attribute (p11_buffer *buffer,
+			      size_t *offset,
+			      CK_ATTRIBUTE *attr)
+{
+	uint32_t type, length;
+	unsigned char validity;
+	static const p11_rpc_value_decoder decoders[] = {
+		p11_rpc_buffer_get_byte_value,
+		p11_rpc_buffer_get_ulong_value,
+		p11_rpc_buffer_get_attribute_array_value,
+		p11_rpc_buffer_get_mechanism_type_array_value,
+		p11_rpc_buffer_get_date_value,
+		p11_rpc_buffer_get_byte_array_value
+	};
+	p11_rpc_value_decoder decoder;
+	p11_rpc_value_type value_type;
+
+	/* The attribute type */
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &type))
+		return false;
+
+	/* Attribute validity */
+	if (!p11_rpc_buffer_get_byte (buffer, offset, &validity))
+		return false;
+
+	/* Not a valid attribute */
+	if (!validity) {
+		attr->ulValueLen = ((CK_ULONG)-1);
+		attr->type = type;
+		return true;
+	}
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
+		return false;
+
+	/* Decode the attribute value */
+	value_type = map_attribute_to_value_type (type);
+	assert (value_type < ELEMS (decoders));
+	decoder = decoders[value_type];
+	assert (decoder != NULL);
+	if (!decoder (buffer, offset, attr->pValue, &attr->ulValueLen))
+		return false;
+	if (!attr->pValue)
+		attr->ulValueLen = length;
+	attr->type = type;
 	return true;
 }

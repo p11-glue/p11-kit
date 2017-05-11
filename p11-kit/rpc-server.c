@@ -281,11 +281,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
                             CK_ULONG *n_result)
 {
 	CK_ATTRIBUTE_PTR attrs;
-	const unsigned char *data;
-	unsigned char valid;
 	uint32_t n_attrs, i;
-	uint32_t value;
-	size_t n_data;
 
 	assert (msg != NULL);
 	assert (result != NULL);
@@ -306,34 +302,31 @@ proto_read_attribute_array (p11_rpc_message *msg,
 
 	/* Now go through and fill in each one */
 	for (i = 0; i < n_attrs; ++i) {
+		size_t offset = msg->parsed;
+		CK_ATTRIBUTE temp;
 
-		/* The attribute type */
-		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
+		memset (&temp, 0, sizeof (temp));
+		if (!p11_rpc_buffer_get_attribute (msg->input, &offset, &temp)) {
+			msg->parsed = offset;
 			return PARSE_ERROR;
+		}
 
-		attrs[i].type = value;
+		attrs[i].type = temp.type;
 
 		/* Whether this one is valid or not */
-		if (!p11_rpc_buffer_get_byte (msg->input, &msg->parsed, &valid))
-			return PARSE_ERROR;
-
-		if (valid) {
-			if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
-				return PARSE_ERROR;
-			if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &data, &n_data))
-				return PARSE_ERROR;
-
-			if (data != NULL && n_data != value) {
-				p11_message ("attribute length and data do not match");
+		if (temp.ulValueLen != ((CK_ULONG)-1)) {
+			size_t offset2 = msg->parsed;
+			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, temp.ulValueLen);
+			if (!p11_rpc_buffer_get_attribute (msg->input, &offset2, &attrs[i])) {
+				msg->parsed = offset2;
 				return PARSE_ERROR;
 			}
-
-			attrs[i].pValue = (CK_VOID_PTR)data;
-			attrs[i].ulValueLen = value;
 		} else {
 			attrs[i].pValue = NULL;
 			attrs[i].ulValueLen = -1;
 		}
+
+		msg->parsed = offset;
 	}
 
 	*result = attrs;
