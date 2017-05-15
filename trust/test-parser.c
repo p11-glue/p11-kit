@@ -168,13 +168,41 @@ test_parse_p11_kit_persist (void)
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
 		{ CKA_TRUSTED, &truev, sizeof (truev) },
-		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_MODIFIABLE, &truev, sizeof (truev) },
 		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
 		{ CKA_INVALID },
 	};
 
 	p11_parser_formats (test.parser, p11_parser_format_persist, NULL);
 	ret = p11_parse_file (test.parser, SRCDIR "/trust/input/verisign-v1.p11-kit", NULL,
+	                      P11_PARSE_FLAG_NONE);
+	assert_num_eq (P11_PARSE_SUCCESS, ret);
+
+	/* Should have gotten certificate  */
+	assert_num_eq (1, test.parsed->num);
+
+	cert = parsed_attrs (certificate_match, -1);
+	test_check_attrs (expected, cert);
+}
+
+static void
+test_parse_p11_kit_persist_unmodifiable (void)
+{
+	CK_ATTRIBUTE *cert;
+	int ret;
+
+	CK_ATTRIBUTE expected[] = {
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_VALUE, (void *)verisign_v1_ca, sizeof (verisign_v1_ca) },
+		{ CKA_TRUSTED, &truev, sizeof (truev) },
+		{ CKA_MODIFIABLE, &falsev, sizeof (falsev) },
+		{ CKA_X_DISTRUSTED, &falsev, sizeof (falsev) },
+		{ CKA_INVALID },
+	};
+
+	p11_parser_formats (test.parser, p11_parser_format_persist, NULL);
+	ret = p11_parse_file (test.parser, SRCDIR "/trust/data/verisign-v1.p11-kit", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_SUCCESS, ret);
 
@@ -553,6 +581,7 @@ main (int argc,
 	p11_test (test_parse_der_certificate, "/parser/parse_der_certificate");
 	p11_test (test_parse_pem_certificate, "/parser/parse_pem_certificate");
 	p11_test (test_parse_p11_kit_persist, "/parser/parse_p11_kit_persist");
+	p11_test (test_parse_p11_kit_persist_unmodifiable, "/parser/parse_p11_kit_persist_unmodifiable");
 	p11_test (test_parse_openssl_trusted, "/parser/parse_openssl_trusted");
 	p11_test (test_parse_openssl_distrusted, "/parser/parse_openssl_distrusted");
 	p11_test (test_openssl_trusted_no_trust, "/parser/openssl-trusted-no-trust");

@@ -42,6 +42,8 @@ module_LTLIBRARIES += \
 	p11-kit-trust.la
 
 p11_kit_trust_la_CFLAGS = \
+	-DP11_SYSTEM_TRUST_DIR=SYSCONFDIR \
+	-DP11_DEFAULT_TRUST_DIR=DATA_DIR \
 	$(LIBTASN1_CFLAGS)
 
 p11_kit_trust_la_LIBADD = \
@@ -66,6 +68,8 @@ libtrust_testable_la_LDFLAGS = \
 libtrust_testable_la_SOURCES = $(TRUST_SRCS)
 
 libtrust_testable_la_CFLAGS = \
+	-DP11_SYSTEM_TRUST_DIR=\"$(abs_srcdir)/trust/input\" \
+	-DP11_DEFAULT_TRUST_DIR=\"$(abs_srcdir)/trust/data\" \
 	$(LIBTASN1_CFLAGS)
 
 libtrust_testable_la_LIBADD = \
@@ -85,6 +89,8 @@ trust_trust_LDADD = \
 
 trust_trust_CFLAGS = \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
+	-DP11_SYSTEM_TRUST_DIR=SYSCONFDIR \
+	-DP11_DEFAULT_TRUST_DIR=DATA_DIR \
 	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
@@ -199,7 +205,10 @@ test_index_CFLAGS = $(trust_CFLAGS)
 
 test_module_SOURCES = trust/test-module.c
 test_module_LDADD = $(trust_LIBS)
-test_module_CFLAGS = $(trust_CFLAGS)
+test_module_CFLAGS = \
+	-DP11_SYSTEM_TRUST_DIR=\"$(abs_srcdir)/trust/input\" \
+	-DP11_DEFAULT_TRUST_DIR=\"$(abs_srcdir)/trust/data\" \
+	$(trust_CFLAGS)
 
 test_oid_SOURCES = trust/test-oid.c
 test_oid_LDADD = $(trust_LIBS)
@@ -290,6 +299,7 @@ installcheck-local:
 	sh $(builddir)/trust/test-extract
 
 EXTRA_DIST += \
+	trust/data \
 	trust/input \
 	trust/fixtures \
 	$(NULL)
