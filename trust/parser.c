@@ -608,14 +608,16 @@ p11_parser_format_persist (p11_parser *parser,
                            const unsigned char *data,
                            size_t length)
 {
-	CK_BBOOL modifiablev = CK_TRUE;
+	CK_BBOOL truev = CK_TRUE;
+	CK_BBOOL falsev = CK_FALSE;
 	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *attr;
 	p11_array *objects;
 	bool ret;
 	int i;
 
-	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &modifiablev, sizeof (modifiablev) };
+	CK_ATTRIBUTE modifiablev = { CKA_MODIFIABLE, &truev, sizeof (truev) };
+	CK_ATTRIBUTE unmodifiablev = { CKA_MODIFIABLE, &falsev, sizeof (falsev) };
+	CK_ATTRIBUTE *modifiable = (parser->flags & P11_PARSE_FLAG_UNMODIFIABLE) ? &unmodifiablev : &modifiablev;
 
 	if (!p11_persist_magic (data, length))
 		return P11_PARSE_UNRECOGNIZED;
@@ -631,14 +633,7 @@ p11_parser_format_persist (p11_parser *parser,
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
 	if (ret) {
 		for (i = 0; i < objects->num; i++) {
-			/* By default, we mark objects read from a persist
-			 * file as modifiable, as the persist format is
-			 * writable.  However, if CKA_MODIFIABLE is explictly
-			 * set in the file, respect the setting.  */
-			attrs = objects->elem[i];
-			attr = p11_attrs_find_valid (objects->elem[i], CKA_MODIFIABLE);
-			if (!attr)
-				attrs = p11_attrs_build (attrs, &modifiable, NULL);
+			attrs = p11_attrs_build (objects->elem[i], modifiable, NULL);
 			sink_object (parser, attrs);
 		}
 	}
@@ -730,6 +725,12 @@ p11_parse_memory (p11_parser *parser,
 	base = p11_path_base (filename);
 	parser->basename = base;
 	parser->flags = flags;
+
+	/* Mark objects read from P11_DEFAULT_TRUST_DIR as read-only.
+	 * This is only effective for the objects read from the
+	 * persist format. */
+	if (p11_path_prefix (filename, P11_DEFAULT_TRUST_DIR))
+		parser->flags |= P11_PARSE_FLAG_UNMODIFIABLE;
 
 	for (i = 0; ret == P11_PARSE_UNRECOGNIZED && i < parser->formats->num; i++)
 		ret = ((parser_func)parser->formats->elem[i]) (parser, data, length);

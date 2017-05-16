@@ -314,9 +314,9 @@ test_get_token_info (void)
 	assert (rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
-	args.pReserved = "paths='" \
-		SYSCONFDIR "/trust/input" P11_PATH_SEP \
-		DATA_DIR "/trust/fixtures/blah" P11_PATH_SEP \
+	args.pReserved = "paths='"					\
+		P11_SYSTEM_TRUST_DIR "/trust/input" P11_PATH_SEP	\
+		P11_DEFAULT_TRUST_DIR "/trust/fixtures/blah" P11_PATH_SEP \
 		"/some/other/path/the-basename'";
 	args.flags = CKF_OS_LOCKING_OK;
 
