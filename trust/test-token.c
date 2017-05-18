@@ -610,6 +610,7 @@ static void
 test_modify_multiple (void)
 {
 	const char *test_data =
+		"# This file has been auto-generated and written by p11-kit.\n"
 		"[p11-kit-object-v1]\n"
 		"class: data\n"
 		"label: \"first\"\n"

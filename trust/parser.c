@@ -49,6 +49,7 @@
 #include "pem.h"
 #include "pkcs11x.h"
 #include "persist.h"
+#include "types.h"
 #include "x509.h"
 
 #include <libtasn1.h>
@@ -630,7 +631,10 @@ p11_parser_format_persist (p11_parser *parser,
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
 	if (ret) {
 		for (i = 0; i < objects->num; i++) {
-			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
+			CK_BBOOL generatedv;
+			attrs = objects->elem[i];
+			if (p11_attrs_find_bool (attrs, CKA_X_GENERATED, &generatedv) && generatedv)
+				attrs = p11_attrs_build (attrs, &modifiable, NULL);
 			sink_object (parser, attrs);
 		}
 	}

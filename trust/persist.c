@@ -631,6 +631,9 @@ p11_persist_read (p11_persist *persist,
 	CK_ATTRIBUTE *attrs;
 	bool failed;
 	bool skip;
+	CK_BBOOL generatedv = CK_FALSE;
+	CK_ATTRIBUTE generated = { CKA_X_GENERATED, &generatedv, sizeof (generatedv) };
+	static const char comment[] = "# This file has been auto-generated and written by p11-kit.";
 
 	return_val_if_fail (persist != NULL, false);
 	return_val_if_fail (objects != NULL, false);
@@ -638,6 +641,10 @@ p11_persist_read (p11_persist *persist,
 	skip = false;
 	attrs = NULL;
 	failed = false;
+
+	if (length >= sizeof (comment) - 1 &&
+	    memcmp ((const char *)data, comment, sizeof (comment) - 1) == 0)
+		generatedv = CK_TRUE;
 
 	p11_lexer_init (&lexer, filename, (const char *)data, length);
 	while (p11_lexer_next (&lexer, &failed)) {
@@ -650,7 +657,7 @@ p11_persist_read (p11_persist *persist,
 				p11_lexer_msg (&lexer, "unrecognized or invalid section header");
 				skip = true;
 			} else {
-				attrs = p11_attrs_build (NULL, NULL);
+				attrs = p11_attrs_build (NULL, &generated, NULL);
 				return_val_if_fail (attrs != NULL, false);
 				skip = false;
 			}
