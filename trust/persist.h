@@ -60,4 +60,7 @@ bool             p11_persist_write  (p11_persist *persist,
 
 void             p11_persist_free   (p11_persist *persist);
 
+bool             p11_persist_is_generated (const unsigned char *data,
+					   size_t length);
+
 #endif /* P11_PERSIST_H_ */

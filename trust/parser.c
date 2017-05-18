@@ -630,11 +630,10 @@ p11_parser_format_persist (p11_parser *parser,
 
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
 	if (ret) {
+		if (!p11_persist_is_generated (data, length))
+			modifiablev = CK_FALSE;
 		for (i = 0; i < objects->num; i++) {
-			CK_BBOOL generatedv;
-			attrs = objects->elem[i];
-			if (p11_attrs_find_bool (attrs, CKA_X_GENERATED, &generatedv) && generatedv)
-				attrs = p11_attrs_build (attrs, &modifiable, NULL);
+			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
 			sink_object (parser, attrs);
 		}
 	}
