@@ -171,7 +171,8 @@ p11_rpc_message_parse (p11_rpc_message *msg,
 	msg->signature = msg->sigverify = NULL;
 
 	/* The call id and signature */
-	if (call_id >= P11_RPC_CALL_MAX) {
+	if (call_id >= P11_RPC_CALL_MAX ||
+	    (type == P11_RPC_REQUEST && call_id == P11_RPC_CALL_ERROR)) {
 		p11_message ("invalid message: bad call id: %d", call_id);
 		return false;
 	}
