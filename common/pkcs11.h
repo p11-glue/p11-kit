@@ -179,6 +179,7 @@ extern "C" {
 #define ck_rsa_pkcs_mgf_type_t CK_RSA_PKCS_MGF_TYPE
 #define ck_rsa_pkcs_oaep_source_type_t CK_RSA_PKCS_OAEP_SOURCE_TYPE
 #define hash_alg hashAlg
+#define s_len sLen
 #define source_data pSourceData
 #define source_data_len ulSourceDataLen
 
@@ -745,6 +746,13 @@ struct ck_mechanism_info
 #define CKG_MGF1_SHA512 0x00000004UL
 
 typedef unsigned long ck_rsa_pkcs_mgf_type_t;
+
+struct ck_rsa_pkcs_pss_params {
+  ck_mechanism_type_t hash_alg;
+  ck_rsa_pkcs_mgf_type_t mgf;
+  unsigned long s_len;
+};
+
 typedef unsigned long ck_rsa_pkcs_oaep_source_type_t;
 
 struct ck_rsa_pkcs_oaep_params {
@@ -1324,6 +1332,9 @@ typedef struct ck_function_list **CK_FUNCTION_LIST_PTR_PTR;
 
 typedef struct ck_c_initialize_args CK_C_INITIALIZE_ARGS;
 typedef struct ck_c_initialize_args *CK_C_INITIALIZE_ARGS_PTR;
+
+typedef struct ck_rsa_pkcs_pss_params CK_RSA_PKCS_PSS_PARAMS;
+typedef struct ck_rsa_pkcs_pss_params *CK_RSA_PKCS_PSS_PARAMS_PTR;
 
 typedef struct ck_rsa_pkcs_oaep_params CK_RSA_PKCS_OAEP_PARAMS;
 typedef struct ck_rsa_pkcs_oaep_params *CK_RSA_PKCS_OAEP_PARAMS_PTR;
