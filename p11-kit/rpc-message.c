@@ -980,7 +980,7 @@ p11_rpc_buffer_add_date_value (p11_buffer *buffer,
 	unsigned char array[8];
 
 	/* Check if value can be converted to CK_DATE. */
-	if (value_length > sizeof (CK_DATE)) {
+	if (value_length != sizeof (CK_DATE)) {
 		p11_buffer_fail (buffer);
 		return;
 	}
