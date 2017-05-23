@@ -444,4 +444,35 @@ bool             p11_rpc_buffer_get_byte_array_value     (p11_buffer *buffer,
 							  void *value,
 							  CK_ULONG *value_length);
 
+bool             p11_rpc_mechanism_is_supported          (CK_MECHANISM_TYPE mech);
+
+void             p11_rpc_buffer_add_mechanism            (p11_buffer *buffer,
+							  const CK_MECHANISM *mech);
+
+bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_MECHANISM *mech);
+
+void             p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value
+                                                         (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value
+                                                         (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value
+                                                          (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value
+                                                          (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
 #endif /* _RPC_MESSAGE_H */

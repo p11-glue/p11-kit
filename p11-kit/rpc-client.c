@@ -379,143 +379,6 @@ proto_read_ulong_array (p11_rpc_message *msg, CK_ULONG_PTR arr,
 	return p11_buffer_failed (msg->input) ? PARSE_ERROR : CKR_OK;
 }
 
-/* Used to override the supported mechanisms in tests */
-CK_MECHANISM_TYPE *p11_rpc_mechanisms_override_supported = NULL;
-
-static bool
-mechanism_has_sane_parameters (CK_MECHANISM_TYPE type)
-{
-	int i;
-
-	/* This can be set from tests, to override default set of supported */
-	if (p11_rpc_mechanisms_override_supported) {
-		for (i = 0; p11_rpc_mechanisms_override_supported[i] != 0; i++) {
-			if (p11_rpc_mechanisms_override_supported[i] == type)
-				return true;
-		}
-
-		return false;
-	}
-
-	/* This list is incomplete */
-	switch (type) {
-	case CKM_RSA_PKCS_OAEP:
-	case CKM_RSA_PKCS_PSS:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static bool
-mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
-{
-	/* This list is incomplete */
-
-	switch (mech) {
-	case CKM_RSA_PKCS_KEY_PAIR_GEN:
-	case CKM_RSA_X9_31_KEY_PAIR_GEN:
-	case CKM_RSA_PKCS:
-	case CKM_RSA_9796:
-	case CKM_RSA_X_509:
-	case CKM_RSA_X9_31:
-	case CKM_MD2_RSA_PKCS:
-	case CKM_MD5_RSA_PKCS:
-	case CKM_SHA1_RSA_PKCS:
-	case CKM_SHA256_RSA_PKCS:
-	case CKM_SHA384_RSA_PKCS:
-	case CKM_SHA512_RSA_PKCS:
-	case CKM_RIPEMD128_RSA_PKCS:
-	case CKM_RIPEMD160_RSA_PKCS:
-	case CKM_SHA1_RSA_X9_31:
-	case CKM_DSA_KEY_PAIR_GEN:
-	case CKM_DSA_PARAMETER_GEN:
-	case CKM_DSA:
-	case CKM_DSA_SHA1:
-	case CKM_FORTEZZA_TIMESTAMP:
-	case CKM_EC_KEY_PAIR_GEN:
-	case CKM_ECDSA:
-	case CKM_ECDSA_SHA1:
-	case CKM_DH_PKCS_KEY_PAIR_GEN:
-	case CKM_DH_PKCS_PARAMETER_GEN:
-	case CKM_X9_42_DH_KEY_PAIR_GEN:
-	case CKM_X9_42_DH_PARAMETER_GEN:
-	case CKM_KEA_KEY_PAIR_GEN:
-	case CKM_GENERIC_SECRET_KEY_GEN:
-	case CKM_RC2_KEY_GEN:
-	case CKM_RC4_KEY_GEN:
-	case CKM_RC4:
-	case CKM_RC5_KEY_GEN:
-	case CKM_AES_KEY_GEN:
-	case CKM_AES_ECB:
-	case CKM_AES_MAC:
-	case CKM_DES_KEY_GEN:
-	case CKM_DES2_KEY_GEN:
-	case CKM_DES3_KEY_GEN:
-	case CKM_CDMF_KEY_GEN:
-	case CKM_CAST_KEY_GEN:
-	case CKM_CAST3_KEY_GEN:
-	case CKM_CAST128_KEY_GEN:
-	case CKM_IDEA_KEY_GEN:
-	case CKM_SSL3_PRE_MASTER_KEY_GEN:
-	case CKM_TLS_PRE_MASTER_KEY_GEN:
-	case CKM_SKIPJACK_KEY_GEN:
-	case CKM_BATON_KEY_GEN:
-	case CKM_JUNIPER_KEY_GEN:
-	case CKM_RC2_ECB:
-	case CKM_DES_ECB:
-	case CKM_DES3_ECB:
-	case CKM_CDMF_ECB:
-	case CKM_CAST_ECB:
-	case CKM_CAST3_ECB:
-	case CKM_CAST128_ECB:
-	case CKM_RC5_ECB:
-	case CKM_IDEA_ECB:
-	case CKM_RC2_MAC:
-	case CKM_DES_MAC:
-	case CKM_DES3_MAC:
-	case CKM_CDMF_MAC:
-	case CKM_CAST_MAC:
-	case CKM_CAST3_MAC:
-	case CKM_RC5_MAC:
-	case CKM_IDEA_MAC:
-	case CKM_SSL3_MD5_MAC:
-	case CKM_SSL3_SHA1_MAC:
-	case CKM_SKIPJACK_WRAP:
-	case CKM_BATON_WRAP:
-	case CKM_JUNIPER_WRAP:
-	case CKM_MD2:
-	case CKM_MD2_HMAC:
-	case CKM_MD5:
-	case CKM_MD5_HMAC:
-	case CKM_SHA_1:
-	case CKM_SHA_1_HMAC:
-	case CKM_SHA256:
-	case CKM_SHA256_HMAC:
-	case CKM_SHA384:
-	case CKM_SHA384_HMAC:
-	case CKM_SHA512:
-	case CKM_SHA512_HMAC:
-	case CKM_FASTHASH:
-	case CKM_RIPEMD128:
-	case CKM_RIPEMD128_HMAC:
-	case CKM_RIPEMD160:
-	case CKM_RIPEMD160_HMAC:
-	case CKM_KEY_WRAP_LYNKS:
-		return true;
-	default:
-		return false;
-	};
-}
-
-static bool
-mechanism_is_supported (CK_MECHANISM_TYPE mech)
-{
-	if (mechanism_has_no_parameters (mech) ||
-	    mechanism_has_sane_parameters (mech))
-		return true;
-	return false;
-}
 static void
 mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
                       CK_ULONG *n_mechs)
@@ -526,7 +389,7 @@ mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
 	assert (n_mechs != NULL);
 
 	for (i = 0; i < (int)(*n_mechs); ++i) {
-		if (!mechanism_is_supported (mechs[i])) {
+		if (!p11_rpc_mechanism_is_supported (mechs[i])) {
 
 			/* Remove the mechanism from the list */
 			memmove (&mechs[i], &mechs[i + 1],
@@ -549,8 +412,8 @@ proto_write_mechanism (p11_rpc_message *msg,
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "M"));
 
-	/* The mechanism type */
-	p11_rpc_buffer_add_uint32 (msg->output, mech->mechanism);
+	if (!p11_rpc_mechanism_is_supported (mech->mechanism))
+		return CKR_MECHANISM_INVALID;
 
 	/*
 	 * PKCS#11 mechanism parameters are not easy to serialize. They're
@@ -564,13 +427,7 @@ proto_write_mechanism (p11_rpc_message *msg,
 	 * pointing to garbage if they don't think it's going to be used.
 	 */
 
-	if (mechanism_has_no_parameters (mech->mechanism))
-		p11_rpc_buffer_add_byte_array (msg->output, NULL, 0);
-	else if (mechanism_has_sane_parameters (mech->mechanism))
-		p11_rpc_buffer_add_byte_array (msg->output, mech->pParameter,
-		                               mech->ulParameterLen);
-	else
-		return CKR_MECHANISM_INVALID;
+	p11_rpc_buffer_add_mechanism (msg->output, mech);
 
 	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 }
@@ -746,7 +603,7 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_MECHANISM_TYPE(val) \
-	if(!mechanism_is_supported (val)) \
+	if(!p11_rpc_mechanism_is_supported (val)) \
 		{ _ret = CKR_MECHANISM_INVALID; goto _cleanup; } \
 	if (!p11_rpc_message_write_ulong (&_msg, val)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }

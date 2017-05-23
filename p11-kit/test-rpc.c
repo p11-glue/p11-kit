@@ -55,6 +55,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
+
 static void
 test_new_free (void)
 {
@@ -565,6 +567,69 @@ test_byte_array_value (void)
 	assert_num_eq (bytes[0], val[0]);
 
 	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_mechanism_value (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_RSA_PKCS_PSS_PARAMS pss_params = {
+		CKM_SHA256,
+		CKG_MGF1_SHA256,
+		32
+	};
+	CK_RSA_PKCS_OAEP_PARAMS oaep_params = {
+		CKM_SHA384,
+		CKG_MGF1_SHA384,
+		0,
+		NULL,
+		0
+	};
+	CK_MECHANISM mechs[] = {
+		{ CKM_RSA_PKCS_PSS, &pss_params, sizeof (pss_params) },
+		{ CKM_RSA_PKCS_OAEP, &oaep_params, sizeof (oaep_params) }
+	};
+
+	CK_MECHANISM val;
+	size_t offset = 0;
+	bool ret;
+	size_t i;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	p11_buffer_init (&buffer, 0);
+
+	for (i = 0; i < ELEMS (mechs); i++) {
+		size_t offset2 = offset;
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mechs[i]);
+		assert (!p11_buffer_failed (&buffer));
+
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mechs[i].mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (mechs[i].ulParameterLen, val.ulParameterLen);
+
+		val.pParameter = malloc (val.ulParameterLen);
+		assert_ptr_not_null (val.pParameter);
+
+		offset = offset2;
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mechs[i].mechanism, val.mechanism);
+		assert_num_eq (mechs[i].ulParameterLen, val.ulParameterLen);
+		assert (memcmp (val.pParameter, mechs[i].pParameter, val.ulParameterLen) == 0);
+
+		free (val.pParameter);
+	}
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
 static p11_virtual base;
@@ -1257,6 +1322,7 @@ main (int argc,
 	p11_test (test_mechanism_type_array_value, "/rpc/mechanism-type-array-value");
 	p11_test (test_date_value, "/rpc/date-value");
 	p11_test (test_byte_array_value, "/rpc/byte-array-value");
+	p11_test (test_mechanism_value, "/rpc/mechanism-value");
 
 	p11_test (test_initialize_fails_on_client, "/rpc/initialize-fails-on-client");
 	p11_test (test_initialize_fails_on_server, "/rpc/initialize-fails-on-server");
