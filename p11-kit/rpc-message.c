@@ -858,6 +858,21 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	}
 }
 
+typedef struct {
+	p11_rpc_value_type type;
+	p11_rpc_value_encoder encode;
+	p11_rpc_value_decoder decode;
+} p11_rpc_attribute_serializer;
+
+static p11_rpc_attribute_serializer p11_rpc_attribute_serializers[] = {
+	{ P11_RPC_VALUE_BYTE, p11_rpc_buffer_add_byte_value, p11_rpc_buffer_get_byte_value },
+	{ P11_RPC_VALUE_ULONG, p11_rpc_buffer_add_ulong_value, p11_rpc_buffer_get_ulong_value },
+	{ P11_RPC_VALUE_ATTRIBUTE_ARRAY, p11_rpc_buffer_add_attribute_array_value, p11_rpc_buffer_get_attribute_array_value },
+	{ P11_RPC_VALUE_MECHANISM_TYPE_ARRAY, p11_rpc_buffer_add_mechanism_type_array_value, p11_rpc_buffer_get_mechanism_type_array_value },
+	{ P11_RPC_VALUE_DATE, p11_rpc_buffer_add_date_value, p11_rpc_buffer_get_date_value },
+	{ P11_RPC_VALUE_BYTE_ARRAY, p11_rpc_buffer_add_byte_array_value, p11_rpc_buffer_get_byte_array_value }
+};
+
 void
 p11_rpc_buffer_add_byte_value (p11_buffer *buffer,
 			       const void *value,
@@ -997,15 +1012,7 @@ void
 p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
 {
 	unsigned char validity;
-	static const p11_rpc_value_encoder encoders[] = {
-		p11_rpc_buffer_add_byte_value,
-		p11_rpc_buffer_add_ulong_value,
-		p11_rpc_buffer_add_attribute_array_value,
-		p11_rpc_buffer_add_mechanism_type_array_value,
-		p11_rpc_buffer_add_date_value,
-		p11_rpc_buffer_add_byte_array_value
-	};
-	p11_rpc_value_encoder encoder;
+	p11_rpc_attribute_serializer *serializer;
 	p11_rpc_value_type value_type;
 
 	/* The attribute type */
@@ -1031,10 +1038,10 @@ p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
 
 	/* The attribute value */
 	value_type = map_attribute_to_value_type (attr->type);
-	assert (value_type < ELEMS (encoders));
-	encoder = encoders[value_type];
-	assert (encoder != NULL);
-	encoder (buffer, attr->pValue, attr->ulValueLen);
+	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
+	serializer = &p11_rpc_attribute_serializers[value_type];
+	assert (serializer != NULL);
+	serializer->encode (buffer, attr->pValue, attr->ulValueLen);
 }
 
 bool
@@ -1200,15 +1207,7 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 {
 	uint32_t type, length;
 	unsigned char validity;
-	static const p11_rpc_value_decoder decoders[] = {
-		p11_rpc_buffer_get_byte_value,
-		p11_rpc_buffer_get_ulong_value,
-		p11_rpc_buffer_get_attribute_array_value,
-		p11_rpc_buffer_get_mechanism_type_array_value,
-		p11_rpc_buffer_get_date_value,
-		p11_rpc_buffer_get_byte_array_value
-	};
-	p11_rpc_value_decoder decoder;
+	p11_rpc_attribute_serializer *serializer;
 	p11_rpc_value_type value_type;
 
 	/* The attribute type */
@@ -1231,10 +1230,10 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 
 	/* Decode the attribute value */
 	value_type = map_attribute_to_value_type (type);
-	assert (value_type < ELEMS (decoders));
-	decoder = decoders[value_type];
-	assert (decoder != NULL);
-	if (!decoder (buffer, offset, attr->pValue, &attr->ulValueLen))
+	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
+	serializer = &p11_rpc_attribute_serializers[value_type];
+	assert (serializer != NULL);
+	if (!serializer->decode (buffer, offset, attr->pValue, &attr->ulValueLen))
 		return false;
 	if (!attr->pValue)
 		attr->ulValueLen = length;
