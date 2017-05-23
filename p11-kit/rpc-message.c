@@ -1240,3 +1240,345 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 	attr->type = type;
 	return true;
 }
+
+/* Used to override the supported mechanisms in tests */
+CK_MECHANISM_TYPE *p11_rpc_mechanisms_override_supported = NULL;
+
+typedef struct {
+	CK_MECHANISM_TYPE type;
+	p11_rpc_value_encoder encode;
+	p11_rpc_value_decoder decode;
+} p11_rpc_mechanism_serializer;
+
+void
+p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value (p11_buffer *buffer,
+						 const void *value,
+						 CK_ULONG value_length)
+{
+	CK_RSA_PKCS_PSS_PARAMS params;
+
+	/* Check if value can be converted to CK_RSA_PKCS_PSS_PARAMS. */
+	if (value_length != sizeof (CK_RSA_PKCS_PSS_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.hashAlg, params.mgf, and params.sLen can be
+	 * converted to uint64_t. */
+	if (params.hashAlg > UINT64_MAX || params.mgf > UINT64_MAX ||
+	    params.sLen > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hashAlg);
+	p11_rpc_buffer_add_uint64 (buffer, params.mgf);
+	p11_rpc_buffer_add_uint64 (buffer, params.sLen);
+}
+
+bool
+p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value (p11_buffer *buffer,
+						 size_t *offset,
+						 void *value,
+						 CK_ULONG *value_length)
+{
+	uint64_t val[3];
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[0]))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[1]))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[2]))
+		return false;
+
+	if (value) {
+		CK_RSA_PKCS_PSS_PARAMS params;
+
+		params.hashAlg = val[0];
+		params.mgf = val[1];
+		params.sLen = val[2];
+
+		memcpy (value, &params, sizeof (CK_RSA_PKCS_PSS_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_RSA_PKCS_PSS_PARAMS);
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
+						  const void *value,
+						  CK_ULONG value_length)
+{
+	CK_RSA_PKCS_OAEP_PARAMS params;
+
+	/* Check if value can be converted to CK_RSA_PKCS_OAEP_PARAMS. */
+	if (value_length != sizeof (CK_RSA_PKCS_OAEP_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.hashAlg, params.mgf, and params.source can be
+	 * converted to uint64_t. */
+	if (params.hashAlg > UINT64_MAX || params.mgf > UINT64_MAX ||
+	    params.source > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hashAlg);
+	p11_rpc_buffer_add_uint64 (buffer, params.mgf);
+	p11_rpc_buffer_add_uint64 (buffer, params.source);
+
+	/* parmas.pSourceData can only be an array of CK_BYTE or
+	 * NULL */
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pSourceData,
+				       params.ulSourceDataLen);
+}
+
+bool
+p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
+						  size_t *offset,
+						  void *value,
+						  CK_ULONG *value_length)
+{
+	uint64_t val[3];
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[0]))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[1]))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[2]))
+		return false;
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (value) {
+		CK_RSA_PKCS_OAEP_PARAMS params;
+
+		params.hashAlg = val[0];
+		params.mgf = val[1];
+		params.source = val[2];
+		params.pSourceData = (void *) data;
+		params.ulSourceDataLen = len;
+
+		memcpy (value, &params, sizeof (CK_RSA_PKCS_OAEP_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_RSA_PKCS_OAEP_PARAMS);
+
+	return true;
+}
+
+static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
+	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value }
+};
+
+static p11_rpc_mechanism_serializer p11_rpc_byte_array_mechanism_serializer = {
+	0, p11_rpc_buffer_add_byte_array_value, p11_rpc_buffer_get_byte_array_value
+};
+
+static bool
+mechanism_has_sane_parameters (CK_MECHANISM_TYPE type)
+{
+	int i;
+
+	/* This can be set from tests, to override default set of supported */
+	if (p11_rpc_mechanisms_override_supported) {
+		for (i = 0; p11_rpc_mechanisms_override_supported[i] != 0; i++) {
+			if (p11_rpc_mechanisms_override_supported[i] == type)
+				return true;
+		}
+
+		return false;
+	}
+
+	for (i = 0; i < ELEMS(p11_rpc_mechanism_serializers); i++) {
+		if (p11_rpc_mechanism_serializers[i].type == type)
+			return true;
+	}
+
+	return false;
+}
+
+static bool
+mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
+{
+	/* This list is incomplete */
+
+	switch (mech) {
+	case CKM_RSA_PKCS_KEY_PAIR_GEN:
+	case CKM_RSA_X9_31_KEY_PAIR_GEN:
+	case CKM_RSA_PKCS:
+	case CKM_RSA_9796:
+	case CKM_RSA_X_509:
+	case CKM_RSA_X9_31:
+	case CKM_MD2_RSA_PKCS:
+	case CKM_MD5_RSA_PKCS:
+	case CKM_SHA1_RSA_PKCS:
+	case CKM_SHA256_RSA_PKCS:
+	case CKM_SHA384_RSA_PKCS:
+	case CKM_SHA512_RSA_PKCS:
+	case CKM_RIPEMD128_RSA_PKCS:
+	case CKM_RIPEMD160_RSA_PKCS:
+	case CKM_SHA1_RSA_X9_31:
+	case CKM_DSA_KEY_PAIR_GEN:
+	case CKM_DSA_PARAMETER_GEN:
+	case CKM_DSA:
+	case CKM_DSA_SHA1:
+	case CKM_FORTEZZA_TIMESTAMP:
+	case CKM_EC_KEY_PAIR_GEN:
+	case CKM_ECDSA:
+	case CKM_ECDSA_SHA1:
+	case CKM_DH_PKCS_KEY_PAIR_GEN:
+	case CKM_DH_PKCS_PARAMETER_GEN:
+	case CKM_X9_42_DH_KEY_PAIR_GEN:
+	case CKM_X9_42_DH_PARAMETER_GEN:
+	case CKM_KEA_KEY_PAIR_GEN:
+	case CKM_GENERIC_SECRET_KEY_GEN:
+	case CKM_RC2_KEY_GEN:
+	case CKM_RC4_KEY_GEN:
+	case CKM_RC4:
+	case CKM_RC5_KEY_GEN:
+	case CKM_AES_KEY_GEN:
+	case CKM_AES_ECB:
+	case CKM_AES_MAC:
+	case CKM_DES_KEY_GEN:
+	case CKM_DES2_KEY_GEN:
+	case CKM_DES3_KEY_GEN:
+	case CKM_CDMF_KEY_GEN:
+	case CKM_CAST_KEY_GEN:
+	case CKM_CAST3_KEY_GEN:
+	case CKM_CAST128_KEY_GEN:
+	case CKM_IDEA_KEY_GEN:
+	case CKM_SSL3_PRE_MASTER_KEY_GEN:
+	case CKM_TLS_PRE_MASTER_KEY_GEN:
+	case CKM_SKIPJACK_KEY_GEN:
+	case CKM_BATON_KEY_GEN:
+	case CKM_JUNIPER_KEY_GEN:
+	case CKM_RC2_ECB:
+	case CKM_DES_ECB:
+	case CKM_DES3_ECB:
+	case CKM_CDMF_ECB:
+	case CKM_CAST_ECB:
+	case CKM_CAST3_ECB:
+	case CKM_CAST128_ECB:
+	case CKM_RC5_ECB:
+	case CKM_IDEA_ECB:
+	case CKM_RC2_MAC:
+	case CKM_DES_MAC:
+	case CKM_DES3_MAC:
+	case CKM_CDMF_MAC:
+	case CKM_CAST_MAC:
+	case CKM_CAST3_MAC:
+	case CKM_RC5_MAC:
+	case CKM_IDEA_MAC:
+	case CKM_SSL3_MD5_MAC:
+	case CKM_SSL3_SHA1_MAC:
+	case CKM_SKIPJACK_WRAP:
+	case CKM_BATON_WRAP:
+	case CKM_JUNIPER_WRAP:
+	case CKM_MD2:
+	case CKM_MD2_HMAC:
+	case CKM_MD5:
+	case CKM_MD5_HMAC:
+	case CKM_SHA_1:
+	case CKM_SHA_1_HMAC:
+	case CKM_SHA256:
+	case CKM_SHA256_HMAC:
+	case CKM_SHA384:
+	case CKM_SHA384_HMAC:
+	case CKM_SHA512:
+	case CKM_SHA512_HMAC:
+	case CKM_FASTHASH:
+	case CKM_RIPEMD128:
+	case CKM_RIPEMD128_HMAC:
+	case CKM_RIPEMD160:
+	case CKM_RIPEMD160_HMAC:
+	case CKM_KEY_WRAP_LYNKS:
+		return true;
+	default:
+		return false;
+	};
+}
+
+bool
+p11_rpc_mechanism_is_supported (CK_MECHANISM_TYPE mech)
+{
+	if (mechanism_has_no_parameters (mech) ||
+	    mechanism_has_sane_parameters (mech))
+		return true;
+	return false;
+}
+
+void
+p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
+{
+	p11_rpc_mechanism_serializer *serializer = NULL;
+	size_t i;
+
+	/* The mechanism type */
+	p11_rpc_buffer_add_uint32 (buffer, mech->mechanism);
+
+	if (mechanism_has_no_parameters (mech->mechanism)) {
+		p11_rpc_buffer_add_byte_array (buffer, NULL, 0);
+		return;
+	}
+
+	assert (mechanism_has_sane_parameters (mech->mechanism));
+
+	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
+		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
+			serializer = &p11_rpc_mechanism_serializers[i];
+			break;
+		}
+	}
+
+	if (serializer == NULL)
+		serializer = &p11_rpc_byte_array_mechanism_serializer;
+
+	serializer->encode (buffer, mech->pParameter, mech->ulParameterLen);
+}
+
+bool
+p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
+			      size_t *offset,
+			      CK_MECHANISM *mech)
+{
+	uint32_t mechanism;
+	p11_rpc_mechanism_serializer *serializer = NULL;
+	size_t i;
+
+	/* The mechanism type */
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &mechanism))
+		return false;
+
+	mech->mechanism = mechanism;
+
+	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
+		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
+			serializer = &p11_rpc_mechanism_serializers[i];
+			break;
+		}
+	}
+
+	if (serializer == NULL)
+		serializer = &p11_rpc_byte_array_mechanism_serializer;
+
+	if (!serializer->decode (buffer, offset,
+				 mech->pParameter, &mech->ulParameterLen))
+		return false;
+
+	return true;
+}

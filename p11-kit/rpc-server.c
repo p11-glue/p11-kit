@@ -400,9 +400,8 @@ static CK_RV
 proto_read_mechanism (p11_rpc_message *msg,
                       CK_MECHANISM_PTR mech)
 {
-	const unsigned char *data;
-	uint32_t value;
-	size_t n_data;
+	size_t offset;
+	CK_MECHANISM temp;
 
 	assert (msg != NULL);
 	assert (mech != NULL);
@@ -411,17 +410,31 @@ proto_read_mechanism (p11_rpc_message *msg,
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "M"));
 
-	/* The mechanism type */
-	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
+	/* Check the length needed to store the parameter */
+	memset (&temp, 0, sizeof (temp));
+	offset = msg->parsed;
+	if (!p11_rpc_buffer_get_mechanism (msg->input, &offset, &temp)) {
+		msg->parsed = offset;
+		return PARSE_ERROR;
+	}
+
+	mech->mechanism = temp.mechanism;
+
+	/* The mechanism doesn't require parameter */
+	if (temp.ulParameterLen == 0) {
+		mech->pParameter = NULL;
+		mech->ulParameterLen = 0;
+		msg->parsed = offset;
+		return CKR_OK;
+	}
+
+	/* Actually retrieve the parameter */
+	mech->pParameter = p11_rpc_message_alloc_extra (msg, temp.ulParameterLen);
+	if (!p11_rpc_buffer_get_mechanism (msg->input, &msg->parsed, mech))
 		return PARSE_ERROR;
 
-	/* The mechanism data */
-	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &data, &n_data))
-		return PARSE_ERROR;
+	assert (msg->parsed == offset);
 
-	mech->mechanism = value;
-	mech->pParameter = (CK_VOID_PTR)data;
-	mech->ulParameterLen = n_data;
 	return CKR_OK;
 }
 
