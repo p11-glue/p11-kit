@@ -305,6 +305,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
 		size_t offset = msg->parsed;
 		CK_ATTRIBUTE temp;
 
+		/* Check the length needed to store the value */
 		memset (&temp, 0, sizeof (temp));
 		if (!p11_rpc_buffer_get_attribute (msg->input, &offset, &temp)) {
 			msg->parsed = offset;
