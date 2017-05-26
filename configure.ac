@@ -66,6 +66,8 @@ AC_C_BIGENDIAN
 
 AC_HEADER_STDBOOL
 
+AC_CHECK_SIZEOF([unsigned long])
+
 if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNC([pthread_create], , [
 		AC_CHECK_LIB(pthread, pthread_create, , [
