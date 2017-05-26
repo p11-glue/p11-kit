@@ -694,6 +694,66 @@ main (int argc,
 #include <process.h>
 #include <windows.h>
 
+#define DYN_ADVAPI32
+
+typedef DWORD   (WINAPI *GetSecurityInfoFunc)
+                                  (HANDLE handle,
+                                   SE_OBJECT_TYPE ObjectType,
+                                   SECURITY_INFORMATION SecurityInfo,
+                                   PSID *ppsidOwner,
+                                   PSID *ppsidGroup,
+                                   PACL *ppDacl,
+                                   PACL *ppSacl,
+                                   PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+typedef DWORD   (WINAPI *SetSecurityInfoFunc)
+                                  (HANDLE handle,
+                                   SE_OBJECT_TYPE ObjectType,
+                                   SECURITY_INFORMATION SecurityInfo,
+                                   PSID psidOwner,
+                                   PSID psidGroup,
+                                   PACL pDacl,
+                                   PACL pSacl);
+typedef WINBOOL (WINAPI *OpenProcessTokenFunc)
+                                  (HANDLE ProcessHandle,
+                                   DWORD DesiredAccess,
+                                   PHANDLE TokenHandle);
+typedef WINBOOL (WINAPI *GetTokenInformationFunc)
+                                  (HANDLE TokenHandle,
+                                   TOKEN_INFORMATION_CLASS TokenInformationClass,
+                                   LPVOID TokenInformation,
+                                   DWORD TokenInformationLength,
+                                   PDWORD ReturnLength);
+typedef WINBOOL (WINAPI *InitializeSecurityDescriptorFunc)
+                                  (PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                   DWORD dwRevision);
+typedef WINBOOL (WINAPI *SetSecurityDescriptorOwnerFunc)
+                                  (PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                   PSID pOwner,
+                                   WINBOOL bOwnerDefaulted);
+typedef DWORD   (WINAPI *SetEntriesInAclAFunc)
+                                  (ULONG cCountOfExplicitEntries,
+                                   PEXPLICIT_ACCESS_A pListOfExplicitEntries,
+                                   PACL OldAcl,
+                                   PACL *NewAcl);
+
+#ifdef DYN_ADVAPI32
+static GetSecurityInfoFunc pGetSecurityInfo;
+static SetSecurityInfoFunc pSetSecurityInfo;
+static OpenProcessTokenFunc pOpenProcessToken;
+static GetTokenInformationFunc pGetTokenInformation;
+static InitializeSecurityDescriptorFunc pInitializeSecurityDescriptor;
+static SetSecurityDescriptorOwnerFunc pSetSecurityDescriptorOwner;
+static SetEntriesInAclAFunc pSetEntriesInAclA;
+#else
+#define pGetSecurityInfo GetSecurityInfo
+#define pSetSecurityInfo SetSecurityInfo
+#define pOpenProcessToken OpenProcessToken
+#define pGetTokenInformation GetTokenInformation
+#define pInitializeSecurityDescriptor InitializeSecurityDescriptor
+#define pSetSecurityDescriptorOwner SetSecurityDescriptorOwner
+#define pSetEntriesInAclA SetEntriesInAclA
+#endif
+
 #define BUFSIZE 4096
 
 static bool quiet = false;
@@ -802,6 +862,29 @@ server_loop (Server *server)
 	return 0;
 }
 
+static HMODULE advapi32_lib;
+
+static bool
+load_windows_functions (void)
+{
+	advapi32_lib = LoadLibraryA ("advapi32.dll");
+	return_val_if_fail (advapi32_lib != NULL, false);
+
+#define GET_WINDOWS_FUNCTION(func) \
+	p ## func = (func ## Func) GetProcAddress (advapi32_lib, # func); \
+	return_val_if_fail (p ## func != NULL, false)
+
+	GET_WINDOWS_FUNCTION (GetSecurityInfo);
+	GET_WINDOWS_FUNCTION (SetSecurityInfo);
+	GET_WINDOWS_FUNCTION (OpenProcessToken);
+	GET_WINDOWS_FUNCTION (GetTokenInformation);
+	GET_WINDOWS_FUNCTION (InitializeSecurityDescriptor);
+	GET_WINDOWS_FUNCTION (SetSecurityDescriptorOwner);
+	GET_WINDOWS_FUNCTION (SetEntriesInAclA);
+
+	return true;
+}
+
 int
 main (int argc,
       char *argv[])
@@ -837,6 +920,11 @@ main (int argc,
 		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
+
+	if (!load_windows_functions ()) {
+		p11_message ("couldn't initialize Windows security functions");
+		return 1;
+	}
 
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
@@ -893,6 +981,9 @@ main (int argc,
 
 	if (pipe_name)
 		free (pipe_name);
+
+	if (advapi32_lib)
+		FreeLibrary (advapi32_lib);
 
 	return ret;
 }
