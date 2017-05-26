@@ -1,3 +1,9 @@
+0.23.6 (devel)
+ * Port "p11-kit server" to Windows and portability fixes of the RPC
+   protocol [PR#67, PR#72, PR#74]
+ * Recover the old behavior of "trust anchor --remove" [PR#70, PR#71]
+ * Build fixes [PR#63 ...]
+
 0.23.5 (devel)
  * Fix license notice of common/unix-peer.c [PR#58]
  * Remove systemd unit files for now [PR#60]
