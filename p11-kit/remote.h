@@ -62,10 +62,6 @@ int                    p11_kit_remote_serve_tokens          (const char **tokens
 							     int in_fd,
 							     int out_fd);
 
-int                    p11_kit_remote_serve                 (const char *module_or_token,
-							     int in_fd,
-							     int out_fd);
-
 #endif
 
 #ifdef __cplusplus
