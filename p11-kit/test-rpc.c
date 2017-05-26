@@ -370,21 +370,21 @@ test_byte_value (void)
 
 	p11_buffer_init (&buffer, 0);
 
-	p11_rpc_buffer_add_byte_value(&buffer, bytes, sizeof(bytes));
+	p11_rpc_buffer_add_byte_value (&buffer, bytes, sizeof(bytes));
 	assert (p11_buffer_failed (&buffer));
 
 	p11_buffer_reset (&buffer, 0);
 
-	p11_rpc_buffer_add_byte_value(&buffer, bytes, 1);
+	p11_rpc_buffer_add_byte_value (&buffer, bytes, 1);
 	assert (!p11_buffer_failed (&buffer));
 
-	ret = p11_rpc_buffer_get_byte_value(&buffer, &offset, val, &val_size);
+	ret = p11_rpc_buffer_get_byte_value (&buffer, &offset, val, &val_size);
 	assert_num_eq (true, ret);
 
 	assert_num_eq (bytes[0], val[0]);
 
 	/* Read out of bound */
-	ret = p11_rpc_buffer_get_byte_value(&buffer, &offset, val, &val_size);
+	ret = p11_rpc_buffer_get_byte_value (&buffer, &offset, val, &val_size);
 	assert_num_eq (false, ret);
 
 	p11_buffer_uninit (&buffer);
@@ -402,7 +402,7 @@ test_ulong_value (void)
 	bool ret;
 
 	offset = 4;
-	ret = p11_rpc_buffer_get_ulong_value(&buf, &offset, &val, &val_size);
+	ret = p11_rpc_buffer_get_ulong_value (&buf, &offset, &val, &val_size);
 	assert_num_eq (true, ret);
 	assert_num_eq (12, offset);
 	assert_num_eq (sizeof(val), val_size);
@@ -411,11 +411,11 @@ test_ulong_value (void)
 	p11_buffer_init (&buffer, 0);
 
 	offset = 0;
-	val_size = 8;
+	val_size = SIZEOF_UNSIGNED_LONG;
 	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
 	assert_num_eq (0, ret);
 	assert_num_eq (0, offset);
-	assert_num_eq (sizeof(val), val_size);
+	assert_num_eq (SIZEOF_UNSIGNED_LONG, val_size);
 	assert (0xFFFFFFFFFFFFFFFF == val64);
 
 	p11_buffer_reset (&buffer, 0);
@@ -423,7 +423,7 @@ test_ulong_value (void)
 	p11_buffer_add (&buffer, (unsigned char *)"padding", 7);
 
 	val64 = 0x0123456708ABCDEF;
-	p11_rpc_buffer_add_ulong_value (&buffer, &val64, sizeof(val64));
+	p11_rpc_buffer_add_ulong_value (&buffer, &val64, SIZEOF_UNSIGNED_LONG);
 	assert (!p11_buffer_failed (&buffer));
 
 	assert_num_eq (15, buffer.len);
@@ -433,7 +433,7 @@ test_ulong_value (void)
 	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
 	assert_num_eq (true, ret);
 	assert_num_eq (15, offset);
-	assert (0x0123456708ABCDEF == val64);
+	assert_num_eq ((CK_ULONG)0x0123456708ABCDEF, val64);
 
 	/* Read out of bound */
 	val64 = 0xFFFFFFFFFFFFFFFF;
