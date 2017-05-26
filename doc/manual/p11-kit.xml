@@ -94,11 +94,11 @@ $ p11-kit list-modules
 	<para>Run a server process that exposes PKCS#11 module remotely.</para>
 
 <programlisting>
-$ p11-kit server /path/to/pkcs11-module.so
-$ p11-kit server pkcs11:token-uri
+$ p11-kit server pkcs11:token1 pkcs11:token2 ...
+$ p11-kit server --provider /path/to/pkcs11-module.so pkcs11:token1 pkcs11:token2 ...
 </programlisting>
 
-	<para>This launches a server that exposes the given PKCS#11 module or token on a local socket. To access the socket, use <literal>p11-kit-client.so</literal> module. The server address and PID are printed as a shell-script snippet which sets the appropriate environment variable: <literal>P11_KIT_SERVER_ADDRESS</literal> and <literal>P11_KIT_SERVER_PID</literal>.</para>
+	<para>This launches a server that exposes the given PKCS#11 tokens on a local socket. The tokens must belong to the same module. To access the socket, use <literal>p11-kit-client.so</literal> module. The server address and PID are printed as a shell-script snippet which sets the appropriate environment variable: <literal>P11_KIT_SERVER_ADDRESS</literal> and <literal>P11_KIT_SERVER_PID</literal>.</para>
 
 </refsect1>
 
@@ -119,12 +119,14 @@ $ p11-kit server pkcs11:token-uri
 
 <programlisting>
 $ p11-kit remote /path/to/pkcs11-module.so
+$ p11-kit remote pkcs11:token1 pkcs11:token2 ...
 </programlisting>
 
 	<para>This is not meant to be run directly from a terminal. But rather in a
 	<option>remote</option> option in a
 	<citerefentry><refentrytitle>pkcs11.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
 	file.</para>
+	<para>This exposes the given PKCS#11 module or tokens over standard input and output. Those two forms, whether to expose a module or tokens, are mutually exclusive and if the second form is used, the tokens must belong to the same module.</para>
 </refsect1>
 
 <refsect1 id="p11-kit-bugs">
