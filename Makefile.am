@@ -16,8 +16,7 @@ AM_CPPFLAGS = \
 
 bin_PROGRAMS =
 private_PROGRAMS =
-
-CHECK_PROGS =
+check_PROGRAMS =
 
 CLEANFILES =
 
@@ -29,10 +28,10 @@ inc_HEADERS =
 lib_LTLIBRARIES =
 
 noinst_LTLIBRARIES =
-noinst_PROGRAMS = $(CHECK_PROGS)
+noinst_PROGRAMS =
 noinst_SCRIPTS =
 
-TESTS = $(CHECK_PROGS)
+TESTS = $(check_PROGRAMS)
 
 moduledir = $(p11_module_path)
 module_LTLIBRARIES =

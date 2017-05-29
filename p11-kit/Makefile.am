@@ -194,7 +194,7 @@ p11_kit_LIBS = \
 	libp11-common.la \
 	$(LTLIBINTL)
 
-CHECK_PROGS += \
+check_PROGRAMS += \
 	test-progname \
 	test-util \
 	test-conf \
@@ -251,7 +251,7 @@ print_messages_LDADD = $(p11_kit_LIBS)
 frob_setuid_SOURCES = p11-kit/frob-setuid.c
 frob_setuid_LDADD = $(p11_kit_LIBS)
 
-CHECK_PROGS += \
+check_PROGRAMS += \
 	test-virtual \
 	test-managed \
 	test-log \

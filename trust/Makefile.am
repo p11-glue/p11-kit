@@ -144,7 +144,7 @@ libtrust_test_la_SOURCES = \
 	trust/digest.c \
 	$(NULL)
 
-CHECK_PROGS += \
+check_PROGRAMS += \
 	test-digest \
 	test-asn1 \
 	test-base64 \
