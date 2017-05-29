@@ -662,7 +662,6 @@ main (int argc,
 	}
 
 	server = server_new ((const char **)argv, argc, provider, socket_name);
-	free (socket_name);
 	if (server == NULL) {
 		ret = 1;
 		goto out;
