@@ -189,6 +189,7 @@ transform_sha1 (uint32_t state[5],
 	/* Avoid compiler warnings
 	POST(a); POST(b); POST(c); POST(d); POST(e);
 	*/
+	(void)a;
 }
 
 
