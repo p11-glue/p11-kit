@@ -655,7 +655,6 @@ main (int argc,
 		}
 
 		socket_name = p11_path_build (socket_base, name, NULL);
-		free (socket_base);
 		free (name);
 	} else {
 		socket_name = strdup (name);
