@@ -191,7 +191,9 @@ p11_rpc_message_parse (p11_rpc_message *msg,
 	msg->sigverify = msg->signature;
 
 	/* Verify the incoming signature */
-	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &val, &len)) {
+	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &val, &len) ||
+	    /* This can happen if the length header == 0xffffffff */
+	    val == NULL) {
 		p11_message ("invalid message: couldn't read signature");
 		return false;
 	}
