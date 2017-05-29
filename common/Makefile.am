@@ -54,7 +54,7 @@ common_LIBS = \
 	libp11-common.la \
 	$(NULL)
 
-CHECK_PROGS += \
+check_PROGRAMS += \
 	test-tests \
 	test-compat \
 	test-hash \
