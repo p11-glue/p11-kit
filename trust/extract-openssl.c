@@ -662,7 +662,6 @@ p11_extract_openssl_directory (p11_enumerate *ex,
 
 			filename = NULL;
 			path = NULL;
-			ret = false;
 
 			file = p11_save_open_file_in (dir, name, ".pem");
 			if (file != NULL) {
