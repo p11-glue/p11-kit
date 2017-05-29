@@ -287,15 +287,17 @@ proxy_create (Proxy **res)
 
 			return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
 
-			py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
-			return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
+			if (count > 0) {
+				py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
+				return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
 
-			/* And now add a mapping for each of those slots */
-			for (i = 0; i < count; ++i) {
-				py->mappings[py->n_mappings].funcs = funcs;
-				py->mappings[py->n_mappings].wrap_slot = py->n_mappings + MAPPING_OFFSET;
-				py->mappings[py->n_mappings].real_slot = slots[i];
-				++py->n_mappings;
+				/* And now add a mapping for each of those slots */
+				for (i = 0; i < count; ++i) {
+					py->mappings[py->n_mappings].funcs = funcs;
+					py->mappings[py->n_mappings].wrap_slot = py->n_mappings + MAPPING_OFFSET;
+					py->mappings[py->n_mappings].real_slot = slots[i];
+					++py->n_mappings;
+				}
 			}
 
 			free (slots);
