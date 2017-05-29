@@ -1,3 +1,7 @@
+0.23.7 (devel)
+ * Fix memory issues with "p11-kit server" [PR#78]
+ * Build fixes [PR#77 ...]
+
 0.23.6 (devel)
  * Port "p11-kit server" to Windows and portability fixes of the RPC
    protocol [PR#67, PR#72, PR#74]
