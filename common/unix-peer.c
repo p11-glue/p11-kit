@@ -43,6 +43,10 @@
 #include <sys/uio.h>
 #include <sys/errno.h>
 
+#ifdef HAVE_UCRED_H
+#  include <ucred.h>
+#endif
+
 /* Returns the unix domain socket peer information.
  * Returns zero on success.
  */
@@ -87,6 +91,21 @@ p11_get_upeer_id (int cfd, uid_t *uid, uid_t *gid, pid_t *pid)
 	if (pid)
 		*pid = -1;
 
+#elif defined(HAVE_GETPEERUCRED)
+	/* *Solaris/OpenIndiana */
+	ucred_t *ucred = NULL;
+
+	if (getpeerucred(cfd, &ucred) == -1)
+		return -1;
+
+	ret = ( (uid && (*uid = ucred_geteuid(ucred)) == -1) ||
+			(gid && (*gid = ucred_getrgid(ucred)) == -1) ||
+			(pid && (*pid = ucred_getpid(ucred)) == -1)  );
+
+	ucred_free(ucred);
+
+	if (ret)
+		return -1;
 #else
 #error "Unsupported UNIX variant"
 #endif
