@@ -278,12 +278,6 @@ p11_dl_error (void)
 	return msg_buf;
 }
 
-void
-p11_dl_close (void *dl)
-{
-	FreeLibrary (dl);
-}
-
 int
 p11_thread_create (p11_thread_t *thread,
                    p11_thread_routine routine,
@@ -860,6 +854,17 @@ strerror_r (int errnum,
 }
 
 #endif /* HAVE_STRERROR_R */
+
+void
+p11_dl_close (void *dl)
+{
+#ifdef OS_WIN32
+	FreeLibrary (dl);
+#else
+	(void) dlclose (dl);
+#endif
+}
+
 
 #ifdef OS_UNIX
 

@@ -91,6 +91,8 @@ char *       mkdtemp     (char *template);
 
 char *       strdup_path_mangle (const char *template);
 
+void         p11_dl_close       (void * dl);
+
 /* -----------------------------------------------------------------------------
  * WIN32
  */
@@ -146,8 +148,6 @@ typedef HMODULE dl_module_t;
 	((void *)GetProcAddress ((d), (s)))
 
 char *    p11_dl_error       (void);
-
-void      p11_dl_close       (void * dl);
 
 #define p11_sleep_ms(ms) \
 	(Sleep (ms))
@@ -206,8 +206,6 @@ typedef void * dl_module_t;
 
 #define p11_dl_open(f) \
 	(dlopen ((f), RTLD_LOCAL | RTLD_NOW))
-#define p11_dl_close \
-	dlclose
 #define p11_dl_symbol(d, s) \
 	(dlsym ((d), (s)))
 
