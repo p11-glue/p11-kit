@@ -88,6 +88,13 @@ if test "$os_unix" = "yes"; then
 		AC_MSG_ERROR([could not find dlopen])
 	])
 
+	# for Solaris we need -lsocket -lnsl for socket stuff, gethostbyname
+	# is just a dummy to find -lnsl
+	AC_SEARCH_LIBS([gethostbyname], [nsl])
+	AC_SEARCH_LIBS([connect], [socket], [], [
+		AC_MSG_ERROR([could not find socket])
+	])
+
 	# These are thngs we can work around
 	AC_CHECK_HEADERS([locale.h sys/resource.h])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
