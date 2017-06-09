@@ -49,6 +49,10 @@
 #include "message.h"
 
 #include <assert.h>
+#include <errno.h>
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -100,6 +104,9 @@ p11_message_err (int errnum,
 	char strerr[P11_MESSAGE_MAX];
 	va_list va;
 	size_t length;
+#ifdef HAVE_STRERROR_L
+	locale_t loc;
+#endif
 
 	va_start (va, msg);
 	length = vsnprintf (buffer, P11_MESSAGE_MAX - 1, msg, va);
@@ -110,8 +117,14 @@ p11_message_err (int errnum,
 		length = P11_MESSAGE_MAX - 1;
 	buffer[length] = 0;
 
-	strncpy (strerr, "Unknown error", sizeof (strerr));
+	snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
+#ifdef HAVE_STRERROR_L
+	loc = uselocale ((locale_t) 0);
+	if (loc != NULL)
+		strncpy (strerr, strerror_l (errnum, loc), sizeof (strerr));
+#else
 	strerror_r (errnum, strerr, sizeof (strerr));
+#endif
 	strerr[P11_MESSAGE_MAX - 1] = 0;
 
 	p11_message ("%s: %s", buffer, strerr);
