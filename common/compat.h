@@ -40,10 +40,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef _GNU_SOURCE
-#error Make the crap stop. _GNU_SOURCE is completely unportable and breaks all sorts of behavior
-#endif
-
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
 #else

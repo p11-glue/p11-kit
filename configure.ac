@@ -27,6 +27,9 @@ AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 
+dnl Enable platform specific extensions.
+AC_USE_SYSTEM_EXTENSIONS
+
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen disable-static])
 
