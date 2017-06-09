@@ -34,11 +34,6 @@
 
 #include "config.h"
 
-/* needed for struct ucred */
-#if defined(__linux__) && !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
-#endif
-
 #include "unix-peer.h"
 
 #include <unistd.h>
