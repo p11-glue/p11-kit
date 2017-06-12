@@ -56,6 +56,11 @@ void              p11_debug_message             (int flag,
                                                  const char *format,
                                                  ...) GNUC_PRINTF (2, 3);
 
+void              p11_debug_message_err         (int flag,
+						 int errnum,
+                                                 const char *format,
+                                                 ...) GNUC_PRINTF (3, 4);
+
 void              p11_debug_precond             (const char *format,
                                                  ...) GNUC_PRINTF (1, 2)
                                                  CLANG_ANALYZER_NORETURN;
@@ -127,14 +132,20 @@ void              p11_debug_precond             (const char *format,
 		p11_debug_message (P11_DEBUG_FLAG, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
 	} while (0)
 
+#undef p11_debug_err
+#define p11_debug_err(errnum, format, ...) do {	      \
+	if (P11_DEBUG_FLAG & p11_debug_current_flags) \
+		p11_debug_message_err (P11_DEBUG_FLAG, errnum, "%s: " format, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
+	} while (0)
+
 #undef p11_debugging
 #define p11_debugging \
 	(P11_DEBUG_FLAG & p11_debug_current_flags)
 
 #else /* !defined (WITH_DEBUG) */
 
-#undef p11_debug
-#define p11_debug(format, ...) \
+#undef p11_debug_err
+#define p11_debug_err(errnum, format, ...) \
 	do {} while (false)
 
 #undef p11_debugging

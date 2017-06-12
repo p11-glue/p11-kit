@@ -40,11 +40,16 @@
 #include "debug.h"
 
 #include <assert.h>
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define P11_DEBUG_MESSAGE_MAX 512
 
 struct DebugKey {
 	const char *name;
@@ -136,6 +141,36 @@ p11_debug_message (int flag,
 		vfprintf (stderr, format, args);
 		va_end (args);
 		fprintf (stderr, "\n");
+	}
+}
+
+void
+p11_debug_message_err (int flag,
+		       int errnum,
+		       const char *format, ...)
+{
+	va_list args;
+	char strerr[P11_DEBUG_MESSAGE_MAX];
+#ifdef HAVE_STRERROR_L
+	locale_t loc;
+#endif
+
+	if (flag & p11_debug_current_flags) {
+		fprintf (stderr, "(p11-kit:%d) ", getpid());
+		va_start (args, format);
+		vfprintf (stderr, format, args);
+		va_end (args);
+
+		snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
+#ifdef HAVE_STRERROR_L
+		loc = uselocale ((locale_t) 0);
+		if (loc != NULL)
+			strncpy (strerr, strerror_l (errnum, loc), sizeof (strerr));
+#else
+		strerror_r (errnum, strerr, sizeof (strerr));
+#endif
+		strerr[P11_DEBUG_MESSAGE_MAX - 1] = 0;
+		fprintf (stderr, ": %s\n", strerr);
 	}
 }
 
