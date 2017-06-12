@@ -157,7 +157,7 @@ $ trust list
 <programlisting>
 $ trust anchor /path/to/certificate.crt
 $ trust anchor --remove /path/to/certificate.crt
-$ trust anchor --remove "pkcs11:id=%AA%BB%CC%DD%EE;object-type=cert"
+$ trust anchor --remove "pkcs11:id=%AA%BB%CC%DD%EE;type=cert"
 </programlisting>
 
 	<para>Store or remove trust anchors in the trust policy store. These are
