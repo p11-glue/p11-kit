@@ -58,7 +58,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool print_messages = true;
+static bool print_messages = false;
 
 static char *
 default_message_storage (void)
