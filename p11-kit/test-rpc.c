@@ -395,8 +395,7 @@ test_ulong_value (void)
 {
 	p11_buffer buffer;
 	p11_buffer buf = { (unsigned char *)"pad0\x00\x00\x00\x00\x23\x45\x67\x89", 12, };
-	CK_ULONG val = 0xFFFFFFFF;
-	uint64_t val64 = 0xFFFFFFFFFFFFFFFF;
+	CK_ULONG val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
 	size_t offset = 0;
 	CK_ULONG val_size;
 	bool ret;
@@ -410,34 +409,36 @@ test_ulong_value (void)
 
 	p11_buffer_init (&buffer, 0);
 
+	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
 	offset = 0;
 	val_size = SIZEOF_UNSIGNED_LONG;
-	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (0, ret);
 	assert_num_eq (0, offset);
 	assert_num_eq (SIZEOF_UNSIGNED_LONG, val_size);
-	assert (0xFFFFFFFFFFFFFFFF == val64);
+	assert_num_eq ((CK_ULONG)0xFFFFFFFFFFFFFFFF, val);
 
 	p11_buffer_reset (&buffer, 0);
 
 	p11_buffer_add (&buffer, (unsigned char *)"padding", 7);
 
-	val64 = 0x0123456708ABCDEF;
-	p11_rpc_buffer_add_ulong_value (&buffer, &val64, SIZEOF_UNSIGNED_LONG);
+	val = (CK_ULONG)0x0123456708ABCDEF;
+	p11_rpc_buffer_add_ulong_value (&buffer, &val, SIZEOF_UNSIGNED_LONG);
 	assert (!p11_buffer_failed (&buffer));
+	/* The value is always stored as 64-bit integer */
+	assert_num_eq (7 + 8, buffer.len);
 
-	assert_num_eq (15, buffer.len);
-
-	val64 = 0xFFFFFFFFFFFFFFFF;
+	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
 	offset = 7;
-	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (true, ret);
-	assert_num_eq (15, offset);
-	assert_num_eq ((CK_ULONG)0x0123456708ABCDEF, val64);
+	/* The value is always stored as 64-bit integer */
+	assert_num_eq (7 + 8, offset);
+	assert_num_eq ((CK_ULONG)0x0123456708ABCDEF, *(CK_ULONG *)&val);
 
 	/* Read out of bound */
-	val64 = 0xFFFFFFFFFFFFFFFF;
-	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val64, &val_size);
+	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
+	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (false, ret);
 
 	p11_buffer_uninit (&buffer);
