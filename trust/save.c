@@ -420,7 +420,7 @@ make_unique_name (const char *bare,
 			return p11_buffer_steal (&buf, NULL);
 	}
 
-	assert_not_reached ();
+	return_val_if_reached (NULL);
 }
 
 static int
