@@ -12,12 +12,12 @@
    the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
    PURPOSE.  */
 
-/* Please submit changes back to the Scute project at
-   http://www.scute.org/ (or send them to marcus@g10code.com), so that
+/* Please submit any changes back to the p11-kit project at
+   https://github.com/p11-glue/p11-kit/, so that
    they can be picked up by other projects from there as well.  */
 
 /* This file is a modified implementation of the PKCS #11 standard by
-   RSA Security Inc.  It is mostly a drop-in replacement, with the
+   OASIS group.  It is mostly a drop-in replacement, with the
    following change:
 
    This header file does not require any macro definitions by the user
