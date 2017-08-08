@@ -34,11 +34,11 @@
 
 #include "config.h"
 
+#include "array.h"
 #include "attrs.h"
 #include "buffer.h"
 #define P11_DEBUG_FLAG P11_DEBUG_URI
 #include "debug.h"
-#include "dict.h"
 #include "message.h"
 #include "pkcs11.h"
 #include "private.h"
@@ -140,6 +140,11 @@
  * Length of %P11_KIT_URI_SCHEME.
  */
 
+typedef struct _Attribute {
+	char *name;
+	char *value;
+} Attribute;
+
 struct p11_kit_uri {
 	bool unrecognized;
 	CK_INFO module;
@@ -151,7 +156,7 @@ struct p11_kit_uri {
 	char *pin_value;
 	char *module_name;
 	char *module_path;
-	p11_dict *qattrs;
+	p11_array *qattrs;
 };
 
 static char *
@@ -810,8 +815,49 @@ p11_kit_uri_set_module_path (P11KitUri *uri, const char *path)
 const char*
 p11_kit_uri_get_vendor_query (P11KitUri *uri, const char *name)
 {
+	size_t i;
+
 	return_val_if_fail (uri != NULL, NULL);
-	return p11_dict_get (uri->qattrs, name);
+
+	for (i = 0; i < uri->qattrs->num; i++) {
+		Attribute *attr = uri->qattrs->elem[i];
+		if (strcmp (attr->name, name) == 0)
+			return attr->value;
+	}
+	return NULL;
+}
+
+static void
+free_attribute (Attribute *attr)
+{
+	free (attr->name);
+	free (attr->value);
+	free (attr);
+}
+
+static bool
+insert_attribute (p11_array *attrs, char *name, char *value)
+{
+	Attribute *attr;
+	size_t i;
+
+	return_val_if_fail (attrs != NULL, false);
+	return_val_if_fail (name != NULL, false);
+	return_val_if_fail (value != NULL, false);
+
+	for (i = 0; i < attrs->num; i++) {
+		attr = attrs->elem[i];
+		if (strcmp (attr->name, (char *)name) > 0)
+			break;
+	}
+
+	attr = calloc (1, sizeof (Attribute));
+	return_val_if_fail (attr, false);
+
+	attr->name = name;
+	attr->value = value;
+
+	return p11_array_insert (attrs, i, attr);
 }
 
 /**
@@ -830,13 +876,31 @@ int
 p11_kit_uri_set_vendor_query (P11KitUri *uri, const char *name,
 			      const char *value)
 {
+	Attribute *attr;
+	size_t i;
+
 	return_val_if_fail (uri != NULL, 0);
 	return_val_if_fail (name != NULL, 0);
 
+	for (i = 0; i < uri->qattrs->num; i++) {
+		attr = uri->qattrs->elem[i];
+		if (strcmp (attr->name, name) == 0)
+			break;
+	}
+	if (i == uri->qattrs->num) {
+		if (value == NULL)
+			return 0;
+		return insert_attribute (uri->qattrs,
+					 strdup (name), strdup (value));
+	}
 	if (value == NULL)
-		return p11_dict_remove (uri->qattrs, name);
+		p11_array_remove (uri->qattrs, i);
+	else {
+		free (attr->value);
+		attr->value = strdup (value);
+	}
 
-	return p11_dict_set (uri->qattrs, strdup (name), strdup (value));
+	return 1;
 }
 
 /**
@@ -861,7 +925,7 @@ p11_kit_uri_new (void)
 	uri->module.libraryVersion.major = (CK_BYTE)-1;
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->slot_id = (CK_SLOT_ID)-1;
-	uri->qattrs = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, free);
+	uri->qattrs = p11_array_new ((p11_destroyer)free_attribute);
 
 	return uri;
 }
@@ -1062,6 +1126,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 {
 	p11_buffer buffer;
 	enum uri_sep sep = sep_path;
+	size_t i;
 
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 	return_val_if_fail (string != NULL, P11_KIT_URI_UNEXPECTED);
@@ -1170,20 +1235,12 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		}
 	}
 
-	if (uri->qattrs) {
-		p11_dictiter iter;
-		void *_key;
-		void *_value;
-
-		p11_dict_iterate (uri->qattrs, &iter);
-		while (p11_dict_next (&iter, &_key, &_value)) {
-			char *key = _key;
-			char *value = _value;
-			if (!format_encode_string (&buffer, &sep, key,
-						   (const unsigned char *) value,
-						   strlen (value), 0)) {
-				return_val_if_reached (P11_KIT_URI_UNEXPECTED);
-			}
+	for (i = 0; i < uri->qattrs->num; i++) {
+		Attribute *attr = uri->qattrs->elem[i];
+		if (!format_encode_string (&buffer, &sep, attr->name,
+					   (const unsigned char *) attr->value,
+					   strlen (attr->value), 0)) {
+			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
@@ -1536,8 +1593,7 @@ parse_vendor_query (const char *name_start, const char *name_end,
 		return P11_KIT_URI_BAD_ENCODING;
 	}
 
-	if (!p11_dict_set (uri->qattrs, name, value))
-		return 1;
+	insert_attribute (uri->qattrs, (char *)name, (char *)value);
 
 	return 0;
 }
@@ -1617,7 +1673,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 	uri->module_name = NULL;
 	free (uri->module_path);
 	uri->module_path = NULL;
-	p11_dict_clear (uri->qattrs);
+	p11_array_clear (uri->qattrs);
 
 	/* Parse the path. */
 	for (;;) {
@@ -1719,7 +1775,7 @@ p11_kit_uri_free (P11KitUri *uri)
 	free (uri->pin_value);
 	free (uri->module_name);
 	free (uri->module_path);
-	p11_dict_free (uri->qattrs);
+	p11_array_free (uri->qattrs);
 	free (uri);
 }
 
