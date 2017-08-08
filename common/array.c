@@ -107,6 +107,22 @@ p11_array_push (p11_array *array,
 	return true;
 }
 
+bool
+p11_array_insert (p11_array *array,
+		  unsigned int index,
+		  void *value)
+{
+	return_val_if_fail (index <= array->num, false);
+	if (!maybe_expand_array (array, array->num + 1))
+		return_val_if_reached (false);
+
+	memmove (array->elem + index + 1, array->elem + index,
+	         (array->num - index) * sizeof (void*));
+	array->elem[index] = value;
+	array->num++;
+	return true;
+}
+
 void
 p11_array_remove (p11_array *array,
                   unsigned int index)

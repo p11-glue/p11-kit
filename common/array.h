@@ -60,6 +60,10 @@ void                 p11_array_free               (p11_array *array);
 bool                 p11_array_push               (p11_array *array,
                                                    void *value);
 
+bool                 p11_array_insert             (p11_array *array,
+						   unsigned int index,
+						   void *value);
+
 void                 p11_array_remove             (p11_array *array,
                                                    unsigned int index);
 
