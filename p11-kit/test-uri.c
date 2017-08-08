@@ -1542,6 +1542,16 @@ test_uri_vendor_query (void)
 	ret = p11_kit_uri_set_vendor_query (uri, "my-query-three", NULL);
 	assert_num_eq (0, ret);
 
+	/* Check if duplicate vendor query attributes are accepted and
+	 * sorted alphabetically.  */
+	ret = p11_kit_uri_parse ("pkcs11:?bbb=zzz&aaa=xxx&aaa=yyy", P11_KIT_URI_FOR_ANY, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+	assert_str_eq ("pkcs11:?aaa=xxx&aaa=yyy&bbb=zzz", string);
+	free (string);
+
 	p11_kit_uri_free (uri);
 }
 
