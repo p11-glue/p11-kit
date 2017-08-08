@@ -487,6 +487,23 @@ strndup (const char *data,
 
 #endif /* HAVE_STRNDUP */
 
+#ifndef HAVE_REALLOCARRAY
+
+void *
+reallocarray (void *ptr,
+	      size_t nmemb,
+	      size_t size)
+{
+	assert (nmemb > 0 && size > 0);
+	if (SIZE_MAX / nmemb < size) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	return realloc (ptr, nmemb * size);
+}
+
+#endif /* HAVE_MEMDUP */
+
 #ifndef HAVE_STRCONCAT
 
 #include <stdarg.h>

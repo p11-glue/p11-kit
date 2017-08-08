@@ -49,13 +49,16 @@ maybe_expand_array (p11_array *array,
 		return true;
 
 
-	new_allocated = array->allocated * 2;
-	if (new_allocated == 0)
+	if (array->allocated == 0)
 		new_allocated = 16;
+	else {
+		return_val_if_fail (SIZE_MAX / array->allocated >= 2, false);
+		new_allocated = array->allocated * 2;
+	}
 	if (new_allocated < length)
 		new_allocated = length;
 
-	new_memory = realloc (array->elem, new_allocated * sizeof (void*));
+	new_memory = reallocarray (array->elem, new_allocated, sizeof (void*));
 	return_val_if_fail (new_memory != NULL, false);
 
 	array->elem = new_memory;
