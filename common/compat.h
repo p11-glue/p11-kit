@@ -258,6 +258,14 @@ char *     strndup          (const char *data,
 
 #endif /* HAVE_STRDUP */
 
+#ifndef HAVE_REALLOCARRAY
+
+void *     reallocarray     (void *ptr,
+                             size_t nmemb,
+                             size_t size);
+
+#endif /* HAVE_REALLOCARRAY */
+
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
 #else
