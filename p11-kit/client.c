@@ -220,7 +220,7 @@ p11_client_module_cleanup (void)
 
 	for (; state != NULL; state = next) {
 		next = state->next;
-		p11_virtual_unwrap (state->wrapped);
 		p11_rpc_transport_free (state->rpc);
+		p11_virtual_unwrap (state->wrapped);
 	}
 }
