@@ -1,3 +1,10 @@
+0.23.8 (devel)
+ * Improve vendor query attributes handling in PKCS#11 URI [PR#92]
+ * Add OTP and GOST mechanisms to pkcs11.h [PR#90, PR#91]
+ * New envvar P11_KIT_NO_USER_CONFIG to stop looking at user
+   configurations [PR#87]
+ * Build fixes for Solaris and 32-bit big-endian platforms [PR#81, PR#86]
+
 0.23.7 (devel)
  * Fix memory issues with "p11-kit server" [PR#78]
  * Build fixes [PR#77 ...]
