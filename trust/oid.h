@@ -118,6 +118,15 @@ static const unsigned char P11_OID_EXTENDED_KEY_USAGE[] =
 static const char P11_OID_EXTENDED_KEY_USAGE_STR[] = "2.5.29.37";
 
 /*
+ * 2.5.29.37.0: anyExtendedKeyUsage
+ *
+ * Defined in RFC 5280
+ */
+static const unsigned char P11_OID_ANY_EXTENDED_KEY_USAGE[] =
+	{ 0x06, 0x03, 0x55, 0x1d, 0x25, 0x00 };
+static const char P11_OID_ANY_EXTENDED_KEY_USAGE_STR[] = "2.5.29.37.0";
+
+/*
  * 1.3.6.1.4.1.3319.6.10.1: OpenSSL reject extension
  *
  * An internally defined certificate extension.
