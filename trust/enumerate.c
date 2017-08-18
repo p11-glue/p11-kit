@@ -374,6 +374,11 @@ on_iterate_load_filter (p11_kit_iter *iter,
 	if (ex->limit_to_purposes && ex->purposes) {
 		*matches = CK_FALSE;
 		for (i = 0; i < ex->purposes->num; i++) {
+			if (strcmp (ex->purposes->elem[i], P11_OID_ANY_EXTENDED_KEY_USAGE_STR) == 0) {
+				p11_debug ("anyExtendedKeyUsage is set, skipping filtering by purposes");
+				*matches = CK_TRUE;
+				break;
+			}
 			if (p11_dict_get (ex->limit_to_purposes, ex->purposes->elem[i])) {
 				*matches = CK_TRUE;
 				break;

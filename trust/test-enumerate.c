@@ -243,6 +243,17 @@ static CK_ATTRIBUTE extension_eku_invalid[] = {
 	{ CKA_INVALID },
 };
 
+static CK_ATTRIBUTE extension_eku_any[] = {
+	{ CKA_CLASS, &extension_class, sizeof (extension_class) },
+	{ CKA_ID, "ID1", 3 },
+	{ CKA_OBJECT_ID, (void *)P11_OID_EXTENDED_KEY_USAGE, sizeof (P11_OID_EXTENDED_KEY_USAGE) },
+	{ CKA_PUBLIC_KEY_INFO, (void *)test_cacert3_ca_public_key, sizeof (test_cacert3_ca_public_key) },
+	/* anyExtendedKeyUsage ('2 5 29 37 0') and
+	 * Microsoft Smart Card Logon ('1 3 6 1 4 1 311 20 2 2') */
+	{ CKA_VALUE, "\x30\x1b\x06\x03\x55\x1d\x25\x04\x14\x30\x12\x06\x04\x55\x1d\x25\x00\x06\x0a\x2b\x06\x01\x04\x01\x82\x37\x14\x02\x02", 29 },
+	{ CKA_INVALID },
+};
+
 static void
 test_info_simple_certificate (void)
 {
@@ -370,6 +381,25 @@ test_limit_to_purpose_no_match (void)
 
 	rv = p11_kit_iter_next (test.ex.iter);
 	assert_num_eq (CKR_CANCEL, rv);
+
+	p11_message_loud ();
+}
+
+static void
+test_limit_to_purpose_match_any (void)
+{
+	CK_RV rv;
+
+	mock_module_add_object (MOCK_SLOT_ONE_ID, cacert3_trusted);
+	mock_module_add_object (MOCK_SLOT_ONE_ID, extension_eku_any);
+
+	p11_enumerate_opt_purpose (&test.ex, P11_OID_SERVER_AUTH_STR);
+	p11_enumerate_ready (&test.ex, NULL);
+
+	p11_message_quiet ();
+
+	rv = p11_kit_iter_next (test.ex.iter);
+	assert_num_eq (CKR_OK, rv);
 
 	p11_message_loud ();
 }
@@ -529,6 +559,7 @@ main (int argc,
 	p11_test (test_info_skip_non_certificate, "/extract/test_info_skip_non_certificate");
 	p11_test (test_limit_to_purpose_match, "/extract/test_limit_to_purpose_match");
 	p11_test (test_limit_to_purpose_no_match, "/extract/test_limit_to_purpose_no_match");
+	p11_test (test_limit_to_purpose_match_any, "/extract/test_limit_to_purpose_no_match_any");
 	p11_test (test_duplicate_extract, "/extract/test_duplicate_extract");
 	p11_test (test_duplicate_distrusted, "/extract/test-duplicate-distrusted");
 	p11_test (test_trusted_match, "/extract/test_trusted_match");
