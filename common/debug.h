@@ -144,6 +144,10 @@ void              p11_debug_precond             (const char *format,
 
 #else /* !defined (WITH_DEBUG) */
 
+#undef p11_debug
+#define p11_debug(format, ...) \
+	do {} while (false)
+
 #undef p11_debug_err
 #define p11_debug_err(errnum, format, ...) \
 	do {} while (false)
