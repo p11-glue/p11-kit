@@ -2085,49 +2085,6 @@ p11_kit_remote_serve_token (CK_FUNCTION_LIST *module,
 	return ret;
 }
 
-/* Find a module providing a token */
-static CK_FUNCTION_LIST *
-find_module (const char *token)
-{
-	CK_FUNCTION_LIST **modules = NULL, *module = NULL;
-	P11KitUri *uri = NULL;
-	P11KitIter *iter = NULL;
-	CK_RV rv;
-
-	modules = p11_kit_modules_load_and_initialize (0);
-	if (modules == NULL)
-		goto out;
-
-	uri = p11_kit_uri_new ();
-	if (uri == NULL)
-		goto out;
-
-	if (p11_kit_uri_parse (token, P11_KIT_URI_FOR_TOKEN, uri) !=
-	    P11_KIT_URI_OK)
-		goto out;
-
-	iter = p11_kit_iter_new (uri,
-				 P11_KIT_ITER_WITH_TOKENS |
-				 P11_KIT_ITER_WITHOUT_OBJECTS);
-	p11_kit_uri_free (uri);
-	uri = NULL;
-	if (iter == NULL)
-		goto out;
-
-	p11_kit_iter_begin (iter, modules);
-	rv = p11_kit_iter_next (iter);
-	if (rv != CKR_OK)
-		goto out;
-
-	module = p11_kit_iter_get_module (iter);
-
- out:
-	p11_kit_iter_free (iter);
-	p11_kit_modules_release (modules);
-
-	return module;
-}
-
 /**
  * p11_kit_remote_serve_tokens:
  * @tokens: a list of token URIs
@@ -2150,7 +2107,9 @@ p11_kit_remote_serve_tokens (const char **tokens,
 {
 	p11_virtual virt;
 	p11_virtual *filter = NULL;
-	CK_FUNCTION_LIST *filtered = NULL;
+	CK_FUNCTION_LIST **modules = NULL, *filtered = NULL;
+	P11KitIter *iter;
+	P11KitUri *uri;
 	int ret = 1;
 	size_t i;
 
@@ -2159,8 +2118,42 @@ p11_kit_remote_serve_tokens (const char **tokens,
 	return_val_if_fail (in_fd >= 0, 2);
 	return_val_if_fail (out_fd >= 0, 2);
 
-	if (!module)
-		module = find_module (tokens[0]);
+	if (!module) {
+		modules = p11_kit_modules_load_and_initialize (0);
+		if (modules == NULL)
+			goto out;
+
+		/* Find a module that provides the first token */
+		uri = p11_kit_uri_new ();
+		if (uri == NULL)
+			goto out;
+
+		if (p11_kit_uri_parse (tokens[0], P11_KIT_URI_FOR_TOKEN, uri) !=
+		    P11_KIT_URI_OK)
+			goto out;
+
+		iter = p11_kit_iter_new (uri,
+					 P11_KIT_ITER_WITH_TOKENS |
+					 P11_KIT_ITER_WITHOUT_OBJECTS);
+		p11_kit_uri_free (uri);
+		if (iter == NULL)
+			goto out;
+
+		p11_kit_iter_begin (iter, modules);
+		if (p11_kit_iter_next (iter) != CKR_OK) {
+			p11_kit_iter_free (iter);
+			goto out;
+		}
+
+		module = p11_kit_iter_get_module (iter);
+		assert (module != NULL);
+
+		p11_kit_iter_free (iter);
+
+		/* Call C_Finalize on modules as C_Initialize on the
+		 * found module will be called later */
+		p11_kit_modules_finalize (modules);
+	}
 
 	/* Create a virtual module that provides only the specified tokens */
 	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
@@ -2169,7 +2162,6 @@ p11_kit_remote_serve_tokens (const char **tokens,
 		goto out;
 
 	for (i = 0; i < n_tokens; i++) {
-		P11KitUri *uri;
 		CK_TOKEN_INFO *token;
 
 		uri = p11_kit_uri_new ();
@@ -2198,6 +2190,8 @@ p11_kit_remote_serve_tokens (const char **tokens,
 		p11_virtual_unwrap (filtered);
 	if (filter != NULL)
 		p11_filter_release (filter);
+	if (modules != NULL)
+		p11_kit_modules_release (modules);
 
 	return ret;
 }
