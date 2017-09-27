@@ -633,6 +633,33 @@ test_mechanism_value (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+static void
+test_message_write (void)
+{
+	p11_rpc_message msg;
+	p11_buffer buffer;
+	CK_BBOOL truev = CK_TRUE;
+	CK_ULONG zerov = (CK_ULONG)0;
+	char labelv[] = "label";
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_MODIFIABLE, &truev, sizeof (truev) },
+		{ CKA_LABEL, labelv, sizeof (labelv) },
+		/* These are cases when C_GetAttributeValue is called
+		 * to obtain the length */
+		{ CKA_COPYABLE, NULL, sizeof (truev) },
+		{ CKA_BITS_PER_PIXEL, NULL, sizeof (zerov) }
+	};
+	bool ret;
+
+	ret = p11_buffer_init (&buffer, 0);
+	assert_num_eq (true, ret);
+	p11_rpc_message_init (&msg, &buffer, &buffer);
+	ret = p11_rpc_message_write_attribute_array (&msg, attrs, ELEMS(attrs));
+	assert_num_eq (true, ret);
+	p11_rpc_message_clear (&msg);
+	p11_buffer_uninit (&buffer);
+}
+
 static p11_virtual base;
 static unsigned int rpc_initialized = 0;
 
@@ -1324,6 +1351,7 @@ main (int argc,
 	p11_test (test_date_value, "/rpc/date-value");
 	p11_test (test_byte_array_value, "/rpc/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc/mechanism-value");
+	p11_test (test_message_write, "/rpc/message-write");
 
 	p11_test (test_initialize_fails_on_client, "/rpc/initialize-fails-on-client");
 	p11_test (test_initialize_fails_on_server, "/rpc/initialize-fails-on-server");
