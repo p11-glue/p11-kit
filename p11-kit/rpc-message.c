@@ -880,14 +880,15 @@ p11_rpc_buffer_add_byte_value (p11_buffer *buffer,
 			       const void *value,
 			       CK_ULONG value_length)
 {
-	CK_BYTE byte_value;
+	CK_BYTE byte_value = 0;
 
 	/* Check if value can be converted to CK_BYTE. */
 	if (value_length > sizeof (CK_BYTE)) {
 		p11_buffer_fail (buffer);
 		return;
 	}
-	memcpy (&byte_value, value, value_length);
+	if (value)
+		memcpy (&byte_value, value, value_length);
 
 	/* Check if byte_value can be converted to uint8_t. */
 	if (byte_value > UINT8_MAX) {
@@ -903,14 +904,15 @@ p11_rpc_buffer_add_ulong_value (p11_buffer *buffer,
 				const void *value,
 				CK_ULONG value_length)
 {
-	CK_ULONG ulong_value;
+	CK_ULONG ulong_value = 0;
 
 	/* Check if value can be converted to CK_ULONG. */
 	if (value_length > sizeof (CK_ULONG)) {
 		p11_buffer_fail (buffer);
 		return;
 	}
-	memcpy (&ulong_value, value, value_length);
+	if (value)
+		memcpy (&ulong_value, value, value_length);
 
 	/* Check if ulong_value can be converted to uint64_t. */
 	if (ulong_value > UINT64_MAX) {
