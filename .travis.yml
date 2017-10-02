@@ -4,6 +4,7 @@ language: c
 
 env:
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64"
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 --enable-coverage" COVERAGE=yes
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SCAN_BUILD="scan-build --status-bugs"
@@ -21,7 +22,7 @@ before_install:
   - export CONTAINER=$(docker run -d fedora sleep 1800)
   - docker exec $CONTAINER dnf -y install 'dnf-command(builddep)'
   - docker exec $CONTAINER dnf -y builddep p11-kit
-  - docker exec $CONTAINER dnf -y install gettext-devel libtool make
+  - docker exec $CONTAINER dnf -y install gettext-devel git lcov libtool make
   - docker exec $CONTAINER dnf -y install libasan libubsan
   - docker exec $CONTAINER dnf -y install clang-analyzer
   - docker exec $CONTAINER dnf -y install mingw64-gcc mingw64-libffi mingw64-libtasn1 wine
@@ -42,3 +43,6 @@ script:
 
 after_failure:
   - docker exec $CONTAINER su - user sh -c "cd /builddir && cat test-suite.log"
+
+after_success:
+  - if test x"$COVERAGE" = xyes; then docker exec $CONTAINER pip install cpp-coveralls; docker exec $CONTAINER su - user sh -c "cd /builddir && coveralls -r /srcdir -b /builddir --gcov-options '\-lp'"; fi
