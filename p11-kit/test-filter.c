@@ -73,6 +73,12 @@ static void
 test_allowed (void)
 {
 	CK_FUNCTION_LIST_PTR module;
+	CK_SLOT_ID slots[1], slot;
+	CK_SLOT_INFO slot_info;
+	CK_TOKEN_INFO token_info;
+	CK_MECHANISM_TYPE mechs[8];
+	CK_MECHANISM_INFO mech;
+	CK_SESSION_HANDLE session = 0;
 	p11_virtual virt;
 	p11_virtual *filter;
 	CK_ULONG count;
@@ -88,9 +94,70 @@ test_allowed (void)
 	rv = (module->C_Initialize) (NULL);
 	assert_num_eq (CKR_OK, rv);
 
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, NULL);
+	assert_num_eq (CKR_ARGUMENTS_BAD, rv);
+
 	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
 	assert_num_eq (CKR_OK, rv);
 	assert_num_eq (count, 1);
+
+	count = 0;
+	rv = (module->C_GetSlotList) (CK_TRUE, slots, &count);
+	assert_num_eq (CKR_BUFFER_TOO_SMALL, rv);
+
+	count = 1;
+	rv = (module->C_GetSlotList) (CK_TRUE, slots, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (count, 1);
+
+	rv = (module->C_GetSlotInfo) (99, &slot_info);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_GetSlotInfo) (slots[0], &slot_info);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_GetTokenInfo) (99, &token_info);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_GetTokenInfo) (slots[0], &token_info);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_GetMechanismList) (99, NULL, &count);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_GetMechanismList) (slots[0], NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_GetMechanismList) (slots[0], mechs, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (2, count);
+
+	rv = (module->C_GetMechanismInfo) (99, mechs[0], &mech);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_GetMechanismInfo) (slots[0], mechs[0], &mech);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_InitToken) (99, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_InitToken) (slots[0], (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_WaitForSlotEvent) (0, &slot, NULL);
+	assert_num_eq (CKR_FUNCTION_NOT_SUPPORTED, rv);
+
+	rv = (module->C_OpenSession) (99, CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_OpenSession) (slots[0], CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (CKR_OK, rv);
+
+	rv = (module->C_CloseAllSessions) (99);
+	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
+
+	rv = (module->C_CloseAllSessions) (slots[0]);
+	assert_num_eq (CKR_OK, rv);
 
 	rv = (module->C_Finalize) (NULL);
 	assert_num_eq (CKR_OK, rv);
