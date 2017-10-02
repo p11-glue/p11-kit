@@ -1,3 +1,8 @@
+0.23.9 (devel)
+ * Fix p11-kit server regressions [PR#103, PR#104]
+ * trust: Respect anyExtendedKeyUsage in CA certificates [PR#99]
+ * Build fixes related to reallocarray [PR#96, PR#98, PR#100]
+
 0.23.8 (devel)
  * Improve vendor query attributes handling in PKCS#11 URI [PR#92]
  * Add OTP and GOST mechanisms to pkcs11.h [PR#90, PR#91]
