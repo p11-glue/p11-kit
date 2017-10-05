@@ -346,6 +346,17 @@ server_loop (Server *server,
 	if (server->socket == -1)
 		return 1;
 
+	if (!quiet) {
+		char *path;
+
+		path = p11_path_encode (server->socket_name);
+		printf ("P11_KIT_SERVER_ADDRESS=unix:path=%s\n", path);
+		free (path);
+		printf ("P11_KIT_SERVER_PID=%d\n", getpid ());
+		fflush (stdout);
+		close (STDOUT_FILENO);
+	}
+
 	/* run as daemon */
 	if (!foreground) {
 		pid = fork ();
@@ -371,15 +382,6 @@ server_loop (Server *server,
 	}
 
 	sigprocmask (SIG_BLOCK, &blockset, NULL);
-
-	if (!quiet) {
-		char *path;
-
-		path = p11_path_encode (server->socket_name);
-		printf ("P11_KIT_SERVER_ADDRESS=unix:path=%s\n", path);
-		free (path);
-		printf ("P11_KIT_SERVER_PID=%d\n", getpid ());
-	}
 
 	/* accept connections */
 	ret = 0;
