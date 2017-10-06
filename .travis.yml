@@ -38,4 +38,7 @@ install:
 script:
   - docker exec $CONTAINER sh -c "cd /srcdir && NOCONFIGURE=1 ./autogen.sh"
   - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --enable-strict $BUILD_OPTS"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && $SCAN_BUILD make V=1 && make check V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && $SCAN_BUILD make -j$(nproc) V=1 && make check -j$(nproc) V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
+
+after_failure:
+  - docker exec $CONTAINER su - user sh -c "cd /builddir && cat test-suite.log"
