@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -161,6 +162,10 @@ static bool need_children_cleanup = false;
 static bool terminate = false;
 static unsigned children_avail = 0;
 static bool quiet = false;
+static bool csh = false;
+
+#define P11_KIT_SERVER_ADDRESS_ENV "P11_KIT_SERVER_ADDRESS"
+#define P11_KIT_SERVER_PID_ENV "P11_KIT_SERVER_PID"
 
 static SIGHANDLER_T
 ocsignal (int signum, SIGHANDLER_T handler)
@@ -346,28 +351,42 @@ server_loop (Server *server,
 	if (server->socket == -1)
 		return 1;
 
-	if (!quiet) {
-		char *path;
-
-		path = p11_path_encode (server->socket_name);
-		printf ("P11_KIT_SERVER_ADDRESS=unix:path=%s\n", path);
-		free (path);
-		printf ("P11_KIT_SERVER_PID=%d\n", getpid ());
-		fflush (stdout);
-		close (STDOUT_FILENO);
-	}
-
 	/* run as daemon */
 	if (!foreground) {
 		pid = fork ();
-		switch (pid) {
-		case -1:
+		if (pid == -1) {
 			p11_message_err (errno, "could not fork() to daemonize");
 			return 1;
-		case 0:
-			break;
-		default:
-			_exit (0);
+		}
+		if (pid == 0) {
+			close (STDIN_FILENO);
+			close (STDOUT_FILENO);
+		}
+		if (pid != 0) {
+			char *path, *address;
+
+			path = p11_path_encode (server->socket_name);
+			rc = asprintf (&address, "unix:path=%s", path);
+			free (path);
+			if (rc < 0)
+				return 1;
+			if (csh) {
+				printf ("setenv %s %s;\n",
+					P11_KIT_SERVER_ADDRESS_ENV,
+					address);
+				printf ("setenv %s %d;\n",
+					P11_KIT_SERVER_PID_ENV,
+					pid);
+			} else {
+				printf ("%s=%s; export %s;\n",
+					P11_KIT_SERVER_ADDRESS_ENV, address,
+					P11_KIT_SERVER_ADDRESS_ENV);
+				printf ("%s=%d; export %s;\n",
+					P11_KIT_SERVER_PID_ENV, pid,
+					P11_KIT_SERVER_PID_ENV);
+			}
+			free (address);
+			exit (0);
 		}
 		if (setsid () == -1) {
 			p11_message_err (errno, "could not create a new session");
@@ -487,6 +506,8 @@ main (int argc,
 	const struct passwd *pwd;
 	const struct group *grp;
 	bool foreground = false;
+	bool csh_opt = false;
+	bool kill_opt = false;
 	struct timespec *timeout = NULL, ts;
 	char *name = NULL;
 	char *provider = NULL;
@@ -504,7 +525,10 @@ main (int argc,
 		opt_foreground = 'f',
 		opt_timeout = 't',
 		opt_name = 'n',
-		opt_provider = 'p'
+		opt_provider = 'p',
+		opt_kill = 'k',
+		opt_csh = 'c',
+		opt_sh = 's'
 	};
 
 	struct option options[] = {
@@ -519,6 +543,9 @@ main (int argc,
 		{ "timeout", required_argument, NULL, opt_timeout },
 		{ "name", required_argument, NULL, opt_name },
 		{ "provider", required_argument, NULL, opt_provider },
+		{ "kill", no_argument, NULL, opt_kill },
+		{ "csh", no_argument, NULL, opt_csh },
+		{ "sh", no_argument, NULL, opt_sh },
 		{ 0 },
 	};
 
@@ -532,6 +559,9 @@ main (int argc,
 		{ opt_timeout, "exit if no connection until the given timeout" },
 		{ opt_name, "specify name of the socket (default: pkcs11-<pid>)" },
 		{ opt_provider, "specify the module to use" },
+		{ opt_kill, "terminate the running server" },
+		{ opt_csh, "generate C-shell commands on stdout" },
+		{ opt_sh, "generate Bourne shell commands on stdout" },
 		{ 0 },
 	};
 
@@ -589,6 +619,17 @@ main (int argc,
 		case opt_provider:
 			provider = optarg;
 			break;
+		case opt_kill:
+			kill_opt = true;
+			break;
+		case opt_csh:
+			csh = true;
+			csh_opt = true;
+			break;
+		case opt_sh:
+			csh = false;
+			csh_opt = true;
+			break;
 		case opt_help:
 		case '?':
 			p11_tool_usage (usages, options);
@@ -602,9 +643,52 @@ main (int argc,
 	argc -= optind;
 	argv += optind;
 
-	if (argc < 1) {
+	if (argc < 1 && !kill_opt) {
 		p11_tool_usage (usages, options);
 		return 2;
+	}
+
+	if (!csh_opt) {
+		const char *shell = secure_getenv ("SHELL");
+		size_t len;
+		if (shell != NULL && (len = strlen (shell)) > 2 &&
+		    strncmp (shell + len - 3, "csh", 3) == 0)
+			csh = true;
+	}
+
+	if (kill_opt) {
+		const char *pidstr = secure_getenv (P11_KIT_SERVER_PID_ENV);
+		char *endptr;
+		long pidval;
+
+		if (pidstr == NULL) {
+			fprintf (stderr, "%s not set, cannot kill server",
+				 P11_KIT_SERVER_PID_ENV);
+			exit (1);
+		}
+		pidval = strtol (pidstr, &endptr, 10);
+		if (errno == ERANGE &&
+		    (pidval == LONG_MAX || pidval == LONG_MIN)) {
+			perror ("strtol");
+			exit (1);
+		}
+		if (kill ((pid_t) pidval, SIGTERM) == -1) {
+			perror ("kill");
+			exit (1);
+		}
+
+		if (csh) {
+			printf ("unsetenv %s;\n",
+				P11_KIT_SERVER_ADDRESS_ENV);
+			printf ("unsetenv %s;\n",
+				P11_KIT_SERVER_PID_ENV);
+		} else {
+			printf ("unset %s;\n",
+				P11_KIT_SERVER_ADDRESS_ENV);
+			printf ("unset %s;\n",
+				P11_KIT_SERVER_PID_ENV);
+		}
+		exit (0);
 	}
 
 	if (run_as_gid != -1) {

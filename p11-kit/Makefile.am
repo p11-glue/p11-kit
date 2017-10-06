@@ -208,6 +208,10 @@ check_PROGRAMS += \
 	test-rpc \
 	$(NULL)
 
+if !OS_WIN32
+check_SCRIPTS += p11-kit/test-server.sh
+endif
+
 test_conf_SOURCES = p11-kit/test-conf.c
 test_conf_LDADD = $(p11_kit_LIBS)
 
@@ -306,4 +310,5 @@ mock_five_la_LIBADD = $(mock_one_la_LIBADD)
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/test-mock.c \
+	$(check_SCRIPTS) \
 	$(NULL)
