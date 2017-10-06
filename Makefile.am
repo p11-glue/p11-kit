@@ -17,6 +17,7 @@ AM_CPPFLAGS = \
 bin_PROGRAMS =
 private_PROGRAMS =
 check_PROGRAMS =
+check_SCRIPTS =
 
 CLEANFILES =
 
@@ -31,7 +32,7 @@ noinst_LTLIBRARIES =
 noinst_PROGRAMS =
 noinst_SCRIPTS =
 
-TESTS = $(check_PROGRAMS)
+TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 moduledir = $(p11_module_path)
 module_LTLIBRARIES =
@@ -53,6 +54,9 @@ DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-strict \
 	CFLAGS='-O2'
 
+AM_TESTS_ENVIRONMENT = \
+	abs_top_builddir="$(abs_top_builddir)"; \
+	export abs_top_builddir;
 
 MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet
 
