@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012 Stefan Walter
- * Copyright (c) 2012 Red Hat Inc.
+ * Copyright (c) 2012-2017 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,6 +40,7 @@
 #include "mock.h"
 #include "path.h"
 #include "private.h"
+
 #include "p11-kit.h"
 #include "rpc.h"
 
@@ -87,8 +88,9 @@ setup_remote (void *unused)
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
 	p11_test_file_write (test.user_modules, "init-arg.module", data, strlen (data));
 
-	p11_config_user_modules = test.user_modules;
-	p11_config_user_file = test.user_config;
+	p11_kit_override_system_files (NULL, test.user_config,
+				       NULL, NULL,
+				       test.user_modules);
 }
 
 static void
@@ -239,8 +241,9 @@ setup_remote_unix (void *unused)
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
 	free (data);
 
-	p11_config_user_modules = test.user_modules;
-	p11_config_user_file = test.user_config;
+	p11_kit_override_system_files (NULL, test.user_config,
+				       NULL, NULL,
+				       test.user_modules);
 }
 
 static void
