@@ -1971,6 +1971,9 @@ p11_modules_load_inlock_reentrant (int flags,
  * modules (such as those configured with RPC) cannot be loaded in
  * unmanaged mode, and will be skipped.
  *
+ * If @flags contains the %P11_KIT_MODULE_TRUSTED flag then only the
+ * marked as trusted modules will be loaded.
+ *
  * Use p11_kit_modules_release() to release the modules returned by
  * this function.
  *
@@ -2102,6 +2105,9 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
  *
  * Use p11_kit_modules_finalize_and_release() when you're done with the
  * modules returned by this function.
+ *
+ * The @flags allowed by this function, as well as their meaning, are the
+ * same as with p11_kit_modules_load().
  *
  * Returns: a <literal>NULL</literal> terminated list of modules, or
  * 	<literal>NULL</literal> on failure
