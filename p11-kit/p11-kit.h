@@ -111,6 +111,11 @@ void                   p11_kit_be_loud                      (void);
 
 void                   p11_kit_set_progname                 (const char *progname);
 
+void                   p11_kit_override_system_files        (const char *system_conf,
+                                                             const char *user_conf,
+                                                             const char *package_modules,
+                                                             const char *system_modules,
+						             const char *user_modules);
 #endif
 
 const char *           p11_kit_message                      (void);

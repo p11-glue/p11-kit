@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2008 Stefan Walter
  * Copyright (C) 2011 Collabora Ltd.
+ * Copyright (C) 2017 Red Hat, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -184,6 +185,51 @@ const char *p11_config_user_modules = P11_USER_CONFIG_MODULES;
 /* -----------------------------------------------------------------------------
  * P11-KIT FUNCTIONALITY
  */
+
+/**
+ * p11_kit_override_system_files:
+ * @system_conf: the system configuration file (default: system_config_dir/pkcs11.conf)
+ * @user_conf: the user configuration file (default: ~/.config/pkcs11/pkcs11.conf)
+ * @package_modules: location of modules shipped by p11-kit (default: system_config/modules)
+ * @system_modules: location of system pkcs11 modules (default: system_config/modules)
+ * @user_modules: location of user modules (default: ~/.config/pkcs11/modules)
+ *
+ * Overrides the default system configuration files. The
+ * provided values should be accessible for the lifetime
+ * of p11-kit usage.
+ *
+ * When the value %NULL is provided for any of the locations,
+ * it will not be updated.
+ *
+ * This is function intended to be used in test suites and
+ * not production, and as such %P11_KIT_FUTURE_UNSTABLE_API
+ * must be defined before including p11-kit.h.
+ *
+ * Since: 0.23.10
+ *
+ */
+void
+p11_kit_override_system_files (const char *system_conf,
+                               const char *user_conf,
+                               const char *package_modules,
+                               const char *system_modules,
+                               const char *user_modules)
+{
+	if (system_conf)
+		p11_config_system_file = system_conf;
+
+	if (user_conf)
+		p11_config_user_file = user_conf;
+
+	if (package_modules)
+		p11_config_package_modules = package_modules;
+
+	if (system_modules)
+		p11_config_system_modules = system_modules;
+
+	if (user_modules)
+		p11_config_user_modules = user_modules;
+}
 
 static CK_RV
 create_mutex (CK_VOID_PTR_PTR mut)
