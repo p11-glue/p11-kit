@@ -3,16 +3,16 @@ sudo: required
 language: c
 
 env:
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64"
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 --enable-coverage" COVERAGE=yes
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'"
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SCAN_BUILD="scan-build --status-bugs"
-  - BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine"
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SRCDIR=/srcdir BUILDDIR=/builddir
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 --enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir
+  - BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine" SRCDIR=/srcdir BUILDDIR=/builddir
 
 matrix:
   allow_failures:
-    - env: BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine"
+    - env: BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine" SRCDIR=/srcdir BUILDDIR=/builddir
 
 services:
   - docker
@@ -27,22 +27,24 @@ before_install:
   - docker exec $CONTAINER dnf -y install clang-analyzer
   - docker exec $CONTAINER dnf -y install mingw64-gcc mingw64-libffi mingw64-libtasn1 wine
   - docker exec $CONTAINER useradd user
-  - docker exec $CONTAINER mkdir /builddir
-  - docker exec $CONTAINER chown -R user /builddir
 
 install:
   - docker cp . $CONTAINER:/srcdir
+  - docker exec $CONTAINER cp -R /srcdir /coverage
+  - docker exec $CONTAINER mkdir /builddir
+  - docker exec $CONTAINER chown -R user /builddir
   # FIXME: This is needed because some files are included in distribution
   # and need to be generated in $srcdir rather than $builddir
   - docker exec $CONTAINER chown -R user /srcdir
+  - docker exec $CONTAINER chown -R user /coverage
 
 script:
-  - docker exec $CONTAINER sh -c "cd /srcdir && NOCONFIGURE=1 ./autogen.sh"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && ../srcdir/configure --enable-strict $BUILD_OPTS"
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && $SCAN_BUILD make -j$(nproc) V=1 && make check -j$(nproc) V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
+  - docker exec $CONTAINER sh -c "cd $SRCDIR && NOCONFIGURE=1 ./autogen.sh"
+  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SRCDIR/configure --enable-strict $BUILD_OPTS"
+  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SCAN_BUILD make -j$(nproc) V=1 && make check -j$(nproc) V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
 
 after_failure:
-  - docker exec $CONTAINER su - user sh -c "cd /builddir && cat test-suite.log"
+  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && cat test-suite.log"
 
 after_success:
-  - if test x"$COVERAGE" = xyes; then docker exec $CONTAINER pip install cpp-coveralls; docker exec $CONTAINER su - user sh -c "cd /builddir && coveralls -r /srcdir -b /builddir --gcov-options '\-lp'"; fi
+  - if test x"$COVERAGE" = xyes; then docker exec $CONTAINER pip install cpp-coveralls; docker exec $CONTAINER sh -c "cd $BUILDDIR && coveralls -b $BUILDDIR -E 'test-.*' --gcov-options '\-lp'"; fi
