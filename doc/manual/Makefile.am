@@ -87,6 +87,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	p11-kit-devel.xml \
 	p11-kit-proxy.xml \
 	p11-kit-trust.xml \
+	p11-kit-remoting.xml \
 	p11-kit.xml \
 	pkcs11.conf.xml \
 	trust.xml \
