@@ -1,0 +1,7 @@
+
+module: mock-six.so
+
+enable-in: test-proxy
+
+# the highest priority among others loaded by test-proxy
+priority: 100

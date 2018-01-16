@@ -307,6 +307,13 @@ mock_five_la_SOURCES = p11-kit/mock-module-ep3.c
 mock_five_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_five_la_LIBADD = $(mock_one_la_LIBADD)
 
+if !OS_WIN32
+noinst_LTLIBRARIES += mock-six.la
+mock_six_la_SOURCES = p11-kit/mock-module-ep4.c
+mock_six_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_six_la_LIBADD = $(mock_one_la_LIBADD)
+endif
+
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/test-mock.c \

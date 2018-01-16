@@ -121,6 +121,8 @@ test_initialize_child (void)
 	CK_RV rv;
 	pid_t pid;
 	int st;
+	CK_SLOT_ID slots[32], last_slot;
+	CK_ULONG count, last_count;
 
 	rv = C_GetFunctionList (&proxy);
 	assert (rv == CKR_OK);
@@ -129,6 +131,11 @@ test_initialize_child (void)
 
 	rv = proxy->C_Initialize(NULL);
 	assert_num_eq (rv, CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
+	assert_num_cmp (count, >=, 2);
+	last_slot = slots[count - 1];
+	last_count = count;
 
 	pid = fork ();
 	if (!pid) {
@@ -148,6 +155,17 @@ test_initialize_child (void)
 
 		rv = proxy->C_Initialize(NULL);
 		assert_num_eq (rv, CKR_OK);
+
+		rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
+		assert_num_eq (rv, CKR_OK);
+		assert_num_cmp (count, >=, 2);
+
+		/* One of the module initializations should fail after
+		 * fork (see mock-module-ep4.c) and the total number
+		 * of slots should be less than last_count. */
+		assert_num_cmp (count, <, last_count);
+		/* Check if the last valid slot ID is preserved */
+		assert_num_eq (slots[count - 1], last_slot);
 
 		rv = proxy->C_Finalize (NULL);
 		assert_num_eq (rv, CKR_OK);
