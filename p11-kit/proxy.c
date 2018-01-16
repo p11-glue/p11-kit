@@ -248,12 +248,13 @@ modules_dup (CK_FUNCTION_LIST **modules)
 }
 
 static CK_RV
-proxy_create (Proxy **res)
+proxy_create (Proxy **res, Mapping *mappings, unsigned int n_mappings)
 {
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
+	unsigned int j;
 	CK_RV rv = CKR_OK;
 	Proxy *py;
 
@@ -293,8 +294,14 @@ proxy_create (Proxy **res)
 
 				/* And now add a mapping for each of those slots */
 				for (i = 0; i < count; ++i) {
+					/* Reuse the existing mapping if any */
+					for (j = 0; j < n_mappings; ++j) {
+						if (mappings[j].funcs == funcs &&
+						    mappings[j].real_slot == slots[i])
+							break;
+					}
 					py->mappings[py->n_mappings].funcs = funcs;
-					py->mappings[py->n_mappings].wrap_slot = py->n_mappings + MAPPING_OFFSET;
+					py->mappings[py->n_mappings].wrap_slot = j == n_mappings ? py->n_mappings + MAPPING_OFFSET : mappings[j].wrap_slot;
 					py->mappings[py->n_mappings].real_slot = slots[i];
 					++py->n_mappings;
 				}
@@ -323,6 +330,8 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 {
 	State *state = (State *)self;
 	bool initialize = false;
+	Mapping *mappings = NULL;
+	unsigned int n_mappings = 0;
 	Proxy *py;
 	CK_RV rv;
 
@@ -338,8 +347,15 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 			unsigned call_finalize = 1;
 
 			initialize = true;
-			if (PROXY_FORKED(state->px))
+			if (PROXY_FORKED(state->px)) {
 				call_finalize = 0;
+				if (state->px->mappings) {
+					mappings = state->px->mappings;
+					n_mappings = state->px->n_mappings;
+					state->px->mappings = NULL;
+					state->px->n_mappings = 0;
+				}
+			}
 			proxy_free (state->px, call_finalize);
 
 			state->px = NULL;
@@ -354,7 +370,8 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 		return CKR_OK;
 	}
 
-	rv = proxy_create (&py);
+	rv = proxy_create (&py, mappings, n_mappings);
+	free (mappings);
 	if (rv != CKR_OK) {
 		p11_debug ("out: %lu", rv);
 		return rv;
