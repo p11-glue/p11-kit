@@ -418,7 +418,8 @@ server_loop (Server *server,
 		if (ret == -1 && errno == EINTR)
 			continue;
 
-		if (ret == 0 && children_avail == 0) { /* timeout */
+		/* timeout */
+		if (ret == 0 && children_avail == 0 && timeout != NULL) {
 			p11_message ("no connections to %s for %lu secs, exiting", server->socket_name, timeout->tv_sec);
 			break;
 		}
