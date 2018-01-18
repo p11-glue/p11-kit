@@ -43,6 +43,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "dict.h"
+#include "filter.h"
 #include "library.h"
 #include "log.h"
 #include "message.h"
@@ -53,6 +54,7 @@
 #include "private.h"
 #include "proxy.h"
 #include "rpc.h"
+#include "uri.h"
 #include "virtual.h"
 
 #include <sys/stat.h>
@@ -1887,6 +1889,9 @@ prepare_module_inlock_reentrant (Module *mod,
 	p11_virtual *virt;
 	bool is_managed;
 	bool with_log;
+	const char *allow_tokens;
+	const char *deny_tokens;
+	CK_RV rv = CKR_OK;
 
 	assert (module != NULL);
 
@@ -1909,11 +1914,72 @@ prepare_module_inlock_reentrant (Module *mod,
 		return_val_if_fail (virt != NULL, CKR_HOST_MEMORY);
 		destroyer = managed_free_inlock;
 
-		/* Add the logger if configured */
-		if (p11_log_force || with_log) {
-			virt = p11_log_subclass (virt, destroyer);
-			destroyer = p11_log_release;
+		allow_tokens = module_get_option_inlock (NULL, "allow-tokens");
+		deny_tokens = module_get_option_inlock (NULL, "deny-tokens");
+
+		if (allow_tokens && deny_tokens) {
+			p11_message ("'%s' and '%s' are mutually exclusive",
+				     "allow-tokens", "deny-tokens");
+			rv = CKR_FUNCTION_NOT_SUPPORTED;
 		}
+
+		/* Add the filter if configured */
+		if (rv == CKR_OK && (allow_tokens || deny_tokens)) {
+			char *str, *tok, *saveptr;
+			P11KitUri *uri = NULL;
+
+			virt = p11_filter_subclass (virt, destroyer);
+			if (virt == NULL)
+				rv = CKR_HOST_MEMORY;
+			else
+				destroyer = p11_filter_release;
+
+			if (rv == CKR_OK) {
+				uri = p11_kit_uri_new ();
+				if (uri == NULL)
+					rv = CKR_HOST_MEMORY;
+			}
+
+			if (rv == CKR_OK) {
+				for (str = (char *) allow_tokens; ; str = NULL) {
+					tok = strtok_r (str, ", ", &saveptr);
+					if (tok == NULL)
+						break;
+					if (p11_kit_uri_parse (tok, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
+						p11_message ("skipping unparsable URI '%s'",
+							     tok);
+					} else {
+						p11_filter_allow_token (virt, p11_kit_uri_get_token_info (uri));
+					}
+				}
+
+				for (str = (char *) deny_tokens; ; str = NULL) {
+					tok = strtok_r (str, ", ", &saveptr);
+					if (tok == NULL)
+						break;
+					if (p11_kit_uri_parse (tok, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
+						p11_message ("skipping unparsable URI '%s'",
+							     tok);
+					} else {
+						p11_filter_deny_token (virt, p11_kit_uri_get_token_info (uri));
+					}
+				}
+			}
+
+			p11_kit_uri_free (uri);
+		}
+
+		/* Add the logger if configured */
+		if (rv == CKR_OK && (p11_log_force || with_log)) {
+			virt = p11_log_subclass (virt, destroyer);
+			if (virt == NULL)
+				rv = CKR_HOST_MEMORY;
+			else
+				destroyer = p11_log_release;
+		}
+
+		if (rv != CKR_OK)
+			return rv;
 
 		*module = p11_virtual_wrap (virt, destroyer);
 		if (*module == NULL)
