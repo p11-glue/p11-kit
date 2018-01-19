@@ -40,11 +40,17 @@
 #include "parser.h"
 #include "pkcs11.h"
 
+enum {
+	P11_TOKEN_FLAG_NONE = 0,
+	P11_TOKEN_FLAG_WRITE_PROTECTED = 1 << 0,
+};
+
 typedef struct _p11_token p11_token;
 
 p11_token *     p11_token_new         (CK_SLOT_ID slot,
                                        const char *path,
-                                       const char *label);
+                                       const char *label,
+                                       int flags);
 
 void            p11_token_free        (p11_token *token);
 

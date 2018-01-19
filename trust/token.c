@@ -817,7 +817,8 @@ p11_token_free (p11_token *token)
 p11_token *
 p11_token_new (CK_SLOT_ID slot,
                const char *path,
-               const char *label)
+               const char *label,
+               int flags)
 {
 	p11_token *token;
 
@@ -858,6 +859,12 @@ p11_token_new (CK_SLOT_ID slot,
 	return_val_if_fail (token->label != NULL, NULL);
 
 	token->slot = slot;
+
+	if (flags & P11_TOKEN_FLAG_WRITE_PROTECTED) {
+		token->checked_path = true;
+		token->make_directory = false;
+		token->is_writable = false;
+	}
 
 	load_builtin_objects (token);
 

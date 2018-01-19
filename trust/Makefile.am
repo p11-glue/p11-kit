@@ -46,6 +46,8 @@ module_LTLIBRARIES += \
 	p11-kit-trust.la
 
 p11_kit_trust_la_CFLAGS = \
+	-DP11_DEFAULT_TRUST_PREFIX=DATA_DIR \
+	-DP11_SYSTEM_TRUST_PREFIX=SYSCONFDIR \
 	$(LIBTASN1_CFLAGS)
 
 p11_kit_trust_la_LIBADD = \
@@ -70,6 +72,8 @@ libtrust_testable_la_LDFLAGS = \
 libtrust_testable_la_SOURCES = $(TRUST_SRCS)
 
 libtrust_testable_la_CFLAGS = \
+	-DP11_DEFAULT_TRUST_PREFIX=\"$(builddir)/trust/default\" \
+	-DP11_SYSTEM_TRUST_PREFIX=\"$(builddir)/trust/system\" \
 	$(LIBTASN1_CFLAGS)
 
 libtrust_testable_la_LIBADD = \
@@ -125,7 +129,7 @@ asn:
 # Tests ----------------------------------------------------------------
 
 trust_CFLAGS = \
-        $(LIBTASN1_CFLAGS) \
+        $(libtrust_testable_la_CFLAGS) \
 	$(NULL)
 
 trust_LIBS = \
