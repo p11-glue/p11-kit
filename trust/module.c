@@ -198,10 +198,11 @@ create_tokens_inlock (p11_array *tokens,
 	struct {
 		const char *prefix;
 		const char *label;
+		int flags;
 	} labels[] = {
-		{ "~/", "User Trust" },
-		{ DATA_DIR, "Default Trust" },
-		{ SYSCONFDIR, "System Trust" },
+		{ "~/", "User Trust", P11_TOKEN_FLAG_NONE },
+		{ P11_DEFAULT_TRUST_PREFIX, "Default Trust", P11_TOKEN_FLAG_WRITE_PROTECTED },
+		{ P11_SYSTEM_TRUST_PREFIX, "System Trust", P11_TOKEN_FLAG_NONE },
 		{ NULL },
 	};
 
@@ -210,6 +211,7 @@ create_tokens_inlock (p11_array *tokens,
 	CK_SLOT_ID slot;
 	const char *path;
 	const char *label;
+	int flags;
 	char *alloc;
 	char *remaining;
 	char *base;
@@ -236,12 +238,14 @@ create_tokens_inlock (p11_array *tokens,
 			slot = BASE_SLOT_ID + tokens->num;
 
 			label = NULL;
+			flags = P11_TOKEN_FLAG_NONE;
 			base = NULL;
 
 			/* Claim the various labels based on prefix */
 			for (i = 0; label == NULL && labels[i].prefix != NULL; i++) {
 				if (strncmp (path, labels[i].prefix, strlen (labels[i].prefix)) == 0) {
 					label = labels[i].label;
+					flags = labels[i].flags;
 					labels[i].label = NULL;
 				}
 			}
@@ -252,7 +256,7 @@ create_tokens_inlock (p11_array *tokens,
 				return_val_if_fail (base != NULL, false);
 			}
 
-			token = p11_token_new (slot, path, label);
+			token = p11_token_new (slot, path, label, flags);
 			return_val_if_fail (token != NULL, false);
 
 			if (!p11_array_push (tokens, token))

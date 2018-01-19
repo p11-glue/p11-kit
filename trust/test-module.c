@@ -315,8 +315,8 @@ test_get_token_info (void)
 
 	memset (&args, 0, sizeof (args));
 	args.pReserved = "paths='" \
-		SYSCONFDIR "/trust/input" P11_PATH_SEP \
-		DATA_DIR "/trust/fixtures/blah" P11_PATH_SEP \
+		P11_SYSTEM_TRUST_PREFIX "/trust/input" P11_PATH_SEP \
+		P11_DEFAULT_TRUST_PREFIX "/trust/fixtures/blah" P11_PATH_SEP \
 		"/some/other/path/the-basename'";
 	args.flags = CKF_OS_LOCKING_OK;
 
@@ -1217,6 +1217,68 @@ test_modify_and_write (void)
 	test_check_attrs (expected, parsed->elem[0]);
 }
 
+static void
+test_token_write_protected (void)
+{
+	CK_C_INITIALIZE_ARGS args;
+	CK_FUNCTION_LIST *module;
+	CK_SLOT_ID slots[NUM_SLOTS];
+	CK_TOKEN_INFO info;
+	char label[32];
+	CK_ULONG count;
+	CK_RV rv;
+	int i;
+
+	/* These are the paths passed in in setup() */
+	const char *labels[] = {
+		"System Trust",
+		"Default Trust",
+		"the-basename",
+	};
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&module);
+	assert (rv == CKR_OK);
+
+	memset (&args, 0, sizeof (args));
+	args.pReserved = "paths='" \
+		P11_SYSTEM_TRUST_PREFIX "/trust/input" P11_PATH_SEP \
+		P11_DEFAULT_TRUST_PREFIX "/trust/fixtures/blah" P11_PATH_SEP \
+		"/some/other/path/the-basename'";
+	args.flags = CKF_OS_LOCKING_OK;
+
+	rv = module->C_Initialize (&args);
+	assert (rv == CKR_OK);
+
+	count = NUM_SLOTS;
+	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
+	assert (rv == CKR_OK);
+	assert (count == NUM_SLOTS);
+
+	for (i = 0; i < NUM_SLOTS; i++) {
+		rv = module->C_GetTokenInfo (slots[i], &info);
+		assert_num_eq (CKR_OK, rv);
+
+		memset (label, ' ', sizeof (label));
+		memcpy (label, labels[i], strlen (labels[i]));
+		assert (memcmp (info.label, label, sizeof (label)) == 0);
+
+		switch (i) {
+		case 0:
+			assert_num_cmp (0, ==, info.flags & CKF_WRITE_PROTECTED);
+			break;
+		case 1:
+			assert_num_cmp (0, !=, info.flags & CKF_WRITE_PROTECTED);
+			break;
+		default:
+			break;
+		}
+	}
+
+	rv = module->C_Finalize (NULL);
+	assert_num_eq (CKR_OK, rv);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1256,6 +1318,9 @@ main (int argc,
 	p11_test (test_session_read_only_create, "/module/session-read-only-create");
 	p11_test (test_create_and_write, "/module/create-and-write");
 	p11_test (test_modify_and_write, "/module/modify-and-write");
+
+	p11_fixture (NULL, NULL);
+	p11_test (test_token_write_protected, "/module/token-write-protected");
 
 	return p11_test_run (argc, argv);
 }

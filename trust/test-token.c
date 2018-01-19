@@ -63,7 +63,7 @@ struct {
 static void
 setup (void *path)
 {
-	test.token = p11_token_new (333, path, "Label");
+	test.token = p11_token_new (333, path, "Label", P11_TOKEN_FLAG_NONE);
 	assert_ptr_not_null (test.token);
 
 	test.index = p11_token_index (test.token);
@@ -241,18 +241,18 @@ test_not_writable (void)
 #ifdef OS_UNIX
 	if (getuid () != 0) {
 #endif
-		token = p11_token_new (333, "/", "Label");
+		token = p11_token_new (333, "/", "Label", P11_TOKEN_FLAG_NONE);
 		assert (!p11_token_is_writable (token));
 		p11_token_free (token);
 #ifdef OS_UNIX
 	}
 #endif
 
-	token = p11_token_new (333, "", "Label");
+	token = p11_token_new (333, "", "Label", P11_TOKEN_FLAG_NONE);
 	assert (!p11_token_is_writable (token));
 	p11_token_free (token);
 
-	token = p11_token_new (333, "/non-existant", "Label");
+	token = p11_token_new (333, "/non-existant", "Label", P11_TOKEN_FLAG_NONE);
 	assert (!p11_token_is_writable (token));
 	p11_token_free (token);
 }
@@ -276,7 +276,7 @@ test_writable_no_exist (void)
 	path = p11_path_build (directory, "subdir", NULL);
 	assert (path != NULL);
 
-	token = p11_token_new (333, path, "Label");
+	token = p11_token_new (333, path, "Label", P11_TOKEN_FLAG_NONE);
 	free (path);
 
 	/* A writable directory since parent is writable */
