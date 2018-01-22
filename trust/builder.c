@@ -562,6 +562,7 @@ calc_certificate_category (p11_builder *builder,
                            CK_ULONG *category)
 {
 	CK_ATTRIBUTE *label;
+	CK_ATTRIBUTE *origin;
 	unsigned char *ext;
 	size_t ext_len;
 	bool is_ca = 0;
@@ -603,6 +604,20 @@ calc_certificate_category (p11_builder *builder,
 		*category = 0;
 		return true;
 
+	}
+
+	/*
+	 * If the certificate is loaded from anchors/blacklists locations,
+	 * either CKA_TRUSTED or CKA_X_DISTRUSTED attribute must be set.
+	 * Check that the certificate is CA; otherwise print a warning.
+	 */
+	if (!is_ca &&
+	    (p11_attrs_find_valid (cert, CKA_TRUSTED) ||
+	     p11_attrs_find_valid (cert, CKA_X_DISTRUSTED))) {
+		origin = p11_attrs_find_valid (cert, CKA_X_ORIGIN);
+		p11_message ("%.*s: only CA certificate can be used as trust anchor",
+			     origin ? (int)origin->ulValueLen : 7,
+			     origin ? (char *)origin->pValue : "unknown");
 	}
 
 	*category = is_ca ? 2 : 3;
