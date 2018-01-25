@@ -66,6 +66,9 @@ libp11_kit_la_LIBADD = \
 
 noinst_LTLIBRARIES += \
 	libp11-kit-internal.la \
+	$(NULL)
+
+check_LTLIBRARIES += \
 	libp11-kit-testable.la \
 	$(NULL)
 
@@ -194,7 +197,7 @@ p11_kit_LIBS = \
 	libp11-common.la \
 	$(LTLIBINTL)
 
-check_PROGRAMS += \
+c_tests += \
 	test-progname \
 	test-util \
 	test-conf \
@@ -209,7 +212,7 @@ check_PROGRAMS += \
 	$(NULL)
 
 if !OS_WIN32
-check_SCRIPTS += p11-kit/test-server.sh
+sh_tests += p11-kit/test-server.sh
 endif
 
 test_conf_SOURCES = p11-kit/test-conf.c
@@ -245,7 +248,7 @@ test_uri_LDADD = $(p11_kit_LIBS)
 test_util_SOURCES = p11-kit/test-util.c
 test_util_LDADD = $(p11_kit_LIBS)
 
-noinst_PROGRAMS += \
+check_PROGRAMS += \
 	print-messages \
 	frob-setuid
 
@@ -255,7 +258,7 @@ print_messages_LDADD = $(p11_kit_LIBS)
 frob_setuid_SOURCES = p11-kit/frob-setuid.c
 frob_setuid_LDADD = $(p11_kit_LIBS)
 
-check_PROGRAMS += \
+c_tests += \
 	test-virtual \
 	test-managed \
 	test-log \
@@ -278,7 +281,7 @@ test_transport_LDADD = $(p11_kit_LIBS)
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
 
-noinst_LTLIBRARIES += \
+check_LTLIBRARIES += \
 	mock-one.la \
 	mock-two.la \
 	mock-three.la \
@@ -317,5 +320,5 @@ endif
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/test-mock.c \
-	$(check_SCRIPTS) \
+	p11-kit/test-server.sh \
 	$(NULL)
