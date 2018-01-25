@@ -16,8 +16,9 @@ AM_CPPFLAGS = \
 
 bin_PROGRAMS =
 private_PROGRAMS =
-check_PROGRAMS =
-check_SCRIPTS =
+check_PROGRAMS = $(c_tests)
+check_SCRIPTS = $(sh_tests)
+check_LTLIBRARIES =
 
 CLEANFILES =
 
@@ -32,7 +33,9 @@ noinst_LTLIBRARIES =
 noinst_PROGRAMS =
 noinst_SCRIPTS =
 
-TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
+c_tests =
+sh_tests =
+TESTS = $(c_tests) $(sh_tests)
 
 moduledir = $(p11_module_path)
 module_LTLIBRARIES =

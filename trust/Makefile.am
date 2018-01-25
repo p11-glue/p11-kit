@@ -1,7 +1,11 @@
 
 noinst_LTLIBRARIES += \
+	libtrust-data.la \
+	$(NULL)
+
+check_LTLIBRARIES += \
 	libtrust-testable.la \
-	libtrust-data.la
+	$(NULL)
 
 libtrust_data_la_SOURCES = \
 	trust/asn1.c trust/asn1.h \
@@ -136,7 +140,7 @@ trust_LIBS = \
 	$(HASH_LIBS) \
 	$(NULL)
 
-noinst_LTLIBRARIES += \
+check_LTLIBRARIES += \
 	libtrust-test.la
 
 libtrust_test_la_SOURCES = \
@@ -144,7 +148,7 @@ libtrust_test_la_SOURCES = \
 	trust/digest.c \
 	$(NULL)
 
-check_PROGRAMS += \
+c_tests += \
 	test-digest \
 	test-asn1 \
 	test-base64 \
@@ -233,7 +237,7 @@ test_x509_SOURCES = trust/test-x509.c
 test_x509_LDADD = $(trust_LIBS)
 test_x509_CFLAGS = $(trust_CFLAGS)
 
-noinst_PROGRAMS += \
+check_PROGRAMS += \
 	frob-pow \
 	frob-token \
 	frob-nss-trust \

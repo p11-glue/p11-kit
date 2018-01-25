@@ -7,8 +7,11 @@ inc_HEADERS += \
 noinst_LTLIBRARIES += \
 	libp11-common.la \
 	libp11-library.la \
-	libp11-test.la \
 	libp11-tool.la \
+	$(NULL)
+
+check_LTLIBRARIES += \
+	libp11-test.la \
 	$(NULL)
 
 libp11_common_la_SOURCES = \
@@ -54,7 +57,7 @@ common_LIBS = \
 	libp11-common.la \
 	$(NULL)
 
-check_PROGRAMS += \
+c_tests += \
 	test-tests \
 	test-compat \
 	test-hash \
@@ -109,7 +112,7 @@ test_tests_LDADD = $(common_LIBS)
 test_url_SOURCES = common/test-url.c
 test_url_LDADD = $(common_LIBS)
 
-noinst_PROGRAMS += \
+check_PROGRAMS += \
 	frob-getauxval \
 	frob-getenv \
 	$(NULL)
