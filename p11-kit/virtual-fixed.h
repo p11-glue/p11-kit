@@ -35,9 +35,6 @@
 #ifndef __P11_VIRTUAL_FIXED_H__
 #define __P11_VIRTUAL_FIXED_H__
 
-/* The maximum number of precompiled closures.  */
-#define P11_VIRTUAL_MAX_FIXED 64
-
 #define P11_VIRTUAL_FIXED_FUNCTIONS(fixed_index)	\
 static CK_RV \
 fixed ## fixed_index ## _C_Initialize (CK_VOID_PTR init_args) \

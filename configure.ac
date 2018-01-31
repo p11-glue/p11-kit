@@ -217,6 +217,19 @@ fi
 
 AM_CONDITIONAL(WITH_FFI, test "$with_libffi" = "yes")
 
+AC_ARG_WITH([closures],
+	    [AS_HELP_STRING([--with-closures[=NUM]],
+		            [the number of precompiled closures, used when libffi is unavailable])],
+	    [closures=$withval],
+	    [closures=64])
+
+if test "$closures" -lt 1; then
+	AC_MSG_ERROR([at least one closure must be compiled in])
+fi
+
+AC_DEFINE_UNQUOTED(P11_VIRTUAL_MAX_FIXED, [$closures], [the number of closures])
+AC_SUBST(closures)
+
 # --------------------------------------------------------------------
 # Hash implementation
 
