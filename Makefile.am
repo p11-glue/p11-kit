@@ -20,6 +20,8 @@ check_PROGRAMS = $(c_tests)
 check_SCRIPTS = $(sh_tests)
 check_LTLIBRARIES =
 
+BUILT_SOURCES =
+
 CLEANFILES =
 
 EXTRA_DIST = HACKING
