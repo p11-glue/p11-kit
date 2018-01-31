@@ -102,7 +102,7 @@ test_token_load (void *path)
 	int count;
 
 	count = p11_token_load (test.token);
-	assert_num_eq (6, count);
+	assert_num_eq (8, count);
 
 	/* A certificate and trust object for each parsed object */
 	index = p11_token_index (test.token);

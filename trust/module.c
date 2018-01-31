@@ -45,6 +45,7 @@
 #include "library.h"
 #include "message.h"
 #include "module.h"
+#include "oid.h"
 #include "parser.h"
 #include "path.h"
 #include "pkcs11.h"
@@ -77,6 +78,8 @@ typedef struct _FindObjects {
 	CK_ATTRIBUTE *match;
 	CK_OBJECT_HANDLE *snapshot;
 	CK_ULONG iterator;
+	CK_ATTRIBUTE *public_key;
+	p11_dict *extensions;
 } FindObjects;
 
 static CK_FUNCTION_LIST sys_function_list;
@@ -87,6 +90,7 @@ find_objects_free (void *data)
 	FindObjects *find = data;
 	p11_attrs_free (find->match);
 	free (find->snapshot);
+	p11_dict_free (find->extensions);
 	free (find);
 }
 
@@ -1147,6 +1151,7 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 	char *string;
 	CK_RV rv;
 	int n = 0;
+	CK_OBJECT_CLASS klass;
 
 	if (p11_debugging) {
 		string = p11_attrs_to_string (template, count);
@@ -1190,6 +1195,14 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 				find->iterator = 0;
 				find->snapshot = p11_index_snapshot (indices[0], indices[1], template, count);
 				warn_if_fail (find->snapshot != NULL);
+
+				if (p11_attrs_find_ulong (find->match, CKA_CLASS, &klass) &&
+				    klass == CKO_X_CERTIFICATE_EXTENSION) {
+					find->public_key = p11_attrs_find (find->match, CKA_PUBLIC_KEY_INFO);
+					find->extensions = p11_dict_new (p11_oid_hash,
+									 p11_oid_equal,
+									 free, NULL);
+				}
 			}
 
 			if (!find || !find->snapshot || !find->match)
@@ -1243,10 +1256,10 @@ match_for_broken_nss_serial_number_lookups (CK_ATTRIBUTE *attr,
 
 static bool
 find_objects_match (CK_ATTRIBUTE *attrs,
-                    CK_ATTRIBUTE *match)
+                    FindObjects *find)
 {
 	CK_OBJECT_CLASS klass;
-	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *attr, *match = find->match;
 
 	for (; !p11_attrs_terminator (match); match++) {
 		attr = p11_attrs_find ((CK_ATTRIBUTE *)attrs, match->type);
@@ -1272,6 +1285,29 @@ find_objects_match (CK_ATTRIBUTE *attrs,
 		}
 
 		return false;
+	}
+
+	/*
+	 * WORKAROUND: We keep all objects in the database, while PKIX
+	 * doesn't allow multiple extensions identified by the same
+	 * OID can be attached to a certificate.  Check any duplicate
+	 * and only return the first matching object.
+	 */
+	if (find->public_key &&
+	    p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) &&
+	    klass == CKO_X_CERTIFICATE_EXTENSION) {
+		CK_ATTRIBUTE *oid = p11_attrs_find (attrs, CKA_OBJECT_ID);
+		if (oid) {
+			void *value;
+			if (p11_oid_simple (oid->pValue, oid->ulValueLen) &&
+			    p11_dict_get (find->extensions, oid->pValue)) {
+				p11_debug ("duplicate extension object");
+				return false;
+			}
+			value = memdup (oid->pValue, oid->ulValueLen);
+			return_val_if_fail (value != NULL, false);
+			p11_dict_set (find->extensions, value, value);
+		}
 	}
 
 	return true;
@@ -1317,7 +1353,7 @@ sys_C_FindObjects (CK_SESSION_HANDLE handle,
 				if (attrs == NULL)
 					continue;
 
-				if (find_objects_match (attrs, find->match)) {
+				if (find_objects_match (attrs, find)) {
 					objects[matched] = object;
 					matched++;
 				}
