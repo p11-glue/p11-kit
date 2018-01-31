@@ -1,16 +1,17 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the p11-kit package.
 # 
 # Translators:
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012
+# gogo <trebelnik2@gmail.com>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2015-02-20 21:29+0100\n"
-"PO-Revision-Date: 2013-11-20 10:27+0000\n"
-"Last-Translator: Stef Walter <stefw@gnome.org>\n"
+"POT-Creation-Date: 2018-01-31 16:48+0100\n"
+"PO-Revision-Date: 2017-09-23 18:36+0000\n"
+"Last-Translator: gogo <trebelnik2@gmail.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/freedesktop/p11-kit/language/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,19 +21,19 @@ msgstr ""
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr "Operacija je otkazana"
+msgstr "Operacija je prekinuta"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr "Nema dovoljno memorije"
+msgstr "Nedovoljno memorije"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr "Identifikator navedenog utora nije ispravan"
+msgstr "ID navedenog utora nije ispravan"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr "Interna greška"
+msgstr "Unutrašnja greška"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
@@ -76,11 +77,11 @@ msgstr "Podaci su predugački"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr "Došlo je do pogreške na uređaju"
+msgstr "Došlo je do greške na uređaju"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Nema dovoljno memorije na uređaju"
+msgstr "Nedovoljno memorije na uređaju"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
@@ -88,11 +89,11 @@ msgstr "Uređaj je uklonjen"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr "Kriptirani podaci nisu prepoznati ili nisu ispravni"
+msgstr "Šifrirani podaci nisu prepoznati ili nisu ispravni"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr "Kriptirani podaci su predugački"
+msgstr "Šifrirani podaci su predugački"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
@@ -124,7 +125,7 @@ msgstr "Potreban je ključ"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "Ne mogu uključiti ključ u kontrolnu sumu"
+msgstr "Nemoguće uključiti ključ u kontrolnu sumu"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
@@ -136,15 +137,15 @@ msgstr "Sadržaj ključa se ne može prelomiti u više redaka"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr "Ne mogu izvesti ključ"
+msgstr "Nemoguć izvoz ovog ključa"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "Mehanizam kriptiranja nije prepoznat ili nije ispravan"
+msgstr "Mehanizam šifriranja nije prepoznat ili nije ispravan"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr "Mehanizam kriptiranja ima neispravan argument"
+msgstr "Mehanizam šifriranja ima neispravan argument"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
@@ -180,31 +181,31 @@ msgstr "Lozinka ili PIN su zaključani"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr "Sjednica je zatvorena"
+msgstr "Sesija je zatvorena"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr "Previše sjednica je aktivno"
+msgstr "Previše sesija je aktivno"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr "Sjednica nije ispravna"
+msgstr "Sesija nije ispravna"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr "Sjednica je samo za čitanje"
+msgstr "Sesija je samo za čitanje"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr "Postoji otvorena sjednica"
+msgstr "Postoji otvorena sesija"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr "Postoji sjednica samo za čitanje"
+msgstr "Postoji sesija samo za čitanje"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr "Postoji administratorska sjednica"
+msgstr "Postoji administratorska sesija"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
@@ -216,7 +217,7 @@ msgstr "Potpis nije prepoznat ili je oštećen"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr "Nedostaju neka nužna polja"
+msgstr "Nedostaju neka neophodna polja"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
@@ -236,15 +237,15 @@ msgstr "Uređaj ima zaštitu pisanja"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr "Ne mogu uvesti zbog neispravnog ključa"
+msgstr "Nemoguć uvoz zbog neispravnog ključa"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr "Ne mogu uvesti zbog ključa pogrešne veličine"
+msgstr "Nemoguć uvoz zbog ključa pogrešne veličine"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr "Ne mogu uvesti zbog ključa pogrešne vrste"
+msgstr "Nemoguć uvoz zbog ključa pogrešne vrste"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
@@ -272,27 +273,27 @@ msgstr "Prijavljeno je previše korisnika različitih vrsta"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr "Ne mogu uvesti neispravan ključ"
+msgstr "Nemoguć uvoz neispravanog ključa"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "Ne mogu uvesti ključ pogrešne veličine"
+msgstr "Nemoguć uvoz ključa pogrešne veličine"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr "Ne mogu izvesti neispravan ključ"
+msgstr "Nemoguć izvoz neispravnog ključa"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Ne mogu izvesti ključ pogrešne veličine"
+msgstr "Nemoguć izvoz ključa pogrešne veličine"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr "Ne mogu izvesti ključ pogrešne vrste"
+msgstr "Nemoguć izvoz ključa pogrešne vrste"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr "Ne mogu inicijalizirati generator slučajnih brojeva"
+msgstr "Nemoguće pokretanje generatora slučajnih brojeva"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
@@ -300,11 +301,11 @@ msgstr "Nema dostupnih generatora slučajnih brojeva"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr "Mehanizam kriptiranja ima neispravan parametar"
+msgstr "Mehanizam šifriranja ima neispravan parametar"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr "Nema dovoljno prostora za spremanje rezultata"
+msgstr "Nedovoljno prostora za spremanje rezultata"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
@@ -320,15 +321,15 @@ msgstr "Stanje se ne može spremiti"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr "Modul nije inicijaliziran"
+msgstr "Modul nije pokrenut"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr "Modul je već inicijaliziran"
+msgstr "Modul je već pokrenut"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr "Ne mogu zaključati podatke"
+msgstr "Nemoguće zaključavanje podataka"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
@@ -336,7 +337,7 @@ msgstr "Podaci se ne mogu zaključati"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Zahtjev je odbacio korisnik"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"

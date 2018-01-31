@@ -1,6 +1,6 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the p11-kit package.
 # 
 # Translators:
 # Luca Ferretti <elle.uca@libero.it>, 2012
@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2015-02-20 21:29+0100\n"
-"PO-Revision-Date: 2013-11-20 10:27+0000\n"
+"POT-Creation-Date: 2018-01-31 16:48+0100\n"
+"PO-Revision-Date: 2017-09-19 12:31+0000\n"
 "Last-Translator: Milo Casagrande <milo@ubuntu.com>\n"
 "Language-Team: Italian (http://www.transifex.com/freedesktop/p11-kit/language/it/)\n"
 "MIME-Version: 1.0\n"

@@ -1,22 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the p11-kit package.
 # 
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2012-2013
+# Piotr Drąg <piotrdrag@gmail.com>, 2012-2013,2016
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2015-02-20 21:29+0100\n"
-"PO-Revision-Date: 2013-11-20 10:27+0000\n"
+"POT-Creation-Date: 2018-01-31 16:48+0100\n"
+"PO-Revision-Date: 2017-09-19 11:46+0000\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/freedesktop/p11-kit/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pl\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -24,7 +24,7 @@ msgstr "Anulowano działanie"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr "Brak wystarczającej ilości pamięci"
+msgstr "Za mało dostępnej pamięci"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
@@ -56,7 +56,7 @@ msgstr "Pole jest tylko do odczytu"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr "Pole jest prywatne i nie może zostać ujawnione"
+msgstr "Pole jest prywatne i nie może zostać ujawnione"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
@@ -80,7 +80,7 @@ msgstr "Wystąpił błąd na urządzeniu"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Dostępna jest niewystarczająca ilość pamięci na urządzeniu"
+msgstr "Za mało pamięci dostępnej na urządzeniu"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
@@ -124,7 +124,7 @@ msgstr "Wymagany jest klucz"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "Nie można dołączyć klucza w wyciągu"
+msgstr "Nie można dołączyć klucza w wyciągu"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
@@ -144,7 +144,7 @@ msgstr "Mechanizm kryptograficzny jest nieprawidłowy lub nierozpoznany"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr "Mechanizm kryptograficzny posiada nieprawidłowy parametr"
+msgstr "Mechanizm kryptograficzny ma nieprawidłowy parametr"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
@@ -276,7 +276,7 @@ msgstr "Nie można zaimportować nieprawidłowego klucza"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "Nie można zaimportować klucza o błędnym rozmiarze"
+msgstr "Nie można zaimportować klucza o błędnym rozmiarze"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
@@ -300,11 +300,11 @@ msgstr "Brak dostępnych generatorów liczb losowych"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr "Mechanizm kryptograficzny posiada nieprawidłowy parametr"
+msgstr "Mechanizm kryptograficzny ma nieprawidłowy parametr"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr "Brak wystarczającej ilości miejsca, by przechować wynik"
+msgstr "Za mało miejsca, aby przechować wynik"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
@@ -312,7 +312,7 @@ msgstr "Zapisany stan jest nieprawidłowy"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr "Informacja jest prywatna i nie może zostać ujawniona"
+msgstr "Informacja jest prywatna i nie może zostać ujawniona"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
