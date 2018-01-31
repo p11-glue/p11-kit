@@ -1,16 +1,17 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the p11-kit package.
 # 
 # Translators:
 # Jozef Mlích <xmlich02@stud.fit.vutbr.cz>, 2015
+# Marek Černocký <marek@manet.cz>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2015-02-20 21:29+0100\n"
-"PO-Revision-Date: 2015-07-07 06:46+0000\n"
-"Last-Translator: Jozef Mlích <xmlich02@stud.fit.vutbr.cz>\n"
+"POT-Creation-Date: 2018-01-31 16:48+0100\n"
+"PO-Revision-Date: 2017-09-19 13:59+0000\n"
+"Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech (http://www.transifex.com/freedesktop/p11-kit/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -28,7 +29,7 @@ msgstr "Není k dispozici dostatek paměti"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "Zadané ID slotu není platné"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
@@ -40,11 +41,11 @@ msgstr "Operace selhala"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Neplatné argumenty"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr "Modul nemůže vytvořit požadované vlákna"
+msgstr "Modul nemůže vytvořit požadovaná vlákna"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
@@ -64,11 +65,11 @@ msgstr "Pole je neplatné nebo neexistuje"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr "Nesprávná hodnota pole"
+msgstr "Neplatná hodnota pro pole"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr "Data nejsou platné nebo rozpoznané"
+msgstr "Data nejsou platná nebo rozpoznaná"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
@@ -80,11 +81,11 @@ msgstr "Nastala chyba na zařízení"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Na zařízení není k dispozici dostak paměti"
+msgstr "Na zařízení není k dispozici dostatek paměti"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr "Zařízení bylo odstraněno nebo odpojeno"
+msgstr "Zařízení bylo odebráno nebo odpojeno"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
@@ -92,7 +93,7 @@ msgstr "Šifrovaná data nejsou platná nebo rozpoznaná"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr "Šifrované data jsou příliš dlouhé"
+msgstr "Šifrované data jsou příliš dlouhá"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
@@ -104,11 +105,11 @@ msgstr "Klíč chybí nebo je neplatný"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr "Klíč má chybnou velikost"
+msgstr "Klíč má nesprávnou velikost"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr "Klíč má chybný typ"
+msgstr "Klíč má nesprávný typ"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
@@ -120,11 +121,11 @@ msgstr "Klíč je jiný než byl před tím"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr "Je požadován klíč"
+msgstr "Je zapotřebí klíč"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Klíč nelze zahrnout do otisku"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
@@ -132,7 +133,7 @@ msgstr "S tímto klíčem nelze operaci dokončit"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Klíč nelze obalit"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
@@ -140,11 +141,11 @@ msgstr "Tento klíč nelze exportovat"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "Šiforvací mechanizmus je neplatný nebo nerozpoznaný"
+msgstr "Šifrovací mechanizmus je neplatný nebo nerozpoznaný"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr "Šiforvací mechanizmus má neplatný argument"
+msgstr "Šifrovací mechanizmus má neplatný argument"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
@@ -152,11 +153,11 @@ msgstr "Objekt chybí nebo je neplatný"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "Již probíhá jiná operace"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "Neprobíhá žádná operace"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
@@ -180,35 +181,35 @@ msgstr "Heslo nebo PIN jsou uzamčeny"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Sezení je uzavřené"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "Je aktivních příliš mnoho sezení"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Sezení je neplatné"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Sezení je pouze ke čtení"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Existuje otevřené sezení"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Existuje sezení pouze ke čtení"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Existuje sezení správce"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr "Podpis je špatný nebo poškozený"
+msgstr "Podpis je chybný nebo poškozený"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
@@ -216,15 +217,15 @@ msgstr "Podpis nelze rozpoznat nebo je poškozený"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr "Některé požadované pole chybí"
+msgstr "Některá požadovaná pole chybí"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr "Některé pole mají neplatné hodnoty"
+msgstr "Některá pole mají neplatné hodnoty"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr "Zařízení není přítomno nebo je odpojeno"
+msgstr "Zařízení není přítomno nebo je odpojené"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
@@ -240,15 +241,15 @@ msgstr "Není možné importovat z důvodu neplatného klíče"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr "Není možné importovat z důvodu chybné velikosti klíče"
+msgstr "Není možné importovat z důvodu nesprávné velikosti klíče"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr "Není možné importovat z důvodu chybného typu klíče"
+msgstr "Není možné importovat z důvodu nesprávného typu klíče"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr "Už jste příhlášen"
+msgstr "Už jste přihlášen"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
@@ -256,7 +257,7 @@ msgstr "Není přihlášený žádný uživatel"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr "Uživatelovo heslo nebo PIN není nastavený"
+msgstr "Uživatelovo heslo nebo PIN nejsou nastaveny"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
@@ -264,7 +265,7 @@ msgstr "Neplatný typ uživatele"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr "Už je příhlášený jiný uživatel"
+msgstr "Už je přihlášen jiný uživatel"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
@@ -276,15 +277,15 @@ msgstr "Neplatný klíč nelze importovat"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "Nelze importovat klíč o chybné velikosti"
+msgstr "Nelze importovat klíč o nesprávné velikosti"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr "Nelze exportovat, protože klíč není platný"
+msgstr "Nelze exportovat, protože klíč je neplatný"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Nelze exportovat, protože klíč má chybnou velikost"
+msgstr "Nelze exportovat, protože klíč má nesprávnou velikost"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
@@ -300,7 +301,7 @@ msgstr "Není k dispozici žádný generátor náhodných čísel"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr "Šiforvací mechanizmus má neplatný parametr"
+msgstr "Šifrovací mechanizmus má neplatný parametr"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
@@ -336,7 +337,7 @@ msgstr "Data nemůžou být zamknutá"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr "Požadavek byl uživatelem zamítnut"
+msgstr "Požadavek byl zamítnut uživatelem"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
