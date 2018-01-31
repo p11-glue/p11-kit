@@ -55,12 +55,8 @@ test-driver
 local
 x86_64-w64-mingw32
 
-/*/tests/test-*
-!/*/tests/test-*.[ch]
-!/*/tests/test-*.in
-/*/tests/frob-*
-!/*/tests/frob-*.[ch]
-!/*/tests/frob-*.in
+/test-*
+/frob-*
 
 /x86_64_w64-mingw32/
 
@@ -74,8 +70,6 @@ x86_64-w64-mingw32
 /build/po/
 /build/trust/
 /local
-
-/common/tests/hash-test
 
 /doc/manual/html
 /doc/manual/p11-kit-decl-list.txt
@@ -105,6 +99,10 @@ x86_64-w64-mingw32
 /p11-kit/p11-kit-remote@.service
 /p11-kit/virtual-fixed.c
 
+/p11-kit-remote
+/p11-kit-server
+/print-messages
+
 /po/POTFILES
 /po/stamp-po
 /po/remove-potcdate.sed
@@ -114,18 +112,8 @@ x86_64-w64-mingw32
 /po/en@quot*
 /po/Rules-quot
 
-/p11-kit/tests/p11-test
-/p11-kit/tests/pin-test
-/p11-kit/tests/print-messages
-/p11-kit/tests/print-progname
-/p11-kit/tests/progname-test
-/p11-kit/tests/conf-test
-/p11-kit/tests/uri-test
-
-/tools/p11-kit
-
 /trust/trust
 /trust/trust-extract-compat
-/trust/p11-kit-extract-trust
+/trust/test-extract
 
 /p11-kit-?.?
