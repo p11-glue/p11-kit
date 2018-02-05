@@ -35,6 +35,7 @@
 
 #include "config.h"
 
+#include "conf.h"
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
 #include "filter.h"
@@ -2163,6 +2164,7 @@ p11_kit_remote_serve_tokens (const char **tokens,
 
 	for (i = 0; i < n_tokens; i++) {
 		CK_TOKEN_INFO *token;
+		const char *write_protected;
 
 		uri = p11_kit_uri_new ();
 		if (uri == NULL)
@@ -2175,6 +2177,16 @@ p11_kit_remote_serve_tokens (const char **tokens,
 		}
 
 		token = p11_kit_uri_get_token_info (uri);
+
+		/* Reflect "write-protected" setting in the URI */
+		write_protected =
+			p11_kit_uri_get_vendor_query (uri, "write-protected");
+		if (write_protected &&
+		    _p11_conf_parse_boolean (write_protected, false))
+			token->flags |= CKF_WRITE_PROTECTED;
+		else
+			token->flags &= ~CKF_WRITE_PROTECTED;
+
 		p11_filter_allow_token (filter, token);
 		p11_kit_uri_free (uri);
 	}
