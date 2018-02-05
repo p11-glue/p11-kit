@@ -56,13 +56,18 @@
 #include <stdarg.h>
 
 typedef struct {
+	CK_SLOT_ID slot;
+	const CK_TOKEN_INFO *token;
+} FilterSlot;
+
+typedef struct {
 	p11_virtual virt;
 	CK_X_FUNCTION_LIST *lower;
 	p11_destroyer destroyer;
 	p11_array *entries;
 	bool allowed;
 	bool initialized;
-	CK_SLOT_ID *slots;
+	FilterSlot *slots;
 	CK_ULONG n_slots;
 	CK_ULONG max_slots;
 } FilterData;
@@ -70,7 +75,7 @@ typedef struct {
 extern int p11_match_uri_token_info (CK_TOKEN_INFO_PTR one,
 				     CK_TOKEN_INFO_PTR two);
 
-static bool
+static const CK_TOKEN_INFO *
 filter_match_token (FilterData *filter, CK_TOKEN_INFO *token)
 {
 	unsigned int i;
@@ -81,23 +86,25 @@ filter_match_token (FilterData *filter, CK_TOKEN_INFO *token)
 
 		if ((filter->allowed && matched) ||
 		    (!filter->allowed && !matched))
-			return true;
+			return entry;
 	}
 
-	return false;
+	return NULL;
 }
 
 static bool
-filter_add_slot (FilterData *filter, CK_SLOT_ID slot)
+filter_add_slot (FilterData *filter, CK_SLOT_ID slot, const CK_TOKEN_INFO *token)
 {
 	if (filter->n_slots >= filter->max_slots) {
 		filter->max_slots = filter->max_slots * 2 + 1;
 		filter->slots = realloc (filter->slots,
-					 filter->max_slots * sizeof (CK_SLOT_ID));
+					 filter->max_slots * sizeof (FilterSlot));
 		if (filter->slots == NULL)
 			return false;
 	}
-	filter->slots[filter->n_slots++] = slot;
+	filter->slots[filter->n_slots].slot = slot;
+	filter->slots[filter->n_slots].token = token;
+	filter->n_slots++;
 	return true;
 }
 
@@ -132,13 +139,15 @@ filter_ensure (FilterData *filter)
 	p11_kit_iter_begin_with (iter, lower, 0, CK_INVALID_HANDLE);
 	while (p11_kit_iter_next (iter) == CKR_OK) {
 		CK_TOKEN_INFO *token;
+		const CK_TOKEN_INFO *match;
 
 		token = p11_kit_iter_get_token (iter);
-		if (filter_match_token (filter, token)) {
+		match = filter_match_token (filter, token);
+		if (match) {
 			CK_SLOT_ID slot;
 
 			slot = p11_kit_iter_get_slot (iter);
-			if (!filter_add_slot (filter, slot)) {
+			if (!filter_add_slot (filter, slot, match)) {
 				rv = CKR_HOST_MEMORY;
 				goto out;
 			}
@@ -232,7 +241,7 @@ filter_C_GetSlotInfo (CK_X_FUNCTION_LIST *self,
 	if (slotID >= filter->n_slots)
 		return CKR_SLOT_ID_INVALID;
 
-	return filter->lower->C_GetSlotInfo (filter->lower, filter->slots[slotID], pInfo);
+	return filter->lower->C_GetSlotInfo (filter->lower, filter->slots[slotID].slot, pInfo);
 }
 
 static CK_RV
@@ -245,7 +254,7 @@ filter_C_GetTokenInfo (CK_X_FUNCTION_LIST *self,
 	if (slotID >= filter->n_slots)
 		return CKR_SLOT_ID_INVALID;
 
-	return filter->lower->C_GetTokenInfo (filter->lower, filter->slots[slotID], pInfo);
+	return filter->lower->C_GetTokenInfo (filter->lower, filter->slots[slotID].slot, pInfo);
 }
 
 static CK_RV
@@ -260,7 +269,7 @@ filter_C_GetMechanismList (CK_X_FUNCTION_LIST *self,
 		return CKR_SLOT_ID_INVALID;
 
 	return filter->lower->C_GetMechanismList (filter->lower,
-						  filter->slots[slotID],
+						  filter->slots[slotID].slot,
 						  pMechanismList,
 						  pulCount);
 }
@@ -277,7 +286,7 @@ filter_C_GetMechanismInfo (CK_X_FUNCTION_LIST *self,
 		return CKR_SLOT_ID_INVALID;
 
 	return filter->lower->C_GetMechanismInfo (filter->lower,
-						  filter->slots[slotID],
+						  filter->slots[slotID].slot,
 						  type,
 						  pInfo);
 }
@@ -294,7 +303,10 @@ filter_C_InitToken (CK_X_FUNCTION_LIST *self,
 	if (slotID >= filter->n_slots)
 		return CKR_SLOT_ID_INVALID;
 
-	return filter->lower->C_InitToken (filter->lower, filter->slots[slotID],
+	if (filter->slots[slotID].token->flags & CKF_WRITE_PROTECTED)
+		return CKR_TOKEN_WRITE_PROTECTED;
+
+	return filter->lower->C_InitToken (filter->lower, filter->slots[slotID].slot,
 					   pPin, ulPinLen, pLabel);
 }
 
@@ -320,8 +332,12 @@ filter_C_OpenSession (CK_X_FUNCTION_LIST *self,
 	if (slotID >= filter->n_slots)
 		return CKR_SLOT_ID_INVALID;
 
+	if ((flags & CKF_RW_SESSION) &&
+	    (filter->slots[slotID].token->flags & CKF_WRITE_PROTECTED))
+		return CKR_TOKEN_WRITE_PROTECTED;
+
 	return filter->lower->C_OpenSession (filter->lower,
-					     filter->slots[slotID], flags,
+					     filter->slots[slotID].slot, flags,
 					     pApplication, Notify,
 					     phSession);
 }
@@ -336,7 +352,7 @@ filter_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 		return CKR_SLOT_ID_INVALID;
 
 	return filter->lower->C_CloseAllSessions (filter->lower,
-						  filter->slots[slotID]);
+						  filter->slots[slotID].slot);
 }
 
 void
