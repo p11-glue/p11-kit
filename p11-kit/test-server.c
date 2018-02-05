@@ -184,6 +184,35 @@ test_open_session (void *unused)
 	p11_kit_module_release (module);
 }
 
+static void
+test_open_session_write_protected (void *unused)
+{
+	CK_SESSION_HANDLE session;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SLOT_ID slots[32];
+	CK_ULONG count;
+	CK_RV rv;
+
+	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	assert (module != NULL);
+
+	rv = p11_kit_module_initialize (module);
+	assert (rv == CKR_OK);
+
+	count = 32;
+	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
+	assert (rv == CKR_OK);
+	assert_num_eq (1, count);
+
+	rv = module->C_OpenSession (slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
+	assert (rv == CKR_TOKEN_WRITE_PROTECTED);
+
+	rv = p11_kit_module_finalize (module);
+	assert (rv == CKR_OK);
+
+	p11_kit_module_release (module);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -194,6 +223,7 @@ main (int argc,
 	p11_fixture (setup_server, teardown_server);
 	p11_testx (test_initialize, (void *)"pkcs11:", "/server/initialize");
 	p11_testx (test_open_session, (void *)"pkcs11:", "/server/open-session");
+	p11_testx (test_open_session_write_protected, (void *)"pkcs11:?write-protected=yes", "/server/open-session-write-protected");
 
 	return p11_test_run (argc, argv);
 }
