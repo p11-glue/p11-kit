@@ -134,7 +134,7 @@ $ p11-kit remote pkcs11:token1 pkcs11:token2 ...
   <para>
     Please send bug reports to either the distribution bug tracker
     or the upstream bug tracker at
-    <ulink url="https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit">https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue&amp;component=p11-kit</ulink>.
+    <ulink url="https://github.com/p11-glue/p11-kit/issues/">https://github.com/p11-glue/p11-kit/issues/</ulink>.
   </para>
 </refsect1>
 
@@ -145,7 +145,7 @@ $ p11-kit remote pkcs11:token1 pkcs11:token2 ...
     </simplelist>
     <para>
     Further details available in the p11-kit online documentation at
-    <ulink url="http://p11-glue.freedesktop.org/doc/p11-kit/">http://p11-glue.freedesktop.org/doc/p11-kit/</ulink>.
+    <ulink url="https://p11-glue.github.io/p11-glue/p11-kit/manual/">https://p11-glue.github.io/p11-glue/p11-kit/manual/</ulink>.
   </para>
 </refsect1>
 
