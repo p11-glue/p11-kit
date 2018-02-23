@@ -257,6 +257,11 @@ proxy_create (Proxy **res, Mapping *mappings, unsigned int n_mappings)
 	unsigned int j;
 	CK_RV rv = CKR_OK;
 	Proxy *py;
+	const char *envvar;
+
+	envvar = secure_getenv ("P11_KIT_PROXY_CONFIG");
+	if (envvar && *envvar != '\0')
+		p11_kit_override_system_files (envvar, NULL, NULL, NULL, NULL);
 
 	py = calloc (1, sizeof (Proxy));
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);

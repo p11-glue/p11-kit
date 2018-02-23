@@ -462,6 +462,54 @@ test_config_option (void)
 	finalize_and_free_modules (modules);
 }
 
+static void
+test_filter_tokens (void)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+	CK_FUNCTION_LIST_PTR module;
+	CK_ULONG count;
+	CK_RV rv;
+
+	modules = initialize_and_get_modules ();
+	module = lookup_module_with_name (modules, "four");
+	assert (module != NULL);
+	count = 32;
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (1, count);
+	finalize_and_free_modules (modules);
+
+	p11_kit_override_system_files (SRCDIR "/p11-kit/fixtures/test-system-deny-tokens.conf",
+				       NULL,
+				       NULL,
+				       NULL,
+				       NULL);
+
+	modules = initialize_and_get_modules ();
+	module = lookup_module_with_name (modules, "four");
+	assert (module != NULL);
+	count = 32;
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (0, count);
+	finalize_and_free_modules (modules);
+
+	p11_kit_override_system_files (SRCDIR "/p11-kit/fixtures/test-system-allow-tokens.conf",
+				       NULL,
+				       NULL,
+				       NULL,
+				       NULL);
+
+	modules = initialize_and_get_modules ();
+	module = lookup_module_with_name (modules, "four");
+	assert (module != NULL);
+	count = 32;
+	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (1, count);
+	finalize_and_free_modules (modules);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -480,6 +528,7 @@ main (int argc,
 	p11_test (test_config_option, "/modules/test_config_option");
 	p11_test (test_module_trusted_only, "/modules/trusted-only");
 	p11_test (test_module_trust_flags, "/modules/trust-flags");
+	p11_test (test_filter_tokens, "/modules/test_filter_tokens");
 
 	p11_kit_be_quiet ();
 
