@@ -246,6 +246,7 @@ c_tests += \
 	$(NULL)
 
 if !OS_WIN32
+c_tests += test-server
 sh_tests += p11-kit/test-server.sh
 endif
 
@@ -275,6 +276,9 @@ test_proxy_LDADD = $(p11_kit_LIBS)
 
 test_rpc_SOURCES = p11-kit/test-rpc.c
 test_rpc_LDADD = $(p11_kit_LIBS)
+
+test_server_SOURCES = p11-kit/test-server.c
+test_server_LDADD = $(p11_kit_LIBS)
 
 test_uri_SOURCES = p11-kit/test-uri.c
 test_uri_LDADD = $(p11_kit_LIBS)
