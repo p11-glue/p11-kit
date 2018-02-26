@@ -5,8 +5,8 @@ language: c
 env:
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SRCDIR=/srcdir BUILDDIR=/builddir
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 --enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir
-  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lasan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir PRELOAD_CMD='ls -1 /usr/lib64/libasan.so.* | head -1' LSAN_OPTIONS='suppressions=/srcdir/build/lsan.supp'
+  - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64 CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lubsan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir
   - BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" TESTS_ENVIRONMENT="wine" SRCDIR=/srcdir BUILDDIR=/builddir
 
@@ -41,7 +41,11 @@ install:
 script:
   - docker exec $CONTAINER sh -c "cd $SRCDIR && NOCONFIGURE=1 ./autogen.sh"
   - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SRCDIR/configure --enable-strict $BUILD_OPTS"
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SCAN_BUILD make -j$(nproc) V=1 && make check -j$(nproc) V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
+  - |
+      if test -n "$PRELOAD_CMD"; then
+        P11_KIT_TEST_LD_PRELOAD=$(docker exec $CONTAINER su - user sh -c "$PRELOAD_CMD")
+      fi
+  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SCAN_BUILD make -j$(nproc) V=1 && P11_KIT_DEBUG=all LSAN_OPTIONS="$LSAN_OPTIONS" P11_KIT_TEST_LD_PRELOAD=\"$P11_KIT_TEST_LD_PRELOAD\" make check -j$(nproc) V=1 TESTS_ENVIRONMENT=\"$TESTS_ENVIRONMENT\""
 
 after_failure:
   - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && cat test-suite.log"
