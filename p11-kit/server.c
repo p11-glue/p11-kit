@@ -321,6 +321,36 @@ check_credentials (int fd,
 	return true;
 }
 
+static bool
+print_environment (pid_t pid, const char *socket_path, bool csh)
+{
+	char *path, *address;
+	int rc;
+
+	path = p11_path_encode (socket_path);
+	rc = asprintf (&address, "unix:path=%s", path);
+	free (path);
+	if (rc < 0)
+		return false;
+	if (csh) {
+		printf ("setenv %s %s;\n",
+			P11_KIT_SERVER_ADDRESS_ENV,
+			address);
+		printf ("setenv %s %d;\n",
+			P11_KIT_SERVER_PID_ENV,
+			pid);
+	} else {
+		printf ("%s=%s; export %s;\n",
+			P11_KIT_SERVER_ADDRESS_ENV, address,
+			P11_KIT_SERVER_ADDRESS_ENV);
+		printf ("%s=%d; export %s;\n",
+			P11_KIT_SERVER_PID_ENV, pid,
+			P11_KIT_SERVER_PID_ENV);
+	}
+	free (address);
+	return true;
+}
+
 static int
 server_loop (Server *server,
 	     bool foreground,
@@ -363,29 +393,8 @@ server_loop (Server *server,
 			close (STDOUT_FILENO);
 		}
 		if (pid != 0) {
-			char *path, *address;
-
-			path = p11_path_encode (server->socket_name);
-			rc = asprintf (&address, "unix:path=%s", path);
-			free (path);
-			if (rc < 0)
+			if (!print_environment (pid, server->socket_name, csh))
 				return 1;
-			if (csh) {
-				printf ("setenv %s %s;\n",
-					P11_KIT_SERVER_ADDRESS_ENV,
-					address);
-				printf ("setenv %s %d;\n",
-					P11_KIT_SERVER_PID_ENV,
-					pid);
-			} else {
-				printf ("%s=%s; export %s;\n",
-					P11_KIT_SERVER_ADDRESS_ENV, address,
-					P11_KIT_SERVER_ADDRESS_ENV);
-				printf ("%s=%d; export %s;\n",
-					P11_KIT_SERVER_PID_ENV, pid,
-					P11_KIT_SERVER_PID_ENV);
-			}
-			free (address);
 			exit (0);
 		}
 		if (setsid () == -1) {
@@ -401,6 +410,14 @@ server_loop (Server *server,
 	}
 
 	sigprocmask (SIG_BLOCK, &blockset, NULL);
+
+	/* for testing purposes, even when started in foreground,
+	 * print the envvars */
+	if (foreground) {
+		if (!print_environment (getpid (), server->socket_name, csh))
+			return 1;
+		fflush (stdout);
+	}
 
 	/* accept connections */
 	ret = 0;
