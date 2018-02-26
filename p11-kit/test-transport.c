@@ -180,6 +180,7 @@ launch_server (void)
 
 	assert (FD_ISSET (fd, &fds));
 
+	sa_len = sizeof (sa);
 	nfd = accept (fd, (struct sockaddr *)&sa, &sa_len);
 	assert_num_cmp (rc, !=, -1);
 	close (fd);
