@@ -132,6 +132,7 @@ test_initialize_child (void)
 	rv = proxy->C_Initialize(NULL);
 	assert_num_eq (rv, CKR_OK);
 
+	count = 32;
 	rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
 	assert_num_cmp (count, >=, 2);
 	last_slot = slots[count - 1];
