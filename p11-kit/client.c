@@ -186,14 +186,19 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 		state->rpc = p11_rpc_transport_new (&state->virt,
 						    address,
 						    "client");
-		if (!state->rpc)
+		if (!state->rpc) {
+			free (state);
 			rv = CKR_GENERAL_ERROR;
+		}
 	}
 
 	if (rv == CKR_OK) {
-		module = p11_virtual_wrap (&state->virt, free);
-		if (!module)
+		module = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
+		if (!module) {
+			p11_rpc_transport_free (state->rpc);
+			free (state);
 			rv = CKR_GENERAL_ERROR;
+		}
 	}
 
 	if (rv == CKR_OK) {
@@ -222,5 +227,6 @@ p11_client_module_cleanup (void)
 		next = state->next;
 		p11_rpc_transport_free (state->rpc);
 		p11_virtual_unwrap (state->wrapped);
+		free (state);
 	}
 }
