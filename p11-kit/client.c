@@ -37,6 +37,7 @@
 #include "client.h"
 #include "compat.h"
 #include "library.h"
+#include "runtime.h"
 #include "path.h"
 #include "rpc.h"
 
@@ -53,70 +54,6 @@ typedef struct _State {
 } State;
 
 static State *all_instances = NULL;
-
-static CK_RV
-get_runtime_directory (char **directoryp)
-{
-	const char *envvar;
-	static const char * const bases[] = { "/run", "/var/run", NULL };
-	char prefix[13 + 1 + 20 + 6 + 1];
-	char *directory;
-	uid_t uid;
-	struct stat sb;
-	struct passwd pwbuf, *pw;
-	char buf[1024];
-	int i;
-
-	/* We can't always assume the XDG_RUNTIME_DIR envvar here,
-	 * because the PKCS#11 module can be loaded by a program that
-	 * calls setuid().  */
-	envvar = secure_getenv ("XDG_RUNTIME_DIR");
-
-	if (envvar != NULL && envvar[0] != '\0') {
-		directory = strdup (envvar);
-		if (!directory)
-			return CKR_HOST_MEMORY;
-
-		*directoryp = directory;
-		return CKR_OK;
-	}
-
-	uid = getuid ();
-
-	for (i = 0; bases[i] != NULL; i++) {
-		snprintf (prefix, sizeof prefix, "%s/user/%u",
-			  bases[i], (unsigned int) uid);
-		if (stat (prefix, &sb) != -1 && S_ISDIR (sb.st_mode)) {
-			directory = strdup (prefix);
-			if (!directory)
-				return CKR_HOST_MEMORY;
-			*directoryp = directory;
-			return CKR_OK;
-		}
-	}
-
-	/* We can't use /run/user/<UID>, fallback to ~/.cache.  */
-	envvar = secure_getenv ("XDG_CACHE_HOME");
-
-	if (envvar != NULL && envvar[0] != '\0') {
-		directory = strdup (envvar);
-		if (!directory)
-			return CKR_HOST_MEMORY;
-
-		*directoryp = directory;
-		return CKR_OK;
-	}
-
-	if (getpwuid_r (uid, &pwbuf, buf, sizeof buf, &pw) < 0 ||
-	    pw == NULL || pw->pw_dir == NULL || *pw->pw_dir != '/')
-		return CKR_GENERAL_ERROR;
-
-	if (asprintf (&directory, "%s/.cache", pw->pw_dir) < 0)
-		return CKR_HOST_MEMORY;
-	*directoryp = directory;
-	return CKR_OK;
-}
-
 static CK_RV
 get_server_address (char **addressp)
 {
@@ -137,7 +74,7 @@ get_server_address (char **addressp)
 		return CKR_OK;
 	}
 
-	rv = get_runtime_directory (&directory);
+	rv = p11_get_runtime_directory (&directory);
 	if (rv != CKR_OK)
 		return rv;
 
