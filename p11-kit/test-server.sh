@@ -24,8 +24,8 @@ fi
 
 . ./start.env
 
-test "${P11_KIT_SERVER_ADDRESS+set}" == set || exit 1
-test "${P11_KIT_SERVER_PID+set}" == set || exit 1
+test "${P11_KIT_SERVER_ADDRESS+set}" = "set" || exit 1
+test "${P11_KIT_SERVER_PID+set}" = "set" || exit 1
 
 "$abs_top_builddir"/p11-kit-server -s -k > stop.env 2> stop.err
 if test $? -ne 0; then
@@ -35,5 +35,5 @@ fi
 
 . ./stop.env
 
-test "${P11_KIT_SERVER_ADDRESS-unset}" == unset || exit 1
-test "${P11_KIT_SERVER_PID-unset}" == unset || exit 1
+test "${P11_KIT_SERVER_ADDRESS-unset}" = "unset" || exit 1
+test "${P11_KIT_SERVER_PID-unset}" = "unset" || exit 1
