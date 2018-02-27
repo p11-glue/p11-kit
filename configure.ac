@@ -2,9 +2,9 @@ AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
 	[0.23.9],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue],
+	[https://github.com/p11-glue/p11-kit/issues],
 	[p11-kit],
-	[http://p11-glue.freedesktop.org/p11-kit.html])
+	[https://p11-glue.github.io/p11-glue/p11-kit.html])
 
 # ------------------------------------------------------------------------------
 # p11-kit libtool versioning
