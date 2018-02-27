@@ -79,10 +79,16 @@ setup_server (void *arg)
 	struct pollfd pfd;
 	int ret;
 	const char *envvar;
+	char *path;
 
 	test.directory = p11_test_directory ("p11-test-server");
-	if (asprintf (&test.socket_path, "%s/pkcs11", test.directory) < 0)
+	if (asprintf (&path, "%s/p11-kit", test.directory) < 0)
 		assert_not_reached ();
+	if (mkdir (path, 0700) < 0)
+		assert_not_reached ();
+	if (asprintf (&test.socket_path, "%s/pkcs11", path) < 0)
+		assert_not_reached ();
+	free (path);
 	unlink (test.socket_path);
 
 	ret = socketpair (AF_UNIX, SOCK_STREAM, 0, fds);
@@ -140,6 +146,27 @@ test_initialize (void *unused)
 {
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
+
+	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	assert (module != NULL);
+
+	rv = p11_kit_module_initialize (module);
+	assert (rv == CKR_OK);
+
+	rv = p11_kit_module_finalize (module);
+	assert (rv == CKR_OK);
+
+	p11_kit_module_release (module);
+}
+
+static void
+test_initialize_no_address (void *unused)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_RV rv;
+
+	unsetenv ("P11_KIT_SERVER_ADDRESS");
+	setenv ("XDG_RUNTIME_DIR", test.directory, 1);
 
 	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
 	assert (module != NULL);
@@ -223,6 +250,7 @@ main (int argc,
 
 	p11_fixture (setup_server, teardown_server);
 	p11_testx (test_initialize, (void *)"pkcs11:", "/server/initialize");
+	p11_testx (test_initialize_no_address, (void *)"pkcs11:", "/server/initialize-no-address");
 	p11_testx (test_open_session, (void *)"pkcs11:", "/server/open-session");
 	p11_testx (test_open_session_write_protected, (void *)"pkcs11:?write-protected=yes", "/server/open-session-write-protected");
 
