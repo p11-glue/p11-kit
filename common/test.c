@@ -430,6 +430,8 @@ p11_test_directory_delete (const char *directory)
 {
 	struct dirent *dp;
 	DIR *dir;
+	char *path;
+	struct stat st;
 
 	dir = opendir (directory);
 	if (dir == NULL) {
@@ -442,7 +444,15 @@ p11_test_directory_delete (const char *directory)
 		    strcmp (dp->d_name, "..") == 0)
 			continue;
 
-		p11_test_file_delete (directory, dp->d_name);
+		if (asprintf (&path, "%s/%s", directory, dp->d_name) < 0)
+			assert_not_reached ();
+		if (stat (path, &st) < 0)
+			assert_not_reached ();
+		if (S_ISDIR (st.st_mode))
+			p11_test_directory_delete (path);
+		else
+			p11_test_file_delete (directory, dp->d_name);
+		free (path);
 	}
 
 	closedir (dir);
