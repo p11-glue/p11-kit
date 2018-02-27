@@ -119,6 +119,8 @@ teardown (void *unused)
 	rv = test.module->C_Finalize (NULL);
 	assert (rv == CKR_OK);
 
+	if (test.directory)
+		p11_test_directory_delete (test.directory);
 	free (test.directory);
 
 	memset (&test, 0, sizeof (test));

@@ -69,7 +69,7 @@ setup_remote (void *unused)
 {
 	const char *data;
 
-	test.directory = p11_test_directory ("p11-test-config");
+	test.directory = p11_test_directory ("p11-test-transport");
 	test.user_modules = p11_path_build (test.directory, "modules", NULL);
 #ifdef OS_UNIX
 	if (mkdir (test.user_modules, 0700) < 0)
@@ -206,7 +206,7 @@ setup_remote_unix (void *unused)
 	char *path;
 	pid_t pid;
 
-	test.directory = p11_test_directory ("p11-test-config");
+	test.directory = p11_test_directory ("p11-test-transport");
 	test.user_modules = p11_path_build (test.directory, "modules", NULL);
 	if (mkdir (test.user_modules, 0700) < 0)
 		assert_not_reached ();
@@ -251,6 +251,8 @@ static void
 teardown_remote_unix (void *unused)
 {
 	kill (test.pid, SIGKILL);
+	p11_test_directory_delete (test.directory);
+	free (test.directory);
 }
 
 #endif /* OS_UNIX */
