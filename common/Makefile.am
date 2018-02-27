@@ -28,6 +28,7 @@ libp11_common_la_SOURCES = \
 	common/message.c common/message.h \
 	common/path.c common/path.h \
 	common/pkcs11.h common/pkcs11x.h common/pkcs11i.h \
+	common/runtime.c common/runtime.h \
 	common/url.c common/url.h \
 	$(NULL)
 
@@ -71,6 +72,7 @@ c_tests += \
 	test-lexer \
 	test-message \
 	test-argv \
+	test-runtime \
 	$(NULL)
 
 test_argv_SOURCES = common/test-argv.c
@@ -111,6 +113,9 @@ test_tests_LDADD = $(common_LIBS)
 
 test_url_SOURCES = common/test-url.c
 test_url_LDADD = $(common_LIBS)
+
+test_runtime_SOURCES = common/test-runtime.c
+test_runtime_LDADD = $(common_LIBS)
 
 check_PROGRAMS += \
 	frob-getauxval \
