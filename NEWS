@@ -1,3 +1,15 @@
+0.23.10 (devel)
+ * filter: Respect "write-protected" vendor-specific attribute in
+   PKCS#11 URI [PR#129]
+ * server: Improve shell integration and documentation [PR#107, PR#108]
+ * proxy: Reuse existing slot ID mapping in after fork() [PR#120]
+ * trust: Forcibly mark "Default Trust" read-only [PR#123]
+ * New function p11_kit_override_system_files() which can be used for
+   testing [PR#110]
+ * trust: Filter out duplicate extensions [PR#69]
+ * Update translations [PR#128]
+ * Bug fixes [PR#125, PR#126]
+
 0.23.9 (devel)
  * Fix p11-kit server regressions [PR#103, PR#104]
  * trust: Respect anyExtendedKeyUsage in CA certificates [PR#99]
