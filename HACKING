@@ -1,16 +1,16 @@
 CONTRIBUTING to p11-kit
 
  * Documentation on developing p11-kit:
-   http://p11-glue.freedesktop.org/doc/p11-kit/devel.html
+   https://p11-glue.github.io/p11-glue/p11-kit/manual/devel.html
 
  * Code available at:
    https://github.com/p11-glue/p11-kit
 
  * General Website:
-   http://p11-glue.freedesktop.org/p11-kit.html
+   https://p11-glue.github.io/p11-glue/p11-kit.html
 
  * Mailing list:
    p11-glue@lists.freedesktop.org
 
  * Report bugs here:
-   https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue
+   https://github.com/p11-glue/p11-kit/issues
