@@ -293,6 +293,8 @@ check_PROGRAMS += \
 print_messages_SOURCES = p11-kit/print-messages.c
 print_messages_LDADD = $(p11_kit_LIBS)
 
+sh_tests += p11-kit/test-messages.sh
+
 frob_setuid_SOURCES = p11-kit/frob-setuid.c
 frob_setuid_LDADD = $(p11_kit_LIBS)
 
