@@ -2115,7 +2115,7 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 
 	for (i = 0, out = 0; modules[i] != NULL; i++, out++) {
 		rv = modules[i]->C_Initialize (NULL);
-		if (rv != CKR_OK) {
+		if (rv != CKR_OK && rv != CKR_CRYPTOKI_ALREADY_INITIALIZED) {
 			name = p11_kit_module_get_name (modules[i]);
 			if (name == NULL)
 				name = strdup ("(unknown)");
@@ -2130,6 +2130,11 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 			out--;
 			free (name);
 		} else {
+			if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED) {
+				name = p11_kit_module_get_name (modules[i]);
+				p11_message ("%s: module was already initialized",
+				             name ? name : "(unknown)");
+			}
 			modules[out] = modules[i];
 		}
 	}
