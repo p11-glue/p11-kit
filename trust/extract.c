@@ -81,6 +81,7 @@ format_argument (const char *optarg,
 		{ "pem-directory", p11_extract_pem_directory },
 		{ "pem-directory-hash", p11_extract_pem_directory_hash },
 		{ "java-cacerts", p11_extract_jks_cacerts },
+		{ "edk2-cacerts", p11_extract_edk2_cacerts },
 		{ "openssl-bundle", p11_extract_openssl_bundle },
 		{ "openssl-directory", p11_extract_openssl_directory },
 		{ NULL },
@@ -211,7 +212,8 @@ p11_trust_extract (int argc,
 		  "  pem-directory-hash  directory of PEM files with hash links\n"
 		  "  openssl-bundle      OpenSSL specific PEM bundle\n"
 		  "  openssl-directory   directory of OpenSSL specific files\n"
-		  "  java-cacerts        java keystore cacerts file",
+		  "  java-cacerts        java keystore cacerts file\n"
+		  "  edk2-cacerts        cacerts file for EDK2 HTTPS config",
 		  "type"
 		},
 		{ opt_purpose,
