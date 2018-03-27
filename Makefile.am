@@ -64,6 +64,10 @@ AM_TESTS_ENVIRONMENT = \
 	export abs_top_builddir;
 AM_TESTS_FD_REDIRECT = 9>&2;
 
+LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+	$(top_srcdir)/build/litter/tap-driver.sh
+LOG_DRIVER_FLAGS = --comments --ignore-exit
+
 MEMCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=80 --quiet
 
 LEAKCHECK_ENV = $(TEST_RUNNER) valgrind --error-exitcode=81 --quiet --leak-check=yes

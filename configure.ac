@@ -22,6 +22,7 @@ P11KIT_AGE=3
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_AUX_DIR([build/litter])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AM_INIT_AUTOMAKE([1.12 foreign subdir-objects])
 AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])

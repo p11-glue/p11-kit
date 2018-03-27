@@ -49,6 +49,7 @@ Makefile
 Makefile.in
 missing
 stamp-h1
+tap-driver.sh
 temp.txt
 test-driver
 
