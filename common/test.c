@@ -89,29 +89,15 @@ struct {
 	jmp_buf jump;
 } gl = { NULL, NULL, 0, };
 
-void
-p11_test_fail (const char *filename,
-               int line,
-               const char *function,
-               const char *message,
-               ...)
+static void
+print_diagnostics (const char *filename,
+		   int line,
+		   const char *function,
+		   char *output)
 {
 	const char *pos;
-	char *output;
 	char *from;
 	char *next;
-	va_list va;
-
-	assert (gl.last != NULL);
-	assert (gl.last->type == TEST);
-	gl.last->x.test.failed = 1;
-
-	printf ("not ok %d %s\n", gl.number, gl.last->x.test.name);
-
-	va_start (va, message);
-	if (vasprintf (&output, message, va) < 0)
-		assert (0 && "vasprintf() failed");
-	va_end (va);
 
 	for (from = output; from != NULL; ) {
 		next = strchr (from, '\n');
@@ -129,7 +115,112 @@ p11_test_fail (const char *filename,
 		filename = pos + 1;
 
 	printf ("# in %s() at %s:%d\n", function, filename, line);
+}
 
+void
+p11_test_fail (const char *filename,
+               int line,
+               const char *function,
+               const char *message,
+               ...)
+{
+	char *output;
+	va_list va;
+
+	assert (gl.last != NULL);
+	assert (gl.last->type == TEST);
+	gl.last->x.test.failed = 1;
+
+	printf ("not ok %d %s\n", gl.number, gl.last->x.test.name);
+
+	va_start (va, message);
+	if (vasprintf (&output, message, va) < 0)
+		assert (0 && "vasprintf() failed");
+	va_end (va);
+
+	print_diagnostics (filename, line, function, output);
+	free (output);
+
+	/* Let coverity know we're not supposed to return from here */
+#ifdef __COVERITY__
+	abort();
+#endif
+
+	longjmp (gl.jump, 1);
+}
+
+void
+p11_test_skip (const char *filename,
+               int line,
+               const char *function,
+               const char *message,
+               ...)
+{
+	char *output;
+	char *pos;
+	va_list va;
+
+	assert (gl.last != NULL);
+	assert (gl.last->type == TEST);
+	gl.last->x.test.failed = 1;
+
+	printf ("ok %d %s", gl.number, gl.last->x.test.name);
+
+	va_start (va, message);
+	if (vasprintf (&output, message, va) < 0)
+		assert (0 && "vasprintf() failed");
+	va_end (va);
+
+	pos = strchr (output, '\n');
+	if (pos) {
+		*pos = '\0';
+		pos++;
+	}
+	printf (" # SKIP %s\n", output);
+
+	if (pos)
+		print_diagnostics (filename, line, function, pos);
+	free (output);
+
+	/* Let coverity know we're not supposed to return from here */
+#ifdef __COVERITY__
+	abort();
+#endif
+
+	longjmp (gl.jump, 1);
+}
+
+void
+p11_test_todo (const char *filename,
+               int line,
+               const char *function,
+               const char *message,
+               ...)
+{
+	char *output;
+	char *pos;
+	va_list va;
+
+	assert (gl.last != NULL);
+	assert (gl.last->type == TEST);
+	gl.last->x.test.failed = 1;
+
+	printf ("not ok %d %s", gl.number, gl.last->x.test.name);
+
+	va_start (va, message);
+	if (vasprintf (&output, message, va) < 0)
+		assert (0 && "vasprintf() failed");
+	va_end (va);
+
+	pos = strchr (output, '\n');
+	if (pos) {
+		*pos = '\0';
+		pos++;
+	}
+	printf (" # TODO %s\n", output);
+
+	if (pos)
+		print_diagnostics (filename, line, function, pos);
 	free (output);
 
 	/* Let coverity know we're not supposed to return from here */
