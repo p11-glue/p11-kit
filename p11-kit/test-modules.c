@@ -462,6 +462,30 @@ test_config_option (void)
 	finalize_and_free_modules (modules);
 }
 
+static void
+test_already_initialized (void)
+{
+	CK_FUNCTION_LIST_PTR_PTR modules;
+	CK_RV rv;
+
+	/* This enables module seven */
+	p11_kit_set_progname ("test-modules");
+
+	modules = initialize_and_get_modules ();
+	assert (lookup_module_with_name (modules, "seven") != NULL);
+
+	rv = p11_kit_modules_initialize (modules, NULL);
+	if (rv != CKR_OK) {
+		finalize_and_free_modules (modules);
+		assert_todo ("not implemented", "CKR_CRYPTOKI_ALREADY_INITIALIZED handling");
+	}
+	if (!lookup_module_with_name (modules, "seven")) {
+		finalize_and_free_modules (modules);
+		assert_todo ("not implemented", "CKR_CRYPTOKI_ALREADY_INITIALIZED handling");
+	}
+	finalize_and_free_modules (modules);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -480,6 +504,7 @@ main (int argc,
 	p11_test (test_config_option, "/modules/test_config_option");
 	p11_test (test_module_trusted_only, "/modules/trusted-only");
 	p11_test (test_module_trust_flags, "/modules/trust-flags");
+	p11_test (test_already_initialized, "/modules/already-initialized");
 
 	p11_kit_be_quiet ();
 

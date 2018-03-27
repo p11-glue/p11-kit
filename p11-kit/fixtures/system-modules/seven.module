@@ -1,0 +1,4 @@
+
+module: mock-seven.so
+critical: yes
+enable-in: test-modules
