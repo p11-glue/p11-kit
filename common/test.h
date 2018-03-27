@@ -63,6 +63,14 @@
 	do { const char *__s = (detail); \
 		p11_test_fail (__FILE__, __LINE__, __FUNCTION__, "%s%s%s", (msg), __s ? ": ": "", __s ? __s : ""); \
 	} while (0)
+#define assert_skip(msg, detail) \
+	do { const char *__s = (detail); \
+		p11_test_skip (__FILE__, __LINE__, __FUNCTION__, "%s%s%s", (msg), __s ? ": ": "", __s ? __s : ""); \
+	} while (0)
+#define assert_todo(msg, detail) \
+	do { const char *__s = (detail); \
+		p11_test_todo (__FILE__, __LINE__, __FUNCTION__, "%s%s%s", (msg), __s ? ": ": "", __s ? __s : ""); \
+	} while (0)
 #define assert_not_reached(msg) \
 	do { \
 		p11_test_fail (__FILE__, __LINE__, __FUNCTION__, "code should not be reached"); \
@@ -108,6 +116,18 @@
 
 
 void        p11_test_fail           (const char *filename,
+                                     int line,
+                                     const char *function,
+                                     const char *message,
+                                     ...) GNUC_PRINTF(4, 5) CLANG_ANALYZER_NORETURN;
+
+void        p11_test_skip           (const char *filename,
+                                     int line,
+                                     const char *function,
+                                     const char *message,
+                                     ...) GNUC_PRINTF(4, 5) CLANG_ANALYZER_NORETURN;
+
+void        p11_test_todo           (const char *filename,
                                      int line,
                                      const char *function,
                                      const char *message,
