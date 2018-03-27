@@ -326,7 +326,8 @@ check_LTLIBRARIES += \
 	mock-two.la \
 	mock-three.la \
 	mock-four.la \
-	mock-five.la
+	mock-five.la \
+	mock-seven.la
 
 mock_one_la_SOURCES = p11-kit/mock-module-ep.c
 mock_one_la_LIBADD = libp11-test.la libp11-common.la
@@ -356,6 +357,10 @@ mock_six_la_SOURCES = p11-kit/mock-module-ep4.c
 mock_six_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_six_la_LIBADD = $(mock_one_la_LIBADD)
 endif
+
+mock_seven_la_SOURCES = p11-kit/mock-module-ep5.c
+mock_seven_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_seven_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST += \
 	p11-kit/fixtures \
