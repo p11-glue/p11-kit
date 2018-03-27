@@ -67,6 +67,9 @@ bool            p11_extract_pem_directory_hash (p11_enumerate *ex,
 bool            p11_extract_jks_cacerts        (p11_enumerate *ex,
                                                 const char *destination);
 
+bool            p11_extract_edk2_cacerts       (p11_enumerate *ex,
+                                                const char *destination);
+
 bool            p11_extract_openssl_bundle     (p11_enumerate *ex,
                                                 const char *destination);
 
