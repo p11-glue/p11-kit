@@ -171,7 +171,7 @@ test_initialize_child (void)
 		rv = proxy->C_Finalize (NULL);
 		assert_num_eq (rv, CKR_OK);
 
-		exit(0);
+		_exit (0);
 	}
 	assert (pid != -1);
 	waitpid(pid, &st, 0);
