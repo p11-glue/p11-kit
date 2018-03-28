@@ -4,7 +4,7 @@ testdir=$PWD/test-server-$$
 test -d "$testdir" || mkdir "$testdir"
 
 cleanup () {
-  rm -rf "$testdir"
+	rm -rf "$testdir"
 }
 trap cleanup 0
 
@@ -16,24 +16,40 @@ unset P11_KIT_SERVER_PID
 XDG_RUNTIME_DIR="$testdir"
 export XDG_RUNTIME_DIR
 
+echo 1..4
+
 "$abs_top_builddir"/p11-kit-server -s --provider "$abs_top_builddir"/.libs/mock-one.so pkcs11: > start.env 2> start.err
-if test $? -ne 0; then
-    cat start.err
-    exit 1
+if test $? -eq 0; then
+	echo "ok 1 /server/start"
+else
+	echo "not ok 1 /server/start"
+	sed 's/^/# /' start.err
+	exit 1
 fi
 
 . ./start.env
 
-test "${P11_KIT_SERVER_ADDRESS+set}" = "set" || exit 1
-test "${P11_KIT_SERVER_PID+set}" = "set" || exit 1
+if test "${P11_KIT_SERVER_ADDRESS+set}" = "set" -a "${P11_KIT_SERVER_PID+set}" = "set"; then
+	echo "ok 2 /server/start-env"
+else
+	echo "not ok 2 /server/start-env"
+	exit 1
+fi
 
 "$abs_top_builddir"/p11-kit-server -s -k > stop.env 2> stop.err
-if test $? -ne 0; then
-    cat stop.err
-    exit 1
+if test $? -eq 0; then
+	echo "ok 3 /server/stop"
+else
+	echo "not ok 3 /server/stop"
+	sed 's/^/# /' stop.err
+	exit 1
 fi
 
 . ./stop.env
 
-test "${P11_KIT_SERVER_ADDRESS-unset}" = "unset" || exit 1
-test "${P11_KIT_SERVER_PID-unset}" = "unset" || exit 1
+if test "${P11_KIT_SERVER_ADDRESS-unset}" = "unset" -a "${P11_KIT_SERVER_PID-unset}" = "unset"; then
+	echo "ok 4 /server/stop-env"
+else
+	echo "not ok 4 /server/stop-env"
+	exit 1
+fi
