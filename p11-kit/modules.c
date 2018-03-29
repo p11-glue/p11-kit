@@ -2134,6 +2134,7 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 				name = p11_kit_module_get_name (modules[i]);
 				p11_message ("%s: module was already initialized",
 				             name ? name : "(unknown)");
+				free (name);
 			}
 			modules[out] = modules[i];
 		}
