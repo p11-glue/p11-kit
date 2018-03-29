@@ -172,6 +172,7 @@ c_tests += \
 	test-cer \
 	test-bundle \
 	test-openssl \
+	test-edk2 \
 	$(NULL)
 
 test_asn1_SOURCES = trust/test-asn1.c
@@ -217,6 +218,10 @@ test_oid_CFLAGS = $(trust_CFLAGS)
 test_openssl_SOURCES = trust/test-openssl.c
 test_openssl_LDADD = $(trust_LIBS)
 test_openssl_CFLAGS = $(trust_CFLAGS)
+
+test_edk2_SOURCES = trust/test-edk2.c
+test_edk2_LDADD = $(trust_LIBS)
+test_edk2_CFLAGS = $(trust_CFLAGS)
 
 test_parser_SOURCES = trust/test-parser.c
 test_parser_LDADD = $(trust_LIBS)
