@@ -37,28 +37,34 @@
 #include "runtime.h"
 
 #include "compat.h"
-#include <pwd.h>
+
 #include <stdio.h>
 #include <string.h>
+
+#ifdef OS_UNIX
+#include <pwd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 static const char * const _p11_runtime_bases_default[] = { "/run", "/var/run", NULL };
 const char * const *_p11_runtime_bases = _p11_runtime_bases_default;
+#endif
 
 CK_RV
 p11_get_runtime_directory (char **directoryp)
 {
 	const char *envvar;
+	char *directory;
+#ifdef OS_UNIX
 	const char * const *bases = _p11_runtime_bases;
 	char prefix[13 + 1 + 20 + 6 + 1];
-	char *directory;
 	uid_t uid;
 	struct stat sb;
 	struct passwd pwbuf, *pw;
 	char buf[1024];
 	int i;
+#endif
 
 	/* We can't always assume the XDG_RUNTIME_DIR envvar here,
 	 * because the PKCS#11 module can be loaded by a program that
@@ -74,6 +80,7 @@ p11_get_runtime_directory (char **directoryp)
 		return CKR_OK;
 	}
 
+#ifdef OS_UNIX
 	uid = getuid ();
 
 	for (i = 0; bases[i] != NULL; i++) {
@@ -87,6 +94,7 @@ p11_get_runtime_directory (char **directoryp)
 			return CKR_OK;
 		}
 	}
+#endif
 
 	/* We can't use /run/user/<UID>, fallback to ~/.cache.  */
 	envvar = secure_getenv ("XDG_CACHE_HOME");
@@ -100,12 +108,15 @@ p11_get_runtime_directory (char **directoryp)
 		return CKR_OK;
 	}
 
-	if (getpwuid_r (uid, &pwbuf, buf, sizeof buf, &pw) < 0 ||
-	    pw == NULL || pw->pw_dir == NULL || *pw->pw_dir != '/')
-		return CKR_GENERAL_ERROR;
+#ifdef OS_UNIX
+	if (getpwuid_r (uid, &pwbuf, buf, sizeof buf, &pw) == 0 &&
+	    pw != NULL && pw->pw_dir != NULL && *pw->pw_dir == '/') {
+		if (asprintf (&directory, "%s/.cache", pw->pw_dir) < 0)
+			return CKR_HOST_MEMORY;
+		*directoryp = directory;
+		return CKR_OK;
+	}
+#endif
 
-	if (asprintf (&directory, "%s/.cache", pw->pw_dir) < 0)
-		return CKR_HOST_MEMORY;
-	*directoryp = directory;
-	return CKR_OK;
+	return CKR_GENERAL_ERROR;
 }
