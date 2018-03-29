@@ -105,6 +105,7 @@ trust_trust_SOURCES = \
 	trust/enumerate.c trust/enumerate.h \
 	trust/extract.c trust/extract.h \
 	trust/extract-jks.c \
+	trust/extract-edk2.c \
 	trust/extract-openssl.c \
 	trust/extract-pem.c \
 	trust/extract-cer.c \
