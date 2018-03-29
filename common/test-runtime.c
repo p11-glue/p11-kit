@@ -41,6 +41,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef OS_UNIX
+#include <unistd.h>
+#include <sys/types.h>
+#endif
+
 static struct {
 	char *directory;
 } test;
@@ -71,6 +76,7 @@ test_xdg_runtime_dir (void)
 	free (directory);
 }
 
+#ifdef OS_UNIX
 static void
 test_bases (void)
 {
@@ -103,17 +109,21 @@ test_bases (void)
 	free (path);
 	free (directory);
 }
+#endif
 
 static void
 test_xdg_cache_home (void)
 {
 	char *directory;
+#ifdef OS_UNIX
 	const char * bases[] = {
 		NULL
 	};
 	_p11_runtime_bases = bases;
+#endif
 
-	unsetenv ("XDG_RUNTIME_DIR");
+	/* MinGW doesn't have unsetenv */
+	setenv ("XDG_RUNTIME_DIR", "", 1);
 	setenv ("XDG_CACHE_HOME", "/cache", 1);
 	p11_get_runtime_directory (&directory);
 	assert_str_eq ("/cache", directory);
@@ -126,7 +136,9 @@ main (int argc,
 {
 	p11_fixture (setup, teardown);
 	p11_test (test_xdg_runtime_dir, "/runtime/xdg-runtime-dir");
+#ifdef OS_UNIX
 	p11_test (test_bases, "/runtime/bases");
+#endif
 	p11_test (test_xdg_cache_home, "/runtime/xdg-cache-home");
 	p11_test_run (argc, argv);
 }
