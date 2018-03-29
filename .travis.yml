@@ -10,10 +10,6 @@ env:
   - BUILD_OPTS="--prefix=/usr --libdir=/usr/lib64" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir
   - BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir
 
-matrix:
-  allow_failures:
-    - env: BUILD_OPTS="-host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir
-
 services:
   - docker
 
