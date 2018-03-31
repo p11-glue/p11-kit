@@ -49,6 +49,8 @@
 #include <stdint.h>
 #include <string.h>
 
+time_t _p11_extract_jks_timestamp = 0;
+
 static void
 encode_msb_short (unsigned char *data,
                   int16_t value)
@@ -245,7 +247,10 @@ prepare_jks_buffer (p11_enumerate *ex,
 	 * when this was this certificate was added to the keystore, however
 	 * we don't have that information. Java uses time in milliseconds
 	 */
-	now = time (NULL);
+	if (_p11_extract_jks_timestamp)
+		now = _p11_extract_jks_timestamp;
+	else
+		now = time (NULL);
 	return_val_if_fail (now > 0, false);
 	now *= 1000; /* seconds to milliseconds */
 
