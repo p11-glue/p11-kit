@@ -190,6 +190,86 @@ test_initialize_child (void)
 }
 #endif
 
+struct {
+	char *directory;
+	const char *system_file;
+	const char *system_modules;
+} test;
+
+extern const char *p11_config_system_file;
+extern const char *p11_config_system_modules;
+
+static void
+setup (void *unused)
+{
+	test.directory = p11_test_directory ("test-proxy");
+	test.system_file = p11_config_system_file;
+	p11_config_system_file = SRCDIR "/p11-kit/fixtures/test-system-none.conf";
+	test.system_modules = p11_config_system_modules;
+	p11_config_system_modules = test.directory;
+}
+
+static void
+teardown (void *unused)
+{
+	p11_test_directory_delete (test.directory);
+	free (test.directory);
+	p11_config_system_file = test.system_file;
+	p11_config_system_modules = test.system_modules;
+}
+
+#define ONE_MODULE "module: mock-one" SHLEXT "\n"
+#define TWO_MODULE "module: mock-two" SHLEXT "\n"
+#define ENABLED "enable-in: test-proxy, p11-kit-proxy\n"
+#define DISABLED "disable-in: p11-kit-proxy\n"
+
+static CK_ULONG
+load_modules_and_count_slots (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_ULONG count;
+	CK_RV rv;
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &count);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
+
+	return count;
+}
+
+static void
+test_disable (void)
+{
+	CK_ULONG count, enabled, disabled;
+
+	p11_test_file_write (test.directory, "one.module", ONE_MODULE, strlen (ONE_MODULE));
+	p11_test_file_write (test.directory, "two.module", TWO_MODULE, strlen (TWO_MODULE));
+	count = load_modules_and_count_slots ();
+	assert_num_cmp (count, >, 1);
+
+	p11_test_file_write (test.directory, "one.module", ONE_MODULE ENABLED, strlen (ONE_MODULE ENABLED));
+	p11_test_file_write (test.directory, "two.module", TWO_MODULE, strlen (TWO_MODULE));
+	enabled = load_modules_and_count_slots ();
+	assert_num_eq (enabled, count);
+
+	p11_test_file_write (test.directory, "one.module", ONE_MODULE, strlen (ONE_MODULE));
+	p11_test_file_write (test.directory, "two.module", TWO_MODULE DISABLED, strlen (TWO_MODULE DISABLED));
+	disabled = load_modules_and_count_slots ();
+	assert_num_cmp (disabled, <, count);
+}
+
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
@@ -271,6 +351,9 @@ main (int argc,
 #ifndef _WIN32
 	p11_test (test_initialize_child, "/proxy/initialize-child");
 #endif
+
+	p11_fixture (setup, teardown);
+	p11_test (test_disable, "/proxy/disable");
 
 	test_mock_add_tests ("/proxy");
 

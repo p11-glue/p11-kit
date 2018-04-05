@@ -115,6 +115,7 @@ x-custom : text
 			for other programs using p11-kit. The base name of the process executable
 			should be used here, for example
 			<literal>seahorse, ssh</literal>.</para>
+			<para>This option can also be used to control whether the module will be loaded by <link linkend="sharing">the proxy module</link>.  To enable loading only from the proxy module, specify <literal>p11-kit-proxy</literal> as the value.</para>
 			<para>This is not a security feature. The argument is optional. If
 			not present, then any process will load the module.</para>
 		</listitem>
@@ -127,6 +128,7 @@ x-custom : text
 			other programs using p11-kit. The base name of the process
 			executable should be used here, for example
 			<literal>firefox, thunderbird-bin</literal>.</para>
+			<para>This option can also be used to control whether the module will be loaded by <link linkend="sharing">the proxy module</link>.  To disable loading from the proxy module, specify <literal>p11-kit-proxy</literal> as the value.</para>
 			<para>This is not a security feature. The argument is optional. If
 			not present, then any process will load the module.</para>
 		</listitem>

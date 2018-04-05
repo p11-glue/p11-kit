@@ -1670,7 +1670,7 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 
 	if (all_modules == NULL) {
 		/* WARNING: Reentrancy can occur here */
-		rv = p11_modules_load_inlock_reentrant (0, &loaded);
+		rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
 		if (rv == CKR_OK) {
 			if (all_modules == NULL)
 				all_modules = loaded;
