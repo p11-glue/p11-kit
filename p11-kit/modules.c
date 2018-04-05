@@ -510,7 +510,8 @@ is_string_in_list (const char *list,
 
 static bool
 is_module_enabled_unlocked (const char *name,
-                            p11_dict *config)
+                            p11_dict *config,
+                            int flags)
 {
 	const char *progname;
 	const char *enable_in;
@@ -527,10 +528,17 @@ is_module_enabled_unlocked (const char *name,
 	progname = _p11_get_progname_unlocked ();
 	if (enable_in && disable_in)
 		p11_message ("module '%s' has both enable-in and disable-in options", name);
-	if (enable_in)
-		enable = (progname != NULL && is_string_in_list (enable_in, progname));
-	else if (disable_in)
-		enable = (progname == NULL || !is_string_in_list (disable_in, progname));
+	if (enable_in) {
+		enable = (progname != NULL &&
+			  is_string_in_list (enable_in, progname)) ||
+			((flags & P11_KIT_MODULE_LOADED_FROM_PROXY) != 0 &&
+			 is_string_in_list (enable_in, "p11-kit-proxy"));
+	} else if (disable_in) {
+		enable = (progname == NULL ||
+			  !is_string_in_list (disable_in, progname)) &&
+			((flags & P11_KIT_MODULE_LOADED_FROM_PROXY) == 0 ||
+			 !is_string_in_list (disable_in, "p11-kit-proxy"));
+	}
 
 	p11_debug ("%s module '%s' running in '%s'",
 	            enable ? "enabled" : "disabled",
@@ -554,7 +562,7 @@ take_config_and_load_module_inlock (char **name,
 	assert (config);
 	assert (*config);
 
-	if (!is_module_enabled_unlocked (*name, *config))
+	if (!is_module_enabled_unlocked (*name, *config, 0))
 		goto out;
 
 	remote = p11_dict_get (*config, "remote");
@@ -856,7 +864,7 @@ initialize_registered_inlock_reentrant (void)
 		while (rv == CKR_OK && p11_dict_next (&iter, NULL, (void **)&mod)) {
 
 			/* Skip all modules that aren't registered or enabled */
-			if (mod->name == NULL || !is_module_enabled_unlocked (mod->name, mod->config))
+			if (mod->name == NULL || !is_module_enabled_unlocked (mod->name, mod->config, 0))
 				continue;
 
 			rv = initialize_module_inlock_reentrant (mod, NULL);
@@ -1116,7 +1124,7 @@ list_registered_modules_inlock (void)
 			 * sure to cover it.
 			 */
 			if (mod->ref_count && mod->name && mod->init_count &&
-			    is_module_enabled_unlocked (mod->name, mod->config)) {
+			    is_module_enabled_unlocked (mod->name, mod->config, 0)) {
 				result[i++] = funcs;
 			}
 		}
@@ -1971,7 +1979,7 @@ p11_modules_load_inlock_reentrant (int flags,
 		 * having initialized. This is a corner case, but want to make
 		 * sure to cover it.
 		 */
-		if (!mod->name || !is_module_enabled_unlocked (mod->name, mod->config))
+		if (!mod->name || !is_module_enabled_unlocked (mod->name, mod->config, flags))
 			continue;
 
 		rv = prepare_module_inlock_reentrant (mod, flags, modules + at);
@@ -2043,6 +2051,9 @@ p11_kit_modules_load (const char *reserved,
 
 	/* WARNING: This function must be reentrant */
 	p11_debug ("in");
+
+	/* mask out internal flags */
+	flags &= P11_KIT_MODULE_MASK;
 
 	p11_lock ();
 
@@ -2169,6 +2180,9 @@ p11_kit_modules_load_and_initialize (int flags)
 {
 	CK_FUNCTION_LIST **modules;
 	CK_RV rv;
+
+	/* mask out internal flags */
+	flags &= P11_KIT_MODULE_MASK;
 
 	modules = p11_kit_modules_load (NULL, flags);
 	if (modules == NULL)
@@ -2464,6 +2478,9 @@ p11_kit_module_load (const char *module_path,
 
 	/* WARNING: This function must be reentrant for the same arguments */
 	p11_debug ("in: %s", module_path);
+
+	/* mask out internal flags */
+	flags &= P11_KIT_MODULE_MASK;
 
 	p11_lock ();
 

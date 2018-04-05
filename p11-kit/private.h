@@ -45,6 +45,11 @@ extern const char *p11_config_package_modules;
 extern const char *p11_config_system_modules;
 extern const char *p11_config_user_modules;
 
+/* These are flags used only internally */
+enum {
+	P11_KIT_MODULE_LOADED_FROM_PROXY = 1 << 16
+};
+
 CK_RV       _p11_load_config_files_unlocked                     (const char *system_conf,
                                                                  const char *user_conf,
                                                                  int *user_mode);
