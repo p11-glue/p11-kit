@@ -564,6 +564,34 @@ test_remove (void)
 }
 
 static void
+test_purge (void)
+{
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_ATTRIBUTE *attr;
+	CK_ATTRIBUTE *attrs;
+
+	CK_ATTRIBUTE initial[] = {
+		{ CKA_LABEL, "label", 5 },
+		{ CKA_TOKEN, &vtrue, sizeof (vtrue) },
+	};
+
+	attrs = p11_attrs_buildn (NULL, initial, 2);
+	assert_ptr_not_null (attrs);
+
+	attr = p11_attrs_find (attrs, CKA_LABEL);
+	assert_ptr_eq (attrs + 0, attr);
+
+	attr[0].ulValueLen = (CK_ULONG) -1;
+
+	p11_attrs_purge (attrs);
+
+	attr = p11_attrs_find (attrs, CKA_LABEL);
+	assert_ptr_eq (NULL, attr);
+
+	p11_attrs_free (attrs);
+}
+
+static void
 test_match (void)
 {
 	CK_BBOOL vtrue = CK_TRUE;
@@ -753,5 +781,6 @@ main (int argc,
 	p11_test (test_find_value, "/attrs/find-value");
 	p11_test (test_find_valid, "/attrs/find-valid");
 	p11_test (test_remove, "/attrs/remove");
+	p11_test (test_purge, "/attrs/purge");
 	return p11_test_run (argc, argv);
 }
