@@ -115,6 +115,6 @@ x86_64-w64-mingw32
 
 /trust/trust
 /trust/trust-extract-compat
-/trust/test-extract
+/trust/test-init.sh
 
 /p11-kit-?.?

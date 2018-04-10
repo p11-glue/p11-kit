@@ -303,12 +303,15 @@ frob_token_SOURCES = trust/frob-token.c
 frob_token_LDADD = $(trust_LIBS)
 frob_token_CFLAGS = $(trust_CFLAGS)
 
-noinst_SCRIPTS += trust/test-extract
+noinst_SCRIPTS += trust/test-extract.sh
 
+if !OS_WIN32
 installcheck-local:
-	sh $(builddir)/trust/test-extract
+	builddir="$(abs_top_builddir)/trust" $(SHELL) $(srcdir)/trust/test-extract.sh
+endif
 
 EXTRA_DIST += \
 	trust/input \
 	trust/fixtures \
+	trust/test-extract.sh \
 	$(NULL)
