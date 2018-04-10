@@ -1,48 +1,6 @@
 #!/bin/sh
 
-set -euf
-
-# -----------------------------------------------------------------------------
-# Basic fundamentals
-
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-datarootdir=@datarootdir@
-datadir=@datadir@
-sysconfdir=@sysconfdir@
-libdir=@libdir@
-libexecdir=@libexecdir@
-privatedir=@privatedir@
-with_trust_paths=@with_trust_paths@
-script=$(basename $0)
-
-# -----------------------------------------------------------------------------
-# Testing
-
-warning()
-{
-	echo "$script: $@" >&2
-}
-
-assert_fail()
-{
-	warning $@
-	exit 1
-}
-
-assert_contains()
-{
-	if ! grep -qF $2 $1; then
-		assert_fail "$1 does not contain $2"
-	fi
-}
-
-assert_not_contains()
-{
-	if grep -qF $2 $1; then
-		assert_fail "$1 contains $2"
-	fi
-}
+. "${builddir=.}/test-init.sh"
 
 teardown()
 {
@@ -56,24 +14,12 @@ teardown()
 	TD=""
 }
 
-teardown_dirty()
-{
-	echo "not ok $TEST_NUMBER $TEST_NAME"
-	teardown
-}
-
 openssl_quiet()
 (
 	command='/Generating a|-----|^[.+]+$|writing new private key/d'
 	exec 3>&1
 	openssl $@ 2>&1 >&3 3>&- | sed -r "$command" 3>&-
 )
-
-skip()
-{
-	TEST_SKIP=yes
-	echo "ok $TEST_NUMBER # skip $TEST_NAME: $@"
-}
 
 setup()
 {
@@ -125,42 +71,6 @@ setup()
 
 	TD="$SOURCE_1/anchors/cert_1.pem $SOURCE_2/anchors/cert_2.pem $SOURCE_2/anchors/cert_3.pem $TD"
 }
-
-run()
-{
-	TOTAL=0
-	for TEST_NAME in $@; do
-		TOTAL=$(expr $TOTAL + 1)
-	done
-
-	echo "1..$TOTAL"
-
-	TEST_NUMBER=0
-	for TEST_NAME in $@; do
-		TEST_NUMBER=$(expr $TEST_NUMBER + 1)
-		(
-			trap teardown_dirty EXIT
-			trap "teardown_dirty; exit 127" INT TERM
-			TD=""
-
-			TEST_SKIP=no
-			setup
-
-			if [ $TEST_SKIP != "yes" ]; then
-				$TEST_NAME
-			fi
-			if [ $TEST_SKIP != "yes" ]; then
-				echo "ok $TEST_NUMBER $TEST_NAME"
-			fi
-
-			trap - EXIT
-			teardown
-		)
-	done
-}
-
-# -----------------------------------------------------------------------------
-# Main tests
 
 test_extract()
 {

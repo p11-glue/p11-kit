@@ -532,7 +532,7 @@ AC_CONFIG_FILES([Makefile
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
 	trust/trust-extract-compat
-	trust/test-extract
+	trust/test-init.sh
 ])
 AC_OUTPUT
 
