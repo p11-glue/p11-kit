@@ -613,6 +613,7 @@ p11_enumerate_opt_filter (p11_enumerate *ex,
 	}
 
 	p11_kit_iter_add_filter (ex->iter, attrs, p11_attrs_count (attrs));
+	p11_attrs_free (attrs);
 	ex->num_filters++;
 	return true;
 }
