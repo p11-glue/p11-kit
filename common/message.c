@@ -104,7 +104,7 @@ p11_message_err (int errnum,
 	char strerr[P11_MESSAGE_MAX];
 	va_list va;
 	size_t length;
-#if defined(HAVE_STRERROR_L) && defined(HAVE_USELOCALE)
+#ifdef HAVE_STRERROR_L
 	locale_t loc;
 #endif
 
@@ -118,12 +118,7 @@ p11_message_err (int errnum,
 	buffer[length] = 0;
 
 	snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
-	/* As strerror_r() is being deprecated in POSIX:
-	 * http://austingroupbugs.net/view.php?id=655
-	 * we prefer to use strerror_l() with per-thread locale
-	 * argument as a thread-safe variant of strerror().
-	 */
-#if defined(HAVE_STRERROR_L) && defined(HAVE_USELOCALE)
+#ifdef HAVE_STRERROR_L
 	loc = uselocale ((locale_t) 0);
 	if (loc != NULL)
 		strncpy (strerr, strerror_l (errnum, loc), sizeof (strerr));
