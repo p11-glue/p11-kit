@@ -60,6 +60,10 @@
 
 static bool print_messages = false;
 
+#ifdef HAVE_LOCALE_H
+locale_t p11_message_locale = (locale_t) 0;
+#endif
+
 static char *
 default_message_storage (void)
 {
@@ -104,9 +108,6 @@ p11_message_err (int errnum,
 	char strerr[P11_MESSAGE_MAX];
 	va_list va;
 	size_t length;
-#ifdef HAVE_STRERROR_L
-	locale_t loc;
-#endif
 
 	va_start (va, msg);
 	length = vsnprintf (buffer, P11_MESSAGE_MAX - 1, msg, va);
@@ -118,10 +119,9 @@ p11_message_err (int errnum,
 	buffer[length] = 0;
 
 	snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
-#ifdef HAVE_STRERROR_L
-	loc = uselocale ((locale_t) 0);
-	if (loc != NULL)
-		strncpy (strerr, strerror_l (errnum, loc), sizeof (strerr));
+#if defined(HAVE_STRERROR_L) && defined(HAVE_NEWLOCALE)
+	if (p11_message_locale != (locale_t) 0)
+		strncpy (strerr, strerror_l (errnum, p11_message_locale), sizeof (strerr));
 #else
 	strerror_r (errnum, strerr, sizeof (strerr));
 #endif

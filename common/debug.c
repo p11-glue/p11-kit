@@ -73,6 +73,10 @@ static bool debug_strict = false;
 /* global variable exported in debug.h */
 int p11_debug_current_flags = ~0;
 
+#ifdef HAVE_LOCALE_H
+extern locale_t p11_message_locale;
+#endif
+
 static int
 parse_environ_flags (void)
 {
@@ -151,9 +155,6 @@ p11_debug_message_err (int flag,
 {
 	va_list args;
 	char strerr[P11_DEBUG_MESSAGE_MAX];
-#ifdef HAVE_STRERROR_L
-	locale_t loc;
-#endif
 
 	if (flag & p11_debug_current_flags) {
 		fprintf (stderr, "(p11-kit:%d) ", getpid());
@@ -162,10 +163,9 @@ p11_debug_message_err (int flag,
 		va_end (args);
 
 		snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
-#ifdef HAVE_STRERROR_L
-		loc = uselocale ((locale_t) 0);
-		if (loc != NULL)
-			strncpy (strerr, strerror_l (errnum, loc), sizeof (strerr));
+#if defined(HAVE_STRERROR_L) && defined(HAVE_NEWLOCALE)
+		if (p11_message_locale != (locale_t) 0)
+			strncpy (strerr, strerror_l (errnum, p11_message_locale), sizeof (strerr));
 #else
 		strerror_r (errnum, strerr, sizeof (strerr));
 #endif
