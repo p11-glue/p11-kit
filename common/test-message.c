@@ -38,14 +38,25 @@
 #include "message.h"
 
 #include <errno.h>
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef HAVE_LOCALE_H
+extern locale_t p11_message_locale;
+#endif
 
 static void
 test_with_err (void)
 {
 	const char *last;
 	char *expected;
+
+#ifdef HAVE_NEWLOCALE
+	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
+#endif
 
 	errno = E2BIG;
 	p11_message_err (ENOENT, "Details: %s", "value");
@@ -55,6 +66,10 @@ test_with_err (void)
 		assert_not_reached ();
 	assert_str_eq (expected, last);
 	free (expected);
+
+#ifdef HAVE_NEWLOCALE
+	freelocale (p11_message_locale);
+#endif
 }
 
 int
