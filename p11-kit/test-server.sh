@@ -1,7 +1,12 @@
 #!/bin/sh
 
-testdir=$PWD/test-server-$$
-test -d "$testdir" || mkdir "$testdir"
+set -e
+
+testdir=`mktemp -d -t test-server.XXXXXX`
+if test $? -ne 0; then
+	echo "cannot create temporary directory" >&2
+	exit 77
+fi
 
 cleanup () {
 	rm -rf "$testdir"
