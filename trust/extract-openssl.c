@@ -453,7 +453,7 @@ p11_openssl_canon_name_der (p11_dict *asn1_defs,
 {
 	p11_buffer value;
 	char outer[64];
-	char field[64];
+	char field[128];
 	node_asn *name;
 	void *at;
 	int value_len;

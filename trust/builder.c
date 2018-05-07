@@ -472,9 +472,9 @@ calc_date (node_asn *node,
 		return_val_if_fail (year >= 0, false);
 
 		century = century_for_two_digit_year (year);
-		return_val_if_fail (century >= 0, false);
+		return_val_if_fail (century >= 0 && century <= 9900, false);
 
-		snprintf ((char *)date->year, 3, "%02d", century);
+		snprintf ((char *)date->year, 3, "%02d", century / 100);
 		memcpy (((char *)date) + 2, buf, 6);
 
 	} else {
