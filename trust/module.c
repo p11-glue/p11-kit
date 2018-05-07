@@ -444,8 +444,8 @@ sys_C_GetInfo (CK_INFO_PTR info)
 		info->libraryVersion.major = PACKAGE_MAJOR;
 		info->libraryVersion.minor = PACKAGE_MINOR;
 		info->flags = 0;
-		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
-		strncpy ((char*)info->libraryDescription, LIBRARY_DESCRIPTION, 32);
+		memcpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
+		memcpy ((char*)info->libraryDescription, LIBRARY_DESCRIPTION, 32);
 	}
 
 	p11_debug ("out: 0x%lx", rv);
@@ -527,7 +527,7 @@ sys_C_GetSlotInfo (CK_SLOT_ID id,
 		info->hardwareVersion.major = PACKAGE_MAJOR;
 		info->hardwareVersion.minor = PACKAGE_MINOR;
 		info->flags = CKF_TOKEN_PRESENT;
-		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
+		memcpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
 
 		/* If too long, copy the first 64 characters into buffer */
 		path = p11_token_get_path (token);
@@ -567,9 +567,9 @@ sys_C_GetTokenInfo (CK_SLOT_ID id,
 		info->hardwareVersion.major = PACKAGE_MAJOR;
 		info->hardwareVersion.minor = PACKAGE_MINOR;
 		info->flags = CKF_TOKEN_INITIALIZED;
-		strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
-		strncpy ((char*)info->model, TOKEN_MODEL, 16);
-		strncpy ((char*)info->serialNumber, TOKEN_SERIAL_NUMBER, 16);
+		memcpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
+		memcpy ((char*)info->model, TOKEN_MODEL, 16);
+		memcpy ((char*)info->serialNumber, TOKEN_SERIAL_NUMBER, 16);
 		info->ulMaxSessionCount = CK_EFFECTIVELY_INFINITE;
 		info->ulSessionCount = CK_UNAVAILABLE_INFORMATION;
 		info->ulMaxRwSessionCount = 0;
