@@ -1,3 +1,11 @@
+0.23.11 (devel)
+ * trust: Add extractor for edk2/cacerts.bin [PR#139]
+ * modules: Add option to control module visibility from proxy [PR#140]
+ * trust: Prevent trust module being loaded by proxy module [PR#142]
+ * library: Use dedicated locale object for printing error [PR#148]
+ * Treat CKR_CRYPTOKI_ALREADY_INITIALIZED correctly [PR#134]
+ * Build and test fixes [PR#151, PR#149, PR#141, PR#138, PR#135]
+
 0.23.10 (devel)
  * filter: Respect "write-protected" vendor-specific attribute in
    PKCS#11 URI [PR#129]
