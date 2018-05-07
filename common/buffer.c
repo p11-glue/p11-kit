@@ -149,6 +149,7 @@ p11_buffer_append (p11_buffer *buffer,
 	size_t terminator;
 	size_t newlen;
 	size_t reserve;
+	size_t offset;
 
 	return_val_if_fail (p11_buffer_ok (buffer), NULL);
 
@@ -174,11 +175,11 @@ p11_buffer_append (p11_buffer *buffer,
 	}
 
 	data = buffer->data;
-	data += buffer->len;
+	offset = buffer->len;
 	buffer->len += length;
 	if (terminator)
-		data[length] = '\0';
-	return data;
+		data[buffer->len] = '\0';
+	return data + offset;
 }
 
 void
