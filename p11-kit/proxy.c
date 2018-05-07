@@ -418,8 +418,8 @@ proxy_C_GetInfo (CK_X_FUNCTION_LIST *self,
 	info->libraryVersion.major = LIBRARY_VERSION_MAJOR;
 	info->libraryVersion.minor = LIBRARY_VERSION_MINOR;
 	info->flags = 0;
-	strncpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
-	strncpy ((char*)info->libraryDescription, LIBRARY_DESCRIPTION, 32);
+	memcpy ((char*)info->manufacturerID, MANUFACTURER_ID, 32);
+	memcpy ((char*)info->libraryDescription, LIBRARY_DESCRIPTION, 32);
 	return CKR_OK;
 }
 
