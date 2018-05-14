@@ -200,7 +200,7 @@ match_struct_string (const unsigned char *inuri, const unsigned char *real,
 }
 
 static bool
-match_struct_version (CK_VERSION_PTR inuri, CK_VERSION_PTR real)
+match_struct_version (CK_VERSION const *inuri, CK_VERSION const *real)
 {
 	/* This matches anything */
 	if (inuri->major == (CK_BYTE)-1 && inuri->minor == (CK_BYTE)-1)
@@ -233,8 +233,8 @@ p11_kit_uri_get_module_info (P11KitUri *uri)
 }
 
 int
-p11_match_uri_module_info (CK_INFO_PTR one,
-                           CK_INFO_PTR two)
+p11_match_uri_module_info (CK_INFO const *one,
+                           CK_INFO const *two)
 {
 	return (match_struct_string (one->libraryDescription,
 	                             two->libraryDescription,
@@ -261,7 +261,7 @@ p11_match_uri_module_info (CK_INFO_PTR one,
  * Returns: 1 if the URI matches, 0 if not.
  */
 int
-p11_kit_uri_match_module_info (P11KitUri *uri, CK_INFO_PTR info)
+p11_kit_uri_match_module_info (const P11KitUri *uri, const CK_INFO *info)
 {
 	return_val_if_fail (uri != NULL, 0);
 	return_val_if_fail (info != NULL, 0);
@@ -296,8 +296,8 @@ p11_kit_uri_get_slot_info (P11KitUri *uri)
 }
 
 int
-p11_match_uri_slot_info (CK_SLOT_INFO_PTR one,
-			 CK_SLOT_INFO_PTR two)
+p11_match_uri_slot_info (CK_SLOT_INFO const *one,
+                         CK_SLOT_INFO const *two)
 {
 	return (match_struct_string (one->slotDescription,
 				     two->slotDescription,
@@ -323,7 +323,7 @@ p11_match_uri_slot_info (CK_SLOT_INFO_PTR one,
  * Returns: 1 if the URI matches, 0 if not.
  */
 int
-p11_kit_uri_match_slot_info (P11KitUri *uri, CK_SLOT_INFO_PTR slot_info)
+p11_kit_uri_match_slot_info (const P11KitUri *uri, const CK_SLOT_INFO *slot_info)
 {
 	return_val_if_fail (uri != NULL, 0);
 	return_val_if_fail (slot_info != NULL, 0);
@@ -388,8 +388,8 @@ p11_kit_uri_get_token_info (P11KitUri *uri)
 }
 
 int
-p11_match_uri_token_info (CK_TOKEN_INFO_PTR one,
-                          CK_TOKEN_INFO_PTR two)
+p11_match_uri_token_info (CK_TOKEN_INFO const *one,
+                          CK_TOKEN_INFO const *two)
 {
 	return (match_struct_string (one->label,
 	                             two->label,
@@ -421,7 +421,7 @@ p11_match_uri_token_info (CK_TOKEN_INFO_PTR one,
  * Returns: 1 if the URI matches, 0 if not.
  */
 int
-p11_kit_uri_match_token_info (P11KitUri *uri, CK_TOKEN_INFO_PTR token_info)
+p11_kit_uri_match_token_info (const P11KitUri *uri, const CK_TOKEN_INFO *token_info)
 {
 	return_val_if_fail (uri != NULL, 0);
 	return_val_if_fail (token_info != NULL, 0);
@@ -578,7 +578,7 @@ p11_kit_uri_clear_attributes (P11KitUri *uri)
  * Returns: 1 if the URI matches, 0 if not.
  */
 int
-p11_kit_uri_match_attributes (P11KitUri *uri, CK_ATTRIBUTE_PTR attrs,
+p11_kit_uri_match_attributes (const P11KitUri *uri, const CK_ATTRIBUTE *attrs,
                               CK_ULONG n_attrs)
 {
 	CK_ATTRIBUTE *attr;
@@ -654,7 +654,7 @@ p11_kit_uri_any_unrecognized (P11KitUri *uri)
  * Returns: The pin-value or %NULL if not present.
  */
 const char*
-p11_kit_uri_get_pin_value (P11KitUri *uri)
+p11_kit_uri_get_pin_value (const P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return uri->pin_value;
@@ -687,7 +687,7 @@ p11_kit_uri_set_pin_value (P11KitUri *uri, const char *pin)
  * Returns: The pin-source or %NULL if not present.
  */
 const char*
-p11_kit_uri_get_pin_source (P11KitUri *uri)
+p11_kit_uri_get_pin_source (const P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return uri->pin_source;
@@ -700,7 +700,7 @@ p11_kit_uri_get_pin_source (P11KitUri *uri)
  * Deprecated: use p11_kit_uri_get_pin_source().
  */
 const char*
-p11_kit_uri_get_pinfile (P11KitUri *uri)
+p11_kit_uri_get_pinfile (const P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return p11_kit_uri_get_pin_source (uri);
@@ -747,7 +747,7 @@ p11_kit_uri_set_pinfile (P11KitUri *uri, const char *pinfile)
  * Returns: The module-name or %NULL if not present.
  */
 const char*
-p11_kit_uri_get_module_name (P11KitUri *uri)
+p11_kit_uri_get_module_name (const P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return uri->module_name;
@@ -779,7 +779,7 @@ p11_kit_uri_set_module_name (P11KitUri *uri, const char *name)
  * Returns: The module-path or %NULL if not present.
  */
 const char*
-p11_kit_uri_get_module_path (P11KitUri *uri)
+p11_kit_uri_get_module_path (const P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return uri->module_path;
@@ -813,7 +813,7 @@ p11_kit_uri_set_module_path (P11KitUri *uri, const char *path)
  * Returns: The value of vendor query or %NULL if not present.
  */
 const char*
-p11_kit_uri_get_vendor_query (P11KitUri *uri, const char *name)
+p11_kit_uri_get_vendor_query (const P11KitUri *uri, const char *name)
 {
 	size_t i;
 
