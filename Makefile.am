@@ -84,6 +84,7 @@ hellcheck: all
 	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(HELLCHECK_ENV)" check-TESTS
 
 dist-hook:
+	cp README.md README
 	@if test -d "$(srcdir)/.git"; \
 	then \
 		echo Creating ChangeLog && \

@@ -42,6 +42,7 @@ depcomp
 makefile
 install-sh
 INSTALL
+README
 libtool
 ltmain.sh
 makefile
