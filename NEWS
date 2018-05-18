@@ -1,4 +1,4 @@
-0.23.11 (devel)
+0.23.11 (stable)
  * trust: Add extractor for edk2/cacerts.bin [PR#139]
  * modules: Add option to control module visibility from proxy [PR#140]
  * trust: Prevent trust module being loaded by proxy module [PR#142]
