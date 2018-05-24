@@ -22,7 +22,7 @@ BUILT_SOURCES =
 
 CLEANFILES =
 
-EXTRA_DIST = HACKING
+EXTRA_DIST = HACKING README
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 inc_HEADERS =
@@ -82,7 +82,11 @@ hellcheck: all
 	make $(AM_MAKEFLAGS) TESTS_ENVIRONMENT="$(HELLCHECK_ENV)" check-TESTS
 
 dist-hook:
-	cp README.md README
+	@if test -d "$(srcdir)/.git"; \
+	then \
+		echo Creating README && \
+		cp README.md README; \
+	fi
 	@if test -d "$(srcdir)/.git"; \
 	then \
 		echo Creating ChangeLog && \
