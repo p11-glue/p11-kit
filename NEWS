@@ -4,6 +4,8 @@
  * trust: Prevent trust module being loaded by proxy module [PR#142]
  * library: Use dedicated locale object for printing error [PR#148]
  * Treat CKR_CRYPTOKI_ALREADY_INITIALIZED correctly [PR#134]
+ * Improve const correctness for P11KitUri [PR#152]
+ * PKCS#11 URI scheme comparison is now case insensitive [PR#156]
  * Build and test fixes [PR#151, PR#149, PR#141, PR#138, PR#135]
 
 0.23.10 (devel)
