@@ -103,6 +103,26 @@ test_uri_parse (void)
 }
 
 static void
+test_uri_parse_case_insensitive (void)
+{
+	P11KitUri *uri;
+	int ret;
+
+	uri = p11_kit_uri_new ();
+	assert_ptr_not_null (uri);
+
+	ret = p11_kit_uri_parse ("PKCS11:", P11_KIT_URI_FOR_MODULE, uri);
+	assert_num_eq (P11_KIT_URI_OK, ret);
+
+	assert (is_module_empty (uri));
+	assert (is_slot_empty (uri));
+	assert (is_token_empty (uri));
+	assert (are_attributes_empty (uri));
+
+	p11_kit_uri_free (uri);
+}
+
+static void
 test_uri_parse_bad_scheme (void)
 {
 	P11KitUri *uri;
@@ -1619,6 +1639,7 @@ main (int argc,
       char *argv[])
 {
 	p11_test (test_uri_parse, "/uri/test_uri_parse");
+	p11_test (test_uri_parse_case_insensitive, "/uri/test_uri_parse_case_insensitive");
 	p11_test (test_uri_parse_bad_scheme, "/uri/test_uri_parse_bad_scheme");
 	p11_test (test_uri_parse_with_label, "/uri/test_uri_parse_with_label");
 	p11_test (test_uri_parse_with_empty_label, "/uri/test_uri_parse_with_empty_label");
