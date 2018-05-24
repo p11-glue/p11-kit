@@ -1628,7 +1628,7 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 {
 	const char *spos, *epos;
 	int ret;
-	size_t length;
+	size_t length, i;
 	char *allocated = NULL;
 
 	assert (string);
@@ -1648,8 +1648,14 @@ p11_kit_uri_parse (const char *string, P11KitUriType uri_type,
 		free (allocated);
 		return P11_KIT_URI_BAD_SCHEME;
 	}
-	ret = strncmp (string, P11_KIT_URI_SCHEME, strlen (P11_KIT_URI_SCHEME));
-	if (ret != 0) {
+	if (epos - string != P11_KIT_URI_SCHEME_LEN) {
+		free (allocated);
+		return P11_KIT_URI_BAD_SCHEME;
+	}
+	for (i = 0; i < P11_KIT_URI_SCHEME_LEN; i++)
+		if (p11_ascii_tolower (string[i]) != P11_KIT_URI_SCHEME[i])
+			break;
+	if (i != P11_KIT_URI_SCHEME_LEN) {
 		free (allocated);
 		return P11_KIT_URI_BAD_SCHEME;
 	}
