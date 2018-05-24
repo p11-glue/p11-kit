@@ -1,7 +1,5 @@
 
 NULL =
-WEBHOST = anarchy.freedesktop.org
-WEBBASE = /srv/p11-glue.freedesktop.org/www
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
@@ -108,20 +106,7 @@ coverage:
 		--title "p11-kit $(PACKAGE_VERSION)" \
 		build/coverage.info
 	@echo "file://$(abs_top_builddir)/build/coverage/index.html"
-
-upload-coverage: coverage
-	rsync -Hvax build/coverage/./ $(WEBHOST):$(WEBBASE)/build/coverage/./
 endif
-
-if ENABLE_GTK_DOC
-upload-doc: all
-	rsync -Hvax --exclude doc --exclude build \
-		doc/manual/html/./ $(WEBHOST):$(WEBBASE)/doc/p11-kit/./
-endif
-
-upload-release: $(DIST_ARCHIVES)
-	gpg --detach-sign --local-user 'stef@thewalter.net' $<
-	scp $< $<.sig $(WEBHOST):$(WEBBASE)/releases/
 
 transifex:
 	cd $(srcdir) && sh build/tx-update
