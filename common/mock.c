@@ -2024,7 +2024,7 @@ mock_C_EncryptUpdate (CK_SESSION_HANDLE session,
 	}
 
 	for (i = 0; i < part_len; ++i)
-		encrypted_part[i] = toupper (part[i]);
+		encrypted_part[i] = p11_ascii_toupper (part[i]);
 	*encrypted_part_len = part_len;
 	return CKR_OK;
 }
@@ -2220,7 +2220,7 @@ mock_C_DecryptUpdate (CK_SESSION_HANDLE session,
 	}
 
 	for (i = 0; i < encrypted_part_len; ++i)
-		part[i] = tolower (encrypted_part[i]);
+		part[i] = p11_ascii_tolower (encrypted_part[i]);
 	*part_len = encrypted_part_len;
 	return CKR_OK;
 }

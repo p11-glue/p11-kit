@@ -159,7 +159,7 @@ convert_alias (const char *input,
 	for (i = 0; i < length; i++) {
 		ch = input[i];
 		if (!isspace (ch) && (ch & 0x80) == 0) {
-			ch = tolower (ch);
+			ch = p11_ascii_tolower (ch);
 			p11_buffer_add (buf, &ch, 1);
 		}
 	}

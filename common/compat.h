@@ -340,4 +340,7 @@ int        fdwalk           (int (* cb) (void *data, int fd),
 
 #endif
 
+int        p11_ascii_tolower (int c);
+int        p11_ascii_toupper (int c);
+
 #endif /* __COMPAT_H__ */
