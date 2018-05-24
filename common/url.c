@@ -75,8 +75,8 @@ p11_url_decode (const char *value,
 				free (result);
 				return NULL;
 			}
-			a = strchr (HEX_CHARS, tolower (value[0]));
-			b = strchr (HEX_CHARS, tolower (value[1]));
+			a = strchr (HEX_CHARS, p11_ascii_tolower (value[0]));
+			b = strchr (HEX_CHARS, p11_ascii_tolower (value[1]));
 			if (!a || !b) {
 				free (result);
 				return NULL;

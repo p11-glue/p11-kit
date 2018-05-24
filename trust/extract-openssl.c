@@ -395,7 +395,7 @@ p11_openssl_canon_string (char *str,
 			/* If there has been a space, then add one */
 			if (sp)
 				*out++ = ' ';
-			*out++ = (*in & 0x80) ? *in : tolower (*in);
+			*out++ = (*in & 0x80) ? *in : p11_ascii_tolower (*in);
 			sp = false;
 			nsp = true;
 		/* If there has been a non-space, then note we should get one */

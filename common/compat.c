@@ -953,3 +953,19 @@ fdwalk (int (* cb) (void *data, int fd),
 #endif /* HAVE_FDWALK */
 
 #endif /* OS_UNIX */
+
+int
+p11_ascii_tolower (int c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return 'a' + (c - 'A');
+	return c;
+}
+
+int
+p11_ascii_toupper (int c)
+{
+	if (c >= 'a' && c <= 'z')
+		return 'A' + (c - 'a');
+	return c;
+}
