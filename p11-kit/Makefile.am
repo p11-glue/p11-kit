@@ -365,5 +365,6 @@ mock_seven_la_LIBADD = $(mock_one_la_LIBADD)
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/test-mock.c \
+	p11-kit/test-messages.sh \
 	p11-kit/test-server.sh \
 	$(NULL)
