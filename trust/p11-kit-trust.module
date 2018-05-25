@@ -16,5 +16,10 @@ trust-policy: yes
 # retrieve trust information.
 x-trust-lookup: pkcs11:library-description=PKCS%2311%20Kit%20Trust%20Module
 
+# This is for drop-in compatibility with glib-networking and gcr. Those
+# projects used this non-standard attribute to denote slots to use to
+# store user trust information.
+x-trust-store: pkcs11:library-description=PKCS%2311%20Kit%20Trust%20Module;token=User%20Trust
+
 # Prevent this module being loaded by the proxy module
 disable-in: p11-kit-proxy
