@@ -922,8 +922,10 @@ const static builder_schema trust_schema = {
 	}, common_populate
 };
 
+/* CKO_X_TRUST_ASSERTION objects can be stored through PKCS #11, for
+ * compatibility reasons with gcr */
 const static builder_schema assertion_schema = {
-	GENERATED_CLASS,
+	NORMAL_BUILD,
 	{ COMMON_ATTRS,
 	  { CKA_X_PURPOSE, REQUIRE | CREATE },
 	  { CKA_X_CERTIFICATE_VALUE, CREATE },
