@@ -79,11 +79,15 @@ typedef enum {
  * to that here.
  */
 #ifdef CRYPTOKI_GNU
+typedef struct ck_info CK_INFO;
 typedef struct ck_info *CK_INFO_PTR;
+typedef struct ck_token_info CK_TOKEN_INFO;
 typedef struct ck_token_info *CK_TOKEN_INFO_PTR;
 typedef ck_attribute_type_t CK_ATTRIBUTE_TYPE;
+typedef struct ck_attribute CK_ATTRIBUTE;
 typedef struct ck_attribute *CK_ATTRIBUTE_PTR;
 typedef unsigned long int CK_ULONG;
+typedef struct ck_slot_info CK_SLOT_INFO;
 typedef struct ck_slot_info *CK_SLOT_INFO_PTR;
 typedef ck_slot_id_t CK_SLOT_ID;
 typedef P11KitUriType p11_kit_uri_type_t;
