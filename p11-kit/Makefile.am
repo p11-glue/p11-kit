@@ -104,6 +104,7 @@ noinst_LTLIBRARIES += \
 
 check_LTLIBRARIES += \
 	libp11-kit-testable.la \
+	libp11-kit-pkcs11-gnu.la \
 	$(NULL)
 
 libp11_kit_internal_la_LDFLAGS = -no-undefined
@@ -116,6 +117,37 @@ libp11_kit_testable_la_SOURCES = \
 	$(libp11_kit_la_SOURCES) \
 	$(NULL)
 libp11_kit_testable_la_LIBADD = $(COMMON_LIBS)
+
+pkcs11_gnu_sources = \
+	p11-kit/uri.gnu.c \
+	p11-kit/iter.gnu.c \
+	p11-kit/pin.gnu.c \
+	$(NULL)
+
+BUILT_SOURCES += $(pkcs11_gnu_sources)
+CLEANFILES += $(pkcs11_gnu_sources)
+
+p11-kit/uri.gnu.c: p11-kit/uri.h
+p11-kit/iter.gnu.c: p11-kit/iter.h
+p11-kit/pin.gnu.c: p11-kit/pin.h
+
+SUFFIXES = .h .gnu.c
+.h.gnu.c:
+	$(AM_V_GEN) src=$<; dst=$@; rm -f $@-t $@ && \
+	{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
+	  echo; \
+	  echo '#include <stdlib.h>'; \
+	  echo '#include "p11-kit/p11-kit.h"'; \
+	  cat $$src; \
+	  echo "void *$${dst}_funcs[] = {" | sed 's/[^][ *a-z0-9_={]/_/g'; \
+	  sed -n -e '/^typedef/d' -e 's/.* \(p11_kit_[^ ]*\) *(.*/	\1,/p' $<; \
+	  echo '};'; \
+	} > $@-t && \
+	mv -f $@-t $@
+
+libp11_kit_pkcs11_gnu_la_LDFLAGS = -no-undefined
+libp11_kit_pkcs11_gnu_la_SOURCES = $(pkcs11_gnu_sources)
+libp11_kit_pkcs11_gnu_la_CFLAGS = -DCRYPTOKI_GNU=1 -DP11_KIT_FUTURE_UNSTABLE_API=1
 
 if OS_WIN32
 
