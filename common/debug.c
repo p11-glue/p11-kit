@@ -73,7 +73,7 @@ static bool debug_strict = false;
 /* global variable exported in debug.h */
 int p11_debug_current_flags = ~0;
 
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_STRERROR_L
 extern locale_t p11_message_locale;
 #endif
 
@@ -163,7 +163,7 @@ p11_debug_message_err (int flag,
 		va_end (args);
 
 		snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
-#if defined(HAVE_STRERROR_L) && defined(HAVE_NEWLOCALE)
+#ifdef HAVE_STRERROR_L
 		if (p11_message_locale != (locale_t) 0)
 			strncpy (strerr, strerror_l (errnum, p11_message_locale), sizeof (strerr));
 #else

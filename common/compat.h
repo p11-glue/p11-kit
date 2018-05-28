@@ -340,6 +340,12 @@ int        fdwalk           (int (* cb) (void *data, int fd),
 
 #endif
 
+/* If either locale_t or newlocale() is not available, strerror_l()
+ * cannot be used */
+#if !defined(HAVE_LOCALE_T) || !defined(HAVE_NEWLOCALE)
+#undef HAVE_STRERROR_L
+#endif
+
 int        p11_ascii_tolower (int c);
 int        p11_ascii_toupper (int c);
 

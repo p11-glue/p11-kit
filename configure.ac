@@ -96,12 +96,17 @@ if test "$os_unix" = "yes"; then
 		AC_MSG_ERROR([could not find socket])
 	])
 
-	# These are thngs we can work around
-	AC_CHECK_HEADERS([locale.h sys/resource.h ucred.h])
+	AC_CHECK_HEADERS([locale.h], [
+		AC_CHECK_TYPES([locale_t], [], [], [[#include <locale.h>]])
+		AC_CHECK_FUNCS([newlocale strerror_l])
+	])
+
+	# These are things we can work around
+	AC_CHECK_HEADERS([sys/resource.h ucred.h])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([getauxval issetugid getresuid secure_getenv])
-	AC_CHECK_FUNCS([strnstr memdup newlocale strndup strerror_l strerror_r])
+	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([reallocarray])
 	AC_CHECK_FUNCS([fdwalk])
 	AC_CHECK_FUNCS([setenv])
