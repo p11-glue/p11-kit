@@ -1,3 +1,8 @@
+0.23.12 (stable)
+ * Fix compile error when PKCS#11 GNU calling convention is enabled [PR#160]
+ * Fix getauxval() and secure_getenv() emulation on macOS and FreeBSD [PR#167]
+ * Build and test fixes on macOS [PR#162, PR#168]
+
 0.23.11 (stable)
  * trust: Add extractor for edk2/cacerts.bin [PR#139]
  * modules: Add option to control module visibility from proxy [PR#140]
