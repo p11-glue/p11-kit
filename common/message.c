@@ -60,7 +60,7 @@
 
 static bool print_messages = false;
 
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_STRERROR_L
 locale_t p11_message_locale = (locale_t) 0;
 #endif
 
@@ -119,7 +119,7 @@ p11_message_err (int errnum,
 	buffer[length] = 0;
 
 	snprintf (strerr, sizeof (strerr), "Unknown error %d", errnum);
-#if defined(HAVE_STRERROR_L) && defined(HAVE_NEWLOCALE)
+#ifdef HAVE_STRERROR_L
 	if (p11_message_locale != (locale_t) 0)
 		strncpy (strerr, strerror_l (errnum, p11_message_locale), sizeof (strerr));
 #else

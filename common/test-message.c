@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_STRERROR_L
 extern locale_t p11_message_locale;
 #endif
 
@@ -54,7 +54,7 @@ test_with_err (void)
 	const char *last;
 	char *expected;
 
-#ifdef HAVE_NEWLOCALE
+#ifdef HAVE_STRERROR_L
 	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
 #endif
 
@@ -67,7 +67,7 @@ test_with_err (void)
 	assert_str_eq (expected, last);
 	free (expected);
 
-#ifdef HAVE_NEWLOCALE
+#ifdef HAVE_STRERROR_L
 	freelocale (p11_message_locale);
 #endif
 }

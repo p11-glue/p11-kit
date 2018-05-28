@@ -70,7 +70,7 @@ pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
 
 unsigned int p11_forkid = 1;
 
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_STRERROR_L
 extern locale_t p11_message_locale;
 #endif
 
@@ -130,7 +130,7 @@ p11_library_init_impl (void)
 	p11_mutex_init (&p11_virtual_mutex);
 	pthread_key_create (&thread_local, free);
 	p11_message_storage = thread_local_message;
-#ifdef HAVE_NEWLOCALE
+#ifdef HAVE_STRERROR_L
 	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
 #endif
 
@@ -152,7 +152,7 @@ p11_library_uninit (void)
 	free (pthread_getspecific (thread_local));
 	pthread_setspecific (thread_local, NULL);
 
-#ifdef HAVE_NEWLOCALE
+#ifdef HAVE_STRERROR_L
 	freelocale (p11_message_locale);
 #endif
 	p11_message_storage = dont_store_message;
