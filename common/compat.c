@@ -912,6 +912,7 @@ fdwalk (int (* cb) (void *data, int fd),
 	struct rlimit rl;
 #endif
 
+#ifdef __linux__
 	dir = opendir ("/proc/self/fd");
 	if (dir != NULL) {
 		while ((de = readdir (dir)) != NULL) {
@@ -934,6 +935,7 @@ fdwalk (int (* cb) (void *data, int fd),
 		closedir (dir);
 		return res;
 	}
+#endif
 
 	/* No /proc, brute force */
 #ifdef HAVE_SYS_RESOURCE_H
