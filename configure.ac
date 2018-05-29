@@ -105,13 +105,26 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_HEADERS([sys/resource.h ucred.h])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
-	AC_CHECK_FUNCS([getauxval issetugid getresuid secure_getenv])
+	AC_CHECK_FUNCS([getauxval getresuid secure_getenv])
 	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
 	AC_CHECK_FUNCS([reallocarray])
 	AC_CHECK_FUNCS([fdwalk])
 	AC_CHECK_FUNCS([setenv])
 	AC_CHECK_FUNCS([getpeereid])
 	AC_CHECK_FUNCS([getpeerucred])
+
+	# Check if issetugid() is available and has compatible behavior with OpenBSD
+	AC_CHECK_FUNCS([issetugid], [
+		AC_MSG_CHECKING([whether issetugid() can detect setuid/setgid])
+		issetugid_openbsd=no
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
+			[[return issetugid ();]])],
+			[chmod 02777 ./conftest$EXEEXT; ./conftest$EXEEXT || issetugid_openbsd=yes])
+		if test "$issetugid_openbsd" = yes; then
+			AC_DEFINE([HAVE_ISSETUGID_OPENBSD], [1], [Whether issetugid() has compatible behavior with OpenBSD])
+		fi
+		AC_MSG_RESULT([$issetugid_openbsd])
+	])
 
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],
