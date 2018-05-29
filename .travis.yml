@@ -1,54 +1,58 @@
-sudo: required
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS=""
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov"
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lasan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir PRELOAD_CMD='ls -1 /usr/lib64/libasan.so.* | head -1' LSAN_OPTIONS='suppressions=/srcdir/build/lsan.supp' EXTRA_PKGS="libasan"
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lubsan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="libubsan"
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="clang-analyzer"
+    - os: linux
+      sudo: required
+      services: docker
+      env: BUILD_OPTS="--host=x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="mingw64-gcc mingw64-libffi mingw64-libtasn1 wine"
 
 language: c
 
-env:
-  - BUILD_OPTS="" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS=""
-  - BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov"
-  - BUILD_OPTS="CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lasan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir PRELOAD_CMD='ls -1 /usr/lib64/libasan.so.* | head -1' LSAN_OPTIONS='suppressions=/srcdir/build/lsan.supp' EXTRA_PKGS="libasan"
-  - BUILD_OPTS="CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lubsan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="libubsan"
-  - BUILD_OPTS="" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="clang-analyzer"
-  - BUILD_OPTS="--host=x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="mingw64-gcc mingw64-libffi mingw64-libtasn1 wine"
-
-services:
-  - docker
-
 before_install:
-  - docker pull fedora
-  - export CONTAINER=$(docker run -d fedora sleep 1800)
-  - docker exec $CONTAINER dnf -y install 'dnf-command(builddep)'
-  - docker exec $CONTAINER dnf -y builddep p11-kit
-  - docker exec $CONTAINER dnf -y install gettext-devel git libtool make opensc openssl $EXTRA_PKGS
-  - docker exec $CONTAINER useradd user
+  - |
+      if test -e "./.travis/${TRAVIS_OS_NAME}/before_install.sh"; then
+        . "./.travis/${TRAVIS_OS_NAME}/before_install.sh"
+      fi
 
 install:
-  - docker cp . $CONTAINER:/srcdir
-  - docker exec $CONTAINER cp -R /srcdir /coverage
-  - docker exec $CONTAINER mkdir /builddir
-  - docker exec $CONTAINER chown -R user /builddir
-  - docker exec $CONTAINER mkdir /installdir
-  - docker exec $CONTAINER mkdir -p /installdir/etc/pki/ca-trust-source
-  - docker exec $CONTAINER mkdir -p /installdir/share/pki/ca-trust-source
-  - docker exec $CONTAINER chown -R user /installdir
-  # FIXME: This is needed because some files are included in distribution
-  # and need to be generated in $srcdir rather than $builddir
-  - docker exec $CONTAINER chown -R user /srcdir
-  - docker exec $CONTAINER chown -R user /coverage
+  - |
+      if test -e "./.travis/${TRAVIS_OS_NAME}/install.sh"; then
+        . "./.travis/${TRAVIS_OS_NAME}/install.sh"
+      fi
 
 script:
-  - docker exec $CONTAINER sh -c "cd $SRCDIR && NOCONFIGURE=1 ./autogen.sh"
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SRCDIR/configure --enable-strict --prefix=/installdir --libdir=/installdir/lib --sysconfdir=/installdir/etc --with-trust-paths=/installdir/etc/pki/ca-trust-source:/installdir/share/pki/ca-trust-source $BUILD_OPTS"
   - |
-      if test -n "$PRELOAD_CMD"; then
-        P11_KIT_TEST_LD_PRELOAD=$(docker exec $CONTAINER su - user sh -c "$PRELOAD_CMD")
+      if test -e "./.travis/${TRAVIS_OS_NAME}/script.sh"; then
+        . "./.travis/${TRAVIS_OS_NAME}/script.sh"
       fi
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SCAN_BUILD make -j$(nproc) V=1"
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && P11_KIT_DEBUG=all LSAN_OPTIONS="$LSAN_OPTIONS" P11_KIT_TEST_LD_PRELOAD=\"$P11_KIT_TEST_LD_PRELOAD\" make check -j$(nproc) V=1 $CHECK_OPTS"
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && make install"
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && make installcheck"
 
 after_failure:
-  - docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && cat test-suite.log"
+  - |
+      if test -e "./.travis/${TRAVIS_OS_NAME}/after_failure.sh"; then
+        . "./.travis/${TRAVIS_OS_NAME}/after_failure.sh"
+      fi
 
 after_success:
-  - if test x"$COVERAGE" = xyes; then docker exec $CONTAINER pip install cpp-coveralls; docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" $CONTAINER sh -c "cd $BUILDDIR && coveralls -b $BUILDDIR -E '(^|.*/)(frob|mock|test)-.*|(^|.*/)(virtual-fixed\.c)' --gcov-options '\-lp'"; fi
+  - |
+      if test -e "./.travis/${TRAVIS_OS_NAME}/after_success.sh"; then
+        . "./.travis/${TRAVIS_OS_NAME}/after_success.sh"
+      fi
