@@ -24,6 +24,7 @@ matrix:
       sudo: required
       services: docker
       env: BUILD_OPTS="--host=x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="mingw64-gcc mingw64-libffi mingw64-libtasn1 wine"
+    - os: osx
 
 language: c
 
