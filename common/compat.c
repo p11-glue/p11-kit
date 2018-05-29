@@ -805,7 +805,7 @@ getauxval (unsigned long type)
 		extern int __libc_enable_secure;
 		secure = __libc_enable_secure;
 
-#elif defined(HAVE_ISSETUGID)
+#elif defined(HAVE_ISSETUGID) && defined(HAVE_ISSETUGID_OPENBSD)
 		secure = issetugid ();
 
 #elif defined(OS_UNIX)
