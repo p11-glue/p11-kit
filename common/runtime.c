@@ -39,6 +39,7 @@
 #include "compat.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef OS_UNIX
@@ -58,7 +59,7 @@ p11_get_runtime_directory (char **directoryp)
 	char *directory;
 #ifdef OS_UNIX
 	const char * const *bases = _p11_runtime_bases;
-	char prefix[13 + 1 + 20 + 6 + 1];
+	char *prefix;
 	uid_t uid;
 	struct stat sb;
 	struct passwd pwbuf, *pw;
@@ -84,15 +85,14 @@ p11_get_runtime_directory (char **directoryp)
 	uid = getuid ();
 
 	for (i = 0; bases[i] != NULL; i++) {
-		snprintf (prefix, sizeof prefix, "%s/user/%u",
-			  bases[i], (unsigned int) uid);
+		if (asprintf (&prefix, "%s/user/%u",
+			      bases[i], (unsigned int) uid) < 0)
+			return CKR_HOST_MEMORY;
 		if (stat (prefix, &sb) != -1 && S_ISDIR (sb.st_mode)) {
-			directory = strdup (prefix);
-			if (!directory)
-				return CKR_HOST_MEMORY;
-			*directoryp = directory;
+			*directoryp = prefix;
 			return CKR_OK;
 		}
+		free (prefix);
 	}
 #endif
 
