@@ -86,6 +86,7 @@ test_bases (void)
 		NULL
 	};
 	char *user, *path;
+	CK_RV rv;
 
 	if (asprintf (&user, "%s/user", test.directory) < 0)
 		assert_not_reached ();
@@ -96,15 +97,13 @@ test_bases (void)
 	free (user);
 	if (mkdir (path, 0700) < 0)
 		assert_not_reached ();
-	free (path);
 
 	bases[0] = test.directory;
 	_p11_runtime_bases = bases;
 
 	unsetenv ("XDG_RUNTIME_DIR");
-	p11_get_runtime_directory (&directory);
-	if (asprintf (&path, "%s/user/%d", test.directory, getuid ()) < 0)
-		assert_not_reached ();
+	rv = p11_get_runtime_directory (&directory);
+	assert_num_eq (CKR_OK, rv);
 	assert_str_eq (path, directory);
 	free (path);
 	free (directory);
