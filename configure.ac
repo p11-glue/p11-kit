@@ -115,15 +115,17 @@ if test "$os_unix" = "yes"; then
 
 	# Check if issetugid() is available and has compatible behavior with OpenBSD
 	AC_CHECK_FUNCS([issetugid], [
-		AC_MSG_CHECKING([whether issetugid() can detect setuid/setgid])
-		issetugid_openbsd=no
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
-			[[return issetugid ();]])],
-			[chmod 02777 ./conftest$EXEEXT; ./conftest$EXEEXT || issetugid_openbsd=yes])
-		if test "$issetugid_openbsd" = yes; then
+		AC_CACHE_CHECK([whether issetugid() can detect setuid/setgid],
+			[ac_cv_issetugid_openbsd],
+			[ac_cv_issetugid_openbsd=no
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
+				[[return issetugid ();]])],
+				[chmod 02777 ./conftest$EXEEXT; ./conftest$EXEEXT || ac_cv_issetugid_openbsd=yes],
+				[ac_cv_issetugid_openbsd=no],
+				[ac_cv_issetugid_openbsd="guessing no"])])
+		if test "$ac_cv_issetugid_openbsd" = yes; then
 			AC_DEFINE([HAVE_ISSETUGID_OPENBSD], [1], [Whether issetugid() has compatible behavior with OpenBSD])
 		fi
-		AC_MSG_RESULT([$issetugid_openbsd])
 	])
 
 	# Required functions
