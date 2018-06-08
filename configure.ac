@@ -117,7 +117,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([issetugid], [
 		AC_MSG_CHECKING([whether issetugid() can detect setuid/setgid])
 		issetugid_openbsd=no
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
 			[[return issetugid ();]])],
 			[chmod 02777 ./conftest$EXEEXT; ./conftest$EXEEXT || issetugid_openbsd=yes])
 		if test "$issetugid_openbsd" = yes; then
