@@ -1,0 +1,15 @@
+[Unit]
+Description=p11-kit server
+Documentation=man:p11-kit(8)
+
+Requires=p11-kit-server.socket
+
+[Service]
+Type=simple
+StandardError=journal
+ExecStart=@bindir@/p11-kit server -f -n %t/p11-kit/pkcs11 pkcs11:
+Restart=on-failure
+
+[Install]
+Also=p11-kit-server.socket
+WantedBy=default.target

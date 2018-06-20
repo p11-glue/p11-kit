@@ -253,7 +253,29 @@ p11_kit_server_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit.la \
+	$(LIBSYSTEMD_LIBS) \
 	$(NULL)
+
+p11_kit_server_CFLAGS = \
+	$(COMMON_CFLAGS) \
+	$(LIBSYSTEMD_CFLAGS) \
+	$(NULL)
+
+if WITH_SYSTEMD
+p11-kit/p11-kit-server.service: p11-kit/p11-kit-server.service.in
+	$(AM_V_GEN)rm -f $@-t $@ && \
+	sed 's|@bindir[@]|$(bindir)|g' $< > $@-t && \
+	mv -f $@-t $@
+
+CLEANFILES += p11-kit/p11-kit-server.service
+
+systemduserunit_DATA = \
+	p11-kit/p11-kit-server.socket \
+	p11-kit/p11-kit-server.service \
+	$(NULL)
+endif
+
+EXTRA_DIST += p11-kit/p11-kit-server.socket p11-kit/p11-kit-server.service.in
 
 # Tests ----------------------------------------------------------------
 
