@@ -545,6 +545,28 @@ AC_DEFINE_UNQUOTED(EXEEXT, ["$EXEEXT"], [File extension for executables])
 privatedir='${libexecdir}/p11-kit'
 AC_SUBST(privatedir)
 
+# --------------------------------------------------------------------
+# systemd
+
+AC_ARG_WITH([systemd],
+            AS_HELP_STRING([--without-systemd],
+                           [Disable systemd socket activation]))
+
+AS_IF([test "$with_systemd" != "no"], [
+	PKG_CHECK_MODULES([LIBSYSTEMD], [libsystemd], [],
+		[with_systemd=no])
+
+	PKG_CHECK_VAR([systemduserunitdir], [systemd], [systemduserunitdir], [],
+		[with_systemd=no])
+
+	AS_IF([test "$with_systemd" != "no"], [
+		with_systemd=yes
+		AC_DEFINE_UNQUOTED(WITH_SYSTEMD, 1, [Build with systemd socket activation])
+	])
+])
+
+AM_CONDITIONAL(WITH_SYSTEMD, [test "$with_systemd" = "yes"])
+
 AC_CONFIG_FILES([Makefile
 	doc/Makefile
 	doc/manual/Makefile
@@ -576,6 +598,7 @@ AC_MSG_NOTICE([build options:
     With libtasn1 dependency:        $with_libtasn1
     With libffi:                     $with_libffi
     With hash implementation:        $with_hash_impl
+    With systemd:                    $with_systemd
 
     Build trust module:              $enable_trust_module
     Trust module paths:              $trust_status

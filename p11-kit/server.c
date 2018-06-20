@@ -62,6 +62,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifdef WITH_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #ifdef HAVE_SIGHANDLER_T
 #define SIGHANDLER_T sighandler_t
 #elif HAVE_SIG_T
@@ -273,8 +277,14 @@ create_socket (const char *address,
 	umask (066);
 	rc = bind (sd, (struct sockaddr *)&sa, SUN_LEN (&sa));
 	if (rc == -1) {
-		p11_message_err (errno, "could not create socket %s", socket_file);
+		p11_message_err (errno, "could not bind socket %s", socket_file);
 		return -1;
+	}
+
+	rc = listen (sd, 1024);
+	if (rc == -1) {
+		p11_message_err (errno, "could not listen to socket %s", socket_file);
+		return 1;
 	}
 
 	if (uid != -1 && gid != -1) {
@@ -356,7 +366,7 @@ server_loop (Server *server,
 	     bool foreground,
 	     struct timespec *timeout)
 {
-	int ret = 1, rc;
+	int ret;
 	int cfd;
 	pid_t pid;
 	socklen_t sa_len;
@@ -376,10 +386,6 @@ server_loop (Server *server,
 	ocsignal (SIGCHLD, handle_children);
 	ocsignal (SIGTERM, handle_term);
 	ocsignal (SIGINT, handle_term);
-
-	server->socket = create_socket (server->socket_name, server->uid, server->gid);
-	if (server->socket == -1)
-		return 1;
 
 	/* run as daemon */
 	if (!foreground) {
@@ -403,10 +409,19 @@ server_loop (Server *server,
 		}
 	}
 
-	rc = listen (server->socket, 1024);
-	if (rc == -1) {
-		p11_message_err (errno, "could not listen to socket %s", server->socket_name);
+#ifdef WITH_SYSTEMD
+	ret = sd_listen_fds (0);
+	if (ret > 1) {
+		p11_message ("too many file descriptors received");
 		return 1;
+	} else if (ret == 1) {
+		server->socket = SD_LISTEN_FDS_START + 0;
+	} else
+#endif
+	{
+		server->socket = create_socket (server->socket_name, server->uid, server->gid);
+		if (server->socket == -1)
+			return 1;
 	}
 
 	sigprocmask (SIG_BLOCK, &blockset, NULL);
