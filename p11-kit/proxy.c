@@ -88,12 +88,12 @@ typedef struct {
 typedef struct _State {
 	p11_virtual virt;
 	struct _State *next;
+	CK_FUNCTION_LIST **loaded;
 	CK_FUNCTION_LIST *wrapped;
 	CK_ULONG last_handle;
 	Proxy *px;
 } State;
 
-static CK_FUNCTION_LIST **all_modules = NULL;
 static State *all_instances = NULL;
 static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, FIRST_HANDLE, NULL };
 
@@ -248,7 +248,8 @@ modules_dup (CK_FUNCTION_LIST **modules)
 }
 
 static CK_RV
-proxy_create (Proxy **res, Mapping *mappings, unsigned int n_mappings)
+proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
+	      Mapping *mappings, unsigned int n_mappings)
 {
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
@@ -263,7 +264,7 @@ proxy_create (Proxy **res, Mapping *mappings, unsigned int n_mappings)
 
 	py->forkid = p11_forkid;
 
-	py->inited = modules_dup (all_modules);
+	py->inited = modules_dup (loaded);
 	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
 
 	rv = p11_kit_modules_initialize (py->inited, NULL);
@@ -370,7 +371,7 @@ proxy_C_Initialize (CK_X_FUNCTION_LIST *self,
 		return CKR_OK;
 	}
 
-	rv = proxy_create (&py, mappings, n_mappings);
+	rv = proxy_create (&py, state->loaded, mappings, n_mappings);
 	free (mappings);
 	if (rv != CKR_OK) {
 		p11_debug ("out: %lu", rv);
@@ -1661,24 +1662,15 @@ CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
-	CK_FUNCTION_LIST **loaded;
+	CK_FUNCTION_LIST **loaded = NULL;
 	State *state;
 	CK_RV rv = CKR_OK;
 
 	p11_library_init_once ();
 	p11_lock ();
 
-	if (all_modules == NULL) {
-		/* WARNING: Reentrancy can occur here */
-		rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
-		if (rv == CKR_OK) {
-			if (all_modules == NULL)
-				all_modules = loaded;
-			else
-				p11_modules_release_inlock_reentrant (loaded);
-		}
-	}
-
+	/* WARNING: Reentrancy can occur here */
+	rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
 	if (rv == CKR_OK) {
 		state = calloc (1, sizeof (State));
 		if (!state) {
@@ -1687,6 +1679,8 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 		} else {
 			p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
 			state->last_handle = FIRST_HANDLE;
+			state->loaded = loaded;
+			loaded = NULL;
 
 			module = p11_virtual_wrap (&state->virt, free);
 			if (module == NULL) {
@@ -1706,6 +1700,9 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 		*list = module;
 	}
 
+	if (loaded)
+		p11_kit_modules_release (loaded);
+
 	p11_unlock ();
 
 	return rv;
@@ -1722,11 +1719,7 @@ p11_proxy_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_virtual_unwrap (state->wrapped);
-	}
-
-	if (all_modules) {
-		p11_kit_modules_release (all_modules);
-		all_modules = NULL;
+		p11_kit_modules_release (state->loaded);
 	}
 }
 
