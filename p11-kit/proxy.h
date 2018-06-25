@@ -39,5 +39,8 @@ bool       p11_proxy_module_check                    (CK_FUNCTION_LIST_PTR modul
 
 void       p11_proxy_module_cleanup                  (void);
 
+CK_RV      p11_proxy_module_create                   (CK_FUNCTION_LIST_PTR *module,
+						      CK_FUNCTION_LIST_PTR *modules);
+
 
 #endif /* __P11_PROXY_H__ */
