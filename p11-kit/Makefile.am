@@ -22,7 +22,7 @@ COMMON_SRCS = \
 	p11-kit/messages.c \
 	p11-kit/rpc-transport.c p11-kit/rpc.h \
 	p11-kit/rpc-message.c p11-kit/rpc-message.h \
-	p11-kit/rpc-client.c p11-kit/rpc-server.c \
+	p11-kit/rpc-client.c \
 	p11-kit/uri.c \
 	p11-kit/virtual.c p11-kit/virtual.h \
 	p11-kit/virtual-fixed.h \
@@ -90,7 +90,8 @@ libp11_kit_la_LDFLAGS = \
 	-export-symbols-regex '^C_GetFunctionList|^p11_kit_'
 
 libp11_kit_la_SOURCES = \
-	p11-kit/proxy.c p11-kit/proxy.h p11-kit/proxy-init.c
+	p11-kit/proxy.c p11-kit/proxy.h p11-kit/proxy-init.c \
+	p11-kit/rpc-server.c \
 	$(NULL)
 
 libp11_kit_la_LIBADD = \
