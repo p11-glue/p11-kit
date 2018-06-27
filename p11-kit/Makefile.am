@@ -243,6 +243,15 @@ p11_kit_remote_LDADD = \
 	libp11-kit.la \
 	$(NULL)
 
+check_PROGRAMS += p11-kit-remote-testable
+p11_kit_remote_testable_SOURCES = $(p11_kit_remote_SOURCES)
+
+p11_kit_remote_testable_LDADD = \
+	libp11-tool.la \
+	libp11-common.la \
+	libp11-kit-testable.la \
+	$(NULL)
+
 private_PROGRAMS += p11-kit-server
 
 p11_kit_server_SOURCES = \
@@ -257,6 +266,23 @@ p11_kit_server_LDADD = \
 	$(NULL)
 
 p11_kit_server_CFLAGS = \
+	-DP11_KIT_REMOTE=\"p11-kit-remote\" \
+	$(COMMON_CFLAGS) \
+	$(LIBSYSTEMD_CFLAGS) \
+	$(NULL)
+
+check_PROGRAMS += p11-kit-server-testable
+p11_kit_server_testable_SOURCES = $(p11_kit_server_SOURCES)
+
+p11_kit_server_testable_LDADD = \
+	libp11-tool.la \
+	libp11-common.la \
+	libp11-kit-testable.la \
+	$(LIBSYSTEMD_LIBS) \
+	$(NULL)
+
+p11_kit_server_testable_CFLAGS = \
+	-DP11_KIT_REMOTE=\"p11-kit-remote-testable\" \
 	$(COMMON_CFLAGS) \
 	$(LIBSYSTEMD_CFLAGS) \
 	$(NULL)

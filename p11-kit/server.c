@@ -496,7 +496,7 @@ server_loop (Server *server,
 				}
 
 				n_args = 0;
-				args[n_args] = "p11-kit-remote";
+				args[n_args] = P11_KIT_REMOTE;
 				n_args++;
 
 				if (server->provider) {
