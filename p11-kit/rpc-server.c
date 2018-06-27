@@ -44,6 +44,7 @@
 #include "library.h"
 #include "private.h"
 #include "message.h"
+#include "proxy.h"
 #include "remote.h"
 #include "rpc.h"
 #include "rpc-message.h"
@@ -2086,32 +2087,59 @@ p11_kit_remote_serve_token (CK_FUNCTION_LIST *module,
 	return ret;
 }
 
+static void
+token_set_write_protected (CK_TOKEN_INFO *token, P11KitUri *uri)
+{
+	const char *write_protected =
+		p11_kit_uri_get_vendor_query (uri, "write-protected");
+	if (write_protected &&
+	    _p11_conf_parse_boolean (write_protected, false))
+		token->flags |= CKF_WRITE_PROTECTED;
+	else
+		token->flags &= ~CKF_WRITE_PROTECTED;
+}
+
+static void
+module_unwrap (CK_FUNCTION_LIST *module)
+{
+	if (module)
+		p11_virtual_unwrap (module);
+}
+
 /**
  * p11_kit_remote_serve_tokens:
  * @tokens: a list of token URIs
  * @n_tokens: the length of @tokens
- * @module: (nullable): a PKCS\#11 module that provides the tokens
+ * @provider: (nullable): a PKCS\#11 module that provides the tokens
  * @in_fd: input fd
  * @out_fd: output fd
  *
- * Expose tokens on a given pair of input/output FDs.  All the tokens
- * must be provided by the same module.
+ * Expose tokens on a given pair of input/output FDs.  If @provider is
+ * not NULL, all the tokens must be provided by the same module.
  *
  * Returns: 0 if success, non-zero otherwise.
  */
 int
 p11_kit_remote_serve_tokens (const char **tokens,
 			     size_t n_tokens,
-			     CK_FUNCTION_LIST *module,
+			     CK_FUNCTION_LIST *provider,
 			     int in_fd,
 			     int out_fd)
 {
-	p11_virtual virt;
+	p11_virtual *lower = NULL;
 	p11_virtual *filter = NULL;
-	CK_FUNCTION_LIST **modules = NULL, *filtered = NULL;
+	CK_FUNCTION_LIST *proxy = NULL;
+	CK_FUNCTION_LIST **modules = NULL;
+	CK_FUNCTION_LIST *provider_modules[2] = { NULL, NULL };
+	CK_FUNCTION_LIST *module;
+	p11_dict *filters = NULL;
+	p11_dictiter filters_iter;
+	p11_array *filtered = NULL;
 	P11KitIter *iter;
-	P11KitUri *uri;
+	P11KitUri **uris = NULL;
+	void *value;
 	int ret = 1;
+	int error = 0;
 	size_t i;
 
 	return_val_if_fail (tokens != NULL, 2);
@@ -2119,91 +2147,140 @@ p11_kit_remote_serve_tokens (const char **tokens,
 	return_val_if_fail (in_fd >= 0, 2);
 	return_val_if_fail (out_fd >= 0, 2);
 
-	if (!module) {
-		modules = p11_kit_modules_load_and_initialize (0);
-		if (modules == NULL)
-			goto out;
+	uris = calloc (n_tokens, sizeof (P11KitUri *));
+	if (uris == NULL) {
+		error = ENOMEM;
+		goto out;
+	}
 
-		/* Find a module that provides the first token */
-		uri = p11_kit_uri_new ();
-		if (uri == NULL)
-			goto out;
-
-		if (p11_kit_uri_parse (tokens[0], P11_KIT_URI_FOR_TOKEN, uri) !=
-		    P11_KIT_URI_OK)
-			goto out;
-
-		iter = p11_kit_iter_new (uri,
-					 P11_KIT_ITER_WITH_TOKENS |
-					 P11_KIT_ITER_WITHOUT_OBJECTS);
-		p11_kit_uri_free (uri);
-		if (iter == NULL)
-			goto out;
-
-		p11_kit_iter_begin (iter, modules);
-		if (p11_kit_iter_next (iter) != CKR_OK) {
-			p11_kit_iter_free (iter);
+	for (i = 0; i < n_tokens; i++) {
+		uris[i] = p11_kit_uri_new ();
+		if (uris[i] == NULL) {
+			error = ENOMEM;
 			goto out;
 		}
+		if (p11_kit_uri_parse (tokens[i], P11_KIT_URI_FOR_TOKEN, uris[i]) !=
+		    P11_KIT_URI_OK) {
+			error = EINVAL;
+			goto out;
+		}
+	}
+
+	if (provider) {
+		if (p11_kit_module_initialize (provider) != CKR_OK) {
+			error = EINVAL;
+			goto out;
+		}
+		provider_modules[0] = provider;
+		modules = provider_modules;
+	} else {
+		modules = p11_kit_modules_load_and_initialize (0);
+		if (modules == NULL) {
+			error = EINVAL;
+			goto out;
+		}
+	}
+
+	filters = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal,
+				NULL, p11_filter_release);
+	if (filters == NULL) {
+		error = ENOMEM;
+		goto out;
+	}
+
+	iter = p11_kit_iter_new (NULL,
+				 P11_KIT_ITER_WITH_TOKENS |
+				 P11_KIT_ITER_WITHOUT_OBJECTS);
+	if (iter == NULL) {
+		error = ENOMEM;
+		goto out;
+	}
+
+	p11_kit_iter_begin (iter, modules);
+	while (p11_kit_iter_next (iter) == CKR_OK) {
+		CK_TOKEN_INFO *token;
+
+		assert (p11_kit_iter_get_kind (iter) == P11_KIT_ITER_KIND_TOKEN);
+
+		token = p11_kit_iter_get_token (iter);
+
+		/* Check if the token is the one we want to export */
+		for (i = 0; i < n_tokens; i++)
+			if (p11_kit_uri_match_token_info (uris[i], token))
+				break;
+		if (i == n_tokens)
+			continue;
 
 		module = p11_kit_iter_get_module (iter);
 		assert (module != NULL);
 
-		p11_kit_iter_free (iter);
-
-		/* Call C_Finalize on modules as C_Initialize on the
-		 * found module will be called later */
-		p11_kit_modules_finalize (modules);
-	}
-
-	/* Create a virtual module that provides only the specified tokens */
-	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
-	filter = p11_filter_subclass (&virt, NULL);
-	if (filter == NULL)
-		goto out;
-
-	for (i = 0; i < n_tokens; i++) {
-		CK_TOKEN_INFO *token;
-		const char *write_protected;
-
-		uri = p11_kit_uri_new ();
-		if (uri == NULL)
-			goto out;
-
-		if (p11_kit_uri_parse (tokens[i], P11_KIT_URI_FOR_TOKEN, uri) !=
-		    P11_KIT_URI_OK) {
-			p11_kit_uri_free (uri);
-			goto out;
+		/* Create a virtual module that provides only the
+		 * specified tokens */
+		filter = p11_dict_get (filters, module);
+		if (filter == NULL) {
+			lower = calloc (1, sizeof (p11_virtual));
+			p11_virtual_init (lower, &p11_virtual_base, module, NULL);
+			filter = p11_filter_subclass (lower, NULL);
+			if (filter == NULL) {
+				error = EINVAL;
+				p11_message_err (error, "couldn't subclass filter");
+				goto out;
+			}
+			p11_dict_set (filters, module, filter);
 		}
 
-		token = p11_kit_uri_get_token_info (uri);
+		for (i = 0; i < n_tokens; i++) {
+			if (p11_kit_uri_match_token_info (uris[i], token)) {
+				token_set_write_protected (token, uris[i]);
+				p11_filter_allow_token (filter, token);
+			}
+		}
+	}
+	p11_kit_iter_free (iter);
 
-		/* Reflect "write-protected" setting in the URI */
-		write_protected =
-			p11_kit_uri_get_vendor_query (uri, "write-protected");
-		if (write_protected &&
-		    _p11_conf_parse_boolean (write_protected, false))
-			token->flags |= CKF_WRITE_PROTECTED;
-		else
-			token->flags &= ~CKF_WRITE_PROTECTED;
-
-		p11_filter_allow_token (filter, token);
-		p11_kit_uri_free (uri);
+	filtered = p11_array_new ((p11_destroyer)module_unwrap);
+	p11_dict_iterate (filters, &filters_iter);
+	while (p11_dict_next (&filters_iter, NULL, &value)) {
+		module = p11_virtual_wrap ((p11_virtual *)value,
+					   (p11_destroyer)p11_virtual_uninit);
+		if (module == NULL) {
+			error = EINVAL;
+			p11_message_err (error, "couldn't wrap filter module");
+			goto out;
+		}
+		if (!p11_array_push (filtered, module)) {
+			error = ENOMEM;
+			goto out;
+		}
 	}
 
-	filtered = p11_virtual_wrap (filter, (p11_destroyer)p11_virtual_uninit);
-	if (filtered == NULL)
+	/* NULL terminate the array */
+	if (!p11_array_push (filtered, NULL)) {
+		error = ENOMEM;
 		goto out;
+	}
 
-	ret = p11_kit_remote_serve_module (filtered, in_fd, out_fd);
+	/* Need to finalize the modules that we initialized for iteration */
+	p11_kit_modules_finalize (modules);
+
+	if (p11_proxy_module_create (&proxy, (CK_FUNCTION_LIST **)filtered->elem)
+	    != CKR_OK) {
+		error = EINVAL;
+		p11_message_err (error, "couldn't create a proxy module");
+		goto out;
+	}
+
+	ret = p11_kit_remote_serve_module (proxy, in_fd, out_fd);
 
  out:
 	if (filtered != NULL)
-		p11_virtual_unwrap (filtered);
-	if (filter != NULL)
-		p11_filter_release (filter);
-	if (modules != NULL)
+		p11_array_free (filtered);
+	if (filters != NULL)
+		p11_dict_free (filters);
+	if (modules != provider_modules)
 		p11_kit_modules_release (modules);
+	if (error != 0)
+		errno = error;
 
 	return ret;
 }

@@ -35,6 +35,7 @@
 #include "config.h"
 #include "test.h"
 
+#include "array.h"
 #include "dict.h"
 #include "library.h"
 #include "filter.h"
@@ -61,25 +62,35 @@ struct {
 	pid_t pid;
 } test;
 
+struct fixture {
+	char *provider;
+	char *token;
+	int slots;
+};
+
 static void
 setup_server (void *arg)
 {
-	char *argv[] = {
-		"p11-kit-server-testable",
-		"-f",
-		"--provider",
-		BUILDDIR "/.libs/mock-one" SHLEXT,
-		"-n",
-		NULL,
-		NULL,
-		NULL
-	};
+	struct fixture *fixture = arg;
+	p11_array *args;
 	char *address;
 	int fds[2];
 	struct pollfd pfd;
 	int ret;
 	const char *envvar;
 	char *path;
+
+	args = p11_array_new (NULL);
+	if (!p11_array_push (args, "p11-kit-server-testable"))
+		assert_not_reached ();
+	if (!p11_array_push (args, "-f"))
+		assert_not_reached ();
+	if (fixture->provider) {
+		if (!p11_array_push (args, "--provider"))
+			assert_not_reached ();
+		if (!p11_array_push (args, fixture->provider))
+			assert_not_reached ();
+	}
 
 	test.directory = p11_test_directory ("p11-test-server");
 	if (asprintf (&path, "%s/p11-kit", test.directory) < 0)
@@ -101,19 +112,30 @@ setup_server (void *arg)
 	if (envvar)
 		setenv ("LD_PRELOAD", envvar, 1);
 
-	argv[5] = test.socket_path;
-	argv[6] = (char *)arg;
+	if (!p11_array_push (args, "-n"))
+		assert_not_reached ();
+	if (!p11_array_push (args, test.socket_path))
+		assert_not_reached ();
+	if (!p11_array_push (args, fixture->token))
+		assert_not_reached ();
+	if (!p11_array_push (args, NULL))
+		assert_not_reached ();
 
 	test.pid = fork ();
+	assert (test.pid >= 0);
 
 	/* The child */
 	if (test.pid == 0) {
 		close (STDOUT_FILENO);
-		dup2 (fds[0], STDOUT_FILENO);
-		execv (BUILDDIR "/p11-kit-server-testable", argv);
+		if (dup2 (fds[0], STDOUT_FILENO) == -1)
+			assert_not_reached ();
+		if (execv (BUILDDIR "/p11-kit-server-testable", (char **)args->elem) == -1)
+			assert_not_reached ();
+		p11_array_free (args);
 		_exit (0);
 	}
 
+	p11_array_free (args);
 	memset (&pfd, 0, sizeof (struct pollfd));
 	pfd.fd = fds[1];
 	pfd.events = POLLIN | POLLHUP | POLLERR;
@@ -181,8 +203,9 @@ test_initialize_no_address (void *unused)
 }
 
 static void
-test_open_session (void *unused)
+test_open_session (void *arg)
 {
+	struct fixture *fixture = arg;
 	CK_SESSION_HANDLE session;
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slots[32];
@@ -198,7 +221,7 @@ test_open_session (void *unused)
 	count = 32;
 	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
 	assert (rv == CKR_OK);
-	assert_num_eq (1, count);
+	assert_num_eq (fixture->slots, count);
 
 	rv = module->C_OpenSession (slots[0], CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
 	assert (rv == CKR_OK);
@@ -245,14 +268,34 @@ int
 main (int argc,
       char *argv[])
 {
+	struct fixture with_provider = {
+		BUILDDIR "/.libs/mock-one" SHLEXT,
+		"pkcs11:",
+		1
+	};
+	struct fixture without_provider = {
+		NULL,
+		"pkcs11:",
+		3
+	};
+	struct fixture write_protected = {
+		BUILDDIR "/.libs/mock-one" SHLEXT,
+		"pkcs11:?write-protected=yes",
+		1
+	};
+
 	p11_library_init ();
 	mock_module_init ();
 
 	p11_fixture (setup_server, teardown_server);
-	p11_testx (test_initialize, (void *)"pkcs11:", "/server/initialize");
-	p11_testx (test_initialize_no_address, (void *)"pkcs11:", "/server/initialize-no-address");
-	p11_testx (test_open_session, (void *)"pkcs11:", "/server/open-session");
-	p11_testx (test_open_session_write_protected, (void *)"pkcs11:?write-protected=yes", "/server/open-session-write-protected");
+	p11_testx (test_initialize, (void *)&with_provider, "/server/initialize");
+	p11_testx (test_initialize_no_address, (void *)&with_provider, "/server/initialize-no-address");
+	p11_testx (test_open_session, (void *)&with_provider, "/server/open-session");
+	p11_testx (test_open_session_write_protected, (void *)&write_protected, "/server/open-session-write-protected");
+
+	p11_testx (test_initialize, (void *)&without_provider, "/server/all/initialize");
+	p11_testx (test_initialize_no_address, (void *)&without_provider, "/server/all/initialize-no-address");
+	p11_testx (test_open_session, (void *)&without_provider, "/server/all/open-session");
 
 	return p11_test_run (argc, argv);
 }
