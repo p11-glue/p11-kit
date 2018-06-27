@@ -65,7 +65,7 @@ static void
 setup_server (void *arg)
 {
 	char *argv[] = {
-		"p11-kit-server",
+		"p11-kit-server-testable",
 		"-f",
 		"--provider",
 		BUILDDIR "/.libs/mock-one" SHLEXT,
@@ -110,7 +110,7 @@ setup_server (void *arg)
 	if (test.pid == 0) {
 		close (STDOUT_FILENO);
 		dup2 (fds[0], STDOUT_FILENO);
-		execv (BUILDDIR "/p11-kit-server", argv);
+		execv (BUILDDIR "/p11-kit-server-testable", argv);
 		_exit (0);
 	}
 

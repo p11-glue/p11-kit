@@ -103,6 +103,8 @@ x86_64-w64-mingw32
 
 /p11-kit-remote
 /p11-kit-server
+/p11-kit-remote-testable
+/p11-kit-server-testable
 /print-messages
 
 /po/POTFILES
