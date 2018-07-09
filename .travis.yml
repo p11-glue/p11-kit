@@ -7,7 +7,7 @@ matrix:
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov"
+      env: BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov python-pip"
     - os: linux
       sudo: required
       services: docker
