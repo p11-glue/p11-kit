@@ -193,11 +193,15 @@ test_initialize_child (void)
 struct {
 	char *directory;
 	const char *system_file;
+	const char *package_modules;
 	const char *system_modules;
+	const char *user_modules;
 } test;
 
 extern const char *p11_config_system_file;
+extern const char *p11_config_package_modules;
 extern const char *p11_config_system_modules;
+extern const char *p11_config_user_modules;
 
 static void
 setup (void *unused)
@@ -205,8 +209,13 @@ setup (void *unused)
 	test.directory = p11_test_directory ("test-proxy");
 	test.system_file = p11_config_system_file;
 	p11_config_system_file = SRCDIR "/p11-kit/fixtures/test-system-none.conf";
+	test.package_modules = p11_config_package_modules;
 	test.system_modules = p11_config_system_modules;
+	test.user_modules = p11_config_user_modules;
+
+	p11_config_package_modules = SRCDIR "/p11-kit/fixtures/nonexistent";
 	p11_config_system_modules = test.directory;
+	p11_config_user_modules = SRCDIR "/p11-kit/fixtures/nonexistent";
 }
 
 static void
@@ -215,7 +224,9 @@ teardown (void *unused)
 	p11_test_directory_delete (test.directory);
 	free (test.directory);
 	p11_config_system_file = test.system_file;
+	p11_config_package_modules = test.package_modules;
 	p11_config_system_modules = test.system_modules;
+	p11_config_user_modules = test.user_modules;
 }
 
 #define ONE_MODULE "module: mock-one" SHLEXT "\n"
@@ -247,6 +258,36 @@ load_modules_and_count_slots (void)
 	p11_proxy_module_cleanup ();
 
 	return count;
+}
+
+static void
+test_no_slot (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_ULONG count;
+	CK_SESSION_HANDLE session;
+	CK_RV rv;
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &count);
+	assert (rv == CKR_OK);
+	assert_num_eq (count, 0);
+
+	/* 0x10 == MAPPING_OFFSET, defined in proxy.c */
+	rv = proxy->C_OpenSession (0x10, CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert (rv == CKR_SLOT_ID_INVALID);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
 }
 
 static void
@@ -354,6 +395,7 @@ main (int argc,
 
 	p11_fixture (setup, teardown);
 	p11_test (test_disable, "/proxy/disable");
+	p11_test (test_no_slot, "/proxy/no-slot");
 
 	test_mock_add_tests ("/proxy");
 
