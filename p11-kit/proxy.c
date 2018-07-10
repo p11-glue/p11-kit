@@ -123,6 +123,8 @@ map_slot_unlocked (Proxy *px,
 
 	if (slot > px->n_mappings) {
 		return CKR_SLOT_ID_INVALID;
+	} else if (px->n_mappings == 0) {
+		return CKR_SLOT_ID_INVALID;
 	} else {
 		assert (px->mappings);
 		memcpy (mapping, &px->mappings[slot], sizeof (Mapping));
