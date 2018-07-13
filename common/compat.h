@@ -258,7 +258,7 @@ char *     strndup          (const char *data,
 
 #endif /* HAVE_STRDUP */
 
-#ifndef HAVE_REALLOCARRAY
+#if defined HAVE_DECL_REALLOCARRAY && !HAVE_DECL_REALLOCARRAY
 
 void *     reallocarray     (void *ptr,
                              size_t nmemb,
