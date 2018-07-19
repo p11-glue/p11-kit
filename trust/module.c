@@ -844,6 +844,17 @@ sys_C_Login (CK_SESSION_HANDLE handle,
 	p11_lock ();
 
 		rv = lookup_session (handle, NULL);
+		/* Since the trust module is designed as a replacement
+		 * of nssckbi, it works as a general access device as
+		 * described in the table 1.1 of:
+		 * <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/PKCS11_Implement>.
+		 *
+		 * That means that the tokens provided by this module
+		 * shall be accessed without login, and if the caller
+		 * tries to login, the attempt should fail with an
+		 * explicit error (otherwise, the caller cannot
+		 * distinguish the user's login status, see also
+		 * C_Logout below). */
 		if (rv == CKR_OK)
 			rv = CKR_USER_TYPE_INVALID;
 
