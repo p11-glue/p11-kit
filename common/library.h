@@ -59,10 +59,20 @@ extern unsigned int p11_forkid;
 #define       p11_library_init_once()
 
 #else /* !OS_WIN32 */
+
+#ifdef __GNUC__
+
+/* No implementation, because done by the ELF constructor */
+#define       p11_library_init_once()
+
+#else
+
 extern        pthread_once_t               p11_library_once;
 
 #define       p11_library_init_once() \
 	pthread_once (&p11_library_once, p11_library_init_impl);
+
+#endif /* !__GNUC__ */
 
 void          p11_library_init_impl        (void);
 

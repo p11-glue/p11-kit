@@ -53,7 +53,7 @@ __attribute__((constructor))
 void
 _p11_kit_init (void)
 {
-	p11_library_init_once ();
+	p11_library_init ();
 }
 
 #ifdef __GNUC__
