@@ -139,6 +139,18 @@ if test "$os_unix" = "yes"; then
 		fi
 	])
 
+	AC_CACHE_CHECK([for thread-local storage class],
+		[ac_cv_tls_keyword],
+		[ac_cv_tls_keyword=
+		for keyword in _Thread_local __thread; do
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+			[[static ]$keyword[ foo;]])],
+			[ac_cv_tls_keyword=$keyword])
+		done])
+	if test -n "$ac_cv_tls_keyword"; then
+		AC_DEFINE_UNQUOTED([P11_TLS_KEYWORD], [$ac_cv_tls_keyword], [the compiler keyword to define thread-local storage])
+	fi
+
 	# Required functions
 	AC_CHECK_FUNCS([gmtime_r],
 		[AC_DEFINE([HAVE_GMTIME_R], 1, [Whether gmtime_r() is available])],
