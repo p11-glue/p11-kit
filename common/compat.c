@@ -169,8 +169,9 @@ getprogname (void)
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifndef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 void
-p11_mutex_init (p11_mutex_t *mutex)
+p11_recursive_mutex_init (p11_mutex_t *mutex)
 {
 	pthread_mutexattr_t attr;
 	int ret;
@@ -181,6 +182,7 @@ p11_mutex_init (p11_mutex_t *mutex)
 	assert (ret == 0);
 	pthread_mutexattr_destroy (&attr);
 }
+#endif
 
 char *
 p11_dl_error (void)
