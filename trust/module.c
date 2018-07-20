@@ -1845,7 +1845,7 @@ __attribute__((constructor))
 void
 p11_trust_module_init (void)
 {
-	p11_library_init_once ();
+	p11_library_init ();
 }
 
 #ifdef __GNUC__

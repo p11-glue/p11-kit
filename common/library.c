@@ -71,7 +71,9 @@ p11_mutex_t p11_virtual_mutex;
 #endif
 
 #ifdef OS_UNIX
+#ifndef __GNUC__
 pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
+#endif
 #endif
 
 unsigned int p11_forkid = 1;
@@ -146,7 +148,7 @@ p11_library_init_impl (void)
 void
 p11_library_init (void)
 {
-	p11_library_init_once ();
+	p11_library_init_impl ();
 }
 
 void
