@@ -335,10 +335,10 @@ test_conf_SOURCES = p11-kit/test-conf.c
 test_conf_LDADD = $(p11_kit_LIBS)
 
 test_deprecated_SOURCES = p11-kit/test-deprecated.c
-test_deprecated_LDADD = $(p11_kit_LIBS)
+test_deprecated_LDADD = $(p11_kit_LIBS) $(PTHREAD_LIBS)
 
 test_init_SOURCES = p11-kit/test-init.c
-test_init_LDADD = $(p11_kit_LIBS)
+test_init_LDADD = $(p11_kit_LIBS) $(PTHREAD_LIBS)
 
 test_iter_SOURCES = p11-kit/test-iter.c
 test_iter_LDADD = $(p11_kit_LIBS)
@@ -356,7 +356,7 @@ test_proxy_SOURCES = p11-kit/test-proxy.c
 test_proxy_LDADD = $(p11_kit_LIBS)
 
 test_rpc_SOURCES = p11-kit/test-rpc.c
-test_rpc_LDADD = $(p11_kit_LIBS)
+test_rpc_LDADD = $(p11_kit_LIBS) $(PTHREAD_LIBS)
 
 test_server_SOURCES = p11-kit/test-server.c
 test_server_LDADD = $(p11_kit_LIBS)
@@ -397,7 +397,7 @@ test_managed_SOURCES = p11-kit/test-managed.c
 test_managed_LDADD = $(p11_kit_LIBS)
 
 test_transport_SOURCES = p11-kit/test-transport.c
-test_transport_LDADD = $(p11_kit_LIBS)
+test_transport_LDADD = $(p11_kit_LIBS) $(PTHREAD_LIBS)
 
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
