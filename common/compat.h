@@ -121,6 +121,8 @@ typedef HANDLE p11_thread_t;
 
 typedef DWORD p11_thread_id_t;
 
+#define P11_RECURSIVE_MUTEX_INIT(m) \
+	(InitializeCriticalSection (&m))
 #define p11_mutex_init(m) \
 	(InitializeCriticalSection (m))
 #define p11_mutex_lock(m) \
@@ -180,8 +182,22 @@ void        p11_mmap_close  (p11_mmap *map);
 
 typedef pthread_mutex_t p11_mutex_t;
 
-void        p11_mutex_init          (p11_mutex_t *mutex);
+#ifdef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 
+/* No implementation, because done by static initializer */
+#define P11_RECURSIVE_MUTEX_INIT(mutex)
+
+#else
+
+#define P11_RECURSIVE_MUTEX_INIT(mutex) \
+	(p11_recursive_mutex_init (&(mutex)))
+
+void        p11_recursive_mutex_init          (p11_mutex_t *mutex);
+
+#endif
+
+#define p11_mutex_init(m) \
+	(pthread_mutex_init (m, NULL))
 #define p11_mutex_lock(m) \
 	(pthread_mutex_lock (m))
 #define p11_mutex_unlock(m) \

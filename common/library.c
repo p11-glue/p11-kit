@@ -60,9 +60,15 @@ typedef struct {
 
 static p11_local * _p11_library_get_thread_local (void);
 
+#ifdef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+p11_mutex_t p11_library_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+
+p11_mutex_t p11_virtual_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+#else
 p11_mutex_t p11_library_mutex;
 
 p11_mutex_t p11_virtual_mutex;
+#endif
 
 #ifdef OS_UNIX
 pthread_once_t p11_library_once = PTHREAD_ONCE_INIT;
@@ -126,8 +132,8 @@ p11_library_init_impl (void)
 {
 	p11_debug_init ();
 	p11_debug ("initializing library");
-	p11_mutex_init (&p11_library_mutex);
-	p11_mutex_init (&p11_virtual_mutex);
+	P11_RECURSIVE_MUTEX_INIT (p11_library_mutex);
+	P11_RECURSIVE_MUTEX_INIT (p11_virtual_mutex);
 	pthread_key_create (&thread_local, free);
 	p11_message_storage = thread_local_message;
 #ifdef HAVE_STRERROR_L
@@ -191,8 +197,8 @@ p11_library_init (void)
 {
 	p11_debug_init ();
 	p11_debug ("initializing library");
-	p11_mutex_init (&p11_library_mutex);
-	p11_mutex_init (&p11_virtual_mutex);
+	P11_RECURSIVE_MUTEX_INIT (p11_library_mutex);
+	P11_RECURSIVE_MUTEX_INIT (p11_virtual_mutex);
 	thread_local = TlsAlloc ();
 	if (thread_local == TLS_OUT_OF_INDEXES)
 		p11_debug ("couldn't setup tls");
