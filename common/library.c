@@ -104,6 +104,21 @@ uninit_common (void)
 
 #ifdef OS_UNIX
 
+#ifdef P11_TLS_KEYWORD
+static p11_local *
+_p11_library_get_thread_local (void)
+{
+	static P11_TLS_KEYWORD p11_local local;
+	static P11_TLS_KEYWORD bool local_initialized = false;
+
+	if (!local_initialized) {
+		memset (&local, 0, sizeof (p11_local));
+		local_initialized = true;
+	}
+
+	return &local;
+}
+#else
 static pthread_key_t thread_local = 0;
 
 static p11_local *
@@ -121,6 +136,7 @@ _p11_library_get_thread_local (void)
 
 	return local;
 }
+#endif
 
 static void
 count_forks (void)
@@ -136,7 +152,9 @@ p11_library_init_impl (void)
 	p11_debug ("initializing library");
 	P11_RECURSIVE_MUTEX_INIT (p11_library_mutex);
 	P11_RECURSIVE_MUTEX_INIT (p11_virtual_mutex);
+#ifndef P11_TLS_KEYWORD
 	pthread_key_create (&thread_local, free);
+#endif
 	p11_message_storage = thread_local_message;
 #ifdef HAVE_STRERROR_L
 	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
@@ -156,15 +174,19 @@ p11_library_uninit (void)
 {
 	uninit_common ();
 
+#ifndef P11_TLS_KEYWORD
 	/* Some cleanup to pacify valgrind */
 	free (pthread_getspecific (thread_local));
 	pthread_setspecific (thread_local, NULL);
+#endif
 
 #ifdef HAVE_STRERROR_L
 	freelocale (p11_message_locale);
 #endif
 	p11_message_storage = dont_store_message;
+#ifndef P11_TLS_KEYWORD
 	pthread_key_delete (thread_local);
+#endif
 	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
 }
