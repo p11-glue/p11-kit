@@ -277,12 +277,14 @@ create_socket (const char *address,
 	umask (066);
 	rc = bind (sd, (struct sockaddr *)&sa, SUN_LEN (&sa));
 	if (rc == -1) {
+		close (sd);
 		p11_message_err (errno, "could not bind socket %s", socket_file);
 		return -1;
 	}
 
 	rc = listen (sd, 1024);
 	if (rc == -1) {
+		close (sd);
 		p11_message_err (errno, "could not listen to socket %s", socket_file);
 		return 1;
 	}
@@ -290,6 +292,7 @@ create_socket (const char *address,
 	if (uid != -1 && gid != -1) {
 		rc = chown (socket_file, uid, gid);
 		if (rc == -1) {
+			close (sd);
 			p11_message_err (errno, "could not chown socket %s", socket_file);
 			return -1;
 		}
