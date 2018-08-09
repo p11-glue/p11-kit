@@ -138,6 +138,23 @@ _p11_library_get_thread_local (void)
 }
 #endif
 
+#if defined(HAVE_DECL___REGISTER_ATFORK) && !HAVE_DECL___REGISTER_ATFORK
+extern int __register_atfork (void (*prepare) (void), void (*parent) (void),
+			      void (*child) (void), void *dso_handle);
+#endif /* HAVE_DECL___REGISTER_ATFORK */
+
+#ifdef HAVE___REGISTER_ATFORK
+
+#define p11_register_atfork(a,b,c,d) \
+	(__register_atfork((a),(b),(c),(d)))
+
+#else
+
+#define p11_register_atfork(a,b,c,d) \
+	(pthread_atfork((a),(b),(c)))
+
+#endif /* HAVE___REGISTER_ATFORK */
+
 static void
 count_forks (void)
 {
@@ -160,7 +177,7 @@ p11_library_init_impl (void)
 	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
 #endif
 
-	pthread_atfork (NULL, NULL, count_forks);
+	p11_register_atfork (NULL, NULL, count_forks, NULL);
 }
 
 void
