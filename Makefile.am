@@ -53,6 +53,7 @@ ACLOCAL_AMFLAGS = -I build/m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-doc \
+	--without-systemd \
 	--disable-coverage \
 	--enable-strict \
 	CFLAGS='-O2'
