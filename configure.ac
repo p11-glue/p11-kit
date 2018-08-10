@@ -123,7 +123,12 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([setenv])
 	AC_CHECK_FUNCS([getpeereid])
 	AC_CHECK_FUNCS([getpeerucred])
-	AC_CHECK_FUNCS([__register_atfork])
+	# If __register_atfork() is not available, we have to link to
+	# libpthread so that the non-stub version of pthread_atfork() work
+	# FIXME: replace pthread_atfork() uses with manual PID checks
+	AC_CHECK_FUNCS([__register_atfork], , [
+		AC_CHECK_LIB([pthread], [pthread_atfork])
+	])
 	AC_CHECK_DECLS([__register_atfork])
 
 	# Check if issetugid() is available and has compatible behavior with OpenBSD
