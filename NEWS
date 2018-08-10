@@ -1,3 +1,10 @@
+0.23.13 (stable)
+ * server: Enable socket activation through systemd [PR#173]
+ * rpc-server: p11_kit_remote_serve_tokens: Allow exporting all modules [PR#174]
+ * proxy: Fail early if there is no slot mapping [PR#175]
+ * Remove hard dependency on libpthread [PR#177]
+ * Build fixes [PR#170, PR#176]
+
 0.23.12 (stable)
  * Fix compile error when PKCS#11 GNU calling convention is enabled [PR#160]
  * Fix getauxval() and secure_getenv() emulation on macOS and FreeBSD [PR#167]
