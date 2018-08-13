@@ -1720,8 +1720,8 @@ p11_proxy_module_cleanup (void)
 
 	for (; state != NULL; state = next) {
 		next = state->next;
-		p11_virtual_unwrap (state->wrapped);
 		p11_kit_modules_release (state->loaded);
+		p11_virtual_unwrap (state->wrapped);
 	}
 }
 
@@ -1729,16 +1729,6 @@ bool
 p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
 {
 	return (module->C_WaitForSlotEvent == module_C_WaitForSlotEvent);
-}
-
-static void
-proxy_module_free (p11_virtual *virt)
-{
-	State *state = (State *)virt;
-
-	p11_virtual_unwrap (state->wrapped);
-	p11_kit_modules_release (state->loaded);
-	free (state);
 }
 
 CK_RV
@@ -1758,9 +1748,10 @@ p11_proxy_module_create (CK_FUNCTION_LIST_PTR *module,
 	p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
 	state->last_handle = FIRST_HANDLE;
 	state->loaded = modules_dup (modules);
-	state->wrapped = p11_virtual_wrap (&state->virt, (p11_destroyer)proxy_module_free);
+	state->wrapped = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
 	if (state->wrapped == NULL) {
-		proxy_module_free (&state->virt);
+		p11_kit_modules_release (state->loaded);
+		free (state);
 		return CKR_GENERAL_ERROR;
 	}
 
