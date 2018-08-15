@@ -1714,14 +1714,16 @@ void
 p11_proxy_module_cleanup (void)
 {
 	State *state, *next;
+	CK_FUNCTION_LIST **loaded;
 
 	state = all_instances;
 	all_instances = NULL;
 
 	for (; state != NULL; state = next) {
 		next = state->next;
+		loaded = state->loaded;
 		p11_virtual_unwrap (state->wrapped);
-		p11_kit_modules_release (state->loaded);
+		p11_kit_modules_release (loaded);
 	}
 }
 
@@ -1735,9 +1737,10 @@ static void
 proxy_module_free (p11_virtual *virt)
 {
 	State *state = (State *)virt;
+	CK_FUNCTION_LIST **loaded = state->loaded;
 
 	p11_virtual_unwrap (state->wrapped);
-	p11_kit_modules_release (state->loaded);
+	p11_kit_modules_release (loaded);
 	free (state);
 }
 
