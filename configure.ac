@@ -79,16 +79,6 @@ if test "$os_unix" = "yes"; then
 		])
 	])
 
-	SAVE_LIBS="$LIBS"
-	PTHREAD_LIBS=
-	AC_CHECK_FUNC([pthread_create], , [
-		AC_CHECK_LIB([pthread], [pthread_create],
-			[PTHREAD_LIBS=-lpthread],
-			[AC_MSG_ERROR([could not find pthread_create])])
-	])
-	LIBS="$SAVE_LIBS"
-	AC_SUBST(PTHREAD_LIBS)
-
 	AC_CHECK_FUNC([nanosleep], , [
 		AC_SEARCH_LIBS([nanosleep], [rt], , [
 			AC_MSG_ERROR([could not find nanosleep])
