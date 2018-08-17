@@ -123,8 +123,6 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([setenv])
 	AC_CHECK_FUNCS([getpeereid])
 	AC_CHECK_FUNCS([getpeerucred])
-	AC_CHECK_FUNCS([__register_atfork])
-	AC_CHECK_DECLS([__register_atfork])
 
 	# Check if issetugid() is available and has compatible behavior with OpenBSD
 	AC_CHECK_FUNCS([issetugid], [
