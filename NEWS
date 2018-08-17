@@ -2,7 +2,7 @@
  * server: Enable socket activation through systemd [PR#173]
  * rpc-server: p11_kit_remote_serve_tokens: Allow exporting all modules [PR#174]
  * proxy: Fail early if there is no slot mapping [PR#175]
- * Remove hard dependency on libpthread on glibc systems [PR#177]
+ * Remove hard dependency on libpthread [PR#177]
  * Build fixes [PR#170, PR#176]
 
 0.23.12 (stable)

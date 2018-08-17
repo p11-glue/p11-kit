@@ -145,14 +145,12 @@ extern int __register_atfork (void (*prepare) (void), void (*parent) (void),
 
 #ifdef HAVE___REGISTER_ATFORK
 
-extern void *__dso_handle;
-
-#define p11_register_atfork(a,b,c) \
-	(__register_atfork((a),(b),(c),__dso_handle))
+#define p11_register_atfork(a,b,c,d) \
+	(__register_atfork((a),(b),(c),(d)))
 
 #else
 
-#define p11_register_atfork(a,b,c) \
+#define p11_register_atfork(a,b,c,d) \
 	(pthread_atfork((a),(b),(c)))
 
 #endif /* HAVE___REGISTER_ATFORK */
@@ -179,7 +177,7 @@ p11_library_init_impl (void)
 	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
 #endif
 
-	p11_register_atfork (NULL, NULL, count_forks);
+	p11_register_atfork (NULL, NULL, count_forks, NULL);
 }
 
 void
