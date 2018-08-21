@@ -29,3 +29,8 @@ uid                  Daiki Ueno <ueno@unixuser.org>
 uid                  Daiki Ueno <ueno@gnu.org>
 sub   4096R/C8C530D6 2010-02-04
 ```
+
+# Reporting security issues
+
+If you find an issue that could potentially impact security, report it
+to ueno@gnu.org, encrypted with the above mentioned OpenPGP key.
