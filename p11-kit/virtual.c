@@ -2792,7 +2792,7 @@ init_wrapper_funcs (Wrapper *wrapper)
 			if (!bind_ffi_closure (wrapper, over,
 			                       binding->function,
 			                       (ffi_type **)binding->types, bound))
-				return_val_if_reached (false);
+				return false;
 		}
 	}
 
@@ -2801,7 +2801,7 @@ init_wrapper_funcs (Wrapper *wrapper)
 	                       binding_C_GetFunctionList,
 	                       (ffi_type **)get_function_list_args,
 	                       (void **)&wrapper->bound.C_GetFunctionList))
-		return_val_if_reached (false);
+		return false;
 
 	/*
 	 * These functions are used as a marker to indicate whether this is
