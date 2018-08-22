@@ -3059,12 +3059,16 @@ p11_virtual_wrap_fixed (p11_virtual *virt,
 		if (fixed_closures[i] == NULL) {
 			Wrapper *wrapper;
 			wrapper = create_fixed_wrapper (virt, i, destroyer);
-			result = &wrapper->bound;
-			fixed_closures[i] = result;
+			if (wrapper) {
+				result = &wrapper->bound;
+				fixed_closures[i] = result;
+			}
 			break;
 		}
 	}
 	p11_mutex_unlock (&p11_virtual_mutex);
+
+	return_val_if_fail (result != NULL, NULL);
 
 	return result;
 }
@@ -3084,7 +3088,7 @@ p11_virtual_unwrap_fixed (CK_FUNCTION_LIST_PTR module)
 	p11_mutex_unlock (&p11_virtual_mutex);
 }
 
-static bool
+static void
 init_wrapper_funcs_fixed (Wrapper *wrapper, CK_FUNCTION_LIST *fixed)
 {
        const FunctionInfo *info;
@@ -3119,8 +3123,6 @@ init_wrapper_funcs_fixed (Wrapper *wrapper, CK_FUNCTION_LIST *fixed)
         */
        wrapper->bound.C_CancelFunction = short_C_CancelFunction;
        wrapper->bound.C_GetFunctionStatus = short_C_GetFunctionStatus;
-
-       return true;
 }
 
 static Wrapper *
@@ -3141,10 +3143,7 @@ create_fixed_wrapper (p11_virtual *virt,
        wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
        wrapper->fixed_index = index;
 
-       if (!init_wrapper_funcs_fixed (wrapper, &p11_virtual_fixed[index])) {
-	       free (wrapper);
-               return NULL;
-       }
+       init_wrapper_funcs_fixed (wrapper, &p11_virtual_fixed[index]);
 
        assert ((void *)wrapper == (void *)&wrapper->bound);
        assert (p11_virtual_is_wrapper (&wrapper->bound));
