@@ -9,4 +9,4 @@ docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && $SCAN_BUILD make -j$(npr
 docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && P11_KIT_DEBUG=all LSAN_OPTIONS="$LSAN_OPTIONS" P11_KIT_TEST_LD_PRELOAD=\"$P11_KIT_TEST_LD_PRELOAD\" make check -j$(nproc) V=1 $CHECK_OPTS"
 docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && make install"
 docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && make installcheck"
-docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && valgrind --error-exitcode=81 pkcs11-tool --module p11-kit-proxy.so -L"
+docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && valgrind --error-exitcode=81 pkcs11-tool --module p11-kit-proxy.so -L; test $? != 81"
