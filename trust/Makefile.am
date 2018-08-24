@@ -64,7 +64,7 @@ p11_kit_trust_la_LDFLAGS = \
 	-export-symbols-regex 'C_GetFunctionList' \
 	$(NULL)
 
-p11_kit_trust_la_SOURCES = $(TRUST_SRCS)
+p11_kit_trust_la_SOURCES = $(TRUST_SRCS) trust/module-init.c
 
 libtrust_testable_la_LDFLAGS = \
 	-no-undefined
