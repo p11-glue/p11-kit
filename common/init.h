@@ -35,23 +35,60 @@
  *  Stef Walter <stef@thewalter.net>
  */
 
-#include "config.h"
+#include "library.h"
 
-#include "client.h"
-#include "pkcs11.h"
+#ifdef OS_UNIX
 
-/* p11_proxy_module_check() is defined as a weak symbol in modules.c */
-#ifndef __GNUC__
-bool       p11_proxy_module_check                    (CK_FUNCTION_LIST_PTR module);
+void INIT (void);
 
-bool
-p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
-{
-	return false;
-}
+void FINI (void);
+
+#ifdef __GNUC__
+__attribute__((constructor))
 #endif
+void
+INIT (void)
+{
+	p11_library_init ();
+}
 
-#define INIT _p11_kit_init
-#define FINI _p11_kit_fini
-#define CLEANUP p11_client_module_cleanup ()
-#include "init.h"
+#ifdef __GNUC__
+__attribute__((destructor))
+#endif
+void
+FINI (void)
+{
+	CLEANUP;
+	p11_library_uninit ();
+}
+
+#endif /* OS_UNIX */
+
+#ifdef OS_WIN32
+
+BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
+
+BOOL WINAPI
+DllMain (HINSTANCE instance,
+         DWORD reason,
+         LPVOID reserved)
+{
+	switch (reason) {
+	case DLL_PROCESS_ATTACH:
+		p11_library_init ();
+		break;
+	case DLL_THREAD_DETACH:
+		p11_library_thread_cleanup ();
+		break;
+	case DLL_PROCESS_DETACH:
+		CLEANUP;
+		p11_library_uninit ();
+		break;
+	default:
+		break;
+	}
+
+	return TRUE;
+}
+
+#endif /* OS_WIN32 */
