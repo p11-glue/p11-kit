@@ -30,6 +30,7 @@ libp11_common_la_SOURCES = \
 	common/pkcs11.h common/pkcs11x.h common/pkcs11i.h \
 	common/runtime.c common/runtime.h \
 	common/url.c common/url.h \
+	common/init.h \
 	$(NULL)
 
 libp11_library_la_SOURCES = \

@@ -41,58 +41,7 @@
 #include "p11-kit.h"
 #include "proxy.h"
 
-#ifdef OS_UNIX
-
-void _p11_kit_init (void);
-
-void _p11_kit_fini (void);
-
-#ifdef __GNUC__
-__attribute__((constructor))
-#endif
-void
-_p11_kit_init (void)
-{
-	p11_library_init ();
-}
-
-#ifdef __GNUC__
-__attribute__((destructor))
-#endif
-void
-_p11_kit_fini (void)
-{
-	p11_proxy_module_cleanup ();
-	p11_library_uninit ();
-}
-
-#endif /* OS_UNIX */
-
-#ifdef OS_WIN32
-
-BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
-
-BOOL WINAPI
-DllMain (HINSTANCE instance,
-         DWORD reason,
-         LPVOID reserved)
-{
-	switch (reason) {
-	case DLL_PROCESS_ATTACH:
-		p11_library_init ();
-		break;
-	case DLL_THREAD_DETACH:
-		p11_library_thread_cleanup ();
-		break;
-	case DLL_PROCESS_DETACH:
-		p11_proxy_module_cleanup ();
-		p11_library_uninit ();
-		break;
-	default:
-		break;
-	}
-
-	return TRUE;
-}
-
-#endif /* OS_WIN32 */
+#define INIT _p11_kit_init
+#define FINI _p11_kit_fini
+#define CLEANUP p11_proxy_module_cleanup ()
+#include "init.h"
