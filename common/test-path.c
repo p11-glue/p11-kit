@@ -206,7 +206,7 @@ test_encode (void)
 	char *test;
 
 	test = p11_path_encode ("2309haonutb;/AOE@#$O ");
-	assert_str_eq (test, "2309haonutb%3b/AOE%40%23%24O%20");
+	assert_str_eq (test, "2309haonutb%3B/AOE%40%23%24O%20");
 	free (test);
 }
 

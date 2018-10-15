@@ -44,7 +44,8 @@
 #include <stdio.h>
 #include <string.h>
 
-const static char HEX_CHARS[] = "0123456789abcdef";
+const static char HEX_CHARS_UPPER[] = "0123456789ABCDEF";
+const static char HEX_CHARS_LOWER[] = "0123456789abcdef";
 
 unsigned char *
 p11_url_decode (const char *value,
@@ -75,14 +76,14 @@ p11_url_decode (const char *value,
 				free (result);
 				return NULL;
 			}
-			a = strchr (HEX_CHARS, p11_ascii_tolower (value[0]));
-			b = strchr (HEX_CHARS, p11_ascii_tolower (value[1]));
+			a = strchr (HEX_CHARS_UPPER, p11_ascii_toupper (value[0]));
+			b = strchr (HEX_CHARS_UPPER, p11_ascii_toupper (value[1]));
 			if (!a || !b) {
 				free (result);
 				return NULL;
 			}
-			*p = (a - HEX_CHARS) << 4;
-			*(p++) |= (b - HEX_CHARS);
+			*p = (a - HEX_CHARS_UPPER) << 4;
+			*(p++) |= (b - HEX_CHARS_UPPER);
 			value += 2;
 
 		/* Ignore whitespace characters */
@@ -110,8 +111,17 @@ p11_url_encode (const unsigned char *value,
                 p11_buffer *buf)
 {
 	char hex[3];
+	const char *env;
+	const char *hex_chars;
 
 	assert (value <= end);
+
+	/* Opt to output lowercase hex-digits for compatibility */
+	env = secure_getenv ("P11_KIT_URI_LOWERCASE");
+	if (env && *env != '\0')
+		hex_chars = HEX_CHARS_LOWER;
+	else
+		hex_chars = HEX_CHARS_UPPER;
 
 	/* Now loop through looking for escapes */
 	while (value != end) {
@@ -123,8 +133,8 @@ p11_url_encode (const unsigned char *value,
 		/* All others get encoded */
 		} else {
 			hex[0] = '%';
-			hex[1] = HEX_CHARS[((unsigned char)*value) >> 4];
-			hex[2] = HEX_CHARS[((unsigned char)*value) & 0x0F];
+			hex[1] = hex_chars[((unsigned char)*value) >> 4];
+			hex[2] = hex_chars[((unsigned char)*value) & 0x0F];
 			p11_buffer_add (buf, hex, 3);
 		}
 
