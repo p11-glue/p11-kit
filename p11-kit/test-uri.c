@@ -657,7 +657,7 @@ test_uri_build_with_attributes (void)
 
 	assert (strstr (string, "object=The%20Label") != NULL);
 	assert (strstr (string, "type=data") != NULL);
-	assert (strstr (string, "id=%48%45%4c%4c%4f") != NULL);
+	assert (strstr (string, "id=%48%45%4C%4C%4F") != NULL);
 
 	free (string);
 	p11_kit_uri_free (uri);
@@ -1352,7 +1352,7 @@ test_uri_pin_source (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "pin-source=%7cmy-pin-file") != NULL);
+	assert (strstr (string, "pin-source=%7Cmy-pin-file") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:?pin-source=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
@@ -1388,7 +1388,7 @@ test_uri_pin_value (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "pkcs11:?pin-value=1%2a%26%23%25%26%40%28") != NULL);
+	assert (strstr (string, "pkcs11:?pin-value=1%2A%26%23%25%26%40%28") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:?pin-value=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
@@ -1438,7 +1438,7 @@ test_uri_module_name (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "pkcs11:?module-name=1%2a%26%23%25%26%40%28") != NULL);
+	assert (strstr (string, "pkcs11:?module-name=1%2A%26%23%25%26%40%28") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:?module-name=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
@@ -1483,7 +1483,7 @@ test_uri_module_path (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "module-path=%2fmy-module-path") != NULL);
+	assert (strstr (string, "module-path=%2Fmy-module-path") != NULL);
 	free (string);
 
 	ret = p11_kit_uri_parse ("pkcs11:?module-path=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
@@ -1512,10 +1512,10 @@ test_uri_module_name_and_path (void)
 
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_ANY, &string);
 	assert_num_eq (P11_KIT_URI_OK, ret);
-	assert (strstr (string, "pkcs11:?module-name=123456&module-path=%2fmy-module-path") != NULL);
+	assert (strstr (string, "pkcs11:?module-name=123456&module-path=%2Fmy-module-path") != NULL);
 	free (string);
 
-	ret = p11_kit_uri_parse ("pkcs11:?module-name=1%2a%26%23%25%26%40%28&module-path=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
+	ret = p11_kit_uri_parse ("pkcs11:?module-name=1%2A%26%23%25%26%40%28&module-path=blah%2Fblah", P11_KIT_URI_FOR_ANY, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
 	module_name = p11_kit_uri_get_module_name (uri);

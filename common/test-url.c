@@ -150,6 +150,33 @@ test_encode_verbatim (void)
 	p11_buffer_uninit (&buf);
 }
 
+static void
+test_encode_lower (void)
+{
+	const unsigned char *input = (unsigned char *)",.:;";
+	p11_buffer buf;
+
+	if (!p11_buffer_init_null (&buf, 5))
+		assert_not_reached ();
+
+	p11_url_encode (input, input + 5, "", &buf);
+	assert (p11_buffer_ok (&buf));
+	assert_str_eq ("%2C%2E%3A%3B%00", (char *)buf.data);
+	assert_num_eq (15, buf.len);
+
+	if (!p11_buffer_reset (&buf, 5))
+		assert_not_reached ();
+
+	setenv ("P11_KIT_URI_LOWERCASE", "1", 1);
+
+	p11_url_encode (input, input + 5, "", &buf);
+	assert (p11_buffer_ok (&buf));
+	assert_str_eq ("%2c%2e%3a%3b%00", (char *)buf.data);
+	assert_num_eq (15, buf.len);
+
+	p11_buffer_uninit (&buf);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -160,5 +187,6 @@ main (int argc,
 
 	p11_test (test_encode, "/url/encode");
 	p11_test (test_encode_verbatim, "/url/encode-verbatim");
+	p11_test (test_encode_lower, "/url/encode-lower");
 	return p11_test_run (argc, argv);
 }
