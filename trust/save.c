@@ -95,6 +95,7 @@ p11_save_open_file (const char *path,
 {
 	p11_save_file *file;
 	char *temp;
+	mode_t mode;
 	int fd;
 
 	return_val_if_fail (path != NULL, NULL);
@@ -105,7 +106,9 @@ p11_save_open_file (const char *path,
 	if (asprintf (&temp, "%s%s.XXXXXX", path, extension) < 0)
 		return_val_if_reached (NULL);
 
+	mode = umask (0077);
 	fd = mkstemp (temp);
+	umask (mode);
 	if (fd < 0) {
 		p11_message_err (errno, "couldn't create file: %s%s", path, extension);
 		free (temp);
