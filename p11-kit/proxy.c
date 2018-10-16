@@ -612,7 +612,8 @@ proxy_C_OpenSession (CK_X_FUNCTION_LIST *self,
 				sess->wrap_slot = map.wrap_slot;
 				sess->real_session = *handle;
 				sess->wrap_session = ++state->last_handle; /* TODO: Handle wrapping, and then collisions */
-				p11_dict_set (state->px->sessions, &sess->wrap_session, sess);
+				if (!p11_dict_set (state->px->sessions, &sess->wrap_session, sess))
+					warn_if_reached ();
 				*handle = sess->wrap_session;
 			}
 

@@ -1321,7 +1321,8 @@ find_objects_match (CK_ATTRIBUTE *attrs,
 			}
 			value = memdup (oid->pValue, oid->ulValueLen);
 			return_val_if_fail (value != NULL, false);
-			p11_dict_set (find->extensions, value, value);
+			if (!p11_dict_set (find->extensions, value, value))
+				warn_if_reached ();
 		}
 	}
 
