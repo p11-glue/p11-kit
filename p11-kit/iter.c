@@ -157,7 +157,10 @@ p11_kit_iter_new (P11KitUri *uri,
 	return_val_if_fail (iter != NULL, NULL);
 
 	iter->modules = p11_array_new (NULL);
-	return_val_if_fail (iter->modules != NULL, NULL);
+	if (iter->modules == NULL) {
+		p11_kit_iter_free (iter);
+		return_val_if_reached (NULL);
+	}
 
 	iter->want_writable = !!(behavior & P11_KIT_ITER_WANT_WRITABLE);
 	iter->preload_results = !(behavior & P11_KIT_ITER_BUSY_SESSIONS);

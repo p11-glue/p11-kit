@@ -68,6 +68,8 @@ static char *   make_unique_name    (const char *bare,
                                      const char *extension,
                                      int (*check) (void *, char *),
                                      void *data);
+static void filo_free (p11_save_file *file);
+static void dir_free (p11_save_dir *dir);
 
 bool
 p11_save_write_and_finish (p11_save_file *file,
@@ -114,9 +116,15 @@ p11_save_open_file (const char *path,
 	return_val_if_fail (file != NULL, NULL);
 	file->temp = temp;
 	file->bare = strdup (path);
-	return_val_if_fail (file->bare != NULL, NULL);
+	if (file->bare == NULL) {
+		filo_free (file);
+		return_val_if_reached (NULL);
+	}
 	file->extension = strdup (extension);
-	return_val_if_fail (file->extension != NULL, NULL);
+	if (file->extension == NULL) {
+		filo_free (file);
+		return_val_if_reached (NULL);
+	}
 	file->flags = flags;
 	file->fd = fd;
 
@@ -164,6 +172,13 @@ filo_free (p11_save_file *file)
 	free (file->bare);
 	free (file->extension);
 	free (file);
+}
+
+static void
+dir_free (p11_save_dir *dir) {
+	p11_dict_free (dir->cache);
+	free (dir->path);
+	free (dir);
 }
 
 #ifdef OS_UNIX
@@ -349,10 +364,16 @@ p11_save_open_directory (const char *path,
 	return_val_if_fail (dir != NULL, NULL);
 
 	dir->path = strdup (path);
-	return_val_if_fail (dir->path != NULL, NULL);
+	if (dir->path == NULL) {
+		dir_free (dir);
+		return_val_if_reached (NULL);
+	}
 
 	dir->cache = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
-	return_val_if_fail (dir->cache != NULL, NULL);
+	if (dir->cache == NULL) {
+		dir_free (dir);
+		return_val_if_reached (NULL);
+	}
 
 	dir->flags = flags;
 	return dir;
