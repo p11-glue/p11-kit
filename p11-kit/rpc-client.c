@@ -371,7 +371,8 @@ proto_read_ulong_array (p11_rpc_message *msg, CK_ULONG_PTR arr,
 
 	/* We need to go ahead and read everything in all cases */
 	for (i = 0; i < num; ++i) {
-		p11_rpc_buffer_get_uint64 (msg->input, &msg->parsed, &val);
+		if (!p11_rpc_buffer_get_uint64 (msg->input, &msg->parsed, &val))
+			return PARSE_ERROR;
 		if (arr)
 			arr[i] = (CK_ULONG)val;
 	}
