@@ -71,13 +71,13 @@ void              p11_debug_precond             (const char *format,
 #endif
 
 #define return_val_if_fail(x, v) \
-	do { if (!(x)) { \
+	do { if (x) { } else {							\
 	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
 	     return v; \
 	} } while (false)
 
 #define return_if_fail(x) \
-	do { if (!(x)) { \
+	do { if (x) { } else {						\
 	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
 	     return; \
 	} } while (false)
@@ -100,7 +100,7 @@ void              p11_debug_precond             (const char *format,
 	} while (false)
 
 #define warn_if_fail(x) \
-	do { if (!(x)) { \
+	do { if (x) { } else {						\
 	     p11_debug_precond ("p11-kit: '%s' not true at %s\n", #x, __func__); \
 	} } while (false)
 
