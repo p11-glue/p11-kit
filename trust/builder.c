@@ -187,7 +187,10 @@ p11_builder_new (int flags)
 	return_val_if_fail (builder != NULL, NULL);
 
 	builder->asn1_cache = p11_asn1_cache_new ();
-	return_val_if_fail (builder->asn1_cache, NULL);
+	if (builder->asn1_cache == NULL) {
+		p11_builder_free (builder);
+		return_val_if_reached (NULL);
+	}
 	builder->asn1_defs = p11_asn1_cache_defs (builder->asn1_cache);
 
 	builder->flags = flags;

@@ -267,7 +267,10 @@ proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
 	py->forkid = p11_forkid;
 
 	py->inited = modules_dup (loaded);
-	return_val_if_fail (py->inited != NULL, CKR_HOST_MEMORY);
+	if (py->inited == NULL) {
+		proxy_free (py, 0);
+		return_val_if_reached (CKR_HOST_MEMORY);
+	}
 
 	rv = p11_kit_modules_initialize (py->inited, NULL);
 
@@ -320,7 +323,10 @@ proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
 	}
 
 	py->sessions = p11_dict_new (p11_dict_ulongptr_hash, p11_dict_ulongptr_equal, NULL, free);
-	return_val_if_fail (py->sessions != NULL, CKR_HOST_MEMORY);
+	if (py->sessions == NULL) {
+		proxy_free (py, 1);
+		return_val_if_reached (CKR_HOST_MEMORY);
+	}
 	py->refs = 1;
 
 	*res = py;

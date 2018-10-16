@@ -89,7 +89,10 @@ p11_persist_new (void)
 	return_val_if_fail (persist != NULL, NULL);
 
 	persist->constants = p11_constant_reverse (true);
-	return_val_if_fail (persist->constants != NULL, NULL);
+	if (persist->constants == NULL) {
+		free (persist);
+		return_val_if_reached (NULL);
+	}
 
 	return persist;
 }

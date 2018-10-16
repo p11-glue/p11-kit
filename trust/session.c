@@ -59,12 +59,18 @@ p11_session_new (p11_token *token)
 	session->handle = p11_module_next_id ();
 
 	session->builder = p11_builder_new (P11_BUILDER_FLAG_NONE);
-	return_val_if_fail (session->builder, NULL);
+	if (session->builder == NULL) {
+		p11_session_free (session);
+		return_val_if_reached (NULL);
+	}
 
 	session->index = p11_index_new (p11_builder_build, NULL, NULL,
 	                                p11_builder_changed,
 	                                session->builder);
-	return_val_if_fail (session->index != NULL, NULL);
+	if (session->index == NULL) {
+		p11_session_free (session);
+		return_val_if_reached (NULL);
+	}
 
 	session->token = token;
 

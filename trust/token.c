@@ -829,7 +829,10 @@ p11_token_new (CK_SLOT_ID slot,
 	return_val_if_fail (token != NULL, NULL);
 
 	token->builder = p11_builder_new (P11_BUILDER_FLAG_TOKEN);
-	return_val_if_fail (token->builder != NULL, NULL);
+	if (token->builder == NULL) {
+		p11_token_free (token);
+		return_val_if_reached (NULL);
+	}
 
 	token->index = p11_index_new (on_index_build,
 	                              on_index_store,

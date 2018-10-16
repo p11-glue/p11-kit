@@ -285,11 +285,17 @@ p11_asn1_cache_new (void)
 	return_val_if_fail (cache != NULL, NULL);
 
 	cache->defs = p11_asn1_defs_load ();
-	return_val_if_fail (cache->defs != NULL, NULL);
+	if (cache->defs == NULL) {
+		p11_asn1_cache_free (cache);
+		return_val_if_reached (NULL);
+	}
 
 	cache->items = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal,
 	                             NULL, free_asn1_item);
-	return_val_if_fail (cache->items != NULL, NULL);
+	if (cache->items == NULL) {
+		p11_asn1_cache_free (cache);
+		return_val_if_reached (NULL);
+	}
 
 	return cache;
 }
@@ -342,7 +348,10 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 	item->length = der_len;
 	item->node = node;
 	item->struct_name = strdup (struct_name);
-	return_if_fail (item->struct_name != NULL);
+	if (item->struct_name == NULL) {
+		free_asn1_item (item);
+		return_if_reached ();
+	}
 
 	if (!p11_dict_set (cache->items, (void *)der, item))
 		return_if_reached ();

@@ -170,10 +170,16 @@ p11_index_new (p11_index_build_cb build,
 	index->objects = p11_dict_new (p11_dict_ulongptr_hash,
 	                               p11_dict_ulongptr_equal,
 	                               NULL, free_object);
-	return_val_if_fail (index->objects != NULL, NULL);
+	if (index->objects == NULL) {
+		p11_index_free (index);
+		return_val_if_reached (NULL);
+	}
 
 	index->buckets = calloc (NUM_BUCKETS, sizeof (index_bucket));
-	return_val_if_fail (index->buckets != NULL, NULL);
+	if (index->buckets == NULL) {
+		p11_index_free (index);
+		return_val_if_reached (NULL);
+	}
 
 	return index;
 }
