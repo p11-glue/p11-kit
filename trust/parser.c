@@ -697,8 +697,10 @@ p11_parser_formats (p11_parser *parser,
 		func = va_arg (va, parser_func);
 		if (func == NULL)
 			break;
-		if (!p11_array_push (formats, func))
+		if (!p11_array_push (formats, func)) {
+			va_end (va);
 			return_if_reached ();
+		}
 	}
 	va_end (va);
 

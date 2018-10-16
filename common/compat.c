@@ -525,7 +525,10 @@ strconcat (const char *first,
 	for (arg = first; arg; arg = va_arg (va, const char*)) {
 		size_t old_length = length;
 		length += strlen (arg);
-		return_val_if_fail (length >= old_length, NULL);
+		if (length < old_length) {
+			va_end (va);
+			return_val_if_reached (NULL);
+		}
 	}
 
 	va_end (va);

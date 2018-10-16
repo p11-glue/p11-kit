@@ -538,8 +538,10 @@ buffer_append_printf (p11_buffer *buffer,
 	va_list va;
 
 	va_start (va, format);
-	if (vasprintf (&string, format, va) < 0)
+	if (vasprintf (&string, format, va) < 0) {
+		va_end (va);
 		return_if_reached ();
+	}
 	va_end (va);
 
 	p11_buffer_add (buffer, string, -1);
