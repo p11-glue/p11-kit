@@ -2226,7 +2226,11 @@ p11_kit_remote_serve_tokens (const char **tokens,
 				p11_message_err (error, "couldn't subclass filter");
 				goto out;
 			}
-			p11_dict_set (filters, module, filter);
+			if (!p11_dict_set (filters, module, filter)) {
+				error = EINVAL;
+				p11_message_err (error, "couldn't register filter");
+				goto out;
+			}
 		}
 
 		for (i = 0; i < n_tokens; i++) {
