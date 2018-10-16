@@ -307,7 +307,10 @@ proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
 							break;
 					}
 					py->mappings[py->n_mappings].funcs = funcs;
-					py->mappings[py->n_mappings].wrap_slot = j == n_mappings ? py->n_mappings + MAPPING_OFFSET : mappings[j].wrap_slot;
+					py->mappings[py->n_mappings].wrap_slot =
+						(n_mappings == 0 || j == n_mappings) ?
+						py->n_mappings + MAPPING_OFFSET :
+						mappings[j].wrap_slot;
 					py->mappings[py->n_mappings].real_slot = slots[i];
 					++py->n_mappings;
 				}
