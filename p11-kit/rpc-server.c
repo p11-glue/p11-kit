@@ -2285,6 +2285,11 @@ p11_kit_remote_serve_tokens (const char **tokens,
 		p11_kit_modules_release (modules);
 	if (error != 0)
 		errno = error;
+	if (uris) {
+		for (i = 0; i < n_tokens; i++)
+			p11_kit_uri_free (uris[i]);
+		free (uris);
+	}
 
 	return ret;
 }
