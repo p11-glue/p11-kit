@@ -2219,6 +2219,10 @@ p11_kit_remote_serve_tokens (const char **tokens,
 		filter = p11_dict_get (filters, module);
 		if (filter == NULL) {
 			lower = calloc (1, sizeof (p11_virtual));
+			if (lower == NULL) {
+				error = ENOMEM;
+				goto out;
+			}
 			p11_virtual_init (lower, &p11_virtual_base, module, NULL);
 			filter = p11_filter_subclass (lower, NULL);
 			if (filter == NULL) {
