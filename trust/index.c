@@ -193,9 +193,11 @@ p11_index_free (p11_index *index)
 
 	p11_dict_free (index->objects);
 	p11_dict_free (index->changes);
-	for (i = 0; i < NUM_BUCKETS; i++)
-		free (index->buckets[i].elem);
-	free (index->buckets);
+	if (index->buckets) {
+		for (i = 0; i < NUM_BUCKETS; i++)
+			free (index->buckets[i].elem);
+		free (index->buckets);
+	}
 	free (index);
 }
 
