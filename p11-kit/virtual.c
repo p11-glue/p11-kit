@@ -2832,6 +2832,7 @@ p11_virtual_wrap (p11_virtual *virt,
                   p11_destroyer destroyer)
 {
 	Wrapper *wrapper;
+	const char *envvar;
 
 	return_val_if_fail (virt != NULL, NULL);
 
@@ -2844,7 +2845,8 @@ p11_virtual_wrap (p11_virtual *virt,
 	wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
 	wrapper->fixed_index = -1;
 
-	if (!init_wrapper_funcs (wrapper))
+	envvar = secure_getenv ("P11_KIT_DISABLE_LIBFFI_CLOSURE");
+	if ((envvar && *envvar != '\0') || !init_wrapper_funcs (wrapper))
 		return p11_virtual_wrap_fixed (virt, destroyer);
 
 	assert ((void *)wrapper == (void *)&wrapper->bound);
