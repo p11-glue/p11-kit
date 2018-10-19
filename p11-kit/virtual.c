@@ -2832,8 +2832,13 @@ p11_virtual_wrap (p11_virtual *virt,
                   p11_destroyer destroyer)
 {
 	Wrapper *wrapper;
+	CK_FUNCTION_LIST *result;
 
 	return_val_if_fail (virt != NULL, NULL);
+
+	result = p11_virtual_wrap_fixed (virt, destroyer);
+	if (result)
+		return result;
 
 	wrapper = calloc (1, sizeof (Wrapper));
 	return_val_if_fail (wrapper != NULL, NULL);
@@ -2844,8 +2849,10 @@ p11_virtual_wrap (p11_virtual *virt,
 	wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
 	wrapper->fixed_index = -1;
 
-	if (!init_wrapper_funcs (wrapper))
-		return p11_virtual_wrap_fixed (virt, destroyer);
+	if (!init_wrapper_funcs (wrapper)) {
+		free (wrapper);
+		return_val_if_reached (NULL);
+	}
 
 	assert ((void *)wrapper == (void *)&wrapper->bound);
 	assert (p11_virtual_is_wrapper (&wrapper->bound));
@@ -2859,7 +2866,11 @@ CK_FUNCTION_LIST *
 p11_virtual_wrap (p11_virtual *virt,
                   p11_destroyer destroyer)
 {
-	return p11_virtual_wrap_fixed (virt, destroyer);
+	CK_FUNCTION_LIST *result;
+
+	result = p11_virtual_wrap_fixed (virt, destroyer);
+	return_val_if_fail (result != NULL, NULL);
+	return result;
 }
 
 #endif /* !FFI_CLOSURES */
@@ -3067,8 +3078,6 @@ p11_virtual_wrap_fixed (p11_virtual *virt,
 		}
 	}
 	p11_mutex_unlock (&p11_virtual_mutex);
-
-	return_val_if_fail (result != NULL, NULL);
 
 	return result;
 }
