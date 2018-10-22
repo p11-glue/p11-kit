@@ -356,6 +356,8 @@ teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 
 	rv = module->C_Finalize (NULL);
 	assert (rv == CKR_OK);
+
+	p11_proxy_module_cleanup ();
 }
 
 /*
