@@ -27,6 +27,8 @@ AM_INIT_AUTOMAKE([1.12 foreign subdir-objects])
 AM_SANITY_CHECK
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
+m4_ifdef([PKG_PREREQ], [PKG_PREREQ(0.29)],
+  [m4_fatal([pkg.m4 is too old; copy the latest version in build/m4])])
 
 dnl Enable platform specific extensions.
 AC_USE_SYSTEM_EXTENSIONS
