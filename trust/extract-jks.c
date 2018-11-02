@@ -48,6 +48,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
+#include <limits.h>
 
 time_t _p11_extract_jks_timestamp = 0;
 
@@ -247,10 +249,38 @@ prepare_jks_buffer (p11_enumerate *ex,
 	 * when this was this certificate was added to the keystore, however
 	 * we don't have that information. Java uses time in milliseconds
 	 */
-	if (_p11_extract_jks_timestamp)
-		now = _p11_extract_jks_timestamp;
-	else
-		now = time (NULL);
+	{
+		char *source_date_epoch;
+		source_date_epoch = secure_getenv ("SOURCE_DATE_EPOCH");
+		if (source_date_epoch) {
+			unsigned long long epoch;
+			char *endptr;
+			errno = 0;
+			epoch = strtoull (source_date_epoch, &endptr, 10);
+			if ((errno == ERANGE && (epoch == ULLONG_MAX || epoch == 0))
+			    || (errno != 0 && epoch == 0)) {
+				p11_message_err (errno, "Environment variable $SOURCE_DATE_EPOCH: strtoull");
+				return false;
+			}
+			if (endptr == source_date_epoch) {
+				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n", endptr);
+				return false;
+			}
+			if (*endptr != '\0') {
+				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n", endptr);
+				return false;
+			}
+			if (epoch > ULONG_MAX) {
+				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal to %lu but was found to be: %llu \n", ULONG_MAX, epoch);
+				return false;
+			}
+			now = epoch;
+		} else if (_p11_extract_jks_timestamp)
+			now = _p11_extract_jks_timestamp;
+		else
+			now = time (NULL);
+	}
+
 	return_val_if_fail (now > 0, false);
 	now *= 1000; /* seconds to milliseconds */
 
