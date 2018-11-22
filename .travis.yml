@@ -30,30 +30,30 @@ language: c
 
 before_install:
   - |
-      if test -e "./.travis/${TRAVIS_OS_NAME}/before_install.sh"; then
-        . "./.travis/${TRAVIS_OS_NAME}/before_install.sh"
+      if test -e "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/before_install.sh"; then
+        . "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/before_install.sh"
       fi
 
 install:
   - |
-      if test -e "./.travis/${TRAVIS_OS_NAME}/install.sh"; then
-        . "./.travis/${TRAVIS_OS_NAME}/install.sh"
+      if test -e "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/install.sh"; then
+        . "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/install.sh"
       fi
 
 script:
   - |
-      if test -e "./.travis/${TRAVIS_OS_NAME}/script.sh"; then
-        . "./.travis/${TRAVIS_OS_NAME}/script.sh"
+      if test -e "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/script.sh"; then
+        . "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/script.sh"
       fi
 
 after_failure:
   - |
-      if test -e "./.travis/${TRAVIS_OS_NAME}/after_failure.sh"; then
-        . "./.travis/${TRAVIS_OS_NAME}/after_failure.sh"
+      if test -e "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/after_failure.sh"; then
+        . "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/after_failure.sh"
       fi
 
 after_success:
   - |
-      if test -e "./.travis/${TRAVIS_OS_NAME}/after_success.sh"; then
-        . "./.travis/${TRAVIS_OS_NAME}/after_success.sh"
+      if test -e "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/after_success.sh"; then
+        . "./.travis/${PROFILE-${TRAVIS_OS_NAME}}/after_success.sh"
       fi
