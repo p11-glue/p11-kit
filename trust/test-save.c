@@ -357,11 +357,14 @@ test_directory_files (void)
 	ret = p11_save_finish_directory (dir, true);
 	assert_num_eq (true, ret);
 
-	test_check_directory (subdir, ("blah.cer", "file.txt",
 #ifdef OS_UNIX
+	test_check_directory (subdir, ("blah.cer", "file.txt",
 	                      "link.ext",
-#endif
 	                      NULL));
+#else
+	test_check_directory (subdir, ("blah.cer", "file.txt",
+	                      NULL));
+#endif
 	test_check_file (subdir, "blah.cer", SRCDIR "/trust/fixtures/cacert3.der");
 	test_check_data (subdir, "file.txt", test_text, strlen (test_text));
 #ifdef OS_UNIX
@@ -443,13 +446,18 @@ test_directory_dups (void)
 	ret = p11_save_finish_directory (dir, true);
 	assert_num_eq (true, ret);
 
-	test_check_directory (subdir, ("file.txt", "file.1.txt", "file.2.txt",
-	                                   "no-ext", "no-ext.1",
-	                                   "with-num.0", "with-num.1",
 #ifdef OS_UNIX
-	                                   "link.0", "link.1",
+	test_check_directory (subdir, ("file.txt", "file.1.txt", "file.2.txt",
+				       "no-ext", "no-ext.1",
+				       "with-num.0", "with-num.1",
+				       "link.0", "link.1",
+				       NULL));
+#else
+	test_check_directory (subdir, ("file.txt", "file.1.txt", "file.2.txt",
+				       "no-ext", "no-ext.1",
+				       "with-num.0", "with-num.1",
+				       NULL));
 #endif
-	                                   NULL));
 	test_check_data (subdir, "file.txt", test_text, 5);
 	test_check_data (subdir, "file.1.txt", test_text, 10);
 	test_check_data (subdir, "file.2.txt", test_text, 15);

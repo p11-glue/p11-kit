@@ -62,6 +62,7 @@ test_memory (void)
 		mem = malloc (1);
 		assert (mem != NULL);
 		free (mem);
+		/* cppcheck-suppress deallocuse */
 		*mem = 1;
 	}
 }
@@ -77,6 +78,7 @@ test_leak (void)
 		assert (mem != NULL);
 		*mem = 1;
 	}
+	/* cppcheck-suppress memleak */
 }
 
 int

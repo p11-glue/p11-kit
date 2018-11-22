@@ -236,11 +236,14 @@ test_directory_hash (void)
 	ret = p11_extract_pem_directory_hash (&test.ex, test.directory);
 	assert_num_eq (true, ret);
 
-	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem",
 #ifdef OS_UNIX
-                                           "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0",
+	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem",
+					       "e5662767.1", "e5662767.0", "590d426f.1", "590d426f.0",
+					       NULL));
+#else
+	test_check_directory (test.directory, ("Cacert3_Here.pem", "Cacert3_Here.1.pem",
+					       NULL));
 #endif
-                                           NULL));
 	test_check_file (test.directory, "Cacert3_Here.pem", SRCDIR "/trust/fixtures/cacert3.pem");
 	test_check_file (test.directory, "Cacert3_Here.1.pem", SRCDIR "/trust/fixtures/cacert3.pem");
 #ifdef OS_UNIX

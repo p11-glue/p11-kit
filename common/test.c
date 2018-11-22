@@ -457,6 +457,7 @@ p11_test_directory (const char *prefix)
 		        directory, strerror (errno));
 		free (directory);
 		assert_not_reached ();
+		return NULL;
 	}
 
 	free (templ);
@@ -483,6 +484,7 @@ p11_test_file_write (const char *base,
 		printf ("# couldn't open file for writing: %s: %s\n", name, strerror (errno));
 		free (path);
 		assert_not_reached ();
+		return;
 	}
 
 	if (fwrite (contents, 1, length, f) != length ||
@@ -490,6 +492,7 @@ p11_test_file_write (const char *base,
 		printf ("# couldn't write to file: %s: %s\n", name, strerror (errno));
 		free (path);
 		assert_not_reached ();
+		return;
 	}
 
 	free (path);
@@ -511,6 +514,7 @@ p11_test_file_delete (const char *base,
 		printf ("# Couldn't delete file: %s\n", name);
 		free (path);
 		assert_not_reached ();
+		return;
 	}
 
 	free (path);
