@@ -147,13 +147,17 @@ server_new (const char **tokens, size_t n_tokens, const char *provider,
 	if (strncmp (tokens[0], "pkcs11:", 7) == 0) {
 		if (server->provider) {
 			server->module = p11_kit_module_load (server->provider, 0);
-			if (server->module == NULL)
+			if (server->module == NULL) {
+				free (server);
 				return NULL;
+			}
 		}
 	} else {
 		server->module = p11_kit_module_load (tokens[0], 0);
-		if (server->module == NULL)
+		if (server->module == NULL) {
+			free (server);
 			return NULL;
+		}
 	}
 #endif /* OS_WIN32 */
 

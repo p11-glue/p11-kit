@@ -283,8 +283,10 @@ test_check_directory_files (const char *file,
 	va_start (va, file);
 
 	while (file != NULL) {
-		if (!p11_dict_set (files, (void *)file, (void *)file))
+		if (!p11_dict_set (files, (void *)file, (void *)file)) {
+			va_end (va);
 			return_val_if_reached (NULL);
+		}
 		file = va_arg (va, const char *);
 	}
 
