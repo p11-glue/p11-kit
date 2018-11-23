@@ -482,17 +482,13 @@ p11_test_file_write (const char *base,
 	f = fopen (name, "wb");
 	if (f == NULL) {
 		printf ("# couldn't open file for writing: %s: %s\n", name, strerror (errno));
-		free (path);
 		assert_not_reached ();
-		return;
 	}
 
 	if (fwrite (contents, 1, length, f) != length ||
 	    fclose (f) != 0) {
 		printf ("# couldn't write to file: %s: %s\n", name, strerror (errno));
-		free (path);
 		assert_not_reached ();
-		return;
 	}
 
 	free (path);
@@ -512,9 +508,7 @@ p11_test_file_delete (const char *base,
 
 	if (unlink (name) < 0) {
 		printf ("# Couldn't delete file: %s\n", name);
-		free (path);
 		assert_not_reached ();
-		return;
 	}
 
 	free (path);
