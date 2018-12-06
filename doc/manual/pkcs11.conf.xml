@@ -178,7 +178,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 		</listitem>
 	</varlistentry>
 	<varlistentry id="option-log-calls">
-		<term>log-calls:</term>
+		<term><option>log-calls:</option></term>
 		<listitem>
 			<para>Set to <literal>yes</literal> to write a log to stderr of all the
 			calls into the module. This is only supported for managed modules.</para>
@@ -226,7 +226,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 		</listitem>
 	</varlistentry>
 	<varlistentry>
-		<term>log-calls:</term>
+		<term><option>log-calls:</option></term>
 		<listitem>
 			<para>Set to <literal>yes</literal> to write a log to stderr of all the
 			calls into all configured modules. This is only supported for managed
