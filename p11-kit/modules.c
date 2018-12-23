@@ -306,6 +306,7 @@ free_module_unlocked (void *data)
 	p11_dict_free (mod->config);
 	free (mod->name);
 	free (mod->filename);
+	free (mod->init_args.pReserved);
 	free (mod);
 }
 
@@ -550,10 +551,12 @@ is_module_enabled_unlocked (const char *name,
 static CK_RV
 take_config_and_load_module_inlock (char **name,
                                     p11_dict **config,
-                                    bool critical)
+                                    bool critical,
+                                    bool verbose)
 {
 	const char *filename = NULL;
 	const char *remote = NULL;
+	char *init_reserved = NULL;
 	CK_RV rv = CKR_OK;
 	Module *mod;
 
@@ -591,7 +594,19 @@ take_config_and_load_module_inlock (char **name,
 	 * 'x-init-reserved' setting in the config. This only works with specific
 	 * PKCS#11 modules, and is non-standard use of that field.
 	 */
-	mod->init_args.pReserved = p11_dict_get (*config, "x-init-reserved");
+	init_reserved = p11_dict_get (*config, "x-init-reserved");
+	if (init_reserved) {
+		if (verbose) {
+			init_reserved = strconcat (init_reserved, " verbose=yes", NULL);
+		} else {
+			init_reserved = strdup (init_reserved);
+		}
+		if (init_reserved == NULL) {
+			rv = CKR_HOST_MEMORY;
+			goto out;
+		}
+	}
+	mod->init_args.pReserved = init_reserved;
 
 	/* Take ownership of these variables */
 	p11_dict_free (mod->config);
@@ -607,7 +622,7 @@ out:
 }
 
 static CK_RV
-load_registered_modules_unlocked (void)
+load_registered_modules_unlocked (int flags)
 {
 	p11_dictiter iter;
 	p11_dict *configs;
@@ -617,6 +632,7 @@ load_registered_modules_unlocked (void)
 	int mode;
 	CK_RV rv;
 	bool critical;
+	bool verbose;
 
 	if (gl.config)
 		return CKR_OK;
@@ -652,7 +668,8 @@ load_registered_modules_unlocked (void)
 
 		/* Is this a critical module, should abort loading of others? */
 		critical = _p11_conf_parse_boolean (p11_dict_get (config, "critical"), false);
-		rv = take_config_and_load_module_inlock (&name, &config, critical);
+		verbose = (flags & P11_KIT_MODULE_VERBOSE) != 0;
+		rv = take_config_and_load_module_inlock (&name, &config, critical, verbose);
 
 		/*
 		 * These variables will be cleared if ownership is transeferred
@@ -858,7 +875,7 @@ initialize_registered_inlock_reentrant (void)
 	if (rv != CKR_OK)
 		return rv;
 
-	rv = load_registered_modules_unlocked ();
+	rv = load_registered_modules_unlocked (0);
 	if (rv == CKR_OK) {
 		p11_dict_iterate (gl.unmanaged_by_funcs, &iter);
 		while (rv == CKR_OK && p11_dict_next (&iter, NULL, (void **)&mod)) {
@@ -1955,7 +1972,7 @@ p11_modules_load_inlock_reentrant (int flags,
 	if (rv != CKR_OK)
 		return rv;
 
-	rv = load_registered_modules_unlocked ();
+	rv = load_registered_modules_unlocked (flags);
 	if (rv != CKR_OK)
 		return rv;
 

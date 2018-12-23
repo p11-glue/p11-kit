@@ -674,6 +674,8 @@ p11_enumerate_opt_purpose (p11_enumerate *ex,
 	return true;
 }
 
+extern bool p11_print_messages;
+
 bool
 p11_enumerate_ready (p11_enumerate *ex,
                      const char *def_filter)
@@ -687,8 +689,13 @@ p11_enumerate_ready (p11_enumerate *ex,
 	 * We only "believe" the CKA_TRUSTED and CKA_X_DISTRUSTED attributes
 	 * we get from modules explicitly marked as containing trust-policy.
 	 */
-	if (!ex->modules)
-		ex->modules = p11_kit_modules_load_and_initialize (P11_KIT_MODULE_TRUSTED);
+	if (!ex->modules) {
+		int flags = P11_KIT_MODULE_TRUSTED;
+		if (p11_print_messages)
+			flags |= P11_KIT_MODULE_VERBOSE;
+
+		ex->modules = p11_kit_modules_load_and_initialize (flags);
+	}
 	if (!ex->modules)
 		return false;
 	if (ex->modules[0] == NULL)

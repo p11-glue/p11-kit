@@ -58,7 +58,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool print_messages = false;
+bool p11_print_messages = false;
 
 #ifdef HAVE_STRERROR_L
 locale_t p11_message_locale = (locale_t) 0;
@@ -148,7 +148,7 @@ p11_message (const char* msg,
 	buffer[length] = 0;
 
 	/* If printing is not disabled, just print out */
-	if (print_messages)
+	if (p11_print_messages)
 		fprintf (stderr, "p11-kit: %s\n", buffer);
 	else
 		p11_debug_message (P11_DEBUG_LIB, "message: %s", buffer);
@@ -158,13 +158,13 @@ p11_message (const char* msg,
 void
 p11_message_quiet (void)
 {
-	print_messages = false;
+	p11_print_messages = false;
 }
 
 void
 p11_message_loud (void)
 {
-	print_messages = true;
+	p11_print_messages = true;
 }
 
 const char *
