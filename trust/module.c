@@ -287,6 +287,11 @@ parse_argument (char *arg,
 		free (gl.paths);
 		gl.paths = value ? strdup (value) : NULL;
 
+	} else if (strcmp (arg, "verbose") == 0) {
+		if (strcmp (value, "yes") == 0)
+			p11_message_loud ();
+		else if (strcmp (value, "no") == 0)
+			p11_message_quiet ();
 	} else {
 		p11_message ("unrecognized module argument: %s", arg);
 	}
