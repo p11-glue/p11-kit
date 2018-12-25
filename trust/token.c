@@ -377,16 +377,19 @@ p11_token_load (p11_token *token)
 	int ret;
 
 	ret = loader_load_path (token, token->path, &is_dir);
-	return_val_if_fail (ret >= 0, -1);
+	if (ret < 0)
+		return -1;
 	total += ret;
 
 	if (is_dir) {
 		ret = loader_load_path (token, token->anchors, &is_dir);
-		return_val_if_fail (ret >= 0, -1);
+		if (ret < 0)
+			return -1;
 		total += ret;
 
 		ret = loader_load_path (token, token->blacklist, &is_dir);
-		return_val_if_fail (ret >= 0, -1);
+		if (ret < 0)
+			return -1;
 		total += ret;
 	}
 
