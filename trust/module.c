@@ -1198,11 +1198,16 @@ sys_C_FindObjectsInit (CK_SESSION_HANDLE handle,
 				indices[n++] = session->index;
 			if (want_token_objects) {
 				if (!session->loaded)
-					p11_token_load (session->token);
-				session->loaded = CK_TRUE;
-				indices[n++] = p11_token_index (session->token);
+					if (p11_token_load (session->token) < 0)
+						rv = CKR_FUNCTION_FAILED;
+				if (rv == CKR_OK) {
+					session->loaded = CK_TRUE;
+					indices[n++] = p11_token_index (session->token);
+				}
 			}
+		}
 
+		if (rv == CKR_OK) {
 			find = calloc (1, sizeof (FindObjects));
 			warn_if_fail (find != NULL);
 

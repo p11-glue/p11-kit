@@ -196,14 +196,14 @@ loader_load_file (p11_token *token,
 	default:
 		p11_debug ("failed to parse: %s", filename);
 		loader_gone_file (token, filename);
-		return 0;
+		return -1;
 	}
 
 	/* Update each parsed object with the origin */
 	parsed = p11_parser_parsed (token->parser);
 	for (i = 0; i < parsed->num; i++) {
 		parsed->elem[i] = p11_attrs_build (parsed->elem[i], origin, NULL);
-		return_val_if_fail (parsed->elem[i] != NULL, 0);
+		return_val_if_fail (parsed->elem[i] != NULL, -1);
 	}
 
 	p11_index_load (token->index);
@@ -215,7 +215,7 @@ loader_load_file (p11_token *token,
 
 	if (rv != CKR_OK) {
 		p11_message ("couldn't load file into objects: %s", filename);
-		return 0;
+		return -1;
 	}
 
 	loader_was_loaded (token, filename, sb);
