@@ -639,7 +639,7 @@ p11_parser_format_persist (p11_parser *parser,
 	}
 
 	p11_array_free (objects);
-	return ret ? P11_PARSE_SUCCESS : P11_PARSE_FAILURE;
+	return ret ? P11_PARSE_SUCCESS : P11_PARSE_UNRECOGNIZED;
 }
 
 p11_parser *
