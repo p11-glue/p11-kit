@@ -124,7 +124,7 @@ test_fall_through (void)
 	rv = (module->C_Initialize) ("initialize-arg");
 	assert_num_eq (CKR_NEED_TO_CREATE_THREADS, rv);
 
-	/* All other functiosn should have just fallen through */
+	/* All other functions should have just fallen through */
 	assert_ptr_eq (mock_module_no_slots.C_Finalize, module->C_Finalize);
 
 	p11_virtual_unwrap (module);

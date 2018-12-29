@@ -94,7 +94,7 @@ content_files=p11-kit-config.xml p11-kit-sharing.xml \
 	annotation-glossary.xml \
 	$(NULL)
 
-# SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
+# SGML files where gtk-doc abbreviations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
 expand_content_files= $(generate_files)

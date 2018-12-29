@@ -243,7 +243,7 @@ test_pin_file (void)
 	assert (memcmp (ptr, "yogabbagabba", length) == 0);
 	p11_kit_pin_unref (pin);
 
-	pin = p11_kit_pin_request (SRCDIR "/p11-kit/fixtures/nonexistant", uri, "The token",
+	pin = p11_kit_pin_request (SRCDIR "/p11-kit/fixtures/nonexistent", uri, "The token",
 	                            P11_KIT_PIN_FLAGS_USER_LOGIN);
 
 	assert_ptr_eq (NULL, pin);

@@ -503,7 +503,7 @@ test_parse_invalid_file (void)
 	p11_message_quiet ();
 
 	p11_parser_formats (test.parser, p11_parser_format_x509, NULL);
-	ret = p11_parse_file (test.parser, "/nonexistant", NULL,
+	ret = p11_parse_file (test.parser, "/nonexistent", NULL,
 	                      P11_PARSE_FLAG_NONE);
 	assert_num_eq (P11_PARSE_FAILURE, ret);
 

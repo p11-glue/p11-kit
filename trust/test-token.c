@@ -129,7 +129,7 @@ test_token_flags (void *path)
 
 	/*
 	 * blacklist2 comes from the input/blacklist/self-server.der file. It is
-	 * explicitly put on the blacklist, even though it containts no trust
+	 * explicitly put on the blacklist, even though it contains no trust
 	 * policy information.
 	 */
 
@@ -151,7 +151,7 @@ test_token_flags (void *path)
 
 	/*
 	 * anchor comes from the input/anchors/cacert3.der file. It is
-	 * explicitly marked as an anchor, even though it containts no trust
+	 * explicitly marked as an anchor, even though it contains no trust
 	 * policy information.
 	 */
 

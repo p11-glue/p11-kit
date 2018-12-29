@@ -859,7 +859,7 @@ typedef unsigned long ck_mechanism_type_t;
 
 #define CKM_VENDOR_DEFINED		((unsigned long) (1UL << 31))
 
-/* Ammendments */
+/* Amendments */
 #define CKM_SHA224			(0x255UL)
 #define CKM_SHA224_HMAC			(0x256UL)
 #define CKM_SHA224_HMAC_GENERAL		(0x257UL)

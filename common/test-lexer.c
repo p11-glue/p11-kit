@@ -96,7 +96,7 @@ check_lex_msg (const char *file,
 			}
 			break;
 		case TOK_EOF:
-			p11_test_fail (file, line, function, "eof should not be recieved");
+			p11_test_fail (file, line, function, "eof should not be received");
 			break;
 		}
 	}

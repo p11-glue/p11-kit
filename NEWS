@@ -140,7 +140,7 @@
 
 0.20.3 (stable)
  * Fix problems reinitializing managed modules after fork
- * Fix bad bookeeping when fail initializing one of the modules
+ * Fix bad bookkeeping when fail initializing one of the modules
  * Fix case where module would be unloaded while in use [#74919]
  * Remove assertions when module used before initialized [#74919]
  * Fix handling of mmap failure and mapping empty files [#74773]
@@ -186,7 +186,7 @@
  * Port to use CKA_PUBLIC_KEY_INFO and updated trust store spec
  * Add option to use freebl for hashing
  * Implement reloading of token data
- * Fix warnings and possible minor bugs higlighted by code scanners
+ * Fix warnings and possible minor bugs highlighted by code scanners
  * Don't load configs in home directories when running setuid or setgid
  * Support treating ~/.config as $XDG_CONFIG_HOME
  * Use $XDG_DATA_HOME/pkcs11 as default user config directory
@@ -241,7 +241,7 @@
  * Use descriptive labels for the trust module tokens [#62534]
  * Remove the temporary built in distrust objects
  * Make extracted output directories and files read-only [#61898]
- * Don't export unneccessary ABI
+ * Don't export unnecessary ABI
  * Build fixes [#62479]
 
 0.17.2 (unstable)
@@ -249,7 +249,7 @@
  * Fix several crashers
 
 0.17.1 (unstable)
- * Support a p11-kit specific PKCS#11 attribute persistance format [#62156]
+ * Support a p11-kit specific PKCS#11 attribute persistence format [#62156]
  * Use the SHA1 hash of SPKI as the CKA_ID in the trust module by default [#62329]
  * Refactor a trust builder which builds objects out of parsed data [#62329]
  * Combine trust policy when extracting certificates [#61497]

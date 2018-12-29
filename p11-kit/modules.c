@@ -593,7 +593,7 @@ take_config_and_load_module_inlock (char **name,
 	 */
 	mod->init_args.pReserved = p11_dict_get (*config, "x-init-reserved");
 
-	/* Take ownership of thes evariables */
+	/* Take ownership of these variables */
 	p11_dict_free (mod->config);
 	mod->config = *config;
 	*config = NULL;

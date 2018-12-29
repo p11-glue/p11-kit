@@ -830,7 +830,7 @@ p11_kit_iter_get_token (P11KitIter *iter)
  * p11_kit_iter_get_session:
  * @iter: the iterator
  *
- * Get the session which the current matching object is acessible
+ * Get the session which the current matching object is accessible
  * through.
  *
  * This can only be called after p11_kit_iter_next() succeeds.
