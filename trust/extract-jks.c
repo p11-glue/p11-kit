@@ -191,6 +191,7 @@ add_alias (p11_buffer *buffer,
 	}
 
 	convert_alias (input, input_len, &buf);
+	length = buf.len;
 
 	for (i = 0; i < INT32_MAX; i++) {
 		if (i > 0) {
@@ -207,7 +208,7 @@ add_alias (p11_buffer *buffer,
 			return true;
 		}
 
-		p11_buffer_reset (&buf, 0);
+		buf.len = length;
 	}
 
 	return false;
