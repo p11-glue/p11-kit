@@ -84,7 +84,7 @@ pem_find_begin (const char *data,
 
 	if (type) {
 		pref += ARMOR_PREF_BEGIN_L;
-		assert (suff > pref);
+		assert (suff >= pref);
 		*type = strndup (pref, suff - pref);
 		return_val_if_fail (*type != NULL, NULL);
 	}
