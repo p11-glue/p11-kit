@@ -120,6 +120,24 @@ struct {
 	},
 
 	{
+	  /* one block with empty type */
+	  "-----BEGIN -----\n"
+	  "aYNNXqshlVxCdo8QfKeXh3GUzd/yn4LYIVgQrx4a\n"
+	  "-----END -----",
+	  {
+	    {
+	      "",
+	      "\x69\x83\x4d\x5e\xab\x21\x95\x5c\x42\x76\x8f\x10\x7c\xa7\x97\x87"
+	      "\x71\x94\xcd\xdf\xf2\x9f\x82\xd8\x21\x58\x10\xaf\x1e\x1a",
+	      30,
+	    },
+	    {
+	      NULL,
+	    }
+	  }
+	},
+
+	{
 	  NULL,
 	}
 };
