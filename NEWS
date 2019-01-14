@@ -1,3 +1,11 @@
+0.23.15 (stable)
+ * trust: Improve error handling if backed trust file is corrupted [PR#206]
+ * url: Prefer upper-case letters in hex characters when encoding [PR#193]
+ * trust/extract-jks.c: also honor SOURCE_DATE_EPOCH time [PR#202]
+ * virtual: Prefer fixed closures to libffi closures [PR#196]
+ * Fix issues spotted by coverity and cppcheck [PR#194, PR#204]
+ * Build and test fixes [PR#164, PR#191, PR#199, PR#201]
+
 0.23.14 (stable)
  * proxy: Avoid invalid memory access when unloading proxy module [PR#180]
  * Update pkcs11 header to allow SoftHSMv2 to compile [PR#181]
