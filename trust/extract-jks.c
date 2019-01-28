@@ -250,7 +250,9 @@ prepare_jks_buffer (p11_enumerate *ex,
 	 * when this was this certificate was added to the keystore, however
 	 * we don't have that information. Java uses time in milliseconds
 	 */
-	{
+	if (_p11_extract_jks_timestamp)
+		now = _p11_extract_jks_timestamp;
+	else {
 		char *source_date_epoch;
 		source_date_epoch = secure_getenv ("SOURCE_DATE_EPOCH");
 		if (source_date_epoch) {
@@ -276,9 +278,7 @@ prepare_jks_buffer (p11_enumerate *ex,
 				return false;
 			}
 			now = epoch;
-		} else if (_p11_extract_jks_timestamp)
-			now = _p11_extract_jks_timestamp;
-		else
+		} else
 			now = time (NULL);
 	}
 
