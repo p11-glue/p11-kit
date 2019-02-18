@@ -163,6 +163,80 @@ setup_writable (void *unused)
 	p11_parser_formats (test.parser, p11_parser_format_persist, NULL);
 }
 
+/* This is similar to setup(), but it adds an unreadable content in
+ * the anchor directory. */
+static void
+setup_unreadable (void *unused)
+{
+	CK_C_INITIALIZE_ARGS args;
+	const char *paths;
+	char *p, *pp, *anchors;
+	FILE *f, *ff;
+	char buffer[4096];
+	char *arguments;
+	CK_ULONG count;
+	CK_RV rv;
+
+	memset (&test, 0, sizeof (test));
+
+	/* This is the entry point of the trust module, linked to this test */
+	rv = C_GetFunctionList (&test.module);
+	assert (rv == CKR_OK);
+
+	test.directory = p11_test_directory ("test-module");
+	anchors = p11_path_build (test.directory, "anchors", NULL);
+#ifdef OS_UNIX
+	if (mkdir (anchors, S_IRWXU) < 0)
+#else
+	if (mkdir (anchors) < 0)
+#endif
+		assert_fail ("mkdir()", anchors);
+
+	p = p11_path_build (anchors, "unreadable", NULL);
+	f = fopen (p, "w");
+	fwrite ("foo", 3, 1, f);
+	fclose (f);
+	chmod (p, 0);
+	free (p);
+
+	pp = p11_path_build (anchors, "thawte", NULL);
+	ff = fopen (pp, "w");
+	f = fopen (SRCDIR "/trust/fixtures/thawte.pem", "r");
+	while (!feof (f)) {
+		size_t size;
+		size = fread (buffer, 1, sizeof (buffer), f);
+		if (ferror (f))
+			assert_fail ("fread()",
+				     SRCDIR "/trust/fixtures/thawte.pem");
+		fwrite (buffer, 1, size, ff);
+		if (ferror (ff))
+			assert_fail ("write()", pp);
+	}
+	free (pp);
+	fclose (ff);
+	fclose (f);
+	free (anchors);
+
+	memset (&args, 0, sizeof (args));
+	paths = SRCDIR "/trust/input" P11_PATH_SEP \
+		SRCDIR "/trust/fixtures/self-signed-with-ku.der";
+	if (asprintf (&arguments, "paths='%s%c%s'",
+		      paths, P11_PATH_SEP_C, test.directory) < 0)
+		assert (false && "not reached");
+	args.pReserved = arguments;
+	args.flags = CKF_OS_LOCKING_OK;
+
+	rv = test.module->C_Initialize (&args);
+	assert (rv == CKR_OK);
+
+	free (arguments);
+
+	count = NUM_SLOTS;
+	rv = test.module->C_GetSlotList (CK_TRUE, test.slots, &count);
+	assert (rv == CKR_OK);
+	assert (count == NUM_SLOTS);
+}
+
 static void
 test_get_slot_list (void)
 {
@@ -1323,6 +1397,9 @@ main (int argc,
 
 	p11_fixture (NULL, NULL);
 	p11_test (test_token_write_protected, "/module/token-write-protected");
+
+	p11_fixture (setup_unreadable, teardown);
+	p11_test (test_find_certificates, "/module/unreadable");
 
 	return p11_test_run (argc, argv);
 }

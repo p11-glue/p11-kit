@@ -266,8 +266,8 @@ loader_load_directory (p11_token *token,
 		return_val_if_fail (path != NULL, -1);
 
 		ret = loader_load_if_file (token, path);
-		return_val_if_fail (ret >=0, -1);
-		total += ret;
+		if (ret >= 0)
+			total += ret;
 
 		/* Make note that this file was seen */
 		p11_dict_remove (present, path);
@@ -328,8 +328,8 @@ loader_load_path (p11_token *token,
 			p11_dict_iterate (present, &iter);
 			while (p11_dict_next (&iter, (void **)&filename, NULL)) {
 				ret = loader_load_if_file (token, filename);
-				return_val_if_fail (ret >= 0, ret);
-				total += ret;
+				if (ret >= 0)
+					total += ret;
 			}
 		}
 
@@ -377,20 +377,17 @@ p11_token_load (p11_token *token)
 	int ret;
 
 	ret = loader_load_path (token, token->path, &is_dir);
-	if (ret < 0)
-		return -1;
-	total += ret;
+	if (ret >= 0)
+		total += ret;
 
 	if (is_dir) {
 		ret = loader_load_path (token, token->anchors, &is_dir);
-		if (ret < 0)
-			return -1;
-		total += ret;
+		if (ret >= 0)
+			total += ret;
 
 		ret = loader_load_path (token, token->blacklist, &is_dir);
-		if (ret < 0)
-			return -1;
-		total += ret;
+		if (ret >= 0)
+			total += ret;
 	}
 
 	return total;
