@@ -797,14 +797,16 @@ init_globals_unlocked (void)
 static void
 free_modules_when_no_refs_unlocked (void)
 {
-	Module *mod;
-	p11_dictiter iter;
+	if (gl.modules) {
+		Module *mod;
+		p11_dictiter iter;
 
-	/* Check if any modules have a ref count */
-	p11_dict_iterate (gl.modules, &iter);
-	while (p11_dict_next (&iter, (void **)&mod, NULL)) {
-		if (mod->ref_count)
-			return;
+		/* Check if any modules have a ref count */
+		p11_dict_iterate (gl.modules, &iter);
+		while (p11_dict_next (&iter, (void **)&mod, NULL)) {
+			if (mod->ref_count)
+				return;
+		}
 	}
 
 	p11_dict_free (gl.unmanaged_by_funcs);
