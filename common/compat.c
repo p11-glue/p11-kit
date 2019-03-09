@@ -270,6 +270,7 @@ p11_dl_error (void)
 {
 	DWORD code = GetLastError();
 	LPVOID msg_buf;
+	char *result;
 
 	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	                FORMAT_MESSAGE_FROM_SYSTEM |
@@ -278,7 +279,9 @@ p11_dl_error (void)
 	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 	                (LPSTR)&msg_buf, 0, NULL);
 
-	return msg_buf;
+	result = strdup (msg_buf);
+	LocalFree (msg_buf);
+	return result;
 }
 
 int
