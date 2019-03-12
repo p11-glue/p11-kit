@@ -1647,7 +1647,7 @@ managed_steal_sessions_inlock (p11_dict *sessions,
 	/* Only removed some, go through and remove those */
 	} else {
 		for (i = 0; i < at; i++) {
-			if (!p11_dict_remove (sessions, stolen + at))
+			if (!p11_dict_remove (sessions, stolen + i))
 				assert_not_reached ();
 		}
 	}
