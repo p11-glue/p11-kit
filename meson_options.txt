@@ -1,0 +1,47 @@
+option('hash_impl', type : 'combo',
+       value : 'internal', choices : ['internal', 'freebl'],
+       description : 'Hash implementation to use')
+
+option('module_config', type : 'string',
+       value : '',
+       description : 'Module configuration files shipped by packages')
+
+option('system_config', type : 'string',
+       value : '',
+       description : 'Change PKCS#11 system config directory')
+
+option('user_config', type : 'string',
+       value : '~/.config/pkcs11',
+       description : 'Change PKCS#11 user config directory')
+
+option('module_path', type : 'string',
+       value : '',
+       description : 'Load modules with relative path names from here')
+
+option('libffi', type : 'feature',
+       value : 'auto',
+       description : 'Use libffi for building closures')
+
+option('closures', type : 'integer',
+       value : 64,
+       description : 'The number of precompiled closures, used when libffi is unavailable')
+
+option('trust_module', type : 'feature',
+       value : 'auto',
+       description : 'Build the trust module')
+
+option('trust_paths', type : 'string',
+       value : '',
+       description : 'Input paths for trust module')
+
+option('strict', type : 'boolean',
+       value : false,
+       description : 'Strict code compilation')
+
+option('systemd', type : 'feature',
+       value : 'auto',
+       description : 'Use systemd socket activation')
+
+option('gtk_doc', type : 'boolean',
+       value : false,
+       description : 'Build documentation using gtk-doc')
