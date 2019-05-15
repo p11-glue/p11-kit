@@ -1,1 +1,2 @@
-((c-mode . ((c-file-style . "linux"))))
+((c-mode . ((c-file-style . "linux")))
+ (meson-mode . ((indent-tabs-mode . nil))))
