@@ -233,6 +233,7 @@ teardown (void *unused)
 #define TWO_MODULE "module: mock-two" SHLEXT "\n"
 #define ENABLED "enable-in: test-proxy, p11-kit-proxy\n"
 #define DISABLED "disable-in: p11-kit-proxy\n"
+#define EIGHT_MODULE "module: mock-eight" SHLEXT "\n"
 
 static CK_ULONG
 load_modules_and_count_slots (void)
@@ -309,6 +310,37 @@ test_disable (void)
 	p11_test_file_write (test.directory, "two.module", TWO_MODULE DISABLED, strlen (TWO_MODULE DISABLED));
 	disabled = load_modules_and_count_slots ();
 	assert_num_cmp (disabled, <, count);
+}
+
+static void
+test_slot_appear (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_ULONG count;
+	CK_RV rv;
+
+	p11_test_file_write (test.directory, "eight.module", EIGHT_MODULE, strlen (EIGHT_MODULE));
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &count);
+	assert (rv == CKR_OK);
+	assert_num_eq (count, 0);
+
+	rv = proxy->C_GetSlotList (CK_TRUE, NULL, &count);
+	assert (rv == CKR_OK);
+	assert_num_eq (count, 1);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
 }
 
 static CK_FUNCTION_LIST_PTR
@@ -388,7 +420,6 @@ main (int argc,
 {
 	p11_library_init ();
 	p11_kit_be_quiet ();
-
 	p11_test (test_initialize_finalize, "/proxy/initialize-finalize");
 	p11_test (test_initialize_multiple, "/proxy/initialize-multiple");
 #ifndef _WIN32
@@ -398,6 +429,7 @@ main (int argc,
 	p11_fixture (setup, teardown);
 	p11_test (test_disable, "/proxy/disable");
 	p11_test (test_no_slot, "/proxy/no-slot");
+	p11_test (test_slot_appear, "/proxy/slot-appear");
 
 	test_mock_add_tests ("/proxy");
 
