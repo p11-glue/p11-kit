@@ -250,14 +250,65 @@ modules_dup (CK_FUNCTION_LIST **modules)
 }
 
 static CK_RV
-proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
-	      Mapping *mappings, unsigned int n_mappings)
+proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 {
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
 	CK_SLOT_ID_PTR slots;
 	CK_ULONG i, count;
 	unsigned int j;
+	CK_RV rv = CKR_OK;
+
+	for (f = py->inited; *f; ++f) {
+		funcs = *f;
+		assert (funcs != NULL);
+		slots = NULL;
+
+		/* Ask module for its slots */
+		rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
+		if (rv == CKR_OK && count) {
+			slots = calloc (sizeof (CK_SLOT_ID), count);
+			rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
+		}
+
+		if (rv != CKR_OK) {
+			free (slots);
+			break;
+		}
+
+		return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
+
+		if (count > 0) {
+			py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
+			return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
+
+			/* And now add a mapping for each of those slots */
+			for (i = 0; i < count; ++i) {
+				/* Reuse the existing mapping if any */
+				for (j = 0; j < n_mappings; ++j) {
+					if (mappings[j].funcs == funcs &&
+					    mappings[j].real_slot == slots[i])
+						break;
+				}
+				py->mappings[py->n_mappings].funcs = funcs;
+				py->mappings[py->n_mappings].wrap_slot =
+					(n_mappings == 0 || j == n_mappings) ?
+					py->n_mappings + MAPPING_OFFSET :
+					mappings[j].wrap_slot;
+				py->mappings[py->n_mappings].real_slot = slots[i];
+				++py->n_mappings;
+			}
+		}
+
+		free (slots);
+	}
+	return rv;
+}
+
+static CK_RV
+proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
+	      Mapping *mappings, unsigned int n_mappings)
+{
 	CK_RV rv = CKR_OK;
 	Proxy *py;
 
@@ -275,49 +326,7 @@ proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
 	rv = p11_kit_modules_initialize (py->inited, NULL);
 
 	if (rv == CKR_OK) {
-		for (f = py->inited; *f; ++f) {
-			funcs = *f;
-			assert (funcs != NULL);
-			slots = NULL;
-
-			/* Ask module for its slots */
-			rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
-			if (rv == CKR_OK && count) {
-				slots = calloc (sizeof (CK_SLOT_ID), count);
-				rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
-			}
-
-			if (rv != CKR_OK) {
-				free (slots);
-				break;
-			}
-
-			return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
-
-			if (count > 0) {
-				py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
-				return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
-
-				/* And now add a mapping for each of those slots */
-				for (i = 0; i < count; ++i) {
-					/* Reuse the existing mapping if any */
-					for (j = 0; j < n_mappings; ++j) {
-						if (mappings[j].funcs == funcs &&
-						    mappings[j].real_slot == slots[i])
-							break;
-					}
-					py->mappings[py->n_mappings].funcs = funcs;
-					py->mappings[py->n_mappings].wrap_slot =
-						(n_mappings == 0 || j == n_mappings) ?
-						py->n_mappings + MAPPING_OFFSET :
-						mappings[j].wrap_slot;
-					py->mappings[py->n_mappings].real_slot = slots[i];
-					++py->n_mappings;
-				}
-			}
-
-			free (slots);
-		}
+		rv = proxy_list_slots (py, mappings, n_mappings);
 	}
 
 	if (rv != CKR_OK) {
@@ -454,7 +463,29 @@ proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
 
 		if (!PROXY_VALID (state->px)) {
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-		} else {
+		}
+
+		if (rv == CKR_OK) {
+			Mapping *mappings = NULL;
+			unsigned int n_mappings = 0;
+
+			if (state->px->mappings) {
+				mappings = state->px->mappings;
+				n_mappings = state->px->n_mappings;
+				state->px->mappings = NULL;
+				state->px->n_mappings = 0;
+			}
+			rv = proxy_list_slots (state->px, mappings, n_mappings);
+			if (rv == CKR_OK) {
+				free (mappings);
+			} else {
+				p11_debug ("failed to list slots: %lu", rv);
+				state->px->mappings = mappings;
+				state->px->n_mappings = n_mappings;
+			}
+		}
+
+		if (rv == CKR_OK) {
 			index = 0;
 
 			/* Go through and build up a map */
