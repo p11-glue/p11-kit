@@ -604,7 +604,40 @@ proxy_C_WaitForSlotEvent (CK_X_FUNCTION_LIST *self,
                           CK_SLOT_ID_PTR slot,
                           CK_VOID_PTR reserved)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	State *state = (State *)self;
+	Proxy *py = state->px;
+	CK_FUNCTION_LIST_PTR *f;
+	CK_FUNCTION_LIST_PTR funcs;
+	CK_SLOT_ID real_slot;
+	unsigned int i;
+	CK_RV rv = CKR_NO_EVENT;
+
+	/* Only the non-blocking case is supported. */
+	if ((flags & CKF_DONT_BLOCK) == 0)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+
+	p11_lock ();
+
+	for (f = py->inited; *f; ++f) {
+		funcs = *f;
+		assert (funcs != NULL);
+
+		rv = (funcs->C_WaitForSlotEvent) (flags, &real_slot, reserved);
+		if (rv == CKR_NO_EVENT)
+			continue;
+		if (rv != CKR_OK)
+			break;
+		for (i = 0; i < py->n_mappings; i++)
+			if (py->mappings[i].funcs == funcs &&
+			    py->mappings[i].real_slot == real_slot) {
+				*slot = py->mappings[i].wrap_slot;
+				break;
+			}
+	}
+
+	p11_unlock ();
+
+	return rv;
 }
 
 static CK_RV
@@ -1617,14 +1650,6 @@ proxy_C_GenerateRandom (CK_X_FUNCTION_LIST *self,
 	return (map.funcs->C_GenerateRandom) (handle, random_data, random_len);
 }
 
-static CK_RV
-module_C_WaitForSlotEvent (CK_FLAGS flags,
-                           CK_SLOT_ID_PTR slot,
-                           CK_VOID_PTR reserved)
-{
-	return proxy_C_WaitForSlotEvent (&global.virt.funcs, flags, slot, reserved);
-}
-
 /* --------------------------------------------------------------------
  * MODULE ENTRY POINT
  */
@@ -1737,11 +1762,8 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 		}
 	}
 
-	if (rv == CKR_OK) {
-		/* We use this as a check below */
-		module->C_WaitForSlotEvent = module_C_WaitForSlotEvent;
+	if (rv == CKR_OK)
 		*list = module;
-	}
 
 	if (loaded)
 		p11_kit_modules_release (loaded);
@@ -1769,7 +1791,21 @@ p11_proxy_module_cleanup (void)
 bool
 p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
 {
-	return (module->C_WaitForSlotEvent == module_C_WaitForSlotEvent);
+	State *state;
+	bool ret = false;
+
+	if (!p11_virtual_is_wrapper (module))
+		return false;
+
+	p11_lock ();
+	for (state = all_instances; state != NULL; state = state->next)
+		if (state->wrapped == module) {
+			ret = true;
+			break;
+		}
+	p11_unlock ();
+
+	return ret;
 }
 
 CK_RV
