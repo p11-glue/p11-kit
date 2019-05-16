@@ -234,6 +234,7 @@ teardown (void *unused)
 #define ENABLED "enable-in: test-proxy, p11-kit-proxy\n"
 #define DISABLED "disable-in: p11-kit-proxy\n"
 #define EIGHT_MODULE "module: mock-eight" SHLEXT "\n"
+#define NINE_MODULE "module: mock-nine" SHLEXT "\n"
 
 static CK_ULONG
 load_modules_and_count_slots (void)
@@ -343,6 +344,44 @@ test_slot_appear (void)
 	p11_proxy_module_cleanup ();
 }
 
+static void
+test_slot_event (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_SLOT_ID slot;
+	CK_SLOT_ID slots[32];
+	CK_ULONG count;
+	CK_RV rv;
+
+	p11_test_file_write (test.directory, "nine.module", NINE_MODULE, strlen (NINE_MODULE));
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
+	assert (rv == CKR_OK);
+	assert (count == 2);
+
+	slot = 0;
+	rv = proxy->C_WaitForSlotEvent (0, &slot, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+	assert_num_eq (slot, 0);
+
+	rv = proxy->C_WaitForSlotEvent (CKF_DONT_BLOCK, &slot, NULL);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (slot, slots[0]);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
+}
+
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
@@ -430,6 +469,7 @@ main (int argc,
 	p11_test (test_disable, "/proxy/disable");
 	p11_test (test_no_slot, "/proxy/no-slot");
 	p11_test (test_slot_appear, "/proxy/slot-appear");
+	p11_test (test_slot_event, "/proxy/slot-event");
 
 	test_mock_add_tests ("/proxy");
 
