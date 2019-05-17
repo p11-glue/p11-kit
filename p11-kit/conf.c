@@ -232,8 +232,10 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 		if (getauxval (AT_SECURE)) {
 			p11_debug ("skipping user config in setuid or setgid program");
 			mode = CONF_USER_NONE;
+		} else if (getuid () == 0) {
+			p11_debug ("skipping user config in program running as root");
+			mode = CONF_USER_NONE;
 		} else if (secure_getenv ("P11_KIT_NO_USER_CONFIG")) {
-			/* This one should be used in RPM %post and equivalent */
 			p11_debug ("skipping user config due to P11_NO_USER_CONFIG");
 			mode = CONF_USER_NONE;
 		}
