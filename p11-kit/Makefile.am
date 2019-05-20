@@ -29,14 +29,14 @@ COMMON_SRCS = \
 	$(inc_HEADERS)
 
 BUILT_SOURCES += \
-	p11-kit/virtual-fixed.c \
+	p11-kit/virtual-fixed-generated.h \
 	$(NULL)
 
 CLEANFILES += \
-	p11-kit/virtual-fixed.c \
+	p11-kit/virtual-fixed-generated.h \
 	$(NULL)
 
-p11-kit/virtual-fixed.c: Makefile
+p11-kit/virtual-fixed-generated.h: Makefile
 	$(AM_V_GEN)rm -f $@-t $@ && \
 	{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
 	  echo; \
