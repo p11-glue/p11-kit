@@ -3056,7 +3056,7 @@ CK_X_FUNCTION_LIST p11_virtual_base = {
 	base_C_WaitForSlotEvent
 };
 
-#include "p11-kit/virtual-fixed.c"
+#include "p11-kit/virtual-fixed-generated.h"
 
 static CK_FUNCTION_LIST *
 p11_virtual_wrap_fixed (p11_virtual *virt,

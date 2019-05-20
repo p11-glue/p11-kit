@@ -9,5 +9,5 @@ if test x"$COVERAGE" = xyes; then
   docker exec \
 	 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" \
 	 -e TRAVIS_BRANCH="$TRAVIS_BRANCH" \
-	 $CONTAINER sh -c "cd $BUILDDIR && cpp-coveralls -b $BUILDDIR -E '(^|.*/)(frob|mock|test)-.*|(^|.*/)(virtual-fixed\.c)' --gcov-options '\-lp'"
+	 $CONTAINER sh -c "cd $BUILDDIR && cpp-coveralls -b $BUILDDIR -E '(^|.*/)(frob|mock|test)-.*|(^|.*/)(virtual-fixed-generated\.h)' --gcov-options '\-lp'"
 fi
