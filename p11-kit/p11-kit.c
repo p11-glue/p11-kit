@@ -63,6 +63,7 @@ int       p11_kit_external        (int argc,
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, "List modules and tokens" },
 	{ "remote", p11_kit_external, "Run a specific PKCS#11 module remotely" },
+	{ "server", p11_kit_external, "Run a server process that exposes PKCS#11 module remotely" },
 	{ P11_TOOL_FALLBACK, p11_kit_external, NULL },
 	{ 0, }
 };
