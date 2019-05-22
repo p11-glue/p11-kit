@@ -95,7 +95,6 @@ typedef struct _State {
 } State;
 
 static State *all_instances = NULL;
-static State global = { { { { -1, -1 }, NULL, }, }, NULL, NULL, NULL, FIRST_HANDLE, NULL };
 
 #define PROXY_VALID(px) ((px) && (px)->forkid == p11_forkid)
 #define PROXY_FORKED(px) ((px) && (px)->forkid != p11_forkid)
