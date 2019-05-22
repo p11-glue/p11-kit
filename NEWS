@@ -1,3 +1,13 @@
+0.23.16 (stable)
+ * proxy: Support C_WaitForSlotEvent() if CKF_DONT_BLOCK is specified [PR#225]
+ * conf: Ignore user configuration if the program is running as root [PR#226]
+ * proxy: Refresh slot list on every C_GetSlotList call [PR#224]
+ * modules: Fix index used in call to p11_dict_remove() [PR#219]
+ * Fix Win32 p11_dl_error crash [PR#218]
+ * modules: check gl.modules before iterates on it when freeing [PR#217]
+ * trust: Ignore unreadable content in anchors [PR#215]
+ * extract-jks: Prefer _p11_extract_jks_timestamp to SOURCE_DATE_EPOCH [PR#213]
+
 0.23.15 (stable)
  * trust: Improve error handling if backed trust file is corrupted [PR#206]
  * url: Prefer upper-case letters in hex characters when encoding [PR#193]
