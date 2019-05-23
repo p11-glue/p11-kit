@@ -363,6 +363,10 @@ test_slot_event (void)
 	rv = proxy->C_Initialize (NULL);
 	assert (rv == CKR_OK);
 
+	rv = proxy->C_GetSlotList (CK_FALSE, NULL, &count);
+	assert (rv == CKR_OK);
+	assert (count == 2);
+
 	rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
 	assert (rv == CKR_OK);
 	assert (count == 2);
