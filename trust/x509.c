@@ -101,8 +101,8 @@ p11_x509_hash_subject_public_key (node_asn *cert,
 	size_t len;
 	int ret;
 
-	return_val_if_fail (cert != NULL, NULL);
-	return_val_if_fail (der != NULL, NULL);
+	return_val_if_fail (cert != NULL, false);
+	return_val_if_fail (der != NULL, false);
 
 	ret = asn1_der_decoding_startEnd (cert, der, der_len, "tbsCertificate.subjectPublicKeyInfo", &start, &end);
 	return_val_if_fail (ret == ASN1_SUCCESS, false);
