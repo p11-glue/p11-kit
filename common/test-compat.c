@@ -70,7 +70,7 @@ test_getauxval (void)
 	ret = p11_test_run_child (args, true);
 	assert_num_eq (ret, 0);
 
-	path = p11_test_copy_setgid (args[0]);
+	path = p11_test_copy_setgid (args[0], BUILDDIR);
 	if (path == NULL)
 		return;
 
@@ -95,7 +95,7 @@ test_secure_getenv (void)
 	ret = p11_test_run_child (args, true);
 	assert_num_eq (ret, 5);
 
-	path = p11_test_copy_setgid (args[0]);
+	path = p11_test_copy_setgid (args[0], BUILDDIR);
 	if (path == NULL)
 		return;
 

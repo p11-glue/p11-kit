@@ -162,7 +162,8 @@ void        p11_test_file_delete    (const char *directory,
 
 #ifdef OS_UNIX
 
-char *      p11_test_copy_setgid    (const char *path);
+char *      p11_test_copy_setgid    (const char *path,
+				     const char *tmpdir);
 
 int         p11_test_run_child      (const char **argv,
                                      bool quiet_out);
