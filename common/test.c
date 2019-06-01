@@ -579,7 +579,8 @@ copy_file (const char *input,
 }
 
 char *
-p11_test_copy_setgid (const char *input)
+p11_test_copy_setgid (const char *input,
+		      const char *tmpdir)
 {
 	gid_t groups[128];
 		char *path;
@@ -600,7 +601,9 @@ p11_test_copy_setgid (const char *input)
 		return NULL;
 	}
 
-	path = strdup (BUILDDIR "/test-setgid.XXXXXX");
+	if (asprintf(&path, "%s/test-setgid.XXXXXX", tmpdir) < 0)
+		assert_not_reached();
+
 	assert (path != NULL);
 
 	fd = mkstemp (path);
