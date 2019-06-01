@@ -83,9 +83,9 @@ setup_remote (void *unused)
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
 	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
-	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-two" SHLEXT "\n";
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-two" SHLEXT "\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
-	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
 	p11_test_file_write (test.user_modules, "init-arg.module", data, strlen (data));
 
 	p11_kit_override_system_files (NULL, test.user_config,
@@ -192,7 +192,7 @@ launch_server (void)
 	assert_num_cmp (rc, !=, -1);
 
 	argv[0] = "p11-kit-remote";
-	argv[1] = BUILDDIR "/.libs/mock-two.so";
+	argv[1] = P11_MODULE_PATH "/mock-two.so";
 	argv[2] = NULL;
 
 	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote", argv);

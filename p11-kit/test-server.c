@@ -169,7 +169,7 @@ test_initialize (void *unused)
 	CK_FUNCTION_LIST_PTR module;
 	CK_RV rv;
 
-	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	module = p11_kit_module_load (P11_MODULE_PATH "/p11-kit-client" SHLEXT, 0);
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
@@ -190,7 +190,7 @@ test_initialize_no_address (void *unused)
 	unsetenv ("P11_KIT_SERVER_ADDRESS");
 	setenv ("XDG_RUNTIME_DIR", test.directory, 1);
 
-	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	module = p11_kit_module_load (P11_MODULE_PATH "/p11-kit-client" SHLEXT, 0);
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
@@ -212,7 +212,7 @@ test_open_session (void *arg)
 	CK_ULONG count;
 	CK_RV rv;
 
-	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	module = p11_kit_module_load (P11_MODULE_PATH "/p11-kit-client" SHLEXT, 0);
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
@@ -244,7 +244,7 @@ test_open_session_write_protected (void *unused)
 	CK_ULONG count;
 	CK_RV rv;
 
-	module = p11_kit_module_load (BUILDDIR "/.libs/p11-kit-client" SHLEXT, 0);
+	module = p11_kit_module_load (P11_MODULE_PATH "/p11-kit-client" SHLEXT, 0);
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
@@ -269,7 +269,7 @@ main (int argc,
       char *argv[])
 {
 	struct fixture with_provider = {
-		BUILDDIR "/.libs/mock-one" SHLEXT,
+		P11_MODULE_PATH "/mock-one" SHLEXT,
 		"pkcs11:",
 		1
 	};
@@ -279,7 +279,7 @@ main (int argc,
 		3
 	};
 	struct fixture write_protected = {
-		BUILDDIR "/.libs/mock-one" SHLEXT,
+		P11_MODULE_PATH "/mock-one" SHLEXT,
 		"pkcs11:?write-protected=yes",
 		1
 	};

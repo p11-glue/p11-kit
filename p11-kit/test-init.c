@@ -343,7 +343,7 @@ test_load_and_initialize (void)
 	CK_RV rv;
 	int ret;
 
-	module = p11_kit_module_load (BUILDDIR "/.libs/mock-one" SHLEXT, 0);
+	module = p11_kit_module_load (P11_MODULE_PATH "/mock-one" SHLEXT, 0);
 	assert (module != NULL);
 
 	rv = p11_kit_module_initialize (module);
