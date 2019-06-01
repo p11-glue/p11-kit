@@ -119,12 +119,12 @@ test_runtime_SOURCES = common/test-runtime.c
 test_runtime_LDADD = $(common_LIBS)
 
 check_PROGRAMS += \
-	frob-getauxval \
-	frob-getenv \
+	common/frob-getauxval \
+	common/frob-getenv \
 	$(NULL)
 
-frob_getauxval_SOURCES = common/frob-getauxval.c
-frob_getauxval_LDADD = $(common_LIBS)
+common_frob_getauxval_SOURCES = common/frob-getauxval.c
+common_frob_getauxval_LDADD = $(common_LIBS)
 
-frob_getenv_SOURCES = common/frob-getenv.c
-frob_getenv_LDADD = $(common_LIBS)
+common_frob_getenv_SOURCES = common/frob-getenv.c
+common_frob_getenv_LDADD = $(common_LIBS)

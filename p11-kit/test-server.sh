@@ -23,7 +23,7 @@ export XDG_RUNTIME_DIR
 
 echo 1..4
 
-"$abs_top_builddir"/p11-kit-server -s --provider "$abs_top_builddir"/.libs/mock-one.so pkcs11: > start.env 2> start.err
+"$abs_top_builddir"/p11-kit/p11-kit-server -s --provider "$abs_top_builddir"/.libs/mock-one.so pkcs11: > start.env 2> start.err
 if test $? -eq 0; then
 	echo "ok 1 /server/start"
 else
@@ -41,7 +41,7 @@ else
 	exit 1
 fi
 
-"$abs_top_builddir"/p11-kit-server -s -k > stop.env 2> stop.err
+"$abs_top_builddir"/p11-kit/p11-kit-server -s -k > stop.env 2> stop.err
 if test $? -eq 0; then
 	echo "ok 3 /server/stop"
 else

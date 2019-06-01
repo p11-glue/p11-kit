@@ -402,7 +402,7 @@ test_parse_boolean (void)
 static void
 test_setuid (void)
 {
-	const char *args[] = { BUILDDIR "/frob-setuid", NULL, };
+	const char *args[] = { BUILDDIR "/p11-kit/frob-setuid", NULL, };
 	char *path;
 	int ret;
 

@@ -57,7 +57,7 @@ local
 x86_64-w64-mingw32
 
 /test-*
-/frob-*
+frob-*
 
 /x86_64_w64-mingw32/
 
@@ -101,11 +101,11 @@ x86_64-w64-mingw32
 /p11-kit/virtual-fixed-generated.h
 /p11-kit/*.gnu.c
 
-/p11-kit-remote
-/p11-kit-server
-/p11-kit-remote-testable
-/p11-kit-server-testable
-/print-messages
+/p11-kit/p11-kit-remote
+/p11-kit/p11-kit-server
+/p11-kit/p11-kit-remote-testable
+/p11-kit/p11-kit-server-testable
+/p11-kit/print-messages
 
 /po/POTFILES
 /po/stamp-po

@@ -96,7 +96,7 @@ CKR_MUTEX_NOT_LOCKED: The data cannot be locked
 CKR_FUNCTION_REJECTED: The request was rejected by the user
 EOF
 
-${WINE} "$abs_top_builddir"/print-messages | tr -d '\r' > messages.out
+${WINE} "$abs_top_builddir"/p11-kit/print-messages | tr -d '\r' > messages.out
 
 echo 1..1
 
