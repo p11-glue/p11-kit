@@ -105,7 +105,7 @@ setup_server (void *arg)
 	ret = socketpair (AF_UNIX, SOCK_STREAM, 0, fds);
 	assert_num_cmp (-1, !=, ret);
 
-	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
+	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
 
 	/* Allow the child process to preload libasan.so */
 	envvar = secure_getenv ("P11_KIT_TEST_LD_PRELOAD");
@@ -129,7 +129,7 @@ setup_server (void *arg)
 		close (STDOUT_FILENO);
 		if (dup2 (fds[0], STDOUT_FILENO) == -1)
 			assert_not_reached ();
-		if (execv (BUILDDIR "/p11-kit-server-testable", (char **)args->elem) == -1)
+		if (execv (BUILDDIR "/p11-kit/p11-kit-server-testable", (char **)args->elem) == -1)
 			assert_not_reached ();
 		p11_array_free (args);
 		_exit (0);

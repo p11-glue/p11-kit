@@ -82,7 +82,7 @@ setup_remote (void *unused)
 	test.user_config = p11_path_build (test.directory, "pkcs11.conf", NULL);
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
-	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
+	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-two" SHLEXT "\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " BUILDDIR "/.libs/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
@@ -195,7 +195,7 @@ launch_server (void)
 	argv[1] = BUILDDIR "/.libs/mock-two.so";
 	argv[2] = NULL;
 
-	rc = execv (BUILDDIR "/p11-kit-remote", argv);
+	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote", argv);
 	assert_num_cmp (rc, !=, -1);
 }
 
@@ -228,7 +228,7 @@ setup_remote_unix (void *unused)
 		test.pid = pid;
 	}
 
-	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR, 1);
+	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
 
 	if (asprintf (&path, "%s/pkcs11", test.directory) < 0)
 		assert_not_reached ();

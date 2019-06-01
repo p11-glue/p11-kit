@@ -63,7 +63,7 @@ static void
 test_getauxval (void)
 {
 	/* 23 is AT_SECURE */
-	const char *args[] = { BUILDDIR "/frob-getauxval", "23", NULL };
+	const char *args[] = { BUILDDIR "/common/frob-getauxval", "23", NULL };
 	char *path;
 	int ret;
 
@@ -86,7 +86,7 @@ test_getauxval (void)
 static void
 test_secure_getenv (void)
 {
-	const char *args[] = { BUILDDIR "/frob-getenv", "BLAH", NULL };
+	const char *args[] = { BUILDDIR "/common/frob-getenv", "BLAH", NULL };
 	char *path;
 	int ret;
 

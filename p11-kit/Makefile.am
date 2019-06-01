@@ -232,57 +232,57 @@ p11_kit_p11_kit_LDADD = \
 	$(LTLIBINTL) \
 	$(NULL)
 
-private_PROGRAMS += p11-kit-remote
+private_PROGRAMS += p11-kit/p11-kit-remote
 
-p11_kit_remote_SOURCES = \
+p11_kit_p11_kit_remote_SOURCES = \
 	p11-kit/remote.c \
 	$(NULL)
 
-p11_kit_remote_LDADD = \
+p11_kit_p11_kit_remote_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit.la \
 	$(NULL)
 
-check_PROGRAMS += p11-kit-remote-testable
-p11_kit_remote_testable_SOURCES = $(p11_kit_remote_SOURCES)
+check_PROGRAMS += p11-kit/p11-kit-remote-testable
+p11_kit_p11_kit_remote_testable_SOURCES = $(p11_kit_p11_kit_remote_SOURCES)
 
-p11_kit_remote_testable_LDADD = \
+p11_kit_p11_kit_remote_testable_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit-testable.la \
 	$(NULL)
 
-private_PROGRAMS += p11-kit-server
+private_PROGRAMS += p11-kit/p11-kit-server
 
-p11_kit_server_SOURCES = \
+p11_kit_p11_kit_server_SOURCES = \
 	p11-kit/server.c \
 	$(NULL)
 
-p11_kit_server_LDADD = \
+p11_kit_p11_kit_server_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit.la \
 	$(LIBSYSTEMD_LIBS) \
 	$(NULL)
 
-p11_kit_server_CFLAGS = \
+p11_kit_p11_kit_server_CFLAGS = \
 	-DP11_KIT_REMOTE=\"p11-kit-remote\" \
 	$(COMMON_CFLAGS) \
 	$(LIBSYSTEMD_CFLAGS) \
 	$(NULL)
 
-check_PROGRAMS += p11-kit-server-testable
-p11_kit_server_testable_SOURCES = $(p11_kit_server_SOURCES)
+check_PROGRAMS += p11-kit/p11-kit-server-testable
+p11_kit_p11_kit_server_testable_SOURCES = $(p11_kit_p11_kit_server_SOURCES)
 
-p11_kit_server_testable_LDADD = \
+p11_kit_p11_kit_server_testable_LDADD = \
 	libp11-tool.la \
 	libp11-common.la \
 	libp11-kit-testable.la \
 	$(LIBSYSTEMD_LIBS) \
 	$(NULL)
 
-p11_kit_server_testable_CFLAGS = \
+p11_kit_p11_kit_server_testable_CFLAGS = \
 	-DP11_KIT_REMOTE=\"p11-kit-remote-testable\" \
 	$(COMMON_CFLAGS) \
 	$(LIBSYSTEMD_CFLAGS) \
@@ -368,8 +368,8 @@ test_util_SOURCES = p11-kit/test-util.c
 test_util_LDADD = $(p11_kit_LIBS)
 
 check_PROGRAMS += \
-	print-messages \
-	frob-setuid
+	p11-kit/print-messages \
+	p11-kit/frob-setuid
 
 print_messages_SOURCES = p11-kit/print-messages.c
 print_messages_LDADD = $(p11_kit_LIBS)
