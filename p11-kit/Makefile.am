@@ -336,9 +336,11 @@ test_conf_LDADD = $(p11_kit_LIBS)
 
 test_deprecated_SOURCES = p11-kit/test-deprecated.c
 test_deprecated_LDADD = $(p11_kit_LIBS)
+test_deprecated_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_init_SOURCES = p11-kit/test-init.c
 test_init_LDADD = $(p11_kit_LIBS)
+test_init_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_iter_SOURCES = p11-kit/test-iter.c
 test_iter_LDADD = $(p11_kit_LIBS)
@@ -360,6 +362,7 @@ test_rpc_LDADD = $(p11_kit_LIBS)
 
 test_server_SOURCES = p11-kit/test-server.c
 test_server_LDADD = $(p11_kit_LIBS)
+test_server_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_uri_SOURCES = p11-kit/test-uri.c
 test_uri_LDADD = $(p11_kit_LIBS)
@@ -371,13 +374,13 @@ check_PROGRAMS += \
 	p11-kit/print-messages \
 	p11-kit/frob-setuid
 
-print_messages_SOURCES = p11-kit/print-messages.c
-print_messages_LDADD = $(p11_kit_LIBS)
+p11_kit_print_messages_SOURCES = p11-kit/print-messages.c
+p11_kit_print_messages_LDADD = $(p11_kit_LIBS)
 
 sh_tests += p11-kit/test-messages.sh
 
-frob_setuid_SOURCES = p11-kit/frob-setuid.c
-frob_setuid_LDADD = $(p11_kit_LIBS)
+p11_kit_frob_setuid_SOURCES = p11-kit/frob-setuid.c
+p11_kit_frob_setuid_LDADD = $(p11_kit_LIBS)
 
 c_tests += \
 	test-virtual \
@@ -398,6 +401,7 @@ test_managed_LDADD = $(p11_kit_LIBS)
 
 test_transport_SOURCES = p11-kit/test-transport.c
 test_transport_LDADD = $(p11_kit_LIBS)
+test_transport_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)

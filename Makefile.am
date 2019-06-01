@@ -60,7 +60,9 @@ DISTCHECK_CONFIGURE_FLAGS = \
 
 AM_TESTS_ENVIRONMENT = \
 	abs_top_builddir="$(abs_top_builddir)"; \
-	export abs_top_builddir;
+	export abs_top_builddir; \
+	P11_MODULE_PATH="$(abs_top_builddir)/.libs"; \
+	export P11_MODULE_PATH;
 AM_TESTS_FD_REDIRECT = 9>&2;
 
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \

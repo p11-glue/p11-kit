@@ -2,6 +2,8 @@
 
 set -e
 
+: ${P11_MODULE_PATH="$abs_top_builddir"/.libs}
+
 testdir=`mktemp -d -t test-server.XXXXXX`
 if test $? -ne 0; then
 	echo "cannot create temporary directory" >&2
@@ -23,7 +25,7 @@ export XDG_RUNTIME_DIR
 
 echo 1..4
 
-"$abs_top_builddir"/p11-kit/p11-kit-server -s --provider "$abs_top_builddir"/.libs/mock-one.so pkcs11: > start.env 2> start.err
+"$abs_top_builddir"/p11-kit/p11-kit-server -s --provider "$P11_MODULE_PATH"/mock-one.so pkcs11: > start.env 2> start.err
 if test $? -eq 0; then
 	echo "ok 1 /server/start"
 else
