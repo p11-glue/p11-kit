@@ -265,7 +265,7 @@ p11_pem_write (const unsigned char *contents,
 
 	prefix = buf->len;
 	target = p11_buffer_append (buf, estimate);
-	return_val_if_fail (target != NULL, NULL);
+	return_val_if_fail (target != NULL, false);
 
 	/*
 	 * OpenSSL is absolutely certain that it wants its PEM base64
