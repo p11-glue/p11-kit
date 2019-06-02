@@ -570,6 +570,7 @@ vasprintf (char **strp,
 	char *nbuf;
 	int guess = 128;
 	int length = 0;
+	va_list orig, aq;
 	int ret;
 
 	if (fmt == NULL) {
@@ -577,17 +578,21 @@ vasprintf (char **strp,
 		return -1;
 	}
 
+	va_copy (orig, ap);
 	for (;;) {
 		nbuf = realloc (buf, guess);
 		if (!nbuf) {
 			free (buf);
+			va_end (orig);
 			return -1;
 		}
 
 		buf = nbuf;
 		length = guess;
 
-		ret = vsnprintf (buf, length, fmt, ap);
+		va_copy (aq, orig);
+		ret = vsnprintf (buf, length, fmt, aq);
+		va_end (aq);
 
 		if (ret < 0)
 			guess *= 2;
@@ -598,6 +603,7 @@ vasprintf (char **strp,
 		else
 			break;
 	}
+	va_end (orig);
 
 	*strp = buf;
 	return ret;
