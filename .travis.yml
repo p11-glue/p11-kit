@@ -3,27 +3,27 @@ matrix:
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS=""
+      env: SRCDIR=/srcdir BUILDDIR=/builddir
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov python-pip"
+      env: PROFILE=autotools BUILD_OPTS="--enable-coverage" COVERAGE=yes SRCDIR=/coverage BUILDDIR=/coverage EXTRA_PKGS="lcov python-pip"
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="CFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=address -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lasan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir PRELOAD_CMD='ls -1 /usr/lib64/libasan.so.* | head -1' LSAN_OPTIONS='suppressions=/srcdir/build/lsan.supp' EXTRA_PKGS="libasan"
+      env: MESON_BUILD_OPTS="-Db_sanitize=address" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="libasan"
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="CFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' CXXFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LDFLAGS='-fsanitize=undefined -g -fno-common -U_FORTIFY_SOURCE' LIBS='-lubsan -ldl -lpthread'" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="libubsan"
+      env: MESON_BUILD_OPTS="-Db_sanitize=undefined" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="libubsan"
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="clang-analyzer"
+      env: MESON_BUILD_OPTS="" SCAN_BUILD="scan-build --status-bugs" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="clang-analyzer"
     - os: linux
       sudo: required
       services: docker
-      env: BUILD_OPTS="--host=x86_64-w64-mingw32 --without-libffi" CHECK_OPTS="LOG_COMPILER=/srcdir/build/wine-wrapper.sh" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="mingw64-gcc mingw64-libffi mingw64-libtasn1 wine"
+      env: MESON_BUILD_OPTS="--cross-file build/cross_file_mingw64.txt" MESON_TEST_ENV="WINEPATH=/usr/x86_64-w64-mingw32/sys-root/mingw/bin" MESON_TEST_OPTS="--num-processes 1" SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="mingw64-gcc mingw64-libffi mingw64-libtasn1 wine"
     - os: linux
       sudo: required
       services: docker

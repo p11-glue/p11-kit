@@ -1,13 +1,11 @@
 #!/bin/sh
 
-if test x"$COVERAGE" = xyes; then
-  # docker exec $CONTAINER pip install cpp-coveralls
+set +x
 
-  # manually install cpp-coveralls until the gcov fix has been
-  # incorporated in the pip version
-  docker exec $CONTAINER sh -c "cd /tmp && rm -rf cpp-coveralls && git clone -q https://github.com/eddyxu/cpp-coveralls && cd cpp-coveralls && python setup.py build && python setup.py install"
+if test x"$COVERAGE" = xyes; then
+  docker exec $CONTAINER su user sh -c "pip3 install --user cpp-coveralls"
   docker exec \
 	 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" \
 	 -e TRAVIS_BRANCH="$TRAVIS_BRANCH" \
-	 $CONTAINER sh -c "cd $BUILDDIR && cpp-coveralls -b $BUILDDIR -E '(^|.*/)(frob|mock|test)-.*|(^|.*/)(virtual-fixed-generated\.h)' --gcov-options '\-lp'"
+	 $CONTAINER su user sh -c "cd $SRCDIR && /home/user/.local/bin/cpp-coveralls -b $BUILDDIR -E '(^|.*/)(frob|mock|test)-.*|(^|.*/)(virtual-fixed-generated\.c)' --gcov-options '\-lp'"
 fi
