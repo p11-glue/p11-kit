@@ -133,8 +133,9 @@ main (int argc,
 {
 	p11_test (test_strndup, "/compat/strndup");
 #ifdef OS_UNIX
-	/* Don't run this test when under fakeroot */
-	if (!getenv ("FAKED_MODE")) {
+	/* Don't run this test when under fakeroot, or the binary is
+	 * written under /tmp */
+	if (!getenv ("FAKED_MODE") && strncmp (BUILDDIR, "/tmp/", 5) != 0) {
 		p11_test (test_getauxval, "/compat/getauxval");
 		p11_test (test_secure_getenv, "/compat/secure_getenv");
 	}
