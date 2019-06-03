@@ -40,10 +40,6 @@
  */
 #define _XOPEN_SOURCE 700
 
-#if defined(HAVE_ISSETUGID) && defined(__FreeBSD__)
-#define __BSD_VISIBLE 1
-#endif
-
 #include "compat.h"
 #include "debug.h"
 
@@ -819,7 +815,8 @@ getauxval (unsigned long type)
 		extern int __libc_enable_secure;
 		secure = __libc_enable_secure;
 
-#elif defined(HAVE_ISSETUGID) && defined(HAVE_ISSETUGID_OPENBSD)
+#elif defined(HAVE_ISSETUGID) && \
+	!((defined __APPLE__ && defined __MACH__) || (defined __FREEBSD__))
 		secure = issetugid ();
 
 #elif defined(OS_UNIX)
