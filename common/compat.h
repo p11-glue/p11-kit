@@ -205,6 +205,19 @@ void        p11_recursive_mutex_init          (p11_mutex_t *mutex);
 #define p11_mutex_uninit(m) \
 	(pthread_mutex_destroy(m))
 
+typedef pthread_cond_t p11_cond_t;
+
+#define p11_cond_init(c) \
+	(pthread_cond_init (c, NULL))
+#define p11_cond_wait(c, m) \
+        (pthread_cond_wait (c, m))
+#define p11_cond_signal(c) \
+        (pthread_cond_signal (c))
+#define p11_cond_broadcast(c) \
+        (pthread_cond_broadcast (c))
+#define p11_cond_uninit(c) \
+        (pthread_cond_destroy (c))
+
 typedef pthread_t p11_thread_t;
 
 typedef pthread_t p11_thread_id_t;
