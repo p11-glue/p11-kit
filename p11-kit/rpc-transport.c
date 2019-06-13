@@ -93,6 +93,10 @@ typedef struct {
 
 	/* This data is protected by read mutex */
 	p11_mutex_t read_lock;
+#ifdef OS_UNIX
+        /* Signalled when read_code changes */
+        p11_cond_t read_code_cond;
+#endif
 	bool read_creds;
 	uint32_t read_code;
 	uint32_t read_olen;
@@ -116,6 +120,10 @@ rpc_socket_new (int fd)
 
 	p11_mutex_init (&sock->write_lock);
 	p11_mutex_init (&sock->read_lock);
+
+#ifdef OS_UNIX
+        p11_cond_init (&sock->read_code_cond);
+#endif
 
 	return sock;
 }
@@ -176,6 +184,9 @@ rpc_socket_unref (rpc_socket *sock)
 	rpc_socket_close (sock);
 	p11_mutex_uninit (&sock->write_lock);
 	p11_mutex_uninit (&sock->read_lock);
+#ifdef OS_UNIX
+        p11_cond_uninit (&sock->read_code_cond);
+#endif
 	free (sock);
 }
 
@@ -357,6 +368,24 @@ p11_rpc_transport_write (int fd,
 	return status;
 }
 
+static void
+rpc_socket_set_read_code_inlock (rpc_socket *sock,
+                                 int code)
+{
+        sock->read_code = code;
+#ifdef OS_UNIX
+        p11_cond_broadcast (&sock->read_code_cond);
+#endif
+}
+
+#ifdef OS_UNIX
+static void
+rpc_socket_wait_for_read_code_change_inlock (rpc_socket *sock)
+{
+        p11_cond_wait (&sock->read_code_cond, &sock->read_lock);
+}
+#endif
+
 static int
 rpc_socket_read (rpc_socket *sock,
                  int *code,
@@ -365,9 +394,6 @@ rpc_socket_read (rpc_socket *sock,
 	CK_RV ret = CKR_DEVICE_ERROR;
 	unsigned char header[12];
 	unsigned char dummy;
-#ifdef OS_UNIX
-	fd_set rfds;
-#endif
 #ifdef OS_WIN32
 	HANDLE handle;
 	DWORD mode;
@@ -398,7 +424,7 @@ rpc_socket_read (rpc_socket *sock,
 				break;
 
 			/* Decode and check the message header */
-			sock->read_code = p11_rpc_buffer_decode_uint32 (header);
+			rpc_socket_set_read_code_inlock (sock, p11_rpc_buffer_decode_uint32 (header));
 			sock->read_olen = p11_rpc_buffer_decode_uint32 (header + 4);
 			sock->read_dlen = p11_rpc_buffer_decode_uint32 (header + 8);
 			if (sock->read_code == 0) {
@@ -426,7 +452,7 @@ rpc_socket_read (rpc_socket *sock,
 			*code = sock->read_code;
 
 			/* Yay, we got our data, off we go */
-			sock->read_code = 0;
+                        rpc_socket_set_read_code_inlock (sock, 0);
 			sock->read_olen = 0;
 			sock->read_dlen = 0;
 			ret = CKR_OK;
@@ -436,21 +462,18 @@ rpc_socket_read (rpc_socket *sock,
 		/* Give another thread the chance to read data for this header */
 		if (sock->read_code != 0) {
 			p11_debug ("received header in wrong thread");
-			p11_mutex_unlock (&sock->read_lock);
 
-			/* Used as a simple wait */
 #ifdef OS_UNIX
-			FD_ZERO (&rfds);
-			FD_SET (sock->read_fd, &rfds);
-			if (select (sock->read_fd + 1, &rfds, NULL, NULL, NULL) < 0)
-				p11_message ("couldn't use select to wait on rpc socket");
+                        rpc_socket_wait_for_read_code_change_inlock (sock);
 #endif
 #ifdef OS_WIN32
+			/* Used as a simple wait */
+			p11_mutex_unlock (&sock->read_lock);
 			handle = (HANDLE) _get_osfhandle (sock->read_fd);
 			if (!ReadFile (handle, NULL, 0, &mode, NULL))
 				p11_message ("couldn't use select to wait on rpc pipe");
-#endif
 			p11_mutex_lock (&sock->read_lock);
+#endif
 		}
 	}
 
