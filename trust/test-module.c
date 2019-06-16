@@ -70,6 +70,7 @@ struct {
 	char *directory;
 	p11_asn1_cache *cache;
 	p11_parser *parser;
+	char *unreadable;
 } test;
 
 static void
@@ -118,6 +119,10 @@ teardown (void *unused)
 
 	rv = test.module->C_Finalize (NULL);
 	assert (rv == CKR_OK);
+
+	if (test.unreadable)
+		chmod (test.unreadable, 0644);
+	free (test.unreadable);
 
 	if (test.directory)
 		p11_test_directory_delete (test.directory);
@@ -170,7 +175,7 @@ setup_unreadable (void *unused)
 {
 	CK_C_INITIALIZE_ARGS args;
 	const char *paths;
-	char *p, *pp, *anchors;
+	char *p, *anchors;
 	FILE *f, *ff;
 	char buffer[4096];
 	char *arguments;
@@ -192,15 +197,14 @@ setup_unreadable (void *unused)
 #endif
 		assert_fail ("mkdir()", anchors);
 
-	p = p11_path_build (anchors, "unreadable", NULL);
-	f = fopen (p, "w");
+	test.unreadable = p11_path_build (anchors, "unreadable", NULL);
+	f = fopen (test.unreadable, "w");
 	fwrite ("foo", 3, 1, f);
 	fclose (f);
-	chmod (p, 0);
-	free (p);
+	chmod (test.unreadable, 0);
 
-	pp = p11_path_build (anchors, "thawte", NULL);
-	ff = fopen (pp, "w");
+	p = p11_path_build (anchors, "thawte", NULL);
+	ff = fopen (p, "w");
 	f = fopen (SRCDIR "/trust/fixtures/thawte.pem", "r");
 	while (!feof (f)) {
 		size_t size;
@@ -210,9 +214,9 @@ setup_unreadable (void *unused)
 				     SRCDIR "/trust/fixtures/thawte.pem");
 		fwrite (buffer, 1, size, ff);
 		if (ferror (ff))
-			assert_fail ("write()", pp);
+			assert_fail ("write()", p);
 	}
-	free (pp);
+	free (p);
 	fclose (ff);
 	fclose (f);
 	free (anchors);
