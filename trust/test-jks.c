@@ -141,10 +141,6 @@ static CK_ATTRIBUTE certificate_filter[] = {
 
 static void
 setup_objects (const CK_ATTRIBUTE *attrs,
-               ...) GNUC_NULL_TERMINATED;
-
-static void
-setup_objects (const CK_ATTRIBUTE *attrs,
                ...)
 {
 	static CK_ULONG id_value = 8888;
@@ -217,6 +213,16 @@ test_file_duplicated (void)
 	duplicated1 = parsed->elem[0];
 	parsed->elem[0] = NULL;
 
+	p11_parser_free (parser);
+
+	parser = p11_parser_new (NULL);
+	assert_ptr_not_null (parser);
+
+	parsed = p11_parser_parsed (parser);
+	assert_ptr_not_null (parsed);
+
+	p11_parser_formats (parser, p11_parser_format_x509, NULL);
+
 	ret = p11_parse_file (parser, SRCDIR "/trust/fixtures/duplicated2.der", NULL,
 	                      P11_PARSE_FLAG_NONE);
 
@@ -227,7 +233,9 @@ test_file_duplicated (void)
 	p11_parser_free (parser);
 
 	setup_objects (duplicated1, NULL);
+	p11_attrs_free (duplicated1);
 	setup_objects (duplicated2, NULL);
+	p11_attrs_free (duplicated2);
 
 	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
