@@ -240,11 +240,9 @@ test_not_writable (void)
 
 #ifdef OS_UNIX
 	if (getuid () != 0) {
-#endif
 		token = p11_token_new (333, "/", "Label", P11_TOKEN_FLAG_NONE);
 		assert (!p11_token_is_writable (token));
 		p11_token_free (token);
-#ifdef OS_UNIX
 	}
 #endif
 
@@ -252,9 +250,13 @@ test_not_writable (void)
 	assert (!p11_token_is_writable (token));
 	p11_token_free (token);
 
-	token = p11_token_new (333, "/non-existant", "Label", P11_TOKEN_FLAG_NONE);
-	assert (!p11_token_is_writable (token));
-	p11_token_free (token);
+#ifdef OS_UNIX
+	if (getuid () != 0) {
+		token = p11_token_new (333, "/non-existant", "Label", P11_TOKEN_FLAG_NONE);
+		assert (!p11_token_is_writable (token));
+		p11_token_free (token);
+	}
+#endif
 }
 
 static void
