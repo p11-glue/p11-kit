@@ -29,10 +29,8 @@ libp11_library = static_library('p11-library', 'library.c',
                                 gnu_symbol_visibility: 'hidden',
                                 include_directories: configinc)
 
-libp11_library_dep = declare_dependency(include_directories: [configinc,
-                                                              commoninc],
-                                        link_with: libp11_library,
-                                        dependencies: thread_deps)
+libp11_library_dep = declare_dependency(link_with: libp11_library,
+                                        dependencies: [libp11_common_dep] + thread_deps)
 
 libp11_test_sources = [
   'mock.c',
@@ -41,10 +39,8 @@ libp11_test_sources = [
 
 libp11_test = static_library('p11-test', libp11_test_sources,
                              include_directories: configinc)
-libp11_test_dep = declare_dependency(include_directories: [configinc,
-                                                           commoninc],
-                                     link_with: libp11_test,
-                                     dependencies: thread_deps)
+libp11_test_dep = declare_dependency(link_with: libp11_test,
+                                     dependencies: [libp11_common_dep] + thread_deps)
 
 libp11_tool_sources = [
   'tool.c'
@@ -56,9 +52,8 @@ endif
 
 libp11_tool = static_library('p11-tool', libp11_tool_sources,
                              include_directories: configinc)
-libp11_tool_dep = declare_dependency(include_directories: [configinc,
-                                                           commoninc],
-                                     link_with: libp11_tool)
+libp11_tool_dep = declare_dependency(link_with: libp11_tool,
+                                     dependencies: [libp11_common_dep])
 
 # Tests ----------------------------------------------------------------
 

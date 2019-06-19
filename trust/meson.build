@@ -49,8 +49,7 @@ shared_module('p11-kit-trust',
               'module-init.c',
               name_prefix: '',
 	      c_args: p11_kit_trust_c_args,
-              dependencies: [libp11_library_dep,
-                             libp11_common_dep] + libtasn1_deps,
+              dependencies: [libp11_library_dep] + libtasn1_deps,
               link_with: libtrust_data,
               install: true,
               install_dir: prefix / p11_module_path)
@@ -90,7 +89,6 @@ executable('trust',
            c_args: common_c_args,
            link_with: libtrust_data,
            dependencies: [libp11_kit_dep,
-                          libp11_common_dep,
                           libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps,
            install: true)
 
@@ -133,8 +131,7 @@ foreach name : trust_tests
                  c_args: common_c_args + tests_c_args + libtrust_testable_c_args,
                  dependencies: [libp11_kit_dep,
                                 libp11_library_dep,
-                                libp11_test_dep,
-                                libp11_common_dep] + dlopen_deps,
+                                libp11_test_dep] + dlopen_deps,
                  link_with: [libtrust_testable, libtrust_data, libtrust_test])
   test(name, t)
 endforeach
@@ -156,7 +153,6 @@ foreach name : trust_progs
                  c_args: tests_c_args,
                  dependencies: [libp11_kit_dep,
                                 libp11_library_dep,
-                                libp11_test_dep,
-                                libp11_common_dep] + libffi_deps + dlopen_deps,
+                                libp11_test_dep] + libffi_deps + dlopen_deps,
                  link_with: [libtrust_testable, libtrust_data, libtrust_test])
 endforeach

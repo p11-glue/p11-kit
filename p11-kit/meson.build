@@ -34,8 +34,7 @@ libp11_kit_internal_c_args = [
 
 libp11_kit_internal = static_library('p11-kit-internal',
                                      libp11_kit_internal_sources,
-                                     dependencies: [libp11_common_dep,
-                                                    libp11_library_dep] + libffi_deps,
+                                     dependencies: [libp11_library_dep] + libffi_deps,
                                      c_args: libp11_kit_internal_c_args,
                                      implicit_include_directories: false,
                                      gnu_symbol_visibility: 'hidden')
@@ -117,7 +116,7 @@ libp11_kit_testable = static_library('p11-kit-testable',
                                      libp11_kit_sources,
                                      c_args: libp11_kit_testable_c_args,
                                      implicit_include_directories: false,
-                                     dependencies: [libp11_common_dep, libp11_library_dep] + libffi_deps + dlopen_deps)
+                                     dependencies: [libp11_library_dep] + libffi_deps + dlopen_deps)
 
 p11_kit_sources = [
   'lists.c',
@@ -127,14 +126,14 @@ p11_kit_sources = [
 executable('p11-kit',
            p11_kit_sources,
            c_args: common_c_args,
-           dependencies: [libp11_tool_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
            link_with: libp11_kit,
            install: true)
 
 executable('p11-kit-remote',
            'remote.c',
            c_args: common_c_args,
-           dependencies: [libp11_tool_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
            link_with: libp11_kit,
            install: true,
            install_dir: prefix / privatedir)
@@ -142,7 +141,7 @@ executable('p11-kit-remote',
 executable('p11-kit-remote-testable',
            'remote.c',
            c_args: common_c_args,
-           dependencies: [libp11_tool_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
            link_with: libp11_kit_testable)
 
 executable('p11-kit-server',
@@ -150,7 +149,7 @@ executable('p11-kit-server',
            c_args: common_c_args + [
              '-DP11_KIT_REMOTE="p11-kit-remote"'
            ],
-           dependencies: [libp11_tool_dep, libp11_common_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
            implicit_include_directories: false,
            link_with: libp11_kit,
            install: true,
@@ -162,7 +161,7 @@ executable('p11-kit-server-testable',
              '-DP11_KIT_REMOTE="p11-kit-remote-testable"'
            ],
            implicit_include_directories: false,
-           dependencies: [libp11_tool_dep, libp11_common_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
            link_with: libp11_kit_testable)
 
 # Check if compilation succeeds with CRYPTOKI_GNU=1
@@ -213,7 +212,7 @@ foreach name : p11_kit_tests
   t = executable(name, '@0@.c'.format(name),
                  c_args: tests_c_args + libp11_kit_testable_c_args,
                  include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
+                 dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
                  link_with: libp11_kit_testable)
   test(name, t)
 endforeach
@@ -227,7 +226,7 @@ foreach name : p11_kit_progs
   t = executable(name, '@0@.c'.format(name),
                  c_args: tests_c_args,
                  include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
+                 dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
                  link_with: libp11_kit_testable)
 endforeach
 
@@ -264,8 +263,7 @@ foreach name, sources : mock_sources
   shared_module(name,
                 sources,
                 name_prefix: '',
-                include_directories: [configinc, commoninc],
-                dependencies: [libp11_test_dep, libp11_common_dep])
+                dependencies: [libp11_test_dep])
 endforeach
 
 p11_kit_pc_variables = [
