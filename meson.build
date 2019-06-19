@@ -75,19 +75,15 @@ tests_c_args = [
 
 conf.set('SIZEOF_UNSIGNED_LONG', cc.sizeof('unsigned long'))
 
-pthread_create_deps = []
 nanosleep_deps = []
 dlopen_deps = []
 socket_deps = []
+thread_deps = []
 
 if host_system != 'windows'
-  if not cc.has_function('pthread_create')
-    libpthread = cc.find_library('pthread', required: false)
-    if cc.has_function('pthread_create', dependencies: libpthread)
-      pthread_create_deps += libpthread
-    else
-      error('could not find pthread_create')
-    endif
+  thread_deps += dependency('threads')
+  if not cc.has_function('pthread_create', dependencies: thread_deps)
+    error('could not find pthread_create')
   endif
 
   if not cc.has_function('nanosleep')

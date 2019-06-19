@@ -213,7 +213,7 @@ foreach name : p11_kit_tests
   t = executable(name, '@0@.c'.format(name),
                  c_args: tests_c_args + libp11_kit_testable_c_args,
                  include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps + pthread_create_deps,
+                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
                  link_with: libp11_kit_testable)
   test(name, t)
 endforeach
@@ -227,7 +227,7 @@ foreach name : p11_kit_progs
   t = executable(name, '@0@.c'.format(name),
                  c_args: tests_c_args,
                  include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps + pthread_create_deps,
+                 dependencies: [libp11_test_dep, libp11_common_dep] + libffi_deps + dlopen_deps,
                  link_with: libp11_kit_testable)
 endforeach
 
