@@ -261,6 +261,7 @@ type_date (p11_builder *builder,
 		return false;
 
 	memcpy (&two, &tm, sizeof (tm));
+	two.tm_isdst = -1;	// do not perform tz fixup
 	if (mktime (&two) < 0)
 		return false;
 
