@@ -135,7 +135,7 @@ if test "$os_unix" = "yes"; then
 		[AC_MSG_ERROR([could not find required gmtime_r() function])])
 
 	# Check if these are declared and/or available to link against
-	AC_CHECK_DECLS([program_invocation_short_name]), [], [], [#include <error.h>])
+	AC_CHECK_DECLS([program_invocation_short_name]), [], [], [#include <errno.h>])
 	AC_MSG_CHECKING([whether program_invocation_short_name is available])
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <errno.h>]],
 	                                [[program_invocation_short_name = "test";]])],
