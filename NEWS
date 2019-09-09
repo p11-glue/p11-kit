@@ -1,3 +1,11 @@
+0.23.17 (stable)
+ * common: Fix uClibc-ng compilation [PR#237]
+ * trust: do not allow daylight to invalidate date validation [PR#236]
+ * build: Port to meson build system [PR#231, PR#234]
+ * rpc: On UNIX wait on condition variable instead of FD if header is for a different thread [PR#232]
+ * doc: Add 'server' command in help [PR#229]
+ * Build and test fixes [PR#230]
+
 0.23.16 (stable)
  * proxy: Support C_WaitForSlotEvent() if CKF_DONT_BLOCK is specified [PR#225]
  * conf: Ignore user configuration if the program is running as root [PR#226]
