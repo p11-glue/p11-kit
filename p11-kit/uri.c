@@ -1593,7 +1593,11 @@ parse_vendor_query (const char *name_start, const char *name_end,
 		return P11_KIT_URI_BAD_ENCODING;
 	}
 
-	insert_attribute (uri->qattrs, (char *)name, (char *)value);
+	if (!insert_attribute (uri->qattrs, (char *)name, (char *)value)) {
+		free (name);
+		free (value);
+		return P11_KIT_URI_UNEXPECTED;
+	}
 
 	return 0;
 }
