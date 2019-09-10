@@ -1,0 +1,6 @@
+{
+	global:
+		C_GetFunctionList;
+	local:
+		*;
+};
