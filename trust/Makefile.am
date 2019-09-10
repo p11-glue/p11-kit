@@ -120,7 +120,8 @@ external_SCRIPTS = \
 	trust/trust-extract-compat
 
 EXTRA_DIST += \
-	trust/p11-kit-trust.module
+	trust/p11-kit-trust.module \
+	trust/meson.build
 
 asn:
 	asn1Parser -o $(srcdir)/trust/pkix.asn.h $(srcdir)/trust/pkix.asn

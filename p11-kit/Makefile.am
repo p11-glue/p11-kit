@@ -216,6 +216,7 @@ example_DATA = p11-kit/pkcs11.conf.example
 
 EXTRA_DIST += \
 	p11-kit/docs.h \
+	p11-kit/meson.build \
 	$(NULL)
 
 bin_PROGRAMS += p11-kit/p11-kit
