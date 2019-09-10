@@ -22,7 +22,7 @@ BUILT_SOURCES =
 
 CLEANFILES =
 
-EXTRA_DIST = HACKING
+EXTRA_DIST = HACKING meson.build meson_options.txt po/meson.build
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 inc_HEADERS =

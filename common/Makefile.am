@@ -128,3 +128,5 @@ common_frob_getauxval_LDADD = $(common_LIBS)
 
 common_frob_getenv_SOURCES = common/frob-getenv.c
 common_frob_getenv_LDADD = $(common_LIBS)
+
+EXTRA_DIST += common/meson.build
