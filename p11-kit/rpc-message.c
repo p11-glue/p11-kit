@@ -711,6 +711,10 @@ p11_rpc_buffer_add_byte_array (p11_buffer *buffer,
                                const unsigned char *data,
                                size_t length)
 {
+	if (length == 0) {
+		p11_rpc_buffer_add_uint32 (buffer, length);
+		return;
+	}
 	if (data == NULL) {
 		p11_rpc_buffer_add_uint32 (buffer, 0xffffffff);
 		return;
@@ -982,6 +986,11 @@ p11_rpc_buffer_add_date_value (p11_buffer *buffer,
 {
 	CK_DATE date_value;
 	unsigned char array[8];
+
+	if (value_length == 0) {
+		p11_rpc_buffer_add_byte_array (buffer, NULL, 0);
+		return;
+	}
 
 	/* Check if value can be converted to CK_DATE. */
 	if (value_length != sizeof (CK_DATE)) {
