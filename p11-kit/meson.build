@@ -86,7 +86,9 @@ if host_system != 'windows'
                 'client.c', 'client-init.c',
                 name_prefix: '',
                 include_directories: [configinc, commoninc],
-                link_with: [libp11_kit_internal])
+                link_with: [libp11_kit_internal],
+                install: true,
+                install_dir: p11_module_path)
 endif
 
 fixtures_dir = meson.current_source_dir() / 'fixtures'
