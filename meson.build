@@ -56,6 +56,7 @@ bindir = get_option('bindir')
 libdir = get_option('libdir')
 libexecdir = get_option('libexecdir')
 sysconfdir = get_option('sysconfdir')
+mandir = get_option('mandir')
 pkgdatadir = datadir / meson.project_name()
 privatedir = libexecdir / meson.project_name()
 
@@ -358,7 +359,5 @@ subdir('p11-kit')
 if with_trust_module
   subdir('trust')
 endif
-if get_option('gtk_doc')
-  subdir('doc/manual')
-endif
+subdir('doc/manual')
 subdir('po')

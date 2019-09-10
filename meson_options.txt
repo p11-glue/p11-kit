@@ -45,3 +45,7 @@ option('systemd', type : 'feature',
 option('gtk_doc', type : 'boolean',
        value : false,
        description : 'Build documentation using gtk-doc')
+
+option('man', type : 'boolean',
+       value : false,
+       description : 'Build manpages using xsltproc')
