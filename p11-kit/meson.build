@@ -300,7 +300,7 @@ pkg.generate(libraries: libp11_kit,
 
 pkcs11_conf_example_conf = configuration_data({
   'p11_system_config_file': prefix / p11_system_config_file,
-  'p11_user_config': prefix / p11_user_config
+  'p11_user_config': p11_user_config
 })
 pkcs11_conf_example = configure_file(input: 'pkcs11.conf.example.in',
                                      output: '@BASENAME@',
