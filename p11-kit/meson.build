@@ -24,12 +24,12 @@ libp11_kit_internal_sources += custom_target('generate virtual-fixed-generated.h
 libp11_kit_internal_sources += 'virtual.c'
 
 libp11_kit_internal_c_args = [
-  '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(p11_system_config_file),
-  '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(p11_system_config_modules),
-  '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(p11_package_config_modules),
+  '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(prefix / p11_system_config_file),
+  '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(prefix / p11_system_config_modules),
+  '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(prefix / p11_package_config_modules),
   '-DP11_USER_CONFIG_FILE="@0@"'.format(p11_user_config_file),
   '-DP11_USER_CONFIG_MODULES="@0@"'.format(p11_user_config_modules),
-  '-DP11_MODULE_PATH="@0@"'.format(p11_module_path)
+  '-DP11_MODULE_PATH="@0@"'.format(prefix / p11_module_path)
 ]
 
 libp11_kit_internal = static_library('p11-kit-internal',
