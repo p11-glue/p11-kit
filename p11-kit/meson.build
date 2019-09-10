@@ -176,6 +176,17 @@ executable('p11-kit-server-testable',
            dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
            link_with: libp11_kit_testable)
 
+if with_systemd
+  p11_kit_server_service_conf = configuration_data({
+    'bindir': prefix / bindir
+  })
+  p11_kit_server_service = configure_file(input: 'p11-kit-server.service.in',
+                                          output: '@BASENAME@',
+                                          configuration: p11_kit_server_service_conf)
+  install_data([p11_kit_server_service, 'p11-kit-server.socket'],
+               install_dir: systemduserunitdir)
+endif
+
 # Check if compilation succeeds with CRYPTOKI_GNU=1
 
 pkcs11_gnu_headers = [
