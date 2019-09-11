@@ -36,6 +36,9 @@ AC_USE_SYSTEM_EXTENSIONS
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen disable-static])
 
+dnl Check if -Wl,--version-script is supported by the linker
+gl_LD_VERSION_SCRIPT
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP

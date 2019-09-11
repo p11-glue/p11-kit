@@ -86,8 +86,13 @@ libp11_kit_la_CFLAGS = $(COMMON_CFLAGS)
 
 libp11_kit_la_LDFLAGS = \
 	-no-undefined \
-	-version-info $(P11KIT_LT_RELEASE) \
-	-export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+	-version-info $(P11KIT_LT_RELEASE)
+
+if HAVE_LD_VERSION_SCRIPT
+libp11_kit_la_LDFLAGS += -Wl,--version-script=$(srcdir)/p11-kit/libp11-kit.map
+else
+libp11_kit_la_LDFLAGS += -export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+endif
 
 libp11_kit_la_SOURCES = \
 	p11-kit/proxy.c p11-kit/proxy.h p11-kit/proxy-init.c \
