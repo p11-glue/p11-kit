@@ -62,6 +62,7 @@ frob-*
 /x86_64_w64-mingw32/
 
 /build/m4/*.m4
+!/build/m4/ld-version-script.m4
 /build/common
 /build/coverage
 /build/coverage.info
