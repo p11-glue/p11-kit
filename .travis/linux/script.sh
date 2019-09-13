@@ -19,7 +19,7 @@ if test $? -ne 0; then
   exit 1
 fi
 
-docker exec $CONTAINER su - user sh -c "cd $SRCDIR && ninja -C $BUILDDIR install"
+docker exec $CONTAINER sh -c "cd $SRCDIR && ninja -C $BUILDDIR install"
 if test $? -ne 0; then
   exit 1
 fi
