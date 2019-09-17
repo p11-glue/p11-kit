@@ -35,6 +35,10 @@
 
 #include "config.h"
 
+#ifndef OS_WIN32
+#include <unistd.h>
+#endif
+
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
 #include "pkcs11.h"
@@ -48,7 +52,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <unistd.h>
 
 /* The error used by us when parsing of rpc message fails */
 #define PARSE_ERROR   CKR_DEVICE_ERROR
@@ -319,7 +322,7 @@ proto_read_byte_array (p11_rpc_message *msg,
 	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &val, &vlen))
 		return PARSE_ERROR;
 
-	*len = vlen;
+	*len = (CK_ULONG)vlen;
 
 	/* Just asking us for size */
 	if (!arr)
@@ -761,7 +764,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	/* If we don't have read and write fds now, then initialize other side */
 	ret = call_prepare (module, &msg, P11_RPC_CALL_C_Initialize);
 	if (ret == CKR_OK)
-		if (!p11_rpc_message_write_byte_array (&msg, P11_RPC_HANDSHAKE, P11_RPC_HANDSHAKE_LEN))
+		if (!p11_rpc_message_write_byte_array (&msg, P11_RPC_HANDSHAKE, (CK_ULONG)P11_RPC_HANDSHAKE_LEN))
 			ret = CKR_HOST_MEMORY;
 	if (ret == CKR_OK) {
 		if (!p11_rpc_message_write_byte (&msg, reserved != NULL))
@@ -771,7 +774,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 		char *reserved_string = "";
 		if (reserved != NULL)
 			reserved_string = (char *) reserved;
-		if (!p11_rpc_message_write_byte_array (&msg, (CK_BYTE_PTR) reserved_string, strlen (reserved_string) + 1))
+		if (!p11_rpc_message_write_byte_array (&msg, (CK_BYTE_PTR) reserved_string, (CK_ULONG)strlen (reserved_string) + 1))
 			ret = CKR_HOST_MEMORY;
 	}
 	if (ret == CKR_OK)

@@ -119,7 +119,7 @@ p11_rpc_message_prep (p11_rpc_message *msg,
                       int call_id,
                       p11_rpc_message_type type)
 {
-	int len;
+	size_t len;
 
 	assert (type != 0);
 	assert (call_id >= P11_RPC_CALL_ERROR);
@@ -210,7 +210,7 @@ bool
 p11_rpc_message_verify_part (p11_rpc_message *msg,
                              const char* part)
 {
-	int len;
+	size_t len;
 	bool ok;
 
 	if (!msg->sigverify)
@@ -646,7 +646,7 @@ p11_rpc_buffer_add_uint32 (p11_buffer *buffer,
 {
 	size_t offset = buffer->len;
 	if (!p11_buffer_append (buffer, 4))
-		return_val_if_reached ();
+		return_if_reached ();
 	p11_rpc_buffer_set_uint32 (buffer, offset, value);
 }
 
@@ -715,10 +715,11 @@ p11_rpc_buffer_add_byte_array (p11_buffer *buffer,
 		p11_rpc_buffer_add_uint32 (buffer, 0xffffffff);
 		return;
 	} else if (length >= 0x7fffffff) {
+	  /* Check if length can be converted to uint32_t. */
 		p11_buffer_fail (buffer);
 		return;
 	}
-	p11_rpc_buffer_add_uint32 (buffer, length);
+	p11_rpc_buffer_add_uint32 (buffer, (uint32_t)length);
 	p11_buffer_add (buffer, data, length);
 }
 
@@ -939,7 +940,7 @@ p11_rpc_buffer_add_attribute_array_value (p11_buffer *buffer,
 	}
 
 	/* Write the number of items */
-	p11_rpc_buffer_add_uint32 (buffer, count);
+	p11_rpc_buffer_add_uint32 (buffer, (uint32_t)count);
 
 	/* Actually write the attributes.  */
 	for (i = 0; i < count; i++) {
@@ -964,7 +965,7 @@ p11_rpc_buffer_add_mechanism_type_array_value (p11_buffer *buffer,
 	}
 
 	/* Write the number of items */
-	p11_rpc_buffer_add_uint32 (buffer, count);
+	p11_rpc_buffer_add_uint32 (buffer, (uint32_t)count);
 
 	for (i = 0; i < count; i++) {
 		if (mechs[i] > UINT64_MAX) {
@@ -1082,7 +1083,7 @@ p11_rpc_buffer_get_ulong_value (p11_buffer *buffer,
 		return false;
 
 	if (value) {
-		CK_ULONG ulong_value = val;
+		CK_ULONG ulong_value = (CK_ULONG)val;
 		memcpy (value, &ulong_value, sizeof (CK_ULONG));
 	}
 
@@ -1199,7 +1200,7 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 		memcpy (value, val, len);
 
 	if (value_length)
-		*value_length = len;
+		*value_length = (CK_ULONG)len;
 
 	return true;
 }
@@ -1300,9 +1301,9 @@ p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value (p11_buffer *buffer,
 	if (value) {
 		CK_RSA_PKCS_PSS_PARAMS params;
 
-		params.hashAlg = val[0];
-		params.mgf = val[1];
-		params.sLen = val[2];
+		params.hashAlg = (CK_MECHANISM_TYPE)val[0];
+		params.mgf = (CK_RSA_PKCS_MGF_TYPE)val[1];
+		params.sLen = (unsigned long)val[2];
 
 		memcpy (value, &params, sizeof (CK_RSA_PKCS_PSS_PARAMS));
 	}
@@ -1369,11 +1370,11 @@ p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
 	if (value) {
 		CK_RSA_PKCS_OAEP_PARAMS params;
 
-		params.hashAlg = val[0];
-		params.mgf = val[1];
-		params.source = val[2];
+		params.hashAlg = (CK_MECHANISM_TYPE)val[0];
+		params.mgf = (CK_RSA_PKCS_MGF_TYPE)val[1];
+		params.source = (CK_RSA_PKCS_OAEP_SOURCE_TYPE)val[2];
 		params.pSourceData = (void *) data;
-		params.ulSourceDataLen = len;
+		params.ulSourceDataLen = (unsigned long)len;
 
 		memcpy (value, &params, sizeof (CK_RSA_PKCS_OAEP_PARAMS));
 	}

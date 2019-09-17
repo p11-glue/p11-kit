@@ -41,7 +41,9 @@
 #include "path.h"
 #include "rpc.h"
 
+#ifndef OS_WIN32
 #include <pwd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
