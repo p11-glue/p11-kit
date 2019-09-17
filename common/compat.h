@@ -172,6 +172,8 @@ void        p11_mmap_close  (p11_mmap *map);
 #define setenv(n, v, z) _putenv_s(n, v)
 #endif /* HAVE_SETENV */
 
+#define strdup(s) _strdup(s)
+
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------
