@@ -478,7 +478,11 @@ strndup (const char *data,
 
 	ret = malloc (length + 1);
 	if (ret != NULL) {
+#ifdef OS_WIN32
 		strncpy_s (ret, length+1, data, length);
+#else
+		strncpy (ret, data, length);
+#endif
 		ret[length] = 0;
 	}
 
