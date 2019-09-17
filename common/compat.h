@@ -166,7 +166,10 @@ void        p11_mmap_close  (p11_mmap *map);
 
 #define strdup(s) _strdup(s)
 
+#ifndef __GNUC__
 #define getpid() _getpid()
+typedef int pid_t;
+#endif
 
 #endif /* OS_WIN32 */
 

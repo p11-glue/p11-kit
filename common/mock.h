@@ -117,7 +117,7 @@ void         mock_module_enumerate_objects               (CK_SESSION_HANDLE sess
                                                           void *user_data);
 
 void         mock_module_add_object                      (CK_SLOT_ID slot_id,
-                                                          const CK_ATTRIBUTE *attrs);
+                                                          CK_ATTRIBUTE *attrs);
 
 void         mock_module_reset                           (void);
 

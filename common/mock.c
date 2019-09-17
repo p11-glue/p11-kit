@@ -34,6 +34,12 @@
 
 #include "config.h"
 
+#ifndef OS_WIN32
+#include <unistd.h>
+#else
+#include <process.h>
+#endif
+
 #include "debug.h"
 #define CRYPTOKI_EXPORTS
 #include "pkcs11.h"
@@ -54,7 +60,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 /* -------------------------------------------------------------------
  * GLOBALS and SUPPORT STUFF
@@ -157,7 +162,7 @@ lookup_object (Session *sess,
 
 void
 mock_module_add_object (CK_SLOT_ID slot_id,
-                        const CK_ATTRIBUTE *attrs)
+                        CK_ATTRIBUTE *attrs)
 {
 	CK_ATTRIBUTE *copy;
 
@@ -204,7 +209,7 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		char *label = "TEST LABEL";
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
-			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_LABEL, label, (CK_ULONG)strlen (label) },
 			{ CKA_INVALID, NULL, 0 },
 		};
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_DATA_OBJECT), p11_attrs_dup (attrs));
@@ -219,14 +224,14 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		CK_BBOOL btrue = CK_TRUE;
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
-			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_LABEL, label, (CK_ULONG)strlen (label) },
 			{ CKA_ALLOWED_MECHANISMS, &type, sizeof (type) },
 			{ CKA_DECRYPT, &btrue, sizeof (btrue) },
 			{ CKA_PRIVATE, &btrue, sizeof (btrue) },
 			{ CKA_WRAP, &btrue, sizeof (btrue) },
 			{ CKA_UNWRAP, &btrue, sizeof (btrue) },
 			{ CKA_DERIVE, &btrue, sizeof (btrue) },
-			{ CKA_VALUE, value, strlen (value) },
+			{ CKA_VALUE, value, (CK_ULONG)strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_PRIVATE_KEY_CAPITALIZE), p11_attrs_dup (attrs));
@@ -242,11 +247,11 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		CK_BBOOL bfalse = CK_FALSE;
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
-			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_LABEL, label, (CK_ULONG)strlen (label) },
 			{ CKA_ALLOWED_MECHANISMS, &type, sizeof (type) },
 			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
 			{ CKA_PRIVATE, &bfalse, sizeof (bfalse) },
-			{ CKA_VALUE, value, strlen (value) },
+			{ CKA_VALUE, value, (CK_ULONG)strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_PUBLIC_KEY_CAPITALIZE), p11_attrs_dup (attrs));
@@ -261,12 +266,12 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		CK_BBOOL btrue = CK_TRUE;
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
-			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_LABEL, label, (CK_ULONG)strlen (label) },
 			{ CKA_ALLOWED_MECHANISMS, &type, sizeof (type) },
 			{ CKA_SIGN, &btrue, sizeof (btrue) },
 			{ CKA_PRIVATE, &btrue, sizeof (btrue) },
 			{ CKA_ALWAYS_AUTHENTICATE, &btrue, sizeof (btrue) },
-			{ CKA_VALUE, value, strlen (value) },
+			{ CKA_VALUE, value, (CK_ULONG)strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_PRIVATE_KEY_PREFIX), p11_attrs_dup (attrs));
@@ -282,12 +287,12 @@ module_reset_objects (CK_SLOT_ID slot_id)
 		CK_BBOOL bfalse = CK_FALSE;
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
-			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_LABEL, label, (CK_ULONG)strlen (label) },
 			{ CKA_ALLOWED_MECHANISMS, &type, sizeof (type) },
 			{ CKA_VERIFY, &btrue, sizeof (btrue) },
 			{ CKA_PRIVATE, &bfalse, sizeof (bfalse) },
 			{ CKA_ALWAYS_AUTHENTICATE, &btrue, sizeof (btrue) },
-			{ CKA_VALUE, value, strlen (value) },
+			{ CKA_VALUE, value, (CK_ULONG)strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
 		p11_dict_set (the_objects, handle_to_pointer (MOCK_PUBLIC_KEY_PREFIX), p11_attrs_dup (attrs));
@@ -2460,7 +2465,7 @@ mock_C_DigestFinal (CK_SESSION_HANDLE session,
 {
 	char buffer[32];
 	Session *sess;
-	int len;
+	CK_ULONG len;
 
 	return_val_if_fail (digest_len != NULL, CKR_ARGUMENTS_BAD);
 
@@ -2559,7 +2564,7 @@ prefix_mechanism_init (CK_SESSION_HANDLE session,
 		n_param = mechanism->ulParameterLen;
 	} else {
 		param = (CK_BYTE_PTR)SIGNED_PREFIX;
-		n_param = strlen (SIGNED_PREFIX) + 1;
+		n_param = (CK_ULONG)strlen (SIGNED_PREFIX) + 1;
 	}
 
 	length = value->ulValueLen + n_param;
@@ -3301,7 +3306,7 @@ mock_C_GenerateKey (CK_SESSION_HANDLE session,
 
 	value.type = CKA_VALUE;
 	value.pValue = "generated";
-	value.ulValueLen = strlen (value.pValue);
+	value.ulValueLen = (CK_ULONG)strlen (value.pValue);
 
 	attrs = p11_attrs_buildn (NULL, template, count);
 	attrs = p11_attrs_buildn (attrs, &value, 1);
@@ -3372,7 +3377,7 @@ mock_C_GenerateKeyPair (CK_SESSION_HANDLE session,
 
 	value.type = CKA_VALUE;
 	value.pValue = "generated";
-	value.ulValueLen = strlen (value.pValue);
+	value.ulValueLen = (CK_ULONG)strlen (value.pValue);
 
 	attrs = p11_attrs_buildn (NULL, public_key_template, public_key_count);
 	attrs = p11_attrs_buildn (attrs, &value, 1);
@@ -3638,7 +3643,7 @@ mock_C_DeriveKey (CK_SESSION_HANDLE session,
 
 	value.type = CKA_VALUE;
 	value.pValue = "derived";
-	value.ulValueLen = strlen (value.pValue);
+	value.ulValueLen = (CK_ULONG)strlen (value.pValue);
 
 	copy = p11_attrs_buildn (NULL, template, count);
 	copy = p11_attrs_buildn (copy, &value, 1);
