@@ -36,6 +36,12 @@
 
 #include "config.h"
 
+#ifndef OS_WIN32
+#include <unistd.h>
+#else
+#include <process.h>
+#endif
+
 #include "compat.h"
 #include "debug.h"
 
@@ -47,7 +53,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #define P11_DEBUG_MESSAGE_MAX 512
 
@@ -90,7 +95,7 @@ parse_environ_flags (void)
 	if (env && env[0] != '\0')
 		debug_strict = true;
 
-	env = getenv ("P11_KIT_DEBUG");
+	env = secure_getenv ("P11_KIT_DEBUG");
 	if (!env)
 		return 0;
 
