@@ -851,6 +851,19 @@ secure_getenv (const char *name)
 }
 
 #else /* OS_WIN32 */
+
+/*
+ * Windows platform does not support such features, it is just
+ * an empty stub.
+ */
+unsigned long
+getauxval (unsigned long type)
+{
+	static unsigned long secure = 0UL;
+	(void)type; /* silent any compilers */
+	return secure;
+}
+
 char *
 secure_getenv(const char *name)
 {
