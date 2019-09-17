@@ -46,6 +46,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,7 +122,7 @@ p11_lexer_next (p11_lexer *lexer,
 				lexer->tok_type = TOK_PEM;
 				lexer->tok.pem.begin = lexer->at;
 				lexer->tok.pem.length = end - lexer->at;
-				assert (end - lexer->at <= lexer->remaining);
+				assert (end - lexer->at <= (ptrdiff_t)lexer->remaining);
 				lexer->remaining -= (end - lexer->at);
 				lexer->at = end;
 				return true;
@@ -140,7 +141,7 @@ p11_lexer_next (p11_lexer *lexer,
 			lexer->remaining = 0;
 			lexer->at = end;
 		} else {
-			assert ((end - lexer->at) + 1 <= lexer->remaining);
+			assert ((end - lexer->at) + 1 <= (ptrdiff_t)lexer->remaining);
 			lexer->remaining -= (end - lexer->at) + 1;
 			lexer->at = end + 1;
 		}

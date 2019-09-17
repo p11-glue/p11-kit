@@ -49,7 +49,7 @@ enum {
 typedef struct {
 	char *filename;
 	const char *at;
-	int remaining;
+	size_t remaining;
 	int complained;
 
 	int tok_type;
