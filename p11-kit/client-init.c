@@ -37,6 +37,8 @@
 
 #include "config.h"
 
+#include "compat.h"
+
 #include "client.h"
 #include "pkcs11.h"
 
