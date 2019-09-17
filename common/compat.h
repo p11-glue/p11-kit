@@ -112,6 +112,11 @@ void         p11_dl_close       (void * dl);
 
 #include <io.h>
 
+#ifndef __GNUC__
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 /* Oh ... my ... god */
 #undef CreateMutex
 
