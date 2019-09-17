@@ -94,7 +94,7 @@ void              p11_debug_precond             (const char *format,
 	     return v; \
 	} while (false)
 
-#define warn_if_reached(v) \
+#define warn_if_reached() \
 	do { \
 	     p11_debug_precond ("p11-kit: shouldn't be reached at %s\n", __func__); \
 	} while (false)

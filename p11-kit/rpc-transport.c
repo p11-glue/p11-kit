@@ -35,6 +35,16 @@
 
 #include "config.h"
 
+#ifdef OS_WIN32
+#include <fcntl.h>
+#include <process.h>
+#include <signal.h>
+#include <winsock2.h>
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+#endif
+
 #include "argv.h"
 #include "compat.h"
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
@@ -63,15 +73,6 @@
 #include <sys/un.h>
 #include <signal.h>
 #include <unistd.h>
-#endif
-
-#ifdef OS_WIN32
-#include <process.h>
-#include <signal.h>
-#include <winsock2.h>
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
 #endif
 
 #ifndef EPROTO
@@ -266,8 +267,8 @@ rpc_socket_write_inlock (rpc_socket *sock,
 	}
 
 	p11_rpc_buffer_encode_uint32 (header, code);
-	p11_rpc_buffer_encode_uint32 (header + 4, options->len);
-	p11_rpc_buffer_encode_uint32 (header + 8, buffer->len);
+	p11_rpc_buffer_encode_uint32 (header + 4, (uint32_t)options->len);
+	p11_rpc_buffer_encode_uint32 (header + 8, (uint32_t)buffer->len);
 
 	if (!write_all (sock->write_fd, header, 12) ||
 	    !write_all (sock->write_fd, options->data, options->len) ||
@@ -345,8 +346,8 @@ p11_rpc_transport_write (int fd,
 
 	if (*state < 12) {
 		p11_rpc_buffer_encode_uint32 (header, call_code);
-		p11_rpc_buffer_encode_uint32 (header + 4, options->len);
-		p11_rpc_buffer_encode_uint32 (header + 8, buffer->len);
+		p11_rpc_buffer_encode_uint32 (header + 4, (uint32_t)options->len);
+		p11_rpc_buffer_encode_uint32 (header + 8, (uint32_t)buffer->len);
 	}
 
 	status = write_at (fd, header, 12, 0, state);
@@ -933,7 +934,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	}
 
 	/* Save the original stdin and stdout */
-	fds[0] = dup (STDIN_FILENO);
+	fds[0] = _dup (STDIN_FILENO);
 	if (fds[0] == -1) {
 		p11_message_err (errno, "failed to duplicate stdin");
 		rv = CKR_DEVICE_ERROR;
@@ -941,7 +942,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	}
 	/* FIXME: Shouldn't we close STDIN_FILENO? */
 
-	fds[1] = dup (STDOUT_FILENO);
+	fds[1] = _dup (STDOUT_FILENO);
 	if (fds[1] == -1) {
 		p11_message_err (errno, "failed to duplicate stdout");
 		rv = CKR_DEVICE_ERROR;
@@ -950,8 +951,8 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	/* FIXME: Shouldn't we close STDOUT_FILENO */
 
 	/* Temporarily redirect pipe descriptors to stdin/stdout for child */
-	if (dup2 (pw[0], STDIN_FILENO) == -1 ||
-	    dup2 (pr[1], STDOUT_FILENO) == -1) {
+	if (_dup2 (pw[0], STDIN_FILENO) == -1 ||
+	    _dup2 (pr[1], STDOUT_FILENO) == -1) {
 		p11_message_err (errno, "failed to duplicate child end of pipe");
 		rv = CKR_DEVICE_ERROR;
 		goto out;
@@ -967,22 +968,22 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 		goto out;
 	}
 
-	close (pw[0]);
+	_close (pw[0]);
 	pw[0] = -1;
-	close (pr[1]);
+	_close (pr[1]);
 	pr[1] = -1;
 
 	/* Restore the original stdin and stdout */
-	if (dup2 (fds[0], STDIN_FILENO) == -1 ||
-	    dup2 (fds[1], STDOUT_FILENO) == -1) {
+	if (_dup2 (fds[0], STDIN_FILENO) == -1 ||
+	    _dup2 (fds[1], STDOUT_FILENO) == -1) {
 		p11_message_err (errno, "failed to restore file descriptors");
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
 
-	close (fds[0]);
+	_close (fds[0]);
 	fds[0] = -1;
-	close (fds[1]);
+	_close (fds[1]);
 	fds[1] = -1;
 
 	rex->pid = (HANDLE) pid;
@@ -997,17 +998,17 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 			CloseHandle ((HANDLE) pid);
 		}
 		if (pw[0] != -1)
-			close (pw[0]);
+			_close (pw[0]);
 		if (pw[1] != -1)
-			close (pw[1]);
+			_close (pw[1]);
 		if (pr[0] != -1)
-			close (pr[0]);
+			_close (pr[0]);
 		if (pr[1] != -1)
-			close (pr[1]);
+			_close (pr[1]);
 		if (fds[0] != -1)
-			close (fds[0]);
+			_close (fds[0]);
 		if (fds[1] != -1)
-			close (fds[1]);
+			_close (fds[1]);
 	}
 
 	return rv;

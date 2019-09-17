@@ -174,6 +174,11 @@ typedef int pid_t;
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 
+/* microsoft Windows uses ISO definitions, not POSIX anymore */
+#define read(fd, buf, len) _read(fd, buf, (unsigned int)(len))
+#define write(fd, buf, len) _write(fd, buf, (unsigned int)(len))
+
+#else
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------
