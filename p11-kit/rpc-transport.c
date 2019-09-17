@@ -43,6 +43,8 @@
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #endif
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "shell32.lib")
 #endif
 
 #include "argv.h"
