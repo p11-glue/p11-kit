@@ -171,6 +171,9 @@ void        p11_mmap_close  (p11_mmap *map);
 typedef int pid_t;
 #endif
 
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------
