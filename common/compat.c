@@ -123,7 +123,6 @@ getprogname (void)
 
 #else /* OS_WIN32 */
 
-extern char **__argv;
 static char prognamebuf[256];
 
 const char *
