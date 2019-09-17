@@ -44,7 +44,6 @@
 #include "debug.h"
 
 #include <assert.h>
-#include <dirent.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -900,6 +899,7 @@ p11_dl_close (void *dl)
 #include <unistd.h>
 
 #ifndef HAVE_FDWALK
+#include <dirent.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
