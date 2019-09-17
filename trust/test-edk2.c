@@ -141,11 +141,11 @@ static CK_ATTRIBUTE certificate_filter[] = {
 };
 
 static void
-setup_objects (const CK_ATTRIBUTE *attrs,
+setup_objects (CK_ATTRIBUTE *attrs,
                ...) GNUC_NULL_TERMINATED;
 
 static void
-setup_objects (const CK_ATTRIBUTE *attrs,
+setup_objects (CK_ATTRIBUTE *attrs,
                ...)
 {
 	static CK_ULONG id_value = 8888;
@@ -159,7 +159,7 @@ setup_objects (const CK_ATTRIBUTE *attrs,
 		copy = p11_attrs_build (p11_attrs_dup (attrs), &id, NULL);
 		assert (copy != NULL);
 		mock_module_take_object (MOCK_SLOT_ONE_ID, copy);
-		attrs = va_arg (va, const CK_ATTRIBUTE *);
+		attrs = va_arg (va, CK_ATTRIBUTE *);
 	}
 	va_end (va);
 

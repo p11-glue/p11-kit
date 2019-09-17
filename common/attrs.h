@@ -42,13 +42,13 @@
 
 #define CKA_INVALID ((CK_ULONG)-1)
 
-CK_ATTRIBUTE *      p11_attrs_dup           (const CK_ATTRIBUTE *attrs);
+CK_ATTRIBUTE *      p11_attrs_dup           (CK_ATTRIBUTE *attrs);
 
 CK_ATTRIBUTE *      p11_attrs_build         (CK_ATTRIBUTE *attrs,
                                              ...);
 
 CK_ATTRIBUTE *      p11_attrs_buildn        (CK_ATTRIBUTE *attrs,
-                                             const CK_ATTRIBUTE *add,
+                                             CK_ATTRIBUTE *add,
                                              CK_ULONG count);
 
 CK_ATTRIBUTE *      p11_attrs_take          (CK_ATTRIBUTE *attrs,

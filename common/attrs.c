@@ -199,7 +199,7 @@ template_generator (void *state)
 
 CK_ATTRIBUTE *
 p11_attrs_buildn (CK_ATTRIBUTE *attrs,
-                  const CK_ATTRIBUTE *add,
+                  CK_ATTRIBUTE *add,
                   CK_ULONG count)
 {
 	return attrs_build (attrs, count, false, true,
@@ -245,7 +245,7 @@ p11_attrs_merge (CK_ATTRIBUTE *attrs,
 }
 
 CK_ATTRIBUTE *
-p11_attrs_dup (const CK_ATTRIBUTE *attrs)
+p11_attrs_dup (CK_ATTRIBUTE *attrs)
 {
 	CK_ULONG count;
 
