@@ -144,7 +144,7 @@ getprogname (void)
 		name = p + 1;
 
 	length = sizeof (prognamebuf) - 1;
-	strncpy (prognamebuf, name, length);
+	strncpy_s (prognamebuf, sizeof(prognamebuf), name, length);
 	prognamebuf[length] = 0;
 	length = strlen (prognamebuf);
 	if (length > 4 && _stricmp (prognamebuf + (length - 4), ".exe") == 0)
@@ -478,7 +478,7 @@ strndup (const char *data,
 
 	ret = malloc (length + 1);
 	if (ret != NULL) {
-		strncpy (ret, data, length);
+		strncpy_s (ret, length+1, data, length);
 		ret[length] = 0;
 	}
 
@@ -633,15 +633,13 @@ gmtime_r (const time_t *timep,
           struct tm *result)
 {
 #ifdef OS_WIN32
+  errno_t e;
 	/*
-	 * On win32 gmtime() returns thread local storage, so we can
-	 * just copy it out into the buffer without worrying about races.
+	 * On win32 gmtime_s() is thread safe too, but arguments are reversed.
 	 */
-	struct tm *tg;
-	tg = gmtime (timep);
-	if (!tg)
+	e = gmtime_s (result, timep);
+	if (e != 0)
 		return NULL;
-	memcpy (result, tg, sizeof (struct tm));
 	return result;
 #else
 	#error Need either gmtime_r() function on Unix
@@ -794,6 +792,7 @@ mkdtemp (char *template)
 
 #endif /* HAVE_MKDTEMP */
 
+#ifndef OS_WIN32
 #ifndef HAVE_GETAUXVAL
 
 unsigned long
@@ -851,6 +850,26 @@ secure_getenv (const char *name)
 	return getenv (name);
 }
 
+#else /* OS_WIN32 */
+char *
+secure_getenv(const char *name)
+{
+#ifndef __GNUC__
+  char *v;
+  size_t len;
+  errno_t e;
+
+  e = _dupenv_s(&v, &len, name);
+  if (e)
+    return NULL;
+
+  return v;
+#else
+  return getenv (name);
+#endif
+}
+#endif /* OS_WIN32 */
+
 #ifndef HAVE_STRERROR_R
 
 int
@@ -859,22 +878,7 @@ strerror_r (int errnum,
             size_t buflen)
 {
 #ifdef OS_WIN32
-#if _WIN32_WINNT < 0x502 /* WinXP or older */
-	int n = sys_nerr;
-	const char *p;
-	if (errnum < 0 || errnum >= n)
-		p = sys_errlist[n];
-	else
-		p = sys_errlist[errnum];
-	if (buf == NULL || buflen == 0)
-		return EINVAL;
-	strncpy(buf, p, buflen);
-	buf[buflen-1] = 0;
-	return 0;
-#else /* Server 2003 or newer */
 	return strerror_s (buf, buflen, errnum);
-#endif /*_WIN32_WINNT*/
-
 #else
 	#error no strerror_r implementation
 #endif
