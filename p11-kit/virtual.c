@@ -3150,7 +3150,7 @@ create_fixed_wrapper (p11_virtual *virt,
        wrapper->destroyer = destroyer;
        wrapper->bound.version.major = CRYPTOKI_VERSION_MAJOR;
        wrapper->bound.version.minor = CRYPTOKI_VERSION_MINOR;
-       wrapper->fixed_index = index;
+       wrapper->fixed_index = (int)index;
 
        init_wrapper_funcs_fixed (wrapper, &p11_virtual_fixed[index]);
 
