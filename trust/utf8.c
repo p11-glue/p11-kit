@@ -253,7 +253,7 @@ ucs4be_to_uchar (const unsigned char *str,
 	if (len < 4)
 		return -1;
 
-	*uc = (str[0] << 24 | str[1] << 16 | str[2] << 8 | str[3]);
+	*uc = ((uint32_t) str[0] << 24 | str[1] << 16 | str[2] << 8 | str[3]);
 	return 4;
 }
 
