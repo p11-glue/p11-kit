@@ -544,6 +544,28 @@ test_date_value (void)
 }
 
 static void
+test_date_value_empty (void)
+{
+	p11_buffer buffer;
+	CK_DATE val;
+	size_t offset = 0;
+	CK_ULONG val_size;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_date_value(&buffer, NULL, 0);
+	assert (!p11_buffer_failed (&buffer));
+
+	ret = p11_rpc_buffer_get_date_value(&buffer, &offset, &val, &val_size);
+	assert_num_eq (true, ret);
+
+	assert_num_eq (0, val_size);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
 test_byte_array_value (void)
 {
 	p11_buffer buffer;
@@ -1349,6 +1371,7 @@ main (int argc,
 	p11_test (test_attribute_array_value, "/rpc/attribute-array-value");
 	p11_test (test_mechanism_type_array_value, "/rpc/mechanism-type-array-value");
 	p11_test (test_date_value, "/rpc/date-value");
+	p11_test (test_date_value_empty, "/rpc/date-value-empty");
 	p11_test (test_byte_array_value, "/rpc/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc/mechanism-value");
 	p11_test (test_message_write, "/rpc/message-write");
