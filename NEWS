@@ -1,3 +1,8 @@
+0.23.18 (stable)
+ * rpc: Allow empty CK_DATE value [PR#253]
+ * build: Meson fixes [PR#245]
+ * build: Adjust feature parity between meson and autotools [PR#247]
+
 0.23.17 (stable)
  * common: Fix uClibc-ng compilation [PR#237]
  * trust: do not allow daylight to invalidate date validation [PR#236]
