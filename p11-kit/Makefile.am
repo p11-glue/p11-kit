@@ -221,8 +221,15 @@ example_DATA = p11-kit/pkcs11.conf.example
 
 EXTRA_DIST += \
 	p11-kit/docs.h \
+	p11-kit/gen-pkcs11-gnu.sh \
+	p11-kit/gen-virtual-fixed.sh \
 	p11-kit/meson.build \
+	p11-kit/meson_post_install.sh \
 	p11-kit/libp11-kit.map \
+	p11-kit/libp11-kit-0.dll.def \
+	p11-kit/p11-module.map \
+	p11-kit/p11-module.def \
+	p11-kit/pkcs11-gnu.c \
 	$(NULL)
 
 bin_PROGRAMS += p11-kit/p11-kit
