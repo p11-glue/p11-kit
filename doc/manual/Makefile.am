@@ -170,5 +170,4 @@ CLEANFILES += \
 
 EXTRA_DIST += \
 	$(MAN_IN_FILES) \
-	doc/manual/meson.build \
 	$(NULL)
