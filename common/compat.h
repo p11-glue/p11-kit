@@ -163,6 +163,7 @@ void        p11_mmap_close  (p11_mmap *map);
 #ifndef HAVE_SETENV
 #define setenv(n, v, z) _putenv_s(n, v)
 #endif /* HAVE_SETENV */
+#define getenv2(name) secure_getenv(name)
 
 #define strdup(s) _strdup(s)
 
@@ -179,6 +180,8 @@ typedef int pid_t;
 #define write(fd, buf, len) _write(fd, buf, (unsigned int)(len))
 
 #else
+/* Microsoft stdlib.h has deprecated getenv(), let's assumes getenv2() */
+#define getenv2(name) getenv(name)
 #endif /* OS_WIN32 */
 
 /* ----------------------------------------------------------------------------

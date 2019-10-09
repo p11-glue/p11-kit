@@ -38,6 +38,11 @@
 
 #include "config.h"
 
+#ifdef OS_WIN32
+#include <winsock2.h>
+#include <shlobj.h>
+#endif
+
 #include "buffer.h"
 #include "debug.h"
 #include "message.h"
@@ -53,10 +58,6 @@
 #ifdef OS_UNIX
 #include <pwd.h>
 #include <unistd.h>
-#endif
-
-#ifdef OS_WIN32
-#include <shlobj.h>
 #endif
 
 
@@ -122,12 +123,12 @@ expand_homedir (const char *remainder)
 	if (remainder != NULL &&
 	    strncmp (remainder, ".config", 7) == 0 &&
 	    is_path_component_or_null (remainder[7])) {
-		env = getenv ("XDG_CONFIG_HOME");
+		env = getenv2 ("XDG_CONFIG_HOME");
 		if (env && env[0])
 			return p11_path_build (env, remainder + 8, NULL);
 	}
 
-	env = getenv ("HOME");
+	env = getenv2 ("HOME");
 	if (env && env[0]) {
 		return p11_path_build (env, remainder, NULL);
 
@@ -303,7 +304,7 @@ bool
 p11_path_prefix (const char *string,
                  const char *prefix)
 {
-	int a, b;
+	size_t a, b;
 
 	return_val_if_fail (string != NULL, false);
 	return_val_if_fail (prefix != NULL, false);
