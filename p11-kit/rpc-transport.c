@@ -149,6 +149,7 @@ rpc_socket_is_open (rpc_socket *sock)
 }
 #endif
 
+#ifdef OS_UNIX
 static void
 rpc_socket_close (rpc_socket *sock)
 {
@@ -156,12 +157,23 @@ rpc_socket_close (rpc_socket *sock)
 	if (sock->read_fd != -1)
 		close (sock->read_fd);
 	sock->read_fd = -1;
-#ifdef OS_WIN32
-	if (sock->write_fd != -1)
-		close (sock->write_fd);
-	sock->write_fd = -1;
-#endif
 }
+#elif defined(OS_WIN32)
+/* XXX On WIN32 _fd are some file handles on the child's process */
+static void
+rpc_socket_close (rpc_socket *sock)
+{
+	assert (sock != NULL);
+	if (sock->read_fd != -1)
+		_close (sock->read_fd);
+	sock->read_fd = -1;
+	if (sock->write_fd != -1)
+		_close (sock->write_fd);
+	sock->write_fd = -1;
+}
+#elif
+#error OS_TBD
+#endif
 
 static void
 rpc_socket_unref (rpc_socket *sock)
@@ -676,17 +688,25 @@ rpc_transport_buffer (p11_rpc_client_vtable *vtable,
 		p11_mutex_lock (&sock->write_lock);
 	}
 
+#ifdef OS_UNIX
 	if (rv != CKR_OK && sock->read_fd != -1) {
 		p11_message ("closing socket due to protocol failure");
 		close (sock->read_fd);
 		sock->read_fd = -1;
 	}
-#ifdef OS_WIN32
+#elif defined(OS_WIN32)
+	if (rv != CKR_OK && sock->read_fd != -1) {
+		p11_message ("closing child fd due to protocol failure");
+		_close (sock->read_fd);
+		sock->read_fd = -1;
+	}
 	if (rv != CKR_OK && sock->write_fd != -1) {
-		p11_message ("closing socket due to protocol failure");
-		close (sock->write_fd);
+		p11_message ("closing child fd due to protocol failure");
+		_close (sock->write_fd);
 		sock->write_fd = -1;
 	}
+#else
+#error OS_TBD
 #endif
 
 	sock->refs--;
