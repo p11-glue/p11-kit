@@ -1151,14 +1151,20 @@ p11_rpc_transport_new (p11_virtual *virt,
                        const char *name)
 {
 	p11_rpc_transport *rpc = NULL;
+	int i = 0;
 
 	return_val_if_fail (virt != NULL, NULL);
 	return_val_if_fail (remote != NULL, NULL);
 	return_val_if_fail (name != NULL, NULL);
 
+	/* skip char when the strings start with ' or " */
+	if ((remote[i] == '\'') ||
+	    (remote[i] == '"'))
+		i++;
+
 	/* This is a command we can execute */
-	if (remote[0] == '|') {
-		rpc = rpc_exec_init (remote + 1, name);
+	if (remote[i] == '|') {
+		rpc = rpc_exec_init (remote + i + 1, name);
 
 #ifdef OS_UNIX
 	} else if (strncmp (remote, "unix:path=/", 11) == 0) {
