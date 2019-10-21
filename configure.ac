@@ -571,6 +571,13 @@ AS_IF([test "$with_systemd" != "no"], [
 
 AM_CONDITIONAL(WITH_SYSTEMD, [test "$with_systemd" = "yes"])
 
+# --------------------------------------------------------------------
+# bash completion
+
+PKG_CHECK_VAR([bashcompdir], [bash-completion], [with_bash_completion=yes])
+AM_CONDITIONAL(WITH_BASH_COMPLETION, [test "$with_bash_completion" = "yes"])
+
+
 AC_CONFIG_FILES([Makefile
 	doc/Makefile
 	doc/manual/Makefile
