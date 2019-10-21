@@ -49,6 +49,14 @@ if WITH_TRUST_MODULE
 include trust/Makefile.am
 endif
 
+if WITH_BASH_COMPLETION
+bashcompdir = $(datadir)/bash-completion/completions
+dist_bashcomp_DATA = bash-completion/p11-kit
+if WITH_TRUST_MODULE
+dist_bashcomp_DATA += bash-completion/trust
+endif
+endif
+
 SUBDIRS = . doc po
 
 ACLOCAL_AMFLAGS = -I build/m4

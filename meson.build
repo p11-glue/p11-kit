@@ -361,3 +361,4 @@ if with_trust_module
 endif
 subdir('doc/manual')
 subdir('po')
+subdir('bash-completion')
