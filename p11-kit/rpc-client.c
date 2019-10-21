@@ -582,7 +582,7 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 #define IN_ULONG_BUFFER(arr, len) \
 	if (len == NULL) \
 		{ _ret = CKR_ARGUMENTS_BAD; goto _cleanup; } \
-	if (!p11_rpc_message_write_ulong_buffer (&_msg, arr ? *len : 0)) \
+	if (!p11_rpc_message_write_ulong_buffer (&_msg, arr, len)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_ULONG_ARRAY(arr, len) \
