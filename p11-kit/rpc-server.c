@@ -68,6 +68,7 @@ proto_read_byte_buffer (p11_rpc_message *msg,
                         CK_ULONG *n_buffer)
 {
 	uint32_t length;
+	uint8_t buffer_is_null;
 
 	assert (msg != NULL);
 	assert (buffer != NULL);
@@ -77,6 +78,8 @@ proto_read_byte_buffer (p11_rpc_message *msg,
 	/* Check that we're supposed to be reading this at this point */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fy"));
 
+	if (!p11_rpc_buffer_get_byte (msg->input, &msg->parsed, &buffer_is_null))
+		return PARSE_ERROR;
 	/* The number of ulongs there's room for on the other end */
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &length))
 		return PARSE_ERROR;
@@ -84,8 +87,8 @@ proto_read_byte_buffer (p11_rpc_message *msg,
 	*n_buffer = length;
 	*buffer = NULL;
 
-	/* If set to zero, then they just want the length */
-	if (length == 0)
+	/* If buffer is NULL, the caller just wants the length */
+	if (buffer_is_null)
 		return CKR_OK;
 
 	*buffer = p11_rpc_message_alloc_extra (msg, length * sizeof (CK_BYTE));
