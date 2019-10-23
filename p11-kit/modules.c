@@ -496,17 +496,27 @@ is_string_in_list (const char *list,
                    const char *string)
 {
 	const char *where;
+	const char *start = list;
 
-	where = strstr (list, string);
-	if (where == NULL)
-		return false;
+	while (*start != '\0') {
+		where = strstr (start, string);
+		if (where == NULL)
+			return false;
 
-	/* Has to be at beginning/end of string, and delimiter before/after */
-	if (where != list && !is_list_delimiter (*(where - 1)))
-		return false;
+		/* Has to be at beginning/end of string, and delimiter before/after */
+		if (where != list && !is_list_delimiter (*(where - 1))) {
+			start += strlen (string);
+			continue;
+		}
 
-	where += strlen (string);
-	return (*where == '\0' || is_list_delimiter (*where));
+		where += strlen (string);
+		if (*where == '\0' || is_list_delimiter (*where)) {
+			return true;
+		}
+		start = where;
+	}
+
+	return false;
 }
 
 static bool
