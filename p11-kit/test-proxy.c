@@ -233,6 +233,7 @@ teardown (void *unused)
 #define TWO_MODULE "module: mock-two" SHLEXT "\n"
 #define ENABLED "enable-in: test-proxy, p11-kit-proxy\n"
 #define DISABLED "disable-in: p11-kit-proxy\n"
+#define ENABLED_PREFIX "enable-in: test-proxy-suffix, p11-kit-proxy-suffix, test-proxy, p11-kit-proxy\n"
 #define EIGHT_MODULE "module: mock-eight" SHLEXT "\n"
 #define NINE_MODULE "module: mock-nine" SHLEXT "\n"
 
@@ -311,6 +312,12 @@ test_disable (void)
 	p11_test_file_write (test.directory, "two.module", TWO_MODULE DISABLED, strlen (TWO_MODULE DISABLED));
 	disabled = load_modules_and_count_slots ();
 	assert_num_cmp (disabled, <, count);
+
+	p11_test_file_write (test.directory, "one.module", ONE_MODULE ENABLED_PREFIX, strlen (ONE_MODULE ENABLED_PREFIX));
+	p11_test_file_write (test.directory, "two.module", TWO_MODULE, strlen (TWO_MODULE));
+	enabled = load_modules_and_count_slots ();
+	assert_num_eq (enabled, count);
+
 }
 
 static void
