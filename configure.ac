@@ -574,7 +574,10 @@ AM_CONDITIONAL(WITH_SYSTEMD, [test "$with_systemd" = "yes"])
 # --------------------------------------------------------------------
 # bash completion
 
-PKG_CHECK_VAR([bashcompdir], [bash-completion], [with_bash_completion=yes])
+PKG_CHECK_VAR([bashcompdir], [bash-completion], [completionsdir],
+	[with_bash_completion=yes])
+AC_SUBST(bashcompdir)
+
 AM_CONDITIONAL(WITH_BASH_COMPLETION, [test "$with_bash_completion" = "yes"])
 
 

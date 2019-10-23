@@ -24,7 +24,8 @@ CLEANFILES =
 
 EXTRA_DIST = HACKING meson.build meson_options.txt po/meson.build \
 	doc/manual/meson.build doc/manual/userdir.xml.in \
-	doc/manual/sysdir.xml.in doc/manual/version.xml.in
+	doc/manual/sysdir.xml.in doc/manual/version.xml.in \
+	bash-completion
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 inc_HEADERS =
@@ -42,19 +43,13 @@ TESTS = $(c_tests) $(sh_tests)
 moduledir = $(p11_module_path)
 module_LTLIBRARIES =
 
+bashcomp_DATA =
+
 include common/Makefile.am
 include p11-kit/Makefile.am
 
 if WITH_TRUST_MODULE
 include trust/Makefile.am
-endif
-
-if WITH_BASH_COMPLETION
-bashcompdir = $(datadir)/bash-completion/completions
-dist_bashcomp_DATA = bash-completion/p11-kit
-if WITH_TRUST_MODULE
-dist_bashcomp_DATA += bash-completion/trust
-endif
 endif
 
 SUBDIRS = . doc po

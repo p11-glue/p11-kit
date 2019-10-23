@@ -246,6 +246,10 @@ p11_kit_p11_kit_LDADD = \
 	$(LTLIBINTL) \
 	$(NULL)
 
+if WITH_BASH_COMPLETION
+bashcomp_DATA += bash-completion/p11-kit
+endif
+
 private_PROGRAMS += p11-kit/p11-kit-remote
 
 p11_kit_p11_kit_remote_SOURCES = \

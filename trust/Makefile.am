@@ -119,6 +119,10 @@ externaldir = $(privatedir)
 external_SCRIPTS = \
 	trust/trust-extract-compat
 
+if WITH_BASH_COMPLETION
+bashcomp_DATA += bash-completion/trust
+endif
+
 EXTRA_DIST += \
 	trust/p11-kit-trust.module \
 	trust/meson.build
