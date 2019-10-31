@@ -339,6 +339,82 @@ type_der_ext (p11_builder *builder,
 	return check_der_struct (builder, "PKIX1.Extension", attr);
 }
 
+static bool
+type_false_or_time (p11_builder *builder,
+		    CK_ATTRIBUTE *attr)
+{
+	struct tm tm;
+	struct tm two;
+	char *value;
+
+	if (sizeof (CK_BBOOL) == attr->ulValueLen &&
+	    *((CK_BBOOL *)attr->pValue) == CK_FALSE)
+		return true;
+
+	value = attr->pValue;
+
+	switch (attr->ulValueLen) {
+	case 13:
+		/* UTCTime restricted by RFC 5280 4.1.2.5.1, i.e., in
+		 * the format "YYMMDDHHMMSSZ" */
+		if (value[attr->ulValueLen - 1] != 'Z')
+			return false;
+
+		tm.tm_year = atoin (value, 2);
+		if (tm.tm_year < 0)
+			return false;
+		if (tm.tm_year >= 50)
+			tm.tm_year += 1900;
+		else if (tm.tm_year >= 0)
+			tm.tm_year += 2000;
+		value += 2;
+
+		break;
+	case 15:
+		/* GeneralizedTime restricted by RFC 5280 4.1.2.5.2,
+		 * i.e., in the form "YYYYMMDDHHMMSSZ" */
+		if (value[attr->ulValueLen - 1] != 'Z')
+			return false;
+
+		tm.tm_year = atoin (value, 4);
+		if (tm.tm_year < 0)
+			return false;
+		value += 4;
+
+		break;
+	default:
+		return false;
+	}
+
+	tm.tm_mon = atoin (value, 2);
+	value += 2;
+	tm.tm_mday = atoin (value, 2);
+	value += 2;
+	tm.tm_hour = atoin (value, 2);
+	value += 2;
+	tm.tm_min = atoin (value, 2);
+	value += 2;
+	tm.tm_sec = atoin (value, 2);
+
+	if (tm.tm_mon <= 0 || tm.tm_mday <= 0 ||
+	    tm.tm_hour < 0 || tm.tm_min < 0 || tm.tm_sec < 0)
+		return false;
+
+	memcpy (&two, &tm, sizeof (tm));
+	two.tm_isdst = -1;	/* do not perform tz fixup */
+
+	/* If mktime changed anything, then bad time */
+	if (tm.tm_year != two.tm_year ||
+	    tm.tm_mon != two.tm_mon ||
+	    tm.tm_mday != two.tm_mday ||
+	    tm.tm_hour != two.tm_hour ||
+	    tm.tm_min != two.tm_min ||
+	    tm.tm_sec != two.tm_sec)
+		return false;
+
+	return true;
+}
+
 #define COMMON_ATTRS \
 	{ CKA_CLASS, REQUIRE | CREATE, type_ulong }, \
 	{ CKA_TOKEN, CREATE | WANT, type_bool }, \
@@ -797,6 +873,8 @@ const static builder_schema certificate_schema = {
 	  { CKA_TRUSTED, CREATE | WANT, type_bool },
 	  { CKA_X_DISTRUSTED, CREATE | WANT, type_bool },
 	  { CKA_NSS_MOZILLA_CA_POLICY, CREATE | WANT, type_bool },
+	  { CKA_NSS_SERVER_DISTRUST_AFTER, CREATE | WANT, type_false_or_time },
+	  { CKA_NSS_EMAIL_DISTRUST_AFTER, CREATE | WANT, type_false_or_time },
 	  { CKA_CERTIFICATE_CATEGORY, CREATE | WANT, type_ulong },
 	  { CKA_CHECK_VALUE, CREATE | WANT, },
 	  { CKA_START_DATE, CREATE | MODIFY | WANT, type_date },

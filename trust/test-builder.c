@@ -864,6 +864,79 @@ test_invalid_dates (void)
 }
 
 static void
+test_valid_false_or_time (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_NSS_SERVER_DISTRUST_AFTER, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	input[0].pValue = "\x00";
+	input[0].ulValueLen = 1;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	input[0].pValue = "190701000000Z";
+	input[0].ulValueLen = 13;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
+
+	input[0].pValue = "20190701000000Z";
+	input[0].ulValueLen = 15;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
+}
+
+static void
+test_invalid_false_or_time (void)
+{
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *extra = NULL;
+	CK_RV rv;
+
+	CK_ATTRIBUTE input[] = {
+		{ CKA_NSS_SERVER_DISTRUST_AFTER, NULL, 0 },
+		{ CKA_CLASS, &certificate, sizeof (certificate) },
+		{ CKA_CERTIFICATE_TYPE, &x509, sizeof (x509) },
+		{ CKA_INVALID },
+	};
+
+	p11_message_quiet ();
+
+	input[0].pValue = "\x01";
+	input[0].ulValueLen = 1;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = "\x01\x02\x03";
+	input[0].ulValueLen = 3;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = NULL;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	p11_message_loud ();
+}
+
+static void
 test_valid_name (void)
 {
 	CK_ATTRIBUTE *attrs = NULL;
@@ -2204,6 +2277,7 @@ main (int argc,
 	p11_test (test_valid_name, "/builder/valid-name");
 	p11_test (test_valid_serial, "/builder/valid-serial");
 	p11_test (test_valid_cert, "/builder/valid-cert");
+	p11_test (test_valid_false_or_time, "/builder/valid-false-or-time");
 	p11_test (test_invalid_bool, "/builder/invalid-bool");
 	p11_test (test_invalid_ulong, "/builder/invalid-ulong");
 	p11_test (test_invalid_utf8, "/builder/invalid-utf8");
@@ -2211,6 +2285,7 @@ main (int argc,
 	p11_test (test_invalid_name, "/builder/invalid-name");
 	p11_test (test_invalid_serial, "/builder/invalid-serial");
 	p11_test (test_invalid_cert, "/builder/invalid-cert");
+	p11_test (test_invalid_false_or_time, "/builder/invalid-false-or-time");
 	p11_test (test_invalid_schema, "/builder/invalid-schema");
 
 	p11_test (test_create_not_settable, "/builder/create_not_settable");

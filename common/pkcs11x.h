@@ -75,6 +75,8 @@ extern "C" {
 #define CKA_NSS_PQG_SEED_BITS           0xce534367UL
 #define CKA_NSS_MODULE_SPEC             0xce534368UL
 #define CKA_NSS_MOZILLA_CA_POLICY       0xce534372UL
+#define CKA_NSS_SERVER_DISTRUST_AFTER   0xce534373UL
+#define CKA_NSS_EMAIL_DISTRUST_AFTER    0xce534374UL
 
 /* NSS trust attributes */
 #define CKA_TRUST_DIGITAL_SIGNATURE     0xce536351UL
