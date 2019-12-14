@@ -784,7 +784,7 @@ done:
 		module->initialized_forkid = 0;
 
 	/* If we told our caller that we're initialized, but not really, then finalize */
-	if (ret != CKR_OK && module->initialize_done) {
+	if (ret != CKR_OK && ret != CKR_CRYPTOKI_ALREADY_INITIALIZED && module->initialize_done) {
 		module->initialize_done = false;
 		assert (module->vtable->disconnect != NULL);
 		(module->vtable->disconnect) (module->vtable, reserved);
