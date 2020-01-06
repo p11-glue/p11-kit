@@ -221,6 +221,15 @@ int main (void) { __libc_enable_secure = 0; return 0; }
     conf.set('HAVE___LIBC_ENABLE_SECURE', 1)
   endif
 
+  vsock_availability_test_code = '''
+#include <sys/socket.h>
+#include <linux/vm_sockets.h>
+struct sockaddr_vm sa = { .svm_family = AF_VSOCK, .svm_cid = VMADDR_CID_ANY };
+'''
+  if cc.compiles(vsock_availability_test_code, name: 'vsock_test')
+    conf.set('HAVE_VSOCK', 1)
+  endif
+
   foreach h : ['sys/types.h', 'signal.h']
     foreach t : ['sighandler_t', 'sig_t', '__sighandler_t']
       if cc.has_header_symbol(h, t)
