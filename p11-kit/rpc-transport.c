@@ -1175,6 +1175,8 @@ p11_rpc_transport_new (p11_virtual *virt,
 		return NULL;
 	}
 
+	return_val_if_fail (rpc != NULL, NULL);
+
 	if (!p11_rpc_client_init (virt, &rpc->vtable))
 		return_val_if_reached (NULL);
 
