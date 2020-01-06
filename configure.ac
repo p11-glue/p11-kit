@@ -154,6 +154,21 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_TYPES([sighandler_t, sig_t, __sighandler_t], [], [],
 		[[#include <sys/types.h>
 		  #include <signal.h>]])
+
+	AC_MSG_CHECKING([whether vsock support is available])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>
+					  #include <linux/vm_sockets.h>]],
+	                                [[struct sockaddr_vm sa = {
+					  .svm_family = AF_VSOCK,
+					  .svm_cid = VMADDR_CID_ANY,
+					  };
+					  (void)&sa;
+					  return 0;]])],
+	               [AC_DEFINE([HAVE_VSOCK], [1],
+	                          [Whether vsock support available])
+	                AC_MSG_RESULT([yes])],
+	               [AC_MSG_RESULT([no])])
+
 fi
 
 # These are thngs we can work around

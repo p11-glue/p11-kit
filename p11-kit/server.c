@@ -66,6 +66,11 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+#ifdef HAVE_VSOCK
+#include "vsock.h"
+#include <linux/vm_sockets.h>
+#endif
+
 #ifdef HAVE_SIGHANDLER_T
 #define SIGHANDLER_T sighandler_t
 #elif HAVE_SIG_T
@@ -89,6 +94,11 @@ typedef struct {
 #ifdef OS_UNIX
 	uid_t uid;
 	gid_t gid;
+
+#ifdef HAVE_VSOCK
+	unsigned int vsock_cid;
+	unsigned int vsock_port;
+#endif /* HAVE_VSOCK */
 
 	int socket;
 #endif /* OS_UNIX */
@@ -138,6 +148,30 @@ server_new (const char **tokens, size_t n_tokens, const char *provider,
 	server->socket_name = socket_name;
 
 #ifdef OS_UNIX
+	if (strncmp (socket_name, "unix:path=", 10) == 0) {
+		server->socket_name = socket_name + 10;
+#ifdef HAVE_VSOCK
+	} else if (strncmp (socket_name, "vsock:", 6) == 0) {
+		if (!p11_vsock_parse_addr(socket_name + 6,
+					  &server->vsock_cid,
+					  &server->vsock_port)) {
+			p11_message ("failed to parse vsock address: '%s'",
+				     socket_name + 6);
+			free (server);
+			return NULL;
+		}
+		if (server->vsock_cid == VMADDR_CID_ANY) {
+			/* We need to print the right CID so that clients can
+			 * know the address to connect to. Just binding to
+			 * VMADDR_CID_ANY isn't stunningly useful unless the
+			 * client knows the CID through other means */
+			p11_vsock_get_local_cid (&server->vsock_cid);
+			/* On error, we'll just report 0xFFFFFFFF */
+		}
+		server->socket_name = NULL;
+#endif /* HAVE_VSOCK */
+	}
+
 	server->socket = -1;
 #endif /* OS_UNIX */
 
@@ -255,9 +289,9 @@ exec_external (int argc,
 }
 
 static int
-create_socket (const char *address,
-	       uid_t uid,
-	       gid_t gid)
+create_unix_socket (const char *address,
+		    uid_t uid,
+		    gid_t gid)
 {
 	int rc, sd;
 	struct sockaddr_un sa;
@@ -305,6 +339,43 @@ create_socket (const char *address,
 	return sd;
 }
 
+#ifdef HAVE_VSOCK
+static int
+create_vsock_socket (unsigned int cid,
+		     unsigned int port)
+{
+	int rc, sd;
+	struct sockaddr_vm sa;
+
+	memset (&sa, 0, sizeof(sa));
+	sa.svm_family = AF_VSOCK;
+	sa.svm_cid = cid;
+	sa.svm_port = port;
+
+	sd = socket (AF_VSOCK, SOCK_STREAM, 0);
+	if (sd == -1) {
+		p11_message_err (errno, "could not create socket %u:%u", cid, port);
+		return -1;
+	}
+
+	rc = bind (sd, (struct sockaddr *)&sa, sizeof(sa));
+	if (rc == -1) {
+		close (sd);
+		p11_message_err (errno, "could not bind socket %u:%u", cid, port);
+		return -1;
+	}
+
+	rc = listen (sd, 1024);
+	if (rc == -1) {
+		close (sd);
+		p11_message_err (errno, "could not listen to socket %u:%u", cid, port);
+		return 1;
+	}
+
+	return sd;
+}
+#endif /* HAVE_VSOCK */
+
 static bool
 check_credentials (int fd,
 		   uid_t uid,
@@ -339,14 +410,26 @@ check_credentials (int fd,
 }
 
 static bool
-print_environment (pid_t pid, const char *socket_path, bool csh)
+print_environment (pid_t pid, Server *server, bool csh)
 {
 	char *path, *address;
-	int rc;
+	int rc = -1;
 
-	path = p11_path_encode (socket_path);
-	rc = asprintf (&address, "unix:path=%s", path);
-	free (path);
+	if (server->socket_name) {
+		path = p11_path_encode (server->socket_name);
+		rc = asprintf (&address, "unix:path=%s", path);
+		free (path);
+#ifdef HAVE_VSOCK
+	} else if (server->vsock_cid || server->vsock_port) {
+		if (server->vsock_cid == VMADDR_CID_ANY) {
+			rc = asprintf (&address, "vsock:port=%u",
+				       server->vsock_port);
+		} else {
+			rc = asprintf (&address, "vsock:cid=%u;port=%u",
+				       server->vsock_cid, server->vsock_port);
+		}
+#endif
+	}
 	if (rc < 0)
 		return false;
 	if (csh) {
@@ -406,7 +489,7 @@ server_loop (Server *server,
 			close (STDOUT_FILENO);
 		}
 		if (pid != 0) {
-			if (!print_environment (pid, server->socket_name, csh))
+			if (!print_environment (pid, server, csh))
 				return 1;
 			exit (0);
 		}
@@ -425,18 +508,22 @@ server_loop (Server *server,
 		server->socket = SD_LISTEN_FDS_START + 0;
 	} else
 #endif
-	{
-		server->socket = create_socket (server->socket_name, server->uid, server->gid);
-		if (server->socket == -1)
-			return 1;
+	if (server->socket_name) {
+		server->socket = create_unix_socket (server->socket_name, server->uid, server->gid);
+#ifdef HAVE_VSOCK
+	} else if (server->vsock_cid || server->vsock_port) {
+		server->socket = create_vsock_socket (server->vsock_cid, server->vsock_port);
+#endif
 	}
+	if (server->socket == -1)
+		return 1;
 
 	sigprocmask (SIG_BLOCK, &blockset, NULL);
 
 	/* for testing purposes, even when started in foreground,
 	 * print the envvars */
 	if (foreground) {
-		if (!print_environment (getpid (), server->socket_name, csh))
+		if (!print_environment (getpid (), server, csh))
 			return 1;
 		fflush (stdout);
 	}
@@ -472,7 +559,8 @@ server_loop (Server *server,
 				continue;
 			}
 
-			if (!check_credentials (cfd, server->uid, server->gid))
+			if (server->socket_name &&
+			    !check_credentials (cfd, server->uid, server->gid))
 				continue;
 
 			pid = fork ();

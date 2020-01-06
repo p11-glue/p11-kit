@@ -63,6 +63,7 @@
 #include <sys/un.h>
 #include <signal.h>
 #include <unistd.h>
+#include <limits.h>
 #endif
 
 #ifdef OS_WIN32
@@ -1145,6 +1146,89 @@ rpc_unix_init (const char *remote,
 
 #endif /* OS_UNIX */
 
+#ifdef HAVE_VSOCK
+#include <linux/vm_sockets.h>
+#include <vsock.h>
+
+typedef struct {
+	p11_rpc_transport base;
+	struct sockaddr_vm sa;
+} rpc_vsock;
+
+static CK_RV
+rpc_vsock_connect (p11_rpc_client_vtable *vtable,
+		   void *init_reserved)
+{
+	rpc_vsock *run = (rpc_vsock *)vtable;
+	int fd;
+
+	fd = socket (AF_VSOCK, SOCK_STREAM, 0);
+	if (fd < 0) {
+		p11_message_err (errno, "failed to create socket for remote");
+		return CKR_GENERAL_ERROR;
+	}
+
+	if (connect (fd, (struct sockaddr *)&run->sa, sizeof (run->sa)) < 0) {
+		p11_debug_err (errno, "failed to connect to socket");
+		close (fd);
+		return CKR_DEVICE_REMOVED;
+	}
+
+	run->base.socket = rpc_socket_new (fd);
+	return_val_if_fail (run->base.socket != NULL, CKR_GENERAL_ERROR);
+
+	return CKR_OK;
+}
+
+static void
+rpc_vsock_disconnect (p11_rpc_client_vtable *vtable,
+                      void *fini_reserved)
+{
+	rpc_vsock *run = (rpc_vsock *)vtable;
+
+	if (run->base.socket)
+		rpc_socket_close (run->base.socket);
+
+	/* Do the common disconnect stuff */
+	rpc_transport_disconnect (vtable, fini_reserved);
+}
+
+static void
+rpc_vsock_free (void *data)
+{
+	rpc_vsock *run = data;
+	rpc_vsock_disconnect (data, NULL);
+	rpc_transport_uninit (&run->base);
+	free (run);
+}
+
+static p11_rpc_transport *
+rpc_vsock_init (unsigned int cid,
+		unsigned int port,
+		const char *name)
+{
+	rpc_vsock *run;
+
+	run = calloc (1, sizeof (rpc_vsock));
+	return_val_if_fail (run != NULL, NULL);
+
+	memset (&run->sa, 0, sizeof (run->sa));
+	run->sa.svm_family = AF_VSOCK;
+	run->sa.svm_cid = cid;
+	run->sa.svm_port = port;
+
+	run->base.vtable.connect = rpc_vsock_connect;
+	run->base.vtable.disconnect = rpc_vsock_disconnect;
+	run->base.vtable.transport = rpc_transport_buffer;
+	rpc_transport_init (&run->base, name, rpc_vsock_free);
+
+	p11_debug ("initialized rpc socket: vsock:cid=%u;port=%u",
+		   cid, port);
+	return &run->base;
+}
+
+#endif /* HAVE_VSOCK */
+
 p11_rpc_transport *
 p11_rpc_transport_new (p11_virtual *virt,
                        const char *remote,
@@ -1170,6 +1254,19 @@ p11_rpc_transport_new (p11_virtual *virt,
 		rpc = rpc_unix_init (path, name);
 		free (path);
 #endif /* OS_UNIX */
+#ifdef HAVE_VSOCK
+	} else if (strncmp (remote, "vsock:", 6) == 0) {
+		unsigned int cid = 0, port = 0;
+
+		if (!p11_vsock_parse_addr (remote + 6, &cid, &port) ||
+		    cid == VMADDR_CID_ANY) {
+			p11_message ("failed to parse vsock address: '%s'",
+				     remote + 6);
+			return NULL;
+		}
+
+		rpc = rpc_vsock_init (cid, port, name);
+#endif /* HAVE_VSOCK */
 	} else {
 		p11_message ("remote not supported: %s", remote);
 		return NULL;

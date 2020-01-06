@@ -14,7 +14,8 @@ libp11_common_sources = [
   'message.c',
   'path.c',
   'runtime.c',
-  'url.c'
+  'url.c',
+  'vsock.c'
 ]
 
 libp11_common = static_library('p11-common', libp11_common_sources,
