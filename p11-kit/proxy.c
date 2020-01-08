@@ -278,8 +278,11 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 		return_val_if_fail (count == 0 || slots != NULL, CKR_GENERAL_ERROR);
 
 		if (count > 0) {
-			py->mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
-			return_val_if_fail (py->mappings != NULL, CKR_HOST_MEMORY);
+			Mapping *new_mappings;
+
+			new_mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
+			return_val_if_fail (new_mappings != NULL, CKR_HOST_MEMORY);
+			py->mappings = new_mappings;
 
 			/* And now add a mapping for each of those slots */
 			for (i = 0; i < count; ++i) {

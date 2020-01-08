@@ -454,6 +454,7 @@ p11_kit_iter_begin_with (P11KitIter *iter,
 		iter->keep_session = 1;
 
 	} else if (slot != 0) {
+		CK_SLOT_ID *slots;
 
 		/*
 		 * Limit to this slot. Initialize as if we're ready to use the
@@ -461,8 +462,9 @@ p11_kit_iter_begin_with (P11KitIter *iter,
 		 */
 
 		iter->module = module;
-		iter->slots = realloc (iter->slots, sizeof (CK_SLOT_ID));
-		return_if_fail (iter->slots != NULL);
+		slots = realloc (iter->slots, sizeof (CK_SLOT_ID));
+		return_if_fail (slots != NULL);
+		iter->slots = slots;
 		iter->slots[0] = slot;
 		iter->num_slots = 1;
 		iter->searched = 1;
@@ -541,12 +543,15 @@ move_next_session (P11KitIter *iter)
 		}
 
 		if (iter->with_slots || iter->with_tokens || iter->with_objects) {
+			CK_SLOT_ID *slots;
+
 			rv = (iter->module->C_GetSlotList) (CK_TRUE, NULL, &num_slots);
 			if (rv != CKR_OK)
 				return finish_iterating (iter, rv);
 
-			iter->slots = realloc (iter->slots, sizeof (CK_SLOT_ID) * (num_slots + 1));
-			return_val_if_fail (iter->slots != NULL, CKR_HOST_MEMORY);
+			slots = realloc (iter->slots, sizeof (CK_SLOT_ID) * (num_slots + 1));
+			return_val_if_fail (slots != NULL, CKR_HOST_MEMORY);
+			iter->slots = slots;
 
 			rv = (iter->module->C_GetSlotList) (CK_TRUE, iter->slots, &num_slots);
 			if (rv != CKR_OK)
@@ -697,9 +702,12 @@ p11_kit_iter_next (P11KitIter *iter)
 
 		for (;;) {
 			if (iter->max_objects - iter->num_objects == 0) {
+				CK_OBJECT_HANDLE *objects;
+
 				iter->max_objects = iter->max_objects ? iter->max_objects * 2 : 64;
-				iter->objects = realloc (iter->objects, iter->max_objects * sizeof (CK_ULONG));
-				return_val_if_fail (iter->objects != NULL, CKR_HOST_MEMORY);
+				objects = realloc (iter->objects, iter->max_objects * sizeof (CK_ULONG));
+				return_val_if_fail (objects != NULL, CKR_HOST_MEMORY);
+				iter->objects = objects;
 			}
 
 			batch = iter->max_objects - iter->num_objects;

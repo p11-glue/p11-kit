@@ -269,9 +269,13 @@ bucket_insert (index_bucket *bucket,
 
 	alloc = alloc_size (bucket->num);
 	if (bucket->num + 1 > alloc) {
+		CK_OBJECT_HANDLE *elem;
+
 		alloc = alloc ? alloc * 2 : 1;
 		return_if_fail (alloc != 0);
-		bucket->elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		return_if_fail (elem != NULL);
+		bucket->elem = elem;
 	}
 
 	return_if_fail (bucket->elem != NULL);
@@ -289,9 +293,13 @@ bucket_push (index_bucket *bucket,
 
 	alloc = alloc_size (bucket->num);
 	if (bucket->num + 1 > alloc) {
+		CK_OBJECT_HANDLE *elem;
+
 		alloc = alloc ? alloc * 2 : 1;
 		return_val_if_fail (alloc != 0, false);
-		bucket->elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		return_val_if_fail (elem != NULL, false);
+		bucket->elem = elem;
 	}
 
 	return_val_if_fail (bucket->elem != NULL, false);
