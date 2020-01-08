@@ -102,6 +102,7 @@ attrs_build (CK_ATTRIBUTE *attrs,
 	CK_ULONG j;
 	CK_ULONG i;
 	size_t length;
+	void **new_memory;
 
 	/* How many attributes we already have */
 	current = p11_attrs_count (attrs);
@@ -109,8 +110,9 @@ attrs_build (CK_ATTRIBUTE *attrs,
 	/* Reallocate for how many we need */
 	length = current + count_to_add;
 	return_val_if_fail (current <= length && length < SIZE_MAX, NULL);
-	attrs = reallocarray (attrs, length + 1, sizeof (CK_ATTRIBUTE));
-	return_val_if_fail (attrs != NULL, NULL);
+	new_memory = reallocarray (attrs, length + 1, sizeof (CK_ATTRIBUTE));
+	return_val_if_fail (new_memory != NULL, NULL);
+	attrs = new_memory;
 
 	at = current;
 	for (i = 0; i < count_to_add; i++) {

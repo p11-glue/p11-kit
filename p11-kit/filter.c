@@ -96,11 +96,12 @@ static bool
 filter_add_slot (FilterData *filter, CK_SLOT_ID slot, const CK_TOKEN_INFO *token)
 {
 	if (filter->n_slots >= filter->max_slots) {
+		FilterSlot *slots;
 		filter->max_slots = filter->max_slots * 2 + 1;
-		filter->slots = realloc (filter->slots,
-					 filter->max_slots * sizeof (FilterSlot));
-		if (filter->slots == NULL)
-			return false;
+		slots = realloc (filter->slots,
+				 filter->max_slots * sizeof (FilterSlot));
+		return_val_if_fail (slots != NULL, false);
+		filter->slots = slots;
 	}
 	filter->slots[filter->n_slots].slot = slot;
 	filter->slots[filter->n_slots].token = token;
