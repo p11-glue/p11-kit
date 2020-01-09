@@ -288,6 +288,8 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 			for (i = 0; i < count; ++i) {
 				/* Reuse the existing mapping if any */
 				for (j = 0; j < n_mappings; ++j) {
+					/* cppcheck-suppress nullPointer symbolName=mappings */
+					/* false-positive: https://trac.cppcheck.net/ticket/9573 */
 					if (mappings[j].funcs == funcs &&
 					    mappings[j].real_slot == slots[i])
 						break;
