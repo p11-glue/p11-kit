@@ -16,19 +16,6 @@ fi
 
 set -x
 
-gettextize=$(which gettextize || true)
-if test -z "$gettextize"; then
-	echo "Couldn't find gettextize" >&2
-	exit 1
-fi
-
-# Copied from avahi's autogen.sh to work around gettext braindamage
-rm -f Makefile.am~ configure.ac~
-# Evil, evil, evil, evil hack
-sed 's/read dummy/\#/' $gettextize | sh -s -- --copy --force --no-changelog
-test -f Makefile.am~ && mv Makefile.am~ Makefile.am
-test -f configure.ac~ && mv configure.ac~ configure.ac
-
 autoreconf --force --install --verbose
 if test x"$NOCONFIGURE" = x; then
   cd $oldpwd
