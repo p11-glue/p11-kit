@@ -47,6 +47,10 @@ PKG_PROG_PKG_CONFIG
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
+AM_GNU_GETTEXT_VERSION([0.19.8])
+m4_ifdef([AM_GNU_GETTEXT_REQUIRE_VERSION],[
+AM_GNU_GETTEXT_REQUIRE_VERSION([0.19.8])
+])
 
 if test "$enable_static" = "yes"; then
 	AC_MSG_ERROR([p11-kit cannot be used as a static library])
