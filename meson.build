@@ -43,6 +43,10 @@ endif
 conf.set_quoted('SHLEXT', shlext)
 conf.set_quoted('EXEEXT', exeext)
 
+if host_machine.endian() == 'big'
+  conf.set('WORDS_BIGENDIAN', 1)
+endif
+
 if get_option('debug')
   conf.set('WITH_DEBUG', 1)
   conf.set('_DEBUG', 1)
