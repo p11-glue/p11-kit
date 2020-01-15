@@ -129,7 +129,7 @@ if host_system != 'windows'
 
   if cc.has_header('locale.h')
     conf.set('HAVE_LOCALE_H', 1)
-    if cc.has_header_symbol('locale.h', 'locale_t')
+    if cc.has_type('locale_t', prefix: '#include <locale.h>')
       conf.set('HAVE_LOCALE_T', 1)
       if cc.has_function('newlocale', prefix: '#include <locale.h>')
         conf.set('HAVE_NEWLOCALE', 1)
@@ -236,7 +236,7 @@ struct sockaddr_vm sa = { .svm_family = AF_VSOCK, .svm_cid = VMADDR_CID_ANY };
 
   foreach h : ['sys/types.h', 'signal.h']
     foreach t : ['sighandler_t', 'sig_t', '__sighandler_t']
-      if cc.has_header_symbol(h, t)
+      if cc.has_type(t, prefix: '#include <@0@>'.format(h))
         define = 'HAVE_' + t.underscorify().to_upper()
         conf.set(define, 1)
       endif
