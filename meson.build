@@ -244,6 +244,16 @@ struct sockaddr_vm sa = { .svm_family = AF_VSOCK, .svm_cid = VMADDR_CID_ANY };
   endforeach
 endif
 
+headers = [
+  'stdbool.h',
+]
+
+foreach h : headers
+  if cc.has_header(h)
+    conf.set('HAVE_' + h.underscorify().to_upper(), 1)
+  endif
+endforeach
+
 functions = [
   'asprintf',
   'basename',
