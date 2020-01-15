@@ -102,7 +102,7 @@ attrs_build (CK_ATTRIBUTE *attrs,
 	CK_ULONG j;
 	CK_ULONG i;
 	size_t length;
-	void **new_memory;
+	void *new_memory;
 
 	/* How many attributes we already have */
 	current = p11_attrs_count (attrs);
