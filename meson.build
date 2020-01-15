@@ -262,6 +262,11 @@ foreach f : functions
   endif
 endforeach
 
+conf.set10('HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME',
+           cc.has_header_symbol('errno.h',
+                                'program_invocation_short_name',
+                                prefix: '#define _GNU_SOURCE'))
+
 conf.set10('HAVE_DECL_ASPRINTF',
            cc.has_header_symbol('stdio.h', 'asprintf',
                                 prefix: '#define _GNU_SOURCE'))
