@@ -1,3 +1,12 @@
+0.23.19 (stable)
+ * common: add Russian PKCS#11 extensions to pkcs11x.h header [PR#255]
+ * Add simple bash completion for provided commands [PR#258]
+ * Unbreak list matching in enable-in and disable-in [PR#262]
+ * Fix RPC when length-s are 0 [PR#259]
+ * rpc: Add vsock transport support [PR#270]
+ * trust: Support CKA_NSS_{SERVER,EMAIL}_DISTRUST_AFTER [PR#265]
+ * Build fixes [PR#271, PR#272, PR#273, ...]
+
 0.23.18 (stable)
  * rpc: Allow empty CK_DATE value [PR#253]
  * build: Meson fixes [PR#245]
