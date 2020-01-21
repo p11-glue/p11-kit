@@ -286,6 +286,10 @@ foreach name, sources : mock_sources
   shared_module(name,
                 sources,
                 name_prefix: '',
+                link_args: p11_module_ldflags,
+                link_depends: [p11_module_symbol_map,
+                               p11_module_symbol_def],
+                vs_module_defs: p11_module_symbol_def,
                 dependencies: [libp11_test_dep])
 endforeach
 
