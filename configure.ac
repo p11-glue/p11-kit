@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
-	[0.23.18],
+	[0.23.19],
 	[https://github.com/p11-glue/p11-kit/issues],
 	[p11-kit],
 	[https://p11-glue.github.io/p11-glue/p11-kit.html])
