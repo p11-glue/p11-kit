@@ -116,6 +116,8 @@ frob-*
 /po/en@boldquot*
 /po/en@quot*
 /po/Rules-quot
+/po/insert-header.sin
+/po/remove-potcdate.sin
 
 /trust/trust
 /trust/trust-extract-compat
