@@ -431,6 +431,10 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 		the_sessions = p11_dict_new (p11_dict_direct_hash,
 		                             p11_dict_direct_equal,
 		                             NULL, free_session);
+		if (!the_sessions) {
+			ret = CKR_HOST_MEMORY;
+			goto done;
+		}
 
 		module_reset_objects (MOCK_SLOT_ONE_ID);
 
