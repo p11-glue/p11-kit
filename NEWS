@@ -1,3 +1,6 @@
+0.23.20 (stable)
+ * Revert "Fix RPC when length-s are 0" changes [PR#276]
+
 0.23.19 (stable)
  * common: add Russian PKCS#11 extensions to pkcs11x.h header [PR#255]
  * Add simple bash completion for provided commands [PR#258]
