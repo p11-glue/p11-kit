@@ -570,7 +570,7 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 #define IN_BYTE_BUFFER(arr, len) \
 	if (len == NULL) \
 		{ _ret = CKR_ARGUMENTS_BAD; goto _cleanup; } \
-	if (!p11_rpc_message_write_byte_buffer (&_msg, arr, len)) \
+	if (!p11_rpc_message_write_byte_buffer (&_msg, arr ? *len : 0)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_BYTE_ARRAY(arr, len) \
