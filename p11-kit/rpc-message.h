@@ -279,8 +279,7 @@ bool             p11_rpc_message_write_space_string      (p11_rpc_message *msg,
                                                                    CK_ULONG length);
 
 bool             p11_rpc_message_write_byte_buffer       (p11_rpc_message *msg,
-                                                          CK_BYTE_PTR array,
-                                                          CK_ULONG_PTR n_array);
+                                                          CK_ULONG count);
 
 bool             p11_rpc_message_write_byte_array        (p11_rpc_message *msg,
                                                           CK_BYTE_PTR arr,
