@@ -241,20 +241,14 @@ p11_rpc_message_write_attribute_buffer (p11_rpc_message *msg,
 	/* Write the number of items */
 	p11_rpc_buffer_add_uint32 (msg->output, num);
 
-	/* Is arr not null ? */
-	p11_rpc_buffer_add_byte (msg->output, arr ? 0 : 1);
-
 	for (i = 0; i < num; ++i) {
 		attr = &(arr[i]);
 
 		/* The attribute type */
 		p11_rpc_buffer_add_uint32 (msg->output, attr->type);
 
-		/* rpc_server.c:value_is_null, is the value buffer not NULL ? */
-		p11_rpc_buffer_add_byte (msg->output, attr->pValue ? 0 : 1);
-
 		/* And the attribute buffer length */
-		p11_rpc_buffer_add_uint32 (msg->output, attr->ulValueLen);
+		p11_rpc_buffer_add_uint32 (msg->output, attr->pValue ? attr->ulValueLen : 0);
 	}
 
 	return !p11_buffer_failed (msg->output);
