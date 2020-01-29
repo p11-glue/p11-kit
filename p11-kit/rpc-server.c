@@ -231,7 +231,6 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 {
 	CK_ATTRIBUTE_PTR attrs;
 	uint32_t n_attrs, i;
-	uint8_t attrs_is_null;
 	uint32_t value;
 
 	assert (msg != NULL);
@@ -246,16 +245,6 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &n_attrs))
 		return PARSE_ERROR;
 
-	/* Is attrs pointer null or not ? */
-	if (!p11_rpc_buffer_get_byte (msg->input, &msg->parsed, &attrs_is_null))
-		return PARSE_ERROR;
-
-	if (attrs_is_null) {
-		*result = NULL;
-		*n_result = n_attrs;
-		return CKR_OK;
-	}
-
 	/* Allocate memory for the attribute structures */
 	attrs = p11_rpc_message_alloc_extra (msg, n_attrs * sizeof (CK_ATTRIBUTE));
 	if (attrs == NULL)
@@ -263,7 +252,6 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 
 	/* Now go through and fill in each one */
 	for (i = 0; i < n_attrs; ++i) {
-		uint8_t value_is_null;
 
 		/* The attribute type */
 		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
@@ -271,22 +259,18 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 
 		attrs[i].type = value;
 
-		/* Is the value buffer not NULL ?  */
-		if (!p11_rpc_buffer_get_byte (msg->input, &msg->parsed, &value_is_null))
-			return PARSE_ERROR;
-
 		/* The number of bytes to allocate */
 		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
 			return PARSE_ERROR;
 
-		attrs[i].ulValueLen = value;
-
-		if (value_is_null) {
+		if (value == 0) {
 			attrs[i].pValue = NULL;
+			attrs[i].ulValueLen = 0;
 		} else {
 			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, value);
 			if (!attrs[i].pValue)
 				return CKR_DEVICE_MEMORY;
+			attrs[i].ulValueLen = value;
 		}
 	}
 
