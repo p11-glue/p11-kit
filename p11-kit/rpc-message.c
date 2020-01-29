@@ -380,16 +380,14 @@ p11_rpc_message_write_byte_array (p11_rpc_message *msg,
 
 bool
 p11_rpc_message_write_ulong_buffer (p11_rpc_message *msg,
-                                    CK_ULONG_PTR array,
-                                    CK_ULONG_PTR n_array)
+                                    CK_ULONG count)
 {
 	assert (msg != NULL);
 	assert (msg->output != NULL);
 
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fu"));
-	p11_rpc_buffer_add_byte (msg->output, array ? 0 : 1);
-	p11_rpc_buffer_add_uint32 (msg->output, *n_array);
+	p11_rpc_buffer_add_uint32 (msg->output, count);
 	return !p11_buffer_failed (msg->output);
 }
 
