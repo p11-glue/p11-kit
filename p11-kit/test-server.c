@@ -264,36 +264,6 @@ test_open_session_write_protected (void *unused)
 	p11_kit_module_release (module);
 }
 
-static void
-test_no_slots (void *unused)
-{
-	CK_FUNCTION_LIST_PTR module;
-	CK_SLOT_ID slots[32];
-	CK_ULONG count;
-	CK_RV rv;
-
-	module = p11_kit_module_load (P11_MODULE_PATH "/p11-kit-client" SHLEXT, 0);
-	assert (module != NULL);
-
-	rv = p11_kit_module_initialize (module);
-	assert (rv == CKR_OK);
-
-	count = 0;
-	rv = module->C_GetSlotList (CK_TRUE, NULL, &count);
-	assert (rv == CKR_OK);
-	assert_num_eq (0, count);
-
-	count = 0;
-	rv = module->C_GetSlotList (CK_TRUE, slots, &count);
-	assert (rv == CKR_OK);
-	assert_num_eq (0, count);
-
-	rv = p11_kit_module_finalize (module);
-	assert (rv == CKR_OK);
-
-	p11_kit_module_release (module);
-}
-
 int
 main (int argc,
       char *argv[])
@@ -313,11 +283,6 @@ main (int argc,
 		"pkcs11:?write-protected=yes",
 		1
 	};
-	struct fixture with_no_slots = {
-		P11_MODULE_PATH "/mock-eight" SHLEXT,
-		"pkcs11:",
-		0
-	};
 
 	p11_library_init ();
 	mock_module_init ();
@@ -331,7 +296,6 @@ main (int argc,
 	p11_testx (test_initialize, (void *)&without_provider, "/server/all/initialize");
 	p11_testx (test_initialize_no_address, (void *)&without_provider, "/server/all/initialize-no-address");
 	p11_testx (test_open_session, (void *)&without_provider, "/server/all/open-session");
-	p11_testx (test_no_slots, (void *)&with_no_slots, "/server/no-slots");
 
 	return p11_test_run (argc, argv);
 }
