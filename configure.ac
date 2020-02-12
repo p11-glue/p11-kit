@@ -538,6 +538,24 @@ AC_SUBST(LCOV)
 AC_SUBST(GCOV)
 AC_SUBST(GENHTML)
 
+# --------------------------------------------------------------------
+# Deterministic slots
+
+AC_MSG_CHECKING([whether to use deterministic slot IDs])
+AC_ARG_ENABLE([deterministic-slots],
+		[AS_HELP_STRING([--enable-deterministic_slots],
+		[Whether to use deterministic slots])],
+		[],
+		[enable_deterministic_slots=no])
+
+AC_MSG_RESULT([$enable_deterministic_slots])
+
+AS_IF([test "x$enable_deterministic_slots" = "xyes"], [
+	AC_DEFINE_UNQUOTED(WITH_DETERMINISTIC_SLOTS, 1, [Use deterministic slots])
+])
+
+AM_CONDITIONAL(WITH_DETERMINISTIC_SLOTS, [test "x$enable_deterministic_slots" = "xyes"])
+
 # ---------------------------------------------------------------------
 
 P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
@@ -633,6 +651,7 @@ AC_MSG_NOTICE([build options:
     User global config:              $p11_user_config_file
     User module config directory:    $p11_user_config_modules
     Load relative module paths from: $p11_module_path
+    Use deterministic slots:         $enable_deterministic_slots
 
     With libtasn1 dependency:        $with_libtasn1
     With libffi:                     $with_libffi

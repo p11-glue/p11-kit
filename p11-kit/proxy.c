@@ -51,6 +51,10 @@
 #include "proxy.h"
 #include "virtual.h"
 
+#ifdef WITH_DETERMINISTIC_SLOTS
+#include "hash.h"
+#endif
+
 #include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
@@ -108,6 +112,26 @@ static State *all_instances = NULL;
  * PKCS#11 PROXY MODULE
  */
 
+#ifdef WITH_DETERMINISTIC_SLOTS
+static CK_RV
+map_slot_deterministic (Proxy *px,
+                        CK_SLOT_ID slot,
+                        Mapping *mapping)
+{
+	unsigned int i;
+
+	/* If mappings were ordered, we could use bsearch */
+	for (i = 0; i < px->n_mappings; i++) {
+		if (px->mappings[i].wrap_slot == slot) {
+			memcpy (mapping, &px->mappings[i], sizeof(Mapping));
+			return CKR_OK;
+		}
+	}
+
+	return CKR_SLOT_ID_INVALID;
+}
+#endif
+
 static CK_RV
 map_slot_unlocked (Proxy *px,
                    CK_SLOT_ID slot,
@@ -116,6 +140,7 @@ map_slot_unlocked (Proxy *px,
 	assert (px != NULL);
 	assert (mapping != NULL);
 
+#ifndef WITH_DETERMINISTIC_SLOTS
 	if (slot < MAPPING_OFFSET)
 		return CKR_SLOT_ID_INVALID;
 	slot -= MAPPING_OFFSET;
@@ -129,6 +154,9 @@ map_slot_unlocked (Proxy *px,
 		memcpy (mapping, &px->mappings[slot], sizeof (Mapping));
 		return CKR_OK;
 	}
+#else
+	return map_slot_deterministic(px, slot, mapping);
+#endif
 }
 
 static CK_RV
@@ -254,9 +282,14 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 	CK_FUNCTION_LIST_PTR *f;
 	CK_FUNCTION_LIST_PTR funcs;
 	CK_SLOT_ID_PTR slots;
+	CK_SLOT_ID wrap_slot;
 	CK_ULONG i, count;
 	unsigned int j;
 	CK_RV rv = CKR_OK;
+#ifdef WITH_DETERMINISTIC_SLOTS
+	CK_SLOT_INFO s_info;
+	CK_TOKEN_INFO t_info;
+#endif
 
 	for (f = py->inited; *f; ++f) {
 		funcs = *f;
@@ -295,10 +328,46 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 						break;
 				}
 				py->mappings[py->n_mappings].funcs = funcs;
-				py->mappings[py->n_mappings].wrap_slot =
-					(n_mappings == 0 || j == n_mappings) ?
-					py->n_mappings + MAPPING_OFFSET :
-					mappings[j].wrap_slot;
+				if (n_mappings == 0 || j == n_mappings) {
+#ifdef WITH_DETERMINISTIC_SLOTS
+					rv = (funcs->C_GetSlotInfo) (slots[i], &s_info);
+					if (rv != CKR_OK)
+						break;
+					if (s_info.flags & CKF_REMOVABLE_DEVICE) {
+						/* If the slot contains a removable token, use only the
+						 * slot info to generate the slot ID */
+						p11_hash_murmur3 (&wrap_slot,
+										  s_info.slotDescription, 64,
+										  s_info.manufacturerID, 32,
+										  &s_info.hardwareVersion, sizeof(CK_VERSION),
+										  &s_info.firmwareVersion, sizeof(CK_VERSION),
+										  &slots[i], sizeof(CK_SLOT_ID),
+										  NULL);
+					} else {
+						/* Otherwise, include the token info */
+						rv = (funcs->C_GetTokenInfo) (slots[i], &t_info);
+						if (rv != CKR_OK)
+							break;
+						p11_hash_murmur3 (&wrap_slot,
+										  s_info.slotDescription, 64,
+										  s_info.manufacturerID, 32,
+										  &s_info.hardwareVersion, sizeof(CK_VERSION),
+										  &s_info.firmwareVersion, sizeof(CK_VERSION),
+										  &slots[i], sizeof(CK_SLOT_ID),
+										  t_info.label, 32,
+										  t_info.manufacturerID, 32,
+										  t_info.model, 16,
+										  t_info.serialNumber, 16,
+										  NULL);
+					}
+#else
+					wrap_slot = py->n_mappings + MAPPING_OFFSET;
+#endif
+				} else {
+					wrap_slot = mappings[j].wrap_slot;
+				}
+
+				py->mappings[py->n_mappings].wrap_slot = wrap_slot;
 				py->mappings[py->n_mappings].real_slot = slots[i];
 				++py->n_mappings;
 			}

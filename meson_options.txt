@@ -49,3 +49,7 @@ option('gtk_doc', type : 'boolean',
 option('man', type : 'boolean',
        value : false,
        description : 'Build manpages using xsltproc')
+
+option('deterministic_slots', type : 'boolean',
+       value : false,
+       description : 'Whether to use deterministic slot IDs')

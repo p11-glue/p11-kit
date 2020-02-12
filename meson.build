@@ -53,6 +53,7 @@ if get_option('debug')
 endif
 
 conf.set10('WITH_STRICT', get_option('strict'))
+conf.set10('WITH_DETERMINISTIC_SLOTS', get_option('deterministic_slots'))
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')

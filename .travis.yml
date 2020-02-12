@@ -28,6 +28,10 @@ matrix:
       sudo: required
       services: docker
       env: PROFILE=cppcheck SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="cppcheck"
+    - os: linux
+      sudo: required
+      services: docker
+      env: MESON_BUILD_OPTS="-Ddeterministic_slots=true" SRCDIR=/srcdir BUILDDIR=/builddir
     - os: osx
 
 language: c
