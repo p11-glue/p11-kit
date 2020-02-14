@@ -236,6 +236,7 @@ teardown (void *unused)
 #define ENABLED_PREFIX "enable-in: test-proxy-suffix, p11-kit-proxy-suffix, test-proxy, p11-kit-proxy\n"
 #define EIGHT_MODULE "module: mock-eight" SHLEXT "\n"
 #define NINE_MODULE "module: mock-nine" SHLEXT "\n"
+#define TEN_MODULE "module: mock-ten" SHLEXT "\n"
 
 static CK_ULONG
 load_modules_and_count_slots (void)
@@ -393,6 +394,52 @@ test_slot_event (void)
 	p11_proxy_module_cleanup ();
 }
 
+static void
+test_deterministic_slots (void)
+{
+	CK_FUNCTION_LIST_PTR proxy;
+	CK_SLOT_ID slots[32];
+	CK_ULONG count = 32;
+	CK_SLOT_INFO s_info;
+	CK_TOKEN_INFO t_info;
+	CK_RV rv;
+
+	p11_test_file_write (test.directory, "ten.module", TEN_MODULE, strlen (TEN_MODULE));
+
+	rv = C_GetFunctionList (&proxy);
+	assert (rv == CKR_OK);
+
+	assert (p11_proxy_module_check (proxy));
+
+	rv = proxy->C_Initialize (NULL);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetSlotList (CK_FALSE, slots, &count);
+	assert (rv == CKR_OK);
+	assert_num_eq (count, 3);
+
+#ifdef WITH_DETERMINISTIC_SLOTS
+	assert_num_eq (slots[0], 1755383279);
+	assert_num_eq (slots[1], 3317702569);
+	assert_num_eq (slots[2], 1922237973);
+#else
+	assert_num_cmp (slots[0], !=, 1755383279);
+	assert_num_cmp (slots[1], !=, 3317702569);
+	assert_num_cmp (slots[2], !=, 1922237973);
+#endif
+
+	rv = proxy->C_GetSlotInfo (slots[2], &s_info);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_GetTokenInfo (slots[2], &t_info);
+	assert (rv == CKR_OK);
+
+	rv = proxy->C_Finalize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	p11_proxy_module_cleanup ();
+}
+
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
@@ -481,6 +528,7 @@ main (int argc,
 	p11_test (test_no_slot, "/proxy/no-slot");
 	p11_test (test_slot_appear, "/proxy/slot-appear");
 	p11_test (test_slot_event, "/proxy/slot-event");
+	p11_test (test_deterministic_slots, "/proxy/deterministic-slots");
 
 	test_mock_add_tests ("/proxy");
 
