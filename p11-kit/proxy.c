@@ -83,6 +83,7 @@ typedef struct {
 	p11_dict *sessions;
 	CK_FUNCTION_LIST **inited;
 	unsigned int forkid;
+	CK_SLOT_ID last_id;
 } Proxy;
 
 typedef struct _State {
@@ -113,22 +114,20 @@ map_slot_unlocked (Proxy *px,
                    CK_SLOT_ID slot,
                    Mapping *mapping)
 {
+	unsigned int i;
+
 	assert (px != NULL);
 	assert (mapping != NULL);
 
-	if (slot < MAPPING_OFFSET)
-		return CKR_SLOT_ID_INVALID;
-	slot -= MAPPING_OFFSET;
-
-	if (slot > px->n_mappings) {
-		return CKR_SLOT_ID_INVALID;
-	} else if (px->n_mappings == 0) {
-		return CKR_SLOT_ID_INVALID;
-	} else {
-		assert (px->mappings);
-		memcpy (mapping, &px->mappings[slot], sizeof (Mapping));
-		return CKR_OK;
+	for (i = 0; i < px->n_mappings; i++) {
+		assert (px->mappings != NULL);
+		if (px->mappings[i].wrap_slot == slot) {
+			memcpy (mapping, &px->mappings[i], sizeof(Mapping));
+			return CKR_OK;
+		}
 	}
+
+	return CKR_SLOT_ID_INVALID;
 }
 
 static CK_RV
@@ -279,29 +278,47 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 
 		if (count > 0) {
 			Mapping *new_mappings;
+			CK_SLOT_ID_PTR new_slots;
+			int new_slots_count = 0;
 
+			new_slots = calloc (count, sizeof(CK_SLOT_ID));
+			return_val_if_fail (new_slots != NULL, CKR_HOST_MEMORY);
 			new_mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
 			return_val_if_fail (new_mappings != NULL, CKR_HOST_MEMORY);
 			py->mappings = new_mappings;
 
-			/* And now add a mapping for each of those slots */
+			/* Reuse the existing mapping if any */
 			for (i = 0; i < count; ++i) {
-				/* Reuse the existing mapping if any */
 				for (j = 0; j < n_mappings; ++j) {
 					/* cppcheck-suppress nullPointer symbolName=mappings */
 					/* false-positive: https://trac.cppcheck.net/ticket/9573 */
 					if (mappings[j].funcs == funcs &&
-					    mappings[j].real_slot == slots[i])
+					    mappings[j].real_slot == slots[i]) {
+						py->mappings[py->n_mappings].funcs = funcs;
+						py->mappings[py->n_mappings].real_slot = slots[i];
+						py->mappings[py->n_mappings].wrap_slot =
+							mappings[j].wrap_slot;
+						++py->n_mappings;
 						break;
+					}
 				}
+				if (n_mappings == 0 || j == n_mappings) {
+					new_slots[new_slots_count] = slots[i];
+					++new_slots_count;
+				}
+			}
+
+			/* And now add a mapping for each new slot */
+			for (i = 0; i < new_slots_count; ++i) {
+				++py->last_id;
 				py->mappings[py->n_mappings].funcs = funcs;
 				py->mappings[py->n_mappings].wrap_slot =
-					(n_mappings == 0 || j == n_mappings) ?
-					py->n_mappings + MAPPING_OFFSET :
-					mappings[j].wrap_slot;
-				py->mappings[py->n_mappings].real_slot = slots[i];
+					py->last_id + MAPPING_OFFSET;
+				py->mappings[py->n_mappings].real_slot = new_slots[i];
 				++py->n_mappings;
 			}
+
+			free(new_slots);
 		}
 
 		free (slots);
@@ -320,6 +337,7 @@ proxy_create (Proxy **res, CK_FUNCTION_LIST **loaded,
 	return_val_if_fail (py != NULL, CKR_HOST_MEMORY);
 
 	py->forkid = p11_forkid;
+	py->last_id = 0;
 
 	py->inited = modules_dup (loaded);
 	if (py->inited == NULL) {
