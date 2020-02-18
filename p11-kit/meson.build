@@ -275,7 +275,8 @@ mock_sources = {
   'mock-five': ['mock-module-ep3.c'],
   'mock-seven': ['mock-module-ep5.c'],
   'mock-eight': ['mock-module-ep6.c'],
-  'mock-nine': ['mock-module-ep7.c']
+  'mock-nine': ['mock-module-ep7.c'],
+  'mock-ten': ['mock-module-ep8.c']
 }
 
 if host_system != 'windows'
