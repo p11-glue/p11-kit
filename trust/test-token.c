@@ -40,6 +40,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include "attrs.h"
 #include "debug.h"
 #include "parser.h"
@@ -58,6 +62,7 @@ struct {
 	p11_index *index;
 	p11_parser *parser;
 	char *directory;
+	char *unwritable;
 } test;
 
 static void
@@ -81,6 +86,22 @@ setup_temp (void *unused)
 }
 
 static void
+setup_writable (void *unused)
+{
+	setup_temp (unused);
+
+	test.unwritable = p11_path_build (test.directory, "unwritable", NULL);
+#ifdef OS_UNIX
+	if (mkdir (test.unwritable, S_IRWXU) < 0)
+#else
+	if (mkdir (test.unwritable) < 0)
+#endif
+		assert_fail ("mkdir() failed", test.unwritable);
+
+	chmod (test.unwritable, 0);
+}
+
+static void
 teardown (void *path)
 {
 	p11_token_free (test.token);
@@ -93,6 +114,15 @@ teardown_temp (void *unused)
 	teardown (test.directory);
 	free (test.directory);
 	memset (&test, 0, sizeof (test));
+}
+
+static void
+teardown_writable (void *unused)
+{
+	chmod (test.unwritable, 0644);
+	free (test.unwritable);
+
+	teardown_temp (unused);
 }
 
 static void
@@ -237,26 +267,31 @@ static void
 test_not_writable (void)
 {
 	p11_token *token;
+	char *path;
+	int fd;
 
-#ifdef OS_UNIX
-	if (getuid () != 0) {
-		token = p11_token_new (333, "/", "Label", P11_TOKEN_FLAG_NONE);
-		assert (!p11_token_is_writable (token));
-		p11_token_free (token);
+	path = p11_path_build (test.unwritable, "test", NULL);
+	fd = open (path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+	free (path);
+
+	if (fd >= 0) {
+		close (fd);
+		assert_skip ("cannot perform non-writable test", NULL);
 	}
-#endif
+
+	token = p11_token_new (333, test.unwritable, "Label", P11_TOKEN_FLAG_NONE);
+	assert (!p11_token_is_writable (token));
+	p11_token_free (token);
 
 	token = p11_token_new (333, "", "Label", P11_TOKEN_FLAG_NONE);
 	assert (!p11_token_is_writable (token));
 	p11_token_free (token);
 
-#ifdef OS_UNIX
-	if (getuid () != 0) {
-		token = p11_token_new (333, "/non-existant", "Label", P11_TOKEN_FLAG_NONE);
-		assert (!p11_token_is_writable (token));
-		p11_token_free (token);
-	}
-#endif
+	path = p11_path_build (test.unwritable, "non-existent", NULL);
+	token = p11_token_new (333, path, "Label", P11_TOKEN_FLAG_NONE);
+	free (path);
+	assert (!p11_token_is_writable (token));
+	p11_token_free (token);
 }
 
 static void
@@ -790,7 +825,7 @@ main (int argc,
 	p11_testx (test_token_label, "/wheee", "/token/label");
 	p11_testx (test_token_slot, "/unneeded", "/token/slot");
 
-	p11_fixture (NULL, NULL);
+	p11_fixture (setup_writable, teardown_writable);
 	p11_test (test_not_writable, "/token/not-writable");
 	p11_test (test_writable_no_exist, "/token/writable-no-exist");
 
