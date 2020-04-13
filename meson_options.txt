@@ -49,3 +49,7 @@ option('gtk_doc', type : 'boolean',
 option('man', type : 'boolean',
        value : false,
        description : 'Build manpages using xsltproc')
+
+option('nls', type : 'boolean',
+       value : true,
+       description : 'Enable NLS support')
