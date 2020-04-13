@@ -71,7 +71,7 @@ typedef struct _test_item {
 			char name[1024];
 			func_with_arg func;
 			void *argument;
-			int failed;
+			bool failed;
 		} test;
 		struct {
 			func_with_arg setup;
@@ -129,7 +129,7 @@ p11_test_fail (const char *filename,
 
 	assert (gl.last != NULL);
 	assert (gl.last->type == TEST);
-	gl.last->x.test.failed = 1;
+	gl.last->x.test.failed = true;
 
 	printf ("not ok %d %s\n", gl.number, gl.last->x.test.name);
 
@@ -162,7 +162,6 @@ p11_test_skip (const char *filename,
 
 	assert (gl.last != NULL);
 	assert (gl.last->type == TEST);
-	gl.last->x.test.failed = 1;
 
 	printf ("ok %d %s", gl.number, gl.last->x.test.name);
 
@@ -203,7 +202,6 @@ p11_test_todo (const char *filename,
 
 	assert (gl.last != NULL);
 	assert (gl.last->type == TEST);
-	gl.last->x.test.failed = 1;
 
 	printf ("not ok %d %s", gl.number, gl.last->x.test.name);
 
