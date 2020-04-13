@@ -388,5 +388,7 @@ if with_trust_module
   subdir('trust')
 endif
 subdir('doc/manual')
-subdir('po')
+if get_option('nls')
+  subdir('po')
+endif
 subdir('bash-completion')
