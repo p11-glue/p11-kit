@@ -33,15 +33,17 @@ libp11_library = static_library('p11-library', 'library.c',
 libp11_library_dep = declare_dependency(link_with: libp11_library,
                                         dependencies: [libp11_common_dep] + thread_deps)
 
-libp11_test_sources = [
-  'mock.c',
-  'test.c'
-]
+if get_option('test')
+  libp11_test_sources = [
+    'mock.c',
+    'test.c'
+  ]
 
-libp11_test = static_library('p11-test', libp11_test_sources,
-                             include_directories: configinc)
-libp11_test_dep = declare_dependency(link_with: libp11_test,
-                                     dependencies: [libp11_common_dep] + thread_deps)
+  libp11_test = static_library('p11-test', libp11_test_sources,
+                               include_directories: configinc)
+  libp11_test_dep = declare_dependency(link_with: libp11_test,
+                                       dependencies: [libp11_common_dep] + thread_deps)
+endif
 
 libp11_tool_sources = [
   'tool.c'
@@ -58,40 +60,42 @@ libp11_tool_dep = declare_dependency(link_with: libp11_tool,
 
 # Tests ----------------------------------------------------------------
 
-common_tests = [
-  'test-tests',
-  'test-compat',
-  'test-hash',
-  'test-dict',
-  'test-array',
-  'test-constants',
-  'test-attrs',
-  'test-buffer',
-  'test-url',
-  'test-path',
-  'test-lexer',
-  'test-message',
-  'test-argv',
-  'test-runtime'
-]
+if get_option('test')
+  common_tests = [
+    'test-tests',
+    'test-compat',
+    'test-hash',
+    'test-dict',
+    'test-array',
+    'test-constants',
+    'test-attrs',
+    'test-buffer',
+    'test-url',
+    'test-path',
+    'test-lexer',
+    'test-message',
+    'test-argv',
+    'test-runtime'
+  ]
 
-foreach name : common_tests
-  t = executable(name, '@0@.c'.format(name),
-                 c_args: tests_c_args,
-                 include_directories: configinc,
-                 dependencies: dlopen_deps,
-                 link_with: [libp11_test, libp11_common])
-  test(name, t)
-endforeach
+  foreach name : common_tests
+    t = executable(name, '@0@.c'.format(name),
+                   c_args: tests_c_args,
+                   include_directories: configinc,
+                   dependencies: dlopen_deps,
+                   link_with: [libp11_test, libp11_common])
+    test(name, t)
+  endforeach
 
-common_progs = [
-  'frob-getauxval',
-  'frob-getenv'
-]
+  common_progs = [
+    'frob-getauxval',
+    'frob-getenv'
+  ]
 
-foreach name : common_progs
-  executable(name, '@0@.c'.format(name),
-             include_directories: configinc,
-             dependencies: dlopen_deps,
-             link_with: [libp11_common])
-endforeach
+  foreach name : common_progs
+    executable(name, '@0@.c'.format(name),
+               include_directories: configinc,
+               dependencies: dlopen_deps,
+               link_with: [libp11_common])
+  endforeach
+endif

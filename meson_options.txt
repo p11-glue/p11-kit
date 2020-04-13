@@ -53,3 +53,7 @@ option('man', type : 'boolean',
 option('nls', type : 'boolean',
        value : true,
        description : 'Enable NLS support')
+
+option('test', type : 'boolean',
+       value : true,
+       description : 'Enable building test programs')
