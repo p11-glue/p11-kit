@@ -101,34 +101,36 @@ if host_system != 'windows'
                 install_dir: p11_module_path)
 endif
 
-fixtures_dir = meson.current_source_dir() / 'fixtures'
+if get_option('test')
+  fixtures_dir = meson.current_source_dir() / 'fixtures'
 
-if host_system == 'windows'
-  libp11_kit_testable_c_args = [
-    '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(fixtures_dir / 'system-pkcs11.conf'),
-    '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'system-modules' / 'win32'),
-    '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'package-modules' / 'win32'),
-    '-DP11_USER_CONFIG_FILE="@0@"'.format(fixtures_dir / 'user-pkcs11.conf'),
-    '-DP11_USER_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'user-modules' / 'win32')
-  ]
-else
-  libp11_kit_testable_c_args = [
-    '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(fixtures_dir / 'system-pkcs11.conf'),
-    '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'system-modules'),
-    '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'package-modules'),
-    '-DP11_USER_CONFIG_FILE="@0@"'.format(fixtures_dir / 'user-pkcs11.conf'),
-    '-DP11_USER_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'user-modules')
-  ]
+  if host_system == 'windows'
+    libp11_kit_testable_c_args = [
+      '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(fixtures_dir / 'system-pkcs11.conf'),
+      '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'system-modules' / 'win32'),
+      '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'package-modules' / 'win32'),
+      '-DP11_USER_CONFIG_FILE="@0@"'.format(fixtures_dir / 'user-pkcs11.conf'),
+      '-DP11_USER_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'user-modules' / 'win32')
+    ]
+  else
+    libp11_kit_testable_c_args = [
+      '-DP11_SYSTEM_CONFIG_FILE="@0@"'.format(fixtures_dir / 'system-pkcs11.conf'),
+      '-DP11_SYSTEM_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'system-modules'),
+      '-DP11_PACKAGE_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'package-modules'),
+      '-DP11_USER_CONFIG_FILE="@0@"'.format(fixtures_dir / 'user-pkcs11.conf'),
+      '-DP11_USER_CONFIG_MODULES="@0@"'.format(fixtures_dir / 'user-modules')
+    ]
+  endif
+
+  libp11_kit_testable_c_args += '-DP11_MODULE_PATH="@0@"'.format(meson.current_build_dir())
+
+  libp11_kit_testable = static_library('p11-kit-testable',
+                                       libp11_kit_internal_sources,
+                                       libp11_kit_sources,
+                                       c_args: libp11_kit_testable_c_args,
+                                       implicit_include_directories: false,
+                                       dependencies: [libp11_library_dep] + libffi_deps + dlopen_deps)
 endif
-
-libp11_kit_testable_c_args += '-DP11_MODULE_PATH="@0@"'.format(meson.current_build_dir())
-
-libp11_kit_testable = static_library('p11-kit-testable',
-                                     libp11_kit_internal_sources,
-                                     libp11_kit_sources,
-                                     c_args: libp11_kit_testable_c_args,
-                                     implicit_include_directories: false,
-                                     dependencies: [libp11_library_dep] + libffi_deps + dlopen_deps)
 
 p11_kit_sources = [
   'lists.c',
@@ -150,11 +152,13 @@ executable('p11-kit-remote',
            install: true,
            install_dir: prefix / privatedir)
 
-executable('p11-kit-remote-testable',
-           'remote.c',
-           c_args: common_c_args,
-           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
-           link_with: libp11_kit_testable)
+if get_option('test')
+  executable('p11-kit-remote-testable',
+             'remote.c',
+             c_args: common_c_args,
+             dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+             link_with: libp11_kit_testable)
+endif
 
 executable('p11-kit-server',
            'server.c',
@@ -167,14 +171,16 @@ executable('p11-kit-server',
            install: true,
            install_dir: prefix / privatedir)
 
-executable('p11-kit-server-testable',
-           'server.c',
-           c_args: common_c_args + [
-             '-DP11_KIT_REMOTE="p11-kit-remote-testable"'
-           ],
-           implicit_include_directories: false,
-           dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
-           link_with: libp11_kit_testable)
+if get_option('test')
+  executable('p11-kit-server-testable',
+             'server.c',
+             c_args: common_c_args + [
+               '-DP11_KIT_REMOTE="p11-kit-remote-testable"'
+             ],
+             implicit_include_directories: false,
+             dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+             link_with: libp11_kit_testable)
+endif
 
 if with_systemd
   p11_kit_server_service_conf = configuration_data({
@@ -208,91 +214,93 @@ static_library('p11-kit-pkcs11-gnu',
 
 # Tests ----------------------------------------------------------------
 
-p11_kit_tests = [
-  'test-progname',
-  'test-util',
-  'test-conf',
-  'test-uri',
-  'test-pin',
-  'test-init',
-  'test-modules',
-  'test-deprecated',
-  'test-proxy',
-  'test-iter',
-  'test-rpc',
-  'test-virtual',
-  'test-managed',
-  'test-log',
-  'test-filter',
-  'test-transport'
-]
+if get_option('test')
+  p11_kit_tests = [
+    'test-progname',
+    'test-util',
+    'test-conf',
+    'test-uri',
+    'test-pin',
+    'test-init',
+    'test-modules',
+    'test-deprecated',
+    'test-proxy',
+    'test-iter',
+    'test-rpc',
+    'test-virtual',
+    'test-managed',
+    'test-log',
+    'test-filter',
+    'test-transport'
+  ]
 
-if host_system != 'windows'
-  p11_kit_tests += 'test-server'
+  if host_system != 'windows'
+    p11_kit_tests += 'test-server'
+  endif
+
+  foreach name : p11_kit_tests
+    t = executable(name, '@0@.c'.format(name),
+                   c_args: tests_c_args + libp11_kit_testable_c_args,
+                   include_directories: [configinc, commoninc],
+                   dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
+                   link_with: libp11_kit_testable)
+    test(name, t)
+  endforeach
+
+  p11_kit_progs = [
+    'print-messages',
+    'frob-setuid'
+  ]
+
+  foreach name : p11_kit_progs
+    t = executable(name, '@0@.c'.format(name),
+                   c_args: tests_c_args,
+                   include_directories: [configinc, commoninc],
+                   dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
+                   link_with: libp11_kit_testable)
+  endforeach
+
+  p11_kit_tests_env = environment()
+  p11_kit_tests_env.set('abs_top_builddir', top_build_dir)
+  p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
+
+  if host_system != 'windows'
+    test('test-messages.sh',
+         find_program('test-messages.sh'),
+         env: p11_kit_tests_env)
+
+    test('test-server.sh',
+         find_program('test-server.sh'),
+         env: p11_kit_tests_env)
+  endif
+
+  mock_sources = {
+                   'mock-one': ['mock-module-ep.c'],
+                   'mock-two': ['mock-module-ep2.c'],
+                   'mock-three': ['mock-module-ep.c'],
+                   'mock-four': ['mock-module-ep.c'],
+                   'mock-five': ['mock-module-ep3.c'],
+                   'mock-seven': ['mock-module-ep5.c'],
+                   'mock-eight': ['mock-module-ep6.c'],
+                   'mock-nine': ['mock-module-ep7.c'],
+                   'mock-ten': ['mock-module-ep8.c']
+                 }
+
+  if host_system != 'windows'
+    mock_sources += {'mock-six': ['mock-module-ep4.c']}
+  endif
+
+  foreach name, sources : mock_sources
+    shared_module(name,
+                  sources,
+                  name_prefix: '',
+                  link_args: p11_module_ldflags,
+                  link_depends: [p11_module_symbol_map,
+                                 p11_module_symbol_def],
+                  vs_module_defs: p11_module_symbol_def,
+                  dependencies: [libp11_test_dep])
+  endforeach
 endif
-
-foreach name : p11_kit_tests
-  t = executable(name, '@0@.c'.format(name),
-                 c_args: tests_c_args + libp11_kit_testable_c_args,
-                 include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
-                 link_with: libp11_kit_testable)
-  test(name, t)
-endforeach
-
-p11_kit_progs = [
-  'print-messages',
-  'frob-setuid'
-]
-
-foreach name : p11_kit_progs
-  t = executable(name, '@0@.c'.format(name),
-                 c_args: tests_c_args,
-                 include_directories: [configinc, commoninc],
-                 dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
-                 link_with: libp11_kit_testable)
-endforeach
-
-p11_kit_tests_env = environment()
-p11_kit_tests_env.set('abs_top_builddir', top_build_dir)
-p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
-
-if host_system != 'windows'
-  test('test-messages.sh',
-       find_program('test-messages.sh'),
-       env: p11_kit_tests_env)
-
-  test('test-server.sh',
-       find_program('test-server.sh'),
-       env: p11_kit_tests_env)
-endif
-
-mock_sources = {
-  'mock-one': ['mock-module-ep.c'],
-  'mock-two': ['mock-module-ep2.c'],
-  'mock-three': ['mock-module-ep.c'],
-  'mock-four': ['mock-module-ep.c'],
-  'mock-five': ['mock-module-ep3.c'],
-  'mock-seven': ['mock-module-ep5.c'],
-  'mock-eight': ['mock-module-ep6.c'],
-  'mock-nine': ['mock-module-ep7.c'],
-  'mock-ten': ['mock-module-ep8.c']
-}
-
-if host_system != 'windows'
-  mock_sources += {'mock-six': ['mock-module-ep4.c']}
-endif
-
-foreach name, sources : mock_sources
-  shared_module(name,
-                sources,
-                name_prefix: '',
-                link_args: p11_module_ldflags,
-                link_depends: [p11_module_symbol_map,
-                               p11_module_symbol_def],
-                vs_module_defs: p11_module_symbol_def,
-                dependencies: [libp11_test_dep])
-endforeach
 
 p11_kit_pc_variables = [
   'p11_module_configs=@0@'.format(prefix / p11_package_config_modules),

@@ -58,16 +58,18 @@ shared_module('p11-kit-trust',
               install: true,
               install_dir: prefix / p11_module_path)
 
-libtrust_testable_c_args = [
-  '-DP11_DEFAULT_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'default'),
-  '-DP11_SYSTEM_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'system')
-]
+if get_option('test')
+  libtrust_testable_c_args = [
+    '-DP11_DEFAULT_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'default'),
+    '-DP11_SYSTEM_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'system')
+  ]
 
-libtrust_testable = static_library('libtrust-testable',
-                                   libtrust_sources,
-                                   include_directories: [configinc, commoninc],
-                                   c_args: libtrust_testable_c_args,
-                                   dependencies: libtasn1_deps)
+  libtrust_testable = static_library('libtrust-testable',
+                                     libtrust_sources,
+                                     include_directories: [configinc, commoninc],
+                                     c_args: libtrust_testable_c_args,
+                                     dependencies: libtasn1_deps)
+endif
 
 trust_sources = [
   'anchor.c',
@@ -98,65 +100,67 @@ executable('trust',
 
 # Tests ----------------------------------------------------------------
 
-libtrust_test_sources = [
-  'test-trust.c',
-  'digest.c'
-]
+if get_option('test')
+  libtrust_test_sources = [
+    'test-trust.c',
+    'digest.c'
+  ]
 
-libtrust_test = static_library('libtrust-test',
-                               libtrust_test_sources,
-                               include_directories: [configinc, commoninc])
+  libtrust_test = static_library('libtrust-test',
+                                 libtrust_test_sources,
+                                 include_directories: [configinc, commoninc])
 
-trust_tests = [
-  'test-digest',
-  'test-asn1',
-  'test-base64',
-  'test-pem',
-  'test-oid',
-  'test-utf8',
-  'test-x509',
-  'test-persist',
-  'test-index',
-  'test-parser',
-  'test-builder',
-  'test-token',
-  'test-module',
-  'test-save',
-  'test-enumerate',
-  'test-cer',
-  'test-bundle',
-  'test-openssl',
-  'test-edk2',
-  'test-jks'
-]
+  trust_tests = [
+    'test-digest',
+    'test-asn1',
+    'test-base64',
+    'test-pem',
+    'test-oid',
+    'test-utf8',
+    'test-x509',
+    'test-persist',
+    'test-index',
+    'test-parser',
+    'test-builder',
+    'test-token',
+    'test-module',
+    'test-save',
+    'test-enumerate',
+    'test-cer',
+    'test-bundle',
+    'test-openssl',
+    'test-edk2',
+    'test-jks'
+  ]
 
-foreach name : trust_tests
-  t = executable(name, '@0@.c'.format(name),
-                 c_args: common_c_args + tests_c_args + libtrust_testable_c_args,
-                 dependencies: [libp11_kit_dep,
-                                libp11_library_dep,
-                                libp11_test_dep] + dlopen_deps,
-                 link_with: [libtrust_testable, libtrust_data, libtrust_test])
-  test(name, t)
-endforeach
+  foreach name : trust_tests
+    t = executable(name, '@0@.c'.format(name),
+                   c_args: common_c_args + tests_c_args + libtrust_testable_c_args,
+                   dependencies: [libp11_kit_dep,
+                                  libp11_library_dep,
+                                  libp11_test_dep] + dlopen_deps,
+                   link_with: [libtrust_testable, libtrust_data, libtrust_test])
+    test(name, t)
+  endforeach
 
-trust_progs = [
-  'frob-pow',
-  'frob-token',
-  'frob-nss-trust',
-  'frob-cert',
-  'frob-bc',
-  'frob-ku',
-  'frob-eku',
-  'frob-ext',
-  'frob-oid'
-]
+  trust_progs = [
+    'frob-pow',
+    'frob-token',
+    'frob-nss-trust',
+    'frob-cert',
+    'frob-bc',
+    'frob-ku',
+    'frob-eku',
+    'frob-ext',
+    'frob-oid'
+  ]
 
-foreach name : trust_progs
-  t = executable(name, '@0@.c'.format(name),
-                 c_args: tests_c_args,
-                 dependencies: [libp11_kit_dep,
-                                libp11_library_dep,
-                                libp11_test_dep] + libffi_deps + dlopen_deps,
-                 link_with: [libtrust_testable, libtrust_data, libtrust_test])
-endforeach
+  foreach name : trust_progs
+    t = executable(name, '@0@.c'.format(name),
+                   c_args: tests_c_args,
+                   dependencies: [libp11_kit_dep,
+                                  libp11_library_dep,
+                                  libp11_test_dep] + libffi_deps + dlopen_deps,
+                   link_with: [libtrust_testable, libtrust_data, libtrust_test])
+  endforeach
+endif
