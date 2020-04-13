@@ -51,11 +51,20 @@
 #include <sys/wait.h>
 #endif
 #include <assert.h>
+#include <limits.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
+
+#if SIZEOF_UNSIGNED_LONG == 8
+#define ULONG_VAL 0x0123456708ABCDEF
+#elif SIZEOF_UNSIGNED_LONG == 4
+#define ULONG_VAL 0x01234567
+#else
+#error "unsupported size of CK_ULONG"
+#endif
 
 static void
 test_new_free (void)
@@ -78,7 +87,7 @@ static void
 test_uint16 (void)
 {
 	p11_buffer buffer;
-	uint16_t val = 0xFFFF;
+	uint16_t val = UINT16_MAX;
 	size_t next;
 	bool ret;
 
@@ -88,7 +97,7 @@ test_uint16 (void)
 	ret = p11_rpc_buffer_get_uint16 (&buffer, &next, &val);
 	assert_num_eq (false, ret);
 	assert_num_eq (0, next);
-	assert_num_eq (0xFFFF, val);
+	assert_num_eq (UINT16_MAX, val);
 
 	p11_buffer_reset (&buffer, 0);
 
@@ -116,7 +125,7 @@ static void
 test_uint16_static (void)
 {
 	p11_buffer buf = { (unsigned char *)"pad0\x67\x89", 6, };
-	uint16_t val = 0xFFFF;
+	uint16_t val = UINT16_MAX;
 	size_t next;
 	bool ret;
 
@@ -131,7 +140,7 @@ static void
 test_uint32 (void)
 {
 	p11_buffer buffer;
-	uint32_t val = 0xFFFFFFFF;
+	uint32_t val = UINT32_MAX;
 	size_t next;
 	bool ret;
 
@@ -141,7 +150,7 @@ test_uint32 (void)
 	ret = p11_rpc_buffer_get_uint32 (&buffer, &next, &val);
 	assert_num_eq (false, ret);
 	assert_num_eq (0, next);
-	assert_num_eq (0xFFFFFFFF, val);
+	assert_num_eq (UINT32_MAX, val);
 
 	p11_buffer_reset (&buffer, 0);
 
@@ -169,7 +178,7 @@ static void
 test_uint32_static (void)
 {
 	p11_buffer buf = { (unsigned char *)"pad0\x23\x45\x67\x89", 8, };
-	uint32_t val = 0xFFFFFFFF;
+	uint32_t val = UINT32_MAX;
 	size_t next;
 	bool ret;
 
@@ -184,7 +193,7 @@ static void
 test_uint64 (void)
 {
 	p11_buffer buffer;
-	uint64_t val = 0xFFFFFFFFFFFFFFFF;
+	uint64_t val = UINT64_MAX;
 	size_t next;
 	bool ret;
 
@@ -194,13 +203,13 @@ test_uint64 (void)
 	ret = p11_rpc_buffer_get_uint64 (&buffer, &next, &val);
 	assert_num_eq (0, ret);
 	assert_num_eq (0, next);
-	assert (0xFFFFFFFFFFFFFFFF == val);
+	assert (UINT64_MAX == val);
 
 	p11_buffer_reset (&buffer, 0);
 
 	p11_buffer_add (&buffer, (unsigned char *)"padding", 7);
 
-	p11_rpc_buffer_add_uint64 (&buffer, 0x0123456708ABCDEF);
+	p11_rpc_buffer_add_uint64 (&buffer, 0x0123456708ABCDEFull);
 	assert_num_eq (15, buffer.len);
 	assert (!p11_buffer_failed (&buffer));
 
@@ -208,7 +217,7 @@ test_uint64 (void)
 	ret = p11_rpc_buffer_get_uint64 (&buffer, &next, &val);
 	assert_num_eq (true, ret);
 	assert_num_eq (15, next);
-	assert (0x0123456708ABCDEF == val);
+	assert (0x0123456708ABCDEFull == val);
 
 	p11_buffer_uninit (&buffer);
 }
@@ -217,7 +226,7 @@ static void
 test_uint64_static (void)
 {
 	p11_buffer buf = { (unsigned char *)"pad0\x89\x67\x45\x23\x11\x22\x33\x44", 12, };
-	uint64_t val = 0xFFFFFFFFFFFFFFFF;
+	uint64_t val = UINT64_MAX;
 	size_t next;
 	bool ret;
 
@@ -225,7 +234,7 @@ test_uint64_static (void)
 	ret = p11_rpc_buffer_get_uint64 (&buf, &next, &val);
 	assert_num_eq (true, ret);
 	assert_num_eq (12, next);
-	assert (0x8967452311223344 == val);
+	assert (0x8967452311223344ull == val);
 }
 
 static void
@@ -395,7 +404,7 @@ test_ulong_value (void)
 {
 	p11_buffer buffer;
 	p11_buffer buf = { (unsigned char *)"pad0\x00\x00\x00\x00\x23\x45\x67\x89", 12, };
-	CK_ULONG val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
+	CK_ULONG val = ULONG_MAX;
 	size_t offset = 0;
 	CK_ULONG val_size;
 	bool ret;
@@ -409,35 +418,35 @@ test_ulong_value (void)
 
 	p11_buffer_init (&buffer, 0);
 
-	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
+	val = ULONG_MAX;
 	offset = 0;
 	val_size = SIZEOF_UNSIGNED_LONG;
 	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (0, ret);
 	assert_num_eq (0, offset);
 	assert_num_eq (SIZEOF_UNSIGNED_LONG, val_size);
-	assert_num_eq ((CK_ULONG)0xFFFFFFFFFFFFFFFF, val);
+	assert_num_eq (ULONG_MAX, val);
 
 	p11_buffer_reset (&buffer, 0);
 
 	p11_buffer_add (&buffer, (unsigned char *)"padding", 7);
 
-	val = (CK_ULONG)0x0123456708ABCDEF;
+	val = ULONG_VAL;
 	p11_rpc_buffer_add_ulong_value (&buffer, &val, SIZEOF_UNSIGNED_LONG);
 	assert (!p11_buffer_failed (&buffer));
 	/* The value is always stored as 64-bit integer */
 	assert_num_eq (7 + 8, buffer.len);
 
-	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
+	val = ULONG_MAX;
 	offset = 7;
 	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (true, ret);
 	/* The value is always stored as 64-bit integer */
 	assert_num_eq (7 + 8, offset);
-	assert_num_eq ((CK_ULONG)0x0123456708ABCDEF, *(CK_ULONG *)&val);
+	assert_num_eq (ULONG_VAL, *(CK_ULONG *)&val);
 
 	/* Read out of bound */
-	val = (CK_ULONG)0xFFFFFFFFFFFFFFFF;
+	val = ULONG_MAX;
 	ret = p11_rpc_buffer_get_ulong_value (&buffer, &offset, &val, &val_size);
 	assert_num_eq (false, ret);
 
