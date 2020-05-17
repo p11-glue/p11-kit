@@ -1,4 +1,4 @@
-bashcomp = dependency('bash-completion', required: false)
+bashcomp = dependency('bash-completion', required: get_option('bash_completion'))
 
 if bashcomp.found()
   bashcompdir = bashcomp.get_pkgconfig_variable('completionsdir')
