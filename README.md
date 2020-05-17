@@ -25,7 +25,7 @@ $ ninja -C _build test
 ```
 
 If you install it locally for testing purposes, you may want to
-specify `-Dsystemd=false -Dbash_completion=false`.
+specify `-Dsystemd=disabled -Dbash_completion=disabled`.
 
 # Releases
 
