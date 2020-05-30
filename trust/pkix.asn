@@ -109,32 +109,6 @@ CRLNumber ::= INTEGER (0..MAX)
 
 CertificateIssuer ::= GeneralNames
 
--- --------------------------------------
---  EXPLICIT
--- --------------------------------------
-
--- UNIVERSAL Types defined in '93 and '98 ASN.1
--- but required by this specification
-
-NumericString ::= [UNIVERSAL 18] IMPLICIT OCTET STRING
-
-IA5String ::= [UNIVERSAL 22] IMPLICIT OCTET STRING
-
-TeletexString ::= [UNIVERSAL 20] IMPLICIT OCTET STRING
-
-PrintableString ::= [UNIVERSAL 19] IMPLICIT OCTET STRING
-
-UniversalString ::= [UNIVERSAL 28] IMPLICIT OCTET STRING
-        -- UniversalString is defined in ASN.1:1993
-
-BMPString ::= [UNIVERSAL 30] IMPLICIT OCTET STRING
-      -- BMPString is the subtype of UniversalString and models
-       -- the Basic Multilingual Plane of ISO/IEC/ITU 10646-1
-
-UTF8String ::= [UNIVERSAL 12] IMPLICIT OCTET STRING
-        -- The content of this type conforms to RFC 2279.
-
-
 -- attribute data types --
 
 Attribute       ::=     SEQUENCE {

@@ -4,7 +4,7 @@
 
 #include <libtasn1.h>
 
-const ASN1_ARRAY_TYPE basic_asn1_tab[] = {
+const asn1_static_node basic_asn1_tab[] = {
   { "BASIC", 536872976, NULL },
   { NULL, 1073741836, NULL },
   { "Any", 1073741837, NULL },

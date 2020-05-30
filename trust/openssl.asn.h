@@ -4,7 +4,7 @@
 
 #include <libtasn1.h>
 
-const ASN1_ARRAY_TYPE openssl_asn1_tab[] = {
+const asn1_static_node openssl_asn1_tab[] = {
   { "OPENSSL", 536875024, NULL },
   { NULL, 1073741836, NULL },
   { "CertAux", 1610612741, NULL },
@@ -13,16 +13,14 @@ const ASN1_ARRAY_TYPE openssl_asn1_tab[] = {
   { "reject", 1610637323, NULL },
   { NULL, 1073745928, "0"},
   { NULL, 12, NULL },
-  { "alias", 1073758210, "UTF8String"},
+  { "alias", 1073758242, NULL },
   { "keyid", 1073758215, NULL },
   { "other", 536895499, NULL },
   { NULL, 1073745928, "1"},
   { NULL, 2, "AlgorithmIdentifier"},
-  { "AlgorithmIdentifier", 1610612741, NULL },
+  { "AlgorithmIdentifier", 536870917, NULL },
   { "algorithm", 1073741836, NULL },
   { "parameters", 541081613, NULL },
   { "algorithm", 1, NULL },
-  { "UTF8String", 536879111, NULL },
-  { NULL, 4360, "12"},
   { NULL, 0, NULL }
 };
