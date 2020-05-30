@@ -22,7 +22,4 @@ AlgorithmIdentifier  ::=  SEQUENCE  {
      parameters              ANY DEFINED BY algorithm OPTIONAL
 }
 
-UTF8String ::= [UNIVERSAL 12] IMPLICIT OCTET STRING
-        -- The content of this type conforms to RFC 2279.
-
 END
