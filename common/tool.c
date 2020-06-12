@@ -182,14 +182,14 @@ command_usage (const p11_tool_command *commands)
 static void
 verbose_arg (void)
 {
-	putenv ("P11_KIT_DEBUG=tool");
+	setenv ("P11_KIT_DEBUG", "tool", 0);
 	p11_message_loud ();
 }
 
 static void
 quiet_arg (void)
 {
-	putenv ("P11_KIT_DEBUG=");
+	unsetenv ("P11_KIT_DEBUG");
 	p11_message_quiet ();
 }
 
