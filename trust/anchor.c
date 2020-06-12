@@ -458,8 +458,9 @@ find_anchor (CK_FUNCTION_LIST *module,
 
 static int
 anchor_store (int argc,
-              char *argv[],
-              bool *changed)
+	      char *argv[],
+	      bool *changed,
+	      unsigned int *errors)
 {
 	CK_ATTRIBUTE *attrs;
 	CK_FUNCTION_LIST *module = NULL;
@@ -509,6 +510,9 @@ anchor_store (int argc,
 		}
 	}
 
+	if (ret != 0)
+		*errors = 1;
+
 	p11_array_free (anchors);
 	p11_kit_module_finalize (module);
 	p11_kit_module_release (module);
@@ -537,7 +541,8 @@ description_for_object_at_iter (p11_kit_iter *iter)
 
 static bool
 remove_all (p11_kit_iter *iter,
-            bool *changed)
+	    bool *changed,
+	    unsigned int *errors)
 {
 	const char *desc;
 	CK_RV rv;
@@ -549,28 +554,28 @@ remove_all (p11_kit_iter *iter,
 		switch (rv) {
 		case CKR_OK:
 			*changed = true;
-			/* fall through */
-		case CKR_OBJECT_HANDLE_INVALID:
 			continue;
 		case CKR_TOKEN_WRITE_PROTECTED:
 		case CKR_SESSION_READ_ONLY:
 		case CKR_ATTRIBUTE_READ_ONLY:
 			p11_message ("couldn't remove read-only %s", desc);
-			continue;
+			break;
 		default:
 			p11_message ("couldn't remove %s: %s", desc,
 			             p11_kit_strerror (rv));
 			break;
 		}
+		(*errors)++;
 	}
 
-	return (rv == CKR_CANCEL);
+	return (rv == CKR_CANCEL) && *errors == 0;
 }
 
 static int
 anchor_remove (int argc,
                char *argv[],
-               bool *changed)
+               bool *changed,
+	       unsigned int *errors)
 {
 	CK_FUNCTION_LIST **modules;
 	p11_array *iters;
@@ -595,7 +600,7 @@ anchor_remove (int argc,
 		iter = iters->elem[i];
 
 		p11_kit_iter_begin (iter, modules);
-		if (!remove_all (iter, changed))
+		if (!remove_all (iter, changed, errors))
 			ret = 1;
 	}
 
@@ -610,6 +615,7 @@ p11_trust_anchor (int argc,
                   char **argv)
 {
 	bool changed = false;
+	unsigned int errors = 0;
 	int action = 0;
 	int opt;
 	int ret = 0;
@@ -674,13 +680,20 @@ p11_trust_anchor (int argc,
 
 	/* Store is different, and only accepts files */
 	if (action == opt_store)
-		ret = anchor_store (argc, argv, &changed);
+		ret = anchor_store (argc, argv, &changed, &errors);
 
 	else if (action == opt_remove)
-		ret = anchor_remove (argc, argv, &changed);
+		ret = anchor_remove (argc, argv, &changed, &errors);
 
 	else
 		assert_not_reached ();
+
+	if (errors > 0) {
+		if (errors == 1)
+			p11_message ("%u error while processing", errors);
+		else
+			p11_message ("%u errors while processing", errors);
+	}
 
 	/* Extract the compat bundles after modification */
 	if (ret == 0 && changed) {
