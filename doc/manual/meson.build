@@ -116,7 +116,7 @@ if get_option('man')
                     output: man_dst,
                     install: true,
                     install_dir: join_paths(mandir, man_section),
-                    build_be_default: true)
+                    build_by_default: true)
     endforeach
   endforeach
 endif
