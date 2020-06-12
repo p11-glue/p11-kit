@@ -67,7 +67,6 @@ static struct DebugKey debug_keys[] = {
 	{ 0, }
 };
 
-static bool debug_inited = false;
 static bool debug_strict = false;
 
 /* global variable exported in debug.h */
@@ -130,7 +129,6 @@ void
 p11_debug_init (void)
 {
 	p11_debug_current_flags = parse_environ_flags ();
-	debug_inited = true;
 }
 
 void
