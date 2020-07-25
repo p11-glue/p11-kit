@@ -1002,7 +1002,7 @@ finalize_registered_inlock_reentrant (void)
 
 	/* WARNING: This function must be reentrant */
 
-	to_finalize = calloc (p11_dict_size (gl.unmanaged_by_funcs), sizeof (Module *));
+	to_finalize = calloc (p11_dict_size (gl.unmanaged_by_funcs) + 1, sizeof (Module *));
 	if (!to_finalize)
 		return CKR_HOST_MEMORY;
 
@@ -1640,7 +1640,7 @@ managed_steal_sessions_inlock (p11_dict *sessions,
 	assert (sessions != NULL);
 	assert (count != NULL);
 
-	stolen = calloc (p11_dict_size (sessions), sizeof (CK_SESSION_HANDLE));
+	stolen = calloc (p11_dict_size (sessions) + 1, sizeof (CK_SESSION_HANDLE));
 	return_val_if_fail (stolen != NULL, NULL);
 
 	at = 0;
