@@ -189,7 +189,7 @@ verbose_arg (void)
 static void
 quiet_arg (void)
 {
-	unsetenv ("P11_KIT_DEBUG");
+	setenv ("P11_KIT_DEBUG", "", 1);
 	p11_message_quiet ();
 }
 
