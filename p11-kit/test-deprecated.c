@@ -475,6 +475,7 @@ test_load_and_initialize (void)
 	assert (rv == CKR_OK);
 	assert (module != NULL);
 
+	memset (&info, 0, sizeof(info));
 	rv = (module->C_GetInfo) (&info);
 	assert (rv == CKR_OK);
 
