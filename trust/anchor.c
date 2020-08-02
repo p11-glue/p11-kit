@@ -228,7 +228,7 @@ session_for_store_on_module (const char *name,
 	CK_SESSION_HANDLE session = 0;
 	CK_SLOT_ID *slots = NULL;
 	CK_TOKEN_INFO info;
-	CK_ULONG count;
+	CK_ULONG count = 0;
 	CK_ULONG i;
 	CK_RV rv;
 
@@ -240,7 +240,7 @@ session_for_store_on_module (const char *name,
 
 	rv = (module->C_GetSlotList) (CK_TRUE, NULL, &count);
 	if (rv == CKR_OK) {
-		slots = calloc (count, sizeof (CK_ULONG));
+		slots = calloc (count + 1, sizeof (CK_ULONG));
 		return_val_if_fail (slots != NULL, 0UL);
 		rv = (module->C_GetSlotList) (CK_TRUE, slots, &count);
 	}
