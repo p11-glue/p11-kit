@@ -112,7 +112,36 @@ getprogname (void)
 	if (p != NULL)
 		name = p + 1;
 #elif defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+#ifdef __linux__
+	name = program_invocation_name;
+	assert (name);
+	if (*name == '/') {
+		/*
+		 * Some programs pack command line arguments into argv[0].
+		 * Check if it is the case by reading /proc/self/exe and extract
+		 * the program name.
+		 *
+		 * Logic borrowed from:
+		 * <https://github.com/mesa3d/mesa/commit/759b94038987bb983398cd4b1d2cb1c8f79817a9>.
+		 */
+		static char *buf;
+
+		if (!buf)
+			buf = realpath ("/proc/self/exe", NULL);
+
+		if (buf && strncmp (buf, name, strlen (buf)) == 0)
+			/* Use the executable path if the prefix matches. */
+			name = strrchr (buf, '/') + 1;
+		else
+			/* Otherwise fall back to
+			 * program_invocation_short_name. */
+			name = program_invocation_short_name;
+	} else {
+		name = program_invocation_short_name;
+	}
+#else
 	name = program_invocation_short_name;
+#endif
 #elif defined (HAVE___PROGNAME)
 	name = __progname;
 #else

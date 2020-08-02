@@ -92,8 +92,13 @@ if get_option('test')
     'frob-getenv'
   ]
 
+  if host_system != 'windows'
+    common_progs += ['frob-getprogname']
+  endif
+
   foreach name : common_progs
     executable(name, '@0@.c'.format(name),
+               c_args: tests_c_args,
                include_directories: configinc,
                dependencies: dlopen_deps,
                link_with: [libp11_common])

@@ -130,4 +130,11 @@ common_frob_getauxval_LDADD = $(common_LIBS)
 common_frob_getenv_SOURCES = common/frob-getenv.c
 common_frob_getenv_LDADD = $(common_LIBS)
 
+if !OS_WIN32
+check_PROGRAMS += common/frob-getprogname
+
+common_frob_getprogname_SOURCES = common/frob-getprogname.c
+common_frob_getprogname_LDADD = $(common_LIBS)
+endif
+
 EXTRA_DIST += common/meson.build

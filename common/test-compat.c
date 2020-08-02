@@ -125,6 +125,20 @@ test_mmap (void)
 	p11_mmap_close (map);
 }
 
+static void
+test_getprogname (void)
+{
+#if defined(__linux__) && defined(HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+	const char *args[] = { BUILDDIR "/common/frob-getprogname", NULL };
+	int ret;
+
+	ret = p11_test_run_child (args, false);
+	assert_num_eq (ret, 0);
+#else
+	assert_skip ("cannot perform getprogname test", NULL);
+#endif
+}
+
 #endif /* OS_UNIX */
 
 int
@@ -140,6 +154,7 @@ main (int argc,
 		p11_test (test_secure_getenv, "/compat/secure_getenv");
 	}
 	p11_test (test_mmap, "/compat/mmap");
+	p11_test (test_getprogname, "/compat/getprogname");
 #endif
 	return p11_test_run (argc, argv);
 }
