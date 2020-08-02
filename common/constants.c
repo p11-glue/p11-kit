@@ -645,7 +645,9 @@ lookup_info (const p11_constant *table,
 		}
 	}
 
-	return_val_if_fail (length != -1, NULL);
+	if (length == -1)
+		return_val_if_reached (NULL);
+
 	return bsearch (&match, table, length, sizeof (p11_constant), compar_attr_info);
 
 }
