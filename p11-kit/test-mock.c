@@ -745,7 +745,7 @@ test_find_objects (void)
 	CK_OBJECT_CLASS klass = CKO_PUBLIC_KEY;
 	CK_ATTRIBUTE attr = { CKA_CLASS, &klass, sizeof (klass) };
 	CK_OBJECT_HANDLE objects[16];
-	CK_ULONG count;
+	CK_ULONG count = 0;
 	CK_ULONG i;
 	CK_RV rv;
 
