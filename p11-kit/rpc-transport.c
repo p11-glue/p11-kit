@@ -940,7 +940,6 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
-	/* FIXME: Shouldn't we close STDIN_FILENO? */
 
 	fds[1] = dup (STDOUT_FILENO);
 	if (fds[1] == -1) {
@@ -948,7 +947,6 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
-	/* FIXME: Shouldn't we close STDOUT_FILENO */
 
 	/* Temporarily redirect pipe descriptors to stdin/stdout for child */
 	if (dup2 (pw[0], STDIN_FILENO) == -1 ||
