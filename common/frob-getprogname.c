@@ -63,7 +63,7 @@ main (int argc,
 		}
 
 		if (pid == 0) {
-			char * const argv[] = {
+			char * const args[] = {
 				BUILDDIR "/common/frob-getprogname" EXEEXT " foo bar",
 				"foo",
 				"bar",
@@ -73,7 +73,7 @@ main (int argc,
 			dup2 (pfds[1], STDOUT_FILENO);
 			close (pfds[0]);
 			close (pfds[1]);
-			execv (BUILDDIR "/common/frob-getprogname" EXEEXT, argv);
+			execv (BUILDDIR "/common/frob-getprogname" EXEEXT, args);
 		} else {
 			int status;
 			char buffer[1024];
