@@ -37,6 +37,9 @@
 
 #include "library.h"
 
+#ifndef P11_INIT_H
+#define P11_INIT_H
+
 #ifdef OS_UNIX
 
 void INIT (void);
@@ -92,3 +95,5 @@ DllMain (HINSTANCE instance,
 }
 
 #endif /* OS_WIN32 */
+
+#endif /* P11_INIT_H */
