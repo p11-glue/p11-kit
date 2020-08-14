@@ -915,9 +915,6 @@ p11_index_snapshot (p11_index *index,
 
 	return_val_if_fail (index != NULL, NULL);
 
-	if (count < (CK_ULONG)0UL)
-		count = p11_attrs_count (attrs);
-
 	index_select (index, attrs, count, sink_any, &handles);
 	if (base)
 		index_select (base, attrs, count, sink_any, &handles);
