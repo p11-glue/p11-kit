@@ -875,6 +875,8 @@ static p11_rpc_attribute_serializer p11_rpc_attribute_serializers[] = {
 	{ P11_RPC_VALUE_BYTE_ARRAY, p11_rpc_buffer_add_byte_array_value, p11_rpc_buffer_get_byte_array_value }
 };
 
+P11_STATIC_ASSERT(sizeof(CK_BYTE) <= sizeof(uint8_t));
+
 void
 p11_rpc_buffer_add_byte_value (p11_buffer *buffer,
 			       const void *value,
@@ -889,12 +891,6 @@ p11_rpc_buffer_add_byte_value (p11_buffer *buffer,
 	}
 	if (value)
 		memcpy (&byte_value, value, value_length);
-
-	/* Check if byte_value can be converted to uint8_t. */
-	if (byte_value > UINT8_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
 
 	p11_rpc_buffer_add_byte (buffer, byte_value);
 }
