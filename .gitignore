@@ -59,6 +59,7 @@ x86_64-w64-mingw32
 /test-*
 frob-*
 !frob-*.c
+*.asn.h
 
 /x86_64_w64-mingw32/
 

@@ -7,22 +7,29 @@ libtrust_data_sources = [
   'x509.c'
 ]
 
-asn_sources = [
-  'basic.asn',
-  'pkix.asn',
-  'openssl.asn'
-]
+basic_asn_h = custom_target('basic.asn.h',
+                            output: 'basic.asn.h',
+                            input: 'basic.asn',
+                            command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
 
-asn_h_gen = generator(asn1Parser,
-                      output: '@BASENAME@.h',
-                      arguments: ['-o', '@OUTPUT@', '@INPUT@'])
-asn_h = asn_h_gen.process(asn_sources)
+pkix_asn_h = custom_target('pkix.asn.h',
+                           output: 'pkix.asn.h',
+                           input: 'pkix.asn',
+                           command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
+
+openssl_asn_h = custom_target('openssl.asn.h',
+                            output: 'openssl.asn.h',
+                            input: 'openssl.asn',
+                            command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
+
+asn_h_dep = declare_dependency(
+  sources: [basic_asn_h, pkix_asn_h, openssl_asn_h]
+)
 
 libtrust_data = static_library('libtrust-data',
-                               asn_h,
                                libtrust_data_sources,
                                include_directories: [configinc, commoninc],
-                               dependencies: libtasn1_deps)
+                               dependencies: [asn_h_dep] + libtasn1_deps)
 
 libtrust_sources = [
   'builder.c',
@@ -49,7 +56,7 @@ shared_module('p11-kit-trust',
               'module-init.c',
               name_prefix: '',
               c_args: p11_kit_trust_c_args,
-              dependencies: [libp11_library_dep] + libtasn1_deps,
+              dependencies: [asn_h_dep, libp11_library_dep] + libtasn1_deps,
               link_args: p11_module_ldflags,
               link_depends: [p11_module_symbol_map,
                              p11_module_symbol_def],
@@ -68,7 +75,7 @@ if get_option('test')
                                      libtrust_sources,
                                      include_directories: [configinc, commoninc],
                                      c_args: libtrust_testable_c_args,
-                                     dependencies: libtasn1_deps)
+                                     dependencies: [asn_h_dep] + libtasn1_deps)
 endif
 
 trust_sources = [
@@ -90,11 +97,11 @@ trust_sources = [
 ]
 
 executable('trust',
-           asn_h,
            trust_sources,
            c_args: common_c_args,
            link_with: libtrust_data,
-           dependencies: [libp11_kit_dep,
+           dependencies: [asn_h_dep,
+                          libp11_kit_dep,
                           libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps,
            install: true)
 
@@ -136,7 +143,8 @@ if get_option('test')
   foreach name : trust_tests
     t = executable(name, '@0@.c'.format(name),
                    c_args: common_c_args + tests_c_args + libtrust_testable_c_args,
-                   dependencies: [libp11_kit_dep,
+                   dependencies: [asn_h_dep,
+                                  libp11_kit_dep,
                                   libp11_library_dep,
                                   libp11_test_dep] + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
@@ -158,7 +166,8 @@ if get_option('test')
   foreach name : trust_progs
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args,
-                   dependencies: [libp11_kit_dep,
+                   dependencies: [asn_h_dep,
+                                  libp11_kit_dep,
                                   libp11_library_dep,
                                   libp11_test_dep] + libffi_deps + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
