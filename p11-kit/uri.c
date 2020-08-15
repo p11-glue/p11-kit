@@ -1579,13 +1579,18 @@ parse_vendor_query (const char *name_start, const char *name_end,
 	assert (name_start <= name_end);
 	assert (start <= end);
 
-	/* FIXME: Should we limit the characters in NAME, according to
-	 * the specification?  */
 	name = malloc (name_end - name_start + 1);
 	if (name == NULL)
 		return P11_KIT_URI_BAD_ENCODING;
 	memcpy (name, name_start, name_end - name_start);
 	name[name_end - name_start] = '\0';
+
+	/* Limit the characters in NAME, according to the specification.  */
+	if (strspn (name, "abcdefghijklmnopqrstuvwxyz0123456789-_") !=
+	    name_end - name_start) {
+		free (name);
+		return P11_KIT_URI_UNEXPECTED;
+	}
 
 	value = p11_url_decode (start, end, P11_URL_WHITESPACE, NULL);
 	if (value == NULL) {
