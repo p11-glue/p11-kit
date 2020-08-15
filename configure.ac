@@ -237,6 +237,7 @@ AS_IF([test "$with_libtasn1" != "no"], [
 	)
 	AC_SUBST(LIBTASN1_CFLAGS)
 	AC_SUBST(LIBTASN1_LIBS)
+	AC_PATH_PROG([ASN1PARSER], [asn1Parser])
 	with_libtasn1="yes"
 	AC_DEFINE_UNQUOTED(WITH_ASN1, 1, [Build with libtasn1 and certificate support])
 ])

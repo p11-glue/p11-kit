@@ -9,14 +9,12 @@ check_LTLIBRARIES += \
 
 libtrust_data_la_SOURCES = \
 	trust/asn1.c trust/asn1.h \
-	trust/basic.asn trust/basic.asn.h \
 	trust/base64.c trust/base64.h \
 	trust/pem.c trust/pem.h \
-	trust/pkix.asn trust/pkix.asn.h \
 	trust/oid.c trust/oid.h \
-	trust/openssl.asn trust/openssl.asn.h \
 	trust/utf8.c trust/utf8.h \
 	trust/x509.c trust/x509.h \
+	$(asn_h) \
 	$(NULL)
 
 libtrust_data_la_CFLAGS = \
@@ -110,9 +108,9 @@ trust_trust_SOURCES = \
 	trust/extract-pem.c \
 	trust/extract-cer.c \
 	trust/list.c trust/list.h \
-	trust/openssl.asn trust/openssl.asn.h \
 	trust/save.c trust/save.h \
 	trust/trust.c \
+	$(asn_h) \
 	$(NULL)
 
 externaldir = $(privatedir)
@@ -127,10 +125,21 @@ EXTRA_DIST += \
 	trust/p11-kit-trust.module \
 	trust/meson.build
 
-asn:
-	asn1Parser -o $(srcdir)/trust/pkix.asn.h $(srcdir)/trust/pkix.asn
-	asn1Parser -o $(srcdir)/trust/openssl.asn.h $(srcdir)/trust/openssl.asn
-	asn1Parser -o $(srcdir)/trust/basic.asn.h $(srcdir)/trust/basic.asn
+SUFFIXES = .asn .asn.h
+.asn.asn.h:
+	$(AM_V_GEN)$(ASN1PARSER) -o $@ $<
+
+asn_h = \
+	trust/basic.asn.h \
+	trust/openssl.asn.h \
+	trust/pkix.asn.h
+
+BUILT_SOURCES += $(asn_h)
+
+EXTRA_DIST += \
+	trust/basic.asn \
+	trust/openssl.asn \
+	trust/pkix.asn
 
 # Tests ----------------------------------------------------------------
 
