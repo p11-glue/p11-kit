@@ -137,7 +137,7 @@ p11-kit/uri.gnu.c: p11-kit/uri.h
 p11-kit/iter.gnu.c: p11-kit/iter.h
 p11-kit/pin.gnu.c: p11-kit/pin.h
 
-SUFFIXES = .h .gnu.c
+SUFFIXES += .h .gnu.c
 .h.gnu.c:
 	$(AM_V_GEN) src=$<; dst=$@; rm -f $@-t $@ && \
 	{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
