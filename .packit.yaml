@@ -4,21 +4,21 @@ synced_files:
   - .packit.yaml
 upstream_package_name: p11-kit
 downstream_package_name: p11-kit
+
+# Use only populated spec files and upstream sources.
 actions:
-   post-upstream-clone:
-   - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit.spec
-   - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit-client.service
-   - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/trust-extract-compat
-   - sed -i -e '/^Source[12]:/d' -e '/^gpgv2 /d' p11-kit.spec
+  post-upstream-clone:
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit.spec
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit-client.service
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/trust-extract-compat
+  get-current-version:
+    - "git describe --abbrev=0"
+  create-archive:
+    - "wget https://github.com/p11-glue/p11-kit/releases/download/$PACKIT_PROJECT_VERSION/p11-kit-$PACKIT_PROJECT_VERSION.tar.xz"
+    - "wget https://github.com/p11-glue/p11-kit/releases/download/$PACKIT_PROJECT_VERSION/p11-kit-$PACKIT_PROJECT_VERSION.tar.xz.sig"
 
 jobs:
-- job: copr_build
-  trigger: pull_request
-  metadata:
-    targets:
-    - fedora-development
-
-- job: propose_downstream
-  trigger: release
-  metadata:
-    dist-git-branch: fedora-all
+  - job: propose_downstream
+    trigger: release
+    metadata:
+      dist_git_branches: fedora-all
