@@ -18,6 +18,8 @@ check_PROGRAMS = $(c_tests)
 check_SCRIPTS = $(sh_tests)
 check_LTLIBRARIES =
 
+SUFFIXES =
+
 BUILT_SOURCES =
 
 CLEANFILES =

@@ -125,7 +125,7 @@ EXTRA_DIST += \
 	trust/p11-kit-trust.module \
 	trust/meson.build
 
-SUFFIXES = .asn .asn.h
+SUFFIXES += .asn .asn.h
 .asn.asn.h:
 	$(AM_V_GEN)$(ASN1PARSER) -o $@ $<
 
