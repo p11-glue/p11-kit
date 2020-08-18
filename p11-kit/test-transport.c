@@ -405,6 +405,8 @@ test_fork_and_reinitialize (void)
 
 #include "test-mock.c"
 
+extern bool p11_conf_force_user_config;
+
 int
 main (int argc,
       char *argv[])
@@ -420,6 +422,8 @@ main (int argc,
 	};
 
 	p11_library_init ();
+
+	p11_conf_force_user_config = true;
 
 	/* Override the mechanisms that the RPC mechanism will handle */
 	p11_rpc_mechanisms_override_supported = mechanisms;
