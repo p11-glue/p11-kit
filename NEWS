@@ -1,3 +1,9 @@
+0.23.21 (stable)
+ * proxy: Do not assign duplicate slot IDs [PR#282]
+ * common: Get program name based on executable path if possible [PR#307]
+ * anchor: Exit with non-zero code, if any error occurs [PR#304]
+ * Build and test fixes [PR#283, PR#290, PR#291, PR#292, PR#296, PR#299, PR#305, PR#306, PR#309, PR#311]
+
 0.23.20 (stable)
  * Revert "Fix RPC when length-s are 0" changes [PR#276]
 
