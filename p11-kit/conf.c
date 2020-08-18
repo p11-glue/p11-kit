@@ -57,6 +57,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* For testing, when the tests assuming user config are run as root. */
+bool p11_conf_force_user_config = false;
+
 static int
 strequal (const char *one, const char *two)
 {
@@ -228,7 +231,7 @@ _p11_conf_load_globals (const char *system_conf, const char *user_conf,
 		goto finished;
 	}
 
-	if (mode != CONF_USER_NONE) {
+	if (mode != CONF_USER_NONE && !p11_conf_force_user_config) {
 		if (getauxval (AT_SECURE)) {
 			p11_debug ("skipping user config in setuid or setgid program");
 			mode = CONF_USER_NONE;

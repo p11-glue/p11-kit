@@ -486,10 +486,14 @@ test_already_initialized (void)
 	finalize_and_free_modules (modules);
 }
 
+extern bool p11_conf_force_user_config;
+
 int
 main (int argc,
       char *argv[])
 {
+	p11_conf_force_user_config = true;
+
 	p11_library_init ();
 
 	p11_test (test_filename, "/modules/test_filename");

@@ -406,6 +406,9 @@ test_setuid (void)
 	char *path;
 	int ret;
 
+	if (getuid () == 0)
+		assert_skip ("cannot perform setuid test as root", NULL);
+
 	/* This is the 'number' setting set in one.module user configuration. */
 	ret = p11_test_run_child (args, true);
 	assert_num_eq (ret, 33);
@@ -427,10 +430,14 @@ test_setuid (void)
 
 #endif /* OS_UNIX */
 
+extern bool p11_conf_force_user_config;
+
 int
 main (int argc,
       char *argv[])
 {
+	p11_conf_force_user_config = true;
+
 	p11_test (test_parse_conf_1, "/conf/test_parse_conf_1");
 	p11_test (test_parse_ignore_missing, "/conf/test_parse_ignore_missing");
 	p11_test (test_parse_fail_missing, "/conf/test_parse_fail_missing");
