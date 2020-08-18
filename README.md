@@ -29,21 +29,6 @@ specify `-Dsystemd=disabled -Dbash_completion=disabled`.
 
 # Releases
 
-Releases are made available via the [primary github site](https://github.com/p11-glue/p11-kit/releases).
-
-They are signed with Daiki Ueno's OpenPGP key:
-
-```
-pub   4096R/D7E69871 2009-07-23
-      Key fingerprint = 4622 25C3 B46F 3487 9FC8  496C D605 848E D7E6 9871
-uid                  Daiki Ueno <ueno@unixuser.org>
-uid                  Daiki Ueno <ueno@gnu.org>
-sub   4096R/C8C530D6 2010-02-04
-```
-
-# Reporting security issues
-
-If you find an issue that could potentially impact security, report it
-to ueno@gnu.org, encrypted with the above mentioned OpenPGP key.
+Releases are made available via the [primary github site](https://github.com/p11-glue/p11-kit/releases). They are signed with the current maintainer's [OpenPGP key](https://keys.openpgp.org/search?q=462225C3B46F34879FC8496CD605848ED7E69871).
 
 [PKCS #11]: https://en.wikipedia.org/wiki/PKCS_11
