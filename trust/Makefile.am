@@ -122,6 +122,7 @@ bashcomp_DATA += bash-completion/trust
 endif
 
 EXTRA_DIST += \
+	trust/trust-extract-compat \
 	trust/p11-kit-trust.module \
 	trust/meson.build
 
