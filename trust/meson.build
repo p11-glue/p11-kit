@@ -105,6 +105,9 @@ executable('trust',
                           libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps,
            install: true)
 
+install_data('trust-extract-compat',
+             install_dir: prefix / privatedir)
+
 # Tests ----------------------------------------------------------------
 
 if get_option('test')
