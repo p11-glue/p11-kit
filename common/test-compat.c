@@ -36,6 +36,7 @@
 #include "test.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -130,7 +131,21 @@ test_getprogname (void)
 {
 #if defined(__linux__) && defined(HAVE_PROGRAM_INVOCATION_SHORT_NAME)
 	const char *args[] = { BUILDDIR "/common/frob-getprogname", NULL };
+	char *path;
 	int ret;
+
+	if (access ("/proc/self/exe", F_OK) < 0)
+		assert_skip ("cannot perform getprogname test: no /proc/self/exe", NULL);
+
+	path = realpath ("/proc/self/exe", NULL);
+	if (!path)
+		assert_skip ("cannot perform getprogname test: cannot resolve /proc/self/exe", NULL);
+
+	ret = strcmp (path, BUILDDIR "/test-compat" EXEEXT);
+	free (path);
+	if (ret != 0) {
+		assert_skip ("cannot perform getprogname test: path contains a symlink", NULL);
+	}
 
 	ret = p11_test_run_child (args, false);
 	assert_num_eq (ret, 0);
