@@ -41,7 +41,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/uio.h>
-#include <sys/errno.h>
+#include <errno.h>
 
 #ifdef HAVE_UCRED_H
 #  include <ucred.h>
