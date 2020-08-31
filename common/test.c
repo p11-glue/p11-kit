@@ -53,6 +53,7 @@
 
 #ifdef OS_UNIX
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/wait.h>
 #endif
 
@@ -586,6 +587,13 @@ p11_test_copy_setgid (const char *input,
 		int ret;
 		int fd;
 		int i;
+	struct statvfs f;
+
+	statvfs (tmpdir, &f);
+	if (f.f_flag & ST_NOSUID) {
+		fprintf (stderr, "cannot perform setgid test on nosuid filesystem\n");
+		return NULL;
+	}
 
 	ret = getgroups (128, groups);
 	for (i = 0; i < ret; ++i) {
