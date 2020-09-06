@@ -181,7 +181,8 @@ p11_library_uninit (void)
 #endif
 
 #ifdef HAVE_STRERROR_L
-	freelocale (p11_message_locale);
+	if (p11_message_locale != (locale_t) 0)
+		freelocale (p11_message_locale);
 #endif
 	p11_message_storage = dont_store_message;
 #ifndef P11_TLS_KEYWORD
