@@ -42,6 +42,10 @@ option('systemd', type : 'feature',
        value : 'auto',
        description : 'Use systemd socket activation')
 
+option('bashcompdir', type : 'string',
+       value : '',
+       description : 'Override default location for bash completion files')
+
 option('bash_completion', type : 'feature',
        value : 'auto',
        description : 'Install bash completion files')
