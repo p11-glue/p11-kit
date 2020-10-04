@@ -848,7 +848,7 @@ certificate_validate (p11_builder *builder,
 	 * In theory we should be validating that in the absence of CKA_VALUE
 	 * various other fields must be set. However we do not enforce this
 	 * because we want to be able to have certificates without a value
-	 * but issuer and serial number, for blacklisting purposes.
+	 * but issuer and serial number, for blocklisting purposes.
 	 */
 
 	if (have_attribute (attrs, merge, CKA_URL)) {
@@ -1273,7 +1273,7 @@ build_trust_object_ku (p11_builder *builder,
 
 	defawlt = present;
 
-	/* If blacklisted, don't even bother looking at extensions */
+	/* If distrusted, don't even bother looking at extensions */
 	if (present != CKT_NSS_NOT_TRUSTED)
 		data = lookup_extension (builder, index, cert, NULL, P11_OID_KEY_USAGE, &length);
 
@@ -1617,7 +1617,7 @@ build_trust_assertions (p11_array *positives,
 
 	if (distrust && negatives) {
 		/*
-		 * Trust assertions are defficient in that they don't blacklist a certificate
+		 * Trust assertions are defficient in that they don't blocklist a certificate
 		 * for any purposes. So we just have to go wild and write out a bunch of
 		 * assertions for all our known purposes.
 		 */

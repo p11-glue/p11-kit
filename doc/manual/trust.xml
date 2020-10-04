@@ -92,11 +92,11 @@ $ trust list
 			</varlistentry>
 			<varlistentry>
 				<term><option>trust-policy</option></term>
-				<listitem><para>Anchors and blacklist (default)</para></listitem>
+				<listitem><para>Anchors and blocklist (default)</para></listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>blacklist</option></term>
-				<listitem><para>Blacklisted certificates</para></listitem>
+				<term><option>blocklist</option></term>
+				<listitem><para>Distrusted certificates</para></listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>certificates</option></term>
@@ -112,10 +112,10 @@ $ trust list
 		<para>If an output format is chosen that cannot support type what has been
 		specified by the filter, a message will be printed.</para>
 
-		<para>None of the available formats support storage of blacklist entries
-		that do not contain a full certificate. Thus any certificates blacklisted by
+		<para>None of the available formats support storage of blocklist entries
+		that do not contain a full certificate. Thus any certificates distrusted by
 		their issuer and serial number alone, are not included in the extracted
-		blacklist.</para>
+		blocklist.</para>
 		</listitem>
 	</varlistentry>
 	<varlistentry>
@@ -228,11 +228,11 @@ $ trust extract --format=x509-directory --filter=ca-anchors /path/to/directory
 				</varlistentry>
 				<varlistentry>
 					<term><option>trust-policy</option></term>
-					<listitem><para>Anchors and blacklist</para></listitem>
+					<listitem><para>Anchors and blocklist</para></listitem>
 				</varlistentry>
 				<varlistentry>
-					<term><option>blacklist</option></term>
-					<listitem><para>Blacklisted certificates</para></listitem>
+					<term><option>blocklist</option></term>
+					<listitem><para>Distrusted certificates</para></listitem>
 				</varlistentry>
 				<varlistentry>
 					<term><option>certificates</option></term>
@@ -248,10 +248,10 @@ $ trust extract --format=x509-directory --filter=ca-anchors /path/to/directory
 			<para>If an output format is chosen that cannot support type what has been
 			specified by the filter, a message will be printed.</para>
 
-			<para>None of the available formats support storage of blacklist entries
-			that do not contain a full certificate. Thus any certificates blacklisted by
+			<para>None of the available formats support storage of blocklist entries
+			that do not contain a full certificate. Thus any certificates distrusted by
 			their issuer and serial number alone, are not included in the extracted
-			blacklist.</para>
+			blocklist.</para>
 			</listitem>
 		</varlistentry>
 		<varlistentry>

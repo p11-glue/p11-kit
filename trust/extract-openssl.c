@@ -180,7 +180,7 @@ write_trust_and_rejects (p11_enumerate *ex,
 	if (distrust) {
 
 		/*
-		 * If this is on the blacklist then, make sure we have
+		 * If this is on the blocklist then, make sure we have
 		 * an empty trusts field and add as many things to rejects
 		 * as possible.
 		 */

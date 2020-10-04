@@ -47,7 +47,7 @@
 enum {
 	/* These overlap with the flags in save.h, so start higher */
 	P11_ENUMERATE_ANCHORS = 1 << 21,
-	P11_ENUMERATE_BLACKLIST = 1 << 22,
+	P11_ENUMERATE_BLOCKLIST = 1 << 22,
 	P11_ENUMERATE_COLLAPSE = 1 << 23,
 	P11_ENUMERATE_CORRELATE = 1 << 24,
 };
@@ -63,8 +63,8 @@ typedef struct {
 	int num_filters;
 	int flags;
 
-	p11_dict *blacklist_issuer_serial;
-	p11_dict *blacklist_public_key;
+	p11_dict *blocklist_issuer_serial;
+	p11_dict *blocklist_public_key;
 
 	/*
 	 * Stuff below is parsed info for the current iteration.

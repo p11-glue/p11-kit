@@ -69,7 +69,7 @@ struct _p11_token {
 
 	char *path;               /* Main path to load from */
 	char *anchors;            /* Path to load anchors from */
-	char *blacklist;          /* Path to load blacklist from */
+	char *blocklist;          /* Path to load blocklist from */
 	char *label;              /* The token label */
 	CK_SLOT_ID slot;          /* The slot id */
 
@@ -175,9 +175,9 @@ loader_load_file (p11_token *token,
 	if (p11_path_prefix (filename, token->anchors))
 		flags = P11_PARSE_FLAG_ANCHOR;
 
-	/* If it's in the blacklist subdirectory, treat as a blacklist */
-	else if (p11_path_prefix (filename, token->blacklist))
-		flags = P11_PARSE_FLAG_BLACKLIST;
+	/* If it's in the blocklist subdirectory, treat as a blocklist */
+	else if (p11_path_prefix (filename, token->blocklist))
+		flags = P11_PARSE_FLAG_BLOCKLIST;
 
 	/* If the token is just one path, then assume they are anchors */
 	else if (strcmp (filename, token->path) == 0 && !S_ISDIR (sb->st_mode))
@@ -385,7 +385,7 @@ p11_token_load (p11_token *token)
 		if (ret >= 0)
 			total += ret;
 
-		ret = loader_load_path (token, token->blacklist, &is_dir);
+		ret = loader_load_path (token, token->blocklist, &is_dir);
 		if (ret >= 0)
 			total += ret;
 	}
@@ -809,7 +809,7 @@ p11_token_free (p11_token *token)
 	p11_dict_free (token->loaded);
 	free (token->path);
 	free (token->anchors);
-	free (token->blacklist);
+	free (token->blocklist);
 	free (token->label);
 	free (token);
 }
@@ -855,8 +855,8 @@ p11_token_new (CK_SLOT_ID slot,
 	token->anchors = p11_path_build (token->path, "anchors", NULL);
 	return_val_if_fail (token->anchors != NULL, NULL);
 
-	token->blacklist = p11_path_build (token->path, "blacklist", NULL);
-	return_val_if_fail (token->blacklist != NULL, NULL);
+	token->blocklist = p11_path_build (token->path, "blocklist", NULL);
+	return_val_if_fail (token->blocklist != NULL, NULL);
 
 	token->label = strdup (label);
 	return_val_if_fail (token->label != NULL, NULL);

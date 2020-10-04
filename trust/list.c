@@ -133,7 +133,7 @@ list_iterate (p11_enumerate *ex,
 		}
 
 		if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &val) && val)
-			printf ("    trust: blacklisted\n");
+			printf ("    trust: distrusted\n");
 		else if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &val) && val)
 			printf ("    trust: anchor\n");
 		else
@@ -195,8 +195,8 @@ p11_trust_list (int argc,
 		{ opt_filter,
 		  "filter of what to export\n"
 		  "  ca-anchors        certificate anchors\n"
-		  "  blacklist         blacklisted certificates\n"
-		  "  trust-policy      anchors and blacklist (default)\n"
+		  "  blocklist         distrusted certificates\n"
+		  "  trust-policy      anchors and blocklist (default)\n"
 		  "  certificates      all certificates\n"
 		  "  pkcs11:object=xx  a PKCS#11 URI",
 		  "what",
