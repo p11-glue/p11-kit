@@ -305,8 +305,8 @@ test_parse_openssl_distrusted (void)
 	int i;
 
 	/*
-	 * OpenSSL style is to litter the blacklist in with the anchors,
-	 * so we parse this as an anchor, but expect it to be blacklisted
+	 * OpenSSL style is to litter the blocklist in with the anchors,
+	 * so we parse this as an anchor, but expect it to be distrusted
 	 */
 	p11_parser_formats (test.parser, p11_parser_format_pem, NULL);
 	ret = p11_parse_file (test.parser, SRCDIR "/trust/fixtures/distrusted.pem", NULL,

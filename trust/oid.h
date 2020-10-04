@@ -133,9 +133,8 @@ static const char P11_OID_ANY_EXTENDED_KEY_USAGE_STR[] = "2.5.29.37.0";
  *
  * OpenSSL contains a list of OID extended key usages to reject.
  * The normal X.509 model is to only *include* the extended key
- * usages that are to be allowed (ie: a whitelist). It's not clear
- * exactly how valid and useful the reject per extended key usage
- * model is.
+ * usages that are to be allowed. It's not clear exactly how
+ * valid and useful the reject per extended key usage model is.
  *
  * However in order to parse openssl trust policy information and
  * be able to write it back out in the same way, we define a custom
@@ -146,8 +145,8 @@ static const char P11_OID_ANY_EXTENDED_KEY_USAGE_STR[] = "2.5.29.37.0";
  *
  * This extension is never marked critical. It is not necessary to
  * respect information in this certificate extension given that the
- * ExtendedKeyUsage extension carries the same information as a
- * whitelist.
+ * ExtendedKeyUsage extension carries the same information as an
+ * allowlist.
  */
 static const unsigned char P11_OID_OPENSSL_REJECT[] =
 	{ 0x06, 0x0a, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x99, 0x77, 0x06, 0x0a, 0x01 };
@@ -232,7 +231,7 @@ static const char P11_OID_TIME_STAMPING_STR[] = "1.3.6.1.5.5.7.3.8";
  * This is used with ExtendedKeyUsage certificate extensions to
  * be a place holder when no other purposes are defined.
  *
- * In theory such a certificate should be blacklisted. But in reality
+ * In theory such a certificate should be distrusted. But in reality
  * many implementations use such empty sets of purposes. RFC 5280 requires
  * at least one purpose in an ExtendedKeyUsage.
  *

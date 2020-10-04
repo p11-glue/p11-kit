@@ -185,16 +185,16 @@ check_trust_flags (p11_enumerate *ex)
 	int flags = 0;
 
 	/* If no extract trust flags, then just continue */
-	if (!(ex->flags & (P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST)))
+	if (!(ex->flags & (P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLOCKLIST)))
 		return true;
 
-	/* Is this a blacklisted directly? */
+	/* Is this a distrusted directly? */
 	if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &distrusted) && distrusted)
-		flags = P11_ENUMERATE_BLACKLIST;
+		flags = P11_ENUMERATE_BLOCKLIST;
 
-	/* Is it blacklisted elsewhere? then prevent it from being an anchor */
-	else if (p11_dict_get (ex->blacklist_public_key, ex->attrs) ||
-	         p11_dict_get (ex->blacklist_issuer_serial, ex->attrs))
+	/* Is it distrusted elsewhere? then prevent it from being an anchor */
+	else if (p11_dict_get (ex->blocklist_public_key, ex->attrs) ||
+	         p11_dict_get (ex->blocklist_issuer_serial, ex->attrs))
 		flags = 0;
 
 	/* Otherwise it might be an anchor? */
@@ -390,7 +390,7 @@ on_iterate_load_filter (p11_kit_iter *iter,
 }
 
 /*
- * Various skip lookup tables, used for blacklists and collapsing
+ * Various skip lookup tables, used for blocklists and collapsing
  * duplicate entries.
  *
  * The dict hash/lookup callbacks are special cased
@@ -432,7 +432,7 @@ issuer_serial_hash (const void *data)
 }
 
 static bool
-blacklist_load (p11_enumerate *ex)
+blocklist_load (p11_enumerate *ex)
 {
 	p11_kit_iter *iter;
 	CK_BBOOL distrusted = CK_TRUE;
@@ -463,28 +463,28 @@ blacklist_load (p11_enumerate *ex)
 
 		/*
 		 * Fail "safe" in that first failure doesn't cause ignoring
-		 * the remainder of the blacklist.
+		 * the remainder of the blocklist.
 		 */
 		rv = p11_kit_iter_load_attributes (iter, attrs, 3);
 		if (rv != CKR_OK) {
-			p11_message ("couldn't load blacklist: %s", p11_kit_strerror (rv));
+			p11_message ("couldn't load blocklist: %s", p11_kit_strerror (rv));
 			continue;
 		}
 
-		/* A blacklisted item with an issuer and serial number */
+		/* A distrusted item with an issuer and serial number */
 		issuer = p11_attrs_find_valid (attrs, CKA_ISSUER);
 		serial = p11_attrs_find_valid (attrs, CKA_SERIAL_NUMBER);
 		if (issuer != NULL && serial != NULL) {
 			key = p11_attrs_build (NULL, issuer, serial, NULL);
-			if (!key || !p11_dict_set (ex->blacklist_issuer_serial, key, "x"))
+			if (!key || !p11_dict_set (ex->blocklist_issuer_serial, key, "x"))
 				return_val_if_reached (false);
 		}
 
-		/* A blacklisted item with a public key */
+		/* A distrusted item with a public key */
 		public_key = p11_attrs_find_valid (attrs, CKA_PUBLIC_KEY_INFO);
 		if (public_key != NULL) {
 			key = p11_attrs_build (NULL, public_key, NULL);
-			if (!public_key || !p11_dict_set (ex->blacklist_public_key, key, "x"))
+			if (!public_key || !p11_dict_set (ex->blocklist_public_key, key, "x"))
 				return_val_if_reached (false);
 		}
 	}
@@ -495,7 +495,7 @@ blacklist_load (p11_enumerate *ex)
 	if (rv == CKR_CANCEL)
 		return true;
 
-	p11_message ("couldn't load blacklist: %s", p11_kit_strerror (rv));
+	p11_message ("couldn't load blocklist: %s", p11_kit_strerror (rv));
 	return false;
 }
 
@@ -509,13 +509,13 @@ p11_enumerate_init (p11_enumerate *ex)
 	ex->iter = p11_kit_iter_new (NULL, 0);
 	return_if_fail (ex->iter != NULL);
 
-	ex->blacklist_public_key = p11_dict_new (public_key_hash, public_key_equal,
+	ex->blocklist_public_key = p11_dict_new (public_key_hash, public_key_equal,
 	                                         p11_attrs_free, NULL);
-	return_if_fail (ex->blacklist_public_key);
+	return_if_fail (ex->blocklist_public_key);
 
-	ex->blacklist_issuer_serial = p11_dict_new (issuer_serial_hash, issuer_serial_equal,
+	ex->blocklist_issuer_serial = p11_dict_new (issuer_serial_hash, issuer_serial_equal,
 	                                            p11_attrs_free, NULL);
-	return_if_fail (ex->blacklist_issuer_serial);
+	return_if_fail (ex->blocklist_issuer_serial);
 
 	p11_kit_iter_add_callback (ex->iter, on_iterate_load_filter, ex, NULL);
 }
@@ -530,10 +530,10 @@ p11_enumerate_cleanup (p11_enumerate *ex)
 
 	p11_dict_free (ex->already_seen);
 	ex->already_seen = NULL;
-	p11_dict_free (ex->blacklist_public_key);
-	ex->blacklist_public_key = NULL;
-	p11_dict_free (ex->blacklist_issuer_serial);
-	ex->blacklist_issuer_serial = NULL;
+	p11_dict_free (ex->blocklist_public_key);
+	ex->blocklist_public_key = NULL;
+	p11_dict_free (ex->blocklist_issuer_serial);
+	ex->blocklist_issuer_serial = NULL;
 
 	p11_dict_free (ex->asn1_defs);
 	ex->asn1_defs = NULL;
@@ -594,11 +594,11 @@ p11_enumerate_opt_filter (p11_enumerate *ex,
 
 	} else if (strcmp (option, "trust-policy") == 0) {
 		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
-		ex->flags |= P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_COLLAPSE;
+		ex->flags |= P11_ENUMERATE_ANCHORS | P11_ENUMERATE_BLOCKLIST | P11_ENUMERATE_COLLAPSE;
 
-	} else if (strcmp (option, "blacklist") == 0) {
+	} else if (strcmp (option, "blocklist") == 0) {
 		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
-		ex->flags |= P11_ENUMERATE_BLACKLIST | P11_ENUMERATE_COLLAPSE;
+		ex->flags |= P11_ENUMERATE_BLOCKLIST | P11_ENUMERATE_COLLAPSE;
 
 	} else if (strcmp (option, "certificates") == 0) {
 		attrs = p11_attrs_build (NULL, &certificate, &x509, NULL);
@@ -702,12 +702,12 @@ p11_enumerate_ready (p11_enumerate *ex,
 		p11_message ("no modules containing trust policy are registered");
 
 	/*
-	 * If loading anchors, then the caller expects that the blacklist is
-	 * "applied" and any anchors on the blacklist are taken out. This is
-	 * for compatibility with software that does not support blacklists.
+	 * If loading anchors, then the caller expects that the blocklist is
+	 * "applied" and any anchors on the blocklist are taken out. This is
+	 * for compatibility with software that does not support blocklists.
 	 */
 	if (ex->flags & P11_ENUMERATE_ANCHORS) {
-		if (!blacklist_load (ex))
+		if (!blocklist_load (ex))
 			return false;
 	}
 

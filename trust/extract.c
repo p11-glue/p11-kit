@@ -132,9 +132,9 @@ validate_filter_and_format (p11_enumerate *ex,
 	}
 
 	if ((ex->flags & P11_ENUMERATE_ANCHORS) &&
-	    (ex->flags & P11_ENUMERATE_BLACKLIST)) {
+	    (ex->flags & P11_ENUMERATE_BLOCKLIST)) {
 		/*
-		 * If we're extracting *both* anchors and blacklist, then we must have
+		 * If we're extracting *both* anchors and blocklist, then we must have
 		 * a format that can represent the different types of information.
 		 */
 
@@ -197,8 +197,8 @@ p11_trust_extract (int argc,
 		{ opt_filter,
 		  "filter of what to export\n"
 		  "  ca-anchors        certificate anchors\n"
-		  "  blacklist         blacklisted certificates\n"
-		  "  trust-policy      anchors and blacklist\n"
+		  "  blocklist         distrusted certificates\n"
+		  "  trust-policy      anchors and blocklist\n"
 		  "  certificates      all certificates\n"
 		  "  pkcs11:object=xx  a PKCS#11 URI",
 		  "what",

@@ -143,12 +143,12 @@ static void
 test_token_flags (void *path)
 {
 	/*
-	 * blacklist comes from the input/distrust.pem file. It is not in the blacklist
+	 * blocklist comes from the input/distrust.pem file. It is not in the blocklist
 	 * directory, but is an OpenSSL trusted certificate file, and is marked
-	 * in the blacklist style for OpenSSL.
+	 * in the blocklist style for OpenSSL.
 	 */
 
-	CK_ATTRIBUTE blacklist[] = {
+	CK_ATTRIBUTE blocklist[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_LABEL, "Red Hat Is the CA", 17 },
 		{ CKA_SERIAL_NUMBER, "\x02\x01\x01", 3 },
@@ -158,8 +158,8 @@ test_token_flags (void *path)
 	};
 
 	/*
-	 * blacklist2 comes from the input/blacklist/self-server.der file. It is
-	 * explicitly put on the blacklist, even though it contains no trust
+	 * blocklist2 comes from the input/blocklist/self-server.der file. It is
+	 * explicitly put on the blocklist, even though it contains no trust
 	 * policy information.
 	 */
 
@@ -171,7 +171,7 @@ test_token_flags (void *path)
 		0x72, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
 	};
 
-	CK_ATTRIBUTE blacklist2[] = {
+	CK_ATTRIBUTE blocklist2[] = {
 		{ CKA_CLASS, &certificate, sizeof (certificate) },
 		{ CKA_SUBJECT, (void *)self_server_subject, sizeof (self_server_subject) },
 		{ CKA_TRUSTED, &falsev, sizeof (falsev) },
@@ -220,8 +220,8 @@ test_token_flags (void *path)
 
 	CK_ATTRIBUTE *expected[] = {
 		anchor,
-		blacklist,
-		blacklist2,
+		blocklist,
+		blocklist2,
 		notrust,
 		NULL,
 	};

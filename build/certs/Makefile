@@ -31,7 +31,7 @@ prepare-certs:
 	openssl x509 -in redhat-newca.der -inform DER -out $(TRUST)/fixtures/distrusted.pem \
 		-addreject clientAuth -setalias "Red Hat Is the CA"
 	cp -v $(TRUST)/fixtures/distrusted.pem $(TRUST)/input
-	cp -v self-server.der $(TRUST)/input/blacklist
+	cp -v self-server.der $(TRUST)/input/blocklist
 	cp -v self-signed-with-eku.der $(TRUST)/fixtures
 	cp -v self-signed-with-ku.der $(TRUST)/fixtures
 	cp -v testing-ca.der $(TRUST)/input/anchors

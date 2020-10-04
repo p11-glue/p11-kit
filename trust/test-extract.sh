@@ -83,18 +83,18 @@ test_extract()
 	assert_contains extract-test.pem $CERT_3_CN
 }
 
-test_blacklist()
+test_blocklist()
 {
-	mkdir -p $SOURCE_1/blacklist
-	cp cert_3.pem $SOURCE_1/blacklist
-	TD="$SOURCE_1/blacklist/cert_3.pem $TD"
+	mkdir -p $SOURCE_1/blocklist
+	cp cert_3.pem $SOURCE_1/blocklist
+	TD="$SOURCE_1/blocklist/cert_3.pem $TD"
 
 	trust extract --filter=ca-anchors --format=pem-bundle \
 		--purpose=server-auth --comment \
-		blacklist-test.pem
+		blocklist-test.pem
 
-	assert_contains blacklist-test.pem $CERT_1_CN
-	assert_not_contains blacklist-test.pem $CERT_3_CN
+	assert_contains blocklist-test.pem $CERT_1_CN
+	assert_not_contains blocklist-test.pem $CERT_3_CN
 }
 
-run test_extract test_blacklist
+run test_extract test_blocklist

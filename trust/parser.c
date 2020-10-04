@@ -108,19 +108,19 @@ populate_trust (p11_parser *parser,
 		distrustv = CK_FALSE;
 
 	/*
-	 * If we're parsing a blacklist location, then force all certificates to
-	 * be blacklisted, regardless of whether they contain anchor information.
+	 * If we're parsing a blocklist location, then force all certificates to
+	 * be distrusted, regardless of whether they contain anchor information.
 	 */
-	} else if (parser->flags & P11_PARSE_FLAG_BLACKLIST) {
+	} else if (parser->flags & P11_PARSE_FLAG_BLOCKLIST) {
 		if (p11_attrs_find_bool (attrs, CKA_TRUSTED, &trustedv) && trustedv)
-			p11_message ("overriding trust for anchor in blacklist: %s", parser->basename);
+			p11_message ("overriding trust for anchor in blocklist: %s", parser->basename);
 
 		trustedv = CK_FALSE;
 		distrustv = CK_TRUE;
 
 	/*
 	 * If the location doesn't have a flag, then fill in trust attributes
-	 * if they are missing: neither an anchor or blacklist.
+	 * if they are missing: neither an anchor or blocklist.
 	 */
 	} else {
 		trustedv = CK_FALSE;
@@ -432,9 +432,9 @@ build_openssl_extensions (p11_parser *parser,
 	}
 
 	/*
-	 * OpenSSL model blacklists as anchors with all purposes being removed/rejected,
+	 * OpenSSL model blocklists as anchors with all purposes being removed/rejected,
 	 * we account for that here. If there is an ExtendedKeyUsage without any
-	 * useful purposes, then treat like a blacklist.
+	 * useful purposes, then treat like a blocklist.
 	 */
 	if (trust && p11_dict_size (trust) == 0) {
 		trusted = CK_FALSE;
@@ -450,9 +450,9 @@ build_openssl_extensions (p11_parser *parser,
 	}
 
 	/*
-	 * OpenSSL model blacklists as anchors with all purposes being removed/rejected,
+	 * OpenSSL model blocklists as anchors with all purposes being removed/rejected,
 	 * we account for that here. If there is an ExtendedKeyUsage without any
-	 * useful purposes, then treat like a blacklist.
+	 * useful purposes, then treat like a blocklist.
 	 */
 
 	cert = p11_attrs_merge (cert, p11_attrs_dup (trust_attrs), true);

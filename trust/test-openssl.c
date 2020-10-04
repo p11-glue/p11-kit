@@ -299,7 +299,7 @@ test_distrust_all (void)
 	char *destination;
 	bool ret;
 
-	static CK_ATTRIBUTE cacert3_blacklist[] = {
+	static CK_ATTRIBUTE cacert3_blocklist[] = {
 		{ CKA_VALUE, (void *)test_cacert3_ca_der, sizeof (test_cacert3_ca_der) },
 		{ CKA_CLASS, &certificate_class, sizeof (certificate_class) },
 		{ CKA_CERTIFICATE_TYPE, &x509_type, sizeof (x509_type) },
@@ -308,7 +308,7 @@ test_distrust_all (void)
 		{ CKA_INVALID },
 	};
 
-	setup_objects (cacert3_blacklist, NULL);
+	setup_objects (cacert3_blocklist, NULL);
 
 	p11_kit_iter_add_filter (test.ex.iter, certificate_filter, 1);
 	p11_kit_iter_begin_with (test.ex.iter, &test.module, 0, 0);
