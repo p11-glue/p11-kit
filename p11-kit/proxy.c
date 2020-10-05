@@ -744,7 +744,7 @@ proxy_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
                           CK_SLOT_ID id)
 {
 	State *state = (State *)self;
-	CK_SESSION_HANDLE_PTR to_close;
+	CK_SESSION_HANDLE_PTR to_close = NULL;
 	CK_RV rv = CKR_OK;
 	Session *sess;
 	CK_ULONG i, count = 0;
@@ -756,7 +756,7 @@ proxy_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (state->px->sessions != NULL);
-			to_close = calloc (p11_dict_size (state->px->sessions), sizeof (CK_SESSION_HANDLE));
+			to_close = calloc (p11_dict_size (state->px->sessions) + 1, sizeof (CK_SESSION_HANDLE));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {
