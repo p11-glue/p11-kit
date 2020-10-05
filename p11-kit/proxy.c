@@ -265,7 +265,7 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 		/* Ask module for its slots */
 		rv = (funcs->C_GetSlotList) (FALSE, NULL, &count);
 		if (rv == CKR_OK && count) {
-			slots = calloc (sizeof (CK_SLOT_ID), count);
+			slots = calloc (count, sizeof (CK_SLOT_ID));
 			rv = (funcs->C_GetSlotList) (FALSE, slots, &count);
 		}
 
@@ -756,7 +756,7 @@ proxy_C_CloseAllSessions (CK_X_FUNCTION_LIST *self,
 			rv = CKR_CRYPTOKI_NOT_INITIALIZED;
 		} else {
 			assert (state->px->sessions != NULL);
-			to_close = calloc (sizeof (CK_SESSION_HANDLE), p11_dict_size (state->px->sessions));
+			to_close = calloc (p11_dict_size (state->px->sessions), sizeof (CK_SESSION_HANDLE));
 			if (!to_close) {
 				rv = CKR_HOST_MEMORY;
 			} else {
