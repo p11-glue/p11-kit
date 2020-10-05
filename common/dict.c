@@ -122,7 +122,7 @@ lookup_or_create_bucket (p11_dict *dict,
 		return bucketp;
 
 	/* add a new entry for non-NULL val */
-	(*bucketp) = calloc (sizeof (dictbucket), 1);
+	(*bucketp) = calloc (1, sizeof (dictbucket));
 
 	if (*bucketp != NULL) {
 		(*bucketp)->key = (void*)key;
@@ -175,7 +175,7 @@ p11_dict_set (p11_dict *dict,
 		/* check that the collision rate isn't too high */
 		if (dict->num_items > dict->num_buckets) {
 			num_buckets = dict->num_buckets * 2 + 1;
-			new_buckets = (dictbucket **)calloc (sizeof (dictbucket *), num_buckets);
+			new_buckets = (dictbucket **)calloc (num_buckets, sizeof (dictbucket *));
 
 			/* Ignore failures, maybe we can expand later */
 			if(new_buckets) {
@@ -283,7 +283,7 @@ p11_dict_new (p11_dict_hasher hash_func,
 		dict->value_destroy_func = value_destroy_func;
 
 		dict->num_buckets = 9;
-		dict->buckets = (dictbucket **)calloc (sizeof (dictbucket *), dict->num_buckets);
+		dict->buckets = (dictbucket **)calloc (dict->num_buckets, sizeof (dictbucket *));
 		if (!dict->buckets) {
 			free (dict);
 			return NULL;
