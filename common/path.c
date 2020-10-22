@@ -241,8 +241,10 @@ p11_path_build (const char *path,
 			num--;
 
 		if (at != 0) {
-			if (num == 0)
+			if (num == 0) {
+				path = va_arg (va, const char *);
 				continue;
+			}
 			built[at++] = delim;
 		}
 
