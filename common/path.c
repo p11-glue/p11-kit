@@ -94,7 +94,7 @@ p11_path_base (const char *path)
 }
 
 static inline bool
-is_path_component (char ch)
+is_path_separator (char ch)
 {
 	return (ch == '/'
 #ifdef OS_WIN32
@@ -104,9 +104,9 @@ is_path_component (char ch)
 }
 
 static inline bool
-is_path_component_or_null (char ch)
+is_path_separator_or_null (char ch)
 {
-	return is_path_component (ch) || ch == '\0';
+	return is_path_separator (ch) || ch == '\0';
 }
 
 static char *
@@ -119,7 +119,7 @@ expand_homedir (const char *remainder)
 		return NULL;
 	}
 
-	while (is_path_component (remainder[0]))
+	while (is_path_separator (remainder[0]))
 		remainder++;
 	if (remainder[0] == '\0')
 		remainder = NULL;
@@ -127,7 +127,7 @@ expand_homedir (const char *remainder)
 	/* Expand $XDG_CONFIG_HOME */
 	if (remainder != NULL &&
 	    strncmp (remainder, ".config", 7) == 0 &&
-	    is_path_component_or_null (remainder[7])) {
+	    is_path_separator_or_null (remainder[7])) {
 		env = getenv ("XDG_CONFIG_HOME");
 		if (env && env[0])
 			return p11_path_build (env, remainder + 8, NULL);
@@ -180,7 +180,7 @@ p11_path_expand (const char *path)
 	return_val_if_fail (path != NULL, NULL);
 
 	if (strncmp (path, "~", 1) == 0 &&
-	    is_path_component_or_null (path[1])) {
+	    is_path_separator_or_null (path[1])) {
 		return expand_homedir (path + 1);
 
 	} else {
@@ -242,9 +242,9 @@ p11_path_build (const char *path,
 		num = strlen (path);
 
 		/* Trim beginning of path */
-		while (is_path_component (path[0])) {
+		while (is_path_separator (path[0])) {
 			/* But preserve the leading path component */
-			if (!at && !is_path_component (path[1]))
+			if (!at && !is_path_separator (path[1]))
 				break;
 			path++;
 			num--;
@@ -252,7 +252,7 @@ p11_path_build (const char *path,
 
 		/* Trim end of the path */
 		until = (at > 0) ? 0 : 1;
-		while (num > until && is_path_component_or_null (path[num - 1]))
+		while (num > until && is_path_separator_or_null (path[num - 1]))
 			num--;
 
 		if (at != 0) {
@@ -288,17 +288,17 @@ p11_path_parent (const char *path)
 
 	/* Find the end of the last component */
 	e = path + strlen (path);
-	while (e != path && is_path_component_or_null (*e))
+	while (e != path && is_path_separator_or_null (*e))
 		e--;
 
 	/* Find the beginning of the last component */
-	while (e != path && !is_path_component_or_null (*e)) {
+	while (e != path && !is_path_separator_or_null (*e)) {
 		had = true;
 		e--;
 	}
 
 	/* Find the end of the last component */
-	while (e != path && is_path_component_or_null (*e))
+	while (e != path && is_path_separator_or_null (*e))
 		e--;
 
 	if (e == path) {
@@ -327,7 +327,7 @@ p11_path_prefix (const char *string,
 
 	return a > b &&
 	       strncmp (string, prefix, b) == 0 &&
-	       is_path_component_or_null (string[b]);
+	       is_path_separator_or_null (string[b]);
 }
 
 void
