@@ -88,6 +88,16 @@ static void
 test_build (void)
 {
 #ifdef OS_UNIX
+	assert_str_eq_free ("/",
+	                    p11_path_build ("/", NULL));
+	assert_str_eq_free ("/",
+	                    p11_path_build ("", "//", NULL));
+	assert_str_eq_free ("/root",
+	                    p11_path_build ("///root///", NULL));
+	assert_str_eq_free ("/root",
+	                    p11_path_build ("/", "root", NULL));
+	assert_str_eq_free ("/root",
+	                    p11_path_build ("", "/root", NULL));
 	assert_str_eq_free ("/root",
 	                    p11_path_build ("/root", "", NULL));
 	assert_str_eq_free ("/root/second",
@@ -96,11 +106,19 @@ test_build (void)
 	                    p11_path_build ("/root", "/second", NULL));
 	assert_str_eq_free ("/root/second",
 	                    p11_path_build ("/root/", "second", NULL));
+	assert_str_eq_free ("/root/second",
+	                    p11_path_build ("/root//", "//second/", NULL));
+	assert_str_eq_free ("/root/second",
+	                    p11_path_build ("/root//", "", "//second/", NULL));
 	assert_str_eq_free ("/root/second/third",
 	                    p11_path_build ("/root", "second", "third", NULL));
 	assert_str_eq_free ("/root/second/third",
 	                    p11_path_build ("/root", "/second/third", NULL));
 #else /* OS_WIN32 */
+	assert_str_eq_free ("C:\\root",
+	                    p11_path_build ("C:\\", "root", NULL));
+	assert_str_eq_free ("C:\\root",
+	                    p11_path_build ("", "C:\\root", NULL));
 	assert_str_eq_free ("C:\\root",
 	                    p11_path_build ("C:\\root", "", NULL));
 	assert_str_eq_free ("C:\\root\\second",
@@ -109,6 +127,10 @@ test_build (void)
 	                    p11_path_build ("C:\\root", "\\second", NULL));
 	assert_str_eq_free ("C:\\root\\second",
 	                    p11_path_build ("C:\\root\\", "second", NULL));
+	assert_str_eq_free ("C:\\root\\second",
+	                    p11_path_build ("C:\\root\\\\", "\\\\second", NULL));
+	assert_str_eq_free ("C:\\root\\second",
+	                    p11_path_build ("C:\\root\\\\", "", "\\\\second", NULL));
 	assert_str_eq_free ("C:\\root\\second\\third",
 	                    p11_path_build ("C:\\root", "second", "third", NULL));
 	assert_str_eq_free ("C:\\root\\second/third",
