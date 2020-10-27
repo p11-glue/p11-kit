@@ -119,7 +119,7 @@ expand_homedir (const char *remainder)
 		return NULL;
 	}
 
-	while (remainder[0] && is_path_component_or_null (remainder[0]))
+	while (is_path_component (remainder[0]))
 		remainder++;
 	if (remainder[0] == '\0')
 		remainder = NULL;
