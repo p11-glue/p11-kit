@@ -1,0 +1,244 @@
+name: test
+on: [push]
+env:
+  BUILDDIR: "builddir"
+  SRCDIR: "srcdir"
+  COVDIR: "coverage"
+  INSTALLDIR: "installdir"
+  PACKAGES: "gettext-devel git libtool make opensc openssl valgrind meson ninja-build bash-completion"
+jobs:
+  autotools:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      BUILD_OPTS: --enable-coverage
+      COVERAGE: yes
+      EXTRA_PKGS: lcov python-pip
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      # TODO Coverage
+      # - run: su user sh -c "pip3 install --user cpp-coveralls"
+
+
+  address-sanitizer:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      MESON_BUILD_OPTS: -Db_sanitize=address
+      EXTRA_PKGS: libasan
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+
+  undefined-sanitizer:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      MESON_BUILD_OPTS: -Db_sanitize=undefined
+      EXTRA_PKGS: libubsan
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+
+
+  scan-build:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      SCAN_BUILD: scan-build --status-bugs
+      EXTRA_PKGS: clang-analyzer
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && SCAN_BUILD='$SCAN_BUILD' ninja scan-build -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+
+  mingw:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      MESON_BUILD_OPTS: --cross-file build/cross_file_mingw64.txt
+      MESON_TEST_ENV: WINEPATH=/usr/x86_64-x64-mingw32/sys-root/mingw/bin
+      MESON_TEST_OPTS: --num-processes 1
+      EXTRA_PKGS: mingw64-gcc mingw64-libffi mingw64-libtasn1 wine
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    env:
+      PROFILE: cppcheck
+      EXTRA_PKGS: cppcheck
+    steps:
+      # Install packages
+      - run: |
+             dnf -y update
+             dnf -y install 'dnf-command(builddep)'
+             dnf -y builddep 'p11-kit'
+             dnf -y install $PACKAGES $EXTRA_PKGS
+      # Create user
+      - run: useradd -m user
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      # Setup directories
+      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
+      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
+      # Build
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+      # Test
+      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      # Install
+      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+
