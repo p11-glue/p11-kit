@@ -64,9 +64,10 @@ create_arg_file_parser (void)
 	return_val_if_fail (parser != NULL, NULL);
 
 	p11_parser_formats (parser,
-	                    p11_parser_format_x509,
-	                    p11_parser_format_pem,
-	                    NULL);
+			    p11_parser_format_persist,
+			    p11_parser_format_x509,
+			    p11_parser_format_pem,
+			    NULL);
 
 	return parser;
 }
