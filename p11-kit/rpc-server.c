@@ -88,7 +88,7 @@ proto_read_byte_buffer (p11_rpc_message *msg,
 	if (length == 0)
 		return CKR_OK;
 
-	*buffer = p11_rpc_message_alloc_extra (msg, length * sizeof (CK_BYTE));
+	*buffer = p11_rpc_message_alloc_extra_array (msg, length, sizeof (CK_BYTE));
 	if (*buffer == NULL)
 		return CKR_DEVICE_MEMORY;
 
@@ -186,7 +186,7 @@ proto_read_ulong_buffer (p11_rpc_message *msg,
 	if (length == 0)
 		return CKR_OK;
 
-	*buffer = p11_rpc_message_alloc_extra (msg, length * sizeof (CK_ULONG));
+	*buffer = p11_rpc_message_alloc_extra_array (msg, length, sizeof (CK_ULONG));
 	if (!*buffer)
 		return CKR_DEVICE_MEMORY;
 
@@ -246,7 +246,7 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 		return PARSE_ERROR;
 
 	/* Allocate memory for the attribute structures */
-	attrs = p11_rpc_message_alloc_extra (msg, n_attrs * sizeof (CK_ATTRIBUTE));
+	attrs = p11_rpc_message_alloc_extra_array (msg, n_attrs, sizeof (CK_ATTRIBUTE));
 	if (attrs == NULL)
 		return CKR_DEVICE_MEMORY;
 
@@ -300,7 +300,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
 		return PARSE_ERROR;
 
 	/* Allocate memory for the attribute structures */
-	attrs = p11_rpc_message_alloc_extra (msg, n_attrs * sizeof (CK_ATTRIBUTE));
+	attrs = p11_rpc_message_alloc_extra_array (msg, n_attrs, sizeof (CK_ATTRIBUTE));
 	if (attrs == NULL)
 		return CKR_DEVICE_MEMORY;
 

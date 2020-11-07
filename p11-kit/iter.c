@@ -549,7 +549,7 @@ move_next_session (P11KitIter *iter)
 			if (rv != CKR_OK)
 				return finish_iterating (iter, rv);
 
-			slots = realloc (iter->slots, sizeof (CK_SLOT_ID) * (num_slots + 1));
+			slots = reallocarray (iter->slots, num_slots + 1, sizeof (CK_SLOT_ID));
 			return_val_if_fail (slots != NULL, CKR_HOST_MEMORY);
 			iter->slots = slots;
 
@@ -705,7 +705,7 @@ p11_kit_iter_next (P11KitIter *iter)
 				CK_OBJECT_HANDLE *objects;
 
 				iter->max_objects = iter->max_objects ? iter->max_objects * 2 : 64;
-				objects = realloc (iter->objects, iter->max_objects * sizeof (CK_ULONG));
+				objects = reallocarray (iter->objects, iter->max_objects, sizeof (CK_ULONG));
 				return_val_if_fail (objects != NULL, CKR_HOST_MEMORY);
 				iter->objects = objects;
 			}

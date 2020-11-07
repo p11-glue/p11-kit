@@ -64,6 +64,8 @@ hex_encode (const unsigned char *data,
 	size_t i;
 	size_t o;
 
+	if ((SIZE_MAX - 1) / 3 < n_data)
+		return NULL;
 	result = malloc (n_data * 3 + 1);
 	if (result == NULL)
 		return NULL;
