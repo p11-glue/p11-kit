@@ -43,6 +43,7 @@
 #include "rpc-message.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
@@ -112,6 +113,18 @@ p11_rpc_message_alloc_extra (p11_rpc_message *msg,
 
 	/* Data starts after first pointer */
 	return (void *)(data + 1);
+}
+
+void *
+p11_rpc_message_alloc_extra_array (p11_rpc_message *msg,
+				   size_t nmemb,
+				   size_t size)
+{
+	if ((SIZE_MAX - sizeof (void *)) / nmemb < size) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	return p11_rpc_message_alloc_extra (msg, nmemb * size);
 }
 
 bool

@@ -283,7 +283,7 @@ proxy_list_slots (Proxy *py, Mapping *mappings, unsigned int n_mappings)
 
 			new_slots = calloc (count, sizeof(CK_SLOT_ID));
 			return_val_if_fail (new_slots != NULL, CKR_HOST_MEMORY);
-			new_mappings = realloc (py->mappings, sizeof (Mapping) * (py->n_mappings + count));
+			new_mappings = reallocarray (py->mappings, (py->n_mappings + count), sizeof (Mapping));
 			return_val_if_fail (new_mappings != NULL, CKR_HOST_MEMORY);
 			py->mappings = new_mappings;
 

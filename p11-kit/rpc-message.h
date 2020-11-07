@@ -255,6 +255,10 @@ void             p11_rpc_message_clear                   (p11_rpc_message *msg);
 void *           p11_rpc_message_alloc_extra             (p11_rpc_message *msg,
                                                           size_t length);
 
+void *           p11_rpc_message_alloc_extra_array       (p11_rpc_message *msg,
+                                                          size_t nmemb,
+                                                          size_t size);
+
 bool             p11_rpc_message_prep                    (p11_rpc_message *msg,
                                                           int call_id,
                                                           p11_rpc_message_type type);

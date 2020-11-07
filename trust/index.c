@@ -273,7 +273,7 @@ bucket_insert (index_bucket *bucket,
 
 		alloc = alloc ? alloc * 2 : 1;
 		return_if_fail (alloc != 0);
-		elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		elem = reallocarray (bucket->elem, alloc, sizeof (CK_OBJECT_HANDLE));
 		return_if_fail (elem != NULL);
 		bucket->elem = elem;
 	}
@@ -297,7 +297,7 @@ bucket_push (index_bucket *bucket,
 
 		alloc = alloc ? alloc * 2 : 1;
 		return_val_if_fail (alloc != 0, false);
-		elem = realloc (bucket->elem, alloc * sizeof (CK_OBJECT_HANDLE));
+		elem = reallocarray (bucket->elem, alloc, sizeof (CK_OBJECT_HANDLE));
 		return_val_if_fail (elem != NULL, false);
 		bucket->elem = elem;
 	}
