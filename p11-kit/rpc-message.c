@@ -1213,7 +1213,7 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 			      size_t *offset,
 			      CK_ATTRIBUTE *attr)
 {
-	uint32_t type, length;
+	uint32_t type, length, decode_length;
 	unsigned char validity;
 	p11_rpc_attribute_serializer *serializer;
 	p11_rpc_value_type value_type;
@@ -1243,8 +1243,13 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 	assert (serializer != NULL);
 	if (!serializer->decode (buffer, offset, attr->pValue, &attr->ulValueLen))
 		return false;
-	if (!attr->pValue)
+	if (!attr->pValue) {
+		decode_length = attr->ulValueLen;
 		attr->ulValueLen = length;
+		if (decode_length > length) {
+			return false;
+		}
+	}
 	attr->type = type;
 	return true;
 }
