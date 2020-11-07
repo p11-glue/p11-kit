@@ -5,8 +5,8 @@ cpu = 'x86_64'
 endian = 'little'
 
 [properties]
-c_args = []
-c_link_args = []
+c_args = ['-fstack-protector']
+c_link_args = ['-fstack-protector']
 
 [binaries]
 c = 'x86_64-w64-mingw32-gcc'
