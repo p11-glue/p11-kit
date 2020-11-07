@@ -60,6 +60,7 @@ x86_64-w64-mingw32
 frob-*
 !frob-*.c
 *.asn.h
+/build/fuzz/*_fuzzer
 
 /x86_64_w64-mingw32/
 

@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
+#include "fuzz.h"
 
 int main(int argc, char **argv)
 {
