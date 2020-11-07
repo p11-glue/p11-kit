@@ -744,7 +744,7 @@ p11_rpc_buffer_get_byte_array (p11_buffer *buf,
 		return false;
 	}
 
-	if (buf->len < len || *offset > buf->len - len) {
+	if (buf->len < len || off > buf->len - len) {
 		p11_buffer_fail (buf);
 		return false;
 	}
