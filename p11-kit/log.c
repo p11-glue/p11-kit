@@ -726,7 +726,7 @@ log_token_info (p11_buffer *buf,
 		          (unsigned int)info->firmwareVersion.minor);
 		p11_buffer_add (buf, temp, -1);
 		p11_buffer_add (buf, "\n\tutcTime: ", -1);
-		p11_buffer_add (buf, (info->flags & CKF_CLOCK_ON_TOKEN) ? (const char*)info->utcTime : "", -1);
+		p11_buffer_add (buf, (info->flags & CKF_CLOCK_ON_TOKEN) ? (const char*)info->utcTime : "", sizeof (info->utcTime));
 		p11_buffer_add (buf, "\n      }\n", -1);
 	}
 }
