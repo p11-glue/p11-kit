@@ -33,7 +33,7 @@ if test -z "$1";then
 fi
 
 rm -f $1
-CFLAGS="-g -O2" CC=afl-gcc make $1 || exit 1
+(cd ../.. && make build/fuzz/$1) || exit 1
 
 TEST=$(echo $1|sed s/_fuzzer//)
 

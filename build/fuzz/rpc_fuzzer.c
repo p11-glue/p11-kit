@@ -19,12 +19,12 @@
 #include "config.h"
 #include "test.h"
 
+#include "build/fuzz/fuzz.h"
 #include "library.h"
 #include "mock.h"
-#include "rpc.h"
+#include "p11-kit/rpc.h"
 
 #include <assert.h>
-#include <stdint.h>
 
 static p11_virtual base;
 
