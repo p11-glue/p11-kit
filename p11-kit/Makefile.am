@@ -32,6 +32,8 @@ BUILT_SOURCES += \
 	p11-kit/virtual-fixed-generated.h \
 	$(NULL)
 
+p11-kit/virtual.c: p11-kit/virtual-fixed-generated.h
+
 CLEANFILES += \
 	p11-kit/virtual-fixed-generated.h \
 	$(NULL)
