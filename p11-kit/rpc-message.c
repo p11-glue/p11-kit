@@ -120,7 +120,7 @@ p11_rpc_message_alloc_extra_array (p11_rpc_message *msg,
 				   size_t nmemb,
 				   size_t size)
 {
-	if ((SIZE_MAX - sizeof (void *)) / nmemb < size) {
+	if (nmemb != 0 && (SIZE_MAX - sizeof (void *)) / nmemb < size) {
 		errno = ENOMEM;
 		return NULL;
 	}
