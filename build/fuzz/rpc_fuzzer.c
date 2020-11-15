@@ -49,6 +49,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     p11_rpc_server_handle (&base.funcs, &buffer, &buffer);
 
     p11_buffer_uninit (&buffer);
+    mock_module_reset ();
+    p11_library_uninit ();
 
     return 0;
 }
