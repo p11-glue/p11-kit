@@ -1,3 +1,18 @@
+configure_file(
+  input: 'version.xml.in',
+  output: '@BASENAME@',
+  configuration: {'VERSION': meson.project_version()})
+
+configure_file(
+  input: 'userdir.xml.in',
+  output: '@BASENAME@',
+  configuration: {'p11_user_config': p11_user_config})
+
+configure_file(
+  input: 'sysdir.xml.in',
+  output: '@BASENAME@',
+  configuration: {'p11_system_config': p11_system_config})
+
 if get_option('gtk_doc')
   ignore_headers = [
     'private.h',
@@ -36,21 +51,6 @@ if get_option('gtk_doc')
     'trust.xml',
     'annotation-glossary.xml'
   ]
-
-  configure_file(
-    input: 'version.xml.in',
-    output: '@BASENAME@',
-    configuration: {'VERSION': meson.project_version()})
-
-  configure_file(
-    input: 'userdir.xml.in',
-    output: '@BASENAME@',
-    configuration: {'p11_user_config': p11_user_config})
-
-  configure_file(
-    input: 'sysdir.xml.in',
-    output: '@BASENAME@',
-    configuration: {'p11_system_config': p11_system_config})
 
   glib_prefix = dependency('glib-2.0').get_pkgconfig_variable('prefix')
   fixxref_args = [
