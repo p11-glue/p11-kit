@@ -1,17 +1,25 @@
-configure_file(
-  input: 'version.xml.in',
-  output: '@BASENAME@',
-  configuration: {'VERSION': meson.project_version()})
+version_xml = custom_target('generate version.xml',
+                            output: 'version.xml',
+                            capture: true,
+                            command: [
+                              'echo', '-n', meson.project_version()
+                            ])
 
-configure_file(
-  input: 'userdir.xml.in',
-  output: '@BASENAME@',
-  configuration: {'p11_user_config': p11_user_config})
+userdir_xml = custom_target('generate userdir.xml',
+                            output: 'userdir.xml',
+                            capture: true,
+                            command: [
+                              'echo', '-n', p11_user_config
+                            ])
 
-configure_file(
-  input: 'sysdir.xml.in',
-  output: '@BASENAME@',
-  configuration: {'p11_system_config': p11_system_config})
+sysdir_xml = custom_target('generate sysdir.xml',
+                           output: 'sysdir.xml',
+                           capture: true,
+                           command: [
+                             'echo', '-n', p11_system_config
+                           ])
+
+xml_deps = [version_xml, userdir_xml, sysdir_xml]
 
 if get_option('gtk_doc')
   ignore_headers = [
@@ -62,7 +70,7 @@ if get_option('gtk_doc')
               main_xml: 'p11-kit-docs.xml',
               namespace: 'p11_kit',
               src_dir: 'p11-kit',
-              dependencies: libffi_deps + dlopen_deps,
+              dependencies: libffi_deps + dlopen_deps + xml_deps,
               scan_args: [
                 '--ignore-headers=' + ' '.join(ignore_headers),
                 '--rebuild-types',
@@ -114,6 +122,7 @@ if get_option('man')
                     ],
                     input: man_src,
                     output: man_dst,
+                    depends: xml_deps,
                     install: true,
                     install_dir: join_paths(mandir, man_section),
                     build_by_default: true)
