@@ -30,7 +30,11 @@ conf.set('PACKAGE_MAJOR', major_version)
 conf.set('PACKAGE_MINOR', minor_version)
 
 host_system = host_machine.system()
-conf.set(host_system == 'windows' ? 'OS_WIN32' : 'OS_UNIX', 1)
+if host_system == 'windows'
+  conf.set('OS_WIN32', 1)
+else
+  conf.set('OS_UNIX', 1)
+endif
 
 if host_system == 'windows'
   shlext = '.dll'
