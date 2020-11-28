@@ -52,7 +52,7 @@
 #define GNUC_NULL_TERMINATED
 #endif
 
-#if (201112L <= __STDC_VERSION__ \
+#if ((defined __STDC_VERSION__ && 201112L <= __STDC_VERSION__) \
      || (!defined __STRICT_ANSI__ && 4 < __GNUC__ + (6 <= __GNUC_MINOR__)))
 # define P11_STATIC_ASSERT(x) _Static_assert(x, "static assertion failed")
 #else
