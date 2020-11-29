@@ -18,6 +18,11 @@ if test $? -ne 0; then
   exit 1
 fi
 
+docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && P11_KIT_DEBUG=all LSAN_OPTIONS="$LSAN_OPTIONS" P11_KIT_TEST_LD_PRELOAD=\"$P11_KIT_TEST_LD_PRELOAD\" make check -j$(nproc) V=1 $CHECK_OPTS"
+if test $? -ne 0; then
+  exit 1
+fi
+
 docker exec $CONTAINER su - user sh -c "cd $BUILDDIR && P11_KIT_DEBUG=all LSAN_OPTIONS="$LSAN_OPTIONS" P11_KIT_TEST_LD_PRELOAD=\"$P11_KIT_TEST_LD_PRELOAD\" make distcheck -j$(nproc) V=1 $CHECK_OPTS"
 if test $? -ne 0; then
   exit 1
