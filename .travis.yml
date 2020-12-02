@@ -36,6 +36,7 @@ matrix:
       services: docker
       env: PROFILE=cppcheck SRCDIR=/srcdir BUILDDIR=/builddir EXTRA_PKGS="cppcheck"
     - os: osx
+    - os: freebsd
 
 language: c
 
