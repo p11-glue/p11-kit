@@ -845,7 +845,7 @@ getauxval (unsigned long type)
 		secure = __libc_enable_secure;
 
 #elif defined(HAVE_ISSETUGID) && \
-	!((defined __APPLE__ && defined __MACH__) || (defined __FREEBSD__))
+	!((defined __APPLE__ && defined __MACH__) || (defined __FreeBSD__))
 		secure = issetugid ();
 
 #elif defined(OS_UNIX)
