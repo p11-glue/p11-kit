@@ -149,7 +149,7 @@ if get_option('test')
                    dependencies: [asn_h_dep,
                                   libp11_kit_dep,
                                   libp11_library_dep,
-                                  libp11_test_dep] + dlopen_deps,
+                                  libp11_test_dep] + libtasn1_deps + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
     test(name, t)
   endforeach
