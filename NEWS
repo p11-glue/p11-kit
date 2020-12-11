@@ -1,3 +1,13 @@
+0.23.22 (stable)
+ * Fix memory-safety issues that affect the RPC protocol
+   (CVE-2020-29361, CVE-2020-29362, and CVE-2020-29363), discovered
+   and fixed by David Cook
+ * anchor: Prefer persistent format when storing anchor [PR#329]
+ * common: Fix infloop in p11_path_build [PR#326, PR#327]
+ * proxy: C_CloseAllSessions: Make sure that calloc args are non-zero [PR#325]
+ * common: Check for a NULL locale before freeing it [PR#321]
+ * Build and test fixes [PR#313, PR#315, PR#317, PR#318, PR#319, PR#323, PR#330, PR#333, PR#334, PR#335, PR#338, PR#339]
+
 0.23.21 (stable)
  * proxy: Do not assign duplicate slot IDs [PR#282]
  * common: Get program name based on executable path if possible [PR#307]
