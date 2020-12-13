@@ -952,7 +952,6 @@ fdwalk (int (* cb) (void *data, int fd),
         void *data)
 {
 	int open_max;
-	long num;
 	int res = 0;
 	int fd;
 
@@ -961,13 +960,16 @@ fdwalk (int (* cb) (void *data, int fd),
 #endif
 
 #ifdef __linux__
-	struct dirent *de;
-	char *end;
 	DIR *dir;
 
 	dir = opendir ("/proc/self/fd");
 	if (dir != NULL) {
+		struct dirent *de;
+
 		while ((de = readdir (dir)) != NULL) {
+			char *end;
+			long num;
+
 			end = NULL;
 			num = (int) strtol (de->d_name, &end, 10);
 
