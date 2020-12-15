@@ -40,6 +40,15 @@
  */
 #define _XOPEN_SOURCE 700
 
+/*
+ * This is needed to expose issetugid, getresuid, and getresgid, which are
+ * hidden with the _XOPEN_SOURCE setting above
+ */
+#ifdef __FreeBSD__
+#undef __BSD_VISIBLE
+#define __BSD_VISIBLE 1
+#endif
+
 #include "compat.h"
 #include "debug.h"
 
