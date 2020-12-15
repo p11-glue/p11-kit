@@ -43,6 +43,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 #include "attrs.h"
 #include "debug.h"

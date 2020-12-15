@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #ifdef OS_UNIX
 #include <sys/wait.h>
+#include <unistd.h>
 #endif
 #include <errno.h>
 #include <stdlib.h>

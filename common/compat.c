@@ -49,6 +49,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 /*-
  * Portions of this file are covered by the following copyright:
@@ -89,8 +92,6 @@
 #ifndef HAVE_GETPROGNAME
 
 #ifdef OS_UNIX
-
-#include <unistd.h>
 
 #if defined (HAVE_PROGRAM_INVOCATION_SHORT_NAME) && !HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 extern char *program_invocation_short_name;

@@ -51,6 +51,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>

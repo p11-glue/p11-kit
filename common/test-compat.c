@@ -40,6 +40,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 #include "compat.h"
 

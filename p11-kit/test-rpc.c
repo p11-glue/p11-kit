@@ -55,6 +55,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
