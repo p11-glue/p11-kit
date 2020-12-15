@@ -43,6 +43,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 #ifdef HAVE_VSOCK
 #include <sys/socket.h>

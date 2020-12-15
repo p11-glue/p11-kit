@@ -185,7 +185,6 @@ void        p11_mmap_close  (p11_mmap *map);
 #include <pthread.h>
 #include <dlfcn.h>
 #include <time.h>
-#include <unistd.h>
 
 typedef pthread_mutex_t p11_mutex_t;
 

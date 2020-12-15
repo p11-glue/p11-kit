@@ -48,6 +48,9 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef OS_UNIX
+#include <unistd.h>
+#endif
 
 #include <assert.h>
 #include <ctype.h>
