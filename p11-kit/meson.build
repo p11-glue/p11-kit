@@ -92,6 +92,7 @@ if host_system != 'windows'
                 'client.c', 'client-init.c',
                 name_prefix: '',
                 include_directories: [configinc, commoninc],
+                dependencies: dlopen_deps,
                 link_args: p11_module_ldflags,
                 link_depends: [p11_module_symbol_map,
                                p11_module_symbol_def],
