@@ -82,6 +82,11 @@ unsigned int p11_forkid = 1;
 extern locale_t p11_message_locale;
 #endif
 
+#ifdef __linux__
+/* used only under __linux__ in the getprogname() emulation in compat.c. */
+char *p11_program_realpath;
+#endif
+
 static char *
 thread_local_message (void)
 {
@@ -190,6 +195,10 @@ p11_library_uninit (void)
 #endif
 	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
+
+#ifdef __linux__
+	free (p11_program_realpath);
+#endif
 }
 
 #endif /* OS_UNIX */

@@ -100,6 +100,19 @@ extern char *program_invocation_short_name;
 extern char *__progname;
 #endif
 
+#ifdef __linux__
+/* This symbol is also defined in library.c so as to be freed by the library
+ * destructor.  If weak symbols are not supported nor library.c is not linked we
+ * simply leak the memory allocated with realpath().  */
+#ifdef __GNUC__
+extern char *p11_program_realpath;
+
+char *p11_program_realpath __attribute__((weak));
+#else
+static char *p11_program_realpath;
+#endif
+#endif
+
 const char *
 getprogname (void)
 {
@@ -124,14 +137,14 @@ getprogname (void)
 		 * Logic borrowed from:
 		 * <https://github.com/mesa3d/mesa/commit/759b94038987bb983398cd4b1d2cb1c8f79817a9>.
 		 */
-		static char *buf;
+		if (!p11_program_realpath)
+			p11_program_realpath = realpath ("/proc/self/exe", NULL);
 
-		if (!buf)
-			buf = realpath ("/proc/self/exe", NULL);
-
-		if (buf && strncmp (buf, name, strlen (buf)) == 0)
+		if (p11_program_realpath &&
+		    strncmp (p11_program_realpath, name,
+			     strlen (p11_program_realpath)) == 0)
 			/* Use the executable path if the prefix matches. */
-			name = strrchr (buf, '/') + 1;
+			name = strrchr (p11_program_realpath, '/') + 1;
 		else
 			/* Otherwise fall back to
 			 * program_invocation_short_name. */
