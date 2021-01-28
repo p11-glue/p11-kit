@@ -2408,7 +2408,6 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 			rv = initialize_module_inlock_reentrant (mod, NULL);
 			if (rv != CKR_OK) {
 				p11_message ("module initialization failed: %s", p11_kit_strerror (rv));
-				p11_module_release_inlock_reentrant (module);
 			}
 		}
 
