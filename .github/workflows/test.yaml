@@ -1,27 +1,19 @@
 name: test
-on: [push]
+on: [push, pull_request]
 env:
   BUILDDIR: "builddir"
   SRCDIR: "srcdir"
   COVDIR: "coverage"
   INSTALLDIR: "installdir"
-  PACKAGES: "gettext-devel git libtool make opensc openssl valgrind meson ninja-build bash-completion"
 jobs:
   autotools:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       BUILD_OPTS: --enable-coverage
       COVERAGE: yes
-      EXTRA_PKGS: lcov python-pip
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
@@ -52,17 +44,10 @@ jobs:
   address-sanitizer:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       MESON_BUILD_OPTS: -Db_sanitize=address
-      EXTRA_PKGS: libasan
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
@@ -90,17 +75,10 @@ jobs:
   undefined-sanitizer:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       MESON_BUILD_OPTS: -Db_sanitize=undefined
-      EXTRA_PKGS: libubsan
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
@@ -129,17 +107,10 @@ jobs:
   scan-build:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       SCAN_BUILD: scan-build --status-bugs
-      EXTRA_PKGS: clang-analyzer
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
@@ -167,19 +138,12 @@ jobs:
   mingw:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       MESON_BUILD_OPTS: --cross-file build/cross_file_mingw64.txt
       MESON_TEST_ENV: WINEPATH=/usr/x86_64-x64-mingw32/sys-root/mingw/bin
       MESON_TEST_OPTS: --num-processes 1
-      EXTRA_PKGS: mingw64-gcc mingw64-libffi mingw64-libtasn1 wine
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
@@ -207,17 +171,10 @@ jobs:
   cppcheck:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: ghcr.io/p11-glue/build:latest
     env:
       PROFILE: cppcheck
-      EXTRA_PKGS: cppcheck
     steps:
-      # Install packages
-      - run: |
-             dnf -y update
-             dnf -y install 'dnf-command(builddep)'
-             dnf -y builddep 'p11-kit'
-             dnf -y install $PACKAGES $EXTRA_PKGS
       # Create user
       - run: useradd -m user
       # Checkout repo
