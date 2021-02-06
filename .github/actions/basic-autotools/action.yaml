@@ -1,0 +1,39 @@
+name: 'Basic build process of p11-kit using autotools'
+description: 'Set up user and build directories, build, and run tests'
+
+runs:
+  using: composite
+  steps:
+    - name: Create user
+      run: useradd -m user
+      shell: bash
+
+    - name: Setup directories
+      run: |
+        mkdir $GITHUB_WORKSPACE/$BUILDDIR
+        chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+        mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+        chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+        chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      shell: bash
+
+    - name: Build
+      run: |
+        sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && NOCONFIGURE=1 ./autogen.sh"
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && $GITHUB_WORKSPACE/$SRCDIR/configure --enable-strict --prefix=$GITHUB_WORKSPACE/$INSTALLDIR --libdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib --sysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc --with-trust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source --enable-doc --without-systemd --without-bash-completion $BUILD_OPTS"
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make -j$(nproc) V=1"
+      shell: bash
+
+    - name: Test
+      run: |
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && P11_KIT_DEBUG=all make check -j$(nproc) V=1"
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && P11_KIT_DEBUG=all make distcheck -j$(nproc) V=1"
+      shell: bash
+
+    - name: Install
+      run: |
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make install"
+        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make installcheck"
+      shell: bash
