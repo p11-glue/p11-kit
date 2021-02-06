@@ -18,6 +18,7 @@ libtrust_data_la_SOURCES = \
 	$(NULL)
 
 libtrust_data_la_CFLAGS = \
+	-I$(builddir)/trust \
 	$(LIBTASN1_CFLAGS)
 
 libtrust_data_la_LIBADD = \
@@ -46,6 +47,7 @@ module_LTLIBRARIES += \
 p11_kit_trust_la_CFLAGS = \
 	-DP11_DEFAULT_TRUST_PREFIX=DATA_DIR \
 	-DP11_SYSTEM_TRUST_PREFIX=SYSCONFDIR \
+	-I$(builddir)/trust \
 	$(LIBTASN1_CFLAGS)
 
 p11_kit_trust_la_LIBADD = \
@@ -72,6 +74,7 @@ libtrust_testable_la_SOURCES = $(TRUST_SRCS)
 libtrust_testable_la_CFLAGS = \
 	-DP11_DEFAULT_TRUST_PREFIX=\"$(builddir)/trust/default\" \
 	-DP11_SYSTEM_TRUST_PREFIX=\"$(builddir)/trust/system\" \
+	-I$(builddir)/trust \
 	$(LIBTASN1_CFLAGS)
 
 libtrust_testable_la_LIBADD = \
@@ -91,6 +94,7 @@ trust_trust_LDADD = \
 
 trust_trust_CFLAGS = \
 	-DP11_KIT_FUTURE_UNSTABLE_API \
+	-I$(builddir)/trust \
 	$(LIBTASN1_CFLAGS) \
 	$(NULL)
 
