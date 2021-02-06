@@ -1,0 +1,38 @@
+name: 'Basic build process of p11-kit using meson'
+description: 'Set up user and build directories, build, and run tests'
+
+runs:
+  using: composite
+  steps:
+    - name: Create user
+      run: useradd -m user
+      shell: bash
+
+    - name: Setup directories
+      run: |
+        mkdir $GITHUB_WORKSPACE/$BUILDDIR
+        chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+        mkdir $GITHUB_WORKSPACE/$INSTALLDIR
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+        chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+        chown -R user $GITHUB_WORKSPACE/$SRCDIR
+      shell: bash
+
+    - name: Build
+      run: |
+        su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust_paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
+        if test -n "$SCAN_BUILD"; then
+          su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja scan-build -C $GITHUB_WORKSPACE/$BUILDDIR"
+        else
+          su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
+        fi
+      shell: bash
+
+    - name: Test
+      run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
+      shell: bash
+
+    - name: Install
+      run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      shell: bash

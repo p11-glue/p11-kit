@@ -3,43 +3,18 @@ on: [push, pull_request]
 env:
   BUILDDIR: "builddir"
   SRCDIR: "srcdir"
-  COVDIR: "coverage"
   INSTALLDIR: "installdir"
 jobs:
   autotools:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/p11-glue/build:latest
-    env:
-      BUILD_OPTS: --enable-coverage
-      COVERAGE: yes
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
-      # TODO Coverage
-      # - run: su user sh -c "pip3 install --user cpp-coveralls"
-
+      - uses: ./srcdir/.github/actions/basic-autotools
 
   address-sanitizer:
     runs-on: ubuntu-latest
@@ -48,29 +23,11 @@ jobs:
     env:
       MESON_BUILD_OPTS: -Db_sanitize=address
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      - uses: ./srcdir/.github/actions/basic-meson
 
   undefined-sanitizer:
     runs-on: ubuntu-latest
@@ -79,30 +36,11 @@ jobs:
     env:
       MESON_BUILD_OPTS: -Db_sanitize=undefined
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
-
+      - uses: ./srcdir/.github/actions/basic-meson
 
   scan-build:
     runs-on: ubuntu-latest
@@ -111,29 +49,11 @@ jobs:
     env:
       SCAN_BUILD: scan-build --status-bugs
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && SCAN_BUILD='$SCAN_BUILD' ninja scan-build -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      - uses: ./srcdir/.github/actions/basic-meson
 
   mingw:
     runs-on: ubuntu-latest
@@ -144,29 +64,11 @@ jobs:
       MESON_TEST_ENV: WINEPATH=/usr/x86_64-x64-mingw32/sys-root/mingw/bin
       MESON_TEST_OPTS: --num-processes 1
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      - uses: ./srcdir/.github/actions/basic-meson
 
   cppcheck:
     runs-on: ubuntu-latest
@@ -175,27 +77,29 @@ jobs:
     env:
       PROFILE: cppcheck
     steps:
-      # Create user
-      - run: useradd -m user
       # Checkout repo
       - uses: actions/checkout@v2
         with:
           path: ${{ env.SRCDIR }}
-      # Setup directories
-      - run: cp -r $GITHUB_WORKSPACE/$SRCDIR $GITHUB_WORKSPACE/$COVDIR
-      - run: mkdir $GITHUB_WORKSPACE/$BUILDDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-      - run: mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-      - run: mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-      - run: chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$SRCDIR
-      - run: chown -R user $GITHUB_WORKSPACE/$COVDIR
-      # Build
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS"
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR"
-      # Test
-      - run: su - user sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && P11_KIT_DEBUG=all $MESON_TEST_ENV meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt"
-      # Install
-      - run: sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && ninja -C $GITHUB_WORKSPACE/$BUILDDIR install"
+      - run: |
+          sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1"
 
+  coverage:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/p11-glue/build:latest
+    env:
+      MESON_BUILD_OPTS: -Db_coverage=true
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+      - uses: ./srcdir/.github/actions/basic-meson
+      - name: Genereate coverage
+        run: su - user sh -c "ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR"
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          path-to-lcov: ./builddir/meson-logs/coverage.info
+          github-token: ${{ secrets.github_token }}
