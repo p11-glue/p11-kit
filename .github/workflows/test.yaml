@@ -61,8 +61,8 @@ jobs:
       image: ghcr.io/p11-glue/build:latest
     env:
       MESON_BUILD_OPTS: --cross-file build/cross_file_mingw64.txt
-      MESON_TEST_ENV: WINEPATH=/usr/x86_64-x64-mingw32/sys-root/mingw/bin
       MESON_TEST_OPTS: --num-processes 1
+      WINEPATH: /usr/x86_64-x64-mingw32/sys-root/mingw/bin
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
@@ -82,7 +82,8 @@ jobs:
         with:
           path: ${{ env.SRCDIR }}
       - run: |
-          sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1"
+          cd $GITHUB_WORKSPACE/$SRCDIR
+          find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1
 
   coverage:
     runs-on: ubuntu-latest
@@ -97,7 +98,7 @@ jobs:
           path: ${{ env.SRCDIR }}
       - uses: ./srcdir/.github/actions/basic-meson
       - name: Genereate coverage
-        run: su - user sh -c "ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR"
+        run: runuser -u user -- ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v1.1.2
         with:

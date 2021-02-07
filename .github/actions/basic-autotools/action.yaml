@@ -15,25 +15,32 @@ runs:
         mkdir $GITHUB_WORKSPACE/$INSTALLDIR
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-        chown -R user $GITHUB_WORKSPACE/$INSTALLDIR
+        # This is necessary to update p11-kit.pot
         chown -R user $GITHUB_WORKSPACE/$SRCDIR
       shell: bash
 
     - name: Build
       run: |
-        sh -c "cd $GITHUB_WORKSPACE/$SRCDIR && NOCONFIGURE=1 ./autogen.sh"
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && $GITHUB_WORKSPACE/$SRCDIR/configure --enable-strict --prefix=$GITHUB_WORKSPACE/$INSTALLDIR --libdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib --sysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc --with-trust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source --enable-doc --without-systemd --without-bash-completion $BUILD_OPTS"
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make -j$(nproc) V=1"
+        cd $GITHUB_WORKSPACE/$SRCDIR
+        NOCONFIGURE=1 ./autogen.sh
+        cd $GITHUB_WORKSPACE/$BUILDDIR
+        runuser -u user -- $GITHUB_WORKSPACE/$SRCDIR/configure --enable-strict --prefix=$GITHUB_WORKSPACE/$INSTALLDIR --libdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib --sysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc --with-trust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source --enable-doc --without-systemd --without-bash-completion $BUILD_OPTS
+        runuser -u user -- make -j$(nproc) V=1
       shell: bash
 
     - name: Test
       run: |
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && P11_KIT_DEBUG=all make check -j$(nproc) V=1"
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && P11_KIT_DEBUG=all make distcheck -j$(nproc) V=1"
+        cd $GITHUB_WORKSPACE/$BUILDDIR
+        P11_KIT_DEBUG=all runuser -u user -- make check -j$(nproc) V=1
+        P11_KIT_DEBUG=all runuser -u user -- make distcheck -j$(nproc) V=1
       shell: bash
 
     - name: Install
       run: |
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make install"
-        su - user sh -c "cd $GITHUB_WORKSPACE/$BUILDDIR && make installcheck"
+        cd $GITHUB_WORKSPACE/$BUILDDIR
+        make install
+        # This is necessary for 'trust/test-extract.sh'
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit
+        ln -sf /usr/bin/true $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit/trust-extract-compat
+        make installcheck
       shell: bash
