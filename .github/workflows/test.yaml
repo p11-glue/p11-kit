@@ -2,7 +2,6 @@ name: test
 on: [push, pull_request]
 env:
   BUILDDIR: "builddir"
-  SRCDIR: "srcdir"
   INSTALLDIR: "installdir"
 jobs:
   autotools:
@@ -12,9 +11,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-autotools
+      - uses: ./.github/actions/basic-autotools
 
   address-sanitizer:
     runs-on: ubuntu-latest
@@ -25,9 +22,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-meson
+      - uses: ./.github/actions/basic-meson
 
   undefined-sanitizer:
     runs-on: ubuntu-latest
@@ -38,9 +33,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-meson
+      - uses: ./.github/actions/basic-meson
 
   scan-build:
     runs-on: ubuntu-latest
@@ -51,9 +44,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-meson
+      - uses: ./.github/actions/basic-meson
 
   mingw:
     runs-on: ubuntu-latest
@@ -66,9 +57,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-meson
+      - uses: ./.github/actions/basic-meson
 
   cppcheck:
     runs-on: ubuntu-latest
@@ -79,10 +68,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
       - run: |
-          cd $GITHUB_WORKSPACE/$SRCDIR
           find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1
 
   coverage:
@@ -94,9 +80,7 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
-        with:
-          path: ${{ env.SRCDIR }}
-      - uses: ./srcdir/.github/actions/basic-meson
+      - uses: ./.github/actions/basic-meson
       - name: Genereate coverage
         run: runuser -u user -- ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR
       - name: Coveralls GitHub Action
