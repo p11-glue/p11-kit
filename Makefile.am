@@ -49,7 +49,7 @@ bashcomp_DATA =
 
 include common/Makefile.am
 include p11-kit/Makefile.am
-include build/fuzz/Makefile.am
+include fuzz/Makefile.am
 
 if WITH_TRUST_MODULE
 include trust/Makefile.am

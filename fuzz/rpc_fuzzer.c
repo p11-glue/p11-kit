@@ -19,7 +19,7 @@
 #include "config.h"
 #include "test.h"
 
-#include "build/fuzz/fuzz.h"
+#include "fuzz/fuzz.h"
 #include "library.h"
 #include "mock.h"
 #include "p11-kit/rpc.h"
