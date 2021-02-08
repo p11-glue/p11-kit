@@ -388,7 +388,7 @@ pkg = import('pkgconfig')
 
 subdir('common')
 subdir('p11-kit')
-subdir('build/fuzz')
+subdir('fuzz')
 if with_trust_module
   subdir('trust')
 endif
