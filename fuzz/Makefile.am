@@ -6,6 +6,8 @@ fuzz_rpc_fuzzer_SOURCES = fuzz/rpc_fuzzer.c fuzz/fuzz.h fuzz/main.c
 
 fuzz_rpc_fuzzer_LDADD = libp11-kit-testable.la libp11-test.la libp11-common.la
 
+EXTRA_DIST += fuzz/meson.build
+
 oss-fuzz: libp11-kit-testable.la libp11-test.la libp11-common.la
 	if test "$$OUT" != ""; then \
 	for src_file in $(top_srcdir)/fuzz/*_fuzzer.c; do \
