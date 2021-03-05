@@ -57,6 +57,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /* These functions are declared with a global scope for testing */
 
 void        p11_openssl_canon_string           (char *str,
@@ -359,7 +366,7 @@ p11_extract_openssl_bundle (p11_enumerate *ex,
 	p11_buffer_uninit (&output);
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
+		p11_message (_("failed to find certificates: %s"), p11_kit_strerror (rv));
 		ret = false;
 	}
 
@@ -686,7 +693,7 @@ p11_extract_openssl_directory (p11_enumerate *ex,
 	p11_buffer_uninit (&output);
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
+		p11_message (_("failed to find certificates: %s"), p11_kit_strerror (rv));
 		ret = false;
 	}
 

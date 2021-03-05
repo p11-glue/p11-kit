@@ -52,6 +52,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 static char *
 format_uri (p11_enumerate *ex,
             int flags)
@@ -112,7 +119,7 @@ list_iterate (p11_enumerate *ex,
 
 		string = format_uri (ex, flags);
 		if (string == NULL) {
-			p11_message ("skipping object, couldn't build uri");
+			p11_message (_("skipping object, couldn't build uri"));
 			continue;
 		}
 
@@ -246,7 +253,7 @@ p11_trust_list (int argc,
 	}
 
 	if (argc - optind != 0) {
-		p11_message ("extra arguments passed to command");
+		p11_message (_("extra arguments passed to command"));
 		exit (2);
 	}
 

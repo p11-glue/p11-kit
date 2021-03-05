@@ -42,6 +42,13 @@
 
 #include <stdlib.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 bool
 p11_extract_x509_file (p11_enumerate *ex,
                        const char *destination)
@@ -52,7 +59,7 @@ p11_extract_x509_file (p11_enumerate *ex,
 
 	while ((rv = p11_kit_iter_next (ex->iter)) == CKR_OK) {
 		if (found) {
-			p11_message ("multiple certificates found but could only write one to file");
+			p11_message (_("multiple certificates found but could only write one to file"));
 			break;
 		}
 
@@ -65,12 +72,12 @@ p11_extract_x509_file (p11_enumerate *ex,
 	}
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
+		p11_message (_("failed to find certificates: %s"), p11_kit_strerror (rv));
 		return false;
 
 	/* Remember that an empty DER file is not a valid file, so complain if nothing */
 	} else if (!found) {
-		p11_message ("no certificate found");
+		p11_message (_("no certificate found"));
 		return false;
 	}
 
@@ -105,7 +112,7 @@ p11_extract_x509_directory (p11_enumerate *ex,
 	}
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
+		p11_message (_("failed to find certificates: %s"), p11_kit_strerror (rv));
 		ret = false;
 	} else {
 		ret = true;

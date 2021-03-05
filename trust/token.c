@@ -64,6 +64,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 struct _p11_token {
 	p11_parser *parser;       /* Parser we use to load files */
 	p11_index *index;         /* Index we load objects into */
@@ -217,7 +224,7 @@ loader_load_file (p11_token *token,
 	p11_index_finish (token->index);
 
 	if (rv != CKR_OK) {
-		p11_message ("couldn't load file into objects: %s", filename);
+		p11_message (_("couldn't load file into objects: %s"), filename);
 		return -1;
 	}
 
@@ -233,7 +240,7 @@ loader_load_if_file (p11_token *token,
 
 	if (stat (path, &sb) < 0) {
 		if (errno != ENOENT)
-			p11_message_err (errno, "couldn't stat path: %d: %s", errno, path);
+			p11_message_err (errno, _("couldn't stat path: %d: %s"), errno, path);
 
 	} else if (!S_ISDIR (sb.st_mode)) {
 		return loader_load_file (token, path, &sb);
@@ -259,7 +266,7 @@ loader_load_directory (p11_token *token,
 	/* First we load all the modules */
 	dir = opendir (directory);
 	if (!dir) {
-		p11_message_err (errno, "couldn't list directory: %s", directory);
+		p11_message_err (errno, _("couldn't list directory: %s"), directory);
 		loader_not_loaded (token, directory);
 		return 0;
 	}
@@ -302,7 +309,7 @@ loader_load_path (p11_token *token,
 
 	if (stat (path, &sb) < 0) {
 		if (errno != ENOENT)
-			p11_message_err (errno, "cannot access trust certificate path: %s", path);
+			p11_message_err (errno, _("cannot access trust certificate path: %s"), path);
 		loader_gone_file (token, path);
 		*is_dir = false;
 		ret = 0;
@@ -416,7 +423,7 @@ p11_token_reload (p11_token *token,
 		if (errno == ENOENT) {
 			loader_gone_file (token, origin);
 		} else {
-			p11_message_err (errno, "cannot access trust file: %s", origin);
+			p11_message_err (errno, _("cannot access trust file: %s"), origin);
 		}
 		ret = false;
 
@@ -465,7 +472,7 @@ check_directory (const char *path,
 		free (parent);
 		return ret;
 	default:
-		p11_message_err (errno, "couldn't access: %s", path);
+		p11_message_err (errno, _("couldn't access: %s"), path);
 		return false;
 	}
 }
@@ -493,7 +500,7 @@ writer_remove_origin (p11_token *token,
 	return_val_if_fail (path != NULL, false);
 
 	if (unlink (path) < 0) {
-		p11_message_err (errno, "couldn't remove file: %s", path);
+		p11_message_err (errno, _("couldn't remove file: %s"), path);
 		ret = false;
 	}
 
@@ -625,7 +632,7 @@ mkdir_with_parents (const char *path)
 		}
 		/* fall through */
 	default:
-		p11_message_err (errno, "couldn't create directory: %s", path);
+		p11_message_err (errno, _("couldn't create directory: %s"), path);
 		return false;
 	}
 }

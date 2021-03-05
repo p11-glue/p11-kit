@@ -51,6 +51,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 static bool
 load_attached_extension (p11_dict *attached,
                          p11_dict *asn1_defs,
@@ -67,7 +74,7 @@ load_attached_extension (p11_dict *attached,
 
 	ext = p11_asn1_decode (asn1_defs, "PKIX1.Extension", der, len, message);
 	if (ext == NULL) {
-		p11_message ("couldn't parse attached certificate extension: %s", message);
+		p11_message (_("couldn't parse attached certificate extension: %s"), message);
 		return false;
 	}
 
@@ -138,7 +145,7 @@ load_attached_extensions (p11_enumerate *ex,
 	}
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("couldn't load attached extensions for certificate: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't load attached extensions for certificate: %s"), p11_kit_strerror (rv));
 		p11_dict_free (attached);
 		attached = NULL;
 	}
@@ -262,7 +269,7 @@ extract_certificate (p11_enumerate *ex)
 	                                ex->cert_der, ex->cert_len, message);
 
 	if (!ex->cert_asn) {
-		p11_message ("couldn't parse certificate: %s", message);
+		p11_message (_("couldn't parse certificate: %s"), message);
 		return false;
 	}
 
@@ -299,7 +306,7 @@ extract_info (p11_enumerate *ex)
 
 	/* The attributes couldn't be loaded */
 	if (rv != CKR_OK && rv != CKR_ATTRIBUTE_TYPE_INVALID && rv != CKR_ATTRIBUTE_SENSITIVE) {
-		p11_message ("couldn't load attributes: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't load attributes: %s"), p11_kit_strerror (rv));
 		return false;
 	}
 
@@ -310,7 +317,7 @@ extract_info (p11_enumerate *ex)
 	/* If a certificate then  */
 	if (ex->flags & P11_ENUMERATE_CORRELATE) {
 		if (ex->klass != CKO_CERTIFICATE) {
-			p11_message ("skipping non-certificate object");
+			p11_message (_("skipping non-certificate object"));
 			return false;
 		}
 
@@ -467,7 +474,7 @@ blocklist_load (p11_enumerate *ex)
 		 */
 		rv = p11_kit_iter_load_attributes (iter, attrs, 3);
 		if (rv != CKR_OK) {
-			p11_message ("couldn't load blocklist: %s", p11_kit_strerror (rv));
+			p11_message (_("couldn't load blocklist: %s"), p11_kit_strerror (rv));
 			continue;
 		}
 
@@ -495,7 +502,7 @@ blocklist_load (p11_enumerate *ex)
 	if (rv == CKR_CANCEL)
 		return true;
 
-	p11_message ("couldn't load blocklist: %s", p11_kit_strerror (rv));
+	p11_message (_("couldn't load blocklist: %s"), p11_kit_strerror (rv));
 	return false;
 }
 
@@ -569,19 +576,19 @@ p11_enumerate_opt_filter (p11_enumerate *ex,
 
 	if (strncmp (option, "pkcs11:", 7) == 0) {
 		if (ex->uri != NULL) {
-			p11_message ("a PKCS#11 URI has already been specified");
+			p11_message (_("a PKCS#11 URI has already been specified"));
 			return false;
 		}
 
 		ex->uri = p11_kit_uri_new ();
 		ret = p11_kit_uri_parse (option, P11_KIT_URI_FOR_OBJECT_ON_TOKEN_AND_MODULE, ex->uri);
 		if (ret != P11_KIT_URI_OK) {
-			p11_message ("couldn't parse pkcs11 uri filter: %s", option);
+			p11_message (_("couldn't parse pkcs11 uri filter: %s"), option);
 			return false;
 		}
 
 		if (p11_kit_uri_any_unrecognized (ex->uri))
-			p11_message ("uri contained unrecognized components, nothing will be extracted");
+			p11_message (_("uri contained unrecognized components, nothing will be extracted"));
 
 		p11_kit_iter_set_uri (ex->iter, ex->uri);
 		ex->num_filters++;
@@ -608,7 +615,7 @@ p11_enumerate_opt_filter (p11_enumerate *ex,
 		attrs = p11_attrs_build (NULL, NULL);
 
 	} else {
-		p11_message ("unsupported or unrecognized filter: %s", option);
+		p11_message (_("unsupported or unrecognized filter: %s"), option);
 		return false;
 	}
 
@@ -657,7 +664,7 @@ p11_enumerate_opt_purpose (p11_enumerate *ex,
 	} else if (is_valid_oid_rough (option)) {
 		oid = option;
 	} else {
-		p11_message ("unsupported or unregonized purpose: %s", option);
+		p11_message (_("unsupported or unregonized purpose: %s"), option);
 		return false;
 	}
 
@@ -699,7 +706,7 @@ p11_enumerate_ready (p11_enumerate *ex,
 	if (!ex->modules)
 		return false;
 	if (ex->modules[0] == NULL)
-		p11_message ("no modules containing trust policy are registered");
+		p11_message (_("no modules containing trust policy are registered"));
 
 	/*
 	 * If loading anchors, then the caller expects that the blocklist is

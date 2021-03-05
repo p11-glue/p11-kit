@@ -42,6 +42,13 @@
 #include <stdint.h>  /* UINT32_MAX */
 #include <limits.h>  /* SSIZE_MAX */
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /* types from the UEFI 2.7 spec, section "31.4.1 Signature Database" */
 typedef struct {
 	uint32_t data1;
@@ -182,7 +189,7 @@ prepare_edk2_buffer (p11_enumerate *ex,
 	}
 
 	if (rv != CKR_CANCEL) {
-		p11_message ("failed to find certificate: %s",
+		p11_message (_("failed to find certificate: %s"),
 		             p11_kit_strerror (rv));
 		return false;
 	}

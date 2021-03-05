@@ -56,6 +56,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 #define PERSIST_HEADER "p11-kit-object-v1"
 
 struct _p11_persist {
@@ -483,7 +490,7 @@ format_oid (p11_persist *persist,
 
 	ret = asn1_der_decoding (&asn, attr->pValue, attr->ulValueLen, message);
 	if (ret != ASN1_SUCCESS) {
-		p11_message ("invalid oid value: %s", message);
+		p11_message (_("invalid oid value: %s"), message);
 		return false;
 	}
 

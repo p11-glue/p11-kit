@@ -58,6 +58,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 #define MANUFACTURER_ID         "PKCS#11 Kit                     "
 #define LIBRARY_DESCRIPTION     "PKCS#11 Kit Trust Module        "
 #define TOKEN_MODEL             "p11-kit-trust    "
@@ -293,7 +300,7 @@ parse_argument (char *arg,
 		else if (strcmp (value, "no") == 0)
 			p11_message_quiet ();
 	} else {
-		p11_message ("unrecognized module argument: %s", arg);
+		p11_message (_("unrecognized module argument: %s"), arg);
 	}
 }
 
@@ -372,7 +379,7 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 		              (args->CreateMutex != NULL && args->DestroyMutex != NULL &&
 		               args->LockMutex != NULL && args->UnlockMutex != NULL);
 		if (!supplied_ok) {
-			p11_message ("invalid set of mutex calls supplied");
+			p11_message (_("invalid set of mutex calls supplied"));
 			rv = CKR_ARGUMENTS_BAD;
 		}
 
@@ -381,7 +388,7 @@ sys_C_Initialize (CK_VOID_PTR init_args)
 		 * We must be able to use our pthread functionality.
 		 */
 		if (!(args->flags & CKF_OS_LOCKING_OK)) {
-			p11_message ("can't do without os locking");
+			p11_message (_("can't do without os locking"));
 			rv = CKR_CANT_LOCK;
 		}
 

@@ -54,12 +54,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define N_(x) (x)
+
 static const p11_tool_command commands[] = {
-	{ "list", p11_trust_list, "List trust or certificates" },
-	{ "extract", p11_trust_extract, "Extract certificates and trust" },
-	{ "extract-compat", p11_trust_extract_compat, "Extract trust compatibility bundles" },
-	{ "anchor", p11_trust_anchor, "Add, remove, change trust anchors" },
-	{ "dump", p11_trust_dump, "Dump trust objects in internal format" },
+	{ "list", p11_trust_list, N_("List trust or certificates") },
+	{ "extract", p11_trust_extract, N_("Extract certificates and trust") },
+	{ "extract-compat", p11_trust_extract_compat, N_("Extract trust compatibility bundles") },
+	{ "anchor", p11_trust_anchor, N_("Add, remove, change trust anchors") },
+	{ "dump", p11_trust_dump, N_("Dump trust objects in internal format") },
 	{ 0, }
 };
 
