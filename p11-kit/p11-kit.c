@@ -49,6 +49,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+#define N_(x) (x)
+
 #include "tool.h"
 
 int       p11_kit_list_modules    (int argc,
@@ -61,9 +69,9 @@ int       p11_kit_external        (int argc,
                                    char *argv[]);
 
 static const p11_tool_command commands[] = {
-	{ "list-modules", p11_kit_list_modules, "List modules and tokens" },
-	{ "remote", p11_kit_external, "Run a specific PKCS#11 module remotely" },
-	{ "server", p11_kit_external, "Run a server process that exposes PKCS#11 module remotely" },
+	{ "list-modules", p11_kit_list_modules, N_("List modules and tokens") },
+	{ "remote", p11_kit_external, N_("Run a specific PKCS#11 module remotely") },
+	{ "server", p11_kit_external, N_("Run a server process that exposes PKCS#11 module remotely") },
 	{ P11_TOOL_FALLBACK, p11_kit_external, NULL },
 	{ 0, }
 };
@@ -84,7 +92,7 @@ p11_kit_trust (int argc,
 	execv (args[0], args);
 
 	/* At this point we have no command */
-	p11_message_err (errno, "couldn't run trust tool");
+	p11_message_err (errno, _("couldn't run trust tool"));
 
 	free (args);
 	return 2;
@@ -126,7 +134,7 @@ p11_kit_external (int argc,
 	execv (path, argv);
 
 	/* At this point we have no command */
-	p11_message ("'%s' is not a valid command. See 'p11-kit --help'", argv[0]);
+	p11_message (_("'%s' is not a valid command. See 'p11-kit --help'"), argv[0]);
 
 	free (filename);
 	free (path);

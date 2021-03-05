@@ -49,6 +49,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 int
 main (int argc,
       char *argv[])
@@ -98,12 +105,12 @@ main (int argc,
 	argv += optind;
 
 	if (argc < 1) {
-		p11_message ("specify a module or tokens to remote");
+		p11_message (_("specify a module or tokens to remote"));
 		return 2;
 	}
 
 	if (isatty (0)) {
-		p11_message ("the 'remote' tool is not meant to be run from a terminal");
+		p11_message (_("the 'remote' tool is not meant to be run from a terminal"));
 		return 2;
 	}
 
@@ -129,7 +136,7 @@ main (int argc,
 		int ret;
 
 		if (argc != 1) {
-			p11_message ("only one module can be specified");
+			p11_message (_("only one module can be specified"));
 			return 2;
 		}
 

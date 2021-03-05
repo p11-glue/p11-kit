@@ -46,6 +46,13 @@
 #include <errno.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 #define ELEMS(x) (sizeof (x) / sizeof (x[0]))
 
 void
@@ -180,7 +187,7 @@ p11_rpc_message_parse (p11_rpc_message *msg,
 
 	/* Pull out the call identifier */
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &call_id)) {
-		p11_message ("invalid message: couldn't read call identifier");
+		p11_message (_("invalid message: couldn't read call identifier"));
 		return false;
 	}
 
@@ -189,7 +196,7 @@ p11_rpc_message_parse (p11_rpc_message *msg,
 	/* The call id and signature */
 	if (call_id >= P11_RPC_CALL_MAX ||
 	    (type == P11_RPC_REQUEST && call_id == P11_RPC_CALL_ERROR)) {
-		p11_message ("invalid message: bad call id: %d", call_id);
+		p11_message (_("invalid message: bad call id: %d"), call_id);
 		return false;
 	}
 	if (type == P11_RPC_REQUEST)
@@ -207,12 +214,12 @@ p11_rpc_message_parse (p11_rpc_message *msg,
 	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &val, &len) ||
 	    /* This can happen if the length header == 0xffffffff */
 	    val == NULL) {
-		p11_message ("invalid message: couldn't read signature");
+		p11_message (_("invalid message: couldn't read signature"));
 		return false;
 	}
 
 	if ((strlen (msg->signature) != len) || (memcmp (val, msg->signature, len) != 0)) {
-		p11_message ("invalid message: signature doesn't match");
+		p11_message (_("invalid message: signature doesn't match"));
 		return false;
 	}
 
@@ -473,7 +480,7 @@ p11_rpc_message_read_space_string (p11_rpc_message *msg,
 		return false;
 
 	if (n_data != length) {
-		p11_message ("invalid length space padded string received: %d != %d",
+		p11_message (_("invalid length space padded string received: %d != %d"),
 		             (int)length, (int)n_data);
 		return false;
 	}

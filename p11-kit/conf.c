@@ -60,6 +60,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /* For testing, when the tests assuming user config are run as root. */
 bool p11_conf_force_user_config = false;
 
@@ -151,11 +158,11 @@ _p11_conf_parse_file (const char* filename,
 			lexer.tok.field.value = NULL;
 			break;
 		case TOK_PEM:
-			p11_message ("%s: unexpected pem block", filename);
+			p11_message (_("%s: unexpected pem block"), filename);
 			failed = true;
 			break;
 		case TOK_SECTION:
-			p11_message ("%s: unexpected section header", filename);
+			p11_message (_("%s: unexpected section header"), filename);
 			failed = true;
 			break;
 		case TOK_EOF:
@@ -198,7 +205,7 @@ user_config_mode (p11_dict *config,
 	} else if (strequal (mode, "override")) {
 		return CONF_USER_ONLY;
 	} else {
-		p11_message ("invalid mode for 'user-config': %s", mode);
+		p11_message (_("invalid mode for 'user-config': %s"), mode);
 		return CONF_USER_INVALID;
 	}
 }
@@ -357,7 +364,7 @@ load_config_from_file (const char *configfile,
 
 	key = calc_name_from_filename (name);
 	if (key == NULL) {
-		p11_message ("invalid config filename, will be ignored in the future: %s", configfile);
+		p11_message (_("invalid config filename, will be ignored in the future: %s"), configfile);
 		key = strdup (name);
 		return_val_if_fail (key != NULL, false);
 	}
@@ -418,7 +425,7 @@ load_configs_from_directory (const char *directory,
 			p11_debug ("couldn't list inacessible module configs");
 			return true;
 		}
-		p11_message_err (error, "couldn't list directory: %s", directory);
+		p11_message_err (error, _("couldn't list directory: %s"), directory);
 		errno = error;
 		return false;
 	}
@@ -429,7 +436,7 @@ load_configs_from_directory (const char *directory,
 
 		if (stat (path, &st) < 0) {
 			error = errno;
-			p11_message_err (error, "couldn't stat path: %s", path);
+			p11_message_err (error, _("couldn't stat path: %s"), path);
 			free (path);
 			break;
 		}
@@ -518,7 +525,7 @@ _p11_conf_parse_boolean (const char *string,
 	} else if (strcmp (string, "no") == 0) {
 		return false;
 	} else {
-		p11_message ("invalid setting '%s' defaulting to '%s'",
+		p11_message (_("invalid setting '%s' defaulting to '%s'"),
 		             string, default_value ? "yes" : "no");
 		return default_value;
 	}

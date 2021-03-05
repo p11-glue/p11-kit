@@ -70,6 +70,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /**
  * SECTION:p11-kit
  * @title: Modules
@@ -363,7 +370,7 @@ dlopen_and_get_function_list (Module *mod,
 	dl = p11_dl_open (path);
 	if (dl == NULL) {
 		error = p11_dl_error ();
-		p11_message ("couldn't load module: %s: %s", path, error);
+		p11_message (_("couldn't load module: %s: %s"), path, error);
 		free (error);
 		return CKR_GENERAL_ERROR;
 	}
@@ -375,7 +382,7 @@ dlopen_and_get_function_list (Module *mod,
 	gfl = p11_dl_symbol (dl, "C_GetFunctionList");
 	if (!gfl) {
 		error = p11_dl_error ();
-		p11_message ("couldn't find C_GetFunctionList entry point in module: %s: %s",
+		p11_message (_("couldn't find C_GetFunctionList entry point in module: %s: %s"),
 		             path, error);
 		free (error);
 		return CKR_GENERAL_ERROR;
@@ -383,13 +390,13 @@ dlopen_and_get_function_list (Module *mod,
 
 	rv = gfl (funcs);
 	if (rv != CKR_OK) {
-		p11_message ("call to C_GetFunctiontList failed in module: %s: %s",
+		p11_message (_("call to C_GetFunctiontList failed in module: %s: %s"),
 		             path, p11_kit_strerror (rv));
 		return rv;
 	}
 
 	if (p11_proxy_module_check (*funcs)) {
-		p11_message ("refusing to load the p11-kit-proxy.so module as a registered module");
+		p11_message (_("refusing to load the p11-kit-proxy.so module as a registered module"));
 		return CKR_FUNCTION_FAILED;
 	}
 
@@ -538,7 +545,7 @@ is_module_enabled_unlocked (const char *name,
 
 	progname = _p11_get_progname_unlocked ();
 	if (enable_in && disable_in)
-		p11_message ("module '%s' has both enable-in and disable-in options", name);
+		p11_message (_("module '%s' has both enable-in and disable-in options"), name);
 	if (enable_in) {
 		enable = (progname != NULL &&
 			  is_string_in_list (enable_in, progname)) ||
@@ -688,7 +695,7 @@ load_registered_modules_unlocked (int flags)
 		p11_dict_free (config);
 
 		if (critical && rv != CKR_OK) {
-			p11_message ("aborting initialization because module '%s' was marked as critical",
+			p11_message (_("aborting initialization because module '%s' was marked as critical"),
 			             name);
 			p11_dict_free (configs);
 			free (name);
@@ -713,7 +720,7 @@ initialize_module_inlock_reentrant (Module *mod, CK_C_INITIALIZE_ARGS *init_args
 	self = p11_thread_id_self ();
 
 	if (mod->initialize_thread == self) {
-		p11_message ("p11-kit initialization called recursively");
+		p11_message (_("p11-kit initialization called recursively"));
 		return CKR_FUNCTION_FAILED;
 	}
 
@@ -899,10 +906,10 @@ initialize_registered_inlock_reentrant (void)
 			rv = initialize_module_inlock_reentrant (mod, NULL);
 			if (rv != CKR_OK) {
 				if (mod->critical) {
-					p11_message ("initialization of critical module '%s' failed: %s",
+					p11_message (_("initialization of critical module '%s' failed: %s"),
 					             mod->name, p11_kit_strerror (rv));
 				} else {
-					p11_message ("skipping module '%s' whose initialization failed: %s",
+					p11_message (_("skipping module '%s' whose initialization failed: %s"),
 					             mod->name, p11_kit_strerror (rv));
 					rv = CKR_OK;
 				}
@@ -1677,7 +1684,7 @@ managed_close_sessions (CK_X_FUNCTION_LIST *funcs,
 	for (i = 0; i < count; i++) {
 		rv = funcs->C_CloseSession (funcs, stolen[i]);
 		if (rv != CKR_OK)
-			p11_message ("couldn't close session: %s", p11_kit_strerror (rv));
+			p11_message (_("couldn't close session: %s"), p11_kit_strerror (rv));
 	}
 }
 
@@ -1854,7 +1861,7 @@ lookup_managed_option (Module *mod,
 	  /*
 	   * This is because the module is running in unmanaged mode, so turn off the
 	   */
-	  p11_message ("the '%s' option for module '%s' is only supported for managed modules",
+	  p11_message (_("the '%s' option for module '%s' is only supported for managed modules"),
 		       option, mod->name);
 	}
 
@@ -2161,7 +2168,7 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 				name = strdup ("(unknown)");
 			return_val_if_fail (name != NULL, CKR_HOST_MEMORY);
 			critical = (p11_kit_module_get_flags (modules[i]) & P11_KIT_MODULE_CRITICAL);
-			p11_message ("%s: module failed to initialize%s: %s",
+			p11_message (_("%s: module failed to initialize%s: %s"),
 			             name, critical ? "" : ", skipping", p11_kit_strerror (rv));
 			if (critical)
 				ret = rv;
@@ -2172,7 +2179,7 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 		} else {
 			if (rv == CKR_CRYPTOKI_ALREADY_INITIALIZED) {
 				name = p11_kit_module_get_name (modules[i]);
-				p11_message ("%s: module was already initialized",
+				p11_message (_("%s: module was already initialized"),
 				             name ? name : "(unknown)");
 				free (name);
 			}
@@ -2268,7 +2275,7 @@ p11_kit_modules_finalize (CK_FUNCTION_LIST **modules)
 		rv = modules[i]->C_Finalize (NULL);
 		if (rv != CKR_OK) {
 			name = p11_kit_module_get_name (modules[i]);
-			p11_message ("%s: module failed to finalize: %s",
+			p11_message (_("%s: module failed to finalize: %s"),
 			             name ? name : "(unknown)", p11_kit_strerror (rv));
 			free (name);
 			ret = rv;
@@ -2407,7 +2414,7 @@ p11_kit_initialize_module (CK_FUNCTION_LIST_PTR module)
 			assert (mod != NULL);
 			rv = initialize_module_inlock_reentrant (mod, NULL);
 			if (rv != CKR_OK) {
-				p11_message ("module initialization failed: %s", p11_kit_strerror (rv));
+				p11_message (_("module initialization failed: %s"), p11_kit_strerror (rv));
 			}
 		}
 
@@ -2639,7 +2646,7 @@ p11_kit_module_initialize (CK_FUNCTION_LIST *module)
 	rv = module->C_Initialize (NULL);
 	if (rv != CKR_OK) {
 		name = p11_kit_module_get_name (module);
-		p11_message ("%s: module failed to initialize: %s",
+		p11_message (_("%s: module failed to initialize: %s"),
 		             name ? name : "(unknown)", p11_kit_strerror (rv));
 		free (name);
 	}
@@ -2680,7 +2687,7 @@ p11_kit_module_finalize (CK_FUNCTION_LIST *module)
 	rv = module->C_Finalize (NULL);
 	if (rv != CKR_OK) {
 		name = p11_kit_module_get_name (module);
-		p11_message ("%s: module failed to finalize: %s",
+		p11_message (_("%s: module failed to finalize: %s"),
 		             name ? name : "(unknown)", p11_kit_strerror (rv));
 		free (name);
 	}

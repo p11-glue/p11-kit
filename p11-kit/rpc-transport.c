@@ -79,6 +79,13 @@
 #define EPROTO EIO
 #endif
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 typedef struct {
 	/* Never changes.  On Unix, these are identical, as it is
 	 * backed by a socket.  On Windows, it is another file
@@ -202,10 +209,10 @@ write_all (int fd,
 		r = write (fd, data, len);
 		if (r == -1) {
 			if (errno == EPIPE) {
-				p11_message ("couldn't send data: closed connection");
+				p11_message (_("couldn't send data: closed connection"));
 				return false;
 			} else if (errno != EAGAIN && errno != EINTR) {
-				p11_message_err (errno, "couldn't send data");
+				p11_message_err (errno, _("couldn't send data"));
 				return false;
 			}
 		} else {
@@ -228,11 +235,11 @@ read_all (int fd,
 	while (len > 0) {
 		r = read (fd, data, len);
 		if (r == 0) {
-			p11_message ("couldn't receive data: closed connection");
+			p11_message (_("couldn't receive data: closed connection"));
 			return false;
 		} else if (r == -1) {
 			if (errno != EAGAIN && errno != EINTR) {
-				p11_message_err (errno, "couldn't receive data");
+				p11_message_err (errno, _("couldn't receive data"));
 				return false;
 			}
 		} else {
@@ -260,7 +267,7 @@ rpc_socket_write_inlock (rpc_socket *sock,
 	/* Place holder byte, will later carry unix credentials (on some systems) */
 	if (!sock->sent_creds) {
 		if (write_all (sock->write_fd, &dummy, 1) != 1) {
-			p11_message_err (errno, "couldn't send socket credentials");
+			p11_message_err (errno, _("couldn't send socket credentials"));
 			return CKR_DEVICE_ERROR;
 		}
 		sock->sent_creds = true;
@@ -429,7 +436,7 @@ rpc_socket_read (rpc_socket *sock,
 			sock->read_olen = p11_rpc_buffer_decode_uint32 (header + 4);
 			sock->read_dlen = p11_rpc_buffer_decode_uint32 (header + 8);
 			if (sock->read_code == 0) {
-				p11_message ("received invalid rpc header values: perhaps wrong protocol");
+				p11_message (_("received invalid rpc header values: perhaps wrong protocol"));
 				break;
 			}
 		}
@@ -472,7 +479,7 @@ rpc_socket_read (rpc_socket *sock,
 			p11_mutex_unlock (&sock->read_lock);
 			handle = (HANDLE) _get_osfhandle (sock->read_fd);
 			if (!ReadFile (handle, NULL, 0, &mode, NULL))
-				p11_message ("couldn't use select to wait on rpc pipe");
+				p11_message (_("couldn't use select to wait on rpc pipe"));
 			p11_mutex_lock (&sock->read_lock);
 #endif
 		}
@@ -678,13 +685,13 @@ rpc_transport_buffer (p11_rpc_client_vtable *vtable,
 	}
 
 	if (rv != CKR_OK && sock->read_fd != -1) {
-		p11_message ("closing socket due to protocol failure");
+		p11_message (_("closing socket due to protocol failure"));
 		close (sock->read_fd);
 		sock->read_fd = -1;
 	}
 #ifdef OS_WIN32
 	if (rv != CKR_OK && sock->write_fd != -1) {
-		p11_message ("closing socket due to protocol failure");
+		p11_message (_("closing socket due to protocol failure"));
 		close (sock->write_fd);
 		sock->write_fd = -1;
 	}
@@ -723,25 +730,25 @@ rpc_exec_wait_or_terminate (pid_t pid)
 	}
 
 	if (ret == 0) {
-		p11_message ("process %d did not exit, terminating", (int)pid);
+		p11_message (_("process %d did not exit, terminating"), (int)pid);
 		kill (pid, SIGTERM);
 		terminated = true;
 		ret = waitpid (pid, &status, 0);
 	}
 
 	if (ret < 0) {
-		p11_message_err (errno, "failed to wait for executed child: %d", (int)pid);
+		p11_message_err (errno, _("failed to wait for executed child: %d"), (int)pid);
 		status = 0;
 	} else if (WIFEXITED (status)) {
 		status = WEXITSTATUS (status);
 		if (status == 0)
 			p11_debug ("process %d exited with status 0", (int)pid);
 		else
-			p11_message ("process %d exited with status %d", (int)pid, status);
+			p11_message (_("process %d exited with status %d"), (int)pid, status);
 	} else if (WIFSIGNALED (status)) {
 		sig = WTERMSIG (status);
 		if (!terminated || sig != SIGTERM)
-			p11_message ("process %d was terminated with signal %d", (int)pid, sig);
+			p11_message (_("process %d was terminated with signal %d"), (int)pid, sig);
 	}
 }
 
@@ -785,7 +792,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	p11_debug ("executing rpc transport: %s", (char *)rex->argv->elem[0]);
 
 	if (socketpair (AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
-		p11_message_err (errno, "failed to create pipe for remote");
+		p11_message_err (errno, _("failed to create pipe for remote"));
 		return CKR_DEVICE_ERROR;
 	}
 
@@ -796,7 +803,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	case -1:
 		close (fds[0]);
 		close (fds[1]);
-		p11_message_err (errno, "failed to fork for remote");
+		p11_message_err (errno, _("failed to fork for remote"));
 		return CKR_DEVICE_ERROR;
 
 	/* Child */
@@ -856,21 +863,21 @@ rpc_exec_wait_or_terminate (HANDLE pid)
 	}
 
 	if (ret != WAIT_OBJECT_0) {
-		p11_message ("process %p did not exit, terminating", pid);
+		p11_message (_("process %p did not exit, terminating"), pid);
 		if (!TerminateProcess (pid, SIGTERM))
-			p11_message ("couldn't terminate process %p", pid);
+			p11_message (_("couldn't terminate process %p"), pid);
 		ret = WaitForSingleObject (pid, 0);
 	}
 
 	if (ret != WAIT_OBJECT_0) {
-		p11_message ("failed to wait for executed child: %p", pid);
+		p11_message (_("failed to wait for executed child: %p"), pid);
 		status = 0;
 	} else if (!GetExitCodeProcess (pid, &status)) {
-		p11_message ("failed to get the exit status of %p", pid);
+		p11_message (_("failed to get the exit status of %p"), pid);
 	} else if (status == 0) {
 		p11_debug ("process %p exited with status 0", pid);
 	} else {
-		p11_message ("process %p exited with status %lu", pid, status);
+		p11_message (_("process %p exited with status %lu"), pid, status);
 	}
 
 	CloseHandle (pid);
@@ -921,14 +928,14 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 
 	if (_pipe (pw, 256, _O_BINARY) == -1 ||
 	    set_cloexec_on_fd (pw[1]) == -1) {
-		p11_message_err (errno, "failed to create pipe for remote");
+		p11_message_err (errno, _("failed to create pipe for remote"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
 
 	if (_pipe (pr, 256, _O_BINARY) == -1 ||
 	    set_cloexec_on_fd (pr[0]) == -1) {
-		p11_message_err (errno, "failed to create pipe for remote");
+		p11_message_err (errno, _("failed to create pipe for remote"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
@@ -936,14 +943,14 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	/* Save the original stdin and stdout */
 	fds[0] = dup (STDIN_FILENO);
 	if (fds[0] == -1) {
-		p11_message_err (errno, "failed to duplicate stdin");
+		p11_message_err (errno, _("failed to duplicate stdin"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
 
 	fds[1] = dup (STDOUT_FILENO);
 	if (fds[1] == -1) {
-		p11_message_err (errno, "failed to duplicate stdout");
+		p11_message_err (errno, _("failed to duplicate stdout"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
@@ -951,7 +958,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	/* Temporarily redirect pipe descriptors to stdin/stdout for child */
 	if (dup2 (pw[0], STDIN_FILENO) == -1 ||
 	    dup2 (pr[1], STDOUT_FILENO) == -1) {
-		p11_message_err (errno, "failed to duplicate child end of pipe");
+		p11_message_err (errno, _("failed to duplicate child end of pipe"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
@@ -961,7 +968,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 		       (const char * const *)rex->argv->elem);
 
 	if (pid == -1) {
-		p11_message_err (errno, "failed to spawn remote");
+		p11_message_err (errno, _("failed to spawn remote"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
@@ -974,7 +981,7 @@ rpc_exec_connect (p11_rpc_client_vtable *vtable,
 	/* Restore the original stdin and stdout */
 	if (dup2 (fds[0], STDIN_FILENO) == -1 ||
 	    dup2 (fds[1], STDOUT_FILENO) == -1) {
-		p11_message_err (errno, "failed to restore file descriptors");
+		p11_message_err (errno, _("failed to restore file descriptors"));
 		rv = CKR_DEVICE_ERROR;
 		goto out;
 	}
@@ -1043,7 +1050,7 @@ rpc_exec_init (const char *remote,
 
 	argv = p11_array_new (free);
 	if (!p11_argv_parse (remote, on_argv_parsed, argv) || argv->num < 1) {
-		p11_message ("invalid remote command line: %s", remote);
+		p11_message (_("invalid remote command line: %s"), remote);
 		p11_array_free (argv);
 		return NULL;
 	}
@@ -1082,7 +1089,7 @@ rpc_unix_connect (p11_rpc_client_vtable *vtable,
 
 	fd = socket (AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
-		p11_message_err (errno, "failed to create socket for remote");
+		p11_message_err (errno, _("failed to create socket for remote"));
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -1162,7 +1169,7 @@ rpc_vsock_connect (p11_rpc_client_vtable *vtable,
 
 	fd = socket (AF_VSOCK, SOCK_STREAM, 0);
 	if (fd < 0) {
-		p11_message_err (errno, "failed to create socket for remote");
+		p11_message_err (errno, _("failed to create socket for remote"));
 		return CKR_GENERAL_ERROR;
 	}
 
@@ -1258,7 +1265,7 @@ p11_rpc_transport_new (p11_virtual *virt,
 
 		if (!p11_vsock_parse_addr (remote + 6, &cid, &port) ||
 		    cid == VMADDR_CID_ANY) {
-			p11_message ("failed to parse vsock address: '%s'",
+			p11_message (_("failed to parse vsock address: '%s'"),
 				     remote + 6);
 			return NULL;
 		}
@@ -1266,7 +1273,7 @@ p11_rpc_transport_new (p11_virtual *virt,
 		rpc = rpc_vsock_init (cid, port, name);
 #endif /* HAVE_VSOCK */
 	} else {
-		p11_message ("remote not supported: %s", remote);
+		p11_message (_("remote not supported: %s"), remote);
 		return NULL;
 	}
 
