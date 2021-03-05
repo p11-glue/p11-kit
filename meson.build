@@ -26,6 +26,7 @@ add_project_arguments(['-D_GNU_SOURCE', '-DP11_KIT_FUTURE_UNSTABLE_API'],
 
 conf = configuration_data()
 
+conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set('PACKAGE_MAJOR', major_version)
 conf.set('PACKAGE_MINOR', minor_version)
 
@@ -57,6 +58,10 @@ if get_option('debug')
 endif
 
 conf.set10('WITH_STRICT', get_option('strict'))
+
+if get_option('nls') and cc.has_header('libintl.h')
+  conf.set('ENABLE_NLS', 1)
+endif
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')
