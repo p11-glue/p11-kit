@@ -58,6 +58,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /* The error returned on protocol failures */
 #define PARSE_ERROR CKR_DEVICE_ERROR
 #define PREP_ERROR  CKR_DEVICE_MEMORY
@@ -548,7 +555,7 @@ call_ready (p11_rpc_message *msg)
 	 */
 
 	if (p11_buffer_failed (msg->output)) {
-		p11_message ("invalid request from module, probably too short"); \
+		p11_message (_("invalid request from module, probably too short")); \
 		return PARSE_ERROR;
 	}
 
@@ -558,7 +565,7 @@ call_ready (p11_rpc_message *msg)
 	msg->input = NULL;
 
 	if (!p11_rpc_message_prep (msg, msg->call_id, P11_RPC_RESPONSE)) {
-		p11_message ("couldn't initialize rpc response");
+		p11_message (_("couldn't initialize rpc response"));
 		return CKR_DEVICE_MEMORY;
 	}
 
@@ -690,7 +697,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 		/* Check to make sure the header matches */
 		if (n_handshake != P11_RPC_HANDSHAKE_LEN ||
 		    memcmp (handshake, P11_RPC_HANDSHAKE, n_handshake) != 0) {
-			p11_message ("invalid handshake received from connecting module");
+			p11_message (_("invalid handshake received from connecting module"));
 			ret = CKR_GENERAL_ERROR;
 		}
 	}
@@ -1807,7 +1814,7 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 
 	if (!p11_rpc_message_parse (&msg, P11_RPC_REQUEST)) {
 		p11_rpc_message_clear (&msg);
-		p11_message ("couldn't parse pkcs11 rpc message");
+		p11_message (_("couldn't parse pkcs11 rpc message"));
 		return false;
 	}
 
@@ -1894,7 +1901,7 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	};
 
 	if (p11_buffer_failed (msg.output)) {
-		p11_message ("out of memory error putting together message");
+		p11_message (_("out of memory error putting together message"));
 		p11_rpc_message_clear (&msg);
 		return false;
 	}
@@ -1918,7 +1925,7 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 		if (!p11_rpc_message_prep (&msg, P11_RPC_CALL_ERROR, P11_RPC_RESPONSE) ||
 		    !p11_rpc_message_write_ulong (&msg, (uint32_t)ret) ||
 		    p11_buffer_failed (msg.output)) {
-			p11_message ("out of memory responding with error");
+			p11_message (_("out of memory responding with error"));
 			p11_rpc_message_clear (&msg);
 			return false;
 		}
@@ -1964,12 +1971,12 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 		goto out;
 	case 1:
 		if (version != 0) {
-			p11_message ("unsupported version received: %d", (int)version);
+			p11_message (_("unsupported version received: %d"), (int)version);
 			goto out;
 		}
 		break;
 	default:
-		p11_message_err (errno, "couldn't read credential byte");
+		p11_message_err (errno, _("couldn't read credential byte"));
 		goto out;
 	}
 
@@ -1978,7 +1985,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 	case 1:
 		break;
 	default:
-		p11_message_err (errno, "couldn't write credential byte");
+		p11_message_err (errno, _("couldn't write credential byte"));
 		goto out;
 	}
 
@@ -2001,12 +2008,12 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 		case P11_RPC_AGAIN:
 			assert_not_reached ();
 		case P11_RPC_ERROR:
-			p11_message_err (errno, "failed to read rpc message");
+			p11_message_err (errno, _("failed to read rpc message"));
 			goto out;
 		}
 
 		if (!p11_rpc_server_handle (&virt.funcs, &buffer, &buffer)) {
-			p11_message ("unexpected error handling rpc message");
+			p11_message (_("unexpected error handling rpc message"));
 			goto out;
 		}
 
@@ -2024,7 +2031,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 		case P11_RPC_AGAIN:
 			assert_not_reached ();
 		case P11_RPC_ERROR:
-			p11_message_err (errno, "failed to write rpc message");
+			p11_message_err (errno, _("failed to write rpc message"));
 			goto out;
 		}
 	}

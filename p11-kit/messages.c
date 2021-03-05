@@ -49,7 +49,7 @@
 #include <libintl.h>
 #define _(x) dgettext(PACKAGE_NAME, x)
 #else
-#define _(x) x
+#define _(x) (x)
 #endif
 
 /**

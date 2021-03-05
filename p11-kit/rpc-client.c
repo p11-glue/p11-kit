@@ -50,6 +50,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 /* The error used by us when parsing of rpc message fails */
 #define PARSE_ERROR   CKR_DEVICE_ERROR
 
@@ -134,12 +141,12 @@ call_run (rpc_client *module,
 	/* If it's an error code then return it */
 	if (msg->call_id == P11_RPC_CALL_ERROR) {
 		if (!p11_rpc_message_read_ulong (msg, &ckerr)) {
-			p11_message ("invalid rpc error response: too short");
+			p11_message (_("invalid rpc error response: too short"));
 			return CKR_DEVICE_ERROR;
 		}
 
 		if (ckerr <= CKR_OK) {
-			p11_message ("invalid rpc error response: bad error code");
+			p11_message (_("invalid rpc error response: bad error code"));
 			return CKR_DEVICE_ERROR;
 		}
 
@@ -149,7 +156,7 @@ call_run (rpc_client *module,
 
 	/* Make sure other side answered the right call */
 	if (call_id != msg->call_id) {
-		p11_message ("invalid rpc response: call mismatch");
+		p11_message (_("invalid rpc response: call mismatch"));
 		return CKR_DEVICE_ERROR;
 	}
 
@@ -170,7 +177,7 @@ call_done (rpc_client *module,
 	/* Check for parsing errors that were not caught elsewhere */
 	if (ret == CKR_OK) {
 		if (p11_buffer_failed (msg->input)) {
-			p11_message ("invalid rpc response: bad argument data");
+			p11_message (_("invalid rpc response: bad argument data"));
 			ret = CKR_GENERAL_ERROR;
 		} else {
 			/* Double check that the signature matched our decoding */
@@ -217,7 +224,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
 	 * number.
 	 */
 	if (len != num) {
-		p11_message ("received an attribute array with wrong number of attributes");
+		p11_message (_("received an attribute array with wrong number of attributes"));
 		return PARSE_ERROR;
 	}
 
@@ -239,7 +246,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
 			CK_ATTRIBUTE *attr = &(arr[i]);
 
 			if (temp.type != attr->type) {
-				p11_message ("returned attributes in invalid order");
+				p11_message (_("returned attributes in invalid order"));
 				msg->parsed = offset;
 				return PARSE_ERROR;
 			}
@@ -710,7 +717,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 		              (args->CreateMutex != NULL && args->DestroyMutex != NULL &&
 		               args->LockMutex != NULL && args->UnlockMutex != NULL);
 		if (!supplied_ok) {
-			p11_message ("invalid set of mutex calls supplied");
+			p11_message (_("invalid set of mutex calls supplied"));
 			return CKR_ARGUMENTS_BAD;
 		}
 
@@ -719,7 +726,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 		 * We must be able to use our mutex functionality.
 		 */
 		if (!(args->flags & CKF_OS_LOCKING_OK)) {
-			p11_message ("can't do without os locking");
+			p11_message (_("can't do without os locking"));
 			return CKR_CANT_LOCK;
 		}
 
@@ -732,7 +739,7 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	if (module->initialized_forkid != 0) {
 		/* This process has called C_Initialize already */
 		if (p11_forkid == module->initialized_forkid) {
-			p11_message ("C_Initialize called twice for same process");
+			p11_message (_("C_Initialize called twice for same process"));
 			ret = CKR_CRYPTOKI_ALREADY_INITIALIZED;
 			goto done;
 		}
@@ -816,7 +823,7 @@ rpc_C_Finalize (CK_X_FUNCTION_LIST *self,
 			ret = call_run (module, &msg);
 		call_done (module, &msg, ret);
 		if (ret != CKR_OK)
-			p11_message ("finalizing rpc module returned an error: %lu", ret);
+			p11_message (_("finalizing rpc module returned an error: %lu"), ret);
 
 		module->initialize_done = false;
 		assert (module->vtable->disconnect != NULL);

@@ -84,6 +84,13 @@ typedef void (*sighandler_t)(int);
 
 #endif /* OS_UNIX */
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 typedef struct {
 	const char **tokens;
 	size_t n_tokens;
@@ -155,7 +162,7 @@ server_new (const char **tokens, size_t n_tokens, const char *provider,
 		if (!p11_vsock_parse_addr(socket_name + 6,
 					  &server->vsock_cid,
 					  &server->vsock_port)) {
-			p11_message ("failed to parse vsock address: '%s'",
+			p11_message (_("failed to parse vsock address: '%s'"),
 				     socket_name + 6);
 			free (server);
 			return NULL;
@@ -233,9 +240,9 @@ cleanup_children (void)
 			children_avail--;
 		if (WIFSIGNALED (status)) {
 			if (WTERMSIG (status) == SIGSEGV)
-				p11_message ("child %u died with sigsegv", (unsigned)pid);
+				p11_message (_("child %u died with sigsegv"), (unsigned)pid);
 			else
-				p11_message ("child %u died with signal %d", (unsigned)pid, (int)WTERMSIG (status));
+				p11_message (_("child %u died with signal %d"), (unsigned)pid, (int)WTERMSIG (status));
 		}
 	}
 	need_children_cleanup = false;
@@ -308,7 +315,7 @@ create_unix_socket (const char *address,
 
 	sd = socket (AF_UNIX, SOCK_STREAM, 0);
 	if (sd == -1) {
-		p11_message_err (errno, "could not create socket %s", socket_file);
+		p11_message_err (errno, _("could not create socket %s"), socket_file);
 		return -1;
 	}
 
@@ -316,14 +323,14 @@ create_unix_socket (const char *address,
 	rc = bind (sd, (struct sockaddr *)&sa, SUN_LEN (&sa));
 	if (rc == -1) {
 		close (sd);
-		p11_message_err (errno, "could not bind socket %s", socket_file);
+		p11_message_err (errno, _("could not bind socket %s"), socket_file);
 		return -1;
 	}
 
 	rc = listen (sd, 1024);
 	if (rc == -1) {
 		close (sd);
-		p11_message_err (errno, "could not listen to socket %s", socket_file);
+		p11_message_err (errno, _("could not listen to socket %s"), socket_file);
 		return 1;
 	}
 
@@ -331,7 +338,7 @@ create_unix_socket (const char *address,
 		rc = chown (socket_file, uid, gid);
 		if (rc == -1) {
 			close (sd);
-			p11_message_err (errno, "could not chown socket %s", socket_file);
+			p11_message_err (errno, _("could not chown socket %s"), socket_file);
 			return -1;
 		}
 	}
@@ -354,21 +361,21 @@ create_vsock_socket (unsigned int cid,
 
 	sd = socket (AF_VSOCK, SOCK_STREAM, 0);
 	if (sd == -1) {
-		p11_message_err (errno, "could not create socket %u:%u", cid, port);
+		p11_message_err (errno, _("could not create socket %u:%u"), cid, port);
 		return -1;
 	}
 
 	rc = bind (sd, (struct sockaddr *)&sa, sizeof(sa));
 	if (rc == -1) {
 		close (sd);
-		p11_message_err (errno, "could not bind socket %u:%u", cid, port);
+		p11_message_err (errno, _("could not bind socket %u:%u"), cid, port);
 		return -1;
 	}
 
 	rc = listen (sd, 1024);
 	if (rc == -1) {
 		close (sd);
-		p11_message_err (errno, "could not listen to socket %u:%u", cid, port);
+		p11_message_err (errno, _("could not listen to socket %u:%u"), cid, port);
 		return 1;
 	}
 
@@ -387,20 +394,20 @@ check_credentials (int fd,
 
 	rc = p11_get_upeer_id (fd, &tuid, &tgid, NULL);
 	if (rc == -1) {
-		p11_message_err (errno, "could not check uid from socket");
+		p11_message_err (errno, _("could not check uid from socket"));
 		close (fd);
 		return false;
 	}
 
 	if (uid != -1 && uid != tuid) {
-		p11_message ("connecting uid (%u) doesn't match expected (%u)",
+		p11_message (_("connecting uid (%u) doesn't match expected (%u)"),
 			     (unsigned)tuid, (unsigned)uid);
 		close (fd);
 		return false;
 	}
 
 	if (gid != -1 && gid != tgid) {
-		p11_message ("connecting gid (%u) doesn't match expected (%u)",
+		p11_message (_("connecting gid (%u) doesn't match expected (%u)"),
 			     (unsigned)tgid, (unsigned)gid);
 		close (fd);
 		return false;
@@ -481,7 +488,7 @@ server_loop (Server *server,
 	if (!foreground) {
 		pid = fork ();
 		if (pid == -1) {
-			p11_message_err (errno, "could not fork() to daemonize");
+			p11_message_err (errno, _("could not fork() to daemonize"));
 			return 1;
 		}
 		if (pid == 0) {
@@ -494,7 +501,7 @@ server_loop (Server *server,
 			exit (0);
 		}
 		if (setsid () == -1) {
-			p11_message_err (errno, "could not create a new session");
+			p11_message_err (errno, _("could not create a new session"));
 			return 1;
 		}
 	}
@@ -502,7 +509,7 @@ server_loop (Server *server,
 #ifdef WITH_SYSTEMD
 	ret = sd_listen_fds (0);
 	if (ret > 1) {
-		p11_message ("too many file descriptors received");
+		p11_message (_("too many file descriptors received"));
 		return 1;
 	} else if (ret == 1) {
 		server->socket = SD_LISTEN_FDS_START + 0;
@@ -546,7 +553,7 @@ server_loop (Server *server,
 
 		/* timeout */
 		if (ret == 0 && children_avail == 0 && timeout != NULL) {
-			p11_message ("no connections to %s for %lu secs, exiting", server->socket_name, timeout->tv_sec);
+			p11_message (_("no connections to %s for %lu secs, exiting"), server->socket_name, timeout->tv_sec);
 			break;
 		}
 
@@ -555,7 +562,7 @@ server_loop (Server *server,
 			cfd = accept (server->socket, (struct sockaddr *)&sa, &sa_len);
 			if (cfd == -1) {
 				if (errno != EINTR)
-					p11_message_err (errno, "could not accept from socket %s", server->socket_name);
+					p11_message_err (errno, _("could not accept from socket %s"), server->socket_name);
 				continue;
 			}
 
@@ -566,7 +573,7 @@ server_loop (Server *server,
 			pid = fork ();
 			switch (pid) {
 			case -1:
-				p11_message_err (errno, "failed to fork for accept");
+				p11_message_err (errno, _("failed to fork for accept"));
 				continue;
 			/* Child */
 			case 0:
@@ -711,7 +718,7 @@ main (int argc,
 		case opt_group:
 			grp = getgrnam (optarg);
 			if (grp == NULL) {
-				p11_message ("unknown group: %s", optarg);
+				p11_message (_("unknown group: %s"), optarg);
 				return 2;
 			}
 			gid = grp->gr_gid;
@@ -719,7 +726,7 @@ main (int argc,
 		case opt_user:
 			pwd = getpwnam (optarg);
 			if (pwd == NULL) {
-				p11_message ("unknown user: %s", optarg);
+				p11_message (_("unknown user: %s"), optarg);
 				return 2;
 			}
 			uid = pwd->pw_uid;
@@ -727,7 +734,7 @@ main (int argc,
 		case opt_run_as_group:
 			grp = getgrnam (optarg);
 			if (grp == NULL) {
-				p11_message ("unknown group: %s", optarg);
+				p11_message (_("unknown group: %s"), optarg);
 				return 2;
 			}
 			run_as_gid = grp->gr_gid;
@@ -735,7 +742,7 @@ main (int argc,
 		case opt_run_as_user:
 			pwd = getpwnam (optarg);
 			if (pwd == NULL) {
-				p11_message ("unknown user: %s", optarg);
+				p11_message (_("unknown user: %s"), optarg);
 				return 2;
 			}
 			run_as_uid = pwd->pw_uid;
@@ -818,13 +825,13 @@ main (int argc,
 
 	if (run_as_gid != -1) {
 		if (setgid (run_as_gid) == -1) {
-			p11_message_err (errno, "cannot set gid to %u", (unsigned)run_as_gid);
+			p11_message_err (errno, _("cannot set gid to %u"), (unsigned)run_as_gid);
 			ret = 1;
 			goto out;
 		}
 
 		if (setgroups (1, &run_as_gid) == -1) {
-			p11_message_err (errno, "cannot setgroups to %u", (unsigned)run_as_gid);
+			p11_message_err (errno, _("cannot setgroups to %u"), (unsigned)run_as_gid);
 			ret = 1;
 			goto out;
 		}
@@ -832,7 +839,7 @@ main (int argc,
 
 	if (run_as_uid != -1) {
 		if (setuid (run_as_uid) == -1) {
-			p11_message_err (errno, "cannot set uid to %u", (unsigned)run_as_uid);
+			p11_message_err (errno, _("cannot set uid to %u"), (unsigned)run_as_uid);
 			ret = 1;
 			goto out;
 		}
@@ -848,7 +855,7 @@ main (int argc,
 
 		runtime_dir = secure_getenv ("XDG_RUNTIME_DIR");
 		if (!runtime_dir || !runtime_dir[0]) {
-			p11_message_err (errno, "cannot determine runtime directory");
+			p11_message_err (errno, _("cannot determine runtime directory"));
 			ret = 1;
 			goto out;
 		}
@@ -860,7 +867,7 @@ main (int argc,
 		}
 
 		if (mkdir (socket_base, 0700) == -1 && errno != EEXIST) {
-			p11_message_err (errno, "cannot create %s", socket_base);
+			p11_message_err (errno, _("cannot create %s"), socket_base);
 			ret = 1;
 			goto out;
 		}
@@ -1131,7 +1138,7 @@ main (int argc,
 	};
 
 	if (!load_windows_functions ()) {
-		p11_message ("couldn't initialize Windows security functions");
+		p11_message (_("couldn't initialize Windows security functions"));
 		return 1;
 	}
 
@@ -1292,7 +1299,7 @@ get_sids (void)
 	if (!user_sid) {
 		user_sid = get_user_sid ();
 		if (user_sid == NULL) {
-			p11_message ("unable to construct SID for %s: %lu",
+			p11_message (_("unable to construct SID for %s: %lu"),
 				     "current user",
 				     GetLastError ());
 			return false;
@@ -1304,7 +1311,7 @@ get_sids (void)
 					       SECURITY_WORLD_RID,
 					       0, 0, 0, 0, 0, 0, 0,
 					       &world_sid)) {
-			p11_message ("unable to construct SID for %s: %lu",
+			p11_message (_("unable to construct SID for %s: %lu"),
 				     "world",
 				     GetLastError ());
 			return false;
@@ -1316,7 +1323,7 @@ get_sids (void)
 					       SECURITY_NETWORK_RID,
 					       0, 0, 0, 0, 0, 0, 0,
 					       &network_sid)) {
-			p11_message ("unable to construct SID for %s: %lu",
+			p11_message (_("unable to construct SID for %s: %lu"),
 				     "local same-user access only",
 				     GetLastError ());
 			return false;
@@ -1359,31 +1366,31 @@ make_private_security_descriptor (DWORD permissions,
 
 	acl_err = SetEntriesInAclA (3, ea, NULL, acl);
 	if (acl_err != ERROR_SUCCESS || *acl == NULL) {
-		p11_message ("unable to construct ACL: %d", acl_err);
+		p11_message (_("unable to construct ACL: %d"), acl_err);
 		goto cleanup;
 	}
 
 	*psd = (PSECURITY_DESCRIPTOR) LocalAlloc (LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	if (!*psd) {
-		p11_message ("unable to allocate security descriptor: %lu",
+		p11_message (_("unable to allocate security descriptor: %lu"),
 			     GetLastError ());
 		goto cleanup;
 	}
 
 	if (!InitializeSecurityDescriptor (*psd, SECURITY_DESCRIPTOR_REVISION)) {
-		p11_message ("unable to initialise security descriptor: %lu",
+		p11_message (_("unable to initialise security descriptor: %lu"),
 			     GetLastError ());
 		goto cleanup;
 	}
 
 	if (!SetSecurityDescriptorOwner (*psd, user_sid, FALSE)) {
-		p11_message ("unable to set owner in security descriptor: %lu",
+		p11_message (_("unable to set owner in security descriptor: %lu"),
 			     GetLastError ());
 		goto cleanup;
 	}
 
 	if (!SetSecurityDescriptorDacl (*psd, TRUE, *acl, FALSE)) {
-		p11_message ("unable to set DACL in security descriptor: %lu",
+		p11_message (_("unable to set DACL in security descriptor: %lu"),
 			     GetLastError ());
 		goto cleanup;
 	}

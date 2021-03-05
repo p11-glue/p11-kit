@@ -55,6 +55,13 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 typedef struct {
 	CK_SLOT_ID slot;
 	const CK_TOKEN_INFO *token;
@@ -173,7 +180,7 @@ filter_reinit (FilterData *filter)
 		filter->initialized = true;
 	else {
 		filter->initialized = false;
-		p11_message ("filter cannot be initialized");
+		p11_message (_("filter cannot be initialized"));
 	}
 }
 

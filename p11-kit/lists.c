@@ -50,6 +50,13 @@
 #include "tool.h"
 #include "uri.h"
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 int p11_kit_list_modules (int argc,
                           char *argv[]);
 
@@ -106,7 +113,7 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 
 	rv = (module->C_GetTokenInfo) (slot_id, &info);
 	if (rv != CKR_OK) {
-		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't load module info: %s"), p11_kit_strerror (rv));
 		return;
 	}
 
@@ -173,7 +180,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 
 	rv = (module->C_GetInfo) (&info);
 	if (rv != CKR_OK) {
-		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't load module info: %s"), p11_kit_strerror (rv));
 		return;
 	}
 
@@ -194,7 +201,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 	count = sizeof (slot_list) / sizeof (slot_list[0]);
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
 	if (rv != CKR_OK) {
-		p11_message ("couldn't load module info: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't load module info: %s"), p11_kit_strerror (rv));
 		return;
 	}
 
@@ -285,7 +292,7 @@ p11_kit_list_modules (int argc,
 	}
 
 	if (argc - optind != 0) {
-		p11_message ("extra arguments specified");
+		p11_message (_("extra arguments specified"));
 		return 2;
 	}
 
