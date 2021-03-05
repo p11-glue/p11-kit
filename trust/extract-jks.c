@@ -51,6 +51,13 @@
 #include <errno.h>
 #include <limits.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 time_t _p11_extract_jks_timestamp = 0;
 
 static void
@@ -132,7 +139,7 @@ add_string (p11_buffer *buffer,
 	unsigned char *data;
 
 	if (length > INT16_MAX) {
-		p11_message ("truncating long string");
+		p11_message (_("truncating long string"));
 		length = INT16_MAX;
 	}
 
@@ -262,19 +269,19 @@ prepare_jks_buffer (p11_enumerate *ex,
 			epoch = strtoull (source_date_epoch, &endptr, 10);
 			if ((errno == ERANGE && (epoch == ULLONG_MAX || epoch == 0))
 			    || (errno != 0 && epoch == 0)) {
-				p11_message_err (errno, "Environment variable $SOURCE_DATE_EPOCH: strtoull");
+				p11_message_err (errno, _("Environment variable $SOURCE_DATE_EPOCH: strtoull"));
 				return false;
 			}
 			if (endptr == source_date_epoch) {
-				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n", endptr);
+				fprintf (stderr, _("Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"), endptr);
 				return false;
 			}
 			if (*endptr != '\0') {
-				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n", endptr);
+				fprintf (stderr, _("Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"), endptr);
 				return false;
 			}
 			if (epoch > ULONG_MAX) {
-				fprintf (stderr, "Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal to %lu but was found to be: %llu \n", ULONG_MAX, epoch);
+				fprintf (stderr, _("Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal to %lu but was found to be: %llu \n"), ULONG_MAX, epoch);
 				return false;
 			}
 			now = epoch;
@@ -302,7 +309,7 @@ prepare_jks_buffer (p11_enumerate *ex,
 		/* The alias */
 		label = p11_attrs_find_valid (ex->attrs, CKA_LABEL);
 		if (!add_alias (buffer, aliases, label)) {
-			p11_message ("could not generate a certificate alias name");
+			p11_message (_("could not generate a certificate alias name"));
 			p11_dict_free (aliases);
 			return false;
 		}
@@ -321,7 +328,7 @@ prepare_jks_buffer (p11_enumerate *ex,
 	p11_dict_free (aliases);
 
 	if (rv != CKR_OK && rv != CKR_CANCEL) {
-		p11_message ("failed to find certificates: %s", p11_kit_strerror (rv));
+		p11_message (_("failed to find certificates: %s"), p11_kit_strerror (rv));
 		return false;
 	}
 

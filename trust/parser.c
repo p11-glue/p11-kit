@@ -65,6 +65,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 struct _p11_parser {
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
@@ -99,7 +106,7 @@ populate_trust (p11_parser *parser,
 	 */
 	if (parser->flags & P11_PARSE_FLAG_ANCHOR) {
 		if (p11_attrs_find_bool (attrs, CKA_X_DISTRUSTED, &distrustv) && distrustv) {
-			p11_message ("certificate with distrust in location for anchors: %s", parser->basename);
+			p11_message (_("certificate with distrust in location for anchors: %s"), parser->basename);
 			return attrs;
 
 		}
@@ -113,7 +120,7 @@ populate_trust (p11_parser *parser,
 	 */
 	} else if (parser->flags & P11_PARSE_FLAG_BLOCKLIST) {
 		if (p11_attrs_find_bool (attrs, CKA_TRUSTED, &trustedv) && trustedv)
-			p11_message ("overriding trust for anchor in blocklist: %s", parser->basename);
+			p11_message (_("overriding trust for anchor in blocklist: %s"), parser->basename);
 
 		trustedv = CK_FALSE;
 		distrustv = CK_TRUE;
@@ -586,7 +593,7 @@ on_pem_block (const char *type,
 	}
 
 	if (ret != P11_PARSE_SUCCESS)
-		p11_message ("Couldn't parse PEM block of type %s", type);
+		p11_message (_("Couldn't parse PEM block of type %s"), type);
 }
 
 int
@@ -756,7 +763,7 @@ p11_parse_file (p11_parser *parser,
 
 	map = p11_mmap_open (filename, sb, &data, &size);
 	if (map == NULL) {
-		p11_message_err (errno, "couldn't open and map file: %s", filename);
+		p11_message_err (errno, _("couldn't open and map file: %s"), filename);
 		return P11_PARSE_FAILURE;
 	}
 

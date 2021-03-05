@@ -55,6 +55,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 static p11_parser *
 create_arg_file_parser (void)
 {
@@ -115,7 +122,7 @@ uris_or_files_to_iters (int argc,
 		if (strncmp (argv[i], "pkcs11:", 7) == 0) {
 			uri = p11_kit_uri_new ();
 			if (p11_kit_uri_parse (argv[i], flags, uri) != P11_KIT_URI_OK) {
-				p11_message ("invalid PKCS#11 uri: %s", argv[i]);
+				p11_message (_("invalid PKCS#11 uri: %s"), argv[i]);
 				p11_kit_uri_free (uri);
 				break;
 			}
@@ -137,10 +144,10 @@ uris_or_files_to_iters (int argc,
 				p11_debug ("parsed file: %s", argv[i]);
 				break;
 			case P11_PARSE_UNRECOGNIZED:
-				p11_message ("unrecognized file format: %s", argv[i]);
+				p11_message (_("unrecognized file format: %s"), argv[i]);
 				break;
 			default:
-				p11_message ("failed to parse file: %s", argv[i]);
+				p11_message (_("failed to parse file: %s"), argv[i]);
 				break;
 			}
 
@@ -193,10 +200,10 @@ files_to_attrs (int argc,
 			p11_debug ("parsed file: %s", argv[i]);
 			break;
 		case P11_PARSE_UNRECOGNIZED:
-			p11_message ("unrecognized file format: %s", argv[i]);
+			p11_message (_("unrecognized file format: %s"), argv[i]);
 			break;
 		default:
-			p11_message ("failed to parse file: %s", argv[i]);
+			p11_message (_("failed to parse file: %s"), argv[i]);
 			break;
 		}
 
@@ -235,7 +242,7 @@ session_for_store_on_module (const char *name,
 
 	rv = p11_kit_module_initialize (module);
 	if (rv != CKR_OK) {
-		p11_message ("%s: couldn't initialize: %s", name, p11_kit_message ());
+		p11_message (_("%s: couldn't initialize: %s"), name, p11_kit_message ());
 		return 0UL;
 	}
 
@@ -246,7 +253,7 @@ session_for_store_on_module (const char *name,
 		rv = (module->C_GetSlotList) (CK_TRUE, slots, &count);
 	}
 	if (rv != CKR_OK) {
-		p11_message ("%s: couldn't enumerate slots: %s", name, p11_kit_strerror (rv));
+		p11_message (_("%s: couldn't enumerate slots: %s"), name, p11_kit_strerror (rv));
 		free (slots);
 		return 0UL;
 	}
@@ -254,7 +261,7 @@ session_for_store_on_module (const char *name,
 	for (i = 0; session == 0 && i < count; i++) {
 		rv = (module->C_GetTokenInfo) (slots[i], &info);
 		if (rv != CKR_OK) {
-			p11_message ("%s: couldn't get token info: %s", name, p11_kit_strerror (rv));
+			p11_message (_("%s: couldn't get token info: %s"), name, p11_kit_strerror (rv));
 			continue;
 		}
 
@@ -266,7 +273,7 @@ session_for_store_on_module (const char *name,
 		rv = (module->C_OpenSession) (slots[i], CKF_SERIAL_SESSION | CKF_RW_SESSION,
 		                              NULL, NULL, &session);
 		if (rv != CKR_OK) {
-			p11_message ("%s: couldn't open session: %s", name, p11_kit_strerror (rv));
+			p11_message (_("%s: couldn't open session: %s"), name, p11_kit_strerror (rv));
 			session = 0;
 		}
 
@@ -314,9 +321,9 @@ session_for_store (CK_FUNCTION_LIST **module)
 
 	if (session == 0UL) {
 		if (found_read_only)
-			p11_message ("no configured writable location to store anchors");
+			p11_message (_("no configured writable location to store anchors"));
 		else
-			p11_message ("no configured location to store anchors");
+			p11_message (_("no configured location to store anchors"));
 	}
 
 	free (modules);
@@ -377,7 +384,7 @@ create_anchor (CK_FUNCTION_LIST *module,
 	p11_attrs_free (attrs);
 
 	if (rv != CKR_OK) {
-		p11_message ("couldn't create object: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't create object: %s"), p11_kit_strerror (rv));
 		return false;
 	}
 
@@ -424,7 +431,7 @@ modify_anchor (CK_FUNCTION_LIST *module,
 	p11_attrs_free (changes);
 
 	if (rv != CKR_OK) {
-		p11_message ("couldn't create object: %s", p11_kit_strerror (rv));
+		p11_message (_("couldn't create object: %s"), p11_kit_strerror (rv));
 		return false;
 	}
 
@@ -476,7 +483,7 @@ anchor_store (int argc,
 		return 1;
 
 	if (anchors->num == 0) {
-		p11_message ("specify at least one anchor input file");
+		p11_message (_("specify at least one anchor input file"));
 		p11_array_free (anchors);
 		return 2;
 	}
@@ -559,10 +566,10 @@ remove_all (p11_kit_iter *iter,
 		case CKR_TOKEN_WRITE_PROTECTED:
 		case CKR_SESSION_READ_ONLY:
 		case CKR_ATTRIBUTE_READ_ONLY:
-			p11_message ("couldn't remove read-only %s", desc);
+			p11_message (_("couldn't remove read-only %s"), desc);
 			break;
 		default:
-			p11_message ("couldn't remove %s: %s", desc,
+			p11_message (_("couldn't remove %s: %s"), desc,
 			             p11_kit_strerror (rv));
 			break;
 		}
@@ -588,7 +595,7 @@ anchor_remove (int argc,
 	return_val_if_fail (iters != NULL, 1);
 
 	if (iters->num == 0) {
-		p11_message ("at least one file or uri must be specified");
+		p11_message (_("at least one file or uri must be specified"));
 		p11_array_free (iters);
 		return 2;
 	}
@@ -654,7 +661,7 @@ p11_trust_anchor (int argc,
 			if (action == 0) {
 				action = opt;
 			} else {
-				p11_message ("an action was already specified");
+				p11_message (_("an action was already specified"));
 				return 2;
 			}
 			break;
@@ -691,9 +698,9 @@ p11_trust_anchor (int argc,
 
 	if (errors > 0) {
 		if (errors == 1)
-			p11_message ("%u error while processing", errors);
+			p11_message (_("%u error while processing"), errors);
 		else
-			p11_message ("%u errors while processing", errors);
+			p11_message (_("%u errors while processing"), errors);
 	}
 
 	/* Extract the compat bundles after modification */

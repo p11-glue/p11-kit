@@ -59,6 +59,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 static bool
 format_argument (const char *optarg,
                  p11_extract_func *func)
@@ -88,7 +95,7 @@ format_argument (const char *optarg,
 	};
 
 	if (*func != NULL) {
-		p11_message ("a format was already specified");
+		p11_message (_("a format was already specified"));
 		return false;
 	}
 
@@ -100,7 +107,7 @@ format_argument (const char *optarg,
 	}
 
 	if (*func == NULL) {
-		p11_message ("unsupported or unrecognized format: %s", optarg);
+		p11_message (_("unsupported or unrecognized format: %s"), optarg);
 		return false;
 	}
 
@@ -138,7 +145,7 @@ validate_filter_and_format (p11_enumerate *ex,
 		 * a format that can represent the different types of information.
 		 */
 
-		p11_message ("format does not support trust policy");
+		p11_message (_("format does not support trust policy"));
 		return false;
 
 	} else if (ex->flags & P11_ENUMERATE_ANCHORS) {
@@ -149,10 +156,10 @@ validate_filter_and_format (p11_enumerate *ex,
 		 */
 
 		if (!ex->limit_to_purposes) {
-			p11_message ("format requires a purpose, specify it with --purpose; defaulting to 'server-auth'");
+			p11_message (_("format requires a purpose, specify it with --purpose; defaulting to 'server-auth'"));
 			p11_enumerate_opt_purpose (ex, "server-auth");
 		} else if (p11_dict_size (ex->limit_to_purposes) > 1) {
-			p11_message ("format does not support multiple purposes, defaulting to 'server-auth'");
+			p11_message (_("format does not support multiple purposes, defaulting to 'server-auth'"));
 			p11_enumerate_opt_purpose (ex, "server-auth");
 		}
 	}
@@ -273,12 +280,12 @@ p11_trust_extract (int argc,
 	argv += optind;
 
 	if (argc != 1) {
-		p11_message ("specify one destination file or directory");
+		p11_message (_("specify one destination file or directory"));
 		exit (2);
 	}
 
 	if (!format) {
-		p11_message ("no output format specified");
+		p11_message (_("no output format specified"));
 		exit (2);
 	}
 
@@ -322,7 +329,7 @@ p11_trust_extract_compat (int argc,
 	}
 
 	/* At this point we have no command */
-	p11_message_err (error, "could not run %s command", path);
+	p11_message_err (error, _("could not run %s command"), path);
 
 	free (path);
 	return 2;

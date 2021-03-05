@@ -55,6 +55,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
+
 struct _p11_builder {
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
@@ -143,7 +150,7 @@ lookup_extension (p11_builder *builder,
 					label = p11_attrs_find_valid (attrs, CKA_LABEL);
 					if (label == NULL)
 						label = p11_attrs_find_valid (cert, CKA_LABEL);
-					p11_message ("%.*s: invalid certificate extension",
+					p11_message (_("%.*s: invalid certificate extension"),
 							label ? (int)label->ulValueLen : 7,
 							label ? (char *)label->pValue : "unknown");
 					return NULL;
@@ -662,9 +669,9 @@ calc_certificate_category (p11_builder *builder,
 		free (ext);
 		if (!ret) {
 			label = p11_attrs_find_valid (cert, CKA_LABEL);
-			p11_message ("%.*s: invalid basic constraints certificate extension",
+			p11_message (_("%.*s: invalid basic constraints certificate extension"),
 				     label ? (int)label->ulValueLen : 7,
-				     label ? (char *)label->pValue : "unknown");
+				     label ? (char *)label->pValue : _("unknown"));
 			return false;
 		}
 
@@ -853,12 +860,12 @@ certificate_validate (p11_builder *builder,
 
 	if (have_attribute (attrs, merge, CKA_URL)) {
 		if (!have_attribute (attrs, merge, CKA_HASH_OF_SUBJECT_PUBLIC_KEY)) {
-			p11_message ("missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute");
+			p11_message (_("missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
 
 		if (!have_attribute (attrs, merge, CKA_HASH_OF_SUBJECT_PUBLIC_KEY)) {
-			p11_message ("missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute");
+			p11_message (_("missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
 	}
@@ -1072,14 +1079,14 @@ build_for_schema (p11_builder *builder,
 	/* This item may not be modifiable */
 	if (modifying) {
 		if (!p11_attrs_find_bool (attrs, CKA_MODIFIABLE, &modifiable) || !modifiable) {
-			p11_message ("the object is not modifiable");
+			p11_message (_("the object is not modifiable"));
 			return CKR_ATTRIBUTE_READ_ONLY;
 		}
 	}
 
 	if (creating && (builder->flags & P11_BUILDER_FLAG_TOKEN)) {
 		if (schema->build_flags & GENERATED_CLASS) {
-			p11_message ("objects of this type cannot be created");
+			p11_message (_("objects of this type cannot be created"));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
 	}
@@ -1098,18 +1105,18 @@ build_for_schema (p11_builder *builder,
 
 			flags = schema->attrs[j].flags;
 			if (creating && !(flags & CREATE)) {
-				p11_message ("the %s attribute cannot be set",
+				p11_message (_("the %s attribute cannot be set"),
 				             type_name (schema->attrs[j].type));
 				return CKR_ATTRIBUTE_READ_ONLY;
 			}
 			if (modifying && !(flags & MODIFY)) {
-				p11_message ("the %s attribute cannot be changed",
+				p11_message (_("the %s attribute cannot be changed"),
 				             type_name (schema->attrs[j].type));
 				return CKR_ATTRIBUTE_READ_ONLY;
 			}
 			if (!loading && schema->attrs[j].validate != NULL &&
 			    !schema->attrs[j].validate (builder, merge + i)) {
-				p11_message ("the %s attribute has an invalid value",
+				p11_message (_("the %s attribute has an invalid value"),
 				             type_name (schema->attrs[j].type));
 				return CKR_ATTRIBUTE_VALUE_INVALID;
 			}
@@ -1118,7 +1125,7 @@ build_for_schema (p11_builder *builder,
 		}
 
 		if (!found) {
-			p11_message ("the %s attribute is not valid for the object",
+			p11_message (_("the %s attribute is not valid for the object"),
 			             type_name (merge[i].type));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
@@ -1140,7 +1147,7 @@ build_for_schema (p11_builder *builder,
 
 			if (!found) {
 				if (flags & REQUIRE) {
-					p11_message ("missing the %s attribute",
+					p11_message (_("missing the %s attribute"),
 					             type_name (schema->attrs[j].type));
 					return CKR_TEMPLATE_INCOMPLETE;
 				} else if (flags & WANT) {
@@ -1180,13 +1187,13 @@ p11_builder_build (void *bilder,
 	return_val_if_fail (merge != NULL, CKR_GENERAL_ERROR);
 
 	if (!p11_attrs_find_ulong (attrs ? attrs : merge, CKA_CLASS, &klass)) {
-		p11_message ("no CKA_CLASS attribute found");
+		p11_message (_("no CKA_CLASS attribute found"));
 		return CKR_TEMPLATE_INCOMPLETE;
 	}
 
 	if (!attrs && p11_attrs_find_bool (merge, CKA_TOKEN, &token)) {
 		if (token != ((builder->flags & P11_BUILDER_FLAG_TOKEN) ? CK_TRUE : CK_FALSE)) {
-			p11_message ("cannot create a %s object", token ? "token" : "non-token");
+			p11_message (_("cannot create a %s object"), token ? _("token") : _("non-token"));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
 	}
@@ -1194,12 +1201,12 @@ p11_builder_build (void *bilder,
 	switch (klass) {
 	case CKO_CERTIFICATE:
 		if (!p11_attrs_find_ulong (attrs ? attrs : merge, CKA_CERTIFICATE_TYPE, &type)) {
-			p11_message ("missing %s on object", type_name (CKA_CERTIFICATE_TYPE));
+			p11_message (_("missing %s on object"), type_name (CKA_CERTIFICATE_TYPE));
 			return CKR_TEMPLATE_INCOMPLETE;
 		} else if (type == CKC_X_509) {
 			return build_for_schema (builder, index, &certificate_schema, attrs, merge, populate);
 		} else {
-			p11_message ("%s unsupported %s", value_name (p11_constant_certs, type),
+			p11_message (_("%s unsupported %s"), value_name (p11_constant_certs, type),
 			             type_name (CKA_CERTIFICATE_TYPE));
 			return CKR_TEMPLATE_INCONSISTENT;
 		}
@@ -1220,7 +1227,7 @@ p11_builder_build (void *bilder,
 		return build_for_schema (builder, index, &assertion_schema, attrs, merge, populate);
 
 	default:
-		p11_message ("%s unsupported object class",
+		p11_message (_("%s unsupported object class"),
 		             value_name (p11_constant_classes, klass));
 		return CKR_TEMPLATE_INCONSISTENT;
 	}
@@ -1286,7 +1293,7 @@ build_trust_object_ku (p11_builder *builder,
 		defawlt = CKT_NSS_TRUST_UNKNOWN;
 
 		if (!p11_x509_parse_key_usage (builder->asn1_defs, data, length, &ku))
-			p11_message ("invalid key usage certificate extension");
+			p11_message (_("invalid key usage certificate extension"));
 		free (data);
 	}
 
@@ -1752,7 +1759,7 @@ replace_trust_and_assertions (p11_builder *builder,
 		if (ext != NULL) {
 			purposes = p11_x509_parse_extended_key_usage (builder->asn1_defs, ext, ext_len);
 			if (purposes == NULL)
-				p11_message ("invalid extended key usage certificate extension");
+				p11_message (_("invalid extended key usage certificate extension"));
 			free (ext);
 		}
 
@@ -1760,7 +1767,7 @@ replace_trust_and_assertions (p11_builder *builder,
 		if (ext != NULL) {
 			rejects = p11_x509_parse_extended_key_usage (builder->asn1_defs, ext, ext_len);
 			if (rejects == NULL)
-				p11_message ("invalid reject key usage certificate extension");
+				p11_message (_("invalid reject key usage certificate extension"));
 			free (ext);
 		}
 	}
