@@ -28,3 +28,4 @@ trust/parser.c
 trust/persist.c
 trust/save.c
 trust/token.c
+trust/trust.c
