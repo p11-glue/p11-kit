@@ -664,7 +664,7 @@ p11_enumerate_opt_purpose (p11_enumerate *ex,
 	} else if (is_valid_oid_rough (option)) {
 		oid = option;
 	} else {
-		p11_message (_("unsupported or unregonized purpose: %s"), option);
+		p11_message (_("unsupported or unrecognized purpose: %s"), option);
 		return false;
 	}
 
