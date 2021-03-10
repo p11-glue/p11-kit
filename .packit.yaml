@@ -1,7 +1,4 @@
 specfile_path: p11-kit.spec
-synced_files:
-  - p11-kit.spec
-  - .packit.yaml
 upstream_package_name: p11-kit
 downstream_package_name: p11-kit
 
