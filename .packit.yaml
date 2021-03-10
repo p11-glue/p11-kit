@@ -8,9 +8,9 @@ downstream_package_name: p11-kit
 # Use only populated spec files and upstream sources.
 actions:
   post-upstream-clone:
-    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit.spec
-    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/p11-kit-client.service
-    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/master/f/trust-extract-compat
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/rawhide/f/p11-kit.spec
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/rawhide/f/p11-kit-client.service
+    - wget https://src.fedoraproject.org/rpms/p11-kit/raw/rawhide/f/trust-extract-compat
   get-current-version:
     - "git describe --abbrev=0"
   create-archive:
