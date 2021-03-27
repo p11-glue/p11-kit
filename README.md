@@ -19,13 +19,14 @@ To build and install p11-kit, you can use the following commands:
 
 ```console
 $ meson _build
-$ ninja -C _build
-$ ninja -C _build test
-# ninja -C _build install
+$ meson compile -C _build
+$ meson test -C _build
+# meson install -C _build
 ```
 
 If you install it locally for testing purposes, you may want to
-specify `-Dsystemd=disabled -Dbash_completion=disabled`.
+specify `-Dsystemd=disabled -Dbash_completion=disabled` to the
+invocation of `meson _build`.
 
 # Releases
 
