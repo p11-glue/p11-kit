@@ -25,8 +25,9 @@ $ meson test -C _build
 ```
 
 If you install it locally for testing purposes, you may want to
-specify `-Dsystemd=disabled -Dbash_completion=disabled` to the
-invocation of `meson _build`.
+specify `-Dsystemd=disabled -Dbash_completion=disabled` at the
+invocation of `meson _build`, to avoid installing files to the
+system locations.
 
 # Releases
 
