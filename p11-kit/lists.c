@@ -39,6 +39,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
