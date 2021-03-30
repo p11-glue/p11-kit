@@ -82,7 +82,7 @@ if get_option('test')
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args,
                    include_directories: configinc,
-                   dependencies: dlopen_deps,
+                   dependencies: dlopen_deps + thread_deps,
                    link_with: [libp11_test, libp11_common])
     test(name, t)
   endforeach
