@@ -63,6 +63,11 @@ if get_option('nls') and cc.has_header('libintl.h')
   conf.set('ENABLE_NLS', 1)
 endif
 
+conf.set10('ENABLE_RUSTC', get_option('rustc'))
+if get_option('rustc')
+  add_languages('rust')
+endif
+
 prefix = get_option('prefix')
 datadir = get_option('datadir')
 bindir = get_option('bindir')

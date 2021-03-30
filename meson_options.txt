@@ -65,3 +65,7 @@ option('nls', type : 'boolean',
 option('test', type : 'boolean',
        value : true,
        description : 'Enable building test programs')
+
+option('rustc', type : 'boolean',
+       value : false,
+       description : 'Enable hardening using Rust')

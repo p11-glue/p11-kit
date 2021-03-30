@@ -18,7 +18,20 @@ libp11_common_sources = [
   'vsock.c'
 ]
 
+libp11_common_libs = []
+
+if get_option('rustc')
+  libp11_common_rust_sources = [
+    'path.rs'
+  ]
+  libp11_common_rust = static_library('p11_common_rust',
+                                      libp11_common_rust_sources,
+                                      rust_crate_type: 'staticlib')
+  libp11_common_libs += libp11_common_rust
+endif
+
 libp11_common = static_library('p11-common', libp11_common_sources,
+                               link_with: libp11_common_libs,
                                gnu_symbol_visibility: 'hidden',
                                include_directories: configinc)
 

@@ -60,6 +60,7 @@
 #endif
 
 
+#if !defined(ENABLE_RUSTC) || !ENABLE_RUSTC
 char *
 p11_path_base (const char *path)
 {
@@ -92,6 +93,7 @@ p11_path_base (const char *path)
 
 	return strndup (beg, end - beg);
 }
+#endif
 
 static inline bool
 is_path_separator (char ch)
