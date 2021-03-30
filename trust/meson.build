@@ -102,7 +102,7 @@ executable('trust',
            link_with: libtrust_data,
            dependencies: [asn_h_dep,
                           libp11_kit_dep,
-                          libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps,
+                          libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps + thread_deps,
            install: true)
 
 install_data('trust-extract-compat',
