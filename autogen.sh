@@ -2,15 +2,15 @@
 
 set -e
 
-oldpwd=$(pwd)
-topdir=$(dirname $0)
+oldpwd=`pwd`
+topdir=`dirname $0`
 cd $topdir
 
 # Some boiler plate to get git setup as expected
 if test -d .git; then
 	if test -f .git/hooks/pre-commit.sample && \
 	   test ! -f .git/hooks/pre-commit; then
-		cp -pv .git/hooks/pre-commit.sample .git/hooks/pre-commit
+		cp -p .git/hooks/pre-commit.sample .git/hooks/pre-commit
 	fi
 fi
 
