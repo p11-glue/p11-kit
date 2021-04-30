@@ -37,8 +37,13 @@
 /*
  * This is needed to expose pthread_mutexattr_settype and PTHREAD_MUTEX_DEFAULT
  * on older pthreads implementations
+ *
+ * This is excluded on SunOS due to it making the code compile in < XPG6 mode
+ * which is not supported with a C99 compiler.
  */
+#ifndef __sun
 #define _XOPEN_SOURCE 700
+#endif
 
 /*
  * This is needed to expose issetugid, getresuid, and getresgid, which are
