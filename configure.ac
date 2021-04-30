@@ -111,7 +111,7 @@ if test "$os_unix" = "yes"; then
 	])
 
 	# These are things we can work around
-	AC_CHECK_HEADERS([sys/resource.h ucred.h])
+	AC_CHECK_HEADERS([sys/resource.h sys/un.h ucred.h])
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([getauxval getresuid secure_getenv])
