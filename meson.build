@@ -152,6 +152,7 @@ if host_system != 'windows'
   # These are things we can work around
   headers = [
     'sys/resource.h',
+    'sys/un.h',
     'ucred.h'
   ]
 

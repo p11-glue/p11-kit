@@ -39,6 +39,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_UN_H
+#  include <sys/un.h>
+#endif
 
 #if !defined(__cplusplus) && (__GNUC__ > 2)
 #define GNUC_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
@@ -379,6 +382,13 @@ int        fdwalk           (int (* cb) (void *data, int fd),
  * cannot be used */
 #if !defined(HAVE_LOCALE_T) || !defined(HAVE_NEWLOCALE)
 #undef HAVE_STRERROR_L
+#endif
+
+#ifndef SUN_LEN
+
+#define SUN_LEN(sa) (sizeof(struct sockaddr_un) \
+	- sizeof((sa)->sun_path) + strlen((sa)->sun_path))
+
 #endif
 
 int        p11_ascii_tolower (int c);
