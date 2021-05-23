@@ -323,6 +323,11 @@ proto_read_attribute_array (p11_rpc_message *msg,
 			return PARSE_ERROR;
 		}
 
+		if (temp.type & CKF_ARRAY_ATTRIBUTE) {
+			p11_debug("recursive attribute array is not supported");
+			return PARSE_ERROR;
+		}
+
 		attrs[i].type = temp.type;
 
 		/* Whether this one is valid or not */
