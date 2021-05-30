@@ -82,8 +82,9 @@ p11_attrs_free (void *attrs)
 	if (!attrs)
 		return;
 
-	for (i = 0; !p11_attrs_terminator (ats + i); i++)
-		free (ats[i].pValue);
+	for (i = 0; !p11_attrs_terminator (ats + i); i++) {
+		p11_attr_clear (&ats[i]);
+	}
 	free (ats);
 }
 
@@ -143,18 +144,17 @@ attrs_build (CK_ATTRIBUTE *attrs,
 				free (add->pValue);
 			continue;
 
-		/* The attribute exitss, and we're overriding */
+		/* The attribute exists but we're overriding */
 		} else {
 			free (attr->pValue);
 		}
 
-		memcpy (attr, add, sizeof (CK_ATTRIBUTE));
-		if (!take_values && attr->pValue != NULL) {
-			if (attr->ulValueLen == 0)
-				attr->pValue = malloc (1);
-			else
-				attr->pValue = memdup (attr->pValue, attr->ulValueLen);
-			return_val_if_fail (attr->pValue != NULL, NULL);
+		if (take_values) {
+			memcpy (attr, add, sizeof (CK_ATTRIBUTE));
+		} else {
+			if (!p11_attr_copy (attr, add)) {
+				return_val_if_reached (NULL);
+			}
 		}
 	}
 
@@ -416,8 +416,9 @@ p11_attrs_remove (CK_ATTRIBUTE *attrs,
 	if (i == count)
 		return false;
 
-	if (attrs[i].pValue)
-		free (attrs[i].pValue);
+	if (attrs[i].pValue) {
+		p11_attr_clear (&attrs[i]);
+	}
 
 	memmove (attrs + i, attrs + i + 1, (count - (i + 1)) * sizeof (CK_ATTRIBUTE));
 	attrs[count - 1].type = CKA_INVALID;
@@ -524,6 +525,61 @@ p11_attr_hash (const void *data)
 	}
 
 	return hash;
+}
+
+bool
+p11_attr_copy (CK_ATTRIBUTE *dst, const CK_ATTRIBUTE *src)
+{
+	memcpy (dst, src, sizeof (CK_ATTRIBUTE));
+
+	if (!src->pValue) {
+		return true;
+	}
+
+	if (src->ulValueLen == 0) {
+		dst->pValue = malloc (1);
+	} else {
+		dst->pValue = malloc (src->ulValueLen);
+	}
+	if (!dst->pValue) {
+		return_val_if_reached (false);
+	}
+
+	assert (dst->ulValueLen >= src->ulValueLen);
+
+	if (!IS_ATTRIBUTE_ARRAY (src)) {
+		memcpy (dst->pValue, src->pValue, src->ulValueLen);
+	} else {
+		CK_ATTRIBUTE *child_dst;
+		const CK_ATTRIBUTE *child_src;
+		size_t i;
+
+		for (i = 0, child_dst = dst->pValue, child_src = src->pValue;
+		     i < src->ulValueLen / sizeof (CK_ATTRIBUTE);
+		     i++, child_dst++, child_src++) {
+			if (!p11_attr_copy (child_dst, child_src)) {
+				return_val_if_reached (false);
+			}
+		}
+	}
+
+	return true;
+}
+
+void
+p11_attr_clear (CK_ATTRIBUTE *attr)
+{
+	if (IS_ATTRIBUTE_ARRAY (attr) && attr->pValue) {
+		CK_ATTRIBUTE *child;
+		size_t i;
+
+		for (i = 0, child = attr->pValue;
+		     i < attr->ulValueLen / sizeof (CK_ATTRIBUTE);
+		     i++, child++) {
+			p11_attr_clear (child);
+		}
+	}
+	free (attr->pValue);
 }
 
 static void
