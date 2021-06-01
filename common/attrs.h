@@ -42,6 +42,12 @@
 
 #define CKA_INVALID ((CK_ULONG)-1)
 
+/* CKA_VENDOR_DEFINED needs to be checked as well, because our vendor
+ * prefix 0x58444700 indicates CKF_ARRAY_ATTRIBUTE. */
+#define IS_ARRAY_ATTRIBUTE(attr) \
+	(((attr)->type & CKF_ARRAY_ATTRIBUTE) && \
+	 !((attr)->type & CKA_VENDOR_DEFINED))
+
 CK_ATTRIBUTE *      p11_attrs_dup           (const CK_ATTRIBUTE *attrs);
 
 CK_ATTRIBUTE *      p11_attrs_build         (CK_ATTRIBUTE *attrs,
@@ -132,5 +138,8 @@ unsigned int        p11_attr_hash           (const void *data);
 bool                p11_attr_match_value    (const CK_ATTRIBUTE *attr,
                                              const void *value,
                                              ssize_t length);
+bool                p11_attr_copy           (CK_ATTRIBUTE *dst,
+					     const CK_ATTRIBUTE *src);
+void                p11_attr_clear          (CK_ATTRIBUTE *attr);
 
 #endif /* P11_ATTRS_H_ */

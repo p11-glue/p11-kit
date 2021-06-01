@@ -97,13 +97,15 @@
 	} while (0)
 #define assert_str_eq(a1, a2) \
 	assert_str_cmp(a1, ==, a2)
-#define assert_ptr_eq(a1, a2) \
+#define assert_ptr_cmp(a1, cmp, a2)    \
 	do { const void *__p1 = (a1); \
 	     const void *__p2 = (a2); \
-	     if (__p1 == __p2) ; else \
+	     if (__p1 cmp __p2) ; else \
 	         p11_test_fail (__FILE__, __LINE__, __FUNCTION__, "assertion failed (%s == %s): (0x%08lx == 0x%08lx)", \
 	                        #a1, #a2, (unsigned long)(size_t)__p1, (unsigned long)(size_t)__p2); \
 	} while (0)
+#define assert_ptr_eq(a1, a2) \
+	assert_ptr_cmp(a1, ==, a2)
 
 #define assert_str_contains(expr, needle) \
 	do { const char *__str = (expr); \
