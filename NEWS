@@ -1,3 +1,12 @@
+0.24.0 (stable)
+ * Use inclusive language on certificate distrust.  Note: This changes
+   the directory and attribute names to distrust certain CAs to
+   "blocklist" [PR#324]
+ * Fix issues spotted by coverity and ASan [PR#349, PR#351]
+ * Integrate gettext with tools more tightly [PR#358]
+ * rpc: Forbid use of array of attributes [PR#365, PR#367]
+ * Build fixes [PR#342, PR#344, PR#345, PR#353, PR#362, PR#364]
+
 0.23.22 (stable)
  * Fix memory-safety issues that affect the RPC protocol
    (CVE-2020-29361, CVE-2020-29362, and CVE-2020-29363), discovered
