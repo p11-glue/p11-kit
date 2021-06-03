@@ -46,6 +46,8 @@
 
 #include "compat.h"
 
+#ifndef HAVE_STRNDUP
+
 static void
 test_strndup (void)
 {
@@ -60,6 +62,8 @@ test_strndup (void)
 	assert_str_eq (res, "test");
 	free (res);
 }
+
+#endif
 
 #ifdef OS_UNIX
 
@@ -163,7 +167,9 @@ int
 main (int argc,
       char *argv[])
 {
+#ifndef HAVE_STRNDUP
 	p11_test (test_strndup, "/compat/strndup");
+#endif
 #ifdef OS_UNIX
 	/* Don't run this test when under fakeroot, or the binary is
 	 * written under /tmp */
