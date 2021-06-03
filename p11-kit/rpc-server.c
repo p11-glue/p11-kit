@@ -35,6 +35,7 @@
 
 #include "config.h"
 
+#include "attrs.h"
 #include "conf.h"
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
 #include "debug.h"
@@ -323,7 +324,7 @@ proto_read_attribute_array (p11_rpc_message *msg,
 			return PARSE_ERROR;
 		}
 
-		if (temp.type & CKF_ARRAY_ATTRIBUTE) {
+		if (IS_ATTRIBUTE_ARRAY (&temp)) {
 			p11_debug("recursive attribute array is not supported");
 			return PARSE_ERROR;
 		}
