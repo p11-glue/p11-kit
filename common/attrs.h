@@ -42,6 +42,16 @@
 
 #define CKA_INVALID ((CK_ULONG)-1)
 
+/* CKF_ARRAY_ATTRIBUTE is not sufficient to tell if the attribute is
+ * an array of attributes, because the flag is also set for
+ * CKA_ALLOWED_MECHANISMS, which is an array of CK_MECHANISM_TYPE
+ * (unsigned long).  Moreover, our vendor prefix 0x58444700UL masks
+ * the bit. */
+#define IS_ATTRIBUTE_ARRAY(attr) \
+	((attr)->type == CKA_WRAP_TEMPLATE ||	\
+	 (attr)->type == CKA_UNWRAP_TEMPLATE ||	\
+	 (attr)->type == CKA_DERIVE_TEMPLATE)
+
 CK_ATTRIBUTE *      p11_attrs_dup           (const CK_ATTRIBUTE *attrs);
 
 CK_ATTRIBUTE *      p11_attrs_build         (CK_ATTRIBUTE *attrs,
