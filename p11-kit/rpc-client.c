@@ -66,6 +66,7 @@ typedef struct {
 	p11_rpc_client_vtable *vtable;
 	unsigned int initialized_forkid;
 	bool initialize_done;
+	uint8_t version;
 } rpc_client;
 
 /* Allocator for call session buffers */
@@ -756,13 +757,16 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	ret = (module->vtable->connect) (module->vtable, reserved);
 
 	if (ret == CKR_OK) {
-		ret = (module->vtable->authenticate) (module->vtable);
+		ret = (module->vtable->authenticate) (module->vtable,
+						      &module->version);
 	}
 
 	/* Successfully initialized */
 	if (ret == CKR_OK) {
 		module->initialized_forkid = p11_forkid;
 		module->initialize_done = true;
+		p11_debug ("authenticated with protocol version %u",
+			   module->version);
 
 	/* Server doesn't exist, initialize but don't call */
 	} else if (ret == CKR_DEVICE_REMOVED) {

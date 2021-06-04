@@ -89,6 +89,16 @@ tests_c_args = [
 
 conf.set('SIZEOF_UNSIGNED_LONG', cc.sizeof('unsigned long'))
 
+rpc_min = get_option('rpc_min')
+rpc_max = get_option('rpc_max')
+
+if rpc_min > rpc_max
+  error('rpc_min is larger than rpc_max')
+endif
+
+conf.set('P11_RPC_PROTOCOL_VERSION_MINIMUM', rpc_min)
+conf.set('P11_RPC_PROTOCOL_VERSION_MAXIMUM', rpc_max)
+
 nanosleep_deps = []
 dlopen_deps = []
 socket_deps = []

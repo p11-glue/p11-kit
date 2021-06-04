@@ -709,9 +709,11 @@ rpc_initialize (p11_rpc_client_vtable *vtable,
 }
 
 static CK_RV
-rpc_authenticate (p11_rpc_client_vtable *vtable)
+rpc_authenticate (p11_rpc_client_vtable *vtable,
+		  uint8_t *version)
 {
 	assert_str_eq (vtable->data, "vtable-data");
+	assert_ptr_not_null (version);
 
 	return CKR_OK;
 }

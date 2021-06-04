@@ -620,13 +620,14 @@ rpc_transport_uninit (p11_rpc_transport *rpc)
 }
 
 static CK_RV
-rpc_transport_authenticate (p11_rpc_client_vtable *vtable)
+rpc_transport_authenticate (p11_rpc_client_vtable *vtable,
+			    uint8_t *version)
 {
 	p11_rpc_transport *rpc = (p11_rpc_transport *)vtable;
 	rpc_socket *sock;
-	unsigned char dummy = '\0';
 
 	assert (rpc != NULL);
+	assert (version != NULL);
 
 	sock = rpc->socket;
 	assert (sock != NULL);
@@ -640,16 +641,25 @@ rpc_transport_authenticate (p11_rpc_client_vtable *vtable)
 	}
 #endif
 
+	*version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
+
 	/* Place holder byte, will later carry unix credentials (on some systems) */
-	if (write_all (sock->write_fd, &dummy, 1) != 1) {
+	if (write_all (sock->write_fd, version, 1) != 1) {
 		p11_message_err (errno, _("couldn't send socket credentials"));
 		return CKR_DEVICE_ERROR;
 	}
 
-	if (read_all (sock->read_fd, &dummy, 1) != 1) {
+	if (read_all (sock->read_fd, version, 1) != 1) {
 		p11_message_err (errno, _("couldn't receive socket credentials"));
 		return CKR_DEVICE_ERROR;
 	}
+
+#if P11_RPC_PROTOCOL_VERSION_MINIMUM > 0
+	if (*version < P11_RPC_PROTOCOL_VERSION_MINIMUM) {
+		p11_message_err (errno, _("peer protocol version is too old"));
+		return CKR_DEVICE_ERROR;
+	}
+#endif
 
 	return CKR_OK;
 }
