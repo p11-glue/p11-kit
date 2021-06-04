@@ -755,6 +755,10 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	assert (module->vtable->connect != NULL);
 	ret = (module->vtable->connect) (module->vtable, reserved);
 
+	if (ret == CKR_OK) {
+		ret = (module->vtable->authenticate) (module->vtable);
+	}
+
 	/* Successfully initialized */
 	if (ret == CKR_OK) {
 		module->initialized_forkid = p11_forkid;

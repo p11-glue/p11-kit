@@ -709,6 +709,14 @@ rpc_initialize (p11_rpc_client_vtable *vtable,
 }
 
 static CK_RV
+rpc_authenticate (p11_rpc_client_vtable *vtable)
+{
+	assert_str_eq (vtable->data, "vtable-data");
+
+	return CKR_OK;
+}
+
+static CK_RV
 rpc_initialize_fails (p11_rpc_client_vtable *vtable,
                       void *init_reserved)
 {
@@ -754,7 +762,7 @@ rpc_finalize (p11_rpc_client_vtable *vtable,
 static void
 test_initialize (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -780,7 +788,7 @@ test_initialize (void)
 static void
 test_not_initialized (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
 	CK_INFO info;
 	bool ret;
@@ -802,7 +810,7 @@ test_not_initialized (void)
 static void
 test_initialize_fails_on_client (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize_fails, rpc_transport, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize_fails, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -832,7 +840,7 @@ rpc_transport_fails (p11_rpc_client_vtable *vtable,
 static void
 test_transport_fails (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_fails, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_fails, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -854,7 +862,7 @@ test_transport_fails (void)
 static void
 test_initialize_fails_on_server (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -894,7 +902,7 @@ rpc_transport_bad_parse (p11_rpc_client_vtable *vtable,
 static void
 test_transport_bad_parse (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_bad_parse, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_bad_parse, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -942,7 +950,7 @@ rpc_transport_short_error (p11_rpc_client_vtable *vtable,
 static void
 test_transport_short_error (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_short_error, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_short_error, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -989,7 +997,7 @@ rpc_transport_invalid_error (p11_rpc_client_vtable *vtable,
 static void
 test_transport_invalid_error (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_invalid_error, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_invalid_error, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -1034,7 +1042,7 @@ rpc_transport_wrong_response (p11_rpc_client_vtable *vtable,
 static void
 test_transport_wrong_response (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_wrong_response, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_wrong_response, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -1081,7 +1089,7 @@ rpc_transport_bad_contents (p11_rpc_client_vtable *vtable,
 static void
 test_transport_bad_contents (void)
 {
-	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_transport_bad_contents, rpc_finalize };
+	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_bad_contents, rpc_finalize };
 	p11_virtual mixin;
 	bool ret;
 	CK_RV rv;
@@ -1105,6 +1113,7 @@ test_transport_bad_contents (void)
 static p11_rpc_client_vtable test_normal_vtable = {
 	NULL,
 	rpc_initialize,
+	rpc_authenticate,
 	rpc_transport,
 	rpc_finalize,
 };
@@ -1112,6 +1121,7 @@ static p11_rpc_client_vtable test_normal_vtable = {
 static p11_rpc_client_vtable test_device_removed_vtable = {
 	NULL,
 	rpc_initialize_device_removed,
+	rpc_authenticate,
 	rpc_transport,
 	rpc_finalize,
 };
