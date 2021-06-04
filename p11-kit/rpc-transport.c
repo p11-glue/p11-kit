@@ -97,7 +97,6 @@ typedef struct {
 	p11_mutex_t write_lock;
 	int refs;
 	int last_code;
-	bool sent_creds;
 
 	/* This data is protected by read mutex */
 	p11_mutex_t read_lock;
@@ -105,7 +104,6 @@ typedef struct {
         /* Signalled when read_code changes */
         p11_cond_t read_code_cond;
 #endif
-	bool read_creds;
 	uint32_t read_code;
 	uint32_t read_olen;
 	uint32_t read_dlen;
@@ -122,8 +120,6 @@ rpc_socket_new (int fd)
 	sock->read_fd = fd;
 	sock->write_fd = fd;
 	sock->last_code = 0x10;
-	sock->read_creds = false;
-	sock->sent_creds = false;
 	sock->refs = 1;
 
 	p11_mutex_init (&sock->write_lock);
@@ -259,19 +255,9 @@ rpc_socket_write_inlock (rpc_socket *sock,
                          p11_buffer *buffer)
 {
 	unsigned char header[12];
-	unsigned char dummy = '\0';
 
 	/* The socket is locked and referenced at this point */
 	assert (buffer != NULL);
-
-	/* Place holder byte, will later carry unix credentials (on some systems) */
-	if (!sock->sent_creds) {
-		if (write_all (sock->write_fd, &dummy, 1) != 1) {
-			p11_message_err (errno, _("couldn't send socket credentials"));
-			return CKR_DEVICE_ERROR;
-		}
-		sock->sent_creds = true;
-	}
 
 	p11_rpc_buffer_encode_uint32 (header, code);
 	p11_rpc_buffer_encode_uint32 (header + 4, options->len);
@@ -401,7 +387,6 @@ rpc_socket_read (rpc_socket *sock,
 {
 	CK_RV ret = CKR_DEVICE_ERROR;
 	unsigned char header[12];
-	unsigned char dummy;
 #ifdef OS_WIN32
 	HANDLE handle;
 	DWORD mode;
@@ -416,14 +401,6 @@ rpc_socket_read (rpc_socket *sock,
 	 */
 
 	p11_mutex_lock (&sock->read_lock);
-
-	if (!sock->read_creds) {
-		if (read_all (sock->read_fd, &dummy, 1) != 1) {
-			p11_mutex_unlock (&sock->read_lock);
-			return CKR_DEVICE_ERROR;
-		}
-		sock->read_creds = true;
-	}
 
 	for (;;) {
 		/* No message header has been read yet? ... read one in */
@@ -640,6 +617,41 @@ static void
 rpc_transport_uninit (p11_rpc_transport *rpc)
 {
 	p11_buffer_uninit (&rpc->options);
+}
+
+static CK_RV
+rpc_transport_authenticate (p11_rpc_client_vtable *vtable)
+{
+	p11_rpc_transport *rpc = (p11_rpc_transport *)vtable;
+	rpc_socket *sock;
+	unsigned char dummy = '\0';
+
+	assert (rpc != NULL);
+
+	sock = rpc->socket;
+	assert (sock != NULL);
+
+	if (sock->read_fd == -1) {
+		return CKR_DEVICE_ERROR;
+	}
+#ifdef OS_WIN32
+	if (sock->write_fd == -1) {
+		return CKR_DEVICE_ERROR;
+	}
+#endif
+
+	/* Place holder byte, will later carry unix credentials (on some systems) */
+	if (write_all (sock->write_fd, &dummy, 1) != 1) {
+		p11_message_err (errno, _("couldn't send socket credentials"));
+		return CKR_DEVICE_ERROR;
+	}
+
+	if (read_all (sock->read_fd, &dummy, 1) != 1) {
+		p11_message_err (errno, _("couldn't receive socket credentials"));
+		return CKR_DEVICE_ERROR;
+	}
+
+	return CKR_OK;
 }
 
 static CK_RV
@@ -1066,6 +1078,7 @@ rpc_exec_init (const char *remote,
 
 	rex->base.vtable.connect = rpc_exec_connect;
 	rex->base.vtable.disconnect = rpc_exec_disconnect;
+	rex->base.vtable.authenticate = rpc_transport_authenticate;
 	rex->base.vtable.transport = rpc_transport_buffer;
 	rpc_transport_init (&rex->base, name, rpc_exec_free);
 
@@ -1142,6 +1155,7 @@ rpc_unix_init (const char *remote,
 
 	run->base.vtable.connect = rpc_unix_connect;
 	run->base.vtable.disconnect = rpc_unix_disconnect;
+	run->base.vtable.authenticate = rpc_transport_authenticate;
 	run->base.vtable.transport = rpc_transport_buffer;
 	rpc_transport_init (&run->base, name, rpc_unix_free);
 
@@ -1224,6 +1238,7 @@ rpc_vsock_init (unsigned int cid,
 
 	run->base.vtable.connect = rpc_vsock_connect;
 	run->base.vtable.disconnect = rpc_vsock_disconnect;
+	run->base.vtable.authenticate = rpc_transport_authenticate;
 	run->base.vtable.transport = rpc_transport_buffer;
 	rpc_transport_init (&run->base, name, rpc_vsock_free);
 

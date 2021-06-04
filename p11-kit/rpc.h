@@ -48,6 +48,8 @@ struct _p11_rpc_client_vtable {
 	CK_RV       (* connect)       (p11_rpc_client_vtable *vtable,
 	                               void *init_reserved);
 
+	CK_RV       (* authenticate)  (p11_rpc_client_vtable *vtable);
+
 	CK_RV       (* transport)     (p11_rpc_client_vtable *vtable,
 	                               p11_buffer *request,
 	                               p11_buffer *response);
