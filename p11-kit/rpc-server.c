@@ -70,6 +70,11 @@
 #define PARSE_ERROR CKR_DEVICE_ERROR
 #define PREP_ERROR  CKR_DEVICE_MEMORY
 
+typedef struct {
+	p11_virtual virt;
+	uint8_t version;
+} rpc_server;
+
 static CK_RV
 proto_read_byte_buffer (p11_rpc_message *msg,
                         CK_BYTE_PTR *buffer,
@@ -1957,8 +1962,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
                              int out_fd)
 {
 	p11_rpc_status status;
-	unsigned char version;
-	p11_virtual virt;
+	rpc_server server;
 	p11_buffer options;
 	p11_buffer buffer;
 	size_t state;
@@ -1970,24 +1974,29 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 	p11_buffer_init (&options, 0);
 	p11_buffer_init (&buffer, 0);
 
-	p11_virtual_init (&virt, &p11_virtual_base, module, NULL);
+	p11_virtual_init (&server.virt, &p11_virtual_base, module, NULL);
 
-	switch (read (in_fd, &version, 1)) {
+	switch (read (in_fd, &server.version, 1)) {
 	case 0:
 		goto out;
 	case 1:
-		if (version != 0) {
+#if P11_RPC_PROTOCOL_VERSION_MINIMUM > 0
+		if (server.version < P11_RPC_PROTOCOL_VERSION_MINIMUM) {
 			p11_message (_("unsupported version received: %d"), (int)version);
 			goto out;
 		}
+#endif
 		break;
 	default:
 		p11_message_err (errno, _("couldn't read credential byte"));
 		goto out;
 	}
 
-	version = 0;
-	switch (write (out_fd, &version, 1)) {
+	if (server.version > P11_RPC_PROTOCOL_VERSION_MAXIMUM) {
+		server.version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
+	}
+
+	switch (write (out_fd, &server.version, 1)) {
 	case 1:
 		break;
 	default:
@@ -2018,7 +2027,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 			goto out;
 		}
 
-		if (!p11_rpc_server_handle (&virt.funcs, &buffer, &buffer)) {
+		if (!p11_rpc_server_handle (&server.virt.funcs, &buffer, &buffer)) {
 			p11_message (_("unexpected error handling rpc message"));
 			goto out;
 		}
@@ -2046,7 +2055,7 @@ out:
 	p11_buffer_uninit (&buffer);
 	p11_buffer_uninit (&options);
 
-	p11_virtual_uninit (&virt);
+	p11_virtual_uninit (&server.virt);
 
 	return ret;
 }

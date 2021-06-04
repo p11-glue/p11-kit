@@ -18,6 +18,11 @@ P11KIT_REVISION=0
 P11KIT_AGE=3
 
 # ------------------------------------------------------------------------------
+# p11-kit RPC protocol versions
+P11KIT_RPC_MIN=0
+P11KIT_RPC_MAX=0
+
+# ------------------------------------------------------------------------------
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([build/m4])
@@ -377,6 +382,35 @@ AC_DEFINE_UNQUOTED(TRUST_PATHS, ["$with_trust_paths"], [The trust module input p
 AC_SUBST(with_trust_paths)
 
 # --------------------------------------------------------------------
+# RPC
+
+AC_ARG_WITH([rpc-min],
+            [AS_HELP_STRING([--with-rpc-min], [Minimum RPC protocol version we support])],
+            [rpc_min=$withval],
+            [rpc_min=$P11KIT_RPC_MIN])
+
+AC_ARG_WITH([rpc-max],
+            [AS_HELP_STRING([--with-rpc-max], [Maximum RPC protocol version we support])],
+            [rpc_max=$withval],
+            [rpc_max=$P11KIT_RPC_MAX])
+
+AS_IF([test $rpc_min -lt $P11KIT_RPC_MIN || test $rpc_min -gt $P11KIT_RPC_MAX], [
+	AC_MSG_ERROR([Out of range version specified with --with-rpc-min])
+])
+
+AS_IF([test $rpc_max -lt $P11KIT_RPC_MIN || test $rpc_max -gt $P11KIT_RPC_MAX], [
+	AC_MSG_ERROR([Out of range version specified with --with-rpc-max])
+])
+
+AS_IF([test $rpc_min -gt $rpc_max], [
+	AC_MSG_ERROR([Conflicting versions specified with --with-rpc-min and --with-rpc-max])
+])
+
+AC_DEFINE_UNQUOTED(P11_RPC_PROTOCOL_VERSION_MINIMUM, $rpc_min, [Minimum RPC protocol version we support])
+
+AC_DEFINE_UNQUOTED(P11_RPC_PROTOCOL_VERSION_MAXIMUM, $rpc_max, [Maximum RPC protocol version we support])
+
+# --------------------------------------------------------------------
 # GTK Doc
 
 dnl check for tools
@@ -641,5 +675,7 @@ AC_MSG_NOTICE([build options:
 
     Build trust module:              $enable_trust_module
     Trust module paths:              $trust_status
+
+    RPC protocol versions:           $rpc_min upto $rpc_max
 
 ])

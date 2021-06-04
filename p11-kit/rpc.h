@@ -39,6 +39,7 @@
 #include "pkcs11.h"
 #include "buffer.h"
 #include "virtual.h"
+#include <stdint.h>
 
 typedef struct _p11_rpc_client_vtable p11_rpc_client_vtable;
 
@@ -48,7 +49,8 @@ struct _p11_rpc_client_vtable {
 	CK_RV       (* connect)       (p11_rpc_client_vtable *vtable,
 	                               void *init_reserved);
 
-	CK_RV       (* authenticate)  (p11_rpc_client_vtable *vtable);
+	CK_RV       (* authenticate)  (p11_rpc_client_vtable *vtable,
+				       uint8_t *version);
 
 	CK_RV       (* transport)     (p11_rpc_client_vtable *vtable,
 	                               p11_buffer *request,
