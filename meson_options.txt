@@ -54,6 +54,10 @@ option('gtk_doc', type : 'boolean',
        value : false,
        description : 'Build documentation using gtk-doc')
 
+option('glib_prefix', type : 'string',
+       value : '',
+       description : 'GLib installed prefix, used for gtk-doc, taken from pkg-config if undefined')
+
 option('man', type : 'boolean',
        value : false,
        description : 'Build manpages using xsltproc')
