@@ -121,6 +121,7 @@ proto_read_byte_array (p11_rpc_message *msg,
 {
 	const unsigned char *data;
 	unsigned char valid;
+	uint32_t len;
 	size_t n_data;
 
 	assert (msg != NULL);
@@ -134,8 +135,10 @@ proto_read_byte_array (p11_rpc_message *msg,
 		return PARSE_ERROR;
 
 	if (!valid) {
+		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &len))
+			return PARSE_ERROR;
 		*array = NULL;
-		*n_array = 0;
+		*n_array = len;
 		return CKR_OK;
 	}
 
