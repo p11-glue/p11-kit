@@ -437,13 +437,13 @@ test_set_pin (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_SetPIN) (0, (CK_UTF8CHAR_PTR)"booo", 4, (CK_UTF8CHAR_PTR)"TEST PIN", 8);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_SetPIN) (session, (CK_UTF8CHAR_PTR)"booo", 4, (CK_UTF8CHAR_PTR)"TEST PIN", 8);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SetPIN) (session, (CK_UTF8CHAR_PTR)"other", 5, (CK_UTF8CHAR_PTR)"OTHER", 5);
-	assert (rv == CKR_PIN_INCORRECT);
+	assert_num_eq (rv,  CKR_PIN_INCORRECT);
 
 	teardown_mock_module (module);
 }
@@ -486,19 +486,19 @@ test_login_logout (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (0, CKU_USER, (CK_UTF8CHAR_PTR)"booo", 4);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_UTF8CHAR_PTR)"bo", 2);
-	assert (rv == CKR_PIN_INCORRECT);
+	assert_num_eq (rv, CKR_PIN_INCORRECT);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_UTF8CHAR_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Logout) (session);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Logout) (session);
-	assert (rv == CKR_USER_NOT_LOGGED_IN);
+	assert_num_eq (rv, CKR_USER_NOT_LOGGED_IN);
 
 	teardown_mock_module (module);
 }
@@ -585,19 +585,19 @@ test_set_attribute_value (void)
 	attrs[1].ulValueLen = sizeof (bits);
 
 	rv = (module->C_SetAttributeValue) (0, MOCK_PRIVATE_KEY_CAPITALIZE, attrs, 2);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_SetAttributeValue) (session, MOCK_PRIVATE_KEY_CAPITALIZE, attrs, 2);
-	assert (rv == CKR_USER_NOT_LOGGED_IN);
+	assert_num_eq (rv, CKR_USER_NOT_LOGGED_IN);
 
 	rv = (module->C_SetAttributeValue) (session, MOCK_PUBLIC_KEY_CAPITALIZE, attrs, 2);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	memset (label, 0, sizeof (label));
 	bits = 0;
 
 	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_CAPITALIZE, attrs, 2);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (bits, 1555);
 	assert_num_eq (7, attrs[0].ulValueLen);
@@ -813,13 +813,13 @@ test_encrypt (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_EncryptInit) (0, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_KEY_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_KEY_HANDLE_INVALID);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* null mechanism cancels the operation */
 	rv = (module->C_EncryptInit) (session, NULL, MOCK_PUBLIC_KEY_CAPITALIZE);
@@ -827,14 +827,14 @@ test_encrypt (void)
 
 	length = sizeof (data);
 	rv = (module->C_Encrypt) (0, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_Encrypt) (session, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the length */
 	length = 0;
@@ -849,36 +849,36 @@ test_encrypt (void)
 
 	length = sizeof (data);
 	rv = (module->C_Encrypt) (session, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "BLAH", 4) == 0);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptUpdate) (0, (CK_BYTE_PTR)"sLurm", 5, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptUpdate) (session, (CK_BYTE_PTR)"sLurm", 5, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (5, length);
 	assert (memcmp (data, "SLURM", 5) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptFinal) (0, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptFinal) (session, data, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	teardown_mock_module (module);
 }
@@ -896,75 +896,75 @@ test_decrypt (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DecryptInit) (0, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_KEY_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_KEY_HANDLE_INVALID);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* null mechanism cancels the operation */
 	rv = (module->C_DecryptInit) (session, NULL, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_Decrypt) (0, (CK_BYTE_PTR)"bLAH", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_Decrypt) (session, (CK_BYTE_PTR)"BLAh", 4, data, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the length */
 	length = 0;
 	rv = (module->C_Decrypt) (session, (CK_BYTE_PTR)"BLAh", 4, NULL, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (length, 4);
 
 	length = 1;
 	rv = (module->C_Decrypt) (session, (CK_BYTE_PTR)"BLAh", 4, data, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (length, 4);
 
 	length = sizeof (data);
 	rv = (module->C_Decrypt) (session, (CK_BYTE_PTR)"BLAh", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "blah", 4) == 0);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptUpdate) (0, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptUpdate) (session, (CK_BYTE_PTR)"sLuRM", 5, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (5, length);
 	assert (memcmp (data, "slurm", 5) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptFinal) (0, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptFinal) (session, data, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	teardown_mock_module (module);
 }
@@ -983,13 +983,13 @@ test_digest (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_DigestInit) (0, &mech);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_DigestInit) (session, &mech_bad);
-	assert (rv == CKR_MECHANISM_INVALID);
+	assert_num_eq (rv, CKR_MECHANISM_INVALID);
 
 	rv = (module->C_DigestInit) (session, &mech);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* null mechanism cancels the operation */
 	rv = (module->C_DigestInit) (session, NULL);
@@ -997,57 +997,57 @@ test_digest (void)
 
 	length = sizeof (digest);
 	rv = (module->C_Digest) (0, (CK_BYTE_PTR)"bLAH", 4, digest, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (digest);
 	rv = (module->C_Digest) (session, (CK_BYTE_PTR)"BLAh", 4, digest, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_DigestInit) (session, &mech);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the length */
 	length = sizeof (digest);
 	rv = (module->C_Digest) (session, (CK_BYTE_PTR)"BLAh", 4, NULL, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (length, 1);
 
 	length = 0;
 	rv = (module->C_Digest) (session, (CK_BYTE_PTR)"BLAh", 4, digest, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (length, 1);
 
 	length = sizeof (digest);
 	rv = (module->C_Digest) (session, (CK_BYTE_PTR)"BLAh", 4, digest, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (1, length);
 	assert (memcmp (digest, "4", 1) == 0);
 
 	rv = (module->C_DigestInit) (session, &mech);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DigestUpdate) (0, (CK_BYTE_PTR)"blah", 4);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_DigestUpdate) (session, (CK_BYTE_PTR)"sLuRM", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* Adds the the value of object handle to hash: 6 */
 	assert_num_eq (6, MOCK_PUBLIC_KEY_PREFIX);
 	rv = (module->C_DigestKey) (session, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DigestUpdate) (session, (CK_BYTE_PTR)"Other", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (digest);
 	rv = (module->C_DigestFinal) (0, digest, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (digest);
 	rv = (module->C_DigestFinal) (session, digest, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (2, length);
 	assert (memcmp (digest, "16", 2) == 0);
@@ -1068,31 +1068,31 @@ test_sign (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SignInit) (0, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_SignInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* NULL mechanisms cancel the operation */
 	rv = (module->C_SignInit) (session, NULL, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (signature);
 	rv = (module->C_Sign) (0, (CK_BYTE_PTR)"bLAH", 4, signature, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (signature);
 	rv = (module->C_Sign) (session, (CK_BYTE_PTR)"bLAH", 4, signature, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_SignInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Login) (session, CKU_CONTEXT_SPECIFIC, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the length */
 	length = sizeof (signature);
@@ -1102,38 +1102,38 @@ test_sign (void)
 
 	length = 1;
 	rv = (module->C_Sign) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (13, length);
 
 	length = sizeof (signature);
 	rv = (module->C_Sign) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (13, length);
 	assert (memcmp (signature, "prefix:value4", 13) == 0);
 
 	rv = (module->C_SignInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Login) (session, CKU_CONTEXT_SPECIFIC, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SignUpdate) (0, (CK_BYTE_PTR)"blah", 4);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_SignUpdate) (session, (CK_BYTE_PTR)"sLuRM", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SignUpdate) (session, (CK_BYTE_PTR)"Other", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (signature);
 	rv = (module->C_SignFinal) (0, signature, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (signature);
 	rv = (module->C_SignFinal) (session, signature, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (14, length);
 	assert (memcmp (signature, "prefix:value10", 2) == 0);
@@ -1154,47 +1154,47 @@ test_sign_recover (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SignRecoverInit) (0, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_SignRecoverInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* NULL mech cancels the operation */
 	rv = (module->C_SignRecoverInit) (session, NULL, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (signature);
 	rv = (module->C_SignRecover) (0, (CK_BYTE_PTR)"bLAH", 4, signature, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (signature);
 	rv = (module->C_SignRecover) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_SignRecoverInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Login) (session, CKU_CONTEXT_SPECIFIC, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the length */
 	length = 0;
 	rv = (module->C_SignRecover) (session, (CK_BYTE_PTR)"BLAh", 4, NULL, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (16, length);
 
 	/* just get the length */
 	length = 1;
 	rv = (module->C_SignRecover) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (16, length);
 
 	length = sizeof (signature);
 	rv = (module->C_SignRecover) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (16, length);
 	assert (memcmp (signature, "prefix:valueBLAh", 16) == 0);
@@ -1215,49 +1215,49 @@ test_verify (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_VerifyInit) (0, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_VerifyInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* NULL mech cancels operation */
 	rv = (module->C_VerifyInit) (session, NULL, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = 13;
 	memcpy (signature, "prefix:value4", length);
 	rv = (module->C_Verify) (0, (CK_BYTE_PTR)"bLAH", 4, signature, 5);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_Verify) (session, (CK_BYTE_PTR)"BLAh", 4, signature, length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_VerifyInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Verify) (session, (CK_BYTE_PTR)"BLAh", 4, signature, length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_VerifyInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_VerifyUpdate) (0, (CK_BYTE_PTR)"blah", 4);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_VerifyUpdate) (session, (CK_BYTE_PTR)"sLuRM", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_VerifyUpdate) (session, (CK_BYTE_PTR)"Other", 5);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = 14;
 	memcpy (signature, "prefix:value10", length);
 
 	rv = (module->C_VerifyFinal) (session, signature, 5);
-	assert (rv == CKR_SIGNATURE_LEN_RANGE);
+	assert_num_eq (rv, CKR_SIGNATURE_LEN_RANGE);
 
 	rv = (module->C_VerifyFinal) (session, signature, length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	teardown_mock_module (module);
 }
@@ -1275,41 +1275,41 @@ test_verify_recover (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_VerifyRecoverInit) (0, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	rv = (module->C_VerifyRecoverInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* NULL mech cancels operation */
 	rv = (module->C_VerifyRecoverInit) (session, NULL, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_VerifyRecover) (0, (CK_BYTE_PTR)"prefix:valueBLah", 16, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_VerifyRecover) (session, (CK_BYTE_PTR)"prefix:valueBLah", 16, data, &length);
-	assert (rv == CKR_OPERATION_NOT_INITIALIZED);
+	assert_num_eq (rv, CKR_OPERATION_NOT_INITIALIZED);
 
 	rv = (module->C_VerifyRecoverInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	/* just get the size */
 	length = sizeof (data);
 	rv = (module->C_VerifyRecover) (session, (CK_BYTE_PTR)"prefix:valueBLah", 16, NULL, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (4, length);
 
 	/* Still too short */
 	length = 1;
 	rv = (module->C_VerifyRecover) (session, (CK_BYTE_PTR)"prefix:valueBLah", 16, data, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (4, length);
 
 	length = sizeof (data);
 	rv = (module->C_VerifyRecover) (session, (CK_BYTE_PTR)"prefix:valueBLah", 16, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "BLah", 4) == 0);
@@ -1331,29 +1331,29 @@ test_digest_encrypt (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DigestInit) (session, &dmech);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DigestEncryptUpdate) (0, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_DigestEncryptUpdate) (session, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "BLAH", 4) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DigestFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (1, length);
 	assert (memcmp (data, "4", 1) == 0);
@@ -1375,32 +1375,32 @@ test_decrypt_digest (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DigestInit) (session, &dmech);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptDigestUpdate) (0, (CK_BYTE_PTR)"BLAH", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptDigestUpdate) (session, (CK_BYTE_PTR)"BLAH", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "blah", 4) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DigestFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (1, length);
 	assert (memcmp (data, "4", 1) == 0);
@@ -1422,35 +1422,35 @@ test_sign_encrypt (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_EncryptInit) (session, &mech, MOCK_PUBLIC_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_SignInit) (session, &smech, MOCK_PRIVATE_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_Login) (session, CKU_CONTEXT_SPECIFIC, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_SignEncryptUpdate) (0, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_SignEncryptUpdate) (session, (CK_BYTE_PTR)"blah", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "BLAH", 4) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_EncryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_SignFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (8, length);
 	assert (memcmp (data, "p:value4", 1) == 0);
@@ -1472,31 +1472,31 @@ test_decrypt_verify (void)
 	module = setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_DecryptInit) (session, &mech, MOCK_PRIVATE_KEY_CAPITALIZE);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_VerifyInit) (session, &vmech, MOCK_PUBLIC_KEY_PREFIX);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptVerifyUpdate) (0, (CK_BYTE_PTR)"BLAH", 4, data, &length);
-	assert (rv == CKR_SESSION_HANDLE_INVALID);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptVerifyUpdate) (session, (CK_BYTE_PTR)"BLAH", 4, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (4, length);
 	assert (memcmp (data, "blah", 4) == 0);
 
 	length = sizeof (data);
 	rv = (module->C_DecryptFinal) (session, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	rv = (module->C_VerifyFinal) (session, (CK_BYTE_PTR)"p:value4", 8);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	teardown_mock_module (module);
 }
@@ -1652,7 +1652,7 @@ test_wrap_key (void)
 
 	length = sizeof (data);
 	rv = (module->C_WrapKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX, MOCK_PUBLIC_KEY_PREFIX, data, &length);
-	assert (rv == CKR_MECHANISM_PARAM_INVALID);
+	assert_num_eq (rv, CKR_MECHANISM_PARAM_INVALID);
 
 	mech.pParameter = "wrap";
 	mech.ulParameterLen = 4;
@@ -1660,18 +1660,18 @@ test_wrap_key (void)
 	/* just get the length */
 	length = sizeof (data);
 	rv = (module->C_WrapKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX, MOCK_PUBLIC_KEY_PREFIX, NULL, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 	assert_num_eq (5, length);
 
 	/* still not large enough */
 	length = 1;
 	rv = (module->C_WrapKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX, MOCK_PUBLIC_KEY_PREFIX, data, &length);
-	assert (rv == CKR_BUFFER_TOO_SMALL);
+	assert_num_eq (rv, CKR_BUFFER_TOO_SMALL);
 	assert_num_eq (5, length);
 
 
 	rv = (module->C_WrapKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX, MOCK_PUBLIC_KEY_PREFIX, data, &length);
-	assert (rv == CKR_OK);
+	assert_num_eq (rv, CKR_OK);
 
 	assert_num_eq (5, length);
 	assert (memcmp (data, "value", 5) == 0);
