@@ -2114,6 +2114,11 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 
 	mech->mechanism = mechanism;
 
+	/* special NULL case */
+	if (mechanism == 0) {
+		return true;
+	}
+
 	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
 		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
 			serializer = &p11_rpc_mechanism_serializers[i];

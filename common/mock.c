@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011, Collabora Ltd.
+ * Copyright (c) 2021, Red Hat, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -86,12 +87,13 @@ typedef struct _Session {
 
 	/* For encrypt, decrypt operations */
 	CK_OBJECT_HANDLE crypto_key;
-	CK_ATTRIBUTE_TYPE crypto_method;
+	CK_FLAGS crypto_method;
 	CK_MECHANISM_TYPE crypto_mechanism;
+	CK_BBOOL crypto_final;
 
 	/* For sign, verify, digest, CKM_MOCK_COUNT */
 	CK_MECHANISM_TYPE hash_mechanism;
-	CK_ATTRIBUTE_TYPE hash_method;
+	CK_FLAGS hash_method;
 	CK_OBJECT_HANDLE hash_key;
 	CK_ULONG hash_count;
 
@@ -1916,11 +1918,18 @@ mock_C_EncryptInit (CK_SESSION_HANDLE session,
 {
 	Session *sess;
 
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate an active encryption operation */
+	if (mechanism == NULL) {
+		if (sess->crypto_method & CKF_ENCRYPT) {
+			sess->crypto_method &= ~CKF_ENCRYPT;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
 
 	/* Starting an operation, cancels any previous one */
 	sess->finding = CK_FALSE;
@@ -1930,7 +1939,7 @@ mock_C_EncryptInit (CK_SESSION_HANDLE session,
 	if (key != MOCK_PUBLIC_KEY_CAPITALIZE)
 		return CKR_KEY_HANDLE_INVALID;
 
-	sess->crypto_method = CKA_ENCRYPT;
+	sess->crypto_method |= CKF_ENCRYPT;
 	sess->crypto_mechanism = CKM_MOCK_CAPITALIZE;
 	sess->crypto_key = key;
 	return CKR_OK;
@@ -1961,9 +1970,15 @@ mock_C_Encrypt (CK_SESSION_HANDLE session,
                 CK_ULONG_PTR encrypted_data_len)
 {
 	CK_ULONG last = 0;
+	Session *sess;
 	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
 	rv = mock_C_EncryptUpdate (session, data, data_len, encrypted_data, encrypted_data_len);
-	if (rv == CKR_OK)
+	if (rv == CKR_OK && sess->crypto_final)
 		rv = mock_C_EncryptFinal (session, encrypted_data, &last);
 	return rv;
 }
@@ -2010,9 +2025,10 @@ mock_C_EncryptUpdate (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 
+	sess->crypto_final = false;
 	if (!sess->crypto_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->crypto_method != CKA_ENCRYPT)
+	if (!(sess->crypto_method & CKF_ENCRYPT))
 		return CKR_OPERATION_NOT_INITIALIZED;
 	assert (sess->crypto_mechanism == CKM_MOCK_CAPITALIZE);
 	assert (sess->crypto_key == MOCK_PUBLIC_KEY_CAPITALIZE);
@@ -2030,6 +2046,7 @@ mock_C_EncryptUpdate (CK_SESSION_HANDLE session,
 	for (i = 0; i < part_len; ++i)
 		encrypted_part[i] = p11_ascii_toupper (part[i]);
 	*encrypted_part_len = part_len;
+	sess->crypto_final = true;
 	return CKR_OK;
 }
 
@@ -2073,12 +2090,12 @@ mock_C_EncryptFinal (CK_SESSION_HANDLE session,
 
 	if (!sess->crypto_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->crypto_method != CKA_ENCRYPT)
+	if (!(sess->crypto_method & CKF_ENCRYPT))
 		return CKR_OPERATION_NOT_INITIALIZED;
 
 	*last_encrypted_part_len = 0;
 
-	sess->crypto_method = 0;
+	sess->crypto_method &= ~CKF_ENCRYPT;
 	sess->crypto_mechanism = 0;
 	sess->crypto_key = 0;
 	return CKR_OK;
@@ -2112,11 +2129,18 @@ mock_C_DecryptInit (CK_SESSION_HANDLE session,
 {
 	Session *sess;
 
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate an active decryption operation */
+	if (mechanism == NULL) {
+		if (sess->crypto_method & CKF_DECRYPT) {
+			sess->crypto_method &= ~CKF_DECRYPT;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
 
 	/* Starting an operation, cancels any previous one */
 	sess->finding = false;
@@ -2126,7 +2150,7 @@ mock_C_DecryptInit (CK_SESSION_HANDLE session,
 	if (key != MOCK_PRIVATE_KEY_CAPITALIZE)
 		return CKR_KEY_HANDLE_INVALID;
 
-	sess->crypto_method = CKA_DECRYPT;
+	sess->crypto_method |= CKF_DECRYPT;
 	sess->crypto_mechanism = CKM_MOCK_CAPITALIZE;
 	sess->crypto_key = key;
 	return CKR_OK;
@@ -2157,9 +2181,14 @@ mock_C_Decrypt (CK_SESSION_HANDLE session,
                 CK_ULONG_PTR data_len)
 {
 	CK_ULONG last = 0;
+	Session *sess;
 	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
 	rv = mock_C_DecryptUpdate (session, encrypted_data, encrypted_data_len, data, data_len);
-	if (rv == CKR_OK)
+	if (rv == CKR_OK && sess->crypto_final)
 		rv = mock_C_DecryptFinal (session, data, &last);
 	return rv;
 }
@@ -2206,9 +2235,10 @@ mock_C_DecryptUpdate (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 
+	sess->crypto_final = false;
 	if (!sess->crypto_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->crypto_method != CKA_DECRYPT)
+	if (!(sess->crypto_method & CKF_DECRYPT))
 		return CKR_OPERATION_NOT_INITIALIZED;
 	assert (sess->crypto_mechanism == CKM_MOCK_CAPITALIZE);
 	assert (sess->crypto_key == MOCK_PRIVATE_KEY_CAPITALIZE);
@@ -2226,6 +2256,7 @@ mock_C_DecryptUpdate (CK_SESSION_HANDLE session,
 	for (i = 0; i < encrypted_part_len; ++i)
 		part[i] = p11_ascii_tolower (encrypted_part[i]);
 	*part_len = encrypted_part_len;
+	sess->crypto_final = true;
 	return CKR_OK;
 }
 
@@ -2269,12 +2300,12 @@ mock_C_DecryptFinal (CK_SESSION_HANDLE session,
 
 	if (!sess->crypto_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->crypto_method != CKA_DECRYPT)
+	if (!(sess->crypto_method & CKF_DECRYPT))
 		return CKR_OPERATION_NOT_INITIALIZED;
 
 	*last_part_len = 0;
 
-	sess->crypto_method = 0;
+	sess->crypto_method &= ~CKF_DECRYPT;
 	sess->crypto_mechanism = 0;
 	sess->crypto_key = 0;
 
@@ -2308,11 +2339,18 @@ mock_C_DigestInit (CK_SESSION_HANDLE session,
 {
 	Session *sess;
 
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate an active message-digesting operation */
+	if (mechanism == NULL) {
+		if (sess->hash_method == CKF_DIGEST) {
+			sess->hash_method = 0;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
 
 	/* Starting an operation, cancels any previous one */
 	sess->finding = false;
@@ -2321,7 +2359,7 @@ mock_C_DigestInit (CK_SESSION_HANDLE session,
 		return CKR_MECHANISM_INVALID;
 
 	sess->hash_mechanism = CKM_MOCK_COUNT;
-	sess->hash_method = (CK_ULONG)-1;
+	sess->hash_method = CKF_DIGEST;
 	sess->hash_count = 0;
 	sess->hash_key = 0;
 	return CKR_OK;
@@ -2349,13 +2387,23 @@ mock_C_Digest (CK_SESSION_HANDLE session,
                CK_BYTE_PTR digest,
                CK_ULONG_PTR digest_len)
 {
+	Session *sess;
 	CK_RV rv;
 
 	return_val_if_fail (digest_len, CKR_ARGUMENTS_BAD);
 
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
 	rv = mock_C_DigestUpdate (session, data, data_len);
-	if (rv == CKR_OK)
+	if (rv == CKR_OK) {
 		rv = mock_C_DigestFinal (session, digest, digest_len);
+		if (sess->hash_method == CKF_DIGEST) {
+			/* not finalized -- reset the state */
+			sess->hash_count = 0;
+		}
+	}
 	return rv;
 }
 
@@ -2397,7 +2445,7 @@ mock_C_DigestUpdate (CK_SESSION_HANDLE session,
 
 	if (!sess->hash_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->hash_method != (CK_ULONG)-1)
+	if (sess->hash_method != CKF_DIGEST)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	assert (sess->hash_mechanism == CKM_MOCK_COUNT);
 
@@ -2434,7 +2482,7 @@ mock_C_DigestKey (CK_SESSION_HANDLE session,
 
 	if (!sess->hash_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->hash_method != (CK_ULONG)-1)
+	if (sess->hash_method != CKF_DIGEST)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	assert (sess->hash_mechanism == CKM_MOCK_COUNT);
 
@@ -2474,7 +2522,7 @@ mock_C_DigestFinal (CK_SESSION_HANDLE session,
 
 	if (!sess->hash_mechanism)
 		return CKR_OPERATION_NOT_INITIALIZED;
-	if (sess->hash_method != (CK_ULONG)-1)
+	if (sess->hash_method != CKF_DIGEST)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	assert (sess->hash_mechanism == CKM_MOCK_COUNT);
 
@@ -2522,7 +2570,7 @@ mock_X_DigestFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
 
 static CK_RV
 prefix_mechanism_init (CK_SESSION_HANDLE session,
-                       CK_ATTRIBUTE_TYPE method,
+                       CK_FLAGS method,
                        CK_MECHANISM_PTR mechanism,
                        CK_OBJECT_HANDLE key)
 {
@@ -2540,10 +2588,10 @@ prefix_mechanism_init (CK_SESSION_HANDLE session,
 
 	if (mechanism->mechanism != CKM_MOCK_PREFIX)
 		return CKR_MECHANISM_INVALID;
-	if (method == CKA_SIGN || method == CKA_SIGN_RECOVER) {
+	if (method == CKF_SIGN || method == CKF_SIGN_RECOVER) {
 		if (key != MOCK_PRIVATE_KEY_PREFIX)
 			return CKR_KEY_HANDLE_INVALID;
-	} else if (method == CKA_VERIFY || method == CKA_VERIFY_RECOVER) {
+	} else if (method == CKF_VERIFY || method == CKF_VERIFY_RECOVER) {
 		if (key != MOCK_PUBLIC_KEY_PREFIX)
 			return CKR_KEY_HANDLE_INVALID;
 	} else {
@@ -2583,7 +2631,7 @@ prefix_mechanism_init (CK_SESSION_HANDLE session,
 	sess->n_sign_prefix = length;
 
 	/* The private key has CKA_ALWAYS_AUTHENTICATE above */
-	if (method == CKA_SIGN || method == CKA_SIGN_RECOVER)
+	if (method == CKF_SIGN || method == CKF_SIGN_RECOVER)
 		sess->want_context_login = true;
 
 	return CKR_OK;
@@ -2595,8 +2643,22 @@ mock_C_SignInit (CK_SESSION_HANDLE session,
                  CK_MECHANISM_PTR mechanism,
                  CK_OBJECT_HANDLE key)
 {
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-	return prefix_mechanism_init (session, CKA_SIGN, mechanism, key);
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate an active signature operation */
+	if (mechanism == NULL) {
+		if (sess->hash_method == CKF_SIGN) {
+			sess->hash_method = 0;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
+
+	return prefix_mechanism_init (session, CKF_SIGN, mechanism, key);
 }
 
 CK_RV
@@ -2623,11 +2685,22 @@ mock_C_Sign (CK_SESSION_HANDLE session,
              CK_BYTE_PTR signature,
              CK_ULONG_PTR signature_len)
 {
+	Session *sess;
 	CK_RV rv;
 
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
 	rv = mock_C_SignUpdate (session, data, data_len);
-	if (rv == CKR_OK)
+
+	if (rv == CKR_OK) {
 		rv = mock_C_SignFinal (session, signature, signature_len);
+		if (sess->hash_method == CKF_SIGN) {
+			/* not finalized -- reset the state */
+			sess->hash_count = 0;
+		}
+	}
 
 	return rv;
 }
@@ -2668,7 +2741,7 @@ mock_C_SignUpdate (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 	if (sess->hash_mechanism != CKM_MOCK_PREFIX ||
-	    sess->hash_method != CKA_SIGN)
+	    sess->hash_method != CKF_SIGN)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
 		return CKR_USER_NOT_LOGGED_IN;
@@ -2714,7 +2787,7 @@ mock_C_SignFinal (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 	if (sess->hash_mechanism != CKM_MOCK_PREFIX ||
-	    sess->hash_method != CKA_SIGN)
+	    sess->hash_method != CKF_SIGN)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
 		return CKR_USER_NOT_LOGGED_IN;
@@ -2770,8 +2843,23 @@ mock_C_SignRecoverInit (CK_SESSION_HANDLE session,
                         CK_MECHANISM_PTR mechanism,
                         CK_OBJECT_HANDLE key)
 {
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-	return prefix_mechanism_init (session, CKA_SIGN_RECOVER, mechanism, key);
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate
+	 * an active signature with data recovery operation */
+	if (mechanism == NULL) {
+		if (sess->hash_method == CKF_SIGN_RECOVER) {
+			sess->hash_method = 0;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
+
+	return prefix_mechanism_init (session, CKF_SIGN_RECOVER, mechanism, key);
 }
 
 CK_RV
@@ -2807,7 +2895,7 @@ mock_C_SignRecover (CK_SESSION_HANDLE session,
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
-	if (sess->hash_method != CKA_SIGN_RECOVER ||
+	if (sess->hash_method != CKF_SIGN_RECOVER ||
 	    sess->hash_mechanism != CKM_MOCK_PREFIX)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
@@ -2867,8 +2955,22 @@ mock_C_VerifyInit (CK_SESSION_HANDLE session,
                    CK_MECHANISM_PTR mechanism,
                    CK_OBJECT_HANDLE key)
 {
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-	return prefix_mechanism_init (session, CKA_VERIFY, mechanism, key);
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate an active verification operation */
+	if (mechanism == NULL) {
+		if (sess->hash_method == CKF_VERIFY) {
+			sess->hash_method = 0;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
+
+	return prefix_mechanism_init (session, CKF_VERIFY, mechanism, key);
 }
 
 CK_RV
@@ -2936,7 +3038,7 @@ mock_C_VerifyUpdate (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 	if (sess->hash_mechanism != CKM_MOCK_PREFIX ||
-	    sess->hash_method != CKA_VERIFY)
+	    sess->hash_method != CKF_VERIFY)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
 		return CKR_USER_NOT_LOGGED_IN;
@@ -2971,6 +3073,7 @@ mock_C_VerifyFinal (CK_SESSION_HANDLE session,
 	Session *sess;
 	CK_ULONG length;
 	int len;
+	CK_RV rv = CKR_OK;
 
 	return_val_if_fail (signature, CKR_ARGUMENTS_BAD);
 
@@ -2978,7 +3081,7 @@ mock_C_VerifyFinal (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 	if (sess->hash_mechanism != CKM_MOCK_PREFIX ||
-	    sess->hash_method != CKA_VERIFY)
+	    sess->hash_method != CKF_VERIFY)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
 		return CKR_USER_NOT_LOGGED_IN;
@@ -2991,14 +3094,14 @@ mock_C_VerifyFinal (CK_SESSION_HANDLE session,
 
 	if (memcmp (signature, sess->sign_prefix, sess->n_sign_prefix) != 0 ||
 	    memcmp (signature + sess->n_sign_prefix, buffer, len) != 0)
-		return CKR_SIGNATURE_INVALID;
+		rv = CKR_SIGNATURE_INVALID;
 
 	sess->hash_mechanism = 0;
 	sess->hash_method = 0;
 	sess->hash_count = 0;
 	sess->hash_key = 0;
 
-	return CKR_OK;
+	return rv;
 }
 
 CK_RV
@@ -3023,8 +3126,23 @@ mock_C_VerifyRecoverInit (CK_SESSION_HANDLE session,
                           CK_MECHANISM_PTR mechanism,
                           CK_OBJECT_HANDLE key)
 {
-	return_val_if_fail (mechanism != NULL, CKR_ARGUMENTS_BAD);
-	return prefix_mechanism_init (session, CKA_VERIFY_RECOVER, mechanism, key);
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	/* can be called with pMechanism set to NULL_PTR to terminate
+	 * an active verification with data recovery operation */
+	if (mechanism == NULL) {
+		if (sess->hash_method == CKF_VERIFY_RECOVER) {
+			sess->hash_method = 0;
+			return CKR_OK;
+		} else
+			return CKR_ARGUMENTS_BAD;
+	}
+
+	return prefix_mechanism_init (session, CKF_VERIFY_RECOVER, mechanism, key);
 }
 
 CK_RV
@@ -3060,7 +3178,7 @@ mock_C_VerifyRecover (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 	if (sess->hash_mechanism != CKM_MOCK_PREFIX ||
-	    sess->hash_method != CKA_VERIFY_RECOVER)
+	    sess->hash_method != CKF_VERIFY_RECOVER)
 		return CKR_OPERATION_NOT_INITIALIZED;
 	if (sess->want_context_login)
 		return CKR_USER_NOT_LOGGED_IN;
