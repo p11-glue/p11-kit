@@ -421,11 +421,16 @@ proto_write_mechanism (p11_rpc_message *msg,
                        CK_MECHANISM_PTR mech)
 {
 	assert (msg != NULL);
-	assert (mech != NULL);
 	assert (msg->output != NULL);
 
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "M"));
+
+	/* This case is valid for C_*Init () functions to cancel operation */
+	if (mech == NULL) {
+		p11_rpc_buffer_add_uint32 (msg->output, 0);
+		return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
+	}
 
 	if (!p11_rpc_mechanism_is_supported (mech->mechanism))
 		return CKR_MECHANISM_INVALID;
@@ -624,8 +629,6 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_MECHANISM(val) \
-	if (val == NULL) \
-		{ _ret = CKR_ARGUMENTS_BAD; goto _cleanup; } \
 	_ret = proto_write_mechanism (&_msg, val); \
 	if (_ret != CKR_OK) goto _cleanup;
 

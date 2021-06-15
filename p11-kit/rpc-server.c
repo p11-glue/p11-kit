@@ -426,7 +426,7 @@ proto_read_null_string (p11_rpc_message *msg,
 
 static CK_RV
 proto_read_mechanism (p11_rpc_message *msg,
-                      CK_MECHANISM_PTR mech)
+                      CK_MECHANISM_PTR *mech)
 {
 	size_t offset;
 	CK_MECHANISM temp;
@@ -446,19 +446,24 @@ proto_read_mechanism (p11_rpc_message *msg,
 		return PARSE_ERROR;
 	}
 
-	mech->mechanism = temp.mechanism;
+	if (temp.mechanism == 0) {
+		*mech = NULL;
+		return CKR_OK;
+	}
+
+	(*mech)->mechanism = temp.mechanism;
 
 	/* The mechanism doesn't require parameter */
 	if (temp.ulParameterLen == 0) {
-		mech->pParameter = NULL;
-		mech->ulParameterLen = 0;
+		(*mech)->pParameter = NULL;
+		(*mech)->ulParameterLen = 0;
 		msg->parsed = offset;
 		return CKR_OK;
 	}
 
 	/* Actually retrieve the parameter */
-	mech->pParameter = p11_rpc_message_alloc_extra (msg, temp.ulParameterLen);
-	if (!p11_rpc_buffer_get_mechanism (msg->input, &msg->parsed, mech))
+	(*mech)->pParameter = p11_rpc_message_alloc_extra (msg, temp.ulParameterLen);
+	if (!p11_rpc_buffer_get_mechanism (msg->input, &msg->parsed, *mech))
 		return PARSE_ERROR;
 
 	assert (msg->parsed == offset);
@@ -1180,14 +1185,15 @@ rpc_C_EncryptInit (CK_X_FUNCTION_LIST *self,
                    p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (EncryptInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 
 }
@@ -1251,14 +1257,15 @@ rpc_C_DecryptInit (CK_X_FUNCTION_LIST *self,
                     p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (DecryptInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 }
 
@@ -1321,12 +1328,13 @@ rpc_C_DigestInit (CK_X_FUNCTION_LIST *self,
                   p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 
 	BEGIN_CALL (DigestInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
-	PROCESS_CALL ((self, session, &mechanism));
+	PROCESS_CALL ((self, session, mechanism));
 	END_CALL;
 }
 
@@ -1399,14 +1407,15 @@ rpc_C_SignInit (CK_X_FUNCTION_LIST *self,
                 p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (SignInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 }
 
@@ -1466,14 +1475,15 @@ rpc_C_SignRecoverInit (CK_X_FUNCTION_LIST *self,
                        p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (SignRecoverInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 }
 
@@ -1501,14 +1511,15 @@ rpc_C_VerifyInit (CK_X_FUNCTION_LIST *self,
                   p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (VerifyInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 }
 
@@ -1565,14 +1576,15 @@ rpc_C_VerifyRecoverInit (CK_X_FUNCTION_LIST *self,
                          p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE key;
 
 	BEGIN_CALL (VerifyRecoverInit);
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ULONG (key);
-	PROCESS_CALL ((self, session, &mechanism, key));
+	PROCESS_CALL ((self, session, mechanism, key));
 	END_CALL;
 }
 
@@ -1676,7 +1688,8 @@ rpc_C_GenerateKey (CK_X_FUNCTION_LIST *self,
                    p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_ATTRIBUTE_PTR template;
 	CK_ULONG count;
 	CK_OBJECT_HANDLE key;
@@ -1685,7 +1698,7 @@ rpc_C_GenerateKey (CK_X_FUNCTION_LIST *self,
 		IN_ULONG (session);
 		IN_MECHANISM (mechanism);
 		IN_ATTRIBUTE_ARRAY (template, count);
-	PROCESS_CALL ((self, session, &mechanism, template, count, &key));
+	PROCESS_CALL ((self, session, mechanism, template, count, &key));
 		OUT_ULONG (key);
 	END_CALL;
 }
@@ -1695,7 +1708,8 @@ rpc_C_GenerateKeyPair (CK_X_FUNCTION_LIST *self,
                        p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_ATTRIBUTE_PTR public_key_template;
 	CK_ULONG public_key_attribute_count;
 	CK_ATTRIBUTE_PTR private_key_template;
@@ -1708,7 +1722,8 @@ rpc_C_GenerateKeyPair (CK_X_FUNCTION_LIST *self,
 		IN_MECHANISM (mechanism);
 		IN_ATTRIBUTE_ARRAY (public_key_template, public_key_attribute_count);
 		IN_ATTRIBUTE_ARRAY (private_key_template, private_key_attribute_count);
-	PROCESS_CALL ((self, session, &mechanism, public_key_template, public_key_attribute_count, private_key_template, private_key_attribute_count, &public_key, &private_key));
+	PROCESS_CALL ((self, session, mechanism, public_key_template, public_key_attribute_count,
+	               private_key_template, private_key_attribute_count, &public_key, &private_key));
 		OUT_ULONG (public_key);
 		OUT_ULONG (private_key);
 	END_CALL;
@@ -1719,7 +1734,8 @@ rpc_C_WrapKey (CK_X_FUNCTION_LIST *self,
                p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE wrapping_key;
 	CK_OBJECT_HANDLE key;
 	CK_BYTE_PTR wrapped_key;
@@ -1731,7 +1747,7 @@ rpc_C_WrapKey (CK_X_FUNCTION_LIST *self,
 		IN_ULONG (wrapping_key);
 		IN_ULONG (key);
 		IN_BYTE_BUFFER (wrapped_key, wrapped_key_len);
-	PROCESS_CALL ((self, session, &mechanism, wrapping_key, key, wrapped_key, &wrapped_key_len));
+	PROCESS_CALL ((self, session, mechanism, wrapping_key, key, wrapped_key, &wrapped_key_len));
 		OUT_BYTE_ARRAY (wrapped_key, wrapped_key_len);
 	END_CALL;
 }
@@ -1741,7 +1757,8 @@ rpc_C_UnwrapKey (CK_X_FUNCTION_LIST *self,
                  p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE unwrapping_key;
 	CK_BYTE_PTR wrapped_key;
 	CK_ULONG wrapped_key_len;
@@ -1755,7 +1772,7 @@ rpc_C_UnwrapKey (CK_X_FUNCTION_LIST *self,
 		IN_ULONG (unwrapping_key);
 		IN_BYTE_ARRAY (wrapped_key, wrapped_key_len);
 		IN_ATTRIBUTE_ARRAY (template, attribute_count);
-	PROCESS_CALL ((self, session, &mechanism, unwrapping_key, wrapped_key, wrapped_key_len, template, attribute_count, &key));
+	PROCESS_CALL ((self, session, mechanism, unwrapping_key, wrapped_key, wrapped_key_len, template, attribute_count, &key));
 		OUT_ULONG (key);
 	END_CALL;
 }
@@ -1765,7 +1782,8 @@ rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
                  p11_rpc_message *msg)
 {
 	CK_SESSION_HANDLE session;
-	CK_MECHANISM mechanism;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
 	CK_OBJECT_HANDLE base_key;
 	CK_ATTRIBUTE_PTR template;
 	CK_ULONG attribute_count;
@@ -1776,7 +1794,7 @@ rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
 		IN_MECHANISM (mechanism);
 		IN_ULONG (base_key);
 		IN_ATTRIBUTE_ARRAY (template, attribute_count);
-	PROCESS_CALL ((self, session, &mechanism, base_key, template, attribute_count, &key));
+	PROCESS_CALL ((self, session, mechanism, base_key, template, attribute_count, &key));
 		OUT_ULONG (key);
 	END_CALL;
 }

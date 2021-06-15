@@ -466,11 +466,15 @@ log_mechanism (p11_buffer *buf,
 	p11_buffer_add (buf, name, -1);
 	p11_buffer_add (buf, " = {\n", 5);
 	p11_buffer_add (buf, "\tmechanism: ", -1);
-	log_CKM (buf, mech->mechanism);
-	p11_buffer_add (buf, "\n\tpParameter: ", -1);
-	snprintf (temp, sizeof (temp), "(%lu) ", mech->ulParameterLen);
-	p11_buffer_add (buf, temp, -1);
-	log_some_bytes (buf, mech->pParameter, mech->ulParameterLen);
+	if (mech != NULL) {
+		log_CKM (buf, mech->mechanism);
+		p11_buffer_add (buf, "\n\tpParameter: ", -1);
+		snprintf (temp, sizeof (temp), "(%lu) ", mech->ulParameterLen);
+		p11_buffer_add (buf, temp, -1);
+		log_some_bytes (buf, mech->pParameter, mech->ulParameterLen);
+	} else {
+		p11_buffer_add (buf, "NULL", 4);
+	}
 	p11_buffer_add (buf, "\n      }\n", -1);
 }
 
