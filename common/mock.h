@@ -45,6 +45,7 @@ enum {
 	MOCK_PUBLIC_KEY_CAPITALIZE = 4,
 	MOCK_PRIVATE_KEY_PREFIX = 5,
 	MOCK_PUBLIC_KEY_PREFIX = 6,
+	MOCK_PROFILE_OBJECT = 7,
 
 	/*
 	 * CKM_MOCK_CAPITALIZE (encrypt/decrypt)
@@ -124,6 +125,8 @@ void         mock_module_enumerate_objects               (CK_SESSION_HANDLE sess
 
 void         mock_module_add_object                      (CK_SLOT_ID slot_id,
                                                           const CK_ATTRIBUTE *attrs);
+void         mock_module_add_profile                     (CK_SLOT_ID slot_id,
+                                                          CK_PROFILE_ID profile_id);
 
 void         mock_module_reset                           (void);
 

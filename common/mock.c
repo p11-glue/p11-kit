@@ -305,6 +305,29 @@ module_reset_objects (CK_SLOT_ID slot_id)
 	}
 }
 
+void
+mock_module_add_profile (CK_SLOT_ID slot_id, CK_PROFILE_ID profile_id)
+{
+	return_if_fail (slot_id == MOCK_SLOT_ONE_ID);
+
+	if (!the_objects) {
+		the_objects = p11_dict_new (p11_dict_direct_hash,
+		                            p11_dict_direct_equal,
+		                            NULL, p11_attrs_free);
+		return_if_fail (the_objects != NULL);
+	}
+
+	{
+		CK_OBJECT_CLASS klass = CKO_PROFILE;
+		CK_ATTRIBUTE attrs[] = {
+			{ CKA_CLASS, &klass, sizeof (klass) },
+			{ CKA_PROFILE_ID, &profile_id, sizeof(profile_id) },
+			{ CKA_INVALID, NULL, 0 },
+		};
+		p11_dict_set (the_objects, handle_to_pointer (MOCK_PROFILE_OBJECT), p11_attrs_dup (attrs));
+	}
+}
+
 static void
 module_finalize (void)
 {
