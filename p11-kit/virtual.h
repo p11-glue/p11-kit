@@ -59,6 +59,11 @@ void                    p11_virtual_uninit     (p11_virtual *virt);
 CK_FUNCTION_LIST *      p11_virtual_wrap       (p11_virtual *virt,
                                                 p11_destroyer destroyer);
 
+CK_FUNCTION_LIST *      p11_virtual_wrap_version
+                                               (p11_virtual *virt,
+                                                p11_destroyer destroyer,
+                                                const CK_VERSION *version);
+
 bool                    p11_virtual_is_wrapper (CK_FUNCTION_LIST *module);
 
 void                    p11_virtual_unwrap     (CK_FUNCTION_LIST *module);

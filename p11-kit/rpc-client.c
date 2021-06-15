@@ -305,7 +305,6 @@ proto_read_byte_array (p11_rpc_message *msg,
 	uint32_t length;
 	size_t vlen;
 
-	assert (len != NULL);
 	assert (msg != NULL);
 	assert (msg->input != NULL);
 
@@ -321,7 +320,8 @@ proto_read_byte_array (p11_rpc_message *msg,
 		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &length))
 			return PARSE_ERROR;
 
-		*len = length;
+		if (len != NULL)
+			*len = length;
 
 		if (arr)
 			return CKR_BUFFER_TOO_SMALL;
@@ -333,7 +333,8 @@ proto_read_byte_array (p11_rpc_message *msg,
 	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &val, &vlen))
 		return PARSE_ERROR;
 
-	*len = vlen;
+	if (len != NULL)
+		*len = vlen;
 
 	/* Just asking us for size */
 	if (!arr)
@@ -595,6 +596,10 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 	if (!p11_rpc_message_write_byte_buffer (&_msg, arr ? (*len > 0 ? *len : (uint32_t)-1) : 0)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
+#define IN_BYTE_BUFFER_NULL(arr, len) \
+	if (!p11_rpc_message_write_byte_buffer_null (&_msg, len)) \
+		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
+
 #define IN_BYTE_ARRAY(arr, len) \
 	if (len != 0 && arr == NULL) \
 		{ _ret = CKR_ARGUMENTS_BAD; goto _cleanup; } \
@@ -648,6 +653,10 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		_ret = CKR_ARGUMENTS_BAD; \
 	if (_ret == CKR_OK) \
 		_ret = proto_read_byte_array (&_msg, (arr), (len), *(len));
+
+#define OUT_BYTE_ARRAY_NULL(arr, len)  \
+	_ret = proto_read_byte_array (&_msg, (arr), (len), (len) ? *(len) : 0); \
+	if (_ret != CKR_OK) goto _cleanup;
 
 #define OUT_ULONG_ARRAY(a, len) \
 	if (len == NULL) \
@@ -1883,6 +1892,365 @@ rpc_C_GenerateRandom (CK_X_FUNCTION_LIST *self,
 	END_CALL;
 }
 
+static CK_RV
+rpc_C_LoginUser (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE session,
+                 CK_USER_TYPE user_type,
+                 CK_UTF8CHAR_PTR pin,
+                 CK_ULONG pin_len,
+                 CK_UTF8CHAR_PTR username,
+                 CK_ULONG username_len)
+{
+	BEGIN_CALL_OR (C_LoginUser, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_ULONG (user_type)
+		IN_BYTE_ARRAY (pin, pin_len)
+		IN_BYTE_ARRAY (username, username_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_SessionCancel (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE session,
+                     CK_FLAGS flags)
+{
+	BEGIN_CALL_OR (C_SessionCancel, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_ULONG (flags)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageEncryptInit (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_MECHANISM_PTR mechanism,
+                          CK_OBJECT_HANDLE key)
+{
+	BEGIN_CALL_OR (C_MessageEncryptInit, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_MECHANISM (mechanism)
+		IN_ULONG (key)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_EncryptMessage (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE session,
+                      CK_VOID_PTR parameter,
+                      CK_ULONG parameter_len,
+                      CK_BYTE_PTR associated_data,
+                      CK_ULONG associated_data_len,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG plaintext_len,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG_PTR ciphertext_len)
+{
+	return_val_if_fail (ciphertext_len, CKR_ARGUMENTS_BAD);
+
+	BEGIN_CALL_OR (C_EncryptMessage, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+		IN_BYTE_ARRAY (plaintext, plaintext_len)
+		IN_BYTE_BUFFER (ciphertext, ciphertext_len);
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY (ciphertext, ciphertext_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_EncryptMessageBegin (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session,
+                           CK_VOID_PTR parameter,
+                           CK_ULONG parameter_len,
+                           CK_BYTE_PTR associated_data,
+                           CK_ULONG associated_data_len)
+{
+	BEGIN_CALL_OR (C_EncryptMessageBegin, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_EncryptMessageNext (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_VOID_PTR parameter,
+                          CK_ULONG parameter_len,
+                          CK_BYTE_PTR plaintext_part,
+                          CK_ULONG plaintext_part_len,
+                          CK_BYTE_PTR ciphertext_part,
+                          CK_ULONG_PTR ciphertext_part_len,
+                          CK_FLAGS flags)
+{
+	BEGIN_CALL_OR (C_EncryptMessageNext, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (plaintext_part, plaintext_part_len)
+		IN_BYTE_BUFFER (ciphertext_part, ciphertext_part_len);
+		IN_ULONG (flags)
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY (ciphertext_part, ciphertext_part_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageEncryptFinal (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session)
+{
+	BEGIN_CALL_OR (C_MessageEncryptFinal, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageDecryptInit (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_MECHANISM_PTR mechanism,
+                          CK_OBJECT_HANDLE key)
+{
+	BEGIN_CALL_OR (C_MessageDecryptInit, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_MECHANISM (mechanism)
+		IN_ULONG (key)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_DecryptMessage (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE session,
+                      CK_VOID_PTR parameter,
+                      CK_ULONG parameter_len,
+                      CK_BYTE_PTR associated_data,
+                      CK_ULONG associated_data_len,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG ciphertext_len,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG_PTR plaintext_len)
+{
+	return_val_if_fail (plaintext_len, CKR_ARGUMENTS_BAD);
+
+	BEGIN_CALL_OR (C_DecryptMessage, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+		IN_BYTE_ARRAY (ciphertext, ciphertext_len)
+		IN_BYTE_BUFFER (plaintext, plaintext_len);
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY (plaintext, plaintext_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_DecryptMessageBegin (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session,
+                           CK_VOID_PTR parameter,
+                           CK_ULONG parameter_len,
+                           CK_BYTE_PTR associated_data,
+                           CK_ULONG associated_data_len)
+{
+	BEGIN_CALL_OR (C_DecryptMessageBegin, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_DecryptMessageNext (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_VOID_PTR parameter,
+                          CK_ULONG parameter_len,
+                          CK_BYTE_PTR ciphertext_part,
+                          CK_ULONG ciphertext_part_len,
+                          CK_BYTE_PTR plaintext_part,
+                          CK_ULONG_PTR plaintext_part_len,
+                          CK_FLAGS flags)
+{
+	BEGIN_CALL_OR (C_DecryptMessageNext, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (ciphertext_part, ciphertext_part_len)
+		IN_BYTE_BUFFER (plaintext_part, plaintext_part_len);
+		IN_ULONG (flags)
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY (plaintext_part, plaintext_part_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageDecryptFinal (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session)
+{
+	BEGIN_CALL_OR (C_MessageDecryptFinal, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageSignInit (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE session,
+                       CK_MECHANISM_PTR mechanism,
+                       CK_OBJECT_HANDLE key)
+{
+	BEGIN_CALL_OR (C_MessageSignInit, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_MECHANISM (mechanism)
+		IN_ULONG (key)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_SignMessage (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE session,
+                   CK_VOID_PTR parameter,
+                   CK_ULONG parameter_len,
+                   CK_BYTE_PTR data,
+                   CK_ULONG data_len,
+                   CK_BYTE_PTR signature,
+                   CK_ULONG_PTR signature_len)
+{
+	return_val_if_fail (signature_len, CKR_ARGUMENTS_BAD);
+
+	BEGIN_CALL_OR (C_SignMessage, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (data, data_len)
+		IN_BYTE_BUFFER (signature, signature_len);
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY (signature, signature_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_SignMessageBegin (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE session,
+                        CK_VOID_PTR parameter,
+                        CK_ULONG parameter_len)
+{
+	BEGIN_CALL_OR (C_SignMessageBegin, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_SignMessageNext (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE session,
+                       CK_VOID_PTR parameter,
+                       CK_ULONG parameter_len,
+                       CK_BYTE_PTR data,
+                       CK_ULONG data_len,
+                       CK_BYTE_PTR signature,
+                       CK_ULONG_PTR signature_len)
+{
+	BEGIN_CALL_OR (C_SignMessageNext, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (data, data_len)
+		IN_BYTE_BUFFER_NULL (signature, signature_len);
+	PROCESS_CALL;
+		OUT_BYTE_ARRAY_NULL (signature, signature_len)
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageSignFinal (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE session)
+{
+	BEGIN_CALL_OR (C_MessageSignFinal, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageVerifyInit (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE session,
+                         CK_MECHANISM_PTR mechanism,
+                         CK_OBJECT_HANDLE key)
+{
+	BEGIN_CALL_OR (C_MessageVerifyInit, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_MECHANISM (mechanism)
+		IN_ULONG (key)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifyMessage (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE session,
+                     CK_VOID_PTR parameter,
+                     CK_ULONG parameter_len,
+                     CK_BYTE_PTR data,
+                     CK_ULONG data_len,
+                     CK_BYTE_PTR signature,
+                     CK_ULONG signature_len)
+{
+	BEGIN_CALL_OR (C_VerifyMessage, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (data, data_len)
+		IN_BYTE_ARRAY (signature, signature_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifyMessageBegin (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_VOID_PTR parameter,
+                          CK_ULONG parameter_len)
+{
+	BEGIN_CALL_OR (C_VerifyMessageBegin, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifyMessageNext (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE session,
+                         CK_VOID_PTR parameter,
+                         CK_ULONG parameter_len,
+                         CK_BYTE_PTR data,
+                         CK_ULONG data_len,
+                         CK_BYTE_PTR signature,
+                         CK_ULONG signature_len)
+{
+	BEGIN_CALL_OR (C_VerifyMessageNext, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+		IN_BYTE_ARRAY (parameter, parameter_len)
+		IN_BYTE_ARRAY (data, data_len)
+		IN_BYTE_ARRAY (signature, signature_len)
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_MessageVerifyFinal (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session)
+{
+	BEGIN_CALL_OR (C_MessageVerifyFinal, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session)
+	PROCESS_CALL;
+	END_CALL;
+}
+
 static CK_X_FUNCTION_LIST rpc_functions = {
 	{ -1, -1 },
 	rpc_C_Initialize,
@@ -1950,6 +2318,29 @@ static CK_X_FUNCTION_LIST rpc_functions = {
 	rpc_C_SeedRandom,
 	rpc_C_GenerateRandom,
 	rpc_C_WaitForSlotEvent,
+	/* PKCS #11 3.0 */
+	rpc_C_LoginUser,
+	rpc_C_SessionCancel,
+	rpc_C_MessageEncryptInit,
+	rpc_C_EncryptMessage,
+	rpc_C_EncryptMessageBegin,
+	rpc_C_EncryptMessageNext,
+	rpc_C_MessageEncryptFinal,
+	rpc_C_MessageDecryptInit,
+	rpc_C_DecryptMessage,
+	rpc_C_DecryptMessageBegin,
+	rpc_C_DecryptMessageNext,
+	rpc_C_MessageDecryptFinal,
+	rpc_C_MessageSignInit,
+	rpc_C_SignMessage,
+	rpc_C_SignMessageBegin,
+	rpc_C_SignMessageNext,
+	rpc_C_MessageSignFinal,
+	rpc_C_MessageVerifyInit,
+	rpc_C_VerifyMessage,
+	rpc_C_VerifyMessageBegin,
+	rpc_C_VerifyMessageNext,
+	rpc_C_MessageVerifyFinal
 };
 
 static void

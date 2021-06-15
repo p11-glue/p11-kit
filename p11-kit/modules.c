@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2008 Stefan Walter
  * Copyright (C) 2011 Collabora Ltd.
- * Copyright (C) 2017 Red Hat, Inc.
+ * Copyright (C) 2017-2022 Red Hat, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -359,6 +359,8 @@ dlopen_and_get_function_list (Module *mod,
                               CK_FUNCTION_LIST **funcs)
 {
 	CK_C_GetFunctionList gfl;
+	CK_C_GetInterface gi;
+	CK_INTERFACE *interface;
 	dl_module_t dl;
 	char *error;
 	CK_RV rv;
@@ -379,21 +381,37 @@ dlopen_and_get_function_list (Module *mod,
 	mod->loaded_destroy = (p11_kit_destroyer)p11_dl_close;
 	mod->loaded_module = dl;
 
-	gfl = p11_dl_symbol (dl, "C_GetFunctionList");
-	if (!gfl) {
-		error = p11_dl_error ();
-		p11_message (_("couldn't find C_GetFunctionList entry point in module: %s: %s"),
-		             path, error);
-		free (error);
-		return CKR_GENERAL_ERROR;
+	gi = p11_dl_symbol (dl, "C_GetInterface");
+	if (gi) {
+		/* Get the default standard interface */
+		rv = gi ((unsigned char *)"PKCS 11", NULL, &interface, 0);
+		if (rv != CKR_OK) {
+			p11_message (_("call to C_GetInterface failed in module: %s: %s"),
+				     path, p11_kit_strerror (rv));
+			return rv;
+		}
+
+		/* TODO check the version and flag it somehere? */
+		*funcs = interface->pFunctionList;
+	} else {
+		p11_debug ("C_GetInterface not available. Falling back to C_GetFunctionList()");
+
+		gfl = p11_dl_symbol (dl, "C_GetFunctionList");
+		if (!gfl) {
+			error = p11_dl_error ();
+			p11_message (_("couldn't find C_GetFunctionList entry point in module: %s: %s"),
+				     path, error);
+			free (error);
+			return CKR_GENERAL_ERROR;
+		}
+		rv = gfl (funcs);
+		if (rv != CKR_OK) {
+			p11_message (_("call to C_GetFunctiontList failed in module: %s: %s"),
+				     path, p11_kit_strerror (rv));
+			return rv;
+		}
 	}
 
-	rv = gfl (funcs);
-	if (rv != CKR_OK) {
-		p11_message (_("call to C_GetFunctiontList failed in module: %s: %s"),
-		             path, p11_kit_strerror (rv));
-		return rv;
-	}
 
 	if (p11_proxy_module_check (*funcs)) {
 		p11_message (_("refusing to load the p11-kit-proxy.so module as a registered module"));

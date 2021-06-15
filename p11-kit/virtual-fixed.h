@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Red Hat, Inc
+ * Copyright (c) 2016-2022 Red Hat, Inc
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,7 +39,7 @@
 static CK_RV \
 fixed ## fixed_index ## _C_Initialize (CK_VOID_PTR init_args) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -52,7 +52,7 @@ fixed ## fixed_index ## _C_Initialize (CK_VOID_PTR init_args) \
 static CK_RV \
 fixed ## fixed_index ## _C_Finalize (CK_VOID_PTR reserved) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -65,7 +65,7 @@ fixed ## fixed_index ## _C_Finalize (CK_VOID_PTR reserved) \
 static CK_RV \
 fixed ## fixed_index ## _C_GetInfo (CK_INFO_PTR info) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -80,7 +80,7 @@ fixed ## fixed_index ## _C_GetSlotList (CK_BBOOL token_present, \
 					CK_SLOT_ID_PTR slot_list, \
 					CK_ULONG_PTR count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -94,7 +94,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_GetSlotInfo (CK_SLOT_ID slot_id, \
 					CK_SLOT_INFO_PTR info) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -108,7 +108,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_GetTokenInfo (CK_SLOT_ID slot_id, \
 					 CK_TOKEN_INFO_PTR info) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -123,7 +123,7 @@ fixed ## fixed_index ## _C_GetMechanismList (CK_SLOT_ID slot_id, \
 					     CK_MECHANISM_TYPE_PTR mechanism_list, \
 					     CK_ULONG_PTR count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -138,7 +138,7 @@ fixed ## fixed_index ## _C_GetMechanismInfo (CK_SLOT_ID slot_id, \
 					     CK_MECHANISM_TYPE type, \
 					     CK_MECHANISM_INFO_PTR info) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -154,7 +154,7 @@ fixed ## fixed_index ## _C_InitToken (CK_SLOT_ID slot_id, \
 				      CK_ULONG pin_len, \
 				      CK_BYTE_PTR label) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -169,7 +169,7 @@ fixed ## fixed_index ## _C_InitPIN (CK_SESSION_HANDLE session, \
 				    CK_BYTE_PTR pin, \
 				    CK_ULONG pin_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -186,7 +186,7 @@ fixed ## fixed_index ## _C_SetPIN (CK_SESSION_HANDLE session, \
 				   CK_BYTE_PTR new_pin, \
 				   CK_ULONG new_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -203,7 +203,7 @@ fixed ## fixed_index ## _C_OpenSession (CK_SLOT_ID slot_id, \
 					CK_NOTIFY notify, \
 					CK_SESSION_HANDLE_PTR session) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -216,7 +216,7 @@ fixed ## fixed_index ## _C_OpenSession (CK_SLOT_ID slot_id, \
 static CK_RV \
 fixed ## fixed_index ## _C_CloseSession (CK_SESSION_HANDLE session) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -229,7 +229,7 @@ fixed ## fixed_index ## _C_CloseSession (CK_SESSION_HANDLE session) \
 static CK_RV \
 fixed ## fixed_index ## _C_CloseAllSessions (CK_SLOT_ID slot_id) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -243,7 +243,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_GetSessionInfo (CK_SESSION_HANDLE session, \
 					   CK_SESSION_INFO_PTR info) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -258,7 +258,7 @@ fixed ## fixed_index ## _C_GetOperationState (CK_SESSION_HANDLE session, \
 					      CK_BYTE_PTR operation_state, \
 					      CK_ULONG_PTR operation_state_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -275,7 +275,7 @@ fixed ## fixed_index ## _C_SetOperationState (CK_SESSION_HANDLE session, \
 					      CK_OBJECT_HANDLE encryption_key, \
 					      CK_OBJECT_HANDLE authentiation_key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -291,7 +291,7 @@ fixed ## fixed_index ## _C_Login (CK_SESSION_HANDLE session, \
 				  CK_BYTE_PTR pin, \
 				  CK_ULONG pin_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -304,7 +304,7 @@ fixed ## fixed_index ## _C_Login (CK_SESSION_HANDLE session, \
 static CK_RV \
 fixed ## fixed_index ## _C_Logout (CK_SESSION_HANDLE session) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -320,7 +320,7 @@ fixed ## fixed_index ## _C_CreateObject (CK_SESSION_HANDLE session, \
 					 CK_ULONG count, \
 					 CK_OBJECT_HANDLE_PTR object) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -337,7 +337,7 @@ fixed ## fixed_index ## _C_CopyObject (CK_SESSION_HANDLE session, \
 				       CK_ULONG count, \
 				       CK_OBJECT_HANDLE_PTR new_object) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -351,7 +351,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_DestroyObject (CK_SESSION_HANDLE session, \
 					  CK_OBJECT_HANDLE object) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -366,7 +366,7 @@ fixed ## fixed_index ## _C_GetObjectSize (CK_SESSION_HANDLE session, \
 					  CK_OBJECT_HANDLE object, \
 					  CK_ULONG_PTR size) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -382,7 +382,7 @@ fixed ## fixed_index ## _C_GetAttributeValue (CK_SESSION_HANDLE session, \
 					      CK_ATTRIBUTE_PTR templ, \
 					      CK_ULONG count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -398,7 +398,7 @@ fixed ## fixed_index ## _C_SetAttributeValue (CK_SESSION_HANDLE session, \
 					      CK_ATTRIBUTE_PTR templ, \
 					      CK_ULONG count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -413,7 +413,7 @@ fixed ## fixed_index ## _C_FindObjectsInit (CK_SESSION_HANDLE session, \
 					    CK_ATTRIBUTE_PTR templ, \
 					    CK_ULONG count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -429,7 +429,7 @@ fixed ## fixed_index ## _C_FindObjects (CK_SESSION_HANDLE session, \
 					CK_ULONG max_object_count, \
 					CK_ULONG_PTR object_count) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -442,7 +442,7 @@ fixed ## fixed_index ## _C_FindObjects (CK_SESSION_HANDLE session, \
 static CK_RV \
 fixed ## fixed_index ## _C_FindObjectsFinal (CK_SESSION_HANDLE session) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -457,7 +457,7 @@ fixed ## fixed_index ## _C_EncryptInit (CK_SESSION_HANDLE session, \
 					CK_MECHANISM_PTR mechanism, \
 					CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -474,7 +474,7 @@ fixed ## fixed_index ## _C_Encrypt (CK_SESSION_HANDLE session, \
 				    CK_BYTE_PTR encrypted_data, \
 				    CK_ULONG_PTR encrypted_data_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -491,7 +491,7 @@ fixed ## fixed_index ## _C_EncryptUpdate (CK_SESSION_HANDLE session, \
 					  CK_BYTE_PTR encrypted_part, \
 					  CK_ULONG_PTR encrypted_part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -506,7 +506,7 @@ fixed ## fixed_index ## _C_EncryptFinal (CK_SESSION_HANDLE session, \
 					 CK_BYTE_PTR last_encrypted_part, \
 					 CK_ULONG_PTR last_encrypted_part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -521,7 +521,7 @@ fixed ## fixed_index ## _C_DecryptInit (CK_SESSION_HANDLE session, \
 					CK_MECHANISM_PTR mechanism, \
 					CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -538,7 +538,7 @@ fixed ## fixed_index ## _C_Decrypt (CK_SESSION_HANDLE session, \
 				    CK_BYTE_PTR data, \
 				    CK_ULONG_PTR data_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -555,7 +555,7 @@ fixed ## fixed_index ## _C_DecryptUpdate (CK_SESSION_HANDLE session, \
 					  CK_BYTE_PTR part, \
 					  CK_ULONG_PTR part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -570,7 +570,7 @@ fixed ## fixed_index ## _C_DecryptFinal (CK_SESSION_HANDLE session, \
 					 CK_BYTE_PTR last_part, \
 					 CK_ULONG_PTR last_part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -584,7 +584,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_DigestInit (CK_SESSION_HANDLE session, \
 				       CK_MECHANISM_PTR mechanism) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -601,7 +601,7 @@ fixed ## fixed_index ## _C_Digest (CK_SESSION_HANDLE session, \
 				   CK_BYTE_PTR digest, \
 				   CK_ULONG_PTR digest_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -616,7 +616,7 @@ fixed ## fixed_index ## _C_DigestUpdate (CK_SESSION_HANDLE session, \
 					 CK_BYTE_PTR part, \
 					 CK_ULONG part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -630,7 +630,7 @@ static CK_RV \
 fixed ## fixed_index ## _C_DigestKey (CK_SESSION_HANDLE session, \
 				      CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -645,7 +645,7 @@ fixed ## fixed_index ## _C_DigestFinal (CK_SESSION_HANDLE session, \
 					CK_BYTE_PTR digest, \
 					CK_ULONG_PTR digest_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -660,7 +660,7 @@ fixed ## fixed_index ## _C_SignInit (CK_SESSION_HANDLE session, \
 				     CK_MECHANISM_PTR mechanism, \
 				     CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -677,7 +677,7 @@ fixed ## fixed_index ## _C_Sign (CK_SESSION_HANDLE session, \
 				 CK_BYTE_PTR signature, \
 				 CK_ULONG_PTR signature_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -692,7 +692,7 @@ fixed ## fixed_index ## _C_SignUpdate (CK_SESSION_HANDLE session, \
 				       CK_BYTE_PTR part, \
 				       CK_ULONG part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -707,7 +707,7 @@ fixed ## fixed_index ## _C_SignFinal (CK_SESSION_HANDLE session, \
 				      CK_BYTE_PTR signature, \
 				      CK_ULONG_PTR signature_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -722,7 +722,7 @@ fixed ## fixed_index ## _C_SignRecoverInit (CK_SESSION_HANDLE session, \
 					    CK_MECHANISM_PTR mechanism, \
 					    CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -739,7 +739,7 @@ fixed ## fixed_index ## _C_SignRecover (CK_SESSION_HANDLE session, \
 					CK_BYTE_PTR signature, \
 					CK_ULONG_PTR signature_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -754,7 +754,7 @@ fixed ## fixed_index ## _C_VerifyInit (CK_SESSION_HANDLE session, \
 				       CK_MECHANISM_PTR mechanism, \
 				       CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -771,7 +771,7 @@ fixed ## fixed_index ## _C_Verify (CK_SESSION_HANDLE session, \
 				   CK_BYTE_PTR signature, \
 				   CK_ULONG signature_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -786,7 +786,7 @@ fixed ## fixed_index ## _C_VerifyUpdate (CK_SESSION_HANDLE session, \
 					 CK_BYTE_PTR part, \
 					 CK_ULONG part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -801,7 +801,7 @@ fixed ## fixed_index ## _C_VerifyFinal (CK_SESSION_HANDLE session, \
 					CK_BYTE_PTR signature, \
 					CK_ULONG signature_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -816,7 +816,7 @@ fixed ## fixed_index ## _C_VerifyRecoverInit (CK_SESSION_HANDLE session, \
 					      CK_MECHANISM_PTR mechanism, \
 					      CK_OBJECT_HANDLE key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -833,7 +833,7 @@ fixed ## fixed_index ## _C_VerifyRecover (CK_SESSION_HANDLE session, \
 					  CK_BYTE_PTR data, \
 					  CK_ULONG_PTR data_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -850,7 +850,7 @@ fixed ## fixed_index ## _C_DigestEncryptUpdate (CK_SESSION_HANDLE session, \
 						CK_BYTE_PTR encrypted_part, \
 						CK_ULONG_PTR encrypted_part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -867,7 +867,7 @@ fixed ## fixed_index ## _C_DecryptDigestUpdate (CK_SESSION_HANDLE session, \
 						CK_BYTE_PTR part, \
 						CK_ULONG_PTR part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -884,7 +884,7 @@ fixed ## fixed_index ## _C_SignEncryptUpdate (CK_SESSION_HANDLE session, \
 					      CK_BYTE_PTR encrypted_part, \
 					      CK_ULONG_PTR encrypted_part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -901,7 +901,7 @@ fixed ## fixed_index ## _C_DecryptVerifyUpdate (CK_SESSION_HANDLE session, \
 						CK_BYTE_PTR part, \
 						CK_ULONG_PTR part_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -918,7 +918,7 @@ fixed ## fixed_index ## _C_GenerateKey (CK_SESSION_HANDLE session, \
 					CK_ULONG count, \
 					CK_OBJECT_HANDLE_PTR key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -938,7 +938,7 @@ fixed ## fixed_index ## _C_GenerateKeyPair (CK_SESSION_HANDLE session, \
 					    CK_OBJECT_HANDLE_PTR public_key, \
 					    CK_OBJECT_HANDLE_PTR private_key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -956,7 +956,7 @@ fixed ## fixed_index ## _C_WrapKey (CK_SESSION_HANDLE session, \
 				    CK_BYTE_PTR wrapped_key, \
 				    CK_ULONG_PTR wrapped_key_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -976,7 +976,7 @@ fixed ## fixed_index ## _C_UnwrapKey (CK_SESSION_HANDLE session, \
 				      CK_ULONG attribute_count, \
 				      CK_OBJECT_HANDLE_PTR key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -994,7 +994,7 @@ fixed ## fixed_index ## _C_DeriveKey (CK_SESSION_HANDLE session, \
 				      CK_ULONG attribute_count, \
 				      CK_OBJECT_HANDLE_PTR key) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -1009,7 +1009,7 @@ fixed ## fixed_index ## _C_SeedRandom (CK_SESSION_HANDLE session, \
 				       CK_BYTE_PTR seed, \
 				       CK_ULONG seed_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -1024,7 +1024,7 @@ fixed ## fixed_index ## _C_GenerateRandom (CK_SESSION_HANDLE session, \
 					   CK_BYTE_PTR random_data, \
 					   CK_ULONG random_len) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -1039,7 +1039,7 @@ fixed ## fixed_index ## _C_WaitForSlotEvent (CK_FLAGS flags, \
 					     CK_SLOT_ID_PTR slot, \
 					     CK_VOID_PTR reserved) \
 { \
-        CK_FUNCTION_LIST *bound; \
+        CK_FUNCTION_LIST_3_0 *bound; \
         Wrapper *wrapper; \
         CK_X_FUNCTION_LIST *funcs; \
         bound = fixed_closures[fixed_index]; \
@@ -1050,7 +1050,445 @@ fixed ## fixed_index ## _C_WaitForSlotEvent (CK_FLAGS flags, \
 } \
 \
 static CK_RV \
-fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list);
+fixed ## fixed_index ## _C_LoginUser (CK_SESSION_HANDLE session, \
+                                      CK_USER_TYPE user_type, \
+                                      CK_UTF8CHAR_PTR pin, \
+                                      CK_ULONG pin_len, \
+                                      CK_UTF8CHAR_PTR username, \
+                                      CK_ULONG username_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_LoginUser (funcs, session, user_type, pin, pin_len, username, username_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_SessionCancel (CK_SESSION_HANDLE session, \
+                                          CK_FLAGS flags) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_SessionCancel (funcs, session, flags); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageEncryptInit (CK_SESSION_HANDLE session, \
+                                               CK_MECHANISM_PTR mechanism, \
+                                               CK_OBJECT_HANDLE key) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageEncryptInit (funcs, session, mechanism, key); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_EncryptMessage (CK_SESSION_HANDLE session, \
+                                           CK_VOID_PTR parameter, \
+                                           CK_ULONG parameter_len, \
+                                           CK_BYTE_PTR associated_data, \
+                                           CK_ULONG associated_data_len, \
+                                           CK_BYTE_PTR plaintext, \
+                                           CK_ULONG plaintext_len, \
+                                           CK_BYTE_PTR ciphertext, \
+                                           CK_ULONG_PTR ciphertext_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_EncryptMessage (funcs, session, parameter, parameter_len, associated_data, \
+                                        associated_data_len, plaintext, plaintext_len, \
+                                        ciphertext, ciphertext_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_EncryptMessageBegin (CK_SESSION_HANDLE session, \
+                                                CK_VOID_PTR parameter, \
+                                                CK_ULONG parameter_len, \
+                                                CK_BYTE_PTR associated_data, \
+                                                CK_ULONG associated_data_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_EncryptMessageBegin (funcs, session, parameter, parameter_len, \
+                                             associated_data, associated_data_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_EncryptMessageNext (CK_SESSION_HANDLE session, \
+                                               CK_VOID_PTR parameter, \
+                                               CK_ULONG parameter_len, \
+                                               CK_BYTE_PTR plaintext_part, \
+                                               CK_ULONG plaintext_part_len, \
+                                               CK_BYTE_PTR ciphertext_part, \
+                                               CK_ULONG_PTR ciphertext_part_len, \
+                                               CK_FLAGS flags) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_EncryptMessageNext (funcs, session, parameter, parameter_len, \
+                                            plaintext_part, plaintext_part_len, \
+                                            ciphertext_part, ciphertext_part_len, flags); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageEncryptFinal (CK_SESSION_HANDLE session) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageEncryptFinal (funcs, session); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageDecryptInit (CK_SESSION_HANDLE session, \
+                                               CK_MECHANISM_PTR mechanism, \
+                                               CK_OBJECT_HANDLE key) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageDecryptInit (funcs, session, mechanism, key); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_DecryptMessage (CK_SESSION_HANDLE session, \
+                                           CK_VOID_PTR parameter, \
+                                           CK_ULONG parameter_len, \
+                                           CK_BYTE_PTR associated_data, \
+                                           CK_ULONG associated_data_len, \
+                                           CK_BYTE_PTR ciphertext, \
+                                           CK_ULONG ciphertext_len, \
+                                           CK_BYTE_PTR plaintext, \
+                                           CK_ULONG_PTR plaintext_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_DecryptMessage (funcs, session, parameter, parameter_len, \
+                                        associated_data, associated_data_len, \
+                                        ciphertext, ciphertext_len, plaintext, plaintext_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_DecryptMessageBegin (CK_SESSION_HANDLE session, \
+                                                CK_VOID_PTR parameter, \
+                                                CK_ULONG parameter_len, \
+                                                CK_BYTE_PTR associated_data, \
+                                                CK_ULONG associated_data_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_DecryptMessageBegin (funcs, session, parameter, parameter_len, \
+                                             associated_data, associated_data_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_DecryptMessageNext (CK_SESSION_HANDLE session, \
+                                               CK_VOID_PTR parameter, \
+                                               CK_ULONG parameter_len, \
+                                               CK_BYTE_PTR ciphertext_part, \
+                                               CK_ULONG ciphertext_part_len, \
+                                               CK_BYTE_PTR plaintext_part, \
+                                               CK_ULONG_PTR plaintext_part_len, \
+                                               CK_FLAGS flags) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_DecryptMessageNext (funcs, session, parameter, parameter_len, \
+                                            ciphertext_part, ciphertext_part_len, \
+                                            plaintext_part, plaintext_part_len, flags); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageDecryptFinal (CK_SESSION_HANDLE session) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageDecryptFinal (funcs, session); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageSignInit (CK_SESSION_HANDLE session, \
+                                            CK_MECHANISM_PTR mechanism, \
+                                            CK_OBJECT_HANDLE key) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageSignInit (funcs, session, mechanism, key); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_SignMessage (CK_SESSION_HANDLE session, \
+                                        CK_VOID_PTR parameter, \
+                                        CK_ULONG parameter_len, \
+                                        CK_BYTE_PTR data, \
+                                        CK_ULONG data_len, \
+                                        CK_BYTE_PTR signature, \
+                                        CK_ULONG_PTR signature_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_SignMessage (funcs, session, parameter, parameter_len, data, data_len, \
+                                     signature, signature_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_SignMessageBegin (CK_SESSION_HANDLE session, \
+                                             CK_VOID_PTR parameter, \
+                                             CK_ULONG parameter_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_SignMessageBegin (funcs, session, parameter, parameter_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_SignMessageNext (CK_SESSION_HANDLE session, \
+                                            CK_VOID_PTR parameter, \
+                                            CK_ULONG parameter_len, \
+                                            CK_BYTE_PTR data, \
+                                            CK_ULONG data_len, \
+                                            CK_BYTE_PTR signature, \
+                                            CK_ULONG_PTR signature_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_SignMessageNext (funcs, session, parameter, parameter_len, data, data_len, \
+                                         signature, signature_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageSignFinal (CK_SESSION_HANDLE session) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageSignFinal (funcs, session); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageVerifyInit (CK_SESSION_HANDLE session, \
+                                              CK_MECHANISM_PTR mechanism, \
+                                              CK_OBJECT_HANDLE key) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageVerifyInit (funcs, session, mechanism, key); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_VerifyMessage (CK_SESSION_HANDLE session, \
+                                          CK_VOID_PTR parameter, \
+                                          CK_ULONG parameter_len, \
+                                          CK_BYTE_PTR data, \
+                                          CK_ULONG data_len, \
+                                          CK_BYTE_PTR signature, \
+                                          CK_ULONG signature_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_VerifyMessage (funcs, session, parameter, parameter_len, data, data_len, \
+                                       signature, signature_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_VerifyMessageBegin (CK_SESSION_HANDLE session, \
+                                               CK_VOID_PTR parameter, \
+                                               CK_ULONG parameter_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_VerifyMessageBegin (funcs, session, parameter, parameter_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_VerifyMessageNext (CK_SESSION_HANDLE session, \
+                                              CK_VOID_PTR parameter, \
+                                              CK_ULONG parameter_len, \
+                                              CK_BYTE_PTR data, \
+                                              CK_ULONG data_len, \
+                                              CK_BYTE_PTR signature, \
+                                              CK_ULONG signature_len) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        return_val_if_fail (bound->version.major >= 3, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_VerifyMessageNext (funcs, session, parameter, parameter_len, \
+                                           data, data_len, signature, signature_len); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_MessageVerifyFinal (CK_SESSION_HANDLE session) \
+{ \
+        CK_FUNCTION_LIST_3_0 *bound; \
+        Wrapper *wrapper; \
+        CK_X_FUNCTION_LIST *funcs; \
+        bound = fixed_closures[fixed_index]; \
+        return_val_if_fail (bound != NULL, CKR_GENERAL_ERROR); \
+        wrapper = (Wrapper *) bound; \
+        funcs = &wrapper->virt->funcs; \
+        return funcs->C_MessageVerifyFinal (funcs, session); \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, \
+                                             CK_ULONG_PTR pulCount) \
+{ \
+	CK_RV rv = CKR_OK; \
+\
+	if (pulCount == NULL_PTR) \
+		return CKR_ARGUMENTS_BAD; \
+\
+	if (pInterfacesList == NULL_PTR) { \
+		*pulCount = 1; \
+		return CKR_OK; \
+	} \
+\
+	if (*pulCount < 1) { \
+		*pulCount = 1; \
+		return CKR_BUFFER_TOO_SMALL; \
+	} \
+\
+	if (rv == CKR_OK) { \
+		memcpy (pInterfacesList, fixed_interfaces[fixed_index], sizeof(CK_INTERFACE)); \
+		*pulCount = 1; \
+	} \
+\
+	return rv; \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, \
+                                         CK_VERSION_PTR pVersion, \
+                                         CK_INTERFACE_PTR_PTR ppInterface, \
+                                         CK_FLAGS flags) \
+{ \
+	CK_INTERFACE_PTR interface = fixed_interfaces[fixed_index]; \
+	CK_VERSION_PTR cmp_version = &fixed_closures[fixed_index]->version; \
+\
+	if (ppInterface == NULL_PTR) { \
+		return CKR_ARGUMENTS_BAD; \
+	} \
+\
+	if (pInterfaceName == NULL) { \
+		*ppInterface = interface; \
+		return CKR_OK; \
+	} \
+\
+	if (strcmp ((char *)pInterfaceName, interface->pInterfaceName) != 0 || \
+	    (pVersion != NULL && (pVersion->major != cmp_version->major || \
+	                          pVersion->minor != cmp_version->minor)) || \
+	    ((flags & interface->flags) != flags)) { \
+		return CKR_ARGUMENTS_BAD; \
+	} \
+	*ppInterface = interface; \
+	return CKR_OK; \
+} \
+\
+static CK_RV \
+fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list); \
+\
+
 
 #define P11_VIRTUAL_FIXED_GET_FUNCTION_LIST(fixed_index) \
 static CK_RV \
@@ -1058,7 +1496,7 @@ fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list) \
 { \
         if (!list) \
                 return CKR_ARGUMENTS_BAD; \
-        *list = fixed_closures[fixed_index]; \
+        *list = (CK_FUNCTION_LIST *)fixed_closures[fixed_index]; \
         return CKR_OK; \
 }
 
@@ -1132,7 +1570,31 @@ fixed ## fixed_index ## _C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list) \
 	fixed ## fixed_index ## _C_GenerateRandom, \
 	short_C_GetFunctionStatus, \
 	short_C_CancelFunction, \
-	fixed ## fixed_index ## _C_WaitForSlotEvent \
+	fixed ## fixed_index ## _C_WaitForSlotEvent, \
+	fixed ## fixed_index ## _C_GetInterfaceList, \
+	fixed ## fixed_index ## _C_GetInterface, \
+	fixed ## fixed_index ## _C_LoginUser, \
+	fixed ## fixed_index ## _C_SessionCancel, \
+	fixed ## fixed_index ## _C_MessageEncryptInit, \
+	fixed ## fixed_index ## _C_EncryptMessage, \
+	fixed ## fixed_index ## _C_EncryptMessageBegin, \
+	fixed ## fixed_index ## _C_EncryptMessageNext, \
+	fixed ## fixed_index ## _C_MessageEncryptFinal, \
+	fixed ## fixed_index ## _C_MessageDecryptInit, \
+	fixed ## fixed_index ## _C_DecryptMessage, \
+	fixed ## fixed_index ## _C_DecryptMessageBegin, \
+	fixed ## fixed_index ## _C_DecryptMessageNext, \
+	fixed ## fixed_index ## _C_MessageDecryptFinal, \
+	fixed ## fixed_index ## _C_MessageSignInit, \
+	fixed ## fixed_index ## _C_SignMessage, \
+	fixed ## fixed_index ## _C_SignMessageBegin, \
+	fixed ## fixed_index ## _C_SignMessageNext, \
+	fixed ## fixed_index ## _C_MessageSignFinal, \
+	fixed ## fixed_index ## _C_MessageVerifyInit, \
+	fixed ## fixed_index ## _C_VerifyMessage, \
+	fixed ## fixed_index ## _C_VerifyMessageBegin, \
+	fixed ## fixed_index ## _C_VerifyMessageNext, \
+	fixed ## fixed_index ## _C_MessageVerifyFinal \
 }
 
 #endif /* __P11_VIRTUAL_FIXED_H__ */

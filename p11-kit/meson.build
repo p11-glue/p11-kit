@@ -93,17 +93,23 @@ p11_module_ldflags = cc.get_supported_link_arguments([
 ])
 p11_module_symbol_def = meson.current_source_dir() / 'p11-module.def'
 
+p11v3_module_symbol_map = meson.current_source_dir() / 'p11v3-module.map'
+p11v3_module_ldflags = cc.get_supported_link_arguments([
+  '-Wl,--version-script,' + p11v3_module_symbol_map
+])
+p11v3_module_symbol_def = meson.current_source_dir() / 'p11v3-module.def'
+
 if host_system != 'windows'
   shared_module('p11-kit-client',
                 'client.c', 'client-init.c',
                 name_prefix: '',
                 include_directories: [configinc, commoninc],
                 dependencies: dlopen_deps,
-                link_args: p11_module_ldflags,
-                link_depends: [p11_module_symbol_map,
-                               p11_module_symbol_def],
+                link_args: p11v3_module_ldflags,
+                link_depends: [p11v3_module_symbol_map,
+                               p11v3_module_symbol_def],
                 link_with: [libp11_kit_internal],
-                vs_module_defs: p11_module_symbol_def,
+                vs_module_defs: p11v3_module_symbol_def,
                 install: true,
                 install_dir: p11_module_path)
 endif
