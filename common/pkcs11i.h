@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Red Hat Inc.
+ * Copyright (c) 2012-2023, Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -429,6 +429,152 @@ typedef CK_RV (* CK_X_WaitForSlotEvent)    (CK_X_FUNCTION_LIST *,
                                             CK_SLOT_ID_PTR,
                                             CK_VOID_PTR);
 
+typedef CK_RV (* CK_X_LoginUser)           (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_USER_TYPE user_type,
+                                            CK_UTF8CHAR_PTR pin,
+                                            CK_ULONG pin_len,
+                                            CK_UTF8CHAR_PTR username,
+                                            CK_ULONG username_len);
+
+typedef CK_RV (* CK_X_SessionCancel)       (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_FLAGS flags);
+
+typedef CK_RV (* CK_X_MessageEncryptInit)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_MECHANISM_PTR mechanism,
+                                            CK_OBJECT_HANDLE key);
+
+typedef CK_RV (* CK_X_EncryptMessage)      (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len,
+                                            CK_BYTE_PTR plaintext,
+                                            CK_ULONG plaintext_len,
+                                            CK_BYTE_PTR ciphertext,
+                                            CK_ULONG_PTR ciphertext_len);
+
+typedef CK_RV (* CK_X_EncryptMessageBegin) (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len);
+
+typedef CK_RV (* CK_X_EncryptMessageNext)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR plaintext_part,
+                                            CK_ULONG plaintext_part_len,
+                                            CK_BYTE_PTR ciphertext_part,
+                                            CK_ULONG_PTR ciphertext_part_len,
+                                            CK_FLAGS flags);
+
+typedef CK_RV (* CK_X_MessageEncryptFinal) (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session);
+
+typedef CK_RV (* CK_X_MessageDecryptInit)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_MECHANISM_PTR mechanism,
+                                            CK_OBJECT_HANDLE key);
+
+typedef CK_RV (* CK_X_DecryptMessage)      (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len,
+                                            CK_BYTE_PTR ciphertext,
+                                            CK_ULONG ciphertext_len,
+                                            CK_BYTE_PTR plaintext,
+                                            CK_ULONG_PTR plaintext_len);
+
+typedef CK_RV (* CK_X_DecryptMessageBegin) (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len);
+
+typedef CK_RV (* CK_X_DecryptMessageNext)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR ciphertext_part,
+                                            CK_ULONG ciphertext_part_len,
+                                            CK_BYTE_PTR plaintext_part,
+                                            CK_ULONG_PTR plaintext_part_len,
+                                            CK_FLAGS flags);
+
+typedef CK_RV (* CK_X_MessageDecryptFinal) (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session);
+
+typedef CK_RV (* CK_X_MessageSignInit)     (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_MECHANISM_PTR mechanism,
+                                            CK_OBJECT_HANDLE key);
+
+typedef CK_RV (* CK_X_SignMessage)         (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR data,
+                                            CK_ULONG data_len,
+                                            CK_BYTE_PTR signature,
+                                            CK_ULONG_PTR signature_len);
+
+typedef CK_RV (* CK_X_SignMessageBegin)    (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len);
+
+typedef CK_RV (* CK_X_SignMessageNext)     (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR data,
+                                            CK_ULONG data_len,
+                                            CK_BYTE_PTR signature,
+                                            CK_ULONG_PTR signature_len);
+
+typedef CK_RV (* CK_X_MessageSignFinal)    (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session);
+
+typedef CK_RV (* CK_X_MessageVerifyInit)   (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_MECHANISM_PTR mechanism,
+                                            CK_OBJECT_HANDLE key);
+
+typedef CK_RV (* CK_X_VerifyMessage)       (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR data,
+                                            CK_ULONG data_len,
+                                            CK_BYTE_PTR signature,
+                                            CK_ULONG signature_len);
+
+typedef CK_RV (* CK_X_VerifyMessageBegin)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len);
+
+typedef CK_RV (* CK_X_VerifyMessageNext)   (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR data,
+                                            CK_ULONG data_len,
+                                            CK_BYTE_PTR signature,
+                                            CK_ULONG signature_len);
+
+typedef CK_RV (* CK_X_MessageVerifyFinal)  (CK_X_FUNCTION_LIST *,
+                                            CK_SESSION_HANDLE session);
+
 struct _CK_X_FUNCTION_LIST {
 	CK_VERSION version;
 	CK_X_Initialize C_Initialize;
@@ -496,6 +642,29 @@ struct _CK_X_FUNCTION_LIST {
 	CK_X_SeedRandom C_SeedRandom;
 	CK_X_GenerateRandom C_GenerateRandom;
 	CK_X_WaitForSlotEvent C_WaitForSlotEvent;
+	/* PKCS #11 3.0 functions */
+	CK_X_LoginUser C_LoginUser;
+	CK_X_SessionCancel C_SessionCancel;
+	CK_X_MessageEncryptInit C_MessageEncryptInit;
+	CK_X_EncryptMessage C_EncryptMessage;
+	CK_X_EncryptMessageBegin C_EncryptMessageBegin;
+	CK_X_EncryptMessageNext C_EncryptMessageNext;
+	CK_X_MessageEncryptFinal C_MessageEncryptFinal;
+	CK_X_MessageDecryptInit C_MessageDecryptInit;
+	CK_X_DecryptMessage C_DecryptMessage;
+	CK_X_DecryptMessageBegin C_DecryptMessageBegin;
+	CK_X_DecryptMessageNext C_DecryptMessageNext;
+	CK_X_MessageDecryptFinal C_MessageDecryptFinal;
+	CK_X_MessageSignInit C_MessageSignInit;
+	CK_X_SignMessage C_SignMessage;
+	CK_X_SignMessageBegin C_SignMessageBegin;
+	CK_X_SignMessageNext C_SignMessageNext;
+	CK_X_MessageSignFinal C_MessageSignFinal;
+	CK_X_MessageVerifyInit C_MessageVerifyInit;
+	CK_X_VerifyMessage C_VerifyMessage;
+	CK_X_VerifyMessageBegin C_VerifyMessageBegin;
+	CK_X_VerifyMessageNext C_VerifyMessageNext;
+	CK_X_MessageVerifyFinal C_MessageVerifyFinal;
 };
 
 #if defined(__cplusplus)
