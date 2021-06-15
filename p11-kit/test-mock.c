@@ -650,6 +650,61 @@ test_create_object (void)
 }
 
 static void
+test_create_object_private (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_OBJECT_HANDLE object;
+	CK_ATTRIBUTE attrs[8];
+	char label[32];
+	CK_ULONG bits;
+	CK_BBOOL true_value = CK_TRUE;
+	CK_RV rv;
+
+	module = setup_mock_module (&session);
+
+	strcpy (label, "Private Blahooo");
+	bits = 15555;
+
+	attrs[0].type = CKA_LABEL;
+	attrs[0].pValue = label;
+	attrs[0].ulValueLen = strlen (label);
+	attrs[1].type = CKA_BITS_PER_PIXEL;
+	attrs[1].pValue = &bits;
+	attrs[1].ulValueLen = sizeof (bits);
+	attrs[2].type = CKA_PRIVATE;
+	attrs[2].pValue = &true_value;
+	attrs[2].ulValueLen = sizeof (true_value);
+
+	rv = (module->C_CreateObject) (0, attrs, 3, &object);
+	assert_num_eq (rv, CKR_SESSION_HANDLE_INVALID);
+
+	rv = (module->C_CreateObject) (session, attrs, 3, &object);
+	assert_num_eq (rv, CKR_USER_NOT_LOGGED_IN);
+
+	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = (module->C_CreateObject) (session, attrs, 3, &object);
+	assert_num_eq (rv, CKR_OK);
+
+	attrs[0].ulValueLen = sizeof (label);
+	memset (label, 0, sizeof (label));
+	bits = 0;
+	true_value = -1;
+
+	rv = (module->C_GetAttributeValue) (session, object, attrs, 3);
+	assert_num_eq (rv, CKR_OK);
+
+	assert_num_eq (bits, 15555);
+	assert_num_eq (15, attrs[0].ulValueLen);
+	assert (memcmp (label, "Private Blahooo", attrs[0].ulValueLen) == 0);
+	assert_num_eq (true_value, CK_TRUE);
+
+	teardown_mock_module (module);
+}
+
+static void
 test_copy_object (void)
 {
 	CK_FUNCTION_LIST_PTR module;
@@ -685,6 +740,52 @@ test_copy_object (void)
 	assert_num_eq (bits, 1555);
 	assert_num_eq (21, attrs[1].ulValueLen);
 	assert (memcmp (label, "Public Capitalize Key", attrs[1].ulValueLen) == 0);
+
+	teardown_mock_module (module);
+}
+
+static void
+test_copy_object_private (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_OBJECT_HANDLE object;
+	CK_ATTRIBUTE attrs[8];
+	char label[32];
+	CK_ULONG bits;
+	CK_RV rv;
+
+	module = setup_mock_module (&session);
+
+	bits = 1555;
+
+	attrs[0].type = CKA_BITS_PER_PIXEL;
+	attrs[0].pValue = &bits;
+	attrs[0].ulValueLen = sizeof (bits);
+
+	rv = (module->C_CopyObject) (session, 1333, attrs, 1, &object);
+	assert_num_eq (rv, CKR_OBJECT_HANDLE_INVALID);
+
+	rv = (module->C_CopyObject) (session, MOCK_PRIVATE_KEY_CAPITALIZE, attrs, 1, &object);
+	assert_num_eq (rv, CKR_USER_NOT_LOGGED_IN);
+
+	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = (module->C_CopyObject) (session, MOCK_PRIVATE_KEY_CAPITALIZE, attrs, 1, &object);
+	assert_num_eq (rv, CKR_OK);
+
+	attrs[1].type = CKA_LABEL;
+	attrs[1].pValue = label;
+	attrs[1].ulValueLen = sizeof (label);
+	bits = 0;
+
+	rv = (module->C_GetAttributeValue) (session, object, attrs, 2);
+	assert_num_eq (rv, CKR_OK);
+
+	assert_num_eq (bits, 1555);
+	assert_num_eq (22, attrs[1].ulValueLen);
+	assert (memcmp (label, "Private Capitalize Key", attrs[1].ulValueLen) == 0);
 
 	teardown_mock_module (module);
 }
@@ -1840,7 +1941,9 @@ test_mock_add_tests (const char *prefix)
 	p11_test (test_get_attribute_value, "%s/test_get_attribute_value", prefix);
 	p11_test (test_set_attribute_value, "%s/test_set_attribute_value", prefix);
 	p11_test (test_create_object, "%s/test_create_object", prefix);
+	p11_test (test_create_object_private, "%s/test_create_object_private", prefix);
 	p11_test (test_copy_object, "%s/test_copy_object", prefix);
+	p11_test (test_copy_object_private, "%s/test_copy_object_private", prefix);
 	p11_test (test_destroy_object, "%s/test_destroy_object", prefix);
 	p11_test (test_get_object_size, "%s/test_get_object_size", prefix);
 	p11_test (test_find_objects, "%s/test_find_objects", prefix);
