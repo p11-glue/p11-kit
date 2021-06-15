@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Red Hat Inc
+ * Copyright (c) 2013-2022 Red Hat Inc
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,7 +29,8 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@redhat.com>
+ * Authors: Stef Walter <stefw@redhat.com>
+ *          Jakub Jelen <jjelen@redhat.com>
  */
 
 #include "config.h"
@@ -57,7 +58,7 @@ setup_mock_module (CK_SESSION_HANDLE *session)
 	p11_lock ();
 	p11_log_force = true;
 
-	rv = p11_module_load_inlock_reentrant (&mock_module, 0, &module);
+	rv = p11_module_load_inlock_reentrant ((CK_FUNCTION_LIST_PTR)&mock_module_v3, 0, &module);
 	assert (rv == CKR_OK);
 	assert_ptr_not_null (module);
 	assert (p11_virtual_is_wrapper (module));
@@ -96,6 +97,8 @@ teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 /* Bring in all the mock module tests */
 #include "test-mock.c"
 
+CK_VERSION test_version_three = {CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR};
+
 int
 main (int argc,
       char *argv[])
@@ -103,7 +106,7 @@ main (int argc,
 	p11_library_init ();
 	mock_module_init ();
 
-	test_mock_add_tests ("/log", NULL);
+	test_mock_add_tests ("/log3", &test_version_three);
 
 	p11_kit_be_quiet ();
 	p11_log_output = false;

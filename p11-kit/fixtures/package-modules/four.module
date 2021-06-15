@@ -1,5 +1,5 @@
 
 module: mock-four.so
-disable-in: test-disable, test-other
+disable-in: test-disable, test-other, test-proxy3, test-rpc3, test-log3
 priority: 4
 trust-policy: no

@@ -71,6 +71,9 @@ static pid_t pkcs11_initialized_pid = 0;
 static CK_UTF8CHAR *the_pin = NULL;
 static CK_ULONG n_the_pin = 0;
 
+static CK_UTF8CHAR *the_username = NULL;
+static CK_ULONG n_the_username = 0;
+
 static bool logged_in = false;
 static CK_USER_TYPE the_user_type = 0;
 
@@ -90,6 +93,10 @@ typedef struct _Session {
 	CK_FLAGS crypto_method;
 	CK_MECHANISM_TYPE crypto_mechanism;
 	CK_BBOOL crypto_final;
+	CK_MECHANISM_TYPE message_method;
+	CK_MECHANISM message_mechanism;
+	CK_OBJECT_HANDLE message_key;
+	bool message_progress;
 
 	/* For sign, verify, digest, CKM_MOCK_COUNT */
 	CK_MECHANISM_TYPE hash_mechanism;
@@ -125,6 +132,7 @@ free_session (void *data)
 	if (sess) {
 		p11_dict_free (sess->objects);
 		p11_array_free (sess->matches);
+		free (sess->message_mechanism.pParameter);
 	}
 	free (sess);
 }
@@ -320,6 +328,10 @@ module_finalize (void)
 		the_pin = NULL;
 		n_the_pin = 0;
 
+		free (the_username);
+		the_username = NULL;
+		n_the_username = 0;
+
 	p11_mutex_unlock (&init_mutex);
 }
 
@@ -427,6 +439,10 @@ mock_C_Initialize (CK_VOID_PTR init_args)
 		free (the_pin);
 		the_pin = (CK_UTF8CHAR_PTR)strdup ("booo");
 		n_the_pin = 4;
+
+		free (the_username);
+		the_username = (CK_UTF8CHAR_PTR)strdup ("yeah");
+		n_the_username = 4;
 
 		if (the_sessions)
 			p11_dict_free (the_sessions);
@@ -851,6 +867,8 @@ mock_C_InitToken__specific_args (CK_SLOT_ID slot_id,
 	n_the_pin = pin_len;
 	return CKR_OK;
 }
+
+/* TODO specific flags username */
 
 CK_RV
 mock_C_InitToken__invalid_slotid (CK_SLOT_ID slot_id,
@@ -3874,8 +3892,1073 @@ mock_X_GenerateRandom__invalid_handle (CK_X_FUNCTION_LIST *self,
 	return CKR_SESSION_HANDLE_INVALID;
 }
 
+CK_RV
+mock_C_GetInterfaceList_not_supported (CK_INTERFACE_PTR interfaces_list,
+                                       CK_ULONG_PTR count)
+{
+	/* This would be a strange call to receive, should be overridden  */
+	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+}
+
+CK_RV
+mock_X_GetInterfaceList_not_supported (CK_X_FUNCTION_LIST *self,
+                                       CK_INTERFACE_PTR interfaces_list,
+                                       CK_ULONG_PTR count)
+{
+	/* This would be a strange call to receive, should be overridden  */
+	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+}
+
+CK_RV
+mock_C_GetInterface_not_supported (CK_UTF8CHAR_PTR interface_name,
+                                   CK_VERSION_PTR version,
+                                   CK_INTERFACE_PTR_PTR interface,
+                                   CK_FLAGS flags)
+{
+	/* This would be a strange call to receive, should be overridden  */
+	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+}
+
+CK_RV
+mock_X_GetInterface_not_supported (CK_X_FUNCTION_LIST *self,
+                                   CK_UTF8CHAR_PTR interface_name,
+                                   CK_VERSION_PTR version,
+                                   CK_INTERFACE_PTR_PTR interface,
+                                   CK_FLAGS flags)
+{
+	/* This would be a strange call to receive, should be overridden  */
+	return_val_if_reached (CKR_FUNCTION_NOT_SUPPORTED);
+}
+
+CK_RV
+mock_C_LoginUser (CK_SESSION_HANDLE session,
+                  CK_USER_TYPE user_type,
+                  CK_UTF8CHAR_PTR pin,
+                  CK_ULONG pin_len,
+                  CK_UTF8CHAR_PTR username,
+                  CK_ULONG username_len)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (sess == NULL)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (!username)
+		return CKR_PIN_INCORRECT;
+
+	if (username_len != n_the_username)
+		return CKR_PIN_INCORRECT;
+	if (strncmp ((char *)username, (char *)the_username, username_len) != 0)
+		return CKR_PIN_INCORRECT;
+
+	return mock_C_Login (session, user_type, pin, pin_len);
+}
+
+CK_RV
+mock_C_LoginUser__invalid_handle (CK_SESSION_HANDLE session,
+                                  CK_USER_TYPE user_type,
+                                  CK_UTF8CHAR_PTR pin,
+                                  CK_ULONG pin_len,
+                                  CK_UTF8CHAR_PTR username,
+                                  CK_ULONG username_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_LoginUser__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                  CK_SESSION_HANDLE session,
+                                  CK_USER_TYPE user_type,
+                                  CK_UTF8CHAR_PTR pin,
+                                  CK_ULONG pin_len,
+                                  CK_UTF8CHAR_PTR username,
+                                  CK_ULONG username_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_SessionCancel (CK_SESSION_HANDLE session,
+                      CK_FLAGS flags)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (flags & CKF_FIND_OBJECTS)
+		sess->finding = CK_FALSE;
+	sess->hash_method &= ~flags;
+	sess->crypto_method &= ~flags;
+	sess->message_method &= ~flags;
+	sess->message_progress = false;
+	sess->crypto_mechanism = 0;
+	sess->crypto_key = 0;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_SessionCancel__invalid_handle (CK_SESSION_HANDLE session,
+                                      CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_SessionCancel__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                      CK_SESSION_HANDLE session,
+                                      CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageEncryptInit (CK_SESSION_HANDLE session,
+                           CK_MECHANISM_PTR mechanism,
+                           CK_OBJECT_HANDLE key)
+{
+	Session *sess;
+	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_ENCRYPT) {
+		sess->message_method = 0;
+		return CKR_OK;
+	}
+	if (sess->message_method != 0)
+		return CKR_OPERATION_ACTIVE;
+
+	rv = mock_C_EncryptInit (session, mechanism, key);
+	if (rv != CKR_OK)
+		return rv;
+
+	sess->message_method = CKF_MESSAGE_ENCRYPT;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageEncryptInit__invalid_handle (CK_SESSION_HANDLE session,
+                                           CK_MECHANISM_PTR mechanism,
+                                           CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageEncryptInit__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session,
+                                           CK_MECHANISM_PTR mechanism,
+                                           CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_EncryptMessage (CK_SESSION_HANDLE session,
+                       CK_VOID_PTR parameter,
+                       CK_ULONG parameter_len,
+                       CK_BYTE_PTR associated_data,
+                       CK_ULONG associated_data_len,
+                       CK_BYTE_PTR plaintext,
+                       CK_ULONG plaintext_len,
+                       CK_BYTE_PTR ciphertext,
+                       CK_ULONG_PTR ciphertext_len)
+{
+	CK_RV rv;
+
+	rv = mock_C_EncryptMessageBegin (session, parameter, parameter_len,
+	                                 associated_data, associated_data_len);
+	if (rv != CKR_OK)
+		return rv;
+
+	return mock_C_EncryptMessageNext (session, parameter, parameter_len, plaintext, plaintext_len,
+	                                  ciphertext, ciphertext_len, CKF_END_OF_MESSAGE);
+}
+
+CK_RV
+mock_C_EncryptMessage__invalid_handle (CK_SESSION_HANDLE session,
+                                       CK_VOID_PTR parameter,
+                                       CK_ULONG parameter_len,
+                                       CK_BYTE_PTR associated_data,
+                                       CK_ULONG associated_data_len,
+                                       CK_BYTE_PTR plaintext,
+                                       CK_ULONG plaintext_len,
+                                       CK_BYTE_PTR ciphertext,
+                                       CK_ULONG_PTR ciphertext_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_EncryptMessage__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                       CK_SESSION_HANDLE session,
+                                       CK_VOID_PTR parameter,
+                                       CK_ULONG parameter_len,
+                                       CK_BYTE_PTR associated_data,
+                                       CK_ULONG associated_data_len,
+                                       CK_BYTE_PTR plaintext,
+                                       CK_ULONG plaintext_len,
+                                       CK_BYTE_PTR ciphertext,
+                                       CK_ULONG_PTR ciphertext_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_EncryptMessageBegin (CK_SESSION_HANDLE session,
+                            CK_VOID_PTR parameter,
+                            CK_ULONG parameter_len,
+                            CK_BYTE_PTR associated_data,
+                            CK_ULONG associated_data_len)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_ENCRYPT)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (parameter_len != 13 || memcmp (parameter, "encrypt-param", 13))
+		return CKR_ARGUMENTS_BAD;
+
+	/* no AEAD */
+	if (associated_data != NULL || associated_data_len != 0)
+		return CKR_ARGUMENTS_BAD;
+
+	sess->message_progress = true;
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_EncryptMessageBegin__invalid_handle (CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_EncryptMessageBegin__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_EncryptMessageNext (CK_SESSION_HANDLE session,
+                           CK_VOID_PTR parameter,
+                           CK_ULONG parameter_len,
+                           CK_BYTE_PTR plaintext_part,
+                           CK_ULONG plaintext_part_len,
+                           CK_BYTE_PTR ciphertext_part,
+                           CK_ULONG_PTR ciphertext_part_len,
+                           CK_FLAGS flags)
+{
+	Session *sess;
+	CK_RV rv;
+
+	if (parameter_len != 13 || memcmp (parameter, "encrypt-param", 13))
+		return CKR_ARGUMENTS_BAD;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_ENCRYPT || !sess->message_progress)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	rv = mock_C_EncryptUpdate (session, plaintext_part, plaintext_part_len,
+	                           ciphertext_part, ciphertext_part_len);
+	if (rv == CKR_OK && flags & CKF_END_OF_MESSAGE)
+		sess->message_progress = false;
+
+	return rv;
+}
+
+CK_RV
+mock_C_EncryptMessageNext__invalid_handle (CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len,
+                                           CK_BYTE_PTR plaintext_part,
+                                           CK_ULONG plaintext_part_len,
+                                           CK_BYTE_PTR ciphertext_part,
+                                           CK_ULONG_PTR ciphertext_part_len,
+                                           CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_EncryptMessageNext__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len,
+                                           CK_BYTE_PTR plaintext_part,
+                                           CK_ULONG plaintext_part_len,
+                                           CK_BYTE_PTR ciphertext_part,
+                                           CK_ULONG_PTR ciphertext_part_len,
+                                           CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageEncryptFinal (CK_SESSION_HANDLE session)
+{
+	Session *sess;
+	unsigned long len = 0;
+	int rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_ENCRYPT)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	sess->message_method = 0;
+	sess->message_progress = false;
+
+	rv = mock_C_EncryptFinal (session, NULL, &len);
+	assert (len == 0);
+	return rv;
+}
+
+CK_RV
+mock_C_MessageEncryptFinal__invalid_handle (CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageEncryptFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                            CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageDecryptInit (CK_SESSION_HANDLE session,
+                           CK_MECHANISM_PTR mechanism,
+                           CK_OBJECT_HANDLE key)
+{
+	CK_RV rv;
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_DECRYPT) {
+		sess->message_method = 0;
+		return CKR_OK;
+	}
+	if (sess->message_method != 0)
+		return CKR_OPERATION_ACTIVE;
+
+	rv = mock_C_DecryptInit (session, mechanism, key);
+	if (rv != CKR_OK)
+		return rv;
+
+	sess->message_method = CKF_MESSAGE_DECRYPT;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageDecryptInit__invalid_handle (CK_SESSION_HANDLE session,
+                                           CK_MECHANISM_PTR mechanism,
+                                           CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageDecryptInit__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session,
+                                           CK_MECHANISM_PTR mechanism,
+                                           CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_DecryptMessage (CK_SESSION_HANDLE session,
+                       CK_VOID_PTR parameter,
+                       CK_ULONG parameter_len,
+                       CK_BYTE_PTR associated_data,
+                       CK_ULONG associated_data_len,
+                       CK_BYTE_PTR ciphertext,
+                       CK_ULONG ciphertext_len,
+                       CK_BYTE_PTR plaintext,
+                       CK_ULONG_PTR plaintext_len)
+{
+	CK_RV rv;
+
+	rv = mock_C_DecryptMessageBegin (session, parameter, parameter_len,
+	                                 associated_data, associated_data_len);
+	if (rv != CKR_OK)
+		return rv;
+
+	return mock_C_DecryptMessageNext (session, parameter, parameter_len, ciphertext, ciphertext_len,
+	                                  plaintext, plaintext_len, CKF_END_OF_MESSAGE);
+}
+
+CK_RV
+mock_C_DecryptMessage__invalid_handle (CK_SESSION_HANDLE session,
+                                       CK_VOID_PTR parameter,
+                                       CK_ULONG parameter_len,
+                                       CK_BYTE_PTR associated_data,
+                                       CK_ULONG associated_data_len,
+                                       CK_BYTE_PTR ciphertext,
+                                       CK_ULONG ciphertext_len,
+                                       CK_BYTE_PTR plaintext,
+                                       CK_ULONG_PTR plaintext_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_DecryptMessage__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                       CK_SESSION_HANDLE session,
+                                       CK_VOID_PTR parameter,
+                                       CK_ULONG parameter_len,
+                                       CK_BYTE_PTR associated_data,
+                                       CK_ULONG associated_data_len,
+                                       CK_BYTE_PTR ciphertext,
+                                       CK_ULONG ciphertext_len,
+                                       CK_BYTE_PTR plaintext,
+                                       CK_ULONG_PTR plaintext_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_DecryptMessageBegin (CK_SESSION_HANDLE session,
+                            CK_VOID_PTR parameter,
+                            CK_ULONG parameter_len,
+                            CK_BYTE_PTR associated_data,
+                            CK_ULONG associated_data_len)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_DECRYPT)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (parameter_len != 13 || memcmp (parameter, "decrypt-param", 13))
+		return CKR_ARGUMENTS_BAD;
+
+	/* no AEAD */
+	if (associated_data != NULL || associated_data_len != 0)
+		return CKR_ARGUMENTS_BAD;
+
+	sess->message_progress = true;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_DecryptMessageBegin__invalid_handle (CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_DecryptMessageBegin__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                            CK_SESSION_HANDLE session,
+                                            CK_VOID_PTR parameter,
+                                            CK_ULONG parameter_len,
+                                            CK_BYTE_PTR associated_data,
+                                            CK_ULONG associated_data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_DecryptMessageNext (CK_SESSION_HANDLE session,
+                           CK_VOID_PTR parameter,
+                           CK_ULONG parameter_len,
+                           CK_BYTE_PTR ciphertext_part,
+                           CK_ULONG ciphertext_part_len,
+                           CK_BYTE_PTR plaintext_part,
+                           CK_ULONG_PTR plaintext_part_len,
+                           CK_FLAGS flags)
+{
+	Session *sess;
+	CK_RV rv;
+
+	if (parameter_len != 13 || memcmp (parameter, "decrypt-param", 13))
+		return CKR_ARGUMENTS_BAD;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_DECRYPT || !sess->message_progress)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	rv = mock_C_DecryptUpdate (session, ciphertext_part, ciphertext_part_len,
+	                           plaintext_part, plaintext_part_len);
+	if (rv == CKR_OK && flags & CKF_END_OF_MESSAGE)
+		sess->message_progress = false;
+
+	return rv;
+}
+
+CK_RV
+mock_C_DecryptMessageNext__invalid_handle (CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len,
+                                           CK_BYTE_PTR ciphertext_part,
+                                           CK_ULONG ciphertext_part_len,
+                                           CK_BYTE_PTR plaintext_part,
+                                           CK_ULONG_PTR plaintext_part_len,
+                                           CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_DecryptMessageNext__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len,
+                                           CK_BYTE_PTR ciphertext_part,
+                                           CK_ULONG ciphertext_part_len,
+                                           CK_BYTE_PTR plaintext_part,
+                                           CK_ULONG_PTR plaintext_part_len,
+                                           CK_FLAGS flags)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageDecryptFinal (CK_SESSION_HANDLE session)
+{
+	Session *sess;
+	unsigned long len = 0;
+	int rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_DECRYPT)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	sess->message_method = 0;
+	sess->message_progress = false;
+
+	rv = mock_C_DecryptFinal (session, NULL, &len);
+	assert (len == 0);
+	return rv;
+}
+
+CK_RV
+mock_C_MessageDecryptFinal__invalid_handle (CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageDecryptFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                            CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageSignInit (CK_SESSION_HANDLE session,
+                        CK_MECHANISM_PTR mechanism,
+                        CK_OBJECT_HANDLE key)
+{
+	Session *sess;
+	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_SIGN) {
+		sess->message_method = 0;
+		return CKR_OK;
+	}
+	if (sess->message_method != 0)
+		return CKR_OPERATION_ACTIVE;
+
+	rv = mock_C_SignInit (session, mechanism, key);
+	if (rv != CKR_OK)
+		return rv;
+
+	sess->message_method = CKF_MESSAGE_SIGN;
+	free (sess->message_mechanism.pParameter);
+	sess->message_mechanism = *mechanism;
+	if (mechanism->pParameter != NULL) {
+		sess->message_mechanism.pParameter = memdup (mechanism->pParameter, mechanism->ulParameterLen);
+		sess->message_mechanism.ulParameterLen = mechanism->ulParameterLen;
+	}
+	sess->message_key = key;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageSignInit__invalid_handle (CK_SESSION_HANDLE session,
+                                        CK_MECHANISM_PTR mechanism,
+                                        CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageSignInit__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                        CK_SESSION_HANDLE session,
+                                        CK_MECHANISM_PTR mechanism,
+                                        CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_SignMessage (CK_SESSION_HANDLE session,
+                    CK_VOID_PTR parameter,
+                    CK_ULONG parameter_len,
+                    CK_BYTE_PTR data,
+                    CK_ULONG data_len,
+                    CK_BYTE_PTR signature,
+                    CK_ULONG_PTR signature_len)
+{
+	CK_RV rv;
+
+	rv = mock_C_SignMessageBegin (session, parameter, parameter_len);
+	if (rv == CKR_OK) {
+		rv = mock_C_SignMessageNext (session, parameter, parameter_len, data, data_len,
+		                             signature, signature_len);
+	}
+
+	return rv;
+}
+
+CK_RV
+mock_C_SignMessage__invalid_handle (CK_SESSION_HANDLE session,
+                                    CK_VOID_PTR parameter,
+                                    CK_ULONG parameter_len,
+                                    CK_BYTE_PTR data,
+                                    CK_ULONG data_len,
+                                    CK_BYTE_PTR signature,
+                                    CK_ULONG_PTR signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_SignMessage__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                    CK_SESSION_HANDLE session,
+                                    CK_VOID_PTR parameter,
+                                    CK_ULONG parameter_len,
+                                    CK_BYTE_PTR data,
+                                    CK_ULONG data_len,
+                                    CK_BYTE_PTR signature,
+                                    CK_ULONG_PTR signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_SignMessageBegin (CK_SESSION_HANDLE session,
+                         CK_VOID_PTR parameter,
+                         CK_ULONG parameter_len)
+{
+	Session *sess;
+	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_SIGN)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (parameter_len != 10 || memcmp (parameter, "sign-param", 10))
+		return CKR_ARGUMENTS_BAD;
+
+	if (sess->hash_method != CKF_SIGN) {
+		/* The Final already terminates this mechanism */
+		rv = prefix_mechanism_init (session, CKF_SIGN, &sess->message_mechanism, sess->message_key);
+		if (rv != CKR_OK)
+			return rv;
+	}
+
+	sess->message_progress = true;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_SignMessageBegin__invalid_handle (CK_SESSION_HANDLE session,
+                                         CK_VOID_PTR parameter,
+                                         CK_ULONG parameter_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_SignMessageBegin__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                         CK_SESSION_HANDLE session,
+                                         CK_VOID_PTR parameter,
+                                         CK_ULONG parameter_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_SignMessageNext (CK_SESSION_HANDLE session,
+                        CK_VOID_PTR parameter,
+                        CK_ULONG parameter_len,
+                        CK_BYTE_PTR data,
+                        CK_ULONG data_len,
+                        CK_BYTE_PTR signature,
+                        CK_ULONG_PTR signature_len)
+{
+	Session *sess;
+	CK_RV rv;
+
+	if (parameter_len != 10 || memcmp (parameter, "sign-param", 10))
+		return CKR_ARGUMENTS_BAD;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_SIGN || !sess->message_progress)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	rv = mock_C_SignUpdate (session, data, data_len);
+	if (rv != CKR_OK) {
+		return rv;
+	}
+
+	if (signature_len != NULL) {
+		rv = mock_C_SignFinal (session, signature, signature_len);
+		if (rv != CKR_BUFFER_TOO_SMALL && rv != CKR_OK)
+			sess->message_progress = false;
+	}
+
+	return rv;
+}
+
+CK_RV
+mock_C_SignMessageNext__invalid_handle (CK_SESSION_HANDLE session,
+                                        CK_VOID_PTR parameter,
+                                        CK_ULONG parameter_len,
+                                        CK_BYTE_PTR data,
+                                        CK_ULONG data_len,
+                                        CK_BYTE_PTR signature,
+                                        CK_ULONG_PTR signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_SignMessageNext__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                        CK_SESSION_HANDLE session,
+                                        CK_VOID_PTR parameter,
+                                        CK_ULONG parameter_len,
+                                        CK_BYTE_PTR data,
+                                        CK_ULONG data_len,
+                                        CK_BYTE_PTR signature,
+                                        CK_ULONG_PTR signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageSignFinal (CK_SESSION_HANDLE session)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_SIGN)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	sess->message_method = 0;
+	sess->message_progress = false;
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageSignFinal__invalid_handle (CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageSignFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                         CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageVerifyInit (CK_SESSION_HANDLE session,
+                          CK_MECHANISM_PTR mechanism,
+                          CK_OBJECT_HANDLE key)
+{
+	Session *sess;
+	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_VERIFY) {
+		sess->message_method = 0;
+		return CKR_OK;
+	}
+	if (sess->message_method != 0)
+		return CKR_OPERATION_ACTIVE;
+
+	rv = mock_C_VerifyInit (session, mechanism, key);
+	if (rv != CKR_OK)
+		return rv;
+
+	sess->message_method = CKF_MESSAGE_VERIFY;
+	free (sess->message_mechanism.pParameter);
+	sess->message_mechanism = *mechanism;
+	if (mechanism->pParameter != NULL) {
+		sess->message_mechanism.pParameter = memdup (mechanism->pParameter, mechanism->ulParameterLen);
+		assert (sess->message_mechanism.pParameter != NULL);
+		sess->message_mechanism.ulParameterLen = mechanism->ulParameterLen;
+	}
+	sess->message_key = key;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageVerifyInit__invalid_handle (CK_SESSION_HANDLE session,
+                                          CK_MECHANISM_PTR mechanism,
+                                          CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageVerifyInit__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                          CK_SESSION_HANDLE session,
+                                          CK_MECHANISM_PTR mechanism,
+                                          CK_OBJECT_HANDLE key)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifyMessage (CK_SESSION_HANDLE session,
+                      CK_VOID_PTR parameter,
+                      CK_ULONG parameter_len,
+                      CK_BYTE_PTR data,
+                      CK_ULONG data_len,
+                      CK_BYTE_PTR signature,
+                      CK_ULONG signature_len)
+{
+	CK_RV rv;
+
+	rv = mock_C_VerifyMessageBegin (session, parameter, parameter_len);
+	if (rv == CKR_OK) {
+		rv = mock_C_VerifyMessageNext (session, parameter, parameter_len, data, data_len,
+		                               signature, signature_len);
+	}
+
+	return rv;
+}
+
+CK_RV
+mock_C_VerifyMessage__invalid_handle (CK_SESSION_HANDLE session,
+                                      CK_VOID_PTR parameter,
+                                      CK_ULONG parameter_len,
+                                      CK_BYTE_PTR data,
+                                      CK_ULONG data_len,
+                                      CK_BYTE_PTR signature,
+                                      CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifyMessage__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                      CK_SESSION_HANDLE session,
+                                      CK_VOID_PTR parameter,
+                                      CK_ULONG parameter_len,
+                                      CK_BYTE_PTR data,
+                                      CK_ULONG data_len,
+                                      CK_BYTE_PTR signature,
+                                      CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifyMessageBegin (CK_SESSION_HANDLE session,
+			   CK_VOID_PTR parameter,
+			   CK_ULONG parameter_len)
+{
+	Session *sess;
+	CK_RV rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_VERIFY)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (parameter_len != 12 || memcmp (parameter, "verify-param", 12))
+		return CKR_ARGUMENTS_BAD;
+
+	if (sess->hash_method != CKF_VERIFY) {
+		/* The Final already terminates this mechanism */
+		rv = prefix_mechanism_init (session, CKF_VERIFY, &sess->message_mechanism, sess->message_key);
+		if (rv != CKR_OK)
+			return rv;
+	}
+
+	sess->message_progress = true;
+
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_VerifyMessageBegin__invalid_handle (CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifyMessageBegin__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session,
+                                           CK_VOID_PTR parameter,
+                                           CK_ULONG parameter_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifyMessageNext (CK_SESSION_HANDLE session,
+                          CK_VOID_PTR parameter,
+                          CK_ULONG parameter_len,
+                          CK_BYTE_PTR data,
+                          CK_ULONG data_len,
+                          CK_BYTE_PTR signature,
+                          CK_ULONG signature_len)
+{
+	Session *sess;
+	CK_RV rv;
+
+	if (parameter_len != 12 || memcmp (parameter, "verify-param", 12))
+		return CKR_ARGUMENTS_BAD;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_VERIFY || !sess->message_progress)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	rv = mock_C_VerifyUpdate (session, data, data_len);
+	if (rv != CKR_OK) {
+		return rv;
+	}
+
+	if (signature != NULL) {
+		rv = mock_C_VerifyFinal (session, signature, signature_len);
+		if (rv != CKR_BUFFER_TOO_SMALL)
+			sess->message_progress = false;
+	}
+
+	return rv;
+}
+
+CK_RV
+mock_C_VerifyMessageNext__invalid_handle (CK_SESSION_HANDLE session,
+                                          CK_VOID_PTR parameter,
+                                          CK_ULONG parameter_len,
+                                          CK_BYTE_PTR data,
+                                          CK_ULONG data_len,
+                                          CK_BYTE_PTR signature,
+                                          CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifyMessageNext__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                          CK_SESSION_HANDLE session,
+                                          CK_VOID_PTR parameter,
+                                          CK_ULONG parameter_len,
+                                          CK_BYTE_PTR data,
+                                          CK_ULONG data_len,
+                                          CK_BYTE_PTR signature,
+                                          CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_MessageVerifyFinal (CK_SESSION_HANDLE session)
+{
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (sess->message_method != CKF_MESSAGE_VERIFY)
+		return CKR_OPERATION_NOT_INITIALIZED;
+
+	sess->message_method = 0;
+	sess->message_progress = false;
+	return CKR_OK;
+}
+
+CK_RV
+mock_C_MessageVerifyFinal__invalid_handle (CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_MessageVerifyFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+                                           CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
 CK_FUNCTION_LIST mock_module_no_slots = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },  /* version */
 	mock_C_Initialize,
 	mock_C_Finalize,
 	mock_C_GetInfo,
@@ -3946,6 +5029,103 @@ CK_FUNCTION_LIST mock_module_no_slots = {
 	mock_C_WaitForSlotEvent__no_event,
 };
 
+CK_FUNCTION_LIST_3_0 mock_module_v3_no_slots = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+	mock_C_Initialize,
+	mock_C_Finalize,
+	mock_C_GetInfo,
+	mock_C_GetFunctionList_not_supported,
+	mock_C_GetSlotList__no_tokens,
+	mock_C_GetSlotInfo__invalid_slotid,
+	mock_C_GetTokenInfo__invalid_slotid,
+	mock_C_GetMechanismList__invalid_slotid,
+	mock_C_GetMechanismInfo__invalid_slotid,
+	mock_C_InitToken__invalid_slotid,
+	mock_C_InitPIN__invalid_handle,
+	mock_C_SetPIN__invalid_handle,
+	mock_C_OpenSession__invalid_slotid,
+	mock_C_CloseSession__invalid_handle,
+	mock_C_CloseAllSessions__invalid_slotid,
+	mock_C_GetSessionInfo__invalid_handle,
+	mock_C_GetOperationState__invalid_handle,
+	mock_C_SetOperationState__invalid_handle,
+	mock_C_Login__invalid_handle,
+	mock_C_Logout__invalid_handle,
+	mock_C_CreateObject__invalid_handle,
+	mock_C_CopyObject__invalid_handle,
+	mock_C_DestroyObject__invalid_handle,
+	mock_C_GetObjectSize__invalid_handle,
+	mock_C_GetAttributeValue__invalid_handle,
+	mock_C_SetAttributeValue__invalid_handle,
+	mock_C_FindObjectsInit__invalid_handle,
+	mock_C_FindObjects__invalid_handle,
+	mock_C_FindObjectsFinal__invalid_handle,
+	mock_C_EncryptInit__invalid_handle,
+	mock_C_Encrypt__invalid_handle,
+	mock_C_EncryptUpdate__invalid_handle,
+	mock_C_EncryptFinal__invalid_handle,
+	mock_C_DecryptInit__invalid_handle,
+	mock_C_Decrypt__invalid_handle,
+	mock_C_DecryptUpdate__invalid_handle,
+	mock_C_DecryptFinal__invalid_handle,
+	mock_C_DigestInit__invalid_handle,
+	mock_C_Digest__invalid_handle,
+	mock_C_DigestUpdate__invalid_handle,
+	mock_C_DigestKey__invalid_handle,
+	mock_C_DigestFinal__invalid_handle,
+	mock_C_SignInit__invalid_handle,
+	mock_C_Sign__invalid_handle,
+	mock_C_SignUpdate__invalid_handle,
+	mock_C_SignFinal__invalid_handle,
+	mock_C_SignRecoverInit__invalid_handle,
+	mock_C_SignRecover__invalid_handle,
+	mock_C_VerifyInit__invalid_handle,
+	mock_C_Verify__invalid_handle,
+	mock_C_VerifyUpdate__invalid_handle,
+	mock_C_VerifyFinal__invalid_handle,
+	mock_C_VerifyRecoverInit__invalid_handle,
+	mock_C_VerifyRecover__invalid_handle,
+	mock_C_DigestEncryptUpdate__invalid_handle,
+	mock_C_DecryptDigestUpdate__invalid_handle,
+	mock_C_SignEncryptUpdate__invalid_handle,
+	mock_C_DecryptVerifyUpdate__invalid_handle,
+	mock_C_GenerateKey__invalid_handle,
+	mock_C_GenerateKeyPair__invalid_handle,
+	mock_C_WrapKey__invalid_handle,
+	mock_C_UnwrapKey__invalid_handle,
+	mock_C_DeriveKey__invalid_handle,
+	mock_C_SeedRandom__invalid_handle,
+	mock_C_GenerateRandom__invalid_handle,
+	mock_C_GetFunctionStatus__not_parallel,
+	mock_C_CancelFunction__not_parallel,
+	mock_C_WaitForSlotEvent__no_event,
+	/* PKCS #11 3.0 */
+	mock_C_GetInterfaceList_not_supported,
+	mock_C_GetInterface_not_supported,
+	mock_C_LoginUser__invalid_handle,
+	mock_C_SessionCancel__invalid_handle,
+	mock_C_MessageEncryptInit__invalid_handle,
+	mock_C_EncryptMessage__invalid_handle,
+	mock_C_EncryptMessageBegin__invalid_handle,
+	mock_C_EncryptMessageNext__invalid_handle,
+	mock_C_MessageEncryptFinal__invalid_handle,
+	mock_C_MessageDecryptInit__invalid_handle,
+	mock_C_DecryptMessage__invalid_handle,
+	mock_C_DecryptMessageBegin__invalid_handle,
+	mock_C_DecryptMessageNext__invalid_handle,
+	mock_C_MessageDecryptFinal__invalid_handle,
+	mock_C_MessageSignInit__invalid_handle,
+	mock_C_SignMessage__invalid_handle,
+	mock_C_SignMessageBegin__invalid_handle,
+	mock_C_SignMessageNext__invalid_handle,
+	mock_C_MessageSignFinal__invalid_handle,
+	mock_C_MessageVerifyInit__invalid_handle,
+	mock_C_VerifyMessage__invalid_handle,
+	mock_C_VerifyMessageBegin__invalid_handle,
+	mock_C_VerifyMessageNext__invalid_handle,
+	mock_C_MessageVerifyFinal__invalid_handle
+};
+
 CK_X_FUNCTION_LIST mock_x_module_no_slots = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
 	mock_X_Initialize,
@@ -4013,10 +5193,33 @@ CK_X_FUNCTION_LIST mock_x_module_no_slots = {
 	mock_X_SeedRandom__invalid_handle,
 	mock_X_GenerateRandom__invalid_handle,
 	mock_X_WaitForSlotEvent__no_event,
+	/* PKCS #11 3.0 */
+	mock_X_LoginUser__invalid_handle,
+	mock_X_SessionCancel__invalid_handle,
+	mock_X_MessageEncryptInit__invalid_handle,
+	mock_X_EncryptMessage__invalid_handle,
+	mock_X_EncryptMessageBegin__invalid_handle,
+	mock_X_EncryptMessageNext__invalid_handle,
+	mock_X_MessageEncryptFinal__invalid_handle,
+	mock_X_MessageDecryptInit__invalid_handle,
+	mock_X_DecryptMessage__invalid_handle,
+	mock_X_DecryptMessageBegin__invalid_handle,
+	mock_X_DecryptMessageNext__invalid_handle,
+	mock_X_MessageDecryptFinal__invalid_handle,
+	mock_X_MessageSignInit__invalid_handle,
+	mock_X_SignMessage__invalid_handle,
+	mock_X_SignMessageBegin__invalid_handle,
+	mock_X_SignMessageNext__invalid_handle,
+	mock_X_MessageSignFinal__invalid_handle,
+	mock_X_MessageVerifyInit__invalid_handle,
+	mock_X_VerifyMessage__invalid_handle,
+	mock_X_VerifyMessageBegin__invalid_handle,
+	mock_X_VerifyMessageNext__invalid_handle,
+	mock_X_MessageVerifyFinal__invalid_handle
 };
 
 CK_FUNCTION_LIST mock_module = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },  /* version */
 	mock_C_Initialize,
 	mock_C_Finalize,
 	mock_C_GetInfo,
@@ -4086,6 +5289,108 @@ CK_FUNCTION_LIST mock_module = {
 	mock_C_CancelFunction,
 	mock_C_WaitForSlotEvent,
 };
+
+CK_FUNCTION_LIST_3_0 mock_module_v3 = {
+	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+	mock_C_Initialize,
+	mock_C_Finalize,
+	mock_C_GetInfo,
+	mock_C_GetFunctionList_not_supported,
+	mock_C_GetSlotList,
+	mock_C_GetSlotInfo,
+	mock_C_GetTokenInfo,
+	mock_C_GetMechanismList,
+	mock_C_GetMechanismInfo,
+	mock_C_InitToken__specific_args,
+	mock_C_InitPIN__specific_args,
+	mock_C_SetPIN__specific_args,
+	mock_C_OpenSession,
+	mock_C_CloseSession,
+	mock_C_CloseAllSessions,
+	mock_C_GetSessionInfo,
+	mock_C_GetOperationState,
+	mock_C_SetOperationState,
+	mock_C_Login,
+	mock_C_Logout,
+	mock_C_CreateObject,
+	mock_C_CopyObject,
+	mock_C_DestroyObject,
+	mock_C_GetObjectSize,
+	mock_C_GetAttributeValue,
+	mock_C_SetAttributeValue,
+	mock_C_FindObjectsInit,
+	mock_C_FindObjects,
+	mock_C_FindObjectsFinal,
+	mock_C_EncryptInit,
+	mock_C_Encrypt,
+	mock_C_EncryptUpdate,
+	mock_C_EncryptFinal,
+	mock_C_DecryptInit,
+	mock_C_Decrypt,
+	mock_C_DecryptUpdate,
+	mock_C_DecryptFinal,
+	mock_C_DigestInit,
+	mock_C_Digest,
+	mock_C_DigestUpdate,
+	mock_C_DigestKey,
+	mock_C_DigestFinal,
+	mock_C_SignInit,
+	mock_C_Sign,
+	mock_C_SignUpdate,
+	mock_C_SignFinal,
+	mock_C_SignRecoverInit,
+	mock_C_SignRecover,
+	mock_C_VerifyInit,
+	mock_C_Verify,
+	mock_C_VerifyUpdate,
+	mock_C_VerifyFinal,
+	mock_C_VerifyRecoverInit,
+	mock_C_VerifyRecover,
+	mock_C_DigestEncryptUpdate,
+	mock_C_DecryptDigestUpdate,
+	mock_C_SignEncryptUpdate,
+	mock_C_DecryptVerifyUpdate,
+	mock_C_GenerateKey,
+	mock_C_GenerateKeyPair,
+	mock_C_WrapKey,
+	mock_C_UnwrapKey,
+	mock_C_DeriveKey,
+	mock_C_SeedRandom,
+	mock_C_GenerateRandom,
+	mock_C_GetFunctionStatus,
+	mock_C_CancelFunction,
+	mock_C_WaitForSlotEvent,
+	/* PKCS #11 3.0 */
+	mock_C_GetInterfaceList_not_supported,
+	mock_C_GetInterface_not_supported,
+	mock_C_LoginUser,
+	mock_C_SessionCancel,
+	mock_C_MessageEncryptInit,
+	mock_C_EncryptMessage,
+	mock_C_EncryptMessageBegin,
+	mock_C_EncryptMessageNext,
+	mock_C_MessageEncryptFinal,
+	mock_C_MessageDecryptInit,
+	mock_C_DecryptMessage,
+	mock_C_DecryptMessageBegin,
+	mock_C_DecryptMessageNext,
+	mock_C_MessageDecryptFinal,
+	mock_C_MessageSignInit,
+	mock_C_SignMessage,
+	mock_C_SignMessageBegin,
+	mock_C_SignMessageNext,
+	mock_C_MessageSignFinal,
+	mock_C_MessageVerifyInit,
+	mock_C_VerifyMessage,
+	mock_C_VerifyMessageBegin,
+	mock_C_VerifyMessageNext,
+	mock_C_MessageVerifyFinal
+};
+
+CK_INTERFACE mock_interfaces[MOCK_INTERFACES] = {
+        {"PKCS 11", &mock_module_v3, 0}, /* 3.0 */
+};
+
 
 void
 mock_module_init (void)

@@ -523,7 +523,7 @@ main (int argc,
 	p11_test (test_slot_event, "/proxy/slot-event");
 	p11_test (test_reuse_slots, "/proxy/reuse-slots");
 
-	test_mock_add_tests ("/proxy");
+	test_mock_add_tests ("/proxy", NULL);
 
 	return p11_test_run (argc, argv);
 }

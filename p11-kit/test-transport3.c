@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012 Stefan Walter
- * Copyright (c) 2012-2017 Red Hat Inc.
+ * Copyright (c) 2012-2022 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,8 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stef@thewalter.net>
+ * Authors: Stef Walter <stef@thewalter.net>
+ *          Jakub Jelen <jjelen@redhat.com>
  */
 
 #include "config.h"
@@ -84,7 +85,7 @@ setup_remote (void *unused)
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
 	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
-	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-two" SHLEXT "\n";
+	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-v3-two" SHLEXT "\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";
 	p11_test_file_write (test.user_modules, "init-arg.module", data, strlen (data));
@@ -193,10 +194,10 @@ launch_server (void)
 	assert_num_cmp (rc, !=, -1);
 
 	argv[0] = "p11-kit-remote";
-	argv[1] = P11_MODULE_PATH "/mock-two" SHLEXT;
+	argv[1] = P11_MODULE_PATH "/mock-v3-two.so";
 	argv[2] = NULL;
 
-	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote" EXEEXT, argv);
+	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote", argv);
 	assert_num_cmp (rc, !=, -1);
 }
 
@@ -408,6 +409,8 @@ test_fork_and_reinitialize (void)
 
 extern bool p11_conf_force_user_config;
 
+CK_VERSION test_version_three = {CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR};
+
 int
 main (int argc,
       char *argv[])
@@ -438,7 +441,7 @@ main (int argc,
 	p11_test (test_fork_and_reinitialize, "/transport/fork-and-reinitialize");
 #endif
 
-	test_mock_add_tests ("/transport", NULL);
+	test_mock_add_tests ("/transport3", &test_version_three);
 
 #ifdef OS_UNIX
 	p11_fixture (setup_remote_unix, teardown_remote_unix);

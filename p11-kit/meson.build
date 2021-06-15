@@ -242,13 +242,17 @@ if get_option('test')
     'test-modules',
     'test-deprecated',
     'test-proxy',
+    'test-proxy3',
     'test-iter',
     'test-rpc',
+    'test-rpc3',
     'test-virtual',
     'test-managed',
     'test-log',
+    'test-log3',
     'test-filter',
-    'test-transport'
+    'test-transport',
+    'test-transport3'
   ]
 
   if host_system != 'windows'
@@ -303,6 +307,12 @@ if get_option('test')
                    'mock-ten': ['mock-module-ep8.c']
                  }
 
+  mock_v3_sources = {
+                      'mock-v3-one': ['mock-module-v3-ep.c'],
+                      'mock-v3-two': ['mock-module-v3-ep2.c'],
+                      'mock-v3-four': ['mock-module-v3-ep.c'],
+                    }
+
   if host_system != 'windows'
     mock_sources += {'mock-six': ['mock-module-ep4.c']}
   endif
@@ -315,6 +325,16 @@ if get_option('test')
                   link_depends: [p11_module_symbol_map,
                                  p11_module_symbol_def],
                   vs_module_defs: p11_module_symbol_def,
+                  dependencies: [libp11_test_dep])
+  endforeach
+  foreach name, sources : mock_v3_sources
+    shared_module(name,
+                  sources,
+                  name_prefix: '',
+                  link_args: p11v3_module_ldflags,
+                  link_depends: [p11v3_module_symbol_map,
+                                 p11v3_module_symbol_def],
+                  vs_module_defs: p11v3_module_symbol_def,
                   dependencies: [libp11_test_dep])
   endforeach
 endif

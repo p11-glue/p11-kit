@@ -1,0 +1,5 @@
+
+module: mock-v3-four.so
+enable-in: test-proxy3, test-rpc3, test-log3
+priority: 4
+trust-policy: no
