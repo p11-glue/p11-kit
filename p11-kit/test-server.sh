@@ -36,7 +36,7 @@ fi
 
 . ./start.env
 
-if test "${P11_KIT_SERVER_ADDRESS+set}" = "set" -a "${P11_KIT_SERVER_PID+set}" = "set"; then
+if test "${P11_KIT_SERVER_ADDRESS+set}" = "set" && test "${P11_KIT_SERVER_PID+set}" = "set"; then
 	echo "ok 2 /server/start-env"
 else
 	echo "not ok 2 /server/start-env"
@@ -54,7 +54,7 @@ fi
 
 . ./stop.env
 
-if test "${P11_KIT_SERVER_ADDRESS-unset}" = "unset" -a "${P11_KIT_SERVER_PID-unset}" = "unset"; then
+if test "${P11_KIT_SERVER_ADDRESS-unset}" = "unset" && test "${P11_KIT_SERVER_PID-unset}" = "unset"; then
 	echo "ok 4 /server/stop-env"
 else
 	echo "not ok 4 /server/stop-env"

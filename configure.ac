@@ -350,7 +350,7 @@ elif test "$enable_trust_module" != "yes"; then
 	AC_MSG_RESULT([disabled])
 
 # Option was not set, try to detect
-elif test "$with_trust_paths" = "" -o "$with_trust_paths" = "yes"; then
+elif test "$with_trust_paths" = "" || test "$with_trust_paths" = "yes"; then
 	with_trust_paths=""
 	for f in /etc/pki/tls/certs/ca-bundle.crt \
 		/etc/ssl/certs/ca-certificates.crt \
