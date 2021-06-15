@@ -48,7 +48,7 @@ p11-kit/virtual-fixed-generated.h: Makefile
 	    counter=`expr $$counter + 1`; \
 	  done; \
 	  echo; \
-	  echo "CK_FUNCTION_LIST p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
+	  echo "CK_FUNCTION_LIST_3_0 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
 	  counter=0; \
 	  while test $$counter -lt $(closures); do \
 	    echo "	P11_VIRTUAL_FIXED_INITIALIZER($$counter),"; \
@@ -94,7 +94,7 @@ libp11_kit_la_LDFLAGS = \
 if HAVE_LD_VERSION_SCRIPT
 libp11_kit_la_LDFLAGS += -Wl,--version-script=$(srcdir)/p11-kit/libp11-kit.map
 else
-libp11_kit_la_LDFLAGS += -export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+libp11_kit_la_LDFLAGS += -export-symbols-regex '^C_GetFunctionList|^C_GetInterface|^p11_kit_'
 endif
 
 libp11_kit_la_SOURCES = \
@@ -204,7 +204,7 @@ module_LTLIBRARIES += \
 p11_kit_client_la_LDFLAGS = \
 	-no-undefined -module -avoid-version \
 	-version-info $(P11KIT_LT_RELEASE) \
-	-export-symbols-regex '^C_GetFunctionList' \
+	-export-symbols-regex '^C_GetFunctionList|^C_GetInterface' \
 	$(NULL)
 
 p11_kit_client_la_CFLAGS = $(COMMON_CFLAGS)
