@@ -54,10 +54,22 @@ void                    p11_virtual_init       (p11_virtual *virt,
                                                 void *lower_module,
                                                 p11_destroyer lower_destroy);
 
+void                    p11_virtual_init_version
+                                               (p11_virtual *virt,
+                                                CK_X_FUNCTION_LIST *funcs,
+                                                const CK_VERSION *version,
+                                                void *lower_module,
+                                                p11_destroyer lower_destroy);
+
 void                    p11_virtual_uninit     (p11_virtual *virt);
 
 CK_FUNCTION_LIST *      p11_virtual_wrap       (p11_virtual *virt,
                                                 p11_destroyer destroyer);
+
+CK_FUNCTION_LIST *      p11_virtual_wrap_version
+                                               (p11_virtual *virt,
+                                                p11_destroyer destroyer,
+                                                const CK_VERSION *version);
 
 bool                    p11_virtual_is_wrapper (CK_FUNCTION_LIST *module);
 

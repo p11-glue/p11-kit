@@ -99,41 +99,6 @@ test_no_duplicates (void)
 	finalize_and_free_modules (modules);
 }
 
-static void
-test_exceed_max (void)
-{
-	CK_FUNCTION_LIST_PTR_PTR modules;
-	p11_dict *paths;
-	p11_dict *funcs;
-	char *path;
-	int i;
-
-	modules = initialize_and_get_modules ();
-	paths = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
-	funcs = p11_dict_new (p11_dict_direct_hash, p11_dict_direct_equal, NULL, NULL);
-
-	/* The loaded modules should not contain duplicates */
-	for (i = 0; modules[i] != NULL; i++) {
-		path = p11_kit_config_option (modules[i], "module");
-
-		if (p11_dict_get (funcs, modules[i]))
-			assert_fail ("found duplicate function list pointer", NULL);
-		if (p11_dict_get (paths, path))
-			assert_fail ("found duplicate path name", NULL);
-
-		if (!p11_dict_set (funcs, modules[i], ""))
-			assert_not_reached ();
-		if (!p11_dict_set (paths, path, ""))
-			assert_not_reached ();
-
-		free (path);
-	}
-
-	p11_dict_free (paths);
-	p11_dict_free (funcs);
-	finalize_and_free_modules (modules);
-}
-
 static CK_FUNCTION_LIST_PTR
 lookup_module_with_name (CK_FUNCTION_LIST_PTR_PTR modules,
                          const char *name)
@@ -498,7 +463,6 @@ main (int argc,
 
 	p11_test (test_filename, "/modules/test_filename");
 	p11_test (test_no_duplicates, "/modules/test_no_duplicates");
-	p11_test (test_exceed_max, "/modules/test_exceed_max");
 	p11_test (test_disable, "/modules/test_disable");
 	p11_test (test_disable_later, "/modules/test_disable_later");
 	p11_test (test_enable, "/modules/test_enable");

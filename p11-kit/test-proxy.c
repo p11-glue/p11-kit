@@ -72,6 +72,8 @@ test_initialize_finalize (void)
 
 	rv = C_GetFunctionList (&proxy);
 	assert (rv == CKR_OK);
+	assert (proxy->version.major == CRYPTOKI_LEGACY_VERSION_MAJOR);
+	assert (proxy->version.minor == CRYPTOKI_LEGACY_VERSION_MINOR);
 
 	assert (p11_proxy_module_check (proxy));
 
@@ -492,7 +494,7 @@ teardown_mock_module (CK_FUNCTION_LIST_PTR module)
 #define MOCK_SKIP_WAIT_TEST
 
 static const CK_INFO mock_info = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
+	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },
 	"PKCS#11 Kit                     ",
 	0,
 	"PKCS#11 Kit Proxy Module        ",
@@ -521,7 +523,7 @@ main (int argc,
 	p11_test (test_slot_event, "/proxy/slot-event");
 	p11_test (test_reuse_slots, "/proxy/reuse-slots");
 
-	test_mock_add_tests ("/proxy");
+	test_mock_add_tests ("/proxy", NULL);
 
 	return p11_test_run (argc, argv);
 }

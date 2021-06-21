@@ -1,6 +1,8 @@
 LIBP11_KIT_1.0 {
 	global:
 		C_GetFunctionList;
+		C_GetInterface;
+		C_GetInterfaceList;
 		p11_kit_be_loud;
 		p11_kit_be_quiet;
 		p11_kit_config_option;

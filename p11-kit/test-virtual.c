@@ -155,6 +155,50 @@ test_get_function_list (void)
 	p11_virtual_unwrap (module);
 }
 
+static void
+test_get_interface (void)
+{
+	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_VERSION version = {3, 0};
+	CK_INTERFACE_PTR list;
+	CK_INTERFACE_PTR interface;
+	CK_ULONG count;
+	p11_virtual virt;
+	CK_RV rv;
+
+	p11_virtual_init (&virt, &p11_virtual_base, &mock_module_v3_no_slots, NULL);
+	module = (CK_FUNCTION_LIST_3_0_PTR)p11_virtual_wrap_version (&virt, NULL, &version);
+	assert_ptr_not_null (module);
+
+	rv = (module->C_GetInterface) (NULL, NULL, NULL, 0);
+	assert_num_eq (CKR_ARGUMENTS_BAD, rv);
+
+	rv = (module->C_GetInterface) (NULL, NULL, &interface, 0);
+	assert_num_eq (CKR_OK, rv);
+	assert_ptr_eq (module, interface->pFunctionList);
+
+	rv = (module->C_GetInterface) ((unsigned char *)"PKCS 11", NULL, &interface, 0);
+	assert_num_eq (CKR_OK, rv);
+	assert_ptr_eq (module, interface->pFunctionList);
+
+	rv = (module->C_GetInterfaceList) (NULL, NULL);
+	assert_num_eq (CKR_ARGUMENTS_BAD, rv);
+
+	rv = (module->C_GetInterfaceList) (NULL, &count);
+	assert_num_eq (CKR_OK, rv);
+
+	list = malloc (sizeof(CK_INTERFACE) * count);
+	assert (list != NULL);
+
+	rv = (module->C_GetInterfaceList) (list, &count);
+	assert_num_eq (CKR_OK, rv);
+	assert_num_eq (count, 1);
+	assert_ptr_eq (module, list[0].pFunctionList);
+	assert (strcmp("PKCS 11", list[0].pInterfaceName) == 0);
+
+	p11_virtual_unwrap ((CK_FUNCTION_LIST *)module);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -165,6 +209,7 @@ main (int argc,
 	p11_test (test_initialize, "/virtual/test_initialize");
 	p11_test (test_fall_through, "/virtual/test_fall_through");
 	p11_test (test_get_function_list, "/virtual/test_get_function_list");
+	p11_test (test_get_interface, "/virtual/test_get_interface");
 
 	return p11_test_run (argc, argv);
 }

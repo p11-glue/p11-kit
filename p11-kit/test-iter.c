@@ -135,6 +135,7 @@ test_all (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -207,6 +208,7 @@ test_callback (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -314,6 +316,7 @@ test_with_session (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -365,6 +368,7 @@ test_with_slot (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -408,6 +412,7 @@ test_with_module (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -514,6 +519,7 @@ test_uri_with_type (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -587,6 +593,7 @@ test_filter (void)
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
 	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (!has_handle (objects, at, MOCK_PROFILE_OBJECT));
 
 	p11_kit_iter_free (iter);
 
@@ -1615,6 +1622,66 @@ test_exhaustive_match (void)
 	}
 }
 
+static void
+test_profile (void)
+{
+	CK_OBJECT_HANDLE objects[128];
+	CK_SESSION_HANDLE session;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SLOT_ID slot;
+	P11KitIter *iter;
+	CK_RV rv;
+	int at;
+
+	mock_module_reset ();
+	rv = mock_module_v3.C_Initialize (NULL);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = mock_C_OpenSession (MOCK_SLOT_ONE_ID, CKF_SERIAL_SESSION, NULL, NULL, &session);
+	assert_num_eq (rv, CKR_OK);
+
+	mock_module_add_profile (MOCK_SLOT_ONE_ID, CKP_PUBLIC_CERTIFICATES_TOKEN);
+
+	iter = p11_kit_iter_new (NULL, 0);
+	p11_kit_iter_begin_with (iter, (CK_FUNCTION_LIST *)&mock_module_v3, 0, session);
+
+	at = 0;
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		assert (at < 128);
+		objects[at] = p11_kit_iter_get_object (iter);
+
+		slot = p11_kit_iter_get_slot (iter);
+		assert (slot == MOCK_SLOT_ONE_ID);
+
+		module = p11_kit_iter_get_module (iter);
+		assert_ptr_eq (module, &mock_module_v3);
+
+		assert (session == p11_kit_iter_get_session (iter));
+		at++;
+	}
+
+	assert (rv == CKR_CANCEL);
+
+	/* 1 modules, each with 1 slot, and 3 public objects and profile object*/
+	assert_num_eq (4, at);
+
+	assert (has_handle (objects, at, MOCK_DATA_OBJECT));
+	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
+	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_CAPITALIZE));
+	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_PREFIX));
+	assert (has_handle (objects, at, MOCK_PUBLIC_KEY_PREFIX));
+	assert (has_handle (objects, at, MOCK_PROFILE_OBJECT));
+
+	p11_kit_iter_free (iter);
+
+	/* The session is still valid ... */
+	rv = mock_module_v3.C_CloseSession (session);
+	assert (rv == CKR_OK);
+
+	rv = mock_module_v3.C_Finalize (NULL);
+	assert (rv == CKR_OK);
+}
+
 int
 main (int argc,
       char *argv[])
@@ -1662,6 +1729,7 @@ main (int argc,
 	p11_testx (test_many, "busy-sessions", "/iter/test-many-busy");
 	p11_test (test_destroy_object, "/iter/destroy-object");
 	p11_test (test_exhaustive_match, "/iter/test_exhaustive_match");
+	p11_test (test_profile, "/iter/test_profile");
 
 	return p11_test_run (argc, argv);
 }

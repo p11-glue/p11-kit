@@ -48,7 +48,7 @@ p11-kit/virtual-fixed-generated.h: Makefile
 	    counter=`expr $$counter + 1`; \
 	  done; \
 	  echo; \
-	  echo "CK_FUNCTION_LIST p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
+	  echo "CK_FUNCTION_LIST_3_0 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
 	  counter=0; \
 	  while test $$counter -lt $(closures); do \
 	    echo "	P11_VIRTUAL_FIXED_INITIALIZER($$counter),"; \
@@ -93,7 +93,7 @@ libp11_kit_la_LDFLAGS = \
 if HAVE_LD_VERSION_SCRIPT
 libp11_kit_la_LDFLAGS += -Wl,--version-script=$(srcdir)/p11-kit/libp11-kit.map
 else
-libp11_kit_la_LDFLAGS += -export-symbols-regex '^C_GetFunctionList|^p11_kit_'
+libp11_kit_la_LDFLAGS += -export-symbols-regex '^C_GetFunctionList|^C_GetInterface|^p11_kit_'
 endif
 
 libp11_kit_la_SOURCES = \
@@ -203,7 +203,7 @@ module_LTLIBRARIES += \
 p11_kit_client_la_LDFLAGS = \
 	-no-undefined -module -avoid-version \
 	-version-info $(P11KIT_LT_RELEASE) \
-	-export-symbols-regex '^C_GetFunctionList' \
+	-export-symbols-regex '^C_GetFunctionList|^C_GetInterface' \
 	$(NULL)
 
 p11_kit_client_la_CFLAGS = $(COMMON_CFLAGS)
@@ -230,7 +230,9 @@ EXTRA_DIST += \
 	p11-kit/libp11-kit.map \
 	p11-kit/libp11-kit-0.dll.def \
 	p11-kit/p11-module.map \
+	p11-kit/p11v3-module.map \
 	p11-kit/p11-module.def \
+	p11-kit/p11v3-module.def \
 	p11-kit/pkcs11-gnu.c \
 	$(NULL)
 
@@ -342,8 +344,10 @@ c_tests += \
 	test-modules \
 	test-deprecated \
 	test-proxy \
+	test-proxy3 \
 	test-iter \
 	test-rpc \
+	test-rpc3 \
 	$(NULL)
 
 if !OS_WIN32
@@ -377,8 +381,14 @@ test_progname_LDADD = $(p11_kit_LIBS)
 test_proxy_SOURCES = p11-kit/test-proxy.c
 test_proxy_LDADD = $(p11_kit_LIBS)
 
+test_proxy3_SOURCES = p11-kit/test-proxy3.c
+test_proxy3_LDADD = $(p11_kit_LIBS)
+
 test_rpc_SOURCES = p11-kit/test-rpc.c
 test_rpc_LDADD = $(p11_kit_LIBS)
+
+test_rpc3_SOURCES = p11-kit/test-rpc3.c
+test_rpc3_LDADD = $(p11_kit_LIBS)
 
 test_server_SOURCES = p11-kit/test-server.c
 test_server_LDADD = $(p11_kit_LIBS)
@@ -406,12 +416,17 @@ c_tests += \
 	test-virtual \
 	test-managed \
 	test-log \
+	test-log3 \
 	test-filter \
 	test-transport \
+	test-transport3 \
 	$(NULL)
 
 test_log_SOURCES = p11-kit/test-log.c
 test_log_LDADD = $(p11_kit_LIBS)
+
+test_log3_SOURCES = p11-kit/test-log3.c
+test_log3_LDADD = $(p11_kit_LIBS)
 
 test_filter_SOURCES = p11-kit/test-filter.c
 test_filter_LDADD = $(p11_kit_LIBS)
@@ -423,14 +438,21 @@ test_transport_SOURCES = p11-kit/test-transport.c
 test_transport_LDADD = $(p11_kit_LIBS)
 test_transport_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
+test_transport3_SOURCES = p11-kit/test-transport3.c
+test_transport3_LDADD = $(p11_kit_LIBS)
+test_transport3_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
+
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
 
 check_LTLIBRARIES += \
 	mock-one.la \
+	mock-v3-one.la \
 	mock-two.la \
+	mock-v3-two.la \
 	mock-three.la \
 	mock-four.la \
+	mock-v3-four.la \
 	mock-five.la \
 	mock-seven.la \
 	mock-eight.la \
@@ -443,9 +465,19 @@ mock_one_la_LDFLAGS = \
 	-module -avoid-version -rpath /nowhere \
 	-no-undefined -export-symbols-regex 'C_GetFunctionList'
 
+mock_v3_one_la_SOURCES = p11-kit/mock-module-v3-ep.c
+mock_v3_one_la_LIBADD = $(mock_one_la_LIBADD)
+mock_v3_one_la_LDFLAGS = \
+	-module -avoid-version -rpath /nowhere \
+	-no-undefined -export-symbols-regex 'C_GetFunctionList|C_GetInterface'
+
 mock_two_la_SOURCES = p11-kit/mock-module-ep2.c
 mock_two_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_two_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_v3_two_la_SOURCES = p11-kit/mock-module-v3-ep2.c
+mock_v3_two_la_LDFLAGS = $(mock_v3_one_la_LDFLAGS)
+mock_v3_two_la_LIBADD = $(mock_v3_one_la_LIBADD)
 
 mock_three_la_SOURCES = $(mock_one_la_SOURCES)
 mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
@@ -454,6 +486,10 @@ mock_three_la_LIBADD = $(mock_one_la_LIBADD)
 mock_four_la_SOURCES = $(mock_one_la_SOURCES)
 mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_v3_four_la_SOURCES = $(mock_v3_one_la_SOURCES)
+mock_v3_four_la_LDFLAGS = $(mock_v3_one_la_LDFLAGS)
+mock_v3_four_la_LIBADD = $(mock_v3_one_la_LIBADD)
 
 mock_five_la_SOURCES = p11-kit/mock-module-ep3.c
 mock_five_la_LDFLAGS = $(mock_one_la_LDFLAGS)

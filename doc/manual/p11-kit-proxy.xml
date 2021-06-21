@@ -23,7 +23,9 @@
 	module is then used as a normal PKCS#11 module would be. It can be loaded by
 	crypto libraries like NSS and behaves as expected.</para>
 
-	<para>The <literal>C_GetFunctionList</literal> exported entry point of the
-	proxy module returns a new managed PKCS#11 module each time it is called. These
-	managed instances are released when the proxy module is unloaded.</para>
+	<para>The <literal>C_GetFunctionList</literal>,
+	<literal>C_GetInterfaceList</literal> and <literal>C_GetInterface</literal>
+	exported entry points of the proxy module returns a new managed PKCS#11 module
+	each time it is called. These managed instances are released when the proxy
+	module is unloaded.</para>
 </chapter>

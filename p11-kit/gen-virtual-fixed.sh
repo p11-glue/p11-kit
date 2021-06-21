@@ -12,7 +12,7 @@ rm -f $target-t $target && \
       counter=`expr $counter + 1`; \
     done; \
     echo; \
-    echo "CK_FUNCTION_LIST p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
+    echo "CK_FUNCTION_LIST_3_0 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
     counter=0; \
     while test $counter -lt $closures; do \
       echo "	P11_VIRTUAL_FIXED_INITIALIZER($counter),"; \

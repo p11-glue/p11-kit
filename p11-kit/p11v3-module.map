@@ -1,0 +1,8 @@
+{
+	global:
+		C_GetFunctionList;
+		C_GetInterfaceList;
+		C_GetInterface;
+	local:
+		*;
+};
