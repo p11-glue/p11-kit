@@ -244,6 +244,41 @@ test_build_null (void)
 }
 
 static void
+test_build_recursive (void)
+{
+	CK_BBOOL vtrue = CK_TRUE;
+	CK_BYTE vpoint[1];
+	CK_ATTRIBUTE template[] = {
+		{ CKA_LOCAL, &vtrue, sizeof (vtrue) },
+		{ CKA_EC_POINT, vpoint, 0 },
+	};
+	CK_ATTRIBUTE add = { CKA_WRAP_TEMPLATE, template, sizeof (template) };
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE *array;
+
+	attrs = p11_attrs_build (NULL, &add, NULL);
+
+	/* Test the first attribute */
+	assert_ptr_not_null (attrs);
+	assert_num_eq (attrs->type, CKA_WRAP_TEMPLATE);
+	assert_num_eq (attrs->ulValueLen, sizeof (template));
+	array = attrs->pValue;
+	/* Check that the CKA_LOCAL attribute has been copied, but
+	 * still has the same value */
+	assert_num_eq (array[0].type, CKA_LOCAL);
+	assert_num_eq (array[0].ulValueLen, sizeof (vtrue));
+	assert_ptr_cmp (array[0].pValue, !=, &vtrue);
+	assert_num_eq (*(CK_BBOOL *)array[0].pValue, vtrue);
+	/* Check that the CKA_EC_POINT attribute has been allocated,
+	 * even if the length is zero */
+	assert_num_eq (array[1].type, CKA_EC_POINT);
+	assert_num_eq (array[1].ulValueLen, 0);
+	assert_ptr_not_null (array[1].pValue);
+	assert_ptr_cmp (array[1].pValue, !=, vpoint);
+	p11_attrs_free (attrs);
+}
+
+static void
 test_dup (void)
 {
 	CK_ATTRIBUTE *attrs;
@@ -766,6 +801,7 @@ main (int argc,
 	p11_test (test_buildn_two, "/attrs/buildn-two");
 	p11_test (test_build_add, "/attrs/build-add");
 	p11_test (test_build_null, "/attrs/build-null");
+	p11_test (test_build_recursive, "/attrs/build-recursive");
 	p11_test (test_dup, "/attrs/dup");
 	p11_test (test_take, "/attrs/take");
 	p11_test (test_merge_replace, "/attrs/merge-replace");

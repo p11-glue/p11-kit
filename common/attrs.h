@@ -142,5 +142,8 @@ unsigned int        p11_attr_hash           (const void *data);
 bool                p11_attr_match_value    (const CK_ATTRIBUTE *attr,
                                              const void *value,
                                              ssize_t length);
+bool                p11_attr_copy           (CK_ATTRIBUTE *dst,
+					     const CK_ATTRIBUTE *src);
+void                p11_attr_clear          (CK_ATTRIBUTE *attr);
 
 #endif /* P11_ATTRS_H_ */
