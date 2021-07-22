@@ -60,6 +60,7 @@
 #define _(x) dgettext(PACKAGE_NAME, x)
 #else
 #define _(x) (x)
+#define dngettext(Domain,String1,String2,N) ((N) == 1 ? (String1) : (String2))
 #endif
 
 static p11_parser *
@@ -697,10 +698,11 @@ p11_trust_anchor (int argc,
 		assert_not_reached ();
 
 	if (errors > 0) {
-		if (errors == 1)
-			p11_message (_("%u error while processing"), errors);
-		else
-			p11_message (_("%u errors while processing"), errors);
+		p11_message (dngettext (PACKAGE_NAME,
+					"%u error while processing",
+					"%u errors while processing",
+					errors),
+			     errors);
 	}
 
 	/* Extract the compat bundles after modification */
