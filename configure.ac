@@ -44,9 +44,10 @@ LT_INIT([dlopen disable-static])
 dnl Check if -Wl,--version-script is supported by the linker
 gl_LD_VERSION_SCRIPT
 
-# --------------------------------------------------------------------
-# Check for -z nodelete link flag
-
+dnl libp11-kit installs pthread_atfork to count forks in ELF
+dnl constructor, which could cause crash if the library is unloaded.
+dnl Use the linker flag "-z nodelete" to prevent unloading, if
+dnl available.
 SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$LDFLAGS -Wl,-z -Wl,nodelete"
 AC_MSG_CHECKING([whether linker understands -z nodelete])

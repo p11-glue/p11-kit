@@ -57,6 +57,12 @@ libp11_kit_ldflags = cc.get_supported_link_arguments([
 ])
 libp11_kit_symbol_def = meson.current_source_dir() / 'libp11-kit-@0@.dll.def'.format(soversion)
 
+# Make sure that libp11-kit is unloadable, as it installs
+# pthread_atfork to count forks in the ELF constructor.
+libp11_kit_ldflags += cc.get_supported_link_arguments([
+  '-Wl,-z,nodelete'
+])
+
 libp11_kit = shared_library('p11-kit',
                             libp11_kit_sources,
                             install: true,
