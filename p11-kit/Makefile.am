@@ -87,6 +87,7 @@ COMMON_LIBS = \
 libp11_kit_la_CFLAGS = $(COMMON_CFLAGS)
 
 libp11_kit_la_LDFLAGS = \
+	$(LDFLAGS_Z_NODELETE) \
 	-no-undefined \
 	-version-info $(P11KIT_LT_RELEASE)
 
