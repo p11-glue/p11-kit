@@ -44,6 +44,19 @@ LT_INIT([dlopen disable-static])
 dnl Check if -Wl,--version-script is supported by the linker
 gl_LD_VERSION_SCRIPT
 
+# --------------------------------------------------------------------
+# Check for -z nodelete link flag
+
+SAVE_LDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS -Wl,-z -Wl,nodelete"
+AC_MSG_CHECKING([whether linker understands -z nodelete])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
+	       [LDFLAGS_Z_NODELETE="-Wl,-z -Wl,nodelete"; has_option=yes],
+	       [LDFLAGS_Z_NODELETE=""; has_option=no])
+AC_MSG_RESULT($has_option)
+LDFLAGS="$SAVE_LDFLAGS"
+AC_SUBST(LDFLAGS_Z_NODELETE)
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
