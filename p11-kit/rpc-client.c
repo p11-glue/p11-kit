@@ -757,8 +757,24 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	ret = (module->vtable->connect) (module->vtable, reserved);
 
 	if (ret == CKR_OK) {
+		module->version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
 		ret = (module->vtable->authenticate) (module->vtable,
 						      &module->version);
+
+#if P11_RPC_PROTOCOL_VERSION_MAXIMUM > 0
+		/* If the server is too old to support version negotiation
+		 * (i.e., not accepting version bytes other than 0), try to
+		 * reconnect and reauthenticate with version 0 */
+		if (ret != CKR_OK) {
+			assert (module->vtable->disconnect != NULL);
+			(module->vtable->disconnect) (module->vtable, reserved);
+			ret = (module->vtable->connect) (module->vtable, reserved);
+
+			module->version = 0;
+			ret = (module->vtable->authenticate) (module->vtable,
+							      &module->version);
+		}
+#endif
 	}
 
 	/* Successfully initialized */

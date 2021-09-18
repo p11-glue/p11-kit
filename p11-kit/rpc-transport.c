@@ -641,7 +641,7 @@ rpc_transport_authenticate (p11_rpc_client_vtable *vtable,
 	}
 #endif
 
-	*version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
+	p11_debug ("authenticating with version %u", *version);
 
 	/* Place holder byte, will later carry unix credentials (on some systems) */
 	if (write_all (sock->write_fd, version, 1) != 1) {
