@@ -62,6 +62,8 @@
 #define _(x) (x)
 #endif
 
+#define ELEMS(x) (sizeof (x) / sizeof (x[0]))
+
 struct _p11_builder {
 	p11_asn1_cache *asn1_cache;
 	p11_dict *asn1_defs;
@@ -1099,7 +1101,8 @@ build_for_schema (p11_builder *builder,
 			continue;
 
 		found = false;
-		for (j = 0; schema->attrs[j].type != CKA_INVALID; j++) {
+		for (j = 0; j < ELEMS(schema->attrs) &&
+			     schema->attrs[j].type != CKA_INVALID; j++) {
 			if (schema->attrs[j].type != merge[i].type)
 				continue;
 
@@ -1132,7 +1135,8 @@ build_for_schema (p11_builder *builder,
 	}
 
 	if (attrs == NULL) {
-		for (j = 0; schema->attrs[j].type != CKA_INVALID; j++) {
+		for (j = 0; j < ELEMS(schema->attrs) &&
+			     schema->attrs[j].type != CKA_INVALID; j++) {
 			flags = schema->attrs[j].flags;
 			found = false;
 
@@ -1297,7 +1301,8 @@ build_trust_object_ku (p11_builder *builder,
 		free (data);
 	}
 
-	for (i = 0; ku_attribute_map[i].type != CKA_INVALID; i++) {
+	for (i = 0; i < ELEMS(ku_attribute_map) &&
+		     ku_attribute_map[i].type != CKA_INVALID; i++) {
 		attrs[i].type = ku_attribute_map[i].type;
 		if (data && (ku & ku_attribute_map[i].ku) == ku_attribute_map[i].ku) {
 			attrs[i].pValue = &present;
@@ -1381,7 +1386,8 @@ build_trust_object_eku (CK_ATTRIBUTE *object,
 	/* The value set if a purpose is explicitly rejected */
 	disallow = CKT_NSS_NOT_TRUSTED;
 
-	for (i = 0; eku_attribute_map[i].type != CKA_INVALID; i++) {
+	for (i = 0; i < ELEMS(eku_attribute_map) &&
+		     eku_attribute_map[i].type != CKA_INVALID; i++) {
 		attrs[i].type = eku_attribute_map[i].type;
 		if (dict_rej && p11_dict_get (dict_rej, eku_attribute_map[i].oid)) {
 			attrs[i].pValue = &disallow;
