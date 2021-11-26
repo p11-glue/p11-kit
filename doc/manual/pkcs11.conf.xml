@@ -174,7 +174,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 		<term><option>trust-policy:</option></term>
 		<listitem>
 			<para>Set to <literal>yes</literal> to use use this module as a source
-			of trust policy information such as certificate anchors and black lists.</para>
+			of trust policy information such as certificate anchors and blocklists.</para>
 		</listitem>
 	</varlistentry>
 	<varlistentry id="option-log-calls">
