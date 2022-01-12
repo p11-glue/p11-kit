@@ -73,7 +73,7 @@ if get_option('gtk_doc')
               main_xml: 'p11-kit-docs.xml',
               namespace: 'p11_kit',
               src_dir: 'p11-kit',
-              dependencies: libffi_deps + dlopen_deps + xml_deps,
+              dependencies: libffi_deps + dlopen_deps,
               scan_args: [
                 '--ignore-headers=' + ' '.join(ignore_headers),
                 '--rebuild-types',
