@@ -1,3 +1,10 @@
+0.24.1 (stable)
+ * rpc: Support protocol version negotiation [PR#371, PR#385]
+ * proxy: Support copying attribute array recursively [PR#368]
+ * Link libp11-kit so that it cannot unload [PR#383]
+ * Translation improvements [PR#381]
+ * Build fixes [PR#372, PR#373, PR#375, PR#377, PR#384, PR#407]
+
 0.24.0 (stable)
  * Use inclusive language on certificate distrust.  Note: This changes
    the directory and attribute names to distrust certain CAs to
