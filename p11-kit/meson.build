@@ -313,7 +313,10 @@ p11_kit_pc_variables = [
   'p11_module_configs=@0@'.format(prefix / p11_package_config_modules),
   'p11_module_path=@0@'.format(prefix / p11_module_path),
   'proxy_module=@0@/p11-kit-proxy.so'.format(prefix / libdir),
-  'p11_system_config_modules=@0@'.format(prefix / p11_system_config_modules)
+  # This is for compatibility. Other packages were using this to determine
+  # the directory they should install their module configs to, so override
+  # this and redirect them to the new location
+  'p11_system_config_modules=@0@'.format(prefix / p11_package_config_modules)
 ]
 
 if trust_paths != ''
