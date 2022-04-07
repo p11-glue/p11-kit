@@ -480,6 +480,17 @@ bool             p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value
 							   void *value,
 							   CK_ULONG *value_length);
 
+void            p11_rpc_buffer_add_ecdh1_derive_mechanism_value
+							  (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ecdh1_derive_mechanism_value
+							  (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
 void            p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value
 							  (p11_buffer *buffer,
 							   const void *value,
