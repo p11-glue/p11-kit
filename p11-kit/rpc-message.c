@@ -807,6 +807,13 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_RESET_ON_INIT:
 	case CKA_HAS_RESET:
 	case CKA_COLOR:
+	case CKA_IBM_RESTRICTABLE:
+	case CKA_IBM_NEVER_MODIFIABLE:
+	case CKA_IBM_RETAINKEY:
+	case CKA_IBM_ATTRBOUND:
+	case CKA_IBM_USE_AS_DATA:
+	case CKA_IBM_PROTKEY_EXTRACTABLE:
+	case CKA_IBM_PROTKEY_NEVER_EXTRACTABLE:
 		return P11_RPC_VALUE_BYTE;
 	case CKA_CLASS:
 	case CKA_CERTIFICATE_TYPE:
@@ -828,6 +835,9 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_CHAR_COLUMNS:
 	case CKA_BITS_PER_PIXEL:
 	case CKA_MECHANISM_TYPE:
+	case CKA_IBM_DILITHIUM_KEYFORM:
+	case CKA_IBM_STD_COMPLIANCE1:
+	case CKA_IBM_KEYTYPE:
 		return P11_RPC_VALUE_ULONG;
 	case CKA_WRAP_TEMPLATE:
 	case CKA_UNWRAP_TEMPLATE:
@@ -876,6 +886,18 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_REQUIRED_CMS_ATTRIBUTES:
 	case CKA_DEFAULT_CMS_ATTRIBUTES:
 	case CKA_SUPPORTED_CMS_ATTRIBUTES:
+	case CKA_IBM_OPAQUE:
+	case CKA_IBM_CV:
+	case CKA_IBM_MACKEY:
+	case CKA_IBM_STRUCT_PARAMS:
+	case CKA_IBM_OPAQUE_PKEY:
+	case CKA_IBM_DILITHIUM_RHO:
+	case CKA_IBM_DILITHIUM_SEED:
+	case CKA_IBM_DILITHIUM_TR:
+	case CKA_IBM_DILITHIUM_S1:
+	case CKA_IBM_DILITHIUM_S2:
+	case CKA_IBM_DILITHIUM_T0:
+	case CKA_IBM_DILITHIUM_T1:
 		return P11_RPC_VALUE_BYTE_ARRAY;
 	}
 }
@@ -1413,9 +1435,59 @@ p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
+void
+p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
+						       const void *value,
+						       CK_ULONG value_length)
+{
+	CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params;
+
+	/* Check if value can be converted to CKM_IBM_ATTRIBUTEBOUND_WRAP. */
+	if (value_length != sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.hSignVerifyKey can be converted to uint64_t. */
+	if (params.hSignVerifyKey > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hSignVerifyKey);
+}
+
+bool
+p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
+						       size_t *offset,
+						       void *value,
+						       CK_ULONG *value_length)
+{
+	uint64_t val;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+
+	if (value) {
+		CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params;
+
+		params.hSignVerifyKey = val;
+
+		memcpy (value, &params, sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS);
+
+	return true;
+}
+
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value }
+	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value },
+	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value }
 };
 
 static p11_rpc_mechanism_serializer p11_rpc_byte_array_mechanism_serializer = {
@@ -1540,6 +1612,18 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_RIPEMD160:
 	case CKM_RIPEMD160_HMAC:
 	case CKM_KEY_WRAP_LYNKS:
+	case CKM_IBM_SHA3_224:
+	case CKM_IBM_SHA3_256:
+	case CKM_IBM_SHA3_384:
+	case CKM_IBM_SHA3_512:
+	case CKM_IBM_CMAC:
+	case CKM_IBM_DILITHIUM:
+	case CKM_IBM_SHA3_224_HMAC:
+	case CKM_IBM_SHA3_256_HMAC:
+	case CKM_IBM_SHA3_384_HMAC:
+	case CKM_IBM_SHA3_512_HMAC:
+	case CKM_IBM_ED25519_SHA512:
+	case CKM_IBM_ED448_SHA3:
 		return true;
 	default:
 		return false;
