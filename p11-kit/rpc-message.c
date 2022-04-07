@@ -1436,6 +1436,80 @@ p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_ecdh1_derive_mechanism_value (p11_buffer *buffer,
+						 const void *value,
+						 CK_ULONG value_length)
+{
+	CK_ECDH1_DERIVE_PARAMS params;
+
+	/* Check if value can be converted to CK_ECDH1_DERIVE_PARAMS. */
+	if (value_length != sizeof (CK_ECDH1_DERIVE_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.kdf can be converted to uint64_t. */
+	if (params.kdf > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.kdf);
+
+	/* parmas.shared_data can only be an array of CK_BYTE or
+	 * NULL */
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.shared_data,
+				       params.shared_data_len);
+
+	/* parmas.public_data can only be an array of CK_BYTE or
+	 * NULL */
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.public_data,
+				       params.public_data_len);
+}
+
+bool
+p11_rpc_buffer_get_ecdh1_derive_mechanism_value (p11_buffer *buffer,
+						 size_t *offset,
+						 void *value,
+						 CK_ULONG *value_length)
+{
+	uint64_t val;
+	const unsigned char *data1, *data2;
+	size_t len1, len2;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data1, &len1))
+		return false;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data2, &len2))
+		return false;
+
+
+	if (value) {
+		CK_ECDH1_DERIVE_PARAMS params;
+
+		params.kdf = val;
+		params.shared_data = (void *) data1;
+		params.shared_data_len = len1;
+		params.public_data = (void *) data2;
+		params.public_data_len = len2;
+
+		memcpy (value, &params, sizeof (CK_ECDH1_DERIVE_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_ECDH1_DERIVE_PARAMS);
+
+	return true;
+}
+
+void
 p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 						       const void *value,
 						       CK_ULONG value_length)
@@ -1487,7 +1561,10 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value },
-	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value }
+	{ CKM_ECDH1_DERIVE, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
+	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value },
+	{ CKM_IBM_EC_X25519, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
+	{ CKM_IBM_EC_X448, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
 };
 
 static p11_rpc_mechanism_serializer p11_rpc_byte_array_mechanism_serializer = {
