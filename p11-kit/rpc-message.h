@@ -42,6 +42,7 @@
 
 #include "buffer.h"
 #include "pkcs11.h"
+#include "pkcs11x.h"
 
 /* The calls, must be in sync with array below */
 enum {
@@ -475,6 +476,17 @@ void             p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value
 
 bool             p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value
                                                           (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
+void            p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value
+							  (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value
+							  (p11_buffer *buffer,
 							   size_t *offset,
 							   void *value,
 							   CK_ULONG *value_length);
