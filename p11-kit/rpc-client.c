@@ -1526,8 +1526,6 @@ rpc_C_SignUpdate (CK_X_FUNCTION_LIST *self,
                   CK_BYTE_PTR part,
                   CK_ULONG part_len)
 {
-	return_val_if_fail (part_len, CKR_ARGUMENTS_BAD);
-
 	BEGIN_CALL_OR (C_SignUpdate, self, CKR_SESSION_HANDLE_INVALID);
 		IN_ULONG (session);
 		IN_BYTE_ARRAY (part, part_len);
