@@ -1561,6 +1561,11 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_SHA224_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_SHA256_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_SHA384_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
+	{ CKM_SHA512_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value },
 	{ CKM_ECDH1_DERIVE, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
 	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value },
@@ -1610,6 +1615,7 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_MD2_RSA_PKCS:
 	case CKM_MD5_RSA_PKCS:
 	case CKM_SHA1_RSA_PKCS:
+	case CKM_SHA224_RSA_PKCS:
 	case CKM_SHA256_RSA_PKCS:
 	case CKM_SHA384_RSA_PKCS:
 	case CKM_SHA512_RSA_PKCS:
@@ -1624,6 +1630,10 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_EC_KEY_PAIR_GEN:
 	case CKM_ECDSA:
 	case CKM_ECDSA_SHA1:
+	case CKM_ECDSA_SHA224:
+	case CKM_ECDSA_SHA256:
+	case CKM_ECDSA_SHA384:
+	case CKM_ECDSA_SHA512:
 	case CKM_DH_PKCS_KEY_PAIR_GEN:
 	case CKM_DH_PKCS_PARAMETER_GEN:
 	case CKM_X9_42_DH_KEY_PAIR_GEN:
@@ -1678,12 +1688,28 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_MD5_HMAC:
 	case CKM_SHA_1:
 	case CKM_SHA_1_HMAC:
+	case CKM_SHA1_KEY_DERIVATION:
+	case CKM_SHA224:
+	case CKM_SHA224_HMAC:
+	case CKM_SHA224_KEY_DERIVATION:
 	case CKM_SHA256:
 	case CKM_SHA256_HMAC:
+	case CKM_SHA256_KEY_DERIVATION:
 	case CKM_SHA384:
 	case CKM_SHA384_HMAC:
+	case CKM_SHA384_KEY_DERIVATION:
 	case CKM_SHA512:
 	case CKM_SHA512_HMAC:
+	case CKM_SHA512_KEY_DERIVATION:
+	case CKM_SHA512_T:
+	case CKM_SHA512_T_HMAC:
+	case CKM_SHA512_T_KEY_DERIVATION:
+	case CKM_SHA512_224:
+	case CKM_SHA512_224_HMAC:
+	case CKM_SHA512_224_KEY_DERIVATION:
+	case CKM_SHA512_256:
+	case CKM_SHA512_256_HMAC:
+	case CKM_SHA512_256_KEY_DERIVATION:
 	case CKM_FASTHASH:
 	case CKM_RIPEMD128:
 	case CKM_RIPEMD128_HMAC:
