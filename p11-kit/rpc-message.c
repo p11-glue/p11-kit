@@ -1559,6 +1559,86 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
+void
+p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
+					   const void *value,
+					   CK_ULONG value_length)
+{
+	/* Check if value can be converted to an AES IV. */
+	if (value_length != 16) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)value,
+				       value_length);
+}
+
+bool
+p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
+					   size_t *offset,
+					   void *value,
+					   CK_ULONG *value_length)
+{
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (len != 16)
+		return false;
+
+	if (value)
+		memcpy (value, data, len);
+
+	if (value_length)
+		*value_length = len;
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
+					   const void *value,
+					   CK_ULONG value_length)
+{
+	/* Check if value can be converted to an DES IV. */
+	if (value_length != 8) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)value,
+				       value_length);
+}
+
+bool
+p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
+					   size_t *offset,
+					   void *value,
+					   CK_ULONG *value_length)
+{
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (len != 8)
+		return false;
+
+	if (value)
+		memcpy (value, data, len);
+
+	if (value_length)
+		*value_length = len;
+
+	return true;
+}
+
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
@@ -1571,6 +1651,21 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value },
 	{ CKM_IBM_EC_X25519, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
 	{ CKM_IBM_EC_X448, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
+	{ CKM_AES_CBC, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CBC_PAD, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_OFB, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CFB1, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CFB8, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CFB64, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CFB128, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CTS, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_DES_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES_CBC_PAD, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES3_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES3_CBC_PAD, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES_CFB8, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES_CFB64, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_DES_OFB64, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 };
 
 static p11_rpc_mechanism_serializer p11_rpc_byte_array_mechanism_serializer = {

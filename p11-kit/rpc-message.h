@@ -502,4 +502,22 @@ bool            p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value
 							   void *value,
 							   CK_ULONG *value_length);
 
+void		p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool		p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
+void		p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool		p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
 #endif /* _RPC_MESSAGE_H */
