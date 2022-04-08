@@ -97,6 +97,12 @@ proto_read_byte_buffer (p11_rpc_message *msg,
 	*n_buffer = length;
 	*buffer = NULL;
 
+	/* length = -1 indicates length = 0, but buffer not NULL */
+	if (length == (uint32_t)-1) {
+		*n_buffer = 0;
+		length = 1; /*allocate 1 dummy byte */
+	}
+
 	/* If set to zero, then they just want the length */
 	if (length == 0)
 		return CKR_OK;

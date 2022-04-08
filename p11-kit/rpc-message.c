@@ -379,7 +379,7 @@ p11_rpc_message_write_byte_array (p11_rpc_message *msg,
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "ay"));
 
 	/* No array, no data, just length */
-	if (!arr) {
+	if (!arr && num != 0) {
 		p11_rpc_buffer_add_byte (msg->output, 0);
 		p11_rpc_buffer_add_uint32 (msg->output, num);
 	} else {
