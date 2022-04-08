@@ -1639,6 +1639,52 @@ p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
+void
+p11_rpc_buffer_add_mac_general_mechanism_value (p11_buffer *buffer,
+						const void *value,
+						CK_ULONG value_length)
+{
+	CK_ULONG val;
+	uint64_t params;
+
+	/*
+	 * Check if value can be converted to an CK_MAC_GENERAL_PARAMS which
+	 * is a CK_ULONG.
+	 */
+	if (value_length != sizeof (CK_ULONG)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&val, value, value_length);
+	params = val;
+
+	p11_rpc_buffer_add_uint64 (buffer, params);
+}
+
+bool
+p11_rpc_buffer_get_mac_general_mechanism_value (p11_buffer *buffer,
+						size_t *offset,
+						void *value,
+						CK_ULONG *value_length)
+{
+	uint64_t val;
+	CK_ULONG params;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+
+	params = val;
+
+	if (value)
+		memcpy (value, &params, sizeof (params));
+
+	if (value_length)
+		*value_length = sizeof (params);
+
+	return true;
+}
+
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
@@ -1666,6 +1712,17 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_DES_CFB8, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES_CFB64, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES_OFB64, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
+	{ CKM_SHA_1_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA224_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA256_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA384_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA512_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA512_224_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_SHA512_256_HMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_AES_MAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_AES_CMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_DES3_MAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
+	{ CKM_DES3_CMAC_GENERAL, p11_rpc_buffer_add_mac_general_mechanism_value, p11_rpc_buffer_get_mac_general_mechanism_value },
 };
 
 static p11_rpc_mechanism_serializer p11_rpc_byte_array_mechanism_serializer = {
@@ -1742,6 +1799,7 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_AES_KEY_GEN:
 	case CKM_AES_ECB:
 	case CKM_AES_MAC:
+	case CKM_AES_CMAC:
 	case CKM_DES_KEY_GEN:
 	case CKM_DES2_KEY_GEN:
 	case CKM_DES3_KEY_GEN:
@@ -1767,6 +1825,7 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_RC2_MAC:
 	case CKM_DES_MAC:
 	case CKM_DES3_MAC:
+	case CKM_DES3_CMAC:
 	case CKM_CDMF_MAC:
 	case CKM_CAST_MAC:
 	case CKM_CAST3_MAC:
