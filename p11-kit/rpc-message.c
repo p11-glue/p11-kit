@@ -1661,6 +1661,75 @@ p11_rpc_buffer_get_aes_ctr_mechanism_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_aes_gcm_mechanism_value (p11_buffer *buffer,
+					    const void *value,
+					    CK_ULONG value_length)
+{
+	CK_GCM_PARAMS params;
+
+	/* Check if value can be converted to CK_GCM_PARAMS. */
+	if (value_length != sizeof (CK_GCM_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.ulTagBits/ulIvBits can be converted to uint64_t. */
+	if (params.ulTagBits > UINT64_MAX || params.ulIvBits > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pIv,
+				       params.ulIvLen);
+	p11_rpc_buffer_add_uint64 (buffer, params.ulIvBits);
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pAAD,
+				       params.ulAADLen);
+	p11_rpc_buffer_add_uint64 (buffer, params.ulTagBits);
+}
+
+bool
+p11_rpc_buffer_get_aes_gcm_mechanism_value (p11_buffer *buffer,
+					    size_t *offset,
+					    void *value,
+					    CK_ULONG *value_length)
+{
+	uint64_t val1, val2;
+	const unsigned char *data1, *data2;
+	size_t len1, len2;
+
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data1, &len1))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val1))
+		return false;
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data2, &len2))
+		return false;
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val2))
+		return false;
+
+	if (value) {
+		CK_GCM_PARAMS params;
+
+		params.pIv = (void *) data1;
+		params.ulIvLen = len1;
+		params.ulIvBits = val1;
+		params.pAAD = (void *) data2;
+		params.ulAADLen = len2;
+		params.ulTagBits = val2;
+
+		memcpy (value, &params, sizeof (CK_GCM_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_GCM_PARAMS);
+
+	return true;
+}
+
+void
 p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
 					   const void *value,
 					   CK_ULONG value_length)
@@ -1807,6 +1876,7 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_AES_CFB128, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CTS, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CTR, p11_rpc_buffer_add_aes_ctr_mechanism_value, p11_rpc_buffer_get_aes_ctr_mechanism_value },
+	{ CKM_AES_GCM, p11_rpc_buffer_add_aes_gcm_mechanism_value, p11_rpc_buffer_get_aes_gcm_mechanism_value },
 	{ CKM_DES_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES_CBC_PAD, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES3_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
