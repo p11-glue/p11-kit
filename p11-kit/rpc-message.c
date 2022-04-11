@@ -1600,6 +1600,67 @@ p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_aes_ctr_mechanism_value (p11_buffer *buffer,
+					    const void *value,
+					    CK_ULONG value_length)
+{
+	CK_AES_CTR_PARAMS params;
+
+	/* Check if value can be converted to CK_AES_CTR_PARAMS. */
+	if (value_length != sizeof (CK_AES_CTR_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.counter_bits can be converted to uint64_t. */
+	if (params.counter_bits > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.counter_bits);
+
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.cb,
+				       sizeof(params.cb));
+}
+
+bool
+p11_rpc_buffer_get_aes_ctr_mechanism_value (p11_buffer *buffer,
+					    size_t *offset,
+					    void *value,
+					    CK_ULONG *value_length)
+{
+	uint64_t val;
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (value) {
+		CK_AES_CTR_PARAMS params;
+
+		params.ulCounterBits = val;
+
+		if (len != sizeof (params.cb))
+			return false;
+
+		memcpy (params.cb, data, sizeof (params.cb));
+		memcpy (value, &params, sizeof (CK_AES_CTR_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_AES_CTR_PARAMS);
+
+	return true;
+}
+
+void
 p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
 					   const void *value,
 					   CK_ULONG value_length)
@@ -1745,6 +1806,7 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_AES_CFB64, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CFB128, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CTS, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
+	{ CKM_AES_CTR, p11_rpc_buffer_add_aes_ctr_mechanism_value, p11_rpc_buffer_get_aes_ctr_mechanism_value },
 	{ CKM_DES_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES_CBC_PAD, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES3_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
