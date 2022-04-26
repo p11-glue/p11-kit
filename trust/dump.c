@@ -148,7 +148,7 @@ p11_trust_dump (int argc,
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: trust list --filter=<what>" },
+		{ 0, "usage: trust dump --filter=<what>" },
 		{ opt_filter,
 		  "filter of what to export\n"
 		  "  pkcs11:object=xx  a PKCS#11 URI\n"
