@@ -278,17 +278,17 @@ test_load_modules_merge (void)
 
 	config = p11_dict_get (configs, "one");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-one" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "user1");
 
 	config = p11_dict_get (configs, "two.badname");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-two" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-three.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-three" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "user3");
 
 	p11_dict_free (configs);
@@ -311,12 +311,12 @@ test_load_modules_user_none (void)
 
 	config = p11_dict_get (configs, "one");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-one" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "system1");
 
 	config = p11_dict_get (configs, "two.badname");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-two" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");
@@ -350,7 +350,7 @@ test_load_modules_user_only (void)
 
 	config = p11_dict_get (configs, "three");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-three.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-three" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "user3");
 
 	p11_dict_free (configs);
@@ -373,12 +373,12 @@ test_load_modules_no_user (void)
 
 	config = p11_dict_get (configs, "one");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-one.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-one" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "system1");
 
 	config = p11_dict_get (configs, "two.badname");
 	assert_ptr_not_null (config);
-	assert_str_eq ("mock-two.so", p11_dict_get (config, "module"));
+	assert_str_eq ("mock-two" SHLEXT, p11_dict_get (config, "module"));
 	assert_str_eq (p11_dict_get (config, "setting"), "system2");
 
 	config = p11_dict_get (configs, "three");

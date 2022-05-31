@@ -193,7 +193,7 @@ launch_server (void)
 	assert_num_cmp (rc, !=, -1);
 
 	argv[0] = "p11-kit-remote";
-	argv[1] = P11_MODULE_PATH "/mock-two.so";
+	argv[1] = P11_MODULE_PATH "/mock-two" SHLEXT;
 	argv[2] = NULL;
 
 	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote" EXEEXT, argv);
