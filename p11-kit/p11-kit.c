@@ -85,7 +85,7 @@ p11_kit_trust (int argc,
 	args = calloc (argc + 2, sizeof (char *));
 	return_val_if_fail (args != NULL, 1);
 
-	args[0] = BINDIR "/trust";
+	args[0] = BINDIR "/trust" EXEEXT;
 	memcpy (args + 1, argv, sizeof (char *) * argc);
 	args[argc + 1] = NULL;
 

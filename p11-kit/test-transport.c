@@ -196,7 +196,7 @@ launch_server (void)
 	argv[1] = P11_MODULE_PATH "/mock-two.so";
 	argv[2] = NULL;
 
-	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote", argv);
+	rc = execv (BUILDDIR "/p11-kit/p11-kit-remote" EXEEXT, argv);
 	assert_num_cmp (rc, !=, -1);
 }
 
