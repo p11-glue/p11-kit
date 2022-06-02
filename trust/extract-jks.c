@@ -289,7 +289,7 @@ prepare_jks_buffer (p11_enumerate *ex,
 			now = time (NULL);
 	}
 
-	return_val_if_fail (now > 0, false);
+	return_val_if_fail (now >= 0, false);
 	now *= 1000; /* seconds to milliseconds */
 
 	/*
