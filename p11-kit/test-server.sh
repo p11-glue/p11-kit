@@ -23,6 +23,9 @@ unset P11_KIT_SERVER_PID
 XDG_RUNTIME_DIR="$testdir"
 export XDG_RUNTIME_DIR
 
+SHELL=/bin/sh
+export SHELL
+
 echo 1..4
 
 "$abs_top_builddir"/p11-kit/p11-kit-server -s --provider "$P11_MODULE_PATH"/mock-one.so pkcs11: > start.env 2> start.err
