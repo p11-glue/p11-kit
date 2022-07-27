@@ -217,6 +217,9 @@ gnu_h = gnu_h_gen.process(pkcs11_gnu_headers)
 static_library('p11-kit-pkcs11-gnu',
                gnu_h,
                'pkcs11-gnu.c',
+               c_args: [
+                 '-DCRYPTOKI_GNU=1', '-DP11_KIT_FUTURE_UNSTABLE_API=1',
+               ],
                include_directories: [configinc, commoninc])
 
 # Tests ----------------------------------------------------------------
