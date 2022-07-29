@@ -43,19 +43,19 @@ typedef struct _p11_asn1_cache p11_asn1_cache;
 
 p11_dict *       p11_asn1_defs_load                 (void);
 
-node_asn *       p11_asn1_decode                    (p11_dict *asn1_defs,
+asn1_node       p11_asn1_decode                    (p11_dict *asn1_defs,
                                                      const char *struct_name,
                                                      const unsigned char *der,
                                                      size_t der_len,
                                                      char *message);
 
-node_asn *       p11_asn1_create                    (p11_dict *asn1_defs,
+asn1_node       p11_asn1_create                    (p11_dict *asn1_defs,
                                                      const char *struct_name);
 
-unsigned char *  p11_asn1_encode                    (node_asn *asn,
+unsigned char *  p11_asn1_encode                    (asn1_node asn,
                                                      size_t *der_len);
 
-void *           p11_asn1_read                      (node_asn *asn,
+void *           p11_asn1_read                      (asn1_node asn,
                                                      const char *field,
                                                      size_t *length);
 
@@ -68,13 +68,13 @@ p11_asn1_cache * p11_asn1_cache_new                 (void);
 
 p11_dict *       p11_asn1_cache_defs                (p11_asn1_cache *cache);
 
-node_asn *       p11_asn1_cache_get                 (p11_asn1_cache *cache,
+asn1_node       p11_asn1_cache_get                 (p11_asn1_cache *cache,
                                                      const char *struct_name,
                                                      const unsigned char *der,
                                                      size_t der_len);
 
 void             p11_asn1_cache_take                (p11_asn1_cache *cache,
-                                                     node_asn *node,
+                                                     asn1_node node,
                                                      const char *struct_name,
                                                      const unsigned char *der,
                                                      size_t der_len);

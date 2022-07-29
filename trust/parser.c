@@ -183,7 +183,7 @@ p11_parser_format_x509 (p11_parser *parser,
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE *value;
-	node_asn *cert;
+	asn1_node cert;
 
 	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, length, message);
 	if (cert == NULL)
@@ -218,7 +218,7 @@ extension_attrs (p11_parser *parser,
 	CK_ATTRIBUTE oid = { CKA_OBJECT_ID, (void *)oid_der, p11_oid_length (oid_der) };
 
 	CK_ATTRIBUTE *attrs;
-	node_asn *dest;
+	asn1_node dest;
 	unsigned char *der;
 	size_t len;
 	int ret;
@@ -256,7 +256,7 @@ attached_attrs (p11_parser *parser,
                 const char *oid_str,
                 const unsigned char *oid_der,
                 bool critical,
-                node_asn *ext)
+                asn1_node ext)
 {
 	CK_ATTRIBUTE *attrs;
 	unsigned char *der;
@@ -274,7 +274,7 @@ attached_attrs (p11_parser *parser,
 }
 
 static p11_dict *
-load_seq_of_oid_str (node_asn *node,
+load_seq_of_oid_str (asn1_node node,
                      const char *seqof)
 {
 	p11_dict *oids;
@@ -310,7 +310,7 @@ attached_eku_attrs (p11_parser *parser,
 {
 	CK_ATTRIBUTE *attrs;
 	p11_dictiter iter;
-	node_asn *dest;
+	asn1_node dest;
 	int count = 0;
 	void *value;
 	int ret;
@@ -361,7 +361,7 @@ static CK_ATTRIBUTE *
 build_openssl_extensions (p11_parser *parser,
                           CK_ATTRIBUTE *cert,
                           CK_ATTRIBUTE *public_key_info,
-                          node_asn *aux,
+                          asn1_node aux,
                           const unsigned char *aux_der,
                           size_t aux_len)
 {
@@ -501,8 +501,8 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 	CK_ATTRIBUTE public_key_info = { CKA_PUBLIC_KEY_INFO };
 	CK_ATTRIBUTE *value;
 	char *label = NULL;
-	node_asn *cert;
-	node_asn *aux = NULL;
+	asn1_node cert;
+	asn1_node aux = NULL;
 	ssize_t cert_len;
 	size_t len;
 	int start;
