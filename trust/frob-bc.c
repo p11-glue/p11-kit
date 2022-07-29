@@ -55,8 +55,8 @@ main (int argc,
       char *argv[])
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *definitions = NULL;
-	node_asn *ext = NULL;
+	asn1_node definitions = NULL;
+	asn1_node ext = NULL;
 	char *buf;
 	int len;
 	int ret;

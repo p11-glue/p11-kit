@@ -83,8 +83,8 @@ main (int argc,
       char *argv[])
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *definitions = NULL;
-	node_asn *cert = NULL;
+	asn1_node definitions = NULL;
+	asn1_node cert = NULL;
 	p11_mmap *map;
 	void *data;
 	size_t size;

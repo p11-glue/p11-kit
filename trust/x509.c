@@ -46,7 +46,7 @@
 #include <string.h>
 
 unsigned char *
-p11_x509_find_extension (node_asn *cert,
+p11_x509_find_extension (asn1_node cert,
                          const unsigned char *oid,
                          const unsigned char *der,
                          size_t der_len,
@@ -92,7 +92,7 @@ p11_x509_find_extension (node_asn *cert,
 }
 
 bool
-p11_x509_hash_subject_public_key (node_asn *cert,
+p11_x509_hash_subject_public_key (asn1_node cert,
                                   const unsigned char *der,
                                   size_t der_len,
                                   unsigned char *keyid)
@@ -120,7 +120,7 @@ p11_x509_parse_subject_key_identifier  (p11_dict *asn1_defs,
                                         size_t *keyid_len)
 {
 	unsigned char *keyid;
-	node_asn *ext;
+	asn1_node ext;
 
 	return_val_if_fail (keyid_len != NULL, false);
 
@@ -143,7 +143,7 @@ p11_x509_parse_basic_constraints (p11_dict *asn1_defs,
                                   bool *is_ca)
 {
 	char buffer[8];
-	node_asn *ext;
+	asn1_node ext;
 	int ret;
 	int len;
 
@@ -178,7 +178,7 @@ p11_x509_parse_key_usage (p11_dict *asn1_defs,
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
 	unsigned char buf[2];
-	node_asn *ext;
+	asn1_node ext;
 	int len;
 	int ret;
 
@@ -203,7 +203,7 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
                                    const unsigned char *ext_der,
                                    size_t ext_len)
 {
-	node_asn *asn;
+	asn1_node asn;
 	char field[128];
 	p11_array *ekus;
 	size_t len;
@@ -301,7 +301,7 @@ p11_x509_parse_dn_name (p11_dict *asn_defs,
                         size_t der_len,
                         const unsigned char *oid)
 {
-	node_asn *asn;
+	asn1_node asn;
 	char *part;
 
 	asn = p11_asn1_decode (asn_defs, "PKIX1.Name", der, der_len, NULL);
@@ -314,7 +314,7 @@ p11_x509_parse_dn_name (p11_dict *asn_defs,
 }
 
 char *
-p11_x509_lookup_dn_name (node_asn *asn,
+p11_x509_lookup_dn_name (asn1_node asn,
                          const char *dn_field,
                          const unsigned char *der,
                          size_t der_len,

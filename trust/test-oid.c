@@ -50,8 +50,8 @@ static void
 test_known_oids (void)
 {
 	char buffer[128];
-	node_asn *definitions = NULL;
-	node_asn *node;
+	asn1_node definitions = NULL;
+	asn1_node node;
 	int ret;
 	int len;
 	int i;

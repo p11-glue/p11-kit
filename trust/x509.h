@@ -40,13 +40,13 @@
 #ifndef P11_X509_H_
 #define P11_X509_H_
 
-unsigned char *  p11_x509_find_extension            (node_asn *cert,
+unsigned char *  p11_x509_find_extension            (asn1_node cert,
                                                      const unsigned char *oid,
                                                      const unsigned char *der,
                                                      size_t der_len,
                                                      size_t *ext_len);
 
-bool             p11_x509_hash_subject_public_key   (node_asn *cert,
+bool             p11_x509_hash_subject_public_key   (asn1_node cert,
                                                      const unsigned char *der,
                                                      size_t der_len,
                                                      unsigned char *keyid);
@@ -75,7 +75,7 @@ char *           p11_x509_parse_dn_name             (p11_dict *asn_defs,
                                                      size_t der_len,
                                                      const unsigned char *oid);
 
-char *           p11_x509_lookup_dn_name            (node_asn *asn,
+char *           p11_x509_lookup_dn_name            (asn1_node asn,
                                                      const char *dn_field,
                                                      const unsigned char *der,
                                                      size_t der_len,

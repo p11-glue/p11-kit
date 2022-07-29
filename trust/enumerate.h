@@ -76,7 +76,7 @@ typedef struct {
 	CK_ATTRIBUTE *attrs;
 
 	/* Pre-parsed data for certificates */
-	node_asn *cert_asn;
+	asn1_node cert_asn;
 	const unsigned char *cert_der;
 	size_t cert_len;
 

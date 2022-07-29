@@ -114,7 +114,7 @@ load_usage_ext (p11_enumerate *ex,
                 p11_array **oids)
 {
 	unsigned char *value;
-	node_asn *ext = NULL;
+	asn1_node ext = NULL;
 	size_t length;
 
 	if (ex->attached)
@@ -135,7 +135,7 @@ load_usage_ext (p11_enumerate *ex,
 }
 
 static bool
-write_usages (node_asn *asn,
+write_usages (asn1_node asn,
               const char *field,
               p11_array *oids)
 {
@@ -169,7 +169,7 @@ write_usages (node_asn *asn,
 
 static bool
 write_trust_and_rejects (p11_enumerate *ex,
-                         node_asn *asn)
+                         asn1_node asn)
 {
 	p11_array *trusts = NULL;
 	p11_array *rejects = NULL;
@@ -230,10 +230,10 @@ write_trust_and_rejects (p11_enumerate *ex,
 
 static bool
 write_keyid (p11_enumerate *ex,
-             node_asn *asn)
+             asn1_node asn)
 {
 	unsigned char *value = NULL;
-	node_asn *ext = NULL;
+	asn1_node ext = NULL;
 	size_t length = 0;
 	int ret;
 
@@ -253,7 +253,7 @@ write_keyid (p11_enumerate *ex,
 
 static bool
 write_alias (p11_enumerate *ex,
-             node_asn *asn)
+             asn1_node asn)
 {
 	CK_ATTRIBUTE *label;
 	int ret;
@@ -272,7 +272,7 @@ write_alias (p11_enumerate *ex,
 
 static bool
 write_other (p11_enumerate *ex,
-             node_asn *asn)
+             asn1_node asn)
 {
 	int ret;
 
@@ -288,7 +288,7 @@ prepare_pem_contents (p11_enumerate *ex,
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
 	unsigned char *der;
-	node_asn *asn;
+	asn1_node asn;
 	size_t offset;
 	int ret;
 	int len;
@@ -461,7 +461,7 @@ p11_openssl_canon_name_der (p11_dict *asn1_defs,
 	p11_buffer value;
 	char outer[64];
 	char field[128];
-	node_asn *name;
+	asn1_node name;
 	void *at;
 	int value_len;
 	bool failed;

@@ -65,7 +65,7 @@ load_attached_extension (p11_dict *attached,
                          size_t len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	node_asn *ext;
+	asn1_node ext;
 	char *oid;
 	int length;
 	int start;
@@ -157,7 +157,7 @@ load_attached_extensions (p11_enumerate *ex,
 static bool
 extract_purposes (p11_enumerate *ex)
 {
-	node_asn *ext = NULL;
+	asn1_node ext = NULL;
 	unsigned char *value = NULL;
 	size_t length;
 
