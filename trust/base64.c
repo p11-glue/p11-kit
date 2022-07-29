@@ -217,7 +217,8 @@ p11_b64_ntop (const unsigned char *src,
 			output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
 			output[3] = input[2] & 0x3f;
 
-		} else if (0 != srclength) {
+		} else {
+			assert (0 != srclength);
 			/* Get what's left. */
 			input[0] = input[1] = input[2] = '\0';
 			for (i = 0; i < srclength; i++)
