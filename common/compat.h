@@ -37,8 +37,9 @@
 
 #include "config.h"
 
-#include <sys/types.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #ifdef HAVE_SYS_UN_H
 #  include <sys/un.h>
 #endif
