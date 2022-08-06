@@ -95,8 +95,8 @@ test_asn1_cache (void)
 {
 	p11_asn1_cache *cache;
 	p11_dict *defs;
-	node_asn *asn;
-	node_asn *check;
+	asn1_node asn;
+	asn1_node check;
 
 	cache = p11_asn1_cache_new ();
 	assert_ptr_not_null (cache);
@@ -134,7 +134,7 @@ static void
 test_asn1_free (void)
 {
 	p11_dict *defs;
-	node_asn *asn;
+	asn1_node asn;
 
 	defs = p11_asn1_defs_load ();
 	assert_ptr_not_null (defs);

@@ -40,14 +40,14 @@
 #include "message.h"
 #include "save.h"
 
-#include <sys/stat.h>
-
 #include <assert.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef ENABLE_NLS
@@ -55,6 +55,10 @@
 #define _(x) dgettext(PACKAGE_NAME, x)
 #else
 #define _(x) (x)
+#endif
+
+#ifndef O_DIRECTORY
+#define O_DIRECTORY 0
 #endif
 
 struct _p11_save_file {
@@ -334,6 +338,7 @@ p11_save_open_directory (const char *path,
 {
 #ifdef OS_UNIX
 	struct stat sb;
+	int fd;
 #endif
 	p11_save_dir *dir;
 
@@ -360,13 +365,23 @@ p11_save_open_directory (const char *path,
 		 * the directory permissions to read-only. We have to change
 		 * them back to writable in order for things to work.
 		 */
-		if (stat (path, &sb) >= 0) {
-			if ((sb.st_mode & S_IRWXU) != S_IRWXU &&
-			    chmod (path, S_IRWXU | sb.st_mode) < 0) {
-				p11_message_err (errno, _("couldn't make directory writable: %s"), path);
-				return NULL;
-			}
+		fd = open (path, O_RDONLY | O_CLOEXEC | O_DIRECTORY);
+		if (fd < 0) {
+			p11_message_err (errno, _("couldn't open directory: %s"), path);
+			return NULL;
 		}
+		if (fstat (fd, &sb) < 0) {
+			p11_message_err (errno, _("couldn't check directory permissions: %s"), path);
+			close (fd);
+			return NULL;
+		}
+		if ((sb.st_mode & S_IRWXU) != S_IRWXU &&
+		    fchmod (fd, S_IRWXU | sb.st_mode) < 0) {
+			p11_message_err (errno, _("couldn't make directory writable: %s"), path);
+			close (fd);
+			return NULL;
+		}
+		close (fd);
 #endif /* OS_UNIX */
 	}
 

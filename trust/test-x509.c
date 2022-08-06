@@ -280,7 +280,7 @@ test_parse_key_usage (void)
 static void
 test_parse_extension (void)
 {
-	node_asn *cert;
+	asn1_node cert;
 	unsigned char *ext;
 	size_t length;
 	bool is_ca;
@@ -305,7 +305,7 @@ test_parse_extension (void)
 static void
 test_parse_extension_not_found (void)
 {
-	node_asn *cert;
+	asn1_node cert;
 	unsigned char *ext;
 	size_t length;
 

@@ -94,13 +94,13 @@ typedef struct {
 	CK_RV (*validate) (p11_builder *, CK_ATTRIBUTE *, CK_ATTRIBUTE *);
 } builder_schema;
 
-static node_asn *
+static asn1_node
 decode_or_get_asn1 (p11_builder *builder,
                     const char *struct_name,
                     const unsigned char *der,
                     size_t length)
 {
-	node_asn *node;
+	asn1_node node;
 
 	node = p11_asn1_cache_get (builder->asn1_cache, struct_name, der, length);
 	if (node != NULL)
@@ -127,7 +127,7 @@ lookup_extension (p11_builder *builder,
 	CK_ATTRIBUTE *label;
 	void *value;
 	size_t length;
-	node_asn *node;
+	asn1_node node;
 
 	CK_ATTRIBUTE match[] = {
 		{ CKA_PUBLIC_KEY_INFO, },
@@ -288,7 +288,7 @@ check_der_struct (p11_builder *builder,
                   const char *struct_name,
                   CK_ATTRIBUTE *attr)
 {
-	node_asn *asn;
+	asn1_node asn;
 
 	if (attr->ulValueLen == 0)
 		return true;
@@ -510,11 +510,11 @@ century_for_two_digit_year (int year)
 }
 
 static bool
-calc_date (node_asn *node,
+calc_date (asn1_node node,
            const char *field,
            CK_DATE *date)
 {
-	node_asn *choice;
+	asn1_node choice;
 	char buf[64];
 	int century;
 	char *sub;
@@ -575,7 +575,7 @@ calc_date (node_asn *node,
 }
 
 static bool
-calc_element (node_asn *node,
+calc_element (asn1_node node,
 	      const unsigned char *data,
 	      size_t length,
 	      const char *field,
@@ -604,7 +604,7 @@ is_v1_x509_authority (p11_builder *builder,
 	CK_ATTRIBUTE issuer;
 	CK_ATTRIBUTE *value;
 	char buffer[16];
-	node_asn *node;
+	asn1_node node;
 	int len;
 	int ret;
 
@@ -701,7 +701,7 @@ calc_certificate_category (p11_builder *builder,
 static CK_ATTRIBUTE *
 certificate_value_attrs (p11_builder *builder,
                          CK_ATTRIBUTE *attrs,
-                         node_asn *node,
+                         asn1_node node,
                          const unsigned char *der,
                          size_t der_len,
                          CK_ATTRIBUTE *public_key)
@@ -812,7 +812,7 @@ certificate_populate (p11_builder *builder,
 	CK_ULONG categoryv = 0UL;
 	CK_ATTRIBUTE *attrs = NULL;
 	CK_ATTRIBUTE public_key;
-	node_asn *node = NULL;
+	asn1_node node = NULL;
 	unsigned char *der = NULL;
 	size_t der_len = 0;
 
@@ -914,7 +914,7 @@ extension_populate (p11_builder *builder,
 
 	void *der;
 	size_t len;
-	node_asn *asn;
+	asn1_node asn;
 
 	attrs = common_populate (builder, index, extension);
 	return_val_if_fail (attrs != NULL, NULL);

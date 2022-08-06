@@ -226,9 +226,23 @@ typedef CK_ULONG                        CK_TRUST;
 #define CKM_IBM_SHA3_512_HMAC                  (CKM_VENDOR_DEFINED + 0x10028)
 #define CKM_IBM_ATTRIBUTEBOUND_WRAP            (CKM_VENDOR_DEFINED + 0x20004)
 
-typedef struct CK_IBM_ATTRIBUTEBOUND_WRAP {
-      CK_OBJECT_HANDLE hSignVerifyKey;
-} CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS;
+/*
+ * If the caller is using the PKCS#11 GNU calling convention, then we cater
+ * to that here.
+ */
+#ifdef CRYPTOKI_GNU
+#define hSignVerifyKey h_sign_verify_key
+#endif
+
+struct ck_ibm_attributebound_wrap {
+	CK_OBJECT_HANDLE hSignVerifyKey;
+};
+
+typedef struct ck_ibm_attributebound_wrap CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS;
+
+#ifdef CRYPTOKI_GNU
+#undef hSignVerifyKey
+#endif
 
 #endif /* CRYPTOKI_IBM_VENDOR_DEFINED */
 

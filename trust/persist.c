@@ -67,7 +67,7 @@
 
 struct _p11_persist {
 	p11_dict *constants;
-	node_asn *asn1_defs;
+	asn1_node asn1_defs;
 };
 
 bool
@@ -407,7 +407,7 @@ parse_oid (p11_persist *persist,
            CK_ATTRIBUTE *attr)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *asn;
+	asn1_node asn;
 	size_t length;
 	char *value;
 	int ret;
@@ -464,7 +464,7 @@ format_oid (p11_persist *persist,
             p11_buffer *buf)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *asn;
+	asn1_node asn;
 	char *data;
 	size_t len;
 	int ret;

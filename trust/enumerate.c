@@ -48,6 +48,7 @@
 #include "pkcs11x.h"
 #include "x509.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -65,7 +66,7 @@ load_attached_extension (p11_dict *attached,
                          size_t len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	node_asn *ext;
+	asn1_node ext;
 	char *oid;
 	int length;
 	int start;
@@ -102,7 +103,6 @@ load_attached_extensions (p11_enumerate *ex,
                           CK_ATTRIBUTE *spki)
 {
 	CK_OBJECT_CLASS extension = CKO_X_CERTIFICATE_EXTENSION;
-	CK_ATTRIBUTE *attrs;
 	P11KitIter *iter;
 	CK_RV rv = CKR_OK;
 	p11_dict *attached;
@@ -128,23 +128,26 @@ load_attached_extensions (p11_enumerate *ex,
 	p11_kit_iter_begin_with (iter, p11_kit_iter_get_module (ex->iter),
 	                         0, p11_kit_iter_get_session (ex->iter));
 
-	while (rv == CKR_OK) {
-		rv = p11_kit_iter_next (iter);
-		if (rv == CKR_OK) {
-			attrs = p11_attrs_buildn (NULL, template, 1);
-			rv = p11_kit_iter_load_attributes (iter, attrs, 1);
-			if (rv == CKR_OK) {
-				if (!load_attached_extension (attached, ex->asn1_defs,
-				                              attrs[0].pValue,
-				                              attrs[0].ulValueLen)) {
-					rv = CKR_GENERAL_ERROR;
-				}
-			}
+	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		CK_ATTRIBUTE *attrs;
+
+		attrs = p11_attrs_buildn (NULL, template, 1);
+		rv = p11_kit_iter_load_attributes (iter, attrs, 1);
+		if (rv != CKR_OK) {
 			p11_attrs_free (attrs);
+			break;
+		}
+		if (!load_attached_extension (attached, ex->asn1_defs,
+					      attrs[0].pValue,
+					      attrs[0].ulValueLen)) {
+			rv = CKR_GENERAL_ERROR;
+			p11_attrs_free (attrs);
+			break;
 		}
 	}
 
-	if (rv != CKR_OK && rv != CKR_CANCEL) {
+	assert (rv != CKR_OK);
+	if (rv != CKR_CANCEL) {
 		p11_message (_("couldn't load attached extensions for certificate: %s"), p11_kit_strerror (rv));
 		p11_dict_free (attached);
 		attached = NULL;
@@ -157,7 +160,7 @@ load_attached_extensions (p11_enumerate *ex,
 static bool
 extract_purposes (p11_enumerate *ex)
 {
-	node_asn *ext = NULL;
+	asn1_node ext = NULL;
 	unsigned char *value = NULL;
 	size_t length;
 

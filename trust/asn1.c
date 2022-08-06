@@ -49,12 +49,12 @@
 static void
 free_asn1_def (void *data)
 {
-	node_asn *def = data;
+	asn1_node def = data;
 	asn1_delete_structure (&def);
 }
 
 struct {
-	const ASN1_ARRAY_TYPE* tab;
+	const asn1_static_node *tab;
 	const char *prefix;
 	int prefix_len;
 } asn1_tabs[] = {
@@ -67,7 +67,7 @@ p11_dict *
 p11_asn1_defs_load (void)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	node_asn *def;
+	asn1_node def;
 	p11_dict *defs;
 	int ret;
 	int i;
@@ -91,7 +91,7 @@ p11_asn1_defs_load (void)
 	return defs;
 }
 
-static node_asn *
+static asn1_node
 lookup_def (p11_dict *asn1_defs,
             const char *struct_name)
 {
@@ -106,12 +106,12 @@ lookup_def (p11_dict *asn1_defs,
 	return NULL;
 }
 
-node_asn *
+asn1_node
 p11_asn1_create (p11_dict *asn1_defs,
                  const char *struct_name)
 {
-	node_asn *def;
-	node_asn *asn;
+	asn1_node def;
+	asn1_node asn;
 	int ret;
 
 	return_val_if_fail (asn1_defs != NULL, NULL);
@@ -129,7 +129,7 @@ p11_asn1_create (p11_dict *asn1_defs,
 	return asn;
 }
 
-node_asn *
+asn1_node
 p11_asn1_decode (p11_dict *asn1_defs,
                  const char *struct_name,
                  const unsigned char *der,
@@ -137,7 +137,7 @@ p11_asn1_decode (p11_dict *asn1_defs,
                  char *message)
 {
 	char msg[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	node_asn *asn = NULL;
+	asn1_node asn = NULL;
 	int ret;
 
 	return_val_if_fail (asn1_defs != NULL, NULL);
@@ -161,7 +161,7 @@ p11_asn1_decode (p11_dict *asn1_defs,
 }
 
 unsigned char *
-p11_asn1_encode (node_asn *asn,
+p11_asn1_encode (asn1_node asn,
                  size_t *der_len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
@@ -193,7 +193,7 @@ p11_asn1_encode (node_asn *asn,
 }
 
 void *
-p11_asn1_read (node_asn *asn,
+p11_asn1_read (asn1_node asn,
                const char *field,
                size_t *length)
 {
@@ -228,7 +228,7 @@ p11_asn1_read (node_asn *asn,
 void
 p11_asn1_free (void *asn)
 {
-	node_asn *node = asn;
+	asn1_node node = asn;
 	if (node != NULL)
 		asn1_delete_structure (&node);
 }
@@ -257,7 +257,7 @@ p11_asn1_tlv_length (const unsigned char *data,
 }
 
 typedef struct {
-	node_asn *node;
+	asn1_node node;
 	char *struct_name;
 	size_t length;
 } asn1_item;
@@ -300,7 +300,7 @@ p11_asn1_cache_new (void)
 	return cache;
 }
 
-node_asn *
+asn1_node
 p11_asn1_cache_get (p11_asn1_cache *cache,
                     const char *struct_name,
                     const unsigned char *der,
@@ -326,7 +326,7 @@ p11_asn1_cache_get (p11_asn1_cache *cache,
 
 void
 p11_asn1_cache_take (p11_asn1_cache *cache,
-                     node_asn *node,
+                     asn1_node node,
                      const char *struct_name,
                      const unsigned char *der,
                      size_t der_len)
