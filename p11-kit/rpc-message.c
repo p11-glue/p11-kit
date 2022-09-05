@@ -46,6 +46,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #define _(x) dgettext(PACKAGE_NAME, x)
@@ -290,6 +292,9 @@ p11_rpc_message_write_attribute_array (p11_rpc_message *msg,
 
 	/* Write the number of items */
 	p11_rpc_buffer_add_uint32 (msg->output, num);
+
+        fprintf(stderr, "\ninside p11_rpc_message_write_attribute_array:\n");
+        fprintf(stderr, "num items = %ul\n", num);
 
 	for (i = 0; i < num; ++i)
 		p11_rpc_buffer_add_attribute (msg->output, &(arr[i]));
@@ -980,6 +985,9 @@ p11_rpc_buffer_add_attribute_array_value (p11_buffer *buffer,
 	/* Write the number of items */
 	p11_rpc_buffer_add_uint32 (buffer, count);
 
+        fprintf(stderr, "inside p11_rpc_buffer_add_attribute_array_value:\n");
+        fprintf(stderr, "count = %ul\n", count);
+
 	/* Actually write the attributes.  */
 	for (i = 0; i < count; i++) {
 		const CK_ATTRIBUTE *attr = &(attrs[i]);
@@ -1091,6 +1099,12 @@ p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
+
+        fprintf(stderr, "inside p11_rpc_buffer_add_attribute:\n");
+        fprintf(stderr, "type = %ul\n", attr->type);
+        fprintf(stderr, "pValue = %p\n", attr->pValue);
+        fprintf(stderr, "ulValueLen = %ul\n", attr->ulValueLen);
+
 	serializer->encode (buffer, attr->pValue, attr->ulValueLen);
 }
 
@@ -1149,6 +1163,9 @@ p11_rpc_buffer_get_attribute_array_value (p11_buffer *buffer,
 
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
 		return false;
+
+	fprintf(stderr, "inside p11_rpc_buffer_get_attribute_array_value:\n");
+	fprintf(stderr, "count = %lu\n", count);
 
 	if (!value) {
 		memset (&temp, 0, sizeof (CK_ATTRIBUTE));
@@ -1252,6 +1269,66 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 }
 
 bool
+p11_rpc_alloc_array(p11_rpc_message *msg,
+                    p11_buffer *buffer,
+		    size_t *offset,
+		    CK_ATTRIBUTE *attr)
+{
+	uint32_t count, i;
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
+		return false;
+
+	fprintf(stderr, "inside p11_rpc_alloc_array:\n");
+	fprintf(stderr, "count = %lu\n", count);
+
+	for (i = 0; i < count; ++i)
+		if (!p11_rpc_alloc_attribute (msg, buffer, offset, attr + i))
+			return false;
+
+	return true;
+}
+
+bool
+p11_rpc_alloc_attribute(p11_rpc_message *msg,
+                        p11_buffer *buffer,
+			size_t *offset,
+			CK_ATTRIBUTE *attr)
+{
+        void *tmp;
+	uint32_t type, length;
+	unsigned char validity;
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &type))
+		return false;
+	if (!p11_rpc_buffer_get_byte (buffer, offset, &validity))
+		return false;
+	if (!validity) {
+		attr->ulValueLen = ((CK_ULONG)-1);
+		attr->type = type;
+		return true;
+	}
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
+		return false;
+
+        tmp = p11_rpc_message_alloc_extra (msg, length);
+        if (tmp == NULL)
+                return false;
+
+        attr->type = type;
+        attr->pValue = tmp;
+        attr->ulValueLen = length;
+
+	fprintf(stderr, "inside p11_rpc_alloc_attribute:\n");
+	fprintf(stderr, "type = %lu\n", attr->type);
+	fprintf(stderr, "pValue = %p\n", attr->pValue);
+	fprintf(stderr, "ulValueLen = %lu\n", attr->ulValueLen);
+
+	return map_attribute_to_value_type (type) != P11_RPC_VALUE_ATTRIBUTE_ARRAY ||
+               p11_rpc_alloc_array(msg, buffer, offset, attr->pValue);
+}
+
+bool
 p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 			      size_t *offset,
 			      CK_ATTRIBUTE *attr)
@@ -1278,6 +1355,10 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
 		return false;
+
+	fprintf(stderr, "inside p11_rpc_buffer_get_attribute:\n");
+	fprintf(stderr, "type = %lu\n", type);
+	fprintf(stderr, "length = %lu\n", length);
 
 	/* Decode the attribute value */
 	value_type = map_attribute_to_value_type (type);

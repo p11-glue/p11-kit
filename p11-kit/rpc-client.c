@@ -50,6 +50,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #ifdef ENABLE_NLS
 #include <libintl.h>
@@ -205,6 +206,8 @@ proto_read_attribute_array (p11_rpc_message *msg,
                             CK_ATTRIBUTE_PTR arr,
                             CK_ULONG len)
 {
+	fprintf(stderr, "inside proto_read_attribute_array (client)\n");
+
 	uint32_t i, num;
 	CK_RV ret;
 
@@ -243,10 +246,13 @@ proto_read_attribute_array (p11_rpc_message *msg,
 			return PARSE_ERROR;
 		}
 
+		/*
 		if (IS_ATTRIBUTE_ARRAY (&temp)) {
 			p11_debug("recursive attribute array is not supported");
 			return PARSE_ERROR;
 		}
+		*/
+		fprintf(stderr, "IS_ATTRIBUTE_ARRAY = %s\n", IS_ATTRIBUTE_ARRAY (&temp) ? "true" : "false");
 
 		/* Try and stuff it in the output data */
 		if (arr) {

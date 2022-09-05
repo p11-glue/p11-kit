@@ -58,6 +58,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #ifdef ENABLE_NLS
 #include <libintl.h>
@@ -303,6 +304,8 @@ proto_read_attribute_array (p11_rpc_message *msg,
                             CK_ATTRIBUTE_PTR *result,
                             CK_ULONG *n_result)
 {
+	fprintf(stderr, "inside proto_read_attribute_array (server)\n");
+
 	CK_ATTRIBUTE_PTR attrs;
 	uint32_t n_attrs, i;
 
@@ -323,6 +326,8 @@ proto_read_attribute_array (p11_rpc_message *msg,
 	if (attrs == NULL)
 		return CKR_DEVICE_MEMORY;
 
+	fprintf(stderr, "n_attrs = %u\n", n_attrs);
+
 	/* Now go through and fill in each one */
 	for (i = 0; i < n_attrs; ++i) {
 		size_t offset = msg->parsed;
@@ -334,18 +339,28 @@ proto_read_attribute_array (p11_rpc_message *msg,
 			msg->parsed = offset;
 			return PARSE_ERROR;
 		}
-
+/*
 		if (IS_ATTRIBUTE_ARRAY (&temp)) {
 			p11_debug("recursive attribute array is not supported");
 			return PARSE_ERROR;
 		}
+*/
+		fprintf(stderr, "IS_ATTRIBUTE_ARRAY = %s\n", IS_ATTRIBUTE_ARRAY (&temp) ? "true" : "false");
+
+		fprintf(stderr, "temp.type = %lu\n", temp.type);
+		fprintf(stderr, "temp.pValue = %p\n", temp.pValue);
+		fprintf(stderr, "temp.ulValueLen = %lu\n\n", temp.ulValueLen);
+
 
 		attrs[i].type = temp.type;
 
 		/* Whether this one is valid or not */
 		if (temp.ulValueLen != ((CK_ULONG)-1)) {
 			size_t offset2 = msg->parsed;
-			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, temp.ulValueLen);
+                        size_t offset3 = offset2;
+                        
+                        p11_rpc_alloc_attribute (msg, msg->input, &offset3, attrs + i);
+
 			if (!p11_rpc_buffer_get_attribute (msg->input, &offset2, &attrs[i])) {
 				msg->parsed = offset2;
 				return PARSE_ERROR;

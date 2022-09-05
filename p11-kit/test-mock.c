@@ -603,6 +603,54 @@ test_set_attribute_value (void)
 }
 
 static void
+test_wrap_template (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_ATTRIBUTE attrs[1];
+	CK_ATTRIBUTE template[1];
+	//CK_ATTRIBUTE temp[1];
+	CK_BBOOL local = CK_FALSE;
+	CK_RV rv;
+
+	module = setup_mock_module (&session);
+
+	template[0].type = CKA_LOCAL;
+	template[0].pValue = &local;
+	template[0].ulValueLen = sizeof (local);
+	attrs[0].type = CKA_WRAP_TEMPLATE;
+	attrs[0].pValue = &template;
+	attrs[0].ulValueLen = sizeof (template);
+
+	fprintf(stderr, "\n");
+	fprintf(stderr, "setting attrs.type = %lu\n", attrs[0].type);
+	fprintf(stderr, "setting attrs.pValue = %p\n", attrs[0].pValue);
+	fprintf(stderr, "setting attrs.ulValueLen = %lu\n\n", attrs[0].ulValueLen);
+        fprintf(stderr, "calling C_SetAttributeValue\n");
+	rv = (module->C_SetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX_2, attrs, 1);
+        fprintf(stderr, "finished C_SetAttributeValue %ld\n", rv);
+	assert (rv == CKR_OK);
+
+	local = !local;
+/*
+	temp[0].type = CKA_WRAP_TEMPLATE;
+	temp[0].pValue = NULL;
+	temp[0].ulValueLen = 0;
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX_2, temp, 1);
+	assert (rv == CKR_OK);
+
+	assert_num_eq (temp[0].ulValueLen, sizeof (template));
+*/
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX_2, attrs, 1);
+	assert (rv == CKR_OK);
+
+	assert (!local);
+
+	teardown_mock_module (module);
+}
+
+static void
 test_create_object (void)
 {
 	CK_FUNCTION_LIST_PTR module;
@@ -1660,6 +1708,7 @@ test_mock_add_tests (const char *prefix)
 	p11_test (test_login_logout, "%s/test_login_logout", prefix);
 	p11_test (test_get_attribute_value, "%s/test_get_attribute_value", prefix);
 	p11_test (test_set_attribute_value, "%s/test_set_attribute_value", prefix);
+	p11_test (test_wrap_template, "%s/test_wrap_template", prefix);
 	p11_test (test_create_object, "%s/test_create_object", prefix);
 	p11_test (test_copy_object, "%s/test_copy_object", prefix);
 	p11_test (test_destroy_object, "%s/test_destroy_object", prefix);

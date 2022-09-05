@@ -127,8 +127,8 @@ test_all (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, at);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, at);
 
 	assert (has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -306,8 +306,8 @@ test_with_session (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* 1 modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (3, at);
+	/* 1 modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (4, at);
 
 	assert (has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -357,8 +357,8 @@ test_with_slot (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* 1 modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (3, at);
+	/* 1 modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (4, at);
 
 	assert (has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -400,8 +400,8 @@ test_with_module (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* 1 modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (3, at);
+	/* 1 modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (4, at);
 
 	assert (has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -506,8 +506,8 @@ test_uri_with_type (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 2 public keys */
-	assert_num_eq (6, at);
+	/* Three modules, each with 1 slot, and 3 public keys */
+	assert_num_eq (9, at);
 
 	assert (!has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -579,8 +579,8 @@ test_filter (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 2 public keys */
-	assert_num_eq (6, at);
+	/* Three modules, each with 1 slot, and 3 public keys */
+	assert_num_eq (9, at);
 
 	assert (!has_handle (objects, at, MOCK_DATA_OBJECT));
 	assert (!has_handle (objects, at, MOCK_PRIVATE_KEY_CAPITALIZE));
@@ -655,8 +655,8 @@ test_module_match (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, count);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, count);
 
 	p11_kit_iter_free (iter);
 
@@ -763,8 +763,8 @@ test_slot_match (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, count);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, count);
 
 	p11_kit_iter_free (iter);
 
@@ -875,8 +875,8 @@ test_slot_match_by_id (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, count);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, count);
 
 	p11_kit_iter_free (iter);
 
@@ -977,8 +977,8 @@ test_token_match (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, count);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, count);
 
 	p11_kit_iter_free (iter);
 
@@ -1301,6 +1301,10 @@ test_get_attributes (void)
 			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
 			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public prefix key", -1));
 			break;
+		case MOCK_PUBLIC_KEY_PREFIX_2:
+			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
+			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public prefix key (for wrap template test)", -1));
+			break;
 		default:
 			assert_fail ("Unknown object matched", NULL);
 			break;
@@ -1311,8 +1315,8 @@ test_get_attributes (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, at);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, at);
 
 	p11_kit_iter_free (iter);
 
@@ -1363,6 +1367,10 @@ test_load_attributes (void)
 			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
 			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public prefix key", -1));
 			break;
+		case MOCK_PUBLIC_KEY_PREFIX_2:
+			assert (p11_attrs_find_ulong (attrs, CKA_CLASS, &ulong) && ulong == CKO_PUBLIC_KEY);
+			assert (p11_attr_match_value (p11_attrs_find (attrs, CKA_LABEL), "Public prefix key (for wrap template test)", -1));
+			break;
 		default:
 			assert_fail ("Unknown object matched", NULL);
 			break;
@@ -1375,8 +1383,8 @@ test_load_attributes (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, at);
+	/* Three modules, each with 1 slot, and 4 public objects */
+	assert_num_eq (12, at);
 
 	p11_kit_iter_free (iter);
 
@@ -1582,7 +1590,7 @@ test_destroy_object (void)
 
 /* Test all combinations of P11_KIT_ITER_WITH_{TOKENS,SLOTS,MODULES}
  * and P11_KIT_ITER_WITHOUT_OBJECTS, against three modules, each
- * with 1 slot, and 3 public objects */
+ * with 1 slot, and 4 public objects */
 static void
 test_exhaustive_match (void)
 {
@@ -1590,7 +1598,7 @@ test_exhaustive_match (void)
 	P11KitIter *iter;
 	CK_RV rv;
 	int counts[] = {
-		9, 12, 12, 15, 12, 15, 15, 18, 0, 3, 3, 6, 3, 6, 6, 9
+		12, 15, 15, 18, 15, 18, 18, 21, 0, 3, 3, 6, 3, 6, 6, 9
 	};
 	int count;
 	int i;

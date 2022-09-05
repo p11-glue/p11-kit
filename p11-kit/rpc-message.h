@@ -245,6 +245,18 @@ typedef struct {
 	void *extra;
 } p11_rpc_message;
 
+bool
+p11_rpc_alloc_array(p11_rpc_message *msg,
+                    p11_buffer *buffer,
+		    size_t *offset,
+		    CK_ATTRIBUTE *attr);
+
+bool
+p11_rpc_alloc_attribute(p11_rpc_message *msg,
+                        p11_buffer *buffer,
+			size_t *offset,
+			CK_ATTRIBUTE *attr);
+
 void             p11_rpc_message_init                    (p11_rpc_message *msg,
                                                           p11_buffer *input,
                                                           p11_buffer *output);
