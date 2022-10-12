@@ -212,6 +212,10 @@ extern "C" {
 #define aad_len ulAADLen
 #define tag_bits ulTagBits
 #define tag_ptr pTag
+#define block_counter pBlockCounter
+#define block_counter_bits blockCounterBits
+#define nonce_ptr pNonce
+#define nonce_bits ulNonceBits
 #define shared_data_len ulSharedDataLen
 #define shared_data pSharedData
 #define public_data_len ulPublicDataLen
@@ -425,6 +429,9 @@ typedef unsigned long ck_key_type_t;
 #define CKK_GOSTR3410		(0x30UL)
 #define CKK_GOSTR3411		(0x31UL)
 #define CKK_GOST28147		(0x32UL)
+#define CKK_CHACHA20		(0x33UL)
+#define CKK_POLY1305		(0x34UL)
+#define CKK_SALSA20		(0x3eUL)
 #define CKK_EC_EDWARDS		(0x40UL)
 #define CKK_EC_MONTGOMERY	(0x41UL)
 #define CKK_VENDOR_DEFINED	((unsigned long) (1UL << 31))
@@ -871,6 +878,11 @@ typedef unsigned long ck_mechanism_type_t;
 #define CKM_GOST28147			(0x1222UL)
 #define CKM_GOST28147_MAC		(0x1223UL)
 #define CKM_GOST28147_KEY_WRAP		(0x1224UL)
+#define CKM_CHACHA20_KEY_GEN		(0x1225UL)
+#define CKM_CHACHA20			(0x1226UL)
+#define CKM_POLY1305_KEY_GEN		(0x1227UL)
+#define CKM_POLY1305			(0x1228UL)
+
 #define CKM_DSA_PARAMETER_GEN		(0x2000UL)
 #define CKM_DH_PKCS_PARAMETER_GEN	(0x2001UL)
 #define CKM_X9_42_DH_PARAMETER_GEN	(0x2002UL)
@@ -1024,6 +1036,32 @@ struct ck_gcm_message_params {
 	ck_generator_function_t iv_generator;
 	unsigned char *tag_ptr;
 	unsigned long tag_bits;
+};
+
+struct ck_chacha20_params {
+	unsigned char *block_counter;
+	unsigned long block_counter_bits;
+	unsigned char *nonce_ptr;
+	unsigned long nonce_bits;
+};
+
+struct ck_salsa20_params {
+	unsigned char *block_counter;
+	unsigned char *nonce_ptr;
+	unsigned long nonce_bits;
+};
+
+struct ck_salsa20_chacha20_poly1305_params {
+	unsigned char *nonce_ptr;
+	unsigned long nonce_bits;
+	unsigned char *aad_ptr;
+	unsigned long aad_len;
+};
+
+struct ck_salsa20_chacha20_poly1305_msg_params {
+	unsigned char *nonce_ptr;
+	unsigned long nonce_bits;
+	unsigned char *tag_ptr;
 };
 
 /* The following EC Key Derivation Functions are defined */
@@ -1867,6 +1905,18 @@ typedef struct ck_aes_ctr_params *CK_AES_CTR_PARAMS_PTR;
 typedef struct ck_gcm_params CK_GCM_PARAMS;
 typedef struct ck_gcm_params *CK_GCM_PARAMS_PTR;
 
+typedef struct ck_chacha20_params CK_CHACHA20_PARAMS;
+typedef struct ck_chacha20_params *CK_CHACHA20_PARAMS_PTR;
+
+typedef struct ck_salsa20_params CK_SALSA20_PARAMS;
+typedef struct ck_salsa20_params *CK_SALSA20_PARAMS_PTR;
+
+typedef struct ck_salsa20_chacha20_poly1305_params CK_SALSA20_CHACHA20_POLY1305_PARAMS;
+typedef struct ck_salsa20_chacha20_poly1305_params *CK_SALSA20_CHACHA20_POLY1305_PARAMS_PTR;
+
+typedef struct ck_salsa20_chacha20_poly1305_msg_params CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS;
+typedef struct ck_salsa20_chacha20_poly1305_msg_params *CK_SALSA20_CHACHA20_POLY1305_MSG_PARAMS_PTR;
+
 typedef struct ck_ecdh1_derive_params CK_ECDH1_DERIVE_PARAMS;
 typedef struct ck_ecdh1_derive_params *CK_ECDH1_DERIVE_PARAMS_PTR;
 
@@ -1995,6 +2045,10 @@ typedef struct ck_aes_cbc_encrypt_data_params *CK_AES_CBC_ENCRYPT_DATA_PARAMS_PT
 #undef aad_len
 #undef tag_bits
 #undef tag_ptr
+#undef block_counter
+#undef block_counter_bits
+#undef nonce_ptr
+#undef nonce_bits
 #undef shared_data_len
 #undef shared_data
 #undef public_data_len
