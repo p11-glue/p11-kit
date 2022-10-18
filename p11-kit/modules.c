@@ -2168,10 +2168,14 @@ p11_kit_modules_initialize (CK_FUNCTION_LIST **modules,
 				name = strdup ("(unknown)");
 			return_val_if_fail (name != NULL, CKR_HOST_MEMORY);
 			critical = (p11_kit_module_get_flags (modules[i]) & P11_KIT_MODULE_CRITICAL);
-			p11_message (_("%s: module failed to initialize%s: %s"),
-			             name, critical ? "" : ", skipping", p11_kit_strerror (rv));
-			if (critical)
+			if (critical) {
 				ret = rv;
+				p11_message (_("%s: module failed to initialize: %s"),
+					     name, p11_kit_strerror (rv));
+			} else {
+				p11_message (_("%s: module failed to initialize, skipping: %s"),
+					     name, p11_kit_strerror (rv));
+			}
 			if (failure_callback)
 				failure_callback (modules[i]);
 			out--;
