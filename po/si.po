@@ -1,0 +1,1438 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Collabora Ltd.
+# This file is distributed under the same license as the p11-kit package.
+#
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: p11-kit\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
+"PO-Revision-Date: 2012-02-29 09:23+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Sinhala (http://www.transifex.com/freedesktop/p11-kit/"
+"language/si/)\n"
+"Language: si\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "භාවිතය: %s විධානය <args>...\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"පොදු %s විධාන වන්නේ:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"වැඩි විස්තර සඳහා '%s <command> --help' බලන්න\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "විධානයක් නියම කර නැත"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "නොදන්නා ගෝලීය විකල්පය: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "නොදන්නා ගෝලීය විකල්පය: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "'%s' වලංගු විධානයක් නොවේ. '%s --උදව්' බලන්න"
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: අනපේක්ෂිත පෙම් බ්ලොක්"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: අනපේක්ෂිත කොටස් ශීර්ෂකය"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "'user-config' සඳහා වලංගු නොවන මාදිලිය: %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "වලංගු නොවන වින්‍යාස ගොනු නාමය, අනාගතයේදී නොසලකා හරිනු ඇත: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "නාමාවලිය ලැයිස්තුගත කළ නොහැක: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "ස්ටැට් මාර්ගය නොහැකි විය: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "වලංගු නොවන සැකසුම '%s' පෙරනිමියෙන් '%s' වෙත"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "පෙරහන ආරම්භ කළ නොහැක"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "මොඩියුල තොරතුරු පූරණය කළ නොහැකි විය: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "අමතර තර්ක නිශ්චිතව දක්වා ඇත"
+
+#: p11-kit/messages.c:78
+msgid "The operation was cancelled"
+msgstr "මෙහෙයුම අවලංගු කරන ලදී"
+
+#: p11-kit/messages.c:81
+msgid "Insufficient memory available"
+msgstr "ප්‍රමාණවත් මතකයක් නොමැත"
+
+#: p11-kit/messages.c:83
+msgid "The specified slot ID is not valid"
+msgstr "නිශ්චිත තව් ID වලංගු නොවේ"
+
+#: p11-kit/messages.c:85
+msgid "Internal error"
+msgstr "අභ්‍යන්තර දෝෂයක්"
+
+#: p11-kit/messages.c:87
+msgid "The operation failed"
+msgstr "මෙහෙයුම අසාර්ථක විය"
+
+#: p11-kit/messages.c:89
+msgid "Invalid arguments"
+msgstr "වලංගු නොවන තර්ක"
+
+#: p11-kit/messages.c:91
+msgid "The module cannot create needed threads"
+msgstr "මොඩියුලයට අවශ්‍ය නූල් සෑදිය නොහැක"
+
+#: p11-kit/messages.c:93
+msgid "The module cannot lock data properly"
+msgstr "මොඩියුලයට දත්ත නිසි ලෙස අගුළු දැමිය නොහැක"
+
+#: p11-kit/messages.c:95
+msgid "The field is read-only"
+msgstr "ක්ෂේත්‍රය කියවීමට පමණි"
+
+#: p11-kit/messages.c:97
+msgid "The field is sensitive and cannot be revealed"
+msgstr "ක්ෂේත්‍රය සංවේදී වන අතර හෙළි කළ නොහැක"
+
+#: p11-kit/messages.c:99
+msgid "The field is invalid or does not exist"
+msgstr "ක්ෂේත්‍රය වලංගු නැත හෝ නොපවතී"
+
+#: p11-kit/messages.c:101
+msgid "Invalid value for field"
+msgstr "ක්ෂේත්‍රය සඳහා වලංගු නොවන අගයක්"
+
+#: p11-kit/messages.c:103
+msgid "The data is not valid or unrecognized"
+msgstr "දත්ත වලංගු හෝ හඳුනා නොගත් ඒවා නොවේ"
+
+#: p11-kit/messages.c:105
+msgid "The data is too long"
+msgstr "දත්ත දිග වැඩියි"
+
+#: p11-kit/messages.c:107
+msgid "An error occurred on the device"
+msgstr "උපාංගයේ දෝෂයක් ඇති විය"
+
+#: p11-kit/messages.c:109
+msgid "Insufficient memory available on the device"
+msgstr "උපාංගයේ ප්‍රමාණවත් මතකයක් නොමැත"
+
+#: p11-kit/messages.c:111
+msgid "The device was removed or unplugged"
+msgstr "උපාංගය ඉවත් කර හෝ පේනුවෙන් ඉවත් කර ඇත"
+
+#: p11-kit/messages.c:113
+msgid "The encrypted data is not valid or unrecognized"
+msgstr "සංකේතනය කළ දත්ත වලංගු හෝ හඳුනා නොගත් ඒවා නොවේ"
+
+#: p11-kit/messages.c:115
+msgid "The encrypted data is too long"
+msgstr "සංකේතනය කළ දත්ත දිග වැඩියි"
+
+#: p11-kit/messages.c:117
+msgid "This operation is not supported"
+msgstr "මෙම මෙහෙයුම සහාය නොදක්වයි"
+
+#: p11-kit/messages.c:119
+msgid "The key is missing or invalid"
+msgstr "යතුර අතුරුදහන් හෝ අවලංගුය"
+
+#: p11-kit/messages.c:121
+msgid "The key is the wrong size"
+msgstr "ප්රධාන දෙය වන්නේ වැරදි ප්රමාණයයි"
+
+#: p11-kit/messages.c:123
+msgid "The key is of the wrong type"
+msgstr "යතුර වැරදි වර්ගයකි"
+
+#: p11-kit/messages.c:125
+msgid "No key is needed"
+msgstr "යතුරක් අවශ්‍ය නොවේ"
+
+#: p11-kit/messages.c:127
+msgid "The key is different than before"
+msgstr "යතුර පෙරට වඩා වෙනස් ය"
+
+#: p11-kit/messages.c:129
+msgid "A key is needed"
+msgstr "යතුරක් අවශ්යයි"
+
+#: p11-kit/messages.c:131
+msgid "Cannot include the key in the digest"
+msgstr "ආහාර දිරවීමේ යතුර ඇතුළත් කළ නොහැක"
+
+#: p11-kit/messages.c:133
+msgid "This operation cannot be done with this key"
+msgstr "මෙම යතුර සමඟ මෙම මෙහෙයුම සිදු කළ නොහැක"
+
+#: p11-kit/messages.c:135
+msgid "The key cannot be wrapped"
+msgstr "යතුර ඔතා ගත නොහැක"
+
+#: p11-kit/messages.c:137
+msgid "Cannot export this key"
+msgstr "මෙම යතුර අපනයනය කළ නොහැක"
+
+#: p11-kit/messages.c:139
+msgid "The crypto mechanism is invalid or unrecognized"
+msgstr "ක්‍රිප්ටෝ යාන්ත්‍රණය අවලංගු හෝ හඳුනාගෙන නොමැත"
+
+#: p11-kit/messages.c:141
+msgid "The crypto mechanism has an invalid argument"
+msgstr "ක්‍රිප්ටෝ යාන්ත්‍රණයට වලංගු නොවන තර්කයක් ඇත"
+
+#: p11-kit/messages.c:143
+msgid "The object is missing or invalid"
+msgstr "වස්තුව අතුරුදහන් හෝ වලංගු නොවේ"
+
+#: p11-kit/messages.c:145
+msgid "Another operation is already taking place"
+msgstr "තවත් මෙහෙයුමක් දැනටමත් සිදුවෙමින් පවතී"
+
+#: p11-kit/messages.c:147
+msgid "No operation is taking place"
+msgstr "කිසිදු මෙහෙයුමක් සිදු නොවේ"
+
+#: p11-kit/messages.c:149
+msgid "The password or PIN is incorrect"
+msgstr "මුරපදය හෝ PIN අංකය වැරදියි"
+
+#: p11-kit/messages.c:151
+msgid "The password or PIN is invalid"
+msgstr "මුරපදය හෝ PIN අංකය වලංගු නොවේ"
+
+#: p11-kit/messages.c:153
+msgid "The password or PIN is of an invalid length"
+msgstr "මුරපදය හෝ PIN වලංගු නොවන දිගකි"
+
+#: p11-kit/messages.c:155
+msgid "The password or PIN has expired"
+msgstr "මුරපදය හෝ PIN අංකය කල් ඉකුත් වී ඇත"
+
+#: p11-kit/messages.c:157
+msgid "The password or PIN is locked"
+msgstr "මුරපදය හෝ PIN අංකය අගුළු දමා ඇත"
+
+#: p11-kit/messages.c:159
+msgid "The session is closed"
+msgstr "සැසිය වසා ඇත"
+
+#: p11-kit/messages.c:161
+msgid "Too many sessions are active"
+msgstr "බොහෝ සැසි සක්‍රීයයි"
+
+#: p11-kit/messages.c:163
+msgid "The session is invalid"
+msgstr "සැසිය වලංගු නොවේ"
+
+#: p11-kit/messages.c:165
+msgid "The session is read-only"
+msgstr "සැසිය කියවීමට පමණි"
+
+#: p11-kit/messages.c:167
+msgid "An open session exists"
+msgstr "විවෘත සැසියක් පවතී"
+
+#: p11-kit/messages.c:169
+msgid "A read-only session exists"
+msgstr "කියවීමට පමණක් සැසියක් පවතී"
+
+#: p11-kit/messages.c:171
+msgid "An administrator session exists"
+msgstr "පරිපාලක සැසියක් පවතී"
+
+#: p11-kit/messages.c:173
+msgid "The signature is bad or corrupted"
+msgstr "අත්සන නරක හෝ දූෂිත ය"
+
+#: p11-kit/messages.c:175
+msgid "The signature is unrecognized or corrupted"
+msgstr "අත්සන හඳුනා නොගත් හෝ දූෂිත ය"
+
+#: p11-kit/messages.c:177
+msgid "Certain required fields are missing"
+msgstr "අවශ්‍ය ඇතැම් ක්ෂේත්‍ර අස්ථානගත වී ඇත"
+
+#: p11-kit/messages.c:179
+msgid "Certain fields have invalid values"
+msgstr "ඇතැම් ක්ෂේත්‍ර වල වලංගු නොවන අගයන් ඇත"
+
+#: p11-kit/messages.c:181
+msgid "The device is not present or unplugged"
+msgstr "උපාංගය නොපවතී හෝ පේනු විසන්ධි කර නැත"
+
+#: p11-kit/messages.c:183
+msgid "The device is invalid or unrecognizable"
+msgstr "උපාංගය අවලංගු හෝ හඳුනාගත නොහැක"
+
+#: p11-kit/messages.c:185
+msgid "The device is write protected"
+msgstr "උපාංගය ලිවීමට ආරක්ෂිතයි"
+
+#: p11-kit/messages.c:187
+msgid "Cannot import because the key is invalid"
+msgstr "යතුර වලංගු නොවන නිසා ආයාත කළ නොහැක"
+
+#: p11-kit/messages.c:189
+msgid "Cannot import because the key is of the wrong size"
+msgstr "යතුර වැරදි ප්‍රමාණයේ නිසා ආයාත කළ නොහැක"
+
+#: p11-kit/messages.c:191
+msgid "Cannot import because the key is of the wrong type"
+msgstr "යතුර වැරදි ආකාරයේ නිසා ආයාත කළ නොහැක"
+
+#: p11-kit/messages.c:193
+msgid "You are already logged in"
+msgstr "ඔබ දැනටමත් පුරනය වී ඇත"
+
+#: p11-kit/messages.c:195
+msgid "No user has logged in"
+msgstr "කිසිම පරිශීලකයෙක් ලොග් වී නැත"
+
+#: p11-kit/messages.c:197
+msgid "The user's password or PIN is not set"
+msgstr "පරිශීලකයාගේ මුරපදය හෝ PIN අංකය සකසා නැත"
+
+#: p11-kit/messages.c:199
+msgid "The user is of an invalid type"
+msgstr "පරිශීලකයා වලංගු නොවන වර්ගයකි"
+
+#: p11-kit/messages.c:201
+msgid "Another user is already logged in"
+msgstr "වෙනත් පරිශීලකයෙකු දැනටමත් පුරනය වී ඇත"
+
+#: p11-kit/messages.c:203
+msgid "Too many users of different types are logged in"
+msgstr "විවිධ වර්ගවල බොහෝ පරිශීලකයින් පුරනය වී ඇත"
+
+#: p11-kit/messages.c:205
+msgid "Cannot import an invalid key"
+msgstr "වලංගු නොවන යතුරක් ආයාත කළ නොහැක"
+
+#: p11-kit/messages.c:207
+msgid "Cannot import a key of the wrong size"
+msgstr "වැරදි ප්‍රමාණයේ යතුරක් ආයාත කළ නොහැක"
+
+#: p11-kit/messages.c:209
+msgid "Cannot export because the key is invalid"
+msgstr "යතුර වලංගු නොවන නිසා අපනයනය කළ නොහැක"
+
+#: p11-kit/messages.c:211
+msgid "Cannot export because the key is of the wrong size"
+msgstr "යතුර වැරදි ප්‍රමාණයේ නිසා අපනයනය කළ නොහැක"
+
+#: p11-kit/messages.c:213
+msgid "Cannot export because the key is of the wrong type"
+msgstr "යතුර වැරදි ආකාරයේ නිසා අපනයනය කළ නොහැක"
+
+#: p11-kit/messages.c:215
+msgid "Unable to initialize the random number generator"
+msgstr "අහඹු සංඛ්යා උත්පාදක යන්ත්රය ආරම්භ කිරීමට නොහැකි විය"
+
+#: p11-kit/messages.c:217
+msgid "No random number generator available"
+msgstr "සසම්භාවී අංක උත්පාදකයක් නොමැත"
+
+#: p11-kit/messages.c:219
+msgid "The crypto mechanism has an invalid parameter"
+msgstr "ක්‍රිප්ටෝ යාන්ත්‍රණයට වලංගු නොවන පරාමිතියක් ඇත"
+
+#: p11-kit/messages.c:221
+msgid "Not enough space to store the result"
+msgstr "ප්රතිඵලය ගබඩා කිරීමට ප්රමාණවත් ඉඩක් නැත"
+
+#: p11-kit/messages.c:223
+msgid "The saved state is invalid"
+msgstr "සුරැකි තත්ත්වය වලංගු නොවේ"
+
+#: p11-kit/messages.c:225
+msgid "The information is sensitive and cannot be revealed"
+msgstr "තොරතුරු සංවේදී වන අතර හෙළි කළ නොහැක"
+
+#: p11-kit/messages.c:227
+msgid "The state cannot be saved"
+msgstr "රාජ්යය සුරැකිය නොහැක"
+
+#: p11-kit/messages.c:229
+msgid "The module has not been initialized"
+msgstr "මොඩියුලය ආරම්භ කර නොමැත"
+
+#: p11-kit/messages.c:231
+msgid "The module has already been initialized"
+msgstr "මොඩියුලය දැනටමත් ආරම්භ කර ඇත"
+
+#: p11-kit/messages.c:233
+msgid "Cannot lock data"
+msgstr "දත්ත අගුළු දැමිය නොහැක"
+
+#: p11-kit/messages.c:235
+msgid "The data cannot be locked"
+msgstr "දත්ත අගුලු දැමිය නොහැක"
+
+#: p11-kit/messages.c:237
+msgid "The request was rejected by the user"
+msgstr "පරිශීලකයා විසින් ඉල්ලීම ප්‍රතික්ෂේප කරන ලදී"
+
+#: p11-kit/messages.c:240
+msgid "Unknown error"
+msgstr "නොදන්නා දෝෂයකි"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "මොඩියුලය පූරණය කළ නොහැකි විය: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr "මොඩියුලයේ C_GetFunctionList ප්‍රවේශ ලක්ෂ්‍යය සොයාගත නොහැකි විය: %s: %s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "C_GetFunctiontList වෙත ඇමතීම මොඩියුලය තුළ අසාර්ථක විය: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr "p11-kit-proxy.so මොඩියුලය ලියාපදිංචි මොඩියුලයක් ලෙස පැටවීම ප්‍රතික්ෂේප කිරීම"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "මොඩියුලය '%s' හි සක්‍රීය සහ අක්‍රීය කිරීමේ විකල්ප දෙකම ඇත"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr "'%s' මොඩියුලය තීරනාත්මක ලෙස සලකුණු කර ඇති නිසා ආරම්භ කිරීම නවත්වයි"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "p11-kit ආරම්භ කිරීම පුනරාවර්තන ලෙස හැඳින්වේ"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "විවේචනාත්මක මොඩියුලය '%s' ආරම්භ කිරීම අසාර්ථක විය: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "ආරම්භ කිරීම අසාර්ථක වූ '%s' මොඩියුලය මඟ හැරීම: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "සැසිය වැසීමට නොහැකි විය: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr "'%s' මොඩියුලය සඳහා '%s' විකල්පය සහය දක්වන්නේ කළමනාකරණය කළ මොඩියුල සඳහා පමණි"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: මොඩියුලය ආරම්භ කිරීමට අසමත් විය: %s"
+
+#: p11-kit/modules.c:2176
+#, fuzzy, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: මොඩියුලය%s: %sආරම්භ කිරීමට අසමත් විය"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: මොඩියුලය දැනටමත් ආරම්භ කර ඇත"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: මොඩියුලය අවසන් කිරීමට අසමත් විය: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "මොඩියුලය ආරම්භ කිරීම අසාර්ථක විය: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "මොඩියුල සහ ටෝකන ලැයිස්තුගත කරන්න"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "නිශ්චිත PKCS#11 මොඩියුලයක් දුරස්ථව ධාවනය කරන්න"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr "PKCS#11 මොඩියුලය දුරස්ථව නිරාවරණය කරන සේවාදායක ක්‍රියාවලියක් ධාවනය කරන්න"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "විශ්වාස මෙවලම ධාවනය කළ නොහැකි විය"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr "'%s' වලංගු විධානයක් නොවේ. 'p11-kit --help' බලන්න"
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "දුරස්ථ කිරීමට මොඩියුලයක් හෝ ටෝකන සඳහන් කරන්න"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "'දුරස්ථ' මෙවලම ටර්මිනලයකින් ධාවනය කිරීමට අදහස් නොකෙරේ"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "එක් මොඩියුලයක් පමණක් නියම කළ හැක"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "වලංගු නොවන rpc දෝෂ ප්‍රතිචාරය: කෙටි වැඩියි"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "වලංගු නොවන rpc දෝෂ ප්‍රතිචාරය: නරක දෝෂ කේතය"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "වලංගු නොවන rpc ප්‍රතිචාරය: ඇමතුම් නොගැලපීම"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "වලංගු නොවන rpc ප්‍රතිචාරය: නරක තර්ක දත්ත"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr "වැරදි උපලක්ෂණ සංඛ්‍යාවක් සහිත උපලක්ෂණ අරාවක් ලැබී ඇත"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "වලංගු නොවන අනුපිළිවෙලින් ගුණාංග ආපසු ලබා දුන්නේය"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "වලංගු නොවන mutex ඇමතුම් කට්ටලයක් සපයා ඇත"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "os locking නැතුව කරන්න බෑ"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "C_Initialize එකම ක්‍රියාවලිය සඳහා දෙවරක් කැඳවනු ලැබේ"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr "rpc මොඩියුලය අවසන් කිරීමේදී දෝෂයක් ඇති විය: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "වලංගු නොවන පණිවිඩය: ඇමතුම් හැඳුනුම්කාරකය කියවිය නොහැක"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "වලංගු නොවන පණිවිඩය: නරක ඇමතුම් හැඳුනුම්පත: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "වලංගු නොවන පණිවිඩය: අත්සන කියවිය නොහැක"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "වලංගු නොවන පණිවිඩය: අත්සන නොගැලපේ"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr "වලංගු නොවන දිග ඉඩක් පිරවූ තන්තුවක් ලැබී ඇත: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "මොඩියුලයෙන් වලංගු නොවන ඉල්ලීමක්, සමහරවිට කෙටි වැඩියි"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "rpc ප්‍රතිචාරය ආරම්භ කිරීමට නොහැකි විය"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr "සම්බන්ධක මොඩියුලයෙන් වලංගු නොවන අතට අත දීම"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "pkcs11 rpc පණිවිඩය විග්‍රහ කිරීමට නොහැකි විය"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "පණිවිඩය එකතු කිරීමේ මතක දෝෂයකි"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "මතකයෙන් බැහැර දෝෂයකින් ප්‍රතිචාර දක්වයි"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "ලැබුණු සහය නොදක්වන අනුවාදය: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "අක්තපත්‍ර බයිට් කියවිය නොහැකි විය"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "අක්තපත්‍ර බයිට් ලිවීමට නොහැකි විය"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "rpc පණිවිඩය කියවීමට අසමත් විය"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "rpc පණිවිඩය හැසිරවීමේ අනපේක්ෂිත දෝෂයකි"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "rpc පණිවිඩය ලිවීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "දත්ත යැවීමට නොහැකි විය: වසා දැමූ සම්බන්ධතාවය"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "දත්ත යැවීමට නොහැකි විය"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "දත්ත ලබා ගැනීමට නොහැකි විය: වසා දැමූ සම්බන්ධතාවය"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "දත්ත ලබා ගැනීමට නොහැකි විය"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "වලංගු නොවන rpc ශීර්ෂ අගයන් ලැබී ඇත: සමහර විට වැරදි ප්‍රොටෝකෝලය"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "rpc පයිප්පයේ රැඳී සිටීමට තේරීම භාවිතා කළ නොහැක"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "සොකට් අක්තපත්‍ර යැවීමට නොහැකි විය"
+
+#: p11-kit/rpc-transport.c:653
+#, fuzzy
+msgid "couldn't receive socket credentials"
+msgstr "සොකට් අක්තපත්‍ර යැවීමට නොහැකි විය"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "ප්රොටෝකෝලය අසමත් වීම හේතුවෙන් වසා දැමීමේ සොකට්"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "ක්‍රියාවලිය %d පිට නොවී, අවසන් වේ"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "ක්රියාත්මක කරන ලද දරුවා බලා සිටීමට අසමත් විය: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "ක්‍රියාවලිය %d තත්ත්වය %dසමඟින් ඉවත් විය"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "ක්‍රියාවලිය %d සංඥාව %dසමඟ අවසන් විය"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "දුරස්ථ සඳහා නලයක් සෑදීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "දුරස්ථ පාලකය සඳහා ෆෝක් කිරීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "ක්‍රියාවලිය %p පිට නොවී, අවසන් වේ"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "%pක්‍රියාවලිය අවසන් කිරීමට නොහැකි විය"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "ක්රියාත්මක කරන ලද දරුවා බලා සිටීමට අසමත් විය: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "%pහි පිටවීමේ තත්ත්වය ලබා ගැනීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "ක්‍රියාවලිය %p තත්ත්වය %luසමඟින් ඉවත් විය"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "stdin අනුපිටපත් කිරීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "stdout අනුපිටපත් කිරීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr "පයිප්පයේ ළමා කෙළවර අනුපිටපත් කිරීමට අපොහොසත් විය"
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "දුරස්ථව බිහි කිරීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "ගොනු විස්තර ප්‍රතිසාධනය කිරීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "වලංගු නොවන දුරස්ථ විධාන රේඛාව: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "දුරස්ථ පාලකය සඳහා සොකට් සෑදීමට අසමත් විය"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "vsock ලිපිනය විග්‍රහ කිරීමට අපොහොසත් විය: '%s'"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "දුරස්ථ පාලකය සහාය නොදක්වයි: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr "%u දරුවා sigsegv සමඟ මිය ගියේය"
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr "%u දරුවා සංඥා %dසමඟ මිය ගියේය"
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "සොකට් %sනිර්මාණය කිරීමට නොහැකි විය"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "සොකට් %sබැඳීමට නොහැකි විය"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "සොකට් %sට සවන් දීමට නොහැකි විය"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr "සොකට් %sචූන් කළ නොහැක"
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "සොකට් %u:%uනිර්මාණය කිරීමට නොහැකි විය"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "සොකට් %u:%uබැඳීමට නොහැකි විය"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "සොකට් %u:%uට සවන් දීමට නොහැකි විය"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "සොකට් එකෙන් uid පරීක්ෂා කළ නොහැකි විය"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "uid සම්බන්ධ කිරීම (%u) අපේක්ෂිත හා නොගැලපේ (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "සම්බන්ධ කිරීම gid (%u) අපේක්ෂිත නොගැලපේ (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr "demonize කිරීමට fork() නොහැකි විය"
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "නව සැසියක් නිර්මාණය කිරීමට නොහැකි විය"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "බොහෝ ගොනු විස්තර ලැබී ඇත"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "තත්පර %lu ක් සඳහා %s වෙත සම්බන්ධතා නොමැත, පිටවීම"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "සොකට් %sවෙතින් පිළිගත නොහැකි විය"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr "පිළිගැනීම සඳහා දෙබල කිරීමට අසමත් විය"
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "නොදන්නා කණ්ඩායම: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "නොදන්නා පරිශීලක: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "gid %uට සැකසිය නොහැක"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "කණ්ඩායම් %uට සැකසිය නොහැක"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "uid %uලෙස සැකසිය නොහැක"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "ධාවන කාල නාමාවලිය තීරණය කළ නොහැක"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "%sසෑදිය නොහැක"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "වින්ඩෝස් ආරක්ෂක කාර්යයන් ආරම්භ කිරීමට නොහැකි විය"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "%s: %luසඳහා SID තැනීමට නොහැක"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "ACL තැනීමට නොහැක: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "ආරක්ෂක විස්තරය වෙන් කළ නොහැක: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "ආරක්ෂක විස්තරය ආරම්භ කළ නොහැක: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "ආරක්ෂක විස්තරයේ හිමිකරු සැකසීමට නොහැක: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "ආරක්ෂක විස්තරය තුළ DACL සැකසීමට නොහැක: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "වලංගු නොවන PKCS#11 uri: %s"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "හඳුනා නොගත් ගොනු ආකෘතිය: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "ගොනුව විග්‍රහ කිරීමට අපොහොසත් විය: %s"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: ආරම්භ කිරීමට නොහැකි විය: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: තව් ගණන් කළ නොහැක: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: ටෝකන තොරතුරු ලබා ගැනීමට නොහැකි විය: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: සැසිය විවෘත කිරීමට නොහැකි විය: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr "නැංගුරම් ගබඩා කිරීම සඳහා වින්‍යාස කර ඇති ලිවිය හැකි ස්ථානයක් නොමැත"
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr "නැංගුරම් ගබඩා කිරීමට වින්‍යාසගත ස්ථානයක් නොමැත"
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "වස්තුව නිර්මාණය කළ නොහැක: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr "අවම වශයෙන් එක් නැංගුරම් ආදාන ගොනුවක් සඳහන් කරන්න"
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "කියවීමට පමණක් %sඉවත් කිරීමට නොහැකි විය"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "%s: %sඉවත් කිරීමට නොහැකි විය"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "අවම වශයෙන් එක් ගොනුවක් හෝ uri සඳහන් කළ යුතුය"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "ක්‍රියාවක් දැනටමත් සඳහන් කර ඇත"
+
+#: trust/anchor.c:702
+#, fuzzy, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "සැකසීමේදී %u දෝෂයකි"
+msgstr[1] "සැකසීමේදී %u දෝෂයකි"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: වලංගු නොවන සහතික දිගුව"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: වලංගු නොවන මූලික බාධා සහතික දිගුව"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "නොදන්නා"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "CKA_HASH_OF_SUBJECT_PUBLIC_KEY ගුණාංගය මග හැරී ඇත"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "CKA_HASH_OF_ISSUER_PUBLIC_KEY ගුණාංගය මග හැරී ඇත"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "වස්තුව වෙනස් කළ නොහැකි ය"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "මෙම වර්ගයේ වස්තූන් නිර්මාණය කළ නොහැක"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "%s ගුණාංගය සැකසිය නොහැක"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "%s ගුණාංගය වෙනස් කළ නොහැක"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "%s ගුණාංගයට වලංගු නොවන අගයක් ඇත"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "වස්තුව සඳහා %s ගුණාංගය වලංගු නොවේ"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "%s ගුණාංගය මග හැරී ඇත"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "CKA_CLASS ගුණාංගයක් හමු නොවීය"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "%s වස්තුවක් සෑදිය නොහැක"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "සංකේතය"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "ටෝකන් නොවන"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "වස්තුවේ %s අතුරුදහන්"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "%s සහාය නොදක්වයි %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "%s සහාය නොදක්වන වස්තු පන්තිය"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "වලංගු නොවන යතුරු භාවිත සහතික දිගුව"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr "වලංගු නොවන දිගු යතුරු භාවිත සහතික දිගුව"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "වලංගු නොවන ප්‍රතික්ෂේප කිරීමේ යතුරු භාවිත සහතික දිගුව"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "වස්තුව ඉවත දැමිය නොහැකි විය"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "අමතර තර්ක විධානයට ලබා දී ඇත"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "අමුණා ඇති සහතික දිගුව විග්‍රහ කළ නොහැක: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "සහතිකය සඳහා අමුණා ඇති දිගු පූරණය කළ නොහැකි විය: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "සහතිකය විග්‍රහ කිරීමට නොහැකි විය: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "ගුණාංග පූරණය කළ නොහැකි විය: %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "සහතික නොවන වස්තුව මඟ හැරීම"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "වාරණ ලැයිස්තුව පූරණය කළ නොහැකි විය: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "PKCS#11 URI දැනටමත් නිශ්චිතව දක්වා ඇත"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "pkcs11 uri ෆිල්ටරය විග්‍රහ කිරීමට නොහැකි විය: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr "uri හි හඳුනා නොගත් සංරචක අඩංගු වේ, කිසිවක් උපුටා නොගනු ඇත"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "සහාය නොදක්වන හෝ හඳුනා නොගත් පෙරහන: %s"
+
+#: trust/enumerate.c:670
+#, fuzzy, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "සහාය නොදක්වන හෝ හඳුනා නොගත් අරමුණ: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "විශ්වාස ප්‍රතිපත්ති අඩංගු මොඩියුල කිසිවක් ලියාපදිංචි කර නොමැත"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "ආකෘතියක් දැනටමත් සඳහන් කර ඇත"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "සහාය නොදක්වන හෝ හඳුනා නොගත් ආකෘතිය: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "ආකෘතිය විශ්වාස ප්‍රතිපත්තියට සහය නොදක්වයි"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr "ආකෘතියට අරමුණක් අවශ්‍ය වේ, එය --අරමුණ සමඟ සඳහන් කරන්න; 'server-auth' වෙත පෙරනිමි"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr "ආකෘතිය බහු අරමුණු සඳහා සහය නොදක්වයි, 'සර්වර්-අත්' වෙත පෙරනිමියෙන්"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "එක් ගමනාන්ත ගොනුවක් හෝ නාමාවලියක් සඳහන් කරන්න"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "නිමැවුම් ආකෘතියක් සඳහන් කර නොමැත"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "%s විධානය ක්‍රියාත්මක කළ නොහැක"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr "සහතික කිහිපයක් හමු වූ නමුත් ගොනු කිරීමට ලිවිය හැක්කේ එකක් පමණි"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "සහතික සොයා ගැනීමට අපොහොසත් විය: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "සහතිකයක් හමු නොවීය"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "සහතිකය සොයා ගැනීමට අපොහොසත් විය: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "දිගු නූල් කප්පාදු කිරීම"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "පරිසර විචල්‍යය $SOURCE_DATE_EPOCH: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr "පරිසර විචල්‍යය $SOURCE_DATE_EPOCH: ඉලක්කම් කිසිවක් හමු නොවීය: %s\n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "පරිසර විචල්‍යය $SOURCE_DATE_EPOCH: පසුපසින් යන කුණු: %s\n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"පරිසර විචල්‍යය $SOURCE_DATE_EPOCH: අගය %lu ට වඩා කුඩා හෝ සමාන විය යුතු නමුත් එය සොයා "
+"ගන්නා ලදී: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "සහතිකය අන්වර්ථ නාමයක් ජනනය කිරීමට නොහැකි විය"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "skipping object, uri ගොඩනැගීමට නොහැකි විය"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "හඳුනා නොගත් මොඩියුල තර්කය: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "නැංගුරම් සඳහා ස්ථානයේ අවිශ්වාසය සහිත සහතිකය: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr "වාරණ ලැයිස්තුවේ නැංගුරම සඳහා විශ්වාසය ඉක්මවා යාම: %s"
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "%sවර්ගයේ PEM වාරණ විග්‍රහ කිරීමට නොහැකි විය"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "ගොනුව විවෘත කර සිතියම්ගත කිරීමට නොහැකි විය: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "වලංගු නොවන oid අගය: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "ගොනුව සෑදීමට නොහැකි විය: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "ගොනුව වෙත ලිවීමට නොහැකි විය: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "ගොනුව ලිවීම සම්පූර්ණ කළ නොහැකි විය: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "ගොනුව ලිවීමට නොහැකි විය: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "ගොනු අවසර සැකසීමට නොහැකි විය: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "ලිවීමේ ගොනුව සම්පූර්ණ කිරීමට නොහැකි විය: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "මුල් ගොනුව ඉවත් කිරීමට නොහැකි විය: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "නාමාවලිය සෑදිය නොහැක: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "නාමාවලිය දැනටමත් පවතී: %s"
+
+#: trust/save.c:370
+#, fuzzy, c-format
+msgid "couldn't open directory: %s"
+msgstr "නාමාවලිය සෑදිය නොහැක: %s"
+
+#: trust/save.c:374
+#, fuzzy, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "නාමාවලි අවසර සැකසීමට නොහැකි විය: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "නාමාවලිය ලිවිය හැකි බවට පත් කිරීමට නොහැකි විය: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "symlink නිර්මාණය කිරීමට නොහැකි විය: %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "ගොනුව ඉවත් කිරීමට නොහැකි විය: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "නාමාවලි අවසර සැකසීමට නොහැකි විය: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "වස්තු වලට ගොනුව පැටවීමට නොහැකි විය: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "%d: %sමාර්ගය සඳහන් කළ නොහැක"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "විශ්වාස සහතික මාර්ගයට පිවිසිය නොහැක: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "විශ්වාස ගොනුවට ප්‍රවේශ විය නොහැක: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "ප්‍රවේශ විය නොහැක: %s"
+
+#: trust/trust.c:60
+#, fuzzy
+msgid "List trust or certificates"
+msgstr "සහතිකය විග්‍රහ කිරීමට නොහැකි විය: %s"
+
+#: trust/trust.c:61
+#, fuzzy
+msgid "Extract certificates and trust"
+msgstr "සහතිකයක් හමු නොවීය"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr ""

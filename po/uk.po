@@ -1,22 +1,118 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
-# 
+#
 # Translators:
 # Yuri Chornoivan <yurchor@ukr.net>, 2012-2013
+# Yuri Chornoivan <yurchor@ukr.net>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2018-01-31 16:48+0100\n"
-"PO-Revision-Date: 2017-09-19 11:46+0000\n"
-"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
-"Language-Team: Ukrainian (http://www.transifex.com/freedesktop/p11-kit/language/uk/)\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
+"PO-Revision-Date: 2012-02-29 09:23+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>, 2021\n"
+"Language-Team: Ukrainian (http://www.transifex.com/freedesktop/p11-kit/"
+"language/uk/)\n"
+"Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: uk\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
+"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
+"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
+"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "користування: %s команад <аргументи>...\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"Типові команди %s:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"Див. «%s <команда> --help», щоб дізнатися більше\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "не вказано команду"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "невідомий загальний параметр: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "невідомий загальний параметр: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "«%s» не є коректною командою. Див. «%s --help»"
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: неочікуваний блок pem"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: неочікуваний заголовок розділу"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "некоректний режим для «user-config»: %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "некоректна назва файла налаштувань, файл надалі буде проігноровано: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "не вдалося побудувати список вмісту каталогу: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "не вдалося отримати статистичні дані щодо шляху: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "некоректний параметр «%s», повертаємося до типового значення «%s»"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "не вдалося ініціалізувати фільтр"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "не вдалося завантажити дані щодо модуля: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "вказано зайві аргументи"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -341,3 +437,1024 @@ msgstr "Користувач відмовив у задоволенні запи
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "Невідома помилка"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "не вдалося завантажити модуль: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr "не вдалося знайти точку входу C_GetFunctionList до модуля: %s: %s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "помилка виклику C_GetFunctiontList у модулі: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr ""
+"відмова у завантаженні модуля p11-kit-proxy.so як зареєстрованого модуля"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "для модуля «%s» одночасно вказано параметри enable-in і disable-in"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr ""
+"перериваємо ініціалізацію, оскільки модуль «%s» було позначено як критичний"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "ініціалізацію p11-kit викликано рекурсивно"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "помилка під час спроби ініціалізувати критичний модуль «%s»: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "пропускаємо модуль «%s», чию ініціалізацію не вдалося виконати: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "не вдалося закрити сеанс: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr ""
+"підтримку параметра «%s» для модуля «%s» передбачено лише для керованих "
+"модулів"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: не вдалося ініціалізувати модуль: %s"
+
+#: p11-kit/modules.c:2176
+#, fuzzy, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: не вдалося ініціалізувати модуль%s: %s"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: модуль вже ініціалізовано"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: не вдалося завершити завантаження модуля: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "помилка ініціалізації модуля: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "Вивести список модулів і жетонів"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "Запустити певний модуль PKCS#11 віддалено"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr ""
+"Запустити процес сервера, який надаватиме доступ до модуля PKCS#11 віддалено"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "не вдалося запустити інструмент довіри"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr "«%s» не є коректною командою. Див. «p11-kit --help»"
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "вказати модуль або жетони для remote"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "інструмент «remote» не призначено для запуску з термінала"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "можна вказати лише один модуль"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "некоректна відповідь щодо помилки rpc: надто коротка"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "некоректна відповідь щодо помилки rpc: помилковий код помилки"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "некоректна відповідь rpc: невідповідність викликів"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "некоректна відповідь rpc: помилкові дані в аргументі"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr "отримано масив атрибутів із помилковою кількістю атрибутів"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "атрибути повернуто у некоректному порядку"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "надано некоректний набір викликів семафорів"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "неможливо виконати без блокування операційної системи"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "C_Initialize викликано двічі для одного процесу"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr ""
+"у відповідь на спробу завершення завантаження модуля rpc повернуто "
+"повідомлення про помилку: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "некоректне повідомлення: не вдалося прочитати ідентифікатор виклику"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "некоректне повідомлення: помилковий ідентифікатор виклику: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "некоректне повідомлення: не вдалося прочитати підпис"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "некоректне повідомлення: підпис є невідповідним"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr "отримано некоректну довжину рядка, доповненого пробілами: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "некоректний запит від модуля; ймовірно, надто короткий"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "не вдалося ініціалізувати відповідь rpc"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr ""
+"отримано некоректну відповідь щодо узгодження зв'язку від модуля з'єднання"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "не вдалося обробити повідомлення rpc pkcs11"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "вичерпано пам'ять під час спроби з'єднати повідомлення"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "відповідь щодо вичерпання пам'яті із помилкою"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "отримано повідомлення щодо непідтримуваної версії: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "не вдалося прочитати байт реєстраційних даних"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "не вдалося записати байт реєстраційних даних"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "не вдалося прочитати повідомлення rpc"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "неочікувана помилка під час пробити повідомлення rpc"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "не вдалося записати повідомлення rpc"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "не вдалося надіслати дані: з'єднання розірвано"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "не вдалося надіслати дані"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "не вдалося отримати дані: з'єднання розірвано"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "не вдалося отримати дані"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr ""
+"отримано некоректні значення заголовка rpc: можливо, помилковий протокол"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "не вдалося скористатися select для очікування на канал rpc"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "не вдалося надіслати реєстраційні дані сокета"
+
+#: p11-kit/rpc-transport.c:653
+#, fuzzy
+msgid "couldn't receive socket credentials"
+msgstr "не вдалося надіслати реєстраційні дані сокета"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "закриваємо сокет через помилку протоколу"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "процес %d не завершив роботу, перериваємо"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "не вдалося дочекатися виконання дочірнього процесу: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "процес %d завершив роботу зі станом %d"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "процес %d було перервано сигналом %d"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "не вдалося створити канал для remote"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "не вдалося створити відгалуження для remote"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "процес %p не завершив роботу, перериваємо"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "не вдалося перервати процес %p"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "не вдалося дочекатися виконання дочірнього процесу: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "не вдалося отримати стан виходу %p"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "процес %p завершив роботу зі станом %lu"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "не вдалося здублювати stdin"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "не вдалося здублювати stdout"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr "не вдалося здублювати кінець каналу дочірнього процесу"
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "не вдалося породити remote"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "не вдалося відновити дескриптори файлів"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "некоректний рядок віддаленої команди: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "не вдалося створити сокет для remote"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "не вдалося обробити адресу vsock: «%s»"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "підтримки remote не передбачено: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr "дочірній процес %u завершив роботу із sigsegv"
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr "дочірній процес %u завершив роботу із сигналом %d"
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "не вдалося створити сокет %s"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "не вдалося прив'язати сокет %s"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "не вдалося почати очікування даних на сокеті %s"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr "не вдалося змінити власника сокета %s"
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "не вдалося створити сокет %u:%u"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "не вдалося прив'язати сокет %u:%u"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "не вдалося почати очікування даних на сокеті %u:%u"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "не вдалося перевірити uid від сокета"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "uid з'єднання (%u) не збігається із очікуваним (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "gid з'єднання (%u) не збігається із очікуваним (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr "не вдалося виконати fork() для створення фонової служби"
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "не вдалося створити сеанс"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "отримано занадто багато файлових дескрипторів"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "немає з'єднань із %s протягом %lu секунд, завершуємо роботу"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "не вдалося прийняти дані з сокета %s"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr "не вдалося створити відгалуження для accept"
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "невідома група: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "невідомий користувач: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "не вдалося встановити gid у значення %u"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "не вдалося виконати setgroups зі значенням %u"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "не вдалося встановити для uid значення %u"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "не вдалося визначити каталог запуску"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "не вдалося створити %s"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "не вдалося ініціалізувати функції захисту Windows"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "не вдалося побудувати SID для %s: %lu"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "не вдалося побудувати ACL: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "не вдалося розмістити у пам'яті дескриптор захисту: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "не вдалося ініціалізувати дескриптор захисту: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "не вдалося встановити власника у дескрипторі захисту: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "не вдалося встановити DACL у дескрипторі захисту: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "некоректна адреса PKCS#11: «%s»"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "невідомий формат файла: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "не вдалося обробити файл: «%s»"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: не вдалося ініціалізувати: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: не вдалося пронумерувати слоти: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: не вдалося отримати відомості щодо жетона: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: не вдалося відкрити сеанс: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr ""
+"немає налаштованого придатного до запису місця для зберігання прив'язок"
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr "немає налаштованого місця для зберігання прив'язок"
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "не вдалося створити об'єкт: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr "вкажіть принаймні один вхідний файл прив'язки"
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "не вдалося вилучити позначений лише для читання %s"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "не вдалося вилучити %s: %s"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "має бути вказано принаймні один файл або адресу"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "дію вже вказано"
+
+#: trust/anchor.c:702
+#, fuzzy, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "%u помилка під час обробки"
+msgstr[1] "%u помилка під час обробки"
+msgstr[2] "%u помилка під час обробки"
+msgstr[3] "%u помилка під час обробки"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: некоректне розширення сертифіката"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: некоректне розширення сертифіката базових обмежень"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "невідомий"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "пропущено атрибут CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "пропущено атрибут CKA_HASH_OF_ISSUER_PUBLIC_KEY"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "об'єкт є непридатним до внесення змін"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "неможливо створити об'єкт цього типу"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "не можна встановлювати атрибут %s"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "не можна вносити зміни до атрибута %s"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "атрибут %s має некоректне значення"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "атрибут %s не є коректним для об'єкта"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "пропущено атрибут %s"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "не знайдено атрибута CKA_CLASS"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "не вдалося створити об'єкт %s"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "ключ"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "не-жетон"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "пропущено %s для об'єкта"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "%s, непідтримуваний %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "%s, непідтримуваний клас об'єктів"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "некоректне розширення сертифіката використання ключів"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr "некоректне розширення сертифіката розширеного використання ключів"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "некоректне розширення сертифіката відмови у використанні ключів"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "не вдалося створити дамп об'єкта"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "команді передано зайві аргументи"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "не вдалося обробити долучене розширення сертифіката: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "не вдалося завантажити долучені розширення для сертифіката: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "не вдалося обробити сертифікат: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "не вдалося завантажити атрибути: %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "пропускаємо об'єкт, який не є сертифікатом"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "не вдалося завантажити список блокування: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "адресу PKCS#11 вже вказано"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "не вдалося обробити фільтр адрес pkcs11: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr "у адресі містяться невідомі компоненти, нічого не буде видобуто"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "непідтримуваний або невідомий фільтр: %s"
+
+#: trust/enumerate.c:670
+#, fuzzy, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "непідтримувана або невідома мета: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "не зареєстровано модулів, які містять правила довіри"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "формат уже вказано"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "непідтримуваний або невідомий формат: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "у форматі не передбачено підтримки правил довіри"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"формат потребує мети, вкажіть її за допомогою --purpose; використовуємо "
+"типову мету «server-auth»"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr ""
+"у форматі не передбачено підтримки визначення декількох записів мети; "
+"використовуємо типову мету «server-auth»"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "вкажіть один файл або каталог призначення"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "не вказано формат виведення даних"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "не вдалося запустити команду %s"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr ""
+"знайдено декілька сертифікатів, але запис можливий лише до одного файла"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "не вдалося знайти сертифікати: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "не знайдено сертифікатів"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "не вдалося знайти сертифікат: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "обрізаємо надто довгий рядок"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "Змінна середовища $SOURCE_DATE_EPOCH: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr "Змінна середовища $SOURCE_DATE_EPOCH: не знайдено цифр: %s\n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "Змінна середовища $SOURCE_DATE_EPOCH: зайві кінцеві дані: %s\n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"Змінна середовища $SOURCE_DATE_EPOCH: значення має бути меншим або рівним "
+"%lu. Втім, виявлено таке значення: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "не вдалося створити альтернативну назву сертифіката"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "пропускаємо об'єкт, не вдалося побудувати адресу"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "невідомий аргумент модуля: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "сертифікат із недовірою у місці для прив'язок: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr "перевизначаємо довіру для прив'язки у списку блокувань: %s"
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "Не вдалося обробити блок PEM типу %s"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "не вдалося відкрити і прив'язати файл: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "некоректне значення oid: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "не вдалося створити файл: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "не вдалося записати дані до цього файла: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "не вдалося завершити запис до файла: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "не вдалося записати файл: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "не вдалося встановити права доступу до файла: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "не вдалося завершити запис до файла: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "не вдалося вилучити початковий файл: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "не вдалося створити каталог: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "каталог вже існує: %s"
+
+#: trust/save.c:370
+#, fuzzy, c-format
+msgid "couldn't open directory: %s"
+msgstr "не вдалося створити каталог: %s"
+
+#: trust/save.c:374
+#, fuzzy, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "не вдалося встановити права доступу до каталогу: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "не вдалося зробити каталог придатним до запису: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "не вдалося створити символічне посилання: %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "не вдалося вилучити файл: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "не вдалося встановити права доступу до каталогу: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "не вдалося завантажити файл до об'єктів: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "не вдалося отримати статистичні дані щодо шляху: %d: %s"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "не вдалося отримати доступ до шляху довірених сертифікатів: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "не вдалося отримати доступ до файла довіри: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "не вдалося отримати доступ: %s"
+
+#: trust/trust.c:60
+#, fuzzy
+msgid "List trust or certificates"
+msgstr "не вдалося обробити сертифікат: %s"
+
+#: trust/trust.c:61
+#, fuzzy
+msgid "Extract certificates and trust"
+msgstr "не знайдено сертифікатів"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr ""

@@ -1,22 +1,115 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
-# 
+#
 # Translators:
+# Anders Jonsson <transifex@norsjovallen.se>, 2021
 # Josef Andersson <josef.andersson@fripost.org>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2018-01-31 16:48+0100\n"
-"PO-Revision-Date: 2017-09-19 19:45+0000\n"
-"Last-Translator: Josef Andersson <josef.andersson@fripost.org>\n"
-"Language-Team: Swedish (http://www.transifex.com/freedesktop/p11-kit/language/sv/)\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
+"PO-Revision-Date: 2012-02-29 09:23+0000\n"
+"Last-Translator: Anders Jonsson <transifex@norsjovallen.se>, 2021\n"
+"Language-Team: Swedish (http://www.transifex.com/freedesktop/p11-kit/"
+"language/sv/)\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "användning: %s kommando <arg>…\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"Vanliga %s-kommandon är:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"Se ”%s <kommando> --help” för mer information\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "inget kommando angivet"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "okänd global flagga: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "okänd global flagga: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "”%s” är inte ett giltigt kommando. Se ”%s --help”"
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: oväntat pem-block"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: oväntad avsnittsrubrik"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "ogiltigt läge för ”user-config”: %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "ogiltigt konfigurationsfilnamn, kommer ignoreras i framtiden: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "kunde inte lista katalog: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "kunde inte köra stat på sökväg: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "ogiltig inställning ”%s”, använder standardvärdet ”%s”"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "filtret kan inte initieras"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "kunde inte läsa in modulinfo: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "extra argument angivna"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -24,7 +117,7 @@ msgstr "Åtgärden avbröts"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr "Otillräckligt med tillgängligt minne"
+msgstr "För lite tillgängligt minne"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
@@ -52,7 +145,7 @@ msgstr "Modulen kan inte låsa data korrekt"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr "Fältet är endast läsbart"
+msgstr "Fältet är skrivskyddat"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
@@ -68,11 +161,11 @@ msgstr "Ogiltigt värde för fält"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr "Datan är ogiltig eller okänd"
+msgstr "Data är ogiltig eller okänd"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr "Datan är för lång"
+msgstr "Data är för lång"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
@@ -80,7 +173,7 @@ msgstr "Ett fel uppstod i enheten"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Otillräckligt med tillgängligt minne på enheten"
+msgstr "För lite tillgängligt minne på enheten"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
@@ -88,11 +181,11 @@ msgstr "Enheten togs bort eller matades ut"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr "Den krypterade datan är ogiltig eller okänd"
+msgstr "Krypterad data är ogiltig eller okänd"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr "Den krypterade datan är för lång"
+msgstr "Krypterad data är för lång"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
@@ -140,7 +233,7 @@ msgstr "Kan inte exportera denna nyckel"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "Krypteringsmekanismen har ett ogiltigt argument eller är okänd"
+msgstr "Krypteringsmekanismen är ogiltig eller okänd"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
@@ -192,7 +285,7 @@ msgstr "Sessionen är ogiltig"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr "Sessionen är endast läsbar"
+msgstr "Sessionen är skrivskyddad"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
@@ -200,19 +293,19 @@ msgstr "En öppen session existerar"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr "En endast läsbar session existerar"
+msgstr "En skrivskyddad session existerar"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr "En administratörsession existerar"
+msgstr "En administratörssession existerar"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr "Signaturen är dålig eller korrupt"
+msgstr "Signaturen är felaktig eller skadad"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr "Signaturen är okänd eller korrupt"
+msgstr "Signaturen är okänd eller skadad"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
@@ -332,7 +425,7 @@ msgstr "Kan inte låsa data"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr "Datan kan inte låsas"
+msgstr "Data kan inte låsas"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
@@ -341,3 +434,1010 @@ msgstr "Begäran avvisades av användaren"
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "Okänt fel"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "kunde inte läsa in modul: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr "kunde inte hitta ingångspunkt för C_GetFunctionList i modul: %s: %s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "anrop till C_GetFunctionList misslyckades i modul: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr "vägrar att läsa in p11-kit-proxy.so-modulen som en registrerad modul"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "modulen ”%s” har både flaggorna enable-in och disable-in"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr "avbryter initiering för att modulen ”%s” markerats som kritisk"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "p11-kit-initiering anropad rekursivt"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "initiering av kritisk modul ”%s” misslyckades: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "hoppar över modulen ”%s” vars initiering misslyckades: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "kunde inte stänga session: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr "flaggan ”%s” för modulen ”%s” stöds endast för hanterade moduler"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: modulen kunde inte initieras: %s"
+
+#: p11-kit/modules.c:2176
+#, fuzzy, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: modulen kunde inte initieras%s: %s"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: modulen var redan initierad"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: modulen kunde inte slutföras: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "modulinitiering misslyckades: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "Lista moduler och token"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "Kör en specifik PKCS#11-modul på distans"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr "Kör en serverprocess som exponerar en PKCS#11-modul på distans"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "kunde inte köra tillitsverktyg"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr "”%s” är inte ett giltigt kommando. Se ”p11-kit --help”"
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "ange en modul eller token till remote"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "verktyget ”remote” är inte avsett att köras från en terminal"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "endast en modul kan anges"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "ogiltigt rpc-felsvar: för kort"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "ogiltigt rpc-felsvar: felaktig felkod"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "ogiltigt rpc-svar: anrop stämmer ej överens"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "ogiltigt rpc-svar: felaktiga argumentdata"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr "mottog en attributvektor med fel antal attribut"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "returnerade attribut i ogiltig ordning"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "ogiltig uppsättning mutexanrop tillhandahölls"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "klarar oss inte utan os-låsning"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "C_Initialize anropad två gånger för samma process"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr "slutförande av rpc-modul returnerade ett fel: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "ogiltigt meddelande: kunde inte läsa anropsidentifierare"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "ogiltigt meddelande: felaktigt anrops-ID: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "ogiltigt meddelande: kunde inte läsa signatur"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "ogiltigt meddelande: signaturen matchar inte"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr "ogiltig längd på sträng utfylld med blanksteg mottogs: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "ogiltig förfrågan från modul, troligen för kort"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "kunde inte initiera rpc-svar"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr "ogiltig handskakning mottagen från anslutande modul"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "kunde inte tolka pkcs11 rpc-meddelande"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "slut på minne då meddelande sattes ihop"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "slut på minne vid svar med fel"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "version som inte stöds mottogs: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "kunde inte läsa identifieringsbyte"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "kunde inte skriva identifieringsbyte"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "misslyckades med att läsa rpc-meddelande"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "oväntat fel vid hantering av rpc-meddelande"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "misslyckades med att skriva rpc-meddelande"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "kunde inte skicka data: anslutning stängd"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "kunde inte skicka data"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "kunde inte ta emot data: anslutning stängd"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "kunde inte ta emot data"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "mottog ogiltiga rpc-rubrikvärden: kanske fel protokoll"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "kunde inte använda select för att vänta på rpc-rör"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "kunde inte skicka uttagets identifiering"
+
+#: p11-kit/rpc-transport.c:653
+#, fuzzy
+msgid "couldn't receive socket credentials"
+msgstr "kunde inte skicka uttagets identifiering"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "stänger uttag på grund av protokollfel"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "process %d avslutades inte, terminerar"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "misslyckades med att vänta på exekverad underordnad: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "process %d avslutades med status %d"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "process %d terminerades med signal %d"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "misslyckades med att skapa rör för fjärr"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "misslyckades med att köra fork för fjärr"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "process %p avslutades inte, terminerar"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "kunde inte terminera process %p"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "misslyckades med att vänta på exekverad underordnad: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "misslyckades med att få avslutningsstatus för %p"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "process %p avslutades med status %lu"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "misslyckades med att duplicera standard in"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "misslyckades med att duplicera standard ut"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr "misslyckades med att duplicera underordnads ände på röret"
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "misslyckades med att starta fjärr"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "misslyckades med att återställa filhandtag"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "ogiltig fjärrkommandorad: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "misslyckades med att skapa uttag för fjärr"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "misslyckades med att tolka vsock-adress: ”%s”"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "fjärranrop stöds inte: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr "underordnad %u dog med sigsegv"
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr "underordnad %u dog med signal %d"
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "kunde inte skapa uttag %s"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "kunde inte binda uttag %s"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "kunde inte lyssna på uttag %s"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr "kunde inte köra chown på uttag %s"
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "kunde inte skapa uttag %u:%u"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "kunde inte binda uttag %u:%u"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "kunde inte lyssna på uttag %u:%u"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "kunde inte kontrollera uid från uttag"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "anslutande uid (%u) matchar inte det förväntade (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "anslutande gid (%u) matchar inte det förväntade (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr "kunde inte köra fork() för att köra som demon"
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "kunde inte skapa en ny session"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "för många filhandtag mottagna"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "inga anslutningar till %s på %lu sekunder, avslutar"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "kunde inte acceptera från uttag %s"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr "misslyckades med att köra fork för accept"
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "okänd grupp: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "okänd användare: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "kan inte ställa in gid till %u"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "kan inte ställa setgroups till %u"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "kan inte ställa in uid till %u"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "kan inte avgöra katalog för exekveringsmiljö"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "kan inte skapa %s"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "kunde inte initiera Windows-säkerhetsfunktioner"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "kunde inte konstruera SID för %s: %lu"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "kunde inte konstruera ACL: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "kunde inte allokera säkerhetsbeskrivare: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "kunde inte initiera säkerhetsbeskrivare: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "kunde inte ställa in ägare i säkerhetsbeskrivare: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "kunde inte ställa in DACL i säkerhetsbeskrivare: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "ogiltig PKCS#11-uri: %s"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "okänt filformat: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "misslyckades med att tolka fil: %s"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: kunde inte initiera: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: kunde inte räkna upp platser: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: kunde inte få token-information: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: kunde inte öppna session: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr "ingen konfigurerad skrivbar plats för att lagra ankare"
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr "ingen konfigurerad plats för att lagra ankare"
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "kunde inte skapa objekt: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr "ange minst en ankarinmatningsfil"
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "kunde inte ta bort skrivskyddad %s"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "kunde inte ta bort %s: %s"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "åtminstone en fil eller uri måste anges"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "en åtgärd hade redan angivits"
+
+#: trust/anchor.c:702
+#, fuzzy, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "%u fel vid behandling"
+msgstr[1] "%u fel vid behandling"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: ogiltigt certifikattillägg"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: ogiltigt certifikattillägg för grundläggande begränsning"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "okänd"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "saknar CKA_HASH_OF_SUBJECT_PUBLIC_KEY-attributet"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "saknar CKA_HASH_OF_ISSUER_PUBLIC_KEY-attributet"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "objektet kan inte ändras"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "objekt av denna typ kan inte skapas"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "%s-attributet kan inte ställas in"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "%s-attributet kan inte ändras"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "%s-attributet har ett ogiltigt värde"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "%s-attributet är inte giltigt för objektet"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "saknar attributet %s"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "inget CKA_CLASS-attribut hittades"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "kan inte skapa ett %s-objekt"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "token"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "icke-token"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "saknar %s för objekt"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "för %s stöds inte %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "objektklassen %s stöds inte"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "ogiltigt certifikattillägg för nyckelanvändning"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr "ogiltigt certifikattillägg för utökad nyckelanvändning"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "ogiltigt certifikattillägg för att avvisa nyckelanvändning"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "kunde inte dumpa objekt"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "extra argument skickade till kommando"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "kunde inte tolka bifogat certifikattillägg: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "kunde inte läsa in bifogade tillägg för certifikat: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "kunde inte tolka certifikat: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "kunde inte läsa in attribut: %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "hoppar över objekt som inte är certifikat"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "kunde inte läsa in blockeringslista: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "en PKCS#11-URI har redan angivits"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "kunde inte tolka pkcs11-urifilter: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr "uri innehöll okända komponenter, inget kommer att extraheras"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "filtret är okänt eller stöds inte: %s"
+
+#: trust/enumerate.c:670
+#, fuzzy, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "syftet är okänt eller stöds inte: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "inga moduler som innehåller tillitspolicy finns registrerade"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "ett format hade redan angivits"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "formatet är okänt eller stöds inte: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "formatet stöder inte tillitspolicyn"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"formatet kräver ett syfte, ange det med --purpose; använder standardvärdet "
+"”server-auth”"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr ""
+"formatet stöder inte flera syften, använder standardvärdet ”server-auth”"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "ange en destinationsfil eller katalog"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "inget utdataformat angivet"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "kunde inte köra kommandot %s"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr "flera certifikat hittades men kunde bara skriva ett till fil"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "misslyckades med att hitta certifikat: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "inget certifikat hittades"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "misslyckades med att hitta certifikat: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "trunkerar lång sträng"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "Miljövariabeln $SOURCE_DATE_EPOCH: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr "Miljövariabeln $SOURCE_DATE_EPOCH: Inga siffror hittades: %s\n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "Miljövariabeln $SOURCE_DATE_EPOCH: Efterföljande skräp: %s\n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"Miljövariabeln $SOURCE_DATE_EPOCH: värdet måste vara mindre eller lika med "
+"%lu men visade sig vara: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "kunde inte generera ett certifikataliasnamn"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "hoppar över objekt, kunde inte bygga uri"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "okänt modulargument: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "certifikat med misstro i plats för ankare: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr "åsidosätter tillit för ankare i blockeringslista: %s"
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "Kunde inte tolka PEM-block av typen %s"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "kunde inte öppna och mappa fil: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "ogiltigt oid-värde: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "kunde inte skapa fil: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "kunde inte skriva till fil: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "kunde inte slutföra skrivning av fil: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "kunde inte skriva fil: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "kunde inte ställa in filrättigheter: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "kunde inte slutföra skrivning av fil: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "kunde inte ta bort ursprunglig fil: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "kunde inte skapa katalog: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "katalogen finns redan: %s"
+
+#: trust/save.c:370
+#, fuzzy, c-format
+msgid "couldn't open directory: %s"
+msgstr "kunde inte skapa katalog: %s"
+
+#: trust/save.c:374
+#, fuzzy, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "kunde inte ställa in katalogrättigheter: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "kunde inte göra katalogen skrivbar: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "kunde inte skapa symbolisk länk: %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "kunde inte ta bort fil: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "kunde inte ställa in katalogrättigheter: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "kunde inte läsa in fil i objekt: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "kunde inte köra stat på sökväg: %d: %s"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "kan inte komma åt tillitscertifikatsökväg: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "kan inte komma åt tillitsfil: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "kunde inte komma åt: %s"
+
+#: trust/trust.c:60
+#, fuzzy
+msgid "List trust or certificates"
+msgstr "kunde inte tolka certifikat: %s"
+
+#: trust/trust.c:61
+#, fuzzy
+msgid "Extract certificates and trust"
+msgstr "inget certifikat hittades"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr ""
