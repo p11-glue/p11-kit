@@ -780,7 +780,7 @@ main (int argc,
 		return 2;
 	}
 
-	if (!csh_opt) {
+	if (!opt_sh && !opt_csh) {
 		const char *shell = secure_getenv ("SHELL");
 		size_t len;
 		if (shell != NULL && (len = strlen (shell)) > 2 &&
