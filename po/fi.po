@@ -1,24 +1,117 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
-# 
+#
 # Translators:
 # Eerik Uusi-Illikainen https://launchpad.net/~ekiuusi-4, 2012
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2012-2013
+# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019,2021-2022
 # Timo Jyrinki <timo.jyrinki@iki.fi>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2018-01-31 16:48+0100\n"
-"PO-Revision-Date: 2017-09-19 11:56+0000\n"
-"Last-Translator: Jiri Grönroos <jiri.gronroos@iki.fi>\n"
-"Language-Team: Finnish (http://www.transifex.com/freedesktop/p11-kit/language/fi/)\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
+"PO-Revision-Date: 2012-02-29 09:23+0000\n"
+"Last-Translator: Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019,2021-2022\n"
+"Language-Team: Finnish (http://www.transifex.com/freedesktop/p11-kit/"
+"language/fi/)\n"
+"Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "käyttö: %s komento <args>...\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"Yleiset %s komennot ovat:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"Katso '%s <command> --help' saadaksesi lisätietoja\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "komentoa ei määritetty"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "tuntematon valinta: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "tuntematon valinta: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "'%s' ei ole oikea komento. Katso '%s --help'"
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: odottamaton pem block"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: odottamaton section header"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "virheellinen tila kohteessa  'user-config': %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "virheellinen määrityksen tiedostonimi, ohitetaan tulevaisuudessa: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "ei voitu listata hakemistoa: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "ei voitu paikallistaa polkua: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "virheellinen asetus '%s' oletuksena '%s'"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "suodatinta ei voi alustaa"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "moduulin tietoja ei voi ladata: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "lisäargumentit määritetty"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -26,7 +119,7 @@ msgstr "Toiminto keskeytettiin"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr "Muisti ei riitÃ¤"
+msgstr "Muisti ei riitä"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
@@ -34,19 +127,19 @@ msgstr "Annettu lohkotunniste ei ole kelvollinen"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr "SisÃ¤inen virhe"
+msgstr "Sisäinen virhe"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr "Toiminto epÃ¤onnistui"
+msgstr "Toiminto epäonnistui"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr "VirheellisiÃ¤ argumentteja"
+msgstr "Virheellisiä argumentteja"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr "Moduuli ei voi luoda vaadittavia sÃ¤ikeitÃ¤"
+msgstr "Moduuli ei voi luoda vaadittavia säikeitä"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
@@ -54,27 +147,27 @@ msgstr "Moduuli ei voi lukita tietoa kunnolla"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr "KenttÃ¤ on vain luettavissa"
+msgstr "Kenttä on vain luettavissa"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr "KenttÃ¤ on arkaluonteinen eikÃ¤ sitÃ¤ voida paljastaa"
+msgstr "Kenttä on arkaluonteinen eikä sitä voida paljastaa"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr "KenttÃ¤ on virheellinen tai sitÃ¤ ei ole olemassa"
+msgstr "Kenttä on virheellinen tai sitä ei ole olemassa"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr "KentÃ¤n arvo on virheellinen"
+msgstr "Kentän arvo on virheellinen"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr "Tieto ei ole kelvollista tai sitÃ¤ ei voida tunnistaa"
+msgstr "Tieto ei ole kelvollista tai sitä ei voida tunnistaa"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr "Tieto on liian pitkÃ¤"
+msgstr "Tieto on liian pitkä"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
@@ -82,7 +175,7 @@ msgstr "Tapahtui virhe laitteella"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr "Laitteen muistimÃ¤Ã¤rÃ¤ liian vÃ¤hÃ¤inen"
+msgstr "Laitteen muistimäärä liian vähäinen"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
@@ -90,15 +183,15 @@ msgstr "Laite poistettiin tai irrotettiin"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr "Salattu tieto ei ole kelvollista tai sitÃ¤ ei voida tunnistaa"
+msgstr "Salattu tieto ei ole kelvollista tai sitä ei voida tunnistaa"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr "Salattu tieto on liian pitkÃ¤"
+msgstr "Salattu tieto on liian pitkä"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr "TÃ¤mÃ¤ toiminto ei ole tuettu"
+msgstr "Tämä toiminto ei ole tuettu"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
@@ -106,11 +199,11 @@ msgstr "Avain puuttuu tai on virheellinen"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr "Avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Avain on väärän kokoinen"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr "Avain on vÃ¤Ã¤rÃ¤Ã¤ tyyppiÃ¤"
+msgstr "Avain on väärää tyyppiä"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
@@ -126,23 +219,23 @@ msgstr "Avain vaaditaan"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "Avainta ei voi sisÃ¤llyttÃ¤Ã¤ tiivisteeseen"
+msgstr "Avainta ei voi sisällyttää kanavaan"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr "TÃ¤tÃ¤ toimintoa ei voi tehdÃ¤ tÃ¤llÃ¤ avaimella"
+msgstr "Tätä toimintoa ei voi tehdä tällä avaimella"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr "Avainta ei voi rivittÃ¤Ã¤"
+msgstr "Avainta ei voi paketoida"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr "TÃ¤tÃ¤ avainta ei voi viedÃ¤"
+msgstr "Tätä avainta ei voi viedä"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "Salausmekanismi on virheellinen tai sitÃ¤ ei voida tunnistaa"
+msgstr "Salausmekanismi on virheellinen tai sitä ei voida tunnistaa"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
@@ -154,15 +247,15 @@ msgstr "Kohde puuttuu tai on virheellinen"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr "Toinen toiminto on jo kÃ¤ynnissÃ¤"
+msgstr "Toinen toiminto on jo käynnissä"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr "YhtÃ¤Ã¤n toimintoa ei ole kÃ¤ynnissÃ¤"
+msgstr "Yhtään toimintoa ei ole käynnissä"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr "Salasana tai PIN-koodi on vÃ¤Ã¤rÃ¤"
+msgstr "Salasana tai PIN-koodi on väärä"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
@@ -206,7 +299,7 @@ msgstr "Lukutilassa oleva istunto on olemassa"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr "YllÃ¤pitÃ¤jÃ¤n istunto on olemassa"
+msgstr "Ylläpitäjän istunto on olemassa"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
@@ -218,11 +311,11 @@ msgstr "Allekirjoitusta ei voida tunnistaa tai se on vioittunut"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr "Jotkut vaadituista kentistÃ¤ puuttuvat"
+msgstr "Jotkut vaadituista kentistä puuttuvat"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr "Jotkin kentÃ¤t sisÃ¤ltÃ¤vÃ¤t virheellisia arvoja"
+msgstr "Jotkin kentät sisältävät virheellisiä arvoja"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
@@ -230,7 +323,7 @@ msgstr "Laite ei ole saatavilla tai se on irrotettu"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr "Laite on virheellinen tai sitÃ¤ ei voida tunnistaa"
+msgstr "Laite on virheellinen tai sitä ei voida tunnistaa"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
@@ -238,47 +331,47 @@ msgstr "Laite on kirjoitussuojattu"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr "Tuonti epÃ¤onnistui koska avain on virheellinen"
+msgstr "Tuonti epäonnistui koska avain on virheellinen"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr "Tuonti epÃ¤onnistui koska avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Tuonti epäonnistui koska avain on väärän kokoinen"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr "Tuonti epÃ¤onnistui koska avain on vÃ¤Ã¤rÃ¤Ã¤ tyyppiÃ¤"
+msgstr "Tuonti epäonnistui koska avain on väärää tyyppiä"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr "Olet jo kirjautuneena sisÃ¤Ã¤n"
+msgstr "Olet jo kirjautuneena sisään"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr "KÃ¤yttÃ¤jiÃ¤ ei ole kirjautuneena sisÃ¤Ã¤n"
+msgstr "Käyttäjä ei ole kirjautuneena sisään"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr "KÃ¤yttÃ¤jÃ¤n salasanaa tai PIN-koodia ei ole asetettu"
+msgstr "Käyttäjän salasanaa tai PIN-koodia ei ole asetettu"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr "KÃ¤yttÃ¤jÃ¤ on vÃ¤Ã¤rÃ¤n tyyppinen"
+msgstr "Käyttäjä on väärän tyyppinen"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr "Toinen kÃ¤yttÃ¤jÃ¤ on jo kirjautunut sisÃ¤Ã¤n"
+msgstr "Toinen käyttäjä on jo kirjautunut sisään"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr "Liian monta eri tyyppistÃ¤ kÃ¤yttÃ¤jÃ¤Ã¤ on kirjautuneena sisÃ¤Ã¤n"
+msgstr "Liian monta eri tyyppistä käyttäjää on kirjautunut sisään"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr "VirheellistÃ¤ avainta ei voida tuoda"
+msgstr "Virheellistä avainta ei voida tuoda"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "VÃ¤Ã¤rÃ¤n kokoista avainta ei voida tuoda"
+msgstr "Väärän kokoista avainta ei voida tuoda"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
@@ -286,11 +379,11 @@ msgstr "Vienti ei onnistu koska avain on virheellinen"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Vienti ei onnistu koska avain on vÃ¤Ã¤rÃ¤n kokoinen"
+msgstr "Ei voi viedä, koska avain on väärän kokoinen"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr "Vienti ei onnistu koska avain on vÃ¤Ã¤rÃ¤n tyyppinen"
+msgstr "Ei voi viedä, koska avain on väärän tyyppinen"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
@@ -306,7 +399,7 @@ msgstr "Salausmekanismin parametri on virheellinen"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr "Liian vÃ¤hÃ¤n tilaa tulosten tallentamiseen"
+msgstr "Ei tarpeeksi tilaa tuloksen tallentamiseen"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
@@ -314,7 +407,7 @@ msgstr "Tallennettu tila on virheellinen"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr "Tieto on luottamuksellista eikÃ¤ sitÃ¤ voida paljastaa"
+msgstr "Tieto on luottamuksellista eikä sitä voida paljastaa"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
@@ -343,3 +436,1009 @@ msgstr "Pyyntö hylättiin käyttäjän toimesta"
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "Tuntematon virhe"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "moduulia ei voi ladata: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr "ei löydy C_GetFunctionList moduulin aloituskohtaa: %s: %s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "kutsu C_GetFunctiontList epäonnistui moduulissa: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr " kieltäytyy lataamasta p11-kit-proxy.so rekisteröitynä moduulina"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "moduulissa '%s' on molemmat käyttöönotto ja poisto vaihtoehdot"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr "alustus keskeytettiin, koska moduuli '%s' on merkitty kriittiseksi"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "p11-kit alustus kutsutaan rekursiivisesti"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "kriittisen moduulin alustus '%s' epäonnistui: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "ohitetaan moduuli '%s' jonka alustus epäonnistui: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "istunto ei sulkeudu: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr "moduulin '%s' valintaa '%s' tuetaan vain hallituissa moduuleissa"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: moduulin alustaminen epäonnistui:%s"
+
+#: p11-kit/modules.c:2176
+#, fuzzy, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: moduulin alustaminen epäonnistui%s: %s"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: moduuli oli jo alustettu"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: moduulin viimeisteleminen epäonnistui: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "moduulin alustus epäonnistui: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "Listaa moduulit ja tunnukset"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "Suorita tietty PKCS#11 moduuli etänä"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr "Suorita palvelinprosessi, joka näyttää PKCS#11 moduulin etänä"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "luottamustyökalua ei voitu suorittaa"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr "'%s' ei ole kelvollinen komento. Katso 'p11-kit --help'"
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "määrittää moduulin tai tunnukset etänä"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "Päätteessä 'etätyökalua' ei ole tarkoitettu suoritettavaksi"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "vain yksi moduuli voidaan määrittää"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "rpc-virheen vastaus: liian lyhyt"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "rpc-virheen vastaus: virheellinen virhekoodi"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "rpc-virheen vastaus: kutsun ristiriita"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "rpc-virheen vastaus: virheellinen argumentin tieto"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr "vastaanotettiin määriterivi, jossa oli väärä määrä määritteitä"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "palautti määritteet virheellisessä järjestyksessä"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "annettujen mutex-kutsujen joukko ei kelpaa"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "ei voi tehdä ilman käyttöjärjestelmän lukitusta"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "C_Initialize kutsutaan kahdesti samalle prosessille"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr "rpc-moduulin viimeistely palautti virheen: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "virheellinen viesti: kutsun tunnusta ei voi lukea"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "virheellinen viesti: bad call id: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "virheellinen viesti: allekirjoitusta ei voi lukea"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "virheellinen viesti: allekirjoitus ei täsmää"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr "vastaanotettu virheellinen pituus tyhjää merkkijonoon: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "virheellinen pyyntö moduulilta, todennäköisesti liian lyhyt"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "rpc-vastausta ei voitu alustaa"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr "yhteysmoduulista saatu virheellinen kättely"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "pkcs11 rpc-viestiä ei voitu jäsentää"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "virhe muistin loppumisesta viestiä koottaessa"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "muistin loppuminen vastasi virheellä"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "vastaanotettu versio, jota ei tueta: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "ei voitu lukea tunnistetietoa"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "ei voitu kirjoittaa tunnistetietoa"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "rpc-viestin lukeminen epäonnistui"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "odottamaton virhe käsiteltäessä rpc-viestiä"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "rpc-viestin kirjoittaminen epäonnistui"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "tietoja ei voitu lähettää: yhteys suljettu"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "ei voitu lähettää tietoja"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "tietoja ei voitu vastaanottaa: yhteys suljettu"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "ei voitu vastaanottaa tietoja"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "vastaanotettiin virheellisiä rpc-arvoja: ehkä väärä protokolla"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "ei voinut käyttää valintaa, odota rpc-putkea"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "ei voitu lähettää socket-tunnuksia"
+
+#: p11-kit/rpc-transport.c:653
+#, fuzzy
+msgid "couldn't receive socket credentials"
+msgstr "ei voitu lähettää socket-tunnuksia"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "sulkee socketin protokollavirheen vuoksi"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "prosessi %d ei poistunut, lopeus"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "ei voitu odottaa suoritettua prosessia: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "prosessi %d poistui tilaviestillä %d"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "prosessi %d lopetettiin tilakoodilla %d"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "ei onnistunut luomaan putkea etäkäyttöön"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "ei onnistunut luomaan putkea etäkäyttöön"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "prosessi %p ei poistunut, lopeus"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "ei voitu lopettaa prosessia %p"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "ei voitu odottaa suoritettua prosessia: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "ei saanut poistumistilaa %p"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "prosessi %p poistui tilasta %lu"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "stdin kopiointi epäonnistui"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "stdout kopiointi epäonnistui"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "etäyhteyden saaminen epäonnistui"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "tiedostokuvausten palauttaminen epäonnistui"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "virheellinen etäkomentorivi: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "ei pystynyt luomaan liitäntää etäkäyttöön"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "jäsentäminen epäonnistui vsock-osoitteen: '%s'"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "etäkäyttöä ei tueta: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr ""
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr ""
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "ei voitu luoda liitäntää %s"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "liitäntää ei voitu sitoa %s"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "ei voitu kuunnella liitäntää %s"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr ""
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "ei voitu luoda liitäntää %u:%u"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "liitäntää ei voitu sitoa %u:%u"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "ei voitu kuunnella liitäntää %u:%u"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "ei voitu tarkistaa uid liitännästä"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "uid-yhteys (%u) ei vastaa oletettua (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "gid-yhteys (%u) ei vastaa oletettua (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr ""
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "ei voitu luoda uutta istuntoa"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "liian monta tiedostojen kuvausta vastaanotettu"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "ei yhteyttä %s - %lu sekuntiin, poistutaan"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "ei voinut hyväksyä liitäntää %s"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr ""
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "tuntematon ryhmä: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "tuntematon käyttäjä: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "ei voi asettaa arvoksi %u"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "ei voi asettaa ryhmää %u"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "ei voi asettaa uid %u"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "ei voi määrittää hakemistoa ajon aikana"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "ei voi luoda %s"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "ei voitu alustaa Windowsin suojaustoimintoja"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "voi rakentaa SID %s: %lu"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "voi rakentaa ACL: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "ei voi varata tietoturvan kuvausta: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "ei voi alustaa tietoturvan kuvausta: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "ei voi asettaa omistajaa tietoturvan kuvaukselle: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "ei voi asettaa DACL tietoturvan kuvaukselle: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "virheellinen PKCS#11 uri: %s"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "tunnistamaton tiedoston formaatti: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "tiedoston jäsentäminen epäonnistui: %s"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: ei voitu alustaa: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: ei voitu luetella korttipaikkoja: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: ei saatu tunnustietoja: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: ei voitu avata istuntoa: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr ""
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr ""
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "objektia ei voitu luoda: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr ""
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "vain luku, ei voi poistaa %s"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "ei voi poistaa %s: %s"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "vähintään yksi tiedosto tai uri on määritettävä"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "toiminto oli jo määritetty"
+
+#: trust/anchor.c:702
+#, fuzzy, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "%u virhe käsittelyn aikana"
+msgstr[1] "%u virhe käsittelyn aikana"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: virheellinen laajennus varmenteelle"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: virheellinen perusrajoitukset varmenteen laajennus"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "tuntematon"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "ominaisuus CKA_HASH_OF_SUBJECT_PUBLIC_KEY puuttuu"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "ominaisuus CKA_HASH_OF_ISSUER_PUBLIC_KEY puuttuu"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "objektia ei voi muokata"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "tämän tyyppisiä objekteja ei voi luoda"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "%s määritettä ei voi asettaa"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "%s määritettä ei voi muuttaa"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "%s määritteellä on virheellinen arvo"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "%s määrite ei kelpaa objektille"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "puuttuva %s attribuutti"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "ei CKA_CLASS attribuuttia löydy"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "ei voi luoda objektia %s"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "tunniste"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "tunnisteeton"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "puuttuu %s objektista"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "%s ei tueta %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "%s ei tueta objektin luokkaa"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "virheellinen avaimen käyttövarmenteen laajennus"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr "virheellinen jatko avaimen käyttövarmenteen laajennus"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "virheellinen, hylkää avaimen käyttövarmenteen laajennus"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "ei voinut poistaa kohdetta"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "ylimääräiset argumentit siirrettiin komennolle"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "liitteenä olevaa varmenteen laajennusta ei voitu jäsentää: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "varmenteeseen liitettyjä laajennuksia ei voi ladata: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "sertifikaattia ei voitu selvittää: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "määritteiden lataaminen epäonnistui: %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "ohitetaan muu kuin varmenteen objekti"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "estolistaa ei voitu ladata: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "PKCS#11 URI on jo määritelty"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "pkcs11 uri-suodatinta ei voitu selvittää: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr "uri sisälsi tunnistamattomia komponentteja, mitään ei pureta"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "tunnistamaton suodatin: %s"
+
+#: trust/enumerate.c:670
+#, fuzzy, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "rekisteröimätön tarkoitus: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "yhtään luottamuskäytäntöä sisältävää moduulia ei ole rekisteröity"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "muoto oli jo määritetty"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "tunnistamaton muoto: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "muoto ei tue luottamuskäytäntöä"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"formaatti vaatii tarkoituksen, määritä se --purpose; oletuksena 'server-auth'"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr "formaatti ei tue useita tarkoituksia, oletuksena 'server-auth'"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "määritä yksi kohdetiedosto tai hakemisto"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "ulostulon muotoa ei ole määritetty"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "komentoa %s ei voitu suorittaa"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr ""
+"useita varmenteita löytyi, mutta pystyivät kirjoittamaan vain yhden tiedoston"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "varmenteiden löytäminen epäonnistui: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "varmennetta ei löytynyt"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "varmenteen löytäminen epäonnistui: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "katkaistaan pitkä merkkijono"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "Ympäristömuuttuja $SOURCE_DATE_EPOCH: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr "Ympäristömuuttuja $SOURCE_DATE_EPOCH: Numeroita ei löytynyt: %s \n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "Ympäristömuuttuja $SOURCE_DATE_EPOCH: Loppu roskaa: %s \n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"Ympäristömuuttuja $SOURCE_DATE_EPOCH: arvon on oltava pienempi tai yhtä "
+"suuri kuin %lu, mutta sen todettiin olevan: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "sertifikaatin aliaksen nimeä ei voitu luoda"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "objektin ohitus, ei voi rakentaa url"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "tunnistamaton moduulin argumentti: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "sertifikaattin sijaintiin ei luoteta: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr ""
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "Ei voitu jäsentää PEM block tyyppiä %s"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "ei voinut avata ja yhdistää tiedostoa: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "virheellinen oid-arvo: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "ei voitu luoda tiedostoa: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "ei voitu kirjoittaa tiedostoon: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "tiedoston kirjoittamista ei suoritettu loppuun: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "ei voitu kirjoittaa tiedostoa: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "tiedoston oikeuksia ei voitu asettaa: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "ei voitu viimeistellä tiedoston kirjoitusta: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "alkuperäisen tiedoston poistaminen epäonnistui: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "ei voitu luoda hakemistoa: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "hakemisto on jo olemassa: %s"
+
+#: trust/save.c:370
+#, fuzzy, c-format
+msgid "couldn't open directory: %s"
+msgstr "ei voitu luoda hakemistoa: %s"
+
+#: trust/save.c:374
+#, fuzzy, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "hakemiston käyttöoikeuksia ei voitu asettaa: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "hakemistoa ei voitu tehdä kirjoitettavaksi: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "symlinkin luominen epäonnistui: %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "tiedostoa ei voitu poistaa: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "hakemiston käyttöoikeuksia ei voitu asettaa: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "tiedostoa ei voi ladata objekteihin: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "ei voitu paikallistaa polkua: %d:%s"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "ei pääsyä luottamuksellisen varmenteen polkuun: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "ei pääsyä luottamukselliseen tiedostoon: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "ei pääsyä: %s"
+
+#: trust/trust.c:60
+#, fuzzy
+msgid "List trust or certificates"
+msgstr "sertifikaattia ei voitu selvittää: %s"
+
+#: trust/trust.c:61
+#, fuzzy
+msgid "Extract certificates and trust"
+msgstr "varmennetta ei löytynyt"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr ""

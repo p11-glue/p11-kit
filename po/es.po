@@ -1,27 +1,122 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
-# 
+#
 # Translators:
 # Adolfo Jayme-Barrientos, 2012
-# Daniel Mustieles <inactive+leo@transifex.com>, 2012-2013
+# Adolfo Jayme-Barrientos, 2012
+# 0f759dd1ea6c4c76cedc299039ca4f23_7584d04 <454cc45058db9632179dc8079c0c1af3_5311>, 2012-2013
+# Francisco Serrador, 2022
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2018-01-31 16:48+0100\n"
-"PO-Revision-Date: 2017-09-19 12:13+0000\n"
-"Last-Translator: Daniel Mustieles <inactive+leo@transifex.com>\n"
-"Language-Team: Spanish (http://www.transifex.com/freedesktop/p11-kit/language/es/)\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
+"PO-Revision-Date: 2012-02-29 09:23+0000\n"
+"Last-Translator: Francisco Serrador, 2022\n"
+"Language-Team: Spanish (http://www.transifex.com/freedesktop/p11-kit/"
+"language/es/)\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
+"1 : 2;\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "modo de empleo: %s instrucción <args>...\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"Instrucciones %s comunes son:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"Vea «%s <command> --help» para más información\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "ninguna instrucción especificada"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "opción global desconocida: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "opción global desconocida: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "«%s» no es una instrucción válido. Vea  «%s --help»"
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: bloque pem inesperado"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: cabecera de sección inesperada"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "modo no válido para 'user-config': %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "nombre no válido del archivo config, será descartado en el futuro: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "no pudo enumerar el directorio: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "no pudo especificar ruta: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "parámetro «%s» no válido predeterminando a «%s»"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "filtro no puede ser inicializado"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "no pudo cargar informe del módulo: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "los argumentos adicionales especificados"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr "Se canceló la operación"
+msgstr "La operación fue cancelada"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
@@ -37,7 +132,7 @@ msgstr "Error interno"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr "Falló la operación"
+msgstr "La operación ha fallado"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
@@ -169,7 +264,7 @@ msgstr "La contraseña o el PIN no son válidos"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr "La contraseña o PIN tiene una longitud no válida"
+msgstr "La contraseña o el PIN tiene una longitud no válida"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
@@ -342,3 +437,1024 @@ msgstr "El usuario rechazó la solicitud"
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "Error desconocido"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "no pudo cargar módulo: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr ""
+"no pudo encontrar el punto de apunte C_GetFunctionList dentro del módulo: "
+"%s: %s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "invocación errónea a C_GetFunctionList en el módulo: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr ""
+"haciendo caso omiso a cargar el módulo p11-kit-proxy.so como un módulo "
+"registrado"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "módulo «%s» tiene ambas opciones activada y desactivada"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr ""
+"interrumpiendo inicialización porque el módulo «%s» fue marcado como crítico"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "p11-kit de inicialización invocada recursivamente"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "inicialización de módulo crítico «%s» erróneo: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "descartando módulo «%s» cuya inicialización falló: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "no pudo cerrar sesión: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr ""
+"la opción «%s» para el módulo «%s» solamente está mantenida por módulos "
+"gestionados"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: módulo erróneo al inicializar: %s"
+
+#: p11-kit/modules.c:2176
+#, fuzzy, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: módulo erróneo al inicializar %s: %s"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: módulo ya fue inicializado"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: módulo erróneo al finalizar: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "inicialización de módulo errónea: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "Enumera módulos y tickets"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "Ejecuta un módulo PKCS#11 específico remotamente"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr ""
+"Ejecuta un proceso de servidor que exponga remotamente el módulo PKCS#11"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "no pudo ejecutar herramienta confiada"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr "«%s» no es una instrucción válido. Vea «p11-kit --help»"
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "especifique un módulo o varios tickets para remoto"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "la herramienta 'remota' no significa ser ejecutada desde un terminal"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "solamente un módulo puede ser especificado"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "respuesta errónea rpc: demasiado breve"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "respuesta errónea rpc: código erróneo"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "respuesta rpc incorrecta: invocación no coincidente"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "respuesta rpc no válida: datos de argumento erróneos"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr ""
+"ha recibido un repertorio de atributo con un número equivocado de atributos"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "los atributos devueltos en ordenación no válida"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "conjunto no válido de invocaciones mutex proporcionadas"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "no puede hacer sin bloqueo del SO"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "Se invocó C_Initialize dos veces para el mismo proceso"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr "al finalizar el módulo rpc se devolvió un error: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "mensaje no válido: no pudo leer identificador invocado"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "mensaje no válido: ID de invocación erróneo: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "mensaje no válido: no pudo leer firma"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "mensaje no válido: la firma no coincide"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr "espacio dejado cadena acolchada no válida recibida: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "solicitud no válida desde módulo, probablemente muy corto"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "no pudo inicializar respuesta rpc"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr "negociación no válida recibida desde conexión de módulo"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "no pudo interpretar mensaje rpc de pkcs11"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "error de memoria agotada poniendo mensaje a la vez"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "memoria agotada respondiendo con error"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "versión recibida no está mantenida: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "no pudo leer byte de credenciales"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "no pudo escribir byte credencial"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "erróneo al leer mensaje rpc"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "error inesperado manipulando mensaje rpc"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "erróneo para escribir mensaje rpc"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "no pudo enviar datos: conexión cerrada"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "no pudo enviar datos"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "no pudo recibir datos: conexión cerrada"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "no pudo recibir datos"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "ha recibido valores de cabecera rpc no válido: quizá protocolo erróneo"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "no pudo utilizar selección para espera en tubería rpc"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "no pudo enviar credenciales del zócalo"
+
+#: p11-kit/rpc-transport.c:653
+#, fuzzy
+msgid "couldn't receive socket credentials"
+msgstr "no pudo enviar credenciales del zócalo"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "cerrando zócalo debido a error de protocolo"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "el proceso %d no salió, terminando"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "erróneo al esperar para heredero ejecutado: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "el proceso %d salió con el estado %d"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "el proceso %d fue terminado con señal %d"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "error al crear canalización para remoto"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "erróneo al bifurcar para remoto"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "proceso %p no salió, terminando"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "no pudo terminar proceso %p"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "erróneo al esperar heredero ejecutado: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "erróneo al obtener el estado de salida de %p"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "proceso %p salió con estado %lu"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "erróneo al duplicar entrada estándar"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "erróneo al duplicar salida estándar"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr "erróneo al duplicar herencia final de canalización"
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "erróneo en reproducción remota"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "erróneo al restaurar descriptores de archivo"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "línea no válida de instrucción remota: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "erróneo al crear zócalo para remoto"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "erróneo al interpretar dirección vzócalo: «%s»"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "remoto no mantenido: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr "%u heredado murió con sigsegv"
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr "%u heredado murió con la señal %d"
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "no se pudo crear zócalo %s"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "no se pudo vincular zócalo %s"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "no se pudo escuchas al zócalo %s"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr "no se pudo cambiar propietario al zócalo %s"
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "no se pudo crear zócalo %u:%u"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "no se pudo vincular zócalo %u:%u"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "no se pudo escuchar al zócalo %u:%u"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "no se pudo marcar el uid desde zócalo"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "conectando uid (%u) no coincide con lo esperado (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "conectando gid (%u) no coincide con lo esperado (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr "no se pudo ejecutar fork() para endemoniar"
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "no se pudo crear una sesión nueva"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "demasiados descriptores de archivo recibido"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "ningunas conexiones a %s para %lu segs, saliendo"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "no se pudo aceptar desde zócalo %s"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr "erróneo al bifurcar para aceptar"
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "grupo desconocido: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "usuario desconocido: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "no se puede fijar gid a %u"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "no se puede fijar grupos a %u"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "no se puede fijar uid a %u"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "no se puede determinar el directorio en tiempo de ejecución"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "no se puede crear %s"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "no pudo inicializar funciones de seguridad Windows®"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "imposible construir SID para %s: %lu"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "imposible construir ACL: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "no es capaz de asignar descriptor de seguridad: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "no es capaz de inicializar descriptor de seguridad: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "no puede fijar propietario dentro de descriptor de seguridad: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "no es capaz de fijar DACL en descriptor de seguridad: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "invalida uri PKCS#11: %s"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "no reconoció el formato del archivo: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "erróneo al interpretar archivo: %s"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: no pudo inicializar: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: no pudo enumerar ranuras: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: no pudo obtener informe de testigo: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: no pudo abrir sesión: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr "ninguna ubicación escribible configurada para almacenar anclajes"
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr "localización no configurada para almacenar anclajes"
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "no pudo crear objeto: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr "especifica al menos un archivo de ancla de entrada"
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "no pudo retirar solo lectura %s"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "no pudo retirar %s: %s"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "al menos un archivo o uri debe estar especificado"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "una acción ya estaba especificada"
+
+#: trust/anchor.c:702
+#, fuzzy, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "%u erróneo mientras procesaba"
+msgstr[1] "%u erróneo mientras procesaba"
+msgstr[2] "%u erróneo mientras procesaba"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: extensión no válida del certificado"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: restricciones básicas no válidas para extensión de certificado"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "desconocido"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "ausentando el atributo CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "ausentando el atributo CKA_HASH_OF_ISSUER_PUBLIC_KEY"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "el objeto no es modificable"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "objetos de este tipo no puede ser creado"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "el atributo %s no puede ser fijado"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "el atributo %s no puede ser modificado"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "el atributo %s tiene un valor no válido"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "el atributo %s no es válido para el objeto"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "ausentando el atributo %s"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "no ha encontrado ningún atributo CKA_CLASS"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "no se puede crear un objeto %s"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "testigo"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "no-testigo"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "ausentando %s en objeto"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "%s no mantenido %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "clase de objeto %s no mantenida"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "utilización de tecla no válida para extensión del certificado"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr ""
+"utilización de tecla extendida no válida para extensión del certificado"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "tecla utilizada no válida para extensión de certificado rechazada"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "no se pudo volcar objeto"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "argumentos adicionales aprobados a instrucción"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "no pudo interpretar extensión de certificado adjuntado: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "no pudo cargar extensiones adjuntas para certificado: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "no pudo interpretar certificado: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "no pudo cargar atributos. %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "descartando objeto sin certificado"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "no pudo cargar listado de bloque: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "un URI PKCS#11 ya ha sido especificado"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "no pudo interpretar filtro uri de pkcs11: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr "uir contenía componentes no reconocidos, no se extraerá nada"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "filtro no admitido o reconocido: %s"
+
+#: trust/enumerate.c:670
+#, fuzzy, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "propósito no admitido o no reconocido: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "no está registrada ninguna normativa de confianza de módulos"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "un formato ya estaba especificado"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "formato no admitido o reconocido: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "el formato no admite normativa de confianza"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"el formato requiere un propósito, especifíquelo con --purpose; por defecto "
+"va a 'server-auth'"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr "formato no admite propósitos múltiples, por defecto a ‘server-auth’"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "especifica un archivo o directorio de destino"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "ningún formato de salida especificado"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "no se pudo ejecutar ejecutar %s"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr ""
+"múltiples certificados encontrado pero no pudo solamente escribir uno al "
+"archivo"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "erróneo al encontrar certificados: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "ningún certificado encontrado"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "erróneo al encontrar certificado: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "truncando cadena larga"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "Variable de entorno $SOURCE_DATE_EPOCH: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr ""
+"Variable de entorno $SOURCE_DATE_EPOCH: ninguno de los dígitos fue "
+"encontrado: %s\n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "Variable de entorno $SOURCE_DATE_EPOCH: cola de basura: %s\n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"Variable $SOURCE_DATE_EPOCH de entorno: valor debe ser más pequeño o igual "
+"que %lu pero fue encontrado para ser: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "no se pudo generar un nombre alias para certificado"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "descartando objeto, no pudo crear uri"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "argumento de módulo no reconocido: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "certifica con desconfianza en ubicación para anclajes: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr "sobrescribiendo confianza para anclaje en listado de bloque: %s"
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "No pudo interpretar bloque PEM de tipo %s"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "no pudo abrir y asociar archivo: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "valor oid no válido: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "no pudo crear archivo: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "no pudo escribir al archivo: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "no pudo completar escritura de archivo: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "no pudo escribir archivo: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "no pudo fijar permisos del archivo: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "no pudo completar escritura al archivo: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "no pudo retirar archivo original: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "no pudo crear directorio: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "directorio ya existe: %s"
+
+#: trust/save.c:370
+#, fuzzy, c-format
+msgid "couldn't open directory: %s"
+msgstr "no pudo crear directorio: %s"
+
+#: trust/save.c:374
+#, fuzzy, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "no pudo fijar permisos del directorio: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "no pudo crear directorio escribible: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "no pudo crear enlace simbólico. %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "no pudo retirar archivo: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "no pudo fijar permisos del directorio: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "no pudo cargar archivo internos a objetos: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "no pudo especificar ruta: %d: %s"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "no se puede acceder a la ruta del certificado de confianza: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "no se puede acceder al archivo de confianza: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "no pudo acceder: %s"
+
+#: trust/trust.c:60
+#, fuzzy
+msgid "List trust or certificates"
+msgstr "no pudo interpretar certificado: %s"
+
+#: trust/trust.c:61
+#, fuzzy
+msgid "Extract certificates and trust"
+msgstr "ningún certificado encontrado"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr ""

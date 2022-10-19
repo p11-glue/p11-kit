@@ -1,23 +1,115 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Collabora Ltd.
+# Hungarian translation for p11-kit.
+# Copyright (C) 2012, 2014, 2022. Free Software Foundation. Inc.
 # This file is distributed under the same license as the p11-kit package.
-# 
-# Translators:
-# Gabor Kelemen <kelemeng at gnome dot hu>, 2012
-# kelemeng <kelemeng@ubuntu.com>, 2014
+#
+# Gabor Kelemen <kelemeng at gnome dot hu>, 2012, 2014.
+# Balázs Úr <ur.balazs at fsf dot hu>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2018-01-31 16:48+0100\n"
-"PO-Revision-Date: 2017-09-19 12:28+0000\n"
-"Last-Translator: kelemeng <kelemeng@ubuntu.com>\n"
-"Language-Team: Hungarian (http://www.transifex.com/freedesktop/p11-kit/language/hu/)\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?component=p11-"
+"kit&product=p11-glue&resolution=---\n"
+"POT-Creation-Date: 2022-07-29 15:27+0000\n"
+"PO-Revision-Date: 2022-10-18 17:02+0200\n"
+"Last-Translator: Balázs Úr <ur.balazs at fsf dot hu>\n"
+"Language-Team: Hungarian <gnome-hu-list at gnome dot org>\n"
+"Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 19.12.3\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr "használat: %s parancs <argumentumok>…\n"
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+"\n"
+"A közös %s parancsok:\n"
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+"\n"
+"További információkért nézze meg a(z) „%s <parancs> --help” parancsot\n"
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr "nincs parancs megadva"
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr "ismeretlen globális kapcsoló: %s"
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr "ismeretlen globális kapcsoló: -%c"
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr "a(z) „%s” nem érvényes parancs. Nézze meg a(z) „%s --help” parancsot."
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr "%s: váratlan pem blokk"
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr "%s: váratlan szakaszfejléc"
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr "érvénytelen mód a „user-config” kapcsolóhoz: %s"
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr "érvénytelen beállítási fájlnév, a jövőben mellőzve lesz: %s"
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr "nem sikerült felsorolni a könyvtárat: %s"
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr "nem sikerült elérni az útvonalat: %s"
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr "érvénytelen „%s” beállítás, a(z) „%s” alapértelmezett használata"
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr "a szűrőt nem lehet előkészíteni"
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr "nem sikerült betölteni a modulinformációkat: %s"
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr "további argumentumok lettek megadva"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -29,7 +121,7 @@ msgstr "Nincs elég memória"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr "A megadott helyazonosító nem érvényes"
+msgstr "A megadott foglalatazonosító nem érvényes"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
@@ -37,7 +129,7 @@ msgstr "Belső hiba"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr "A művelet meghiúsult"
+msgstr "A művelet sikertelen"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
@@ -53,7 +145,7 @@ msgstr "A modul nem képes megfelelően zárolni az adatokat"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr "A mező írásvédett"
+msgstr "A mező csak olvasható"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
@@ -69,7 +161,7 @@ msgstr "A mező értéke érvénytelen"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr "Az adat érvénytelen vagy ismeretlen"
+msgstr "Az adat érvénytelen vagy felismerhetetlen"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
@@ -89,7 +181,7 @@ msgstr "Az eszköz eltávolításra vagy leválasztásra került"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr "A titkosított adatok érvénytelenek vagy ismeretlenek"
+msgstr "A titkosított adatok érvénytelenek vagy felismerhetetlenek"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
@@ -117,7 +209,7 @@ msgstr "Nem szükséges kulcs"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr "A kulcs megváltozott"
+msgstr "A kulcs eltérő a korábbitól"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
@@ -125,11 +217,11 @@ msgstr "Kulcs szükséges"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "A kivonatba nem vehető fel a kulcs"
+msgstr "Nem vehető fel a kulcs a kivonatba"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr "Ez a művelet nem végezhető el a kulccsal"
+msgstr "Ez a művelet nem végezhető el ezzel a kulccsal"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
@@ -137,15 +229,15 @@ msgstr "A kulcs nem alakítható át"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr "A kulcs nem exportálható"
+msgstr "Nem lehet exportálni ezt a kulcsot"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr "A titkosítási mód érvénytelen vagy ismeretlen"
+msgstr "A titkosítási mechanizmus érvénytelen vagy felismerhetetlen"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr "A titkosítási mód argumentuma érvénytelen"
+msgstr "A titkosítási mechanizmus érvénytelen argumentummal rendelkezik"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
@@ -153,7 +245,7 @@ msgstr "Az objektum hiányzik vagy érvénytelen"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr "Már folyamatban van egy művelet"
+msgstr "Egy másik művelet már folyamatban van"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
@@ -161,23 +253,23 @@ msgstr "Nincs folyamatban művelet"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr "A jelszó vagy PIN helytelen"
+msgstr "A jelszó vagy a PIN-kód helytelen"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr "A jelszó vagy PIN érvénytelen"
+msgstr "A jelszó vagy a PIN-kód érvénytelen"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr "A jelszó vagy PIN érvénytelen hosszúságú"
+msgstr "A jelszó vagy a PIN-kód érvénytelen hosszúságú"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr "A jelszó vagy PIN lejárt"
+msgstr "A jelszó vagy a PIN-kód lejárt"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr "A jelszó vagy PIN zárolva van"
+msgstr "A jelszó vagy a PIN-kód zárolva van"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
@@ -193,7 +285,7 @@ msgstr "A munkamenet érvénytelen"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr "A munkamenet írásvédett"
+msgstr "A munkamenet csak olvasható"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
@@ -201,7 +293,7 @@ msgstr "Már létezik nyitott munkamenet"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr "Már létezik írásvédett munkamenet"
+msgstr "Már létezik csak olvasható munkamenet"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
@@ -213,7 +305,7 @@ msgstr "Az aláírás rossz vagy sérült"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr "Az aláírás ismeretlen vagy sérült"
+msgstr "Az aláírás felismerhetetlen vagy sérült"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
@@ -221,11 +313,11 @@ msgstr "Néhány szükséges mező hiányzik"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr "Néhány szükséges mező értéke érvénytelen"
+msgstr "Néhány mező értéke érvénytelen"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr "Az eszköz nincs jelen vagy eltávolították"
+msgstr "Az eszköz nincs jelen vagy leválasztásra került"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
@@ -237,27 +329,27 @@ msgstr "Az eszköz írásvédett"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr "Nem importálható, mert a kulcs érvénytelen"
+msgstr "Nem lehet importálni, mert a kulcs érvénytelen"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr "Nem importálható, mert a kulcs hibás méretű"
+msgstr "Nem lehet importálni, mert a kulcs hibás méretű"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr "Nem importálható, mert a kulcs hibás típusú"
+msgstr "Nem lehet importálni, mert a kulcs hibás típusú"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr "Már bejelentkezett"
+msgstr "Már be van jelentkezve"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr "Senki sem jelentkezett be"
+msgstr "Nincs felhasználó bejelentkezve"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr "A felhasználó jelszava vagy PIN kódja nincs beállítva"
+msgstr "A felhasználó jelszava vagy PIN-kódja nincs beállítva"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
@@ -265,7 +357,7 @@ msgstr "A felhasználó érvénytelen típusú"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr "Már bejelentkezett egy másik felhasználó"
+msgstr "Egy másik felhasználó már bejelentkezett"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
@@ -273,11 +365,11 @@ msgstr "Túl sok eltérő típusú felhasználó jelentkezett be"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr "Nem importálható érvénytelen kulcs"
+msgstr "Nem lehet importálni érvénytelen kulcsot"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "Nem importálható hibás méretű kulcs"
+msgstr "Nem lehet importálni hibás méretű kulcsot"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
@@ -293,15 +385,15 @@ msgstr "Nem lehet exportálni, mert a kulcs hibás típusú"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr "A véletlenszám-generátor nem készíthető elő"
+msgstr "Nem lehet előkészíteni a véletlenszám-előállítót"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr "Nem áll rendelkezésre véletlenszám-generátor"
+msgstr "Nincs elérhető véletlenszám-előállító"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr "A titkosítási mechanizmus egy paramétere érvénytelen"
+msgstr "A titkosítási mechanizmus érvénytelen paraméterrel rendelkezik"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
@@ -321,7 +413,7 @@ msgstr "Az állapot nem menthető"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr "A modul nincs előkészítve"
+msgstr "A modul nem lett előkészítve"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
@@ -329,11 +421,11 @@ msgstr "A modul már elő lett készítve"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr "Nem zárolhatók az adatok"
+msgstr "Nem lehet zárolni az adatokat"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr "Az adatok nem zárolhatók"
+msgstr "Az adatokat nem lehet zárolni"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
@@ -342,3 +434,1014 @@ msgstr "A felhasználó elutasította a kérést"
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "Ismeretlen hiba"
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "nem sikerült betölteni a modult: %s: %s"
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr ""
+"nem sikerült megtalálni a C_GetFunctionList belépési pontot a modulban: %s: "
+"%s"
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "a C_GetFunctiontList hívása sikertelen a modulban: %s: %s"
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr ""
+"a p11-kit-proxy.so modul regisztrált modulként való betöltése elutasítva"
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr "a(z) „%s” modulnak enable-in és disable-in kapcsolója is van"
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr ""
+"előkészítés megszakítása, mert a(z) „%s” modul kritikusként lett megjelölve"
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr "a p11-kit előkészítése rekurzívan lett meghívva"
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr "a(z) „%s” kritikus modul előkészítése sikertelen: %s"
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr "a(z) „%s” modul kihagyása, amely előkészítése sikertelen: %s"
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr "nem sikerült lezárni a munkamenetet: %s"
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr "a(z) „%2$s” modul „%1$s” kapcsolója csak kezelt moduloknál támogatott"
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: a modult nem sikerült előkészíteni: %s"
+
+#: p11-kit/modules.c:2176
+#, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: a modult nem sikerült előkészíteni, kihagyás: %s"
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: a modul már elő lett készítve"
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: a modult nem sikerült véglegesíteni: %s"
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "a modul előkészítése sikertelen: %s"
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr "Modulok és tokenek felsorolása"
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr "Bizonyos PKCS#11-modul futtatása távolról"
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr "Kiszolgálófolyamat futtatása, amely kiteszi a PKCS#11-modult távolról"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr "nem sikerült futtatni a megbízhatósági eszközt"
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr ""
+"a(z) „%s” nem érvényes parancs. Nézze meg a „p11-kit --help” parancsot."
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr "adjon meg egy modult vagy tokeneket a távolihoz"
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr "a „távoli” eszközt nem terminálból kell futtatni"
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr "csak egy modult lehet megadni"
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr "érvénytelen RPC-hibaválasz: túl rövid"
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr "érvénytelen RPC-hibaválasz: rossz hibakód"
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr "érvénytelen RPC-válasz: hívási eltérés"
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr "érvénytelen RPC-válasz: rossz argumentumadatok"
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr "hibás számú attribútummal rendelkező attribútumtömb érkezett"
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr "érvénytelen sorrendben érkezetek vissza az attribútumok"
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr "a mutexhívások érvénytelen halmaza lett megadva"
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr "nem lehet megtenni az OS zárolása nélkül"
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr "a C_Initialize kétszer lett meghívva néhány folyamatnál"
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr "az RPC-modul véglegesítése hibát adott vissza: %lu"
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr "érvénytelen üzenet: nem sikerült olvasni a hívásazonosítót"
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr "érvénytelen üzenet: rossz hívásazonosító: %d"
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr "érvénytelen üzenet: nem sikerült olvasni az aláírást"
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr "érvénytelen üzenet: az aláírás nem egyezik"
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr ""
+"érvénytelen hosszúságú szóközzel kitöltött karakterlánc érkezett: %d != %d"
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr "érvénytelen kérés a modultól, valószínűleg túl rövid"
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr "nem sikerült előkészíteni az RPC-választ"
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr "érvénytelen kézfogás érkezett a kapcsolódó modultól"
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr "nem sikerült feldolgozni a PKCS#11 RPC-üzenetét"
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr "nincs elég memória hibaüzenet összerakása"
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr "nincs elég memória hibával válaszol"
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr "nem támogatott verzió érkezett: %d"
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr "nem sikerült olvasni a hitelesítési adatok bájtját"
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr "nem sikerült írni a hitelesítési adatok bájtját"
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr "nem sikerült olvasni az RPC-üzenetet"
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr "váratlan hibakezelési RPC-üzenet"
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr "nem sikerült írni az RPC-üzenetet"
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr "nem sikerült elküldeni az adatokat: lezárt kapcsolat"
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr "nem sikerült elküldeni az adatokat"
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr "nem sikerült fogadni az adatokat: lezárt kapcsolat"
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr "nem sikerült fogadni az adatokat"
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "érvénytelen RPC-fejlécértékek érkeztek: valószínűleg hibás protokoll"
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "nem sikerült használni a kiválasztást az RPC-csőre várakozáshoz"
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "nem sikerült elküldeni a foglalat hitelesítési adatait"
+
+#: p11-kit/rpc-transport.c:653
+msgid "couldn't receive socket credentials"
+msgstr "nem sikerült fogadni a foglalat hitelesítési adatait"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr "a partner protokollverziója túl régi"
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr "foglalat lezárása protokollhiba miatt"
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr "a(z) %d folyamat nem lépett ki, befejezés"
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr "nem sikerült várakozni a végrehajtott gyermekre: %d"
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr "a(z) %d folyamat kilépett %d állapottal"
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr "a(z) %d folyamat befejeződött %d szignállal"
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr "nem sikerült csövet létrehozni a távolihoz"
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr "nem sikerült elágaztatni a távolihoz"
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr "a(z) %p folyamat nem lépett ki, befejezés"
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr "nem sikerült befejezni a(z) %p folyamatot"
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr "nem sikerült várakozni a végrehajtott gyermekre: %p"
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr "nem sikerült lekérni a(z) %p kilépési állapotát"
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr "a(z) %p folyamat kilépett %lu állapottal"
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr "nem sikerült megkettőzni a szabványos bemenetet"
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr "nem sikerült megkettőzni a szabványos kimenetet"
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr "nem sikerült megkettőzni a cső gyermekvégét"
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr "nem sikerült indítani a távolit"
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr "nem sikerült visszaállítani a fájlleírókat"
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr "érvénytelen távoli parancssor: %s"
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr "nem sikerült foglalatot létrehozni a távolihoz"
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr "nem sikerült feldolgozni a vsock-címet: „%s”"
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr "a távoli nem támogatott: %s"
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr "a(z) %u gyermek meghalt sigsegv-vel"
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr "a(z) %u gyermek meghalt %d szignállal"
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr "nem sikerült létrehozni a(z) %s foglalatot"
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr "nem sikerült kötni a(z) %s foglalatot"
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr "nem sikerült figyelni a(z) %s foglalatot"
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr "nem sikerült a tulajdonosváltás a(z) %s foglalaton"
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr "nem sikerült létrehozni a(z) %u:%u foglalatot"
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr "nem sikerült kötni a(z) %u:%u foglalatot"
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr "nem sikerült figyelni a(z) %u:%u foglalatot"
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr "nem sikerült ellenőrizni a felhasználó-azonosítót a foglalatból"
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr "a kapcsolódó felhasználó-azonosító (%u) nem egyezik az elvárttal (%u)"
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr "a kapcsolódó csoportazonosító (%u) nem egyezik az elvárttal (%u)"
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr "nem sikerült a fork() hívása a démonizáláshoz"
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr "nem sikerült létrehozni új munkamenetet"
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr "túl sok fájlleíró érkezett"
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr "nincsenek kapcsolatok a(z) %s foglalathoz %lu másodperce, kilépés"
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr "nem sikerült elfogadni a(z) %s foglalatból"
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr "nem sikerült elágaztatni az elfogadáshoz"
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr "ismeretlen csoport: %s"
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr "ismeretlen felhasználó: %s"
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr "nem lehet beállítani a csoportazonosítót erre: %u"
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr "nem lehet beállítani a csoportokat erre: %u"
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr "nem lehet beállítani a felhasználó-azonosítót erre: %u"
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr "nem lehet meghatározni a futtatókörnyezet könyvtárát"
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr "nem lehet létrehozni: %s"
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr "nem sikerült előkészíteni a Windows biztonsági függvényeit"
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr "nem lehet felépíteni a(z) %s SID-ját: %lu"
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr "nem lehet felépíteni az ACL-t: %d"
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr "nem lehet lefoglalni a biztonsági leírót: %lu"
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr "nem lehet előkészíteni a biztonsági leírót: %lu"
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr "nem lehet beállítani a tulajdonost a biztonsági leíróban: %lu"
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr "nem lehet beállítani a DACL-t a biztonsági leíróban: %lu"
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr "érvénytelen PKCS#11 URI: %s"
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr "felismerhetetlen fájlformátum: %s"
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr "nem sikerült feldolgozni a fájlt: %s"
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr "%s: nem sikerült előkészíteni: %s"
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr "%s: nem sikerült felsorolni a foglalatokat: %s"
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr "%s: nem sikerül lekérni a tokeninformációkat: %s"
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr "%s: nem sikerült megnyitni a munkamenetet: %s"
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr "nincs beállított írható hely a horgonyok tárolásához"
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr "nincs beállított hely a horgonyok tárolásához"
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr "nem sikerült létrehozni az objektumot: %s"
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr "adjon meg legalább egy horgony bemeneti fájlt"
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr "nem sikerült a csak olvasható %s eltávolítása"
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr "nem sikerült a(z) %s eltávolítása: %s"
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr "legalább egy fájlt vagy URI-t meg kell adni"
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr "egy művelet már meg lett adva"
+
+#: trust/anchor.c:702
+#, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] "%u hiba a feldolgozás során"
+msgstr[1] "%u hiba a feldolgozás során"
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr "%.*s: érvénytelen tanúsítványkiterjesztés"
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr "%.*s: érvénytelen alapvető korlátozások tanúsítványkiterjesztés"
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr "ismeretlen"
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr "hiányzik a CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribútum"
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr "hiányzik a CKA_HASH_OF_ISSUER_PUBLIC_KEY attribútum"
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr "az objektum nem módosítható"
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr "ilyen típusú objektumok nem hozhatók létre"
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr "a(z) %s attribútum nem állítható be"
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr "a(z) %s attribútum nem változtatható meg"
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr "a(z) „%s” attribútum érvénytelen értékkel rendelkezik"
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "a(z) %s attribútum nem érvényes az objektumhoz"
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr "hiányzik a(z) %s attribútum"
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr "nem található CKA_CLASS attribútum"
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr "nem lehet létrehozni egy %s objektumot"
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr "token"
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr "nem token"
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr "a(z) %s hiányzik az objektumnál"
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr "%s nem támogatott %s"
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr "%s nem támogatott objektumosztály"
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr "érvénytelen kulcshasználat tanúsítványkiterjesztés"
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr "érvénytelen kiterjesztett kulcshasználat tanúsítványkiterjesztés"
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr "érvénytelen kulcshasználat visszautasítás tanúsítványkiterjesztés"
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr "nem sikerült kiírni az objektumot"
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr "további argumentumok lettek átadva a parancsnak"
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr "nem sikerült feldolgozni a csatolt tanúsítványkiterjesztést: %s"
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr "nem sikerült betölteni a csatolt kiterjesztéseket a tanúsítványhoz: %s"
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr "nem sikerült feldolgozni tanúsítványt: %s"
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr "nem sikerült betölteni az attribútumokat: %s"
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr "nem tanúsítvány objektumok kihagyása"
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr "nem sikerült betölteni a tiltólistát: %s"
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr "egy PKCS#11 URI már meg lett adva"
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr "nem sikerült feldolgozni a PKCS#11 URI szűrőt: %s"
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr ""
+"az URI felismerhetetlen összetevőket tartalmazott, semmi sem lesz kinyerve"
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr "nem támogatott vagy felismerhetetlen szűrő: %s"
+
+#: trust/enumerate.c:670
+#, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr "nem támogatott vagy felismerhetetlen cél: %s"
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr "nincsenek megbízhatósági házirendet tartalmazó modulok regisztrálva"
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr "egy formátum már meg lett adva"
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr "nem támogatott vagy felismerhetetlen formátum: %s"
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr "a formátum nem támogatja a megbízhatósági házirendet"
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"a formátum egy célt igényel, adja meg a --purpose kapcsolóval, a „server-"
+"auth” alapértelmezett használata"
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr ""
+"a formátum nem támogat több célt, a „server-auth” alapértelmezett használata"
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr "adjon meg egy célfájlt vagy könyvtárat"
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr "nincs kimeneti formátum megadva"
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr "nem sikerült a(z) %s parancs futtatása"
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr "több tanúsítvány található, de csak egyet sikerült fájlba írni"
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr "nem sikerült tanúsítványokat találni: %s"
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr "nem található tanúsítvány"
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr "nem sikerült tanúsítványt találni: %s"
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr "hosszú karakterlánc csonkolása"
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr "$SOURCE_DATE_EPOCH környezeti változó: strtoull"
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr "$SOURCE_DATE_EPOCH környezeti változó: nem találhatók számjegyek: %s\n"
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr "$SOURCE_DATE_EPOCH környezeti változó: lezáró szemét: %s\n"
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+"$SOURCE_DATE_EPOCH környezeti változó: az érték legfeljebb %lu lehet, de úgy "
+"tűnik, hogy: %llu \n"
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr "nem sikerült előállítani egy tanúsítvány álnevét"
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr "objektum kihagyása, nem sikerült összeállítani az URI-t"
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr "felismerhetetlen modulargumentum: %s"
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr "bizalmatlansággal rendelkező tanúsítvány a horgonyok helyén: %s"
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr "a horgony megbízhatóságának felülbírálása a tiltólistában: %s"
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr "Nem sikerült feldolgozni a(z) %s típusú PEM-blokkot"
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "nem sikerült megnyitni és leképezni a fájlt: %s"
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "érvénytelen OID érték: %s"
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr "nem sikerült létrehozni a fájlt: %s%s"
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr "nem sikerült fájlba írni: %s"
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr "nem sikerült befejezni a fájl írását: %s"
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr "nem sikerült írni a fájlt: %s"
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr "nem sikerült beállítani a fájl jogosultságait: %s"
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr "nem sikerült befejezni a fájl írását: %s"
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr "nem sikerült eltávolítani az eredeti fájlt: %s"
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr "nem sikerült létrehozni a könyvtárat: %s"
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr "a könyvtár már létezik: %s"
+
+#: trust/save.c:370
+#, c-format
+msgid "couldn't open directory: %s"
+msgstr "nem sikerült megnyitni a könyvtárat: %s"
+
+#: trust/save.c:374
+#, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "nem sikerült ellenőrizni a könyvtár jogosultságait: %s"
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr "nem sikerült írhatóvá tenni a könyvtárat: %s"
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr "nem sikerült létrehozni szimbolikus linket: %s"
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr "nem sikerült eltávolítani a fájlt: %s"
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr "nem sikerült beállítani a könyvtár jogosultságait: %s"
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr "nem sikerült betölteni a fájlt objektumokba: %s"
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr "nem sikerült elérni az útvonalat: %d: %s"
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr "nem lehet elérni a megbízhatósági tanúsítvány útvonalát: %s"
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr "nem lehet elérni a megbízhatósági fájlt: %s"
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr "nem sikerült elérni: %s"
+
+#: trust/trust.c:60
+msgid "List trust or certificates"
+msgstr "Megbízhatóság vagy tanúsítványok felsorolása"
+
+#: trust/trust.c:61
+msgid "Extract certificates and trust"
+msgstr "Tanúsítványok és megbízhatóság kinyerése"
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr "Megbízhatóság-kompatibilitási csomagok kinyerése"
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr "Megbízhatósági horgonyok hozzáadása, eltávolítása vagy megváltoztatása"
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
+msgstr "Megbízhatósági objektumok kiírása belső formátumban"

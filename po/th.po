@@ -1,21 +1,109 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Collabora Ltd.
-# This file is distributed under the same license as the PACKAGE package.
-# 
+# This file is distributed under the same license as the p11-kit package.
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/enter_bug.cgi?product=p11-glue\n"
-"POT-Creation-Date: 2015-02-20 21:29+0100\n"
+"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
+"POT-Creation-Date: 2022-10-19 03:26+0000\n"
 "PO-Revision-Date: 2012-02-29 09:23+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Thai (http://www.transifex.com/freedesktop/p11-kit/language/th/)\n"
+"Language-Team: Thai (http://www.transifex.com/freedesktop/p11-kit/language/"
+"th/)\n"
+"Language: th\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: th\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#: common/tool.c:184
+#, c-format
+msgid "usage: %s command <args>...\n"
+msgstr ""
+
+#: common/tool.c:185
+#, c-format
+msgid ""
+"\n"
+"Common %s commands are:\n"
+msgstr ""
+
+#: common/tool.c:198
+#, c-format
+msgid ""
+"\n"
+"See '%s <command> --help' for more information\n"
+msgstr ""
+
+#: common/tool.c:261 common/tool.c:333
+msgid "no command specified"
+msgstr ""
+
+#: common/tool.c:277
+#, c-format
+msgid "unknown global option: %s"
+msgstr ""
+
+#: common/tool.c:306
+#, c-format
+msgid "unknown global option: -%c"
+msgstr ""
+
+#. At this point we have no command
+#: common/tool.c:358
+#, c-format
+msgid "'%s' is not a valid command. See '%s --help'"
+msgstr ""
+
+#: p11-kit/conf.c:161
+#, c-format
+msgid "%s: unexpected pem block"
+msgstr ""
+
+#: p11-kit/conf.c:165
+#, c-format
+msgid "%s: unexpected section header"
+msgstr ""
+
+#: p11-kit/conf.c:208
+#, c-format
+msgid "invalid mode for 'user-config': %s"
+msgstr ""
+
+#: p11-kit/conf.c:367
+#, c-format
+msgid "invalid config filename, will be ignored in the future: %s"
+msgstr ""
+
+#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#, c-format
+msgid "couldn't list directory: %s"
+msgstr ""
+
+#: p11-kit/conf.c:439
+#, c-format
+msgid "couldn't stat path: %s"
+msgstr ""
+
+#: p11-kit/conf.c:528
+#, c-format
+msgid "invalid setting '%s' defaulting to '%s'"
+msgstr ""
+
+#: p11-kit/filter.c:183
+msgid "filter cannot be initialized"
+msgstr ""
+
+#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#, c-format
+msgid "couldn't load module info: %s"
+msgstr ""
+
+#: p11-kit/lists.c:296
+msgid "extra arguments specified"
+msgstr ""
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -339,4 +427,1002 @@ msgstr ""
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
+msgstr ""
+
+#: p11-kit/modules.c:373
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr ""
+
+#: p11-kit/modules.c:385
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr ""
+
+#: p11-kit/modules.c:393
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr ""
+
+#: p11-kit/modules.c:399
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr ""
+
+#: p11-kit/modules.c:548
+#, c-format
+msgid "module '%s' has both enable-in and disable-in options"
+msgstr ""
+
+#: p11-kit/modules.c:698
+#, c-format
+msgid "aborting initialization because module '%s' was marked as critical"
+msgstr ""
+
+#: p11-kit/modules.c:723
+msgid "p11-kit initialization called recursively"
+msgstr ""
+
+#: p11-kit/modules.c:909
+#, c-format
+msgid "initialization of critical module '%s' failed: %s"
+msgstr ""
+
+#: p11-kit/modules.c:912
+#, c-format
+msgid "skipping module '%s' whose initialization failed: %s"
+msgstr ""
+
+#: p11-kit/modules.c:1687
+#, c-format
+msgid "couldn't close session: %s"
+msgstr ""
+
+#.
+#. * This is because the module is running in unmanaged mode, so turn off the
+#.
+#: p11-kit/modules.c:1864
+#, c-format
+msgid "the '%s' option for module '%s' is only supported for managed modules"
+msgstr ""
+
+#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr ""
+
+#: p11-kit/modules.c:2176
+#, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr ""
+
+#: p11-kit/modules.c:2182
+#, c-format
+msgid "%s: module was already initialized"
+msgstr ""
+
+#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr ""
+
+#: p11-kit/modules.c:2417
+#, c-format
+msgid "module initialization failed: %s"
+msgstr ""
+
+#: p11-kit/p11-kit.c:72
+msgid "List modules and tokens"
+msgstr ""
+
+#: p11-kit/p11-kit.c:73
+msgid "Run a specific PKCS#11 module remotely"
+msgstr ""
+
+#: p11-kit/p11-kit.c:74
+msgid "Run a server process that exposes PKCS#11 module remotely"
+msgstr ""
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:95
+msgid "couldn't run trust tool"
+msgstr ""
+
+#. At this point we have no command
+#: p11-kit/p11-kit.c:137
+#, c-format
+msgid "'%s' is not a valid command. See 'p11-kit --help'"
+msgstr ""
+
+#: p11-kit/remote.c:108
+msgid "specify a module or tokens to remote"
+msgstr ""
+
+#: p11-kit/remote.c:113
+msgid "the 'remote' tool is not meant to be run from a terminal"
+msgstr ""
+
+#: p11-kit/remote.c:139
+msgid "only one module can be specified"
+msgstr ""
+
+#: p11-kit/rpc-client.c:146
+msgid "invalid rpc error response: too short"
+msgstr ""
+
+#: p11-kit/rpc-client.c:151
+msgid "invalid rpc error response: bad error code"
+msgstr ""
+
+#: p11-kit/rpc-client.c:161
+msgid "invalid rpc response: call mismatch"
+msgstr ""
+
+#: p11-kit/rpc-client.c:182
+msgid "invalid rpc response: bad argument data"
+msgstr ""
+
+#: p11-kit/rpc-client.c:229
+msgid "received an attribute array with wrong number of attributes"
+msgstr ""
+
+#: p11-kit/rpc-client.c:256
+msgid "returned attributes in invalid order"
+msgstr ""
+
+#: p11-kit/rpc-client.c:727 trust/module.c:382
+msgid "invalid set of mutex calls supplied"
+msgstr ""
+
+#: p11-kit/rpc-client.c:736 trust/module.c:391
+msgid "can't do without os locking"
+msgstr ""
+
+#: p11-kit/rpc-client.c:749
+msgid "C_Initialize called twice for same process"
+msgstr ""
+
+#: p11-kit/rpc-client.c:856
+#, c-format
+msgid "finalizing rpc module returned an error: %lu"
+msgstr ""
+
+#: p11-kit/rpc-message.c:190
+msgid "invalid message: couldn't read call identifier"
+msgstr ""
+
+#: p11-kit/rpc-message.c:199
+#, c-format
+msgid "invalid message: bad call id: %d"
+msgstr ""
+
+#: p11-kit/rpc-message.c:217
+msgid "invalid message: couldn't read signature"
+msgstr ""
+
+#: p11-kit/rpc-message.c:222
+msgid "invalid message: signature doesn't match"
+msgstr ""
+
+#: p11-kit/rpc-message.c:483
+#, c-format
+msgid "invalid length space padded string received: %d != %d"
+msgstr ""
+
+#: p11-kit/rpc-server.c:575
+msgid "invalid request from module, probably too short"
+msgstr ""
+
+#: p11-kit/rpc-server.c:585
+msgid "couldn't initialize rpc response"
+msgstr ""
+
+#: p11-kit/rpc-server.c:717
+msgid "invalid handshake received from connecting module"
+msgstr ""
+
+#: p11-kit/rpc-server.c:1834
+msgid "couldn't parse pkcs11 rpc message"
+msgstr ""
+
+#: p11-kit/rpc-server.c:1921
+msgid "out of memory error putting together message"
+msgstr ""
+
+#: p11-kit/rpc-server.c:1945
+msgid "out of memory responding with error"
+msgstr ""
+
+#: p11-kit/rpc-server.c:1991
+#, c-format
+msgid "unsupported version received: %d"
+msgstr ""
+
+#: p11-kit/rpc-server.c:1997
+msgid "couldn't read credential byte"
+msgstr ""
+
+#: p11-kit/rpc-server.c:2009
+msgid "couldn't write credential byte"
+msgstr ""
+
+#: p11-kit/rpc-server.c:2032
+msgid "failed to read rpc message"
+msgstr ""
+
+#: p11-kit/rpc-server.c:2037
+msgid "unexpected error handling rpc message"
+msgstr ""
+
+#: p11-kit/rpc-server.c:2055
+msgid "failed to write rpc message"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:208
+msgid "couldn't send data: closed connection"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:211
+msgid "couldn't send data"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:234
+msgid "couldn't receive data: closed connection"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:416
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:459
+msgid "couldn't use select to wait on rpc pipe"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:653
+msgid "couldn't receive socket credentials"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+msgid "closing socket due to protocol failure"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:755
+#, c-format
+msgid "process %d did not exit, terminating"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:762
+#, c-format
+msgid "failed to wait for executed child: %d"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:769
+#, c-format
+msgid "process %d exited with status %d"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:773
+#, c-format
+msgid "process %d was terminated with signal %d"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
+msgid "failed to create pipe for remote"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:828
+msgid "failed to fork for remote"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:888
+#, c-format
+msgid "process %p did not exit, terminating"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:890
+#, c-format
+msgid "couldn't terminate process %p"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:895
+#, c-format
+msgid "failed to wait for executed child: %p"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:898
+#, c-format
+msgid "failed to get the exit status of %p"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:902
+#, c-format
+msgid "process %p exited with status %lu"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:968
+msgid "failed to duplicate stdin"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:975
+msgid "failed to duplicate stdout"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:983
+msgid "failed to duplicate child end of pipe"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:993
+msgid "failed to spawn remote"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:1006
+msgid "failed to restore file descriptors"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:1075
+#, c-format
+msgid "invalid remote command line: %s"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+msgid "failed to create socket for remote"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#, c-format
+msgid "failed to parse vsock address: '%s'"
+msgstr ""
+
+#: p11-kit/rpc-transport.c:1301
+#, c-format
+msgid "remote not supported: %s"
+msgstr ""
+
+#: p11-kit/server.c:243
+#, c-format
+msgid "child %u died with sigsegv"
+msgstr ""
+
+#: p11-kit/server.c:245
+#, c-format
+msgid "child %u died with signal %d"
+msgstr ""
+
+#: p11-kit/server.c:318
+#, c-format
+msgid "could not create socket %s"
+msgstr ""
+
+#: p11-kit/server.c:326
+#, c-format
+msgid "could not bind socket %s"
+msgstr ""
+
+#: p11-kit/server.c:333
+#, c-format
+msgid "could not listen to socket %s"
+msgstr ""
+
+#: p11-kit/server.c:341
+#, c-format
+msgid "could not chown socket %s"
+msgstr ""
+
+#: p11-kit/server.c:364
+#, c-format
+msgid "could not create socket %u:%u"
+msgstr ""
+
+#: p11-kit/server.c:371
+#, c-format
+msgid "could not bind socket %u:%u"
+msgstr ""
+
+#: p11-kit/server.c:378
+#, c-format
+msgid "could not listen to socket %u:%u"
+msgstr ""
+
+#: p11-kit/server.c:397
+msgid "could not check uid from socket"
+msgstr ""
+
+#: p11-kit/server.c:403
+#, c-format
+msgid "connecting uid (%u) doesn't match expected (%u)"
+msgstr ""
+
+#: p11-kit/server.c:410
+#, c-format
+msgid "connecting gid (%u) doesn't match expected (%u)"
+msgstr ""
+
+#: p11-kit/server.c:491
+msgid "could not fork() to daemonize"
+msgstr ""
+
+#: p11-kit/server.c:504
+msgid "could not create a new session"
+msgstr ""
+
+#: p11-kit/server.c:512
+msgid "too many file descriptors received"
+msgstr ""
+
+#: p11-kit/server.c:556
+#, c-format
+msgid "no connections to %s for %lu secs, exiting"
+msgstr ""
+
+#: p11-kit/server.c:565
+#, c-format
+msgid "could not accept from socket %s"
+msgstr ""
+
+#: p11-kit/server.c:576
+msgid "failed to fork for accept"
+msgstr ""
+
+#: p11-kit/server.c:721 p11-kit/server.c:737
+#, c-format
+msgid "unknown group: %s"
+msgstr ""
+
+#: p11-kit/server.c:729 p11-kit/server.c:745
+#, c-format
+msgid "unknown user: %s"
+msgstr ""
+
+#: p11-kit/server.c:828
+#, c-format
+msgid "cannot set gid to %u"
+msgstr ""
+
+#: p11-kit/server.c:834
+#, c-format
+msgid "cannot setgroups to %u"
+msgstr ""
+
+#: p11-kit/server.c:842
+#, c-format
+msgid "cannot set uid to %u"
+msgstr ""
+
+#: p11-kit/server.c:858
+msgid "cannot determine runtime directory"
+msgstr ""
+
+#: p11-kit/server.c:870
+#, c-format
+msgid "cannot create %s"
+msgstr ""
+
+#: p11-kit/server.c:1141
+msgid "couldn't initialize Windows security functions"
+msgstr ""
+
+#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#, c-format
+msgid "unable to construct SID for %s: %lu"
+msgstr ""
+
+#: p11-kit/server.c:1369
+#, c-format
+msgid "unable to construct ACL: %d"
+msgstr ""
+
+#: p11-kit/server.c:1375
+#, c-format
+msgid "unable to allocate security descriptor: %lu"
+msgstr ""
+
+#: p11-kit/server.c:1381
+#, c-format
+msgid "unable to initialise security descriptor: %lu"
+msgstr ""
+
+#: p11-kit/server.c:1387
+#, c-format
+msgid "unable to set owner in security descriptor: %lu"
+msgstr ""
+
+#: p11-kit/server.c:1393
+#, c-format
+msgid "unable to set DACL in security descriptor: %lu"
+msgstr ""
+
+#: trust/anchor.c:126
+#, c-format
+msgid "invalid PKCS#11 uri: %s"
+msgstr ""
+
+#: trust/anchor.c:148 trust/anchor.c:204
+#, c-format
+msgid "unrecognized file format: %s"
+msgstr ""
+
+#: trust/anchor.c:151 trust/anchor.c:207
+#, c-format
+msgid "failed to parse file: %s"
+msgstr ""
+
+#: trust/anchor.c:246
+#, c-format
+msgid "%s: couldn't initialize: %s"
+msgstr ""
+
+#: trust/anchor.c:257
+#, c-format
+msgid "%s: couldn't enumerate slots: %s"
+msgstr ""
+
+#: trust/anchor.c:265
+#, c-format
+msgid "%s: couldn't get token info: %s"
+msgstr ""
+
+#: trust/anchor.c:277
+#, c-format
+msgid "%s: couldn't open session: %s"
+msgstr ""
+
+#: trust/anchor.c:325
+msgid "no configured writable location to store anchors"
+msgstr ""
+
+#: trust/anchor.c:327
+msgid "no configured location to store anchors"
+msgstr ""
+
+#: trust/anchor.c:388 trust/anchor.c:435
+#, c-format
+msgid "couldn't create object: %s"
+msgstr ""
+
+#: trust/anchor.c:487
+msgid "specify at least one anchor input file"
+msgstr ""
+
+#: trust/anchor.c:570
+#, c-format
+msgid "couldn't remove read-only %s"
+msgstr ""
+
+#: trust/anchor.c:573
+#, c-format
+msgid "couldn't remove %s: %s"
+msgstr ""
+
+#: trust/anchor.c:599
+msgid "at least one file or uri must be specified"
+msgstr ""
+
+#: trust/anchor.c:665
+msgid "an action was already specified"
+msgstr ""
+
+#: trust/anchor.c:702
+#, c-format
+msgid "%u error while processing"
+msgid_plural "%u errors while processing"
+msgstr[0] ""
+
+#: trust/builder.c:155
+#, c-format
+msgid "%.*s: invalid certificate extension"
+msgstr ""
+
+#: trust/builder.c:674
+#, c-format
+msgid "%.*s: invalid basic constraints certificate extension"
+msgstr ""
+
+#: trust/builder.c:676
+msgid "unknown"
+msgstr ""
+
+#: trust/builder.c:865
+msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
+msgstr ""
+
+#: trust/builder.c:870
+msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
+msgstr ""
+
+#: trust/builder.c:1084
+msgid "the object is not modifiable"
+msgstr ""
+
+#: trust/builder.c:1091
+msgid "objects of this type cannot be created"
+msgstr ""
+
+#: trust/builder.c:1111
+#, c-format
+msgid "the %s attribute cannot be set"
+msgstr ""
+
+#: trust/builder.c:1116
+#, c-format
+msgid "the %s attribute cannot be changed"
+msgstr ""
+
+#: trust/builder.c:1122
+#, c-format
+msgid "the %s attribute has an invalid value"
+msgstr ""
+
+#: trust/builder.c:1131
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr ""
+
+#: trust/builder.c:1154
+#, c-format
+msgid "missing the %s attribute"
+msgstr ""
+
+#: trust/builder.c:1194
+msgid "no CKA_CLASS attribute found"
+msgstr ""
+
+#: trust/builder.c:1200
+#, c-format
+msgid "cannot create a %s object"
+msgstr ""
+
+#: trust/builder.c:1200
+msgid "token"
+msgstr ""
+
+#: trust/builder.c:1200
+msgid "non-token"
+msgstr ""
+
+#: trust/builder.c:1208
+#, c-format
+msgid "missing %s on object"
+msgstr ""
+
+#: trust/builder.c:1213
+#, c-format
+msgid "%s unsupported %s"
+msgstr ""
+
+#: trust/builder.c:1234
+#, c-format
+msgid "%s unsupported object class"
+msgstr ""
+
+#: trust/builder.c:1300
+msgid "invalid key usage certificate extension"
+msgstr ""
+
+#: trust/builder.c:1768
+msgid "invalid extended key usage certificate extension"
+msgstr ""
+
+#: trust/builder.c:1776
+msgid "invalid reject key usage certificate extension"
+msgstr ""
+
+#: trust/dump.c:113
+msgid "could not dump object"
+msgstr ""
+
+#: trust/dump.c:187 trust/list.c:256
+msgid "extra arguments passed to command"
+msgstr ""
+
+#: trust/enumerate.c:78
+#, c-format
+msgid "couldn't parse attached certificate extension: %s"
+msgstr ""
+
+#: trust/enumerate.c:151
+#, c-format
+msgid "couldn't load attached extensions for certificate: %s"
+msgstr ""
+
+#: trust/enumerate.c:275
+#, c-format
+msgid "couldn't parse certificate: %s"
+msgstr ""
+
+#: trust/enumerate.c:312
+#, c-format
+msgid "couldn't load attributes: %s"
+msgstr ""
+
+#: trust/enumerate.c:323
+msgid "skipping non-certificate object"
+msgstr ""
+
+#: trust/enumerate.c:480 trust/enumerate.c:508
+#, c-format
+msgid "couldn't load blocklist: %s"
+msgstr ""
+
+#: trust/enumerate.c:582
+msgid "a PKCS#11 URI has already been specified"
+msgstr ""
+
+#: trust/enumerate.c:589
+#, c-format
+msgid "couldn't parse pkcs11 uri filter: %s"
+msgstr ""
+
+#: trust/enumerate.c:594
+msgid "uri contained unrecognized components, nothing will be extracted"
+msgstr ""
+
+#: trust/enumerate.c:621
+#, c-format
+msgid "unsupported or unrecognized filter: %s"
+msgstr ""
+
+#: trust/enumerate.c:670
+#, c-format
+msgid "unsupported or unrecognized purpose: %s"
+msgstr ""
+
+#: trust/enumerate.c:712
+msgid "no modules containing trust policy are registered"
+msgstr ""
+
+#: trust/extract.c:98
+msgid "a format was already specified"
+msgstr ""
+
+#: trust/extract.c:110
+#, c-format
+msgid "unsupported or unrecognized format: %s"
+msgstr ""
+
+#.
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
+#.
+#: trust/extract.c:148
+msgid "format does not support trust policy"
+msgstr ""
+
+#: trust/extract.c:159
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+
+#: trust/extract.c:162
+msgid "format does not support multiple purposes, defaulting to 'server-auth'"
+msgstr ""
+
+#: trust/extract.c:283
+msgid "specify one destination file or directory"
+msgstr ""
+
+#: trust/extract.c:288
+msgid "no output format specified"
+msgstr ""
+
+#. At this point we have no command
+#: trust/extract.c:333
+#, c-format
+msgid "could not run %s command"
+msgstr ""
+
+#: trust/extract-cer.c:62
+msgid "multiple certificates found but could only write one to file"
+msgstr ""
+
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#, c-format
+msgid "failed to find certificates: %s"
+msgstr ""
+
+#: trust/extract-cer.c:80
+msgid "no certificate found"
+msgstr ""
+
+#: trust/extract-edk2.c:192
+#, c-format
+msgid "failed to find certificate: %s"
+msgstr ""
+
+#: trust/extract-jks.c:142
+msgid "truncating long string"
+msgstr ""
+
+#: trust/extract-jks.c:272
+msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
+msgstr ""
+
+#: trust/extract-jks.c:276
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
+msgstr ""
+
+#: trust/extract-jks.c:280
+#, c-format
+msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
+msgstr ""
+
+#: trust/extract-jks.c:284
+#, c-format
+msgid ""
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
+"to %lu but was found to be: %llu \n"
+msgstr ""
+
+#: trust/extract-jks.c:312
+msgid "could not generate a certificate alias name"
+msgstr ""
+
+#: trust/list.c:122
+msgid "skipping object, couldn't build uri"
+msgstr ""
+
+#: trust/module.c:303
+#, c-format
+msgid "unrecognized module argument: %s"
+msgstr ""
+
+#: trust/parser.c:109
+#, c-format
+msgid "certificate with distrust in location for anchors: %s"
+msgstr ""
+
+#: trust/parser.c:123
+#, c-format
+msgid "overriding trust for anchor in blocklist: %s"
+msgstr ""
+
+#: trust/parser.c:596
+#, c-format
+msgid "Couldn't parse PEM block of type %s"
+msgstr ""
+
+#: trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr ""
+
+#: trust/persist.c:493
+#, c-format
+msgid "invalid oid value: %s"
+msgstr ""
+
+#: trust/save.c:124
+#, c-format
+msgid "couldn't create file: %s%s"
+msgstr ""
+
+#: trust/save.c:172
+#, c-format
+msgid "couldn't write to file: %s"
+msgstr ""
+
+#. Continue trying other names
+#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#, c-format
+msgid "couldn't complete writing of file: %s"
+msgstr ""
+
+#: trust/save.c:260
+#, c-format
+msgid "couldn't write file: %s"
+msgstr ""
+
+#: trust/save.c:266
+#, c-format
+msgid "couldn't set file permissions: %s"
+msgstr ""
+
+#: trust/save.c:272 trust/save.c:315
+#, c-format
+msgid "couldn't complete writing file: %s"
+msgstr ""
+
+#: trust/save.c:309
+#, c-format
+msgid "couldn't remove original file: %s"
+msgstr ""
+
+#: trust/save.c:355 trust/token.c:635
+#, c-format
+msgid "couldn't create directory: %s"
+msgstr ""
+
+#: trust/save.c:359
+#, c-format
+msgid "directory already exists: %s"
+msgstr ""
+
+#: trust/save.c:370
+#, c-format
+msgid "couldn't open directory: %s"
+msgstr ""
+
+#: trust/save.c:374
+#, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr ""
+
+#: trust/save.c:380
+#, c-format
+msgid "couldn't make directory writable: %s"
+msgstr ""
+
+#: trust/save.c:541
+#, c-format
+msgid "couldn't create symlink: %s"
+msgstr ""
+
+#: trust/save.c:603 trust/token.c:503
+#, c-format
+msgid "couldn't remove file: %s"
+msgstr ""
+
+#: trust/save.c:631
+#, c-format
+msgid "couldn't set directory permissions: %s"
+msgstr ""
+
+#: trust/token.c:227
+#, c-format
+msgid "couldn't load file into objects: %s"
+msgstr ""
+
+#: trust/token.c:243
+#, c-format
+msgid "couldn't stat path: %d: %s"
+msgstr ""
+
+#: trust/token.c:312
+#, c-format
+msgid "cannot access trust certificate path: %s"
+msgstr ""
+
+#: trust/token.c:426
+#, c-format
+msgid "cannot access trust file: %s"
+msgstr ""
+
+#: trust/token.c:475
+#, c-format
+msgid "couldn't access: %s"
+msgstr ""
+
+#: trust/trust.c:60
+msgid "List trust or certificates"
+msgstr ""
+
+#: trust/trust.c:61
+msgid "Extract certificates and trust"
+msgstr ""
+
+#: trust/trust.c:62
+msgid "Extract trust compatibility bundles"
+msgstr ""
+
+#: trust/trust.c:63
+msgid "Add, remove, change trust anchors"
+msgstr ""
+
+#: trust/trust.c:64
+msgid "Dump trust objects in internal format"
 msgstr ""
