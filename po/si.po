@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
 "POT-Creation-Date: 2022-10-19 03:26+0000\n"
 "PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Transifex contributor\n"
 "Language-Team: Sinhala (http://www.transifex.com/freedesktop/p11-kit/"
 "language/si/)\n"
 "Language: si\n"
@@ -869,7 +869,7 @@ msgstr "බොහෝ ගොනු විස්තර ලැබී ඇත"
 #: p11-kit/server.c:556
 #, c-format
 msgid "no connections to %s for %lu secs, exiting"
-msgstr "තත්පර %lu ක් සඳහා %s වෙත සම්බන්ධතා නොමැත, පිටවීම"
+msgstr "තත්පර %2$lu ක් සඳහා %1$s වෙත සම්බන්ධතා නොමැත, පිටවීම"
 
 #: p11-kit/server.c:565
 #, c-format
