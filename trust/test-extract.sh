@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . "${builddir=.}/test-init.sh"
+: ${DD=dd}
 
 teardown()
 {
@@ -48,10 +49,10 @@ setup()
 	CLEANUP="$dir $TD"
 
 	# Generate a unique identifier
-	CERT_1_CN=test_$(dd if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
-	CERT_2_CN=test_$(dd if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
-	CERT_3_CN=test_$(dd if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
-	CERT_4_CN=test_$(dd if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
+	CERT_1_CN=test_$("$DD" if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
+	CERT_2_CN=test_$("$DD" if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
+	CERT_3_CN=test_$("$DD" if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
+	CERT_4_CN=test_$("$DD" if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
 
 	# Generate relevant certificates
 	openssl_quiet req -x509 -newkey rsa:512 -keyout /dev/null -days 3 -nodes \

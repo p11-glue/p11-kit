@@ -5,18 +5,34 @@ runs:
   using: composite
   steps:
     - name: Create user
-      run: useradd -m user
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          useradd -m user
+        fi
       shell: bash
 
-    - name: Setup directories
+    - name: Create directories
       run: |
         mkdir $GITHUB_WORKSPACE/$BUILDDIR
-        chown -R user $GITHUB_WORKSPACE/$BUILDDIR
         mkdir $GITHUB_WORKSPACE/$INSTALLDIR
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
-        # This is necessary to put p11-kit.pot in $(srcdir)
-        chown -R user $GITHUB_WORKSPACE/po
+      shell: bash
+
+    - name: Update directory permissions
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          chown -R user $GITHUB_WORKSPACE/$BUILDDIR
+          # This is necessary to put p11-kit.pot in $(srcdir)
+          chown -R user $GITHUB_WORKSPACE/po
+        fi
+      shell: bash
+
+    - name: Setup runuser command
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          RUNASUSER="runuser -u user -- "
+        fi
       shell: bash
 
     - name: Build
@@ -24,15 +40,20 @@ runs:
         cd $GITHUB_WORKSPACE
         NOCONFIGURE=1 ./autogen.sh
         cd $GITHUB_WORKSPACE/$BUILDDIR
-        runuser -u user -- $GITHUB_WORKSPACE/configure --enable-strict --prefix=$GITHUB_WORKSPACE/$INSTALLDIR --libdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib --sysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc --with-trust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source --enable-doc --without-systemd --without-bash-completion $BUILD_OPTS
-        runuser -u user -- make -j$(nproc) V=1
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          DOC_OPTS="--enable-doc "
+        fi
+        $RUNASUSER $GITHUB_WORKSPACE/configure --enable-strict --prefix=$GITHUB_WORKSPACE/$INSTALLDIR --libdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib --sysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc --with-trust-paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $DOC_OPTS --without-systemd --without-bash-completion $BUILD_OPTS
+        $RUNASUSER make -j$(nproc) V=1
       shell: bash
 
     - name: Test
       run: |
         cd $GITHUB_WORKSPACE/$BUILDDIR
-        P11_KIT_DEBUG=all runuser -u user -- make check -j$(nproc) V=1
-        P11_KIT_DEBUG=all runuser -u user -- make distcheck -j$(nproc) V=1
+        P11_KIT_DEBUG=all $RUNASUSER make check -j$(nproc) V=1
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          P11_KIT_DEBUG=all $RUNASUSER make distcheck -j$(nproc) V=1
+        fi
       shell: bash
 
     - name: Install
@@ -42,5 +63,9 @@ runs:
         # This is necessary for 'trust/test-extract.sh'
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit
         ln -sf /usr/bin/true $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit/trust-extract-compat
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          DD=gdd
+          export DD
+        fi
         make installcheck
       shell: bash
