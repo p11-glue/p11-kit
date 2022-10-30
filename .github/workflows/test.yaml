@@ -88,3 +88,19 @@ jobs:
         with:
           path-to-lcov: ./builddir/meson-logs/coverage.info
           github-token: ${{ secrets.github_token }}
+
+  macos:
+    runs-on: macos-11.0
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          brew update
+          for pkg in autoconf automake coreutils gettext libffi libtasn1 libtool; do
+            brew install $pkg || true
+          done
+      - name: Update path
+        run: |
+          echo /usr/local/opt/gettext/bin >>${GITHUB_PATH}
+      - uses: ./.github/actions/basic-autotools
