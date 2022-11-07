@@ -18,6 +18,10 @@ option('module_path', type : 'string',
        value : '',
        description : 'Load modules with relative path names from here')
 
+option('env_override_paths', type : 'string',
+       value : '',
+       description : 'Override module and config paths with environment variables')
+
 option('libffi', type : 'feature',
        value : 'auto',
        description : 'Use libffi for building closures')

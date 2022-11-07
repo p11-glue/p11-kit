@@ -224,6 +224,15 @@ AC_ARG_WITH([module-path],
             [module_path=$withval],
             [module_path=$libdir/pkcs11])
 
+AC_ARG_ENABLE([env-override-paths],
+	AS_HELP_STRING([--enable-env-override-paths],
+	               [Override config and module paths via environment varibles [[default=no]]]),,
+              [enable_env_override_paths=no])
+
+if test x$enable_env_override_paths = xyes; then
+	AC_DEFINE_UNQUOTED(P11_ENV_OVERRIDE_PATHS, 1, [Enable environmental path overrides])
+fi
+
 # We expand these so we have concrete paths
 p11_system_config=$system_config_dir
 p11_system_config_file=$p11_system_config/pkcs11.conf

@@ -357,6 +357,11 @@ p11_system_config_modules = p11_system_config / 'modules'
 p11_user_config_file = p11_user_config / 'pkcs11.conf'
 p11_user_config_modules = p11_user_config / 'modules'
 
+p11_env_override_paths = get_option('env_override_paths')
+if p11_env_override_paths == 'enabled'
+  conf.set('P11_ENV_OVERRIDE_PATHS', 1)
+endif
+
 # --------------------------------------------------------------------
 # Hash implementation
 
