@@ -188,6 +188,7 @@ const char *p11_config_user_file = P11_USER_CONFIG_FILE;
 const char *p11_config_package_modules = P11_PACKAGE_CONFIG_MODULES;
 const char *p11_config_system_modules = P11_SYSTEM_CONFIG_MODULES;
 const char *p11_config_user_modules = P11_USER_CONFIG_MODULES;
+const char *p11_module_path = P11_MODULE_PATH;
 
 /* -----------------------------------------------------------------------------
  * P11-KIT FUNCTIONALITY
@@ -423,8 +424,8 @@ load_module_from_file_inlock (const char *name,
 	return_val_if_fail (mod != NULL, CKR_HOST_MEMORY);
 
 	if (!p11_path_absolute (path)) {
-		p11_debug ("module path is relative, loading from: %s", P11_MODULE_PATH);
-		path = expand = p11_path_build (P11_MODULE_PATH, path, NULL);
+		p11_debug ("module path is relative, loading from: %s", p11_module_path);
+		path = expand = p11_path_build (p11_module_path, path, NULL);
 		return_val_if_fail (path != NULL, CKR_HOST_MEMORY);
 	}
 
@@ -638,6 +639,45 @@ out:
 	return rv;
 }
 
+/**
+ * p11_get_paths_from_env:
+ *
+ * Adjusts various configuration paths and files, so that they
+ * can be changed at run-time, based on system environment variables
+ *
+ */
+#ifdef P11_ENV_OVERRIDE_PATHS
+static void
+p11_get_paths_from_env(void)
+{
+	char * path;
+
+	if((path = secure_getenv("P11_SYSTEM_CONFIG_FILE"))){
+		p11_config_system_file = path;
+	}
+
+	if((path = secure_getenv("P11_USER_CONFIG_FILE"))){
+		p11_config_user_file = path;
+	}
+
+	if((path = secure_getenv("P11_PACKAGE_CONFIG_MODULES"))){
+		p11_config_package_modules = path;
+	}
+
+	if((path = secure_getenv("P11_SYSTEM_CONFIG_MODULES"))){
+		p11_config_system_modules = path;
+	}
+
+	if((path = secure_getenv("P11_USER_CONFIG_MODULES"))){
+		p11_config_user_modules = path;
+	}
+
+	if((path = secure_getenv("P11_MODULE_PATH"))){
+		p11_module_path = path;
+	}
+}
+#endif
+
 static CK_RV
 load_registered_modules_unlocked (int flags)
 {
@@ -650,6 +690,10 @@ load_registered_modules_unlocked (int flags)
 	CK_RV rv;
 	bool critical;
 	bool verbose;
+
+#ifdef P11_ENV_OVERRIDE_PATHS
+	p11_get_paths_from_env();
+#endif
 
 	if (gl.config)
 		return CKR_OK;
