@@ -141,14 +141,15 @@ endif
 
 p11_kit_sources = [
   'lists.c',
-  'p11-kit.c'
+  'p11-kit.c',
+  'print-config.c'
 ]
 
 executable('p11-kit',
            p11_kit_sources,
-           c_args: common_c_args,
+           c_args: common_c_args + libp11_kit_internal_c_args,
            dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
-           link_with: libp11_kit,
+           link_with: [libp11_kit, libp11_kit_internal],
            install: true)
 
 executable('p11-kit-remote',

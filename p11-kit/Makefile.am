@@ -237,13 +237,17 @@ EXTRA_DIST += \
 
 bin_PROGRAMS += p11-kit/p11-kit
 
+p11_kit_p11_kit_CFLAGS = $(COMMON_CFLAGS)
+
 p11_kit_p11_kit_SOURCES = \
 	p11-kit/lists.c \
 	p11-kit/p11-kit.c \
+	p11-kit/print-config.c \
 	$(NULL)
 
 p11_kit_p11_kit_LDADD = \
 	libp11-kit.la \
+	libp11-kit-internal.la \
 	libp11-tool.la \
 	libp11-common.la \
 	$(LTLIBINTL) \
