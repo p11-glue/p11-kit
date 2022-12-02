@@ -6,6 +6,7 @@ p11-kit/lists.c
 p11-kit/messages.c
 p11-kit/modules.c
 p11-kit/p11-kit.c
+p11-kit/print-config.c
 p11-kit/remote.c
 p11-kit/rpc-client.c
 p11-kit/rpc-message.c
