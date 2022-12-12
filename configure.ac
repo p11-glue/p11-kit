@@ -148,7 +148,7 @@ if test "$os_unix" = "yes"; then
 		[ac_cv_tls_keyword=
 		for keyword in _Thread_local __thread; do
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
-			[[static ]$keyword[ foo;]])],
+			[[static ]$keyword[ int foo;]])],
 			[ac_cv_tls_keyword=$keyword])
 		done])
 	if test -n "$ac_cv_tls_keyword"; then
