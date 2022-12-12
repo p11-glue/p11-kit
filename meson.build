@@ -200,7 +200,7 @@ if host_system != 'windows'
   tls_test_code_template = '''
 #include <stdlib.h>
 int main (void) {
-static @0@ foo;
+static @0@ int foo;
 return 0;
 }
 '''
