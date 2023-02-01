@@ -398,17 +398,20 @@ static void
 mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
                       CK_ULONG *n_mechs)
 {
-	int i;
+	CK_ULONG i;
 
 	assert (mechs != NULL);
 	assert (n_mechs != NULL);
 
-	for (i = 0; i < (int)(*n_mechs); ++i) {
-		if (!p11_rpc_mechanism_is_supported (mechs[i])) {
+	/* Trim unsupported mechanisms at the end */
+	for (; *n_mechs > 0 && !p11_rpc_mechanism_is_supported (mechs[*n_mechs - 1]); --*n_mechs)
+		;
 
+	for (i = 0; i < *n_mechs; ++i) {
+		if (!p11_rpc_mechanism_is_supported (mechs[i])) {
 			/* Remove the mechanism from the list */
 			memmove (&mechs[i], &mechs[i + 1],
-			         (*n_mechs - i) * sizeof (CK_MECHANISM_TYPE));
+				 (*n_mechs - (i + 1)) * sizeof (CK_MECHANISM_TYPE));
 
 			--(*n_mechs);
 			--i;
