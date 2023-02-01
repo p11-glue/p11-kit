@@ -406,9 +406,15 @@ mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
 	for (i = 0; i < (int)(*n_mechs); ++i) {
 		if (!p11_rpc_mechanism_is_supported (mechs[i])) {
 
-			/* Remove the mechanism from the list */
-			memmove (&mechs[i], &mechs[i + 1],
-			         (*n_mechs - i) * sizeof (CK_MECHANISM_TYPE));
+			/* If this is the last mechanism, don't try to access
+			 * &mechs[i + 1], as that's undefined behavior and will trip
+			 * AddressSanitizer */
+			if (i + 1 < *n_mechs) {
+				/* Remove the mechanism from the list */
+				memmove (&mechs[i], &mechs[i + 1],
+						 (*n_mechs - i - 1) * sizeof (CK_MECHANISM_TYPE));
+			}
+
 
 			--(*n_mechs);
 			--i;
