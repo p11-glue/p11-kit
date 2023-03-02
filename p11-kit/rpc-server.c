@@ -720,7 +720,8 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 	if (ret == CKR_OK) {
 
 		/* Check to make sure the header matches */
-		if (n_handshake != P11_RPC_HANDSHAKE_LEN ||
+		if (!handshake ||
+		    n_handshake != P11_RPC_HANDSHAKE_LEN ||
 		    memcmp (handshake, P11_RPC_HANDSHAKE, n_handshake) != 0) {
 			p11_message (_("invalid handshake received from connecting module"));
 			ret = CKR_GENERAL_ERROR;
