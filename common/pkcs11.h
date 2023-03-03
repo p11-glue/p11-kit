@@ -412,6 +412,7 @@ typedef unsigned long ck_key_type_t;
 #define CKK_GOSTR3411		(0x31UL)
 #define CKK_GOST28147		(0x32UL)
 #define CKK_EC_EDWARDS		(0x40UL)
+#define CKK_EC_MONTGOMERY	(0x41UL)
 #define CKK_VENDOR_DEFINED	((unsigned long) (1UL << 31))
 
 
@@ -895,7 +896,9 @@ typedef unsigned long ck_mechanism_type_t;
 
 /* From version 3.0 */
 #define CKM_EC_EDWARDS_KEY_PAIR_GEN	(0x1055UL)
+#define CKM_EC_MONTGOMERY_KEY_PAIR_GEN  (0x1056UL)
 #define CKM_EDDSA			(0x1057UL)
+#define CKM_XEDDSA			(0x4029UL)
 
 /* Attribute and other constants related to OTP */
 #define CK_OTP_FORMAT_DECIMAL		(0UL)
