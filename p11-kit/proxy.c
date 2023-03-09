@@ -91,7 +91,7 @@ typedef struct _State {
 	p11_virtual virt;
 	struct _State *next;
 	CK_FUNCTION_LIST **loaded;
-	CK_FUNCTION_LIST *wrapped;
+	CK_INTERFACE wrapped;
 	CK_ULONG last_handle;
 	Proxy *px;
 } State;
@@ -2243,17 +2243,18 @@ static CK_X_FUNCTION_LIST proxy_functions = {
 	proxy_C_MessageVerifyFinal
 };
 
+static const char p11_interface_name[] = "PKCS 11";
+
 static int
-get_function_list_inlock(void **list, const CK_VERSION *version)
+get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLAGS flags)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
 	CK_FUNCTION_LIST **loaded = NULL;
 	State *state;
-	int flags = P11_KIT_MODULE_LOADED_FROM_PROXY;
 	int rv;
 
 	/* WARNING: Reentrancy can occur here */
-	rv = p11_modules_load_inlock_reentrant (flags, &loaded);
+	rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
 	if (rv == CKR_OK) {
 		state = calloc (1, sizeof (State));
 		if (!state) {
@@ -2275,7 +2276,9 @@ get_function_list_inlock(void **list, const CK_VERSION *version)
 			} else {
 				if (version)
 					module->version = *version;
-				state->wrapped = module;
+				state->wrapped.pInterfaceName = (char *)p11_interface_name;
+				state->wrapped.pFunctionList = module;
+				state->wrapped.flags = flags;
 				state->next = all_instances;
 				all_instances = state;
 			}
@@ -2283,7 +2286,7 @@ get_function_list_inlock(void **list, const CK_VERSION *version)
 	}
 
 	if (rv == CKR_OK)
-		*list = (void *)module;
+		*interface = &state->wrapped;
 
 	if (loaded)
 		p11_kit_modules_release (loaded);
@@ -2295,31 +2298,6 @@ static const CK_VERSION version_two = {CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_L
 
 /* We are not going to support any special interfaces */
 #define NUM_INTERFACES 2
-#define DEFAULT_INTERFACE 0
-CK_INTERFACE interfaces[NUM_INTERFACES] = {
-        {"PKCS 11", NULL, 0}, /* 3.0 */
-        {"PKCS 11", NULL, 0}  /* 2.4 */
-};
-
-static int
-init_interfaces (void)
-{
-	int rv;
-	void *res = NULL;
-
-	/* Version 3.0 is default */
-	rv = get_function_list_inlock (&res, NULL);
-	if (rv != CKR_OK)
-		return rv;
-	interfaces[0].pFunctionList = res;
-
-	rv = get_function_list_inlock (&res, &version_two);
-	if (rv != CKR_OK)
-		return rv;
-	interfaces[1].pFunctionList = res;
-
-	return CKR_OK;
-}
 
 #ifdef OS_WIN32
 __declspec(dllexport)
@@ -2328,14 +2306,14 @@ CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
 	CK_RV rv = CKR_OK;
-	void *res = NULL;
+	CK_INTERFACE *res = NULL;
 
 	p11_library_init_once ();
 	p11_lock ();
 
-	rv = get_function_list_inlock (&res, &version_two);
+	rv = get_interface_inlock (&res, &version_two, 0);
 	if (rv == CKR_OK)
-		*list = res;
+		*list = res->pFunctionList;
 
 	p11_unlock ();
 
@@ -2349,6 +2327,9 @@ CK_RV
 C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, CK_ULONG_PTR pulCount)
 {
 	CK_RV rv = CKR_OK;
+	CK_INTERFACE *interfaces[NUM_INTERFACES];
+	CK_ULONG count = 0;
+	CK_ULONG i;
 
 	if (pulCount == NULL_PTR)
 		return CKR_ARGUMENTS_BAD;
@@ -2366,12 +2347,19 @@ C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, CK_ULONG_PTR pulCount)
 	p11_library_init_once ();
 	p11_lock ();
 
-	rv = init_interfaces ();
-	if (rv == CKR_OK) {
-		memcpy (pInterfacesList, interfaces, NUM_INTERFACES * sizeof(CK_INTERFACE));
-		*pulCount = NUM_INTERFACES;
-	}
+	rv = get_interface_inlock (&interfaces[count++], NULL, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
 
+	rv = get_interface_inlock (&interfaces[count++], &version_two, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	for (i = 0; i < count; i++)
+		pInterfacesList[i] = *interfaces[i];
+	*pulCount = count;
+
+ cleanup:
 	p11_unlock ();
 
 	return rv;
@@ -2384,51 +2372,25 @@ CK_RV
 C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
                 CK_INTERFACE_PTR_PTR ppInterface, CK_FLAGS flags)
 {
-	int i;
-	int rv = CKR_ARGUMENTS_BAD;
+	int rv;
 
 	if (ppInterface == NULL) {
+		return CKR_ARGUMENTS_BAD;
+	}
+
+	if (pInterfaceName &&
+	    strcmp ((const char *)pInterfaceName, p11_interface_name) != 0) {
 		return CKR_ARGUMENTS_BAD;
 	}
 
 	p11_library_init_once ();
 	p11_lock ();
 
-	rv = init_interfaces ();
-	if (rv != CKR_OK) {
-		p11_unlock ();
-		return rv;
-	}
+	if (pVersion->major == CRYPTOKI_VERSION_MAJOR &&
+	    pVersion->minor == CRYPTOKI_VERSION_MINOR)
+		pVersion = NULL;
 
-	if (pInterfaceName == NULL_PTR) {
-		/* return default interface */
-		*ppInterface = &interfaces[DEFAULT_INTERFACE];
-		p11_unlock ();
-		return CKR_OK;
-	}
-
-	rv = CKR_ARGUMENTS_BAD;
-	for (i = 0; i < NUM_INTERFACES; i++) {
-		/* Version is the first member of CK_FUNCTION_LIST */
-		CK_VERSION_PTR interface_version = (CK_VERSION_PTR)interfaces[i].pFunctionList;
-
-		/* The interface name is not null here */
-		if (strcmp ((char *)pInterfaceName, interfaces[i].pInterfaceName) != 0) {
-			continue;
-		}
-		/* If version is not null, it must match */
-		if (pVersion != NULL_PTR && (pVersion->major != interface_version->major ||
-		                             pVersion->minor != interface_version->minor)) {
-			continue;
-		}
-		/* If any flags specified, it must be supported by the interface */
-		if ((flags & interfaces[i].flags) != flags) {
-			continue;
-		}
-		*ppInterface = &interfaces[i];
-		rv = CKR_OK;
-		break;
-	}
+	rv = get_interface_inlock (ppInterface, pVersion, flags);
 
 	p11_unlock ();
 
@@ -2446,7 +2408,7 @@ p11_proxy_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_kit_modules_release (state->loaded);
-		p11_virtual_unwrap (state->wrapped);
+		p11_virtual_unwrap (state->wrapped.pFunctionList);
 	}
 }
 
@@ -2461,7 +2423,7 @@ p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
 
 	p11_lock ();
 	for (state = all_instances; state != NULL; state = state->next)
-		if (state->wrapped == module) {
+		if (state->wrapped.pFunctionList == module) {
 			ret = true;
 			break;
 		}
@@ -2487,14 +2449,14 @@ p11_proxy_module_create (CK_FUNCTION_LIST_PTR *module,
 	p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
 	state->last_handle = FIRST_HANDLE;
 	state->loaded = modules_dup (modules);
-	state->wrapped = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
-	if (state->wrapped == NULL) {
+	state->wrapped.pFunctionList = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
+	if (state->wrapped.pFunctionList == NULL) {
 		p11_kit_modules_release (state->loaded);
 		free (state);
 		return CKR_GENERAL_ERROR;
 	}
 
-	*module = state->wrapped;
+	*module = state->wrapped.pFunctionList;
 
 	return rv;
 }
