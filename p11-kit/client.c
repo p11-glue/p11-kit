@@ -49,7 +49,7 @@
 typedef struct _State {
 	p11_virtual virt;
 	p11_rpc_transport *rpc;
-	CK_FUNCTION_LIST *wrapped;
+	CK_FUNCTION_LIST_3_0 *wrapped;
 	struct _State *next;
 } State;
 
@@ -140,7 +140,7 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 
 	if (rv == CKR_OK) {
 		*list = module;
-		state->wrapped = module;
+		state->wrapped = (CK_FUNCTION_LIST_3_0 *)module;
 		state->next = all_instances;
 		all_instances = state;
 	}
@@ -163,7 +163,7 @@ p11_client_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_rpc_transport_free (state->rpc);
-		p11_virtual_unwrap (state->wrapped);
+		p11_virtual_unwrap ((CK_FUNCTION_LIST *)state->wrapped);
 		free (state);
 	}
 }
