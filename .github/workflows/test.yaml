@@ -90,7 +90,7 @@ jobs:
           github-token: ${{ secrets.github_token }}
 
   macos:
-    runs-on: macos-11.0
+    runs-on: macos-12
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
