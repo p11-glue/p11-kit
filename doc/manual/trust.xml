@@ -42,6 +42,9 @@
 	<cmdsynopsis>
 		<command>trust dump</command>
 	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>trust check-format</command> /path/to/file.p11-kit...
+	</cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1 id="trust-description">
@@ -382,6 +385,27 @@ $ trust dump
 		</para>
 		</listitem>
 	</varlistentry>
+
+</refsect1>
+
+<refsect1 id="trust-check-format">
+	<title>Check Format</title>
+
+	<para>Check the format of .p11-kit files.</para>
+
+<programlisting>
+$ trust check-format /path/to/file.p11-kit...
+</programlisting>
+
+	<para>Administrators sometimes need to write a custom .p11-kit file to amend
+	the trust information. This is an error prone process as the file format is
+	mainly for machine processing. Administrators can use this command to check
+	whether a file has a correct .p11-kit format.</para>
+
+	<para>This command takes an arbitrary number of files as an input. Each file
+	is then analysed and any mismatch with the .p11-kit format is reported on the
+	standard error output. After the file is processed a check result is printed
+	on the standard output.</para>
 
 </refsect1>
 
