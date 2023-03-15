@@ -78,6 +78,7 @@ endif
 
 trust_sources = [
   'anchor.c',
+  'check-format.c',
   'parser.c',
   'persist.c',
   'digest.c',

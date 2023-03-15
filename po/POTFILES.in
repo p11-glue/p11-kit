@@ -15,6 +15,7 @@ p11-kit/rpc-transport.c
 p11-kit/server.c
 trust/anchor.c
 trust/builder.c
+trust/check-format.c
 trust/dump.c
 trust/enumerate.c
 trust/extract.c

@@ -113,6 +113,7 @@ trust_trust_SOURCES = \
 	trust/extract-cer.c \
 	trust/list.c trust/list.h \
 	trust/save.c trust/save.h \
+	trust/check-format.c trust/check-format.h \
 	trust/trust.c \
 	$(asn_h) \
 	$(NULL)
