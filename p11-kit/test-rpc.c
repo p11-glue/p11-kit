@@ -1418,7 +1418,7 @@ main (int argc,
 	p11_test (test_fork_and_reinitialize, "/rpc/fork-and-reinitialize");
 #endif
 
-	test_mock_add_tests ("/rpc");
+	test_mock_add_tests ("/rpc", NULL);
 
 	return  p11_test_run (argc, argv);
 }

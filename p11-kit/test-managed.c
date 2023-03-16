@@ -305,7 +305,7 @@ main (int argc,
 	p11_test (test_fork_and_reinitialize, "/managed/fork-and-reinitialize");
 #endif
 
-	test_mock_add_tests ("/managed");
+	test_mock_add_tests ("/managed", NULL);
 
 	p11_kit_be_quiet ();
 
