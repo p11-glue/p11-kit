@@ -433,9 +433,12 @@ test_virtual_LDADD = $(p11_kit_LIBS)
 
 check_LTLIBRARIES += \
 	mock-one.la \
+	mock-v3-one.la \
 	mock-two.la \
+	mock-v3-two.la \
 	mock-three.la \
 	mock-four.la \
+	mock-v3-four.la \
 	mock-five.la \
 	mock-seven.la \
 	mock-eight.la \
@@ -448,9 +451,19 @@ mock_one_la_LDFLAGS = \
 	-module -avoid-version -rpath /nowhere \
 	-no-undefined -export-symbols-regex 'C_GetFunctionList'
 
+mock_v3_one_la_SOURCES = p11-kit/mock-module-v3-ep.c
+mock_v3_one_la_LIBADD = $(mock_one_la_LIBADD)
+mock_v3_one_la_LDFLAGS = \
+	-module -avoid-version -rpath /nowhere \
+	-no-undefined -export-symbols-regex 'C_GetFunctionList|C_GetInterface'
+
 mock_two_la_SOURCES = p11-kit/mock-module-ep2.c
 mock_two_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_two_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_v3_two_la_SOURCES = p11-kit/mock-module-v3-ep2.c
+mock_v3_two_la_LDFLAGS = $(mock_v3_one_la_LDFLAGS)
+mock_v3_two_la_LIBADD = $(mock_v3_one_la_LIBADD)
 
 mock_three_la_SOURCES = $(mock_one_la_SOURCES)
 mock_three_la_LDFLAGS = $(mock_one_la_LDFLAGS)
@@ -459,6 +472,10 @@ mock_three_la_LIBADD = $(mock_one_la_LIBADD)
 mock_four_la_SOURCES = $(mock_one_la_SOURCES)
 mock_four_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_four_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_v3_four_la_SOURCES = $(mock_v3_one_la_SOURCES)
+mock_v3_four_la_LDFLAGS = $(mock_v3_one_la_LDFLAGS)
+mock_v3_four_la_LIBADD = $(mock_v3_one_la_LIBADD)
 
 mock_five_la_SOURCES = p11-kit/mock-module-ep3.c
 mock_five_la_LDFLAGS = $(mock_one_la_LDFLAGS)
