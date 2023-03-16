@@ -346,6 +346,7 @@ c_tests += \
 	test-modules \
 	test-deprecated \
 	test-proxy \
+	test-proxy3 \
 	test-iter \
 	test-rpc \
 	$(NULL)
@@ -380,6 +381,9 @@ test_progname_LDADD = $(p11_kit_LIBS)
 
 test_proxy_SOURCES = p11-kit/test-proxy.c
 test_proxy_LDADD = $(p11_kit_LIBS)
+
+test_proxy3_SOURCES = p11-kit/test-proxy3.c
+test_proxy3_LDADD = $(p11_kit_LIBS)
 
 test_rpc_SOURCES = p11-kit/test-rpc.c
 test_rpc_LDADD = $(p11_kit_LIBS)

@@ -233,6 +233,7 @@ if get_option('test')
     'test-modules',
     'test-deprecated',
     'test-proxy',
+    'test-proxy3',
     'test-iter',
     'test-rpc',
     'test-virtual',
