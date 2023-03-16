@@ -438,7 +438,7 @@ main (int argc,
 	p11_test (test_fork_and_reinitialize, "/transport/fork-and-reinitialize");
 #endif
 
-	test_mock_add_tests ("/transport");
+	test_mock_add_tests ("/transport", NULL);
 
 #ifdef OS_UNIX
 	p11_fixture (setup_remote_unix, teardown_remote_unix);
