@@ -60,6 +60,7 @@
 
 #include <assert.h>
 #include <dirent.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -276,8 +277,13 @@ loader_load_directory (p11_token *token,
 		return_val_if_fail (path != NULL, -1);
 
 		ret = loader_load_if_file (token, path);
-		if (ret >= 0)
-			total += ret;
+		if (ret >= 0) {
+			if (ret <= INT_MAX - total) {
+				total += ret;
+			} else {
+				p11_debug ("skipping: too many object to add from %s", directory);
+			}
+		}
 
 		/* Make note that this file was seen */
 		p11_dict_remove (present, path);
@@ -304,19 +310,19 @@ loader_load_path (p11_token *token,
 	p11_dict *present;
 	char *filename;
 	struct stat sb;
-	int total;
 	int ret;
+	int total = 0;
 
 	if (stat (path, &sb) < 0) {
 		if (errno != ENOENT)
 			p11_message_err (errno, _("cannot access trust certificate path: %s"), path);
 		loader_gone_file (token, path);
 		*is_dir = false;
-		ret = 0;
+		return 0;
+	}
 
-	} else if (S_ISDIR (sb.st_mode)) {
+	if (S_ISDIR (sb.st_mode)) {
 		*is_dir = true;
-		ret = 0;
 
 		/* All the files we know about at this path */
 		present = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, NULL);
@@ -330,16 +336,20 @@ loader_load_path (p11_token *token,
 
 		/* If the directory has changed, reload it */
 		if (loader_is_necessary (token, path, &sb)) {
-			ret = loader_load_directory (token, path, present);
+			total = loader_load_directory (token, path, present);
 
 		/* Directory didn't change, but maybe files changed? */
 		} else {
-			total = 0;
 			p11_dict_iterate (present, &iter);
 			while (p11_dict_next (&iter, (void **)&filename, NULL)) {
 				ret = loader_load_if_file (token, filename);
-				if (ret >= 0)
-					total += ret;
+				if (ret >= 0) {
+					if (ret <= INT_MAX - total) {
+						total += ret;
+					} else {
+						p11_debug ("skipping: too many object to add from %s", path);
+					}
+				}
 			}
 		}
 
@@ -348,10 +358,10 @@ loader_load_path (p11_token *token,
 
 	} else {
 		*is_dir = false;
-		ret = loader_load_file (token, path, &sb);
+		total = loader_load_file (token, path, &sb);
 	}
 
-	return ret;
+	return total;
 }
 
 static int
@@ -387,17 +397,35 @@ p11_token_load (p11_token *token)
 	int ret;
 
 	ret = loader_load_path (token, token->path, &is_dir);
-	if (ret >= 0)
-		total += ret;
+	if (ret >= 0) {
+		if (ret <= INT_MAX - total) {
+			total += ret;
+		} else {
+			p11_debug ("skipping: too many object to add from %s",
+				   token->path);
+		}
+	}
 
 	if (is_dir) {
 		ret = loader_load_path (token, token->anchors, &is_dir);
-		if (ret >= 0)
-			total += ret;
+		if (ret >= 0) {
+			if (ret <= INT_MAX - total) {
+				total += ret;
+			} else {
+				p11_debug ("skipping: too many object to add from %s",
+					   token->anchors);
+			}
+		}
 
 		ret = loader_load_path (token, token->blocklist, &is_dir);
-		if (ret >= 0)
-			total += ret;
+		if (ret >= 0) {
+			if (ret <= INT_MAX - total) {
+				total += ret;
+			} else {
+				p11_debug ("skipping: too many object to add from %s",
+					   token->blocklist);
+			}
+		}
 	}
 
 	return total;
