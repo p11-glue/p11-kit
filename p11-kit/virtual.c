@@ -63,7 +63,21 @@
  */
 #define LIBFFI_FREE_CLOSURES 0
 
+/*
+ * Work around for <ffitarget.h> on macOS 12 where it doesn't define
+ * necessary platform-dependent macros, such as FFI_GO_CLOSURES.
+ */
+#ifdef __APPLE__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundef"
+#endif
+
 #include "ffi.h"
+
+#ifdef __APPLE__
+#pragma clang diagnostic pop
+#endif
+
 #endif
 
 /* There are 90 functions in PKCS#11 3.0, with a maximum of 9 args */
