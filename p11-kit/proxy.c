@@ -2245,6 +2245,16 @@ static CK_X_FUNCTION_LIST proxy_functions = {
 
 static const char p11_interface_name[] = "PKCS 11";
 
+static const CK_VERSION version_two = {
+	CRYPTOKI_LEGACY_VERSION_MAJOR,
+	CRYPTOKI_LEGACY_VERSION_MINOR
+};
+
+static const CK_VERSION version_three = {
+	CRYPTOKI_VERSION_MAJOR,
+	CRYPTOKI_VERSION_MINOR
+};
+
 static int
 get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLAGS flags)
 {
@@ -2252,6 +2262,11 @@ get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLA
 	CK_FUNCTION_LIST **loaded = NULL;
 	State *state;
 	int rv;
+
+	if (version &&
+	    memcmp (version, &version_three, sizeof(*version)) != 0 &&
+	    memcmp (version, &version_two, sizeof(*version)) != 0)
+		return CKR_ARGUMENTS_BAD;
 
 	/* WARNING: Reentrancy can occur here */
 	rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
@@ -2293,8 +2308,6 @@ get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLA
 
 	return rv;
 }
-
-static const CK_VERSION version_two = {CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR};
 
 /* We are not going to support any special interfaces */
 #define NUM_INTERFACES 2
@@ -2386,8 +2399,8 @@ C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
 	p11_library_init_once ();
 	p11_lock ();
 
-	if (pVersion->major == CRYPTOKI_VERSION_MAJOR &&
-	    pVersion->minor == CRYPTOKI_VERSION_MINOR)
+	if (pVersion &&
+	    memcmp (pVersion, &version_three, sizeof(*pVersion)) == 0)
 		pVersion = NULL;
 
 	rv = get_interface_inlock (ppInterface, pVersion, flags);
