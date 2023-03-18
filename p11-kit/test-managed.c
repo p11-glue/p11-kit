@@ -162,6 +162,13 @@ test_initialize_fail (void)
 
 	rv = p11_kit_module_initialize (module);
 	assert (rv == CKR_FUNCTION_FAILED);
+
+	p11_lock ();
+
+	rv = p11_module_release_inlock_reentrant (module);
+	assert (rv == CKR_OK);
+
+	p11_unlock ();
 }
 
 static void
@@ -207,7 +214,12 @@ test_separate_close_all_sessions (void)
 	teardown_mock_module (second);
 }
 
+#if defined(WITH_FFI) && WITH_FFI
 #define MAX_MODS (P11_VIRTUAL_MAX_FIXED+10)
+#else
+#define MAX_MODS P11_VIRTUAL_MAX_FIXED
+#endif
+
 static void
 test_max_session_load (void)
 {
@@ -224,7 +236,7 @@ test_max_session_load (void)
 			registered++;
 	}
 
-	assert_num_cmp (registered + 1, >=, P11_VIRTUAL_MAX_FIXED);
+	assert_num_cmp (registered, ==, MAX_MODS);
 
 	for (i = 0; i < registered; i++) {
 		rv = list[i]->C_GetSessionInfo (s1, &info);
