@@ -414,12 +414,16 @@ c_tests += \
 	test-virtual \
 	test-managed \
 	test-log \
+	test-log3 \
 	test-filter \
 	test-transport \
 	$(NULL)
 
 test_log_SOURCES = p11-kit/test-log.c
 test_log_LDADD = $(p11_kit_LIBS)
+
+test_log3_SOURCES = p11-kit/test-log3.c
+test_log3_LDADD = $(p11_kit_LIBS)
 
 test_filter_SOURCES = p11-kit/test-filter.c
 test_filter_LDADD = $(p11_kit_LIBS)
