@@ -762,7 +762,7 @@ rpc_finalize (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_initialize (void)
+test_initialize (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
@@ -771,7 +771,7 @@ test_initialize (void)
 
 	/* Build up our own function list */
 	rpc_initialized = 0;
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -788,7 +788,7 @@ test_initialize (void)
 }
 
 static void
-test_not_initialized (void)
+test_not_initialized (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
@@ -798,7 +798,7 @@ test_not_initialized (void)
 
 	/* Build up our own function list */
 	rpc_initialized = 0;
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -810,7 +810,7 @@ test_not_initialized (void)
 }
 
 static void
-test_initialize_fails_on_client (void)
+test_initialize_fails_on_client (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize_fails, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
@@ -819,7 +819,7 @@ test_initialize_fails_on_client (void)
 
 	/* Build up our own function list */
 	rpc_initialized = 0;
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -840,7 +840,7 @@ rpc_transport_fails (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_fails (void)
+test_transport_fails (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_fails, rpc_finalize };
 	p11_virtual mixin;
@@ -849,7 +849,7 @@ test_transport_fails (void)
 
 	/* Build up our own function list */
 	rpc_initialized = 0;
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -862,7 +862,7 @@ test_transport_fails (void)
 }
 
 static void
-test_initialize_fails_on_server (void)
+test_initialize_fails_on_server (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport, rpc_finalize };
 	p11_virtual mixin;
@@ -870,7 +870,7 @@ test_initialize_fails_on_server (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 	base.funcs.C_Initialize = mock_X_Initialize__fails;
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
@@ -902,7 +902,7 @@ rpc_transport_bad_parse (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_bad_parse (void)
+test_transport_bad_parse (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_bad_parse, rpc_finalize };
 	p11_virtual mixin;
@@ -911,7 +911,7 @@ test_transport_bad_parse (void)
 
 	/* Build up our own function list */
 	rpc_initialized = 0;
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -950,7 +950,7 @@ rpc_transport_short_error (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_short_error (void)
+test_transport_short_error (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_short_error, rpc_finalize };
 	p11_virtual mixin;
@@ -958,7 +958,7 @@ test_transport_short_error (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -997,7 +997,7 @@ rpc_transport_invalid_error (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_invalid_error (void)
+test_transport_invalid_error (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_invalid_error, rpc_finalize };
 	p11_virtual mixin;
@@ -1005,7 +1005,7 @@ test_transport_invalid_error (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -1042,7 +1042,7 @@ rpc_transport_wrong_response (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_wrong_response (void)
+test_transport_wrong_response (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_wrong_response, rpc_finalize };
 	p11_virtual mixin;
@@ -1050,7 +1050,7 @@ test_transport_wrong_response (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -1089,7 +1089,7 @@ rpc_transport_bad_contents (p11_rpc_client_vtable *vtable,
 }
 
 static void
-test_transport_bad_contents (void)
+test_transport_bad_contents (void *module)
 {
 	p11_rpc_client_vtable vtable = { "vtable-data", rpc_initialize, rpc_authenticate, rpc_transport_bad_contents, rpc_finalize };
 	p11_virtual mixin;
@@ -1097,7 +1097,7 @@ test_transport_bad_contents (void)
 	CK_RV rv;
 
 	/* Build up our own function list */
-	p11_virtual_init (&base, &p11_virtual_base, &mock_module_no_slots, NULL);
+	p11_virtual_init (&base, &p11_virtual_base, module, NULL);
 
 	ret = p11_rpc_client_init (&mixin, &vtable);
 	assert_num_eq (true, ret);
@@ -1138,7 +1138,7 @@ mixin_free (void *data)
 
 static CK_FUNCTION_LIST_PTR
 setup_test_rpc_module (p11_rpc_client_vtable *vtable,
-                       CK_FUNCTION_LIST *module_template,
+                       CK_FUNCTION_LIST_3_0 *module_template,
                        CK_SESSION_HANDLE *session)
 {
 	CK_FUNCTION_LIST *rpc_module;
@@ -1173,7 +1173,7 @@ setup_test_rpc_module (p11_rpc_client_vtable *vtable,
 static CK_FUNCTION_LIST *
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
-	return setup_test_rpc_module (&test_normal_vtable, &mock_module, session);
+	return setup_test_rpc_module (&test_normal_vtable, &mock_module_v3, session);
 }
 
 static void
@@ -1184,7 +1184,7 @@ teardown_mock_module (CK_FUNCTION_LIST *rpc_module)
 }
 
 static void
-test_get_info_stand_in (void)
+test_get_info_stand_in (void *module)
 {
 	CK_FUNCTION_LIST_PTR rpc_module;
 	CK_INFO info;
@@ -1192,7 +1192,7 @@ test_get_info_stand_in (void)
 	char *string;
 
 	rpc_module = setup_test_rpc_module (&test_device_removed_vtable,
-	                                    &mock_module_no_slots, NULL);
+	                                    module, NULL);
 
 	rv = (rpc_module->C_GetInfo) (&info);
 	assert (rv == CKR_OK);
@@ -1213,7 +1213,7 @@ test_get_info_stand_in (void)
 }
 
 static void
-test_get_slot_list_no_device (void)
+test_get_slot_list_no_device (void *module)
 {
 	CK_FUNCTION_LIST_PTR rpc_module;
 	CK_SLOT_ID slot_list[8];
@@ -1221,7 +1221,7 @@ test_get_slot_list_no_device (void)
 	CK_RV rv;
 
 	rpc_module = setup_test_rpc_module (&test_device_removed_vtable,
-	                                    &mock_module_no_slots, NULL);
+	                                    module, NULL);
 
 	rv = (rpc_module->C_GetSlotList) (CK_TRUE, NULL, &count);
 	assert (rv == CKR_OK);
@@ -1276,9 +1276,9 @@ delayed_C_GetInfo (CK_INFO_PTR info)
 }
 
 static void
-test_simultaneous_functions (void)
+test_simultaneous_functions (void *module)
 {
-	CK_FUNCTION_LIST real_module;
+	CK_FUNCTION_LIST_3_0 real_module;
 	CK_FUNCTION_LIST *rpc_module;
 	const int num_threads = 128;
 	p11_thread_t threads[num_threads];
@@ -1286,7 +1286,7 @@ test_simultaneous_functions (void)
 
 	p11_mutex_init (&delay_mutex);
 
-	memcpy (&real_module, &mock_module_no_slots, sizeof (CK_FUNCTION_LIST));
+	memcpy (&real_module, module, sizeof (CK_FUNCTION_LIST));
 	real_module.C_GetInfo = delayed_C_GetInfo;
 
 	rpc_module = setup_test_rpc_module (&test_normal_vtable,
@@ -1313,7 +1313,7 @@ test_simultaneous_functions (void)
 #ifdef OS_UNIX
 
 static void
-test_fork_and_reinitialize (void)
+test_fork_and_reinitialize (void *module)
 {
 	CK_FUNCTION_LIST *rpc_module;
 	CK_INFO info;
@@ -1323,7 +1323,7 @@ test_fork_and_reinitialize (void)
 	int i;
 
 	rpc_module = setup_test_rpc_module (&test_normal_vtable,
-	                                    &mock_module_no_slots, NULL);
+	                                    module, NULL);
 
 	pid = fork ();
 	assert_num_cmp (pid, >=, 0);
@@ -1359,20 +1359,22 @@ test_fork_and_reinitialize (void)
 
 #include "test-mock.c"
 
+static const CK_VERSION test_version_three = {CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR};
+
+static CK_MECHANISM_TYPE mechanisms[] = {
+	CKM_MOCK_CAPITALIZE,
+	CKM_MOCK_PREFIX,
+	CKM_MOCK_GENERATE,
+	CKM_MOCK_WRAP,
+	CKM_MOCK_DERIVE,
+	CKM_MOCK_COUNT,
+	0,
+};
+
 int
 main (int argc,
       char *argv[])
 {
-	CK_MECHANISM_TYPE mechanisms[] = {
-		CKM_MOCK_CAPITALIZE,
-		CKM_MOCK_PREFIX,
-		CKM_MOCK_GENERATE,
-		CKM_MOCK_WRAP,
-		CKM_MOCK_DERIVE,
-		CKM_MOCK_COUNT,
-		0,
-	};
-
 	mock_module_init ();
 	p11_library_init ();
 
@@ -1400,25 +1402,44 @@ main (int argc,
 	p11_test (test_mechanism_value, "/rpc/mechanism-value");
 	p11_test (test_message_write, "/rpc/message-write");
 
-	p11_test (test_initialize_fails_on_client, "/rpc/initialize-fails-on-client");
-	p11_test (test_initialize_fails_on_server, "/rpc/initialize-fails-on-server");
-	p11_test (test_initialize, "/rpc/initialize");
-	p11_test (test_not_initialized, "/rpc/not-initialized");
-	p11_test (test_transport_fails, "/rpc/transport-fails");
-	p11_test (test_transport_bad_parse, "/rpc/transport-bad-parse");
-	p11_test (test_transport_short_error, "/rpc/transport-short-error");
-	p11_test (test_transport_invalid_error, "/rpc/transport-invalid-error");
-	p11_test (test_transport_wrong_response, "/rpc/transport-wrong-response");
-	p11_test (test_transport_bad_contents, "/rpc/transport-bad-contents");
-	p11_test (test_get_info_stand_in, "/rpc/get-info-stand-in");
-	p11_test (test_get_slot_list_no_device, "/rpc/get-slot-list-no-device");
-	p11_test (test_simultaneous_functions, "/rpc/simultaneous-functions");
+	p11_testx (test_initialize_fails_on_client, &mock_module_no_slots, "/rpc/initialize-fails-on-client");
+	p11_testx (test_initialize_fails_on_server, &mock_module_no_slots, "/rpc/initialize-fails-on-server");
+	p11_testx (test_initialize, &mock_module_no_slots, "/rpc/initialize");
+	p11_testx (test_not_initialized, &mock_module_no_slots, "/rpc/not-initialized");
+	p11_testx (test_transport_fails, &mock_module_no_slots, "/rpc/transport-fails");
+	p11_testx (test_transport_bad_parse, &mock_module_no_slots, "/rpc/transport-bad-parse");
+	p11_testx (test_transport_short_error, &mock_module_no_slots, "/rpc/transport-short-error");
+	p11_testx (test_transport_invalid_error, &mock_module_no_slots, "/rpc/transport-invalid-error");
+	p11_testx (test_transport_wrong_response, &mock_module_no_slots, "/rpc/transport-wrong-response");
+	p11_testx (test_transport_bad_contents, &mock_module_no_slots, "/rpc/transport-bad-contents");
+	p11_testx (test_get_info_stand_in, &mock_module_no_slots, "/rpc/get-info-stand-in");
+	p11_testx (test_get_slot_list_no_device, &mock_module_no_slots, "/rpc/get-slot-list-no-device");
+	p11_testx (test_simultaneous_functions, &mock_module_no_slots, "/rpc/simultaneous-functions");
 
 #ifdef OS_UNIX
-	p11_test (test_fork_and_reinitialize, "/rpc/fork-and-reinitialize");
+	p11_testx (test_fork_and_reinitialize, &mock_module_no_slots, "/rpc/fork-and-reinitialize");
 #endif
 
-	test_mock_add_tests ("/rpc", NULL);
+	/* PKCS #11 3.0 tests */
+	p11_testx (test_initialize_fails_on_client, &mock_module_v3_no_slots, "/rpc3/initialize-fails-on-client");
+	p11_testx (test_initialize_fails_on_server, &mock_module_v3_no_slots, "/rpc3/initialize-fails-on-server");
+	p11_testx (test_initialize, &mock_module_v3_no_slots, "/rpc3/initialize");
+	p11_testx (test_not_initialized, &mock_module_v3_no_slots, "/rpc3/not-initialized");
+	p11_testx (test_transport_fails, &mock_module_v3_no_slots, "/rpc3/transport-fails");
+	p11_testx (test_transport_bad_parse, &mock_module_v3_no_slots, "/rpc3/transport-bad-parse");
+	p11_testx (test_transport_short_error, &mock_module_v3_no_slots, "/rpc3/transport-short-error");
+	p11_testx (test_transport_invalid_error, &mock_module_v3_no_slots, "/rpc3/transport-invalid-error");
+	p11_testx (test_transport_wrong_response, &mock_module_v3_no_slots, "/rpc3/transport-wrong-response");
+	p11_testx (test_transport_bad_contents, &mock_module_v3_no_slots, "/rpc3/transport-bad-contents");
+	p11_testx (test_get_info_stand_in, &mock_module_v3_no_slots, "/rpc3/get-info-stand-in");
+	p11_testx (test_get_slot_list_no_device, &mock_module_v3_no_slots, "/rpc3/get-slot-list-no-device");
+	p11_testx (test_simultaneous_functions, &mock_module_v3_no_slots, "/rpc3/simultaneous-functions");
+
+#ifdef OS_UNIX
+	p11_testx (test_fork_and_reinitialize, &mock_module_v3_no_slots, "/rpc3/fork-and-reinitialize");
+#endif
+
+	test_mock_add_tests ("/rpc3", &test_version_three);
 
 	return  p11_test_run (argc, argv);
 }
