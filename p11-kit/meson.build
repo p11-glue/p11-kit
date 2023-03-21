@@ -91,7 +91,6 @@ p11_module_symbol_map = meson.current_source_dir() / 'p11-module.map'
 p11_module_ldflags = cc.get_supported_link_arguments([
   '-Wl,--version-script,' + p11_module_symbol_map
 ])
-p11_module_symbol_def = meson.current_source_dir() / 'p11-module.def'
 
 if host_system != 'windows'
   shared_module('p11-kit-client',
@@ -100,10 +99,8 @@ if host_system != 'windows'
                 include_directories: [configinc, commoninc],
                 dependencies: dlopen_deps,
                 link_args: p11_module_ldflags,
-                link_depends: [p11_module_symbol_map,
-                               p11_module_symbol_def],
+                link_depends: [p11_module_symbol_map],
                 link_with: [libp11_kit_internal],
-                vs_module_defs: p11_module_symbol_def,
                 install: true,
                 install_dir: p11_module_path)
 endif
@@ -309,9 +306,7 @@ if get_option('test')
                   sources,
                   name_prefix: '',
                   link_args: p11_module_ldflags,
-                  link_depends: [p11_module_symbol_map,
-                                 p11_module_symbol_def],
-                  vs_module_defs: p11_module_symbol_def,
+                  link_depends: [p11_module_symbol_map],
                   dependencies: [libp11_test_dep])
   endforeach
 endif

@@ -58,10 +58,8 @@ shared_module('p11-kit-trust',
               c_args: p11_kit_trust_c_args,
               dependencies: [asn_h_dep, libp11_library_dep] + dlopen_deps + libtasn1_deps,
               link_args: p11_module_ldflags,
-              link_depends: [p11_module_symbol_map,
-                             p11_module_symbol_def],
+              link_depends: [p11_module_symbol_map],
               link_with: libtrust_data,
-              vs_module_defs: p11_module_symbol_def,
               install: true,
               install_dir: prefix / p11_module_path)
 
