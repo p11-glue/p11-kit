@@ -421,6 +421,7 @@ c_tests += \
 	test-log3 \
 	test-filter \
 	test-transport \
+	test-transport3 \
 	$(NULL)
 
 test_log_SOURCES = p11-kit/test-log.c
@@ -438,6 +439,10 @@ test_managed_LDADD = $(p11_kit_LIBS)
 test_transport_SOURCES = p11-kit/test-transport.c
 test_transport_LDADD = $(p11_kit_LIBS)
 test_transport_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
+
+test_transport3_SOURCES = p11-kit/test-transport3.c
+test_transport3_LDADD = $(p11_kit_LIBS)
+test_transport3_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
@@ -518,6 +523,7 @@ mock_ten_la_LIBADD = $(mock_one_la_LIBADD)
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/test-mock.c \
+	p11-kit/test-transport-base.c \
 	p11-kit/test-messages.sh \
 	p11-kit/test-server.sh \
 	$(NULL)

@@ -242,7 +242,8 @@ if get_option('test')
     'test-log',
     'test-log3',
     'test-filter',
-    'test-transport'
+    'test-transport',
+    'test-transport3'
   ]
 
   if host_system != 'windows'

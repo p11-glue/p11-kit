@@ -30,11 +30,16 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stef@thewalter.net>
+ * Authors: Stef Walter <stef@thewalter.net>
+ *          Jakub Jelen <jjelen@redhat.com>
  */
 
-#define MOCK_MODULE_TWO "mock-two"
-#define TEST_PREFIX "/transport"
-#define TEST_VERSION NULL
+#include "p11-kit.h"
+
+#define MOCK_MODULE_TWO "mock-v3-two"
+#define TEST_PREFIX "/transport3"
+#define TEST_VERSION &test_version_three
+
+static const CK_VERSION test_version_three = {CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR};
 
 #include "test-transport-base.c"
