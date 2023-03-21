@@ -239,6 +239,7 @@ if get_option('test')
     'test-virtual',
     'test-managed',
     'test-log',
+    'test-log3',
     'test-filter',
     'test-transport'
   ]
