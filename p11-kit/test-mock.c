@@ -2557,7 +2557,7 @@ test_pkcs11_3_not_supported (void)
 }
 
 static void
-test_mock_add_tests (const char *prefix, CK_VERSION *version)
+test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 {
 	p11_fixture (NULL, NULL);
 	p11_test (test_get_info, "%s/test_get_info", prefix);
