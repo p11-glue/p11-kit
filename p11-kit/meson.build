@@ -236,6 +236,7 @@ if get_option('test')
     'test-proxy3',
     'test-iter',
     'test-rpc',
+    'test-rpc-message',
     'test-virtual',
     'test-managed',
     'test-log',
