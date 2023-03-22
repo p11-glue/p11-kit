@@ -349,6 +349,7 @@ c_tests += \
 	test-proxy3 \
 	test-iter \
 	test-rpc \
+	test-rpc-message \
 	$(NULL)
 
 if !OS_WIN32
@@ -387,6 +388,9 @@ test_proxy3_LDADD = $(p11_kit_LIBS)
 
 test_rpc_SOURCES = p11-kit/test-rpc.c
 test_rpc_LDADD = $(p11_kit_LIBS)
+
+test_rpc_message_SOURCES = p11-kit/test-rpc-message.c
+test_rpc_message_LDADD = $(p11_kit_LIBS)
 
 test_server_SOURCES = p11-kit/test-server.c
 test_server_LDADD = $(p11_kit_LIBS)
