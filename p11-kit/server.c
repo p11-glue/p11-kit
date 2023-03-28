@@ -60,6 +60,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef WITH_SYSTEMD
@@ -303,6 +304,7 @@ create_unix_socket (const char *address,
 	int rc, sd;
 	struct sockaddr_un sa;
 	const char *socket_file;
+	mode_t socket_mask;
 
 	memset (&sa, 0, sizeof(sa));
 	sa.sun_family = AF_UNIX;
@@ -319,7 +321,10 @@ create_unix_socket (const char *address,
 		return -1;
 	}
 
-	umask (066);
+	socket_mask = S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+	if (gid != -1)
+		socket_mask &= ~(S_IRGRP | S_IWGRP);
+	umask (socket_mask);
 	rc = bind (sd, (struct sockaddr *)&sa, SUN_LEN (&sa));
 	if (rc == -1) {
 		close (sd);
@@ -334,7 +339,7 @@ create_unix_socket (const char *address,
 		return 1;
 	}
 
-	if (uid != -1 && gid != -1) {
+	if (uid != -1 || gid != -1) {
 		rc = chown (socket_file, uid, gid);
 		if (rc == -1) {
 			close (sd);
