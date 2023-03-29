@@ -215,9 +215,11 @@ extern "C" {
 #define string_data pData
 #define string_data_len ulLen
 #define data_params pData
+
+#define ck_profile_id CK_PROFILE_ID
 #endif	/* CRYPTOKI_COMPAT */
 
-
+typedef unsigned long ck_profile_id;
 
 typedef unsigned long ck_flags_t;
 
@@ -358,6 +360,14 @@ typedef unsigned long ck_object_class_t;
 #define CKO_PROFILE		(9UL)
 #define CKO_VENDOR_DEFINED	((unsigned long) (1UL << 31))
 
+
+/* Profiles from PKCS #11 3.0 */
+#define CKP_INVALID_ID                (0UL)
+#define CKP_BASELINE_PROVIDER         (1UL)
+#define CKP_EXTENDED_PROVIDER         (2UL)
+#define CKP_AUTHENTICATION_TOKEN      (3UL)
+#define CKP_PUBLIC_CERTIFICATES_TOKEN (4UL)
+#define CKP_VENDOR_DEFINED            (1UL << 31)
 
 typedef unsigned long ck_hw_feature_type_t;
 
@@ -1953,6 +1963,7 @@ typedef struct ck_aes_cbc_encrypt_data_params *CK_AES_CBC_ENCRYPT_DATA_PARAMS_PT
 #undef unlock_mutex
 #undef reserved
 
+#undef ck_profile_id
 #endif	/* CRYPTOKI_COMPAT */
 
 
