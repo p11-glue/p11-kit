@@ -201,13 +201,17 @@ extern "C" {
 #define source_data pSourceData
 #define source_data_len ulSourceDataLen
 
+#define ck_generator_function_t CK_GENERATOR_FUNCTION
 #define counter_bits ulCounterBits
 #define iv_ptr pIv
 #define iv_len ulIvLen
 #define iv_bits ulIvBits
+#define iv_fixed_bits ulIvFixedBits
+#define iv_generator ivGenerator
 #define aad_ptr pAAD
 #define aad_len ulAADLen
 #define tag_bits ulTagBits
+#define tag_ptr pTag
 #define shared_data_len ulSharedDataLen
 #define shared_data pSharedData
 #define public_data_len ulPublicDataLen
@@ -1011,6 +1015,16 @@ struct ck_gcm_params {
   unsigned long tag_bits;
 };
 
+typedef unsigned long ck_generator_function_t;
+
+struct ck_gcm_message_params {
+	unsigned char *iv_ptr;
+	unsigned long iv_len;
+	unsigned long iv_fixed_bits;
+	ck_generator_function_t iv_generator;
+	unsigned char *tag_ptr;
+	unsigned long tag_bits;
+};
 
 /* The following EC Key Derivation Functions are defined */
 #define CKD_NULL			(0x01UL)
@@ -1920,7 +1934,6 @@ typedef struct ck_aes_cbc_encrypt_data_params *CK_AES_CBC_ENCRYPT_DATA_PARAMS_PT
 #undef value
 #undef value_len
 
-#undef params
 #undef count
 
 #undef ck_date
@@ -1931,15 +1944,16 @@ typedef struct ck_aes_cbc_encrypt_data_params *CK_AES_CBC_ENCRYPT_DATA_PARAMS_PT
 #undef parameter
 #undef parameter_len
 
+#undef params
+
 #undef ck_mechanism_info
+#undef min_key_size
+#undef max_key_size
 
 #undef ck_param_type
 #undef ck_otp_param
 #undef ck_otp_params
 #undef ck_otp_signature_info
-
-#undef min_key_size
-#undef max_key_size
 
 #undef ck_rv_t
 #undef ck_notify_t
@@ -1962,6 +1976,32 @@ typedef struct ck_aes_cbc_encrypt_data_params *CK_AES_CBC_ENCRYPT_DATA_PARAMS_PT
 #undef lock_mutex
 #undef unlock_mutex
 #undef reserved
+
+#undef ck_rsa_pkcs_mgf_type_t
+#undef ck_rsa_pkcs_oaep_source_type_t
+#undef hash_alg
+#undef s_len
+#undef source_data
+#undef source_data_len
+
+#undef ck_generator_function_t
+#undef counter_bits
+#undef iv_ptr
+#undef iv_len
+#undef iv_bits
+#undef iv_fixed_bits
+#undef iv_generator
+#undef aad_ptr
+#undef aad_len
+#undef tag_bits
+#undef tag_ptr
+#undef shared_data_len
+#undef shared_data
+#undef public_data_len
+#undef public_data
+#undef string_data
+#undef string_data_len
+#undef data_params
 
 #undef ck_profile_id
 #endif	/* CRYPTOKI_COMPAT */
