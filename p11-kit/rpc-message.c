@@ -1459,17 +1459,17 @@ p11_rpc_buffer_add_ecdh1_derive_mechanism_value (p11_buffer *buffer,
 
 	p11_rpc_buffer_add_uint64 (buffer, params.kdf);
 
-	/* parmas.shared_data can only be an array of CK_BYTE or
+	/* parmas.pSharedData can only be an array of CK_BYTE or
 	 * NULL */
 	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.shared_data,
-				       params.shared_data_len);
+				       (unsigned char *)params.pSharedData,
+				       params.ulSharedDataLen);
 
-	/* parmas.public_data can only be an array of CK_BYTE or
+	/* parmas.pPublicData can only be an array of CK_BYTE or
 	 * NULL */
 	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.public_data,
-				       params.public_data_len);
+				       (unsigned char *)params.pPublicData,
+				       params.ulPublicDataLen);
 }
 
 bool
@@ -1496,10 +1496,10 @@ p11_rpc_buffer_get_ecdh1_derive_mechanism_value (p11_buffer *buffer,
 		CK_ECDH1_DERIVE_PARAMS params;
 
 		params.kdf = val;
-		params.shared_data = (void *) data1;
-		params.shared_data_len = len1;
-		params.public_data = (void *) data2;
-		params.public_data_len = len2;
+		params.pSharedData = (void *) data1;
+		params.ulSharedDataLen = len1;
+		params.pPublicData = (void *) data2;
+		params.ulPublicDataLen = len2;
 
 		memcpy (value, &params, sizeof (CK_ECDH1_DERIVE_PARAMS));
 	}
@@ -1614,13 +1614,13 @@ p11_rpc_buffer_add_aes_ctr_mechanism_value (p11_buffer *buffer,
 
 	memcpy (&params, value, value_length);
 
-	/* Check if params.counter_bits can be converted to uint64_t. */
-	if (params.counter_bits > UINT64_MAX) {
+	/* Check if params.ulCounterBits can be converted to uint64_t. */
+	if (params.ulCounterBits > UINT64_MAX) {
 		p11_buffer_fail (buffer);
 		return;
 	}
 
-	p11_rpc_buffer_add_uint64 (buffer, params.counter_bits);
+	p11_rpc_buffer_add_uint64 (buffer, params.ulCounterBits);
 
 	p11_rpc_buffer_add_byte_array (buffer,
 				       (unsigned char *)params.cb,
