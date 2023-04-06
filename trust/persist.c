@@ -696,6 +696,8 @@ p11_persist_read (p11_persist *persist,
 				failed = !pem_to_attributes (&lexer, &attrs);
 			}
 			break;
+		default:
+			assert_not_reached ();
 		}
 
 		if (failed)
@@ -837,6 +839,8 @@ p11_persist_check (p11_persist *persist,
 				failed = true;
 			}
 			break;
+		default:
+			assert_not_reached ();
 		}
 	}
 

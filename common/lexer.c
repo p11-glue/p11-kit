@@ -118,6 +118,15 @@ p11_lexer_next (p11_lexer *lexer,
 					end += 1;
 				else
 					end = lexer->at + lexer->remaining;
+				/* Count newlines in the PEM block */
+				pos = lexer->at;
+				while (pos < end) {
+					pos = memchr (pos, '\n', end - pos);
+					if (!pos)
+						break;
+					lexer->line++;
+					pos++;
+				}
 				lexer->tok_type = TOK_PEM;
 				lexer->tok.pem.begin = lexer->at;
 				lexer->tok.pem.length = end - lexer->at;
@@ -141,6 +150,7 @@ p11_lexer_next (p11_lexer *lexer,
 			lexer->at = end;
 		} else {
 			assert ((end - lexer->at) + 1 <= lexer->remaining);
+			lexer->line++;
 			lexer->remaining -= (end - lexer->at) + 1;
 			lexer->at = end + 1;
 		}
@@ -220,18 +230,19 @@ p11_lexer_msg (p11_lexer *lexer,
 
 	switch (lexer->tok_type) {
 	case TOK_FIELD:
-		p11_message ("%s: %s: %s", lexer->filename,
+		p11_message ("%s:%zu: %s: %s", lexer->filename, lexer->line,
 		             lexer->tok.field.name, msg);
 		break;
 	case TOK_SECTION:
-		p11_message ("%s: [%s]: %s", lexer->filename,
+		p11_message ("%s:%zu: [%s]: %s", lexer->filename, lexer->line,
 		             lexer->tok.section.name, msg);
 		break;
 	case TOK_PEM:
-		p11_message ("%s: BEGIN ...: %s", lexer->filename, msg);
+		p11_message ("%s:%zu: BEGIN ...: %s", lexer->filename,
+			     lexer->line, msg);
 		break;
 	default:
-		p11_message ("%s: %s", lexer->filename, msg);
+		p11_message ("%s:%zu: %s", lexer->filename, lexer->line, msg);
 		break;
 	}
 
