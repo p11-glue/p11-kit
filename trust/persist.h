@@ -36,8 +36,10 @@
 #define P11_PERSIST_H_
 
 #include "array.h"
+#include "buffer.h"
 #include "compat.h"
 #include "dict.h"
+#include "pkcs11.h"
 
 #include <sys/types.h>
 
@@ -53,6 +55,11 @@ bool             p11_persist_read   (p11_persist *persist,
                                      const unsigned char *data,
                                      size_t length,
                                      p11_array *objects);
+
+bool             p11_persist_check  (p11_persist *persist,
+                                     const char *filename,
+                                     const unsigned char *data,
+                                     size_t length);
 
 bool             p11_persist_write  (p11_persist *persist,
                                      CK_ATTRIBUTE *object,
