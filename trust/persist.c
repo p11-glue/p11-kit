@@ -787,3 +787,60 @@ p11_persist_write (p11_persist *persist,
 	p11_buffer_add (buf, "\n", 1);
 	return p11_buffer_ok (buf);
 }
+
+bool
+p11_persist_check (p11_persist *persist,
+		   const char *filename,
+		   const unsigned char *data,
+		   size_t length)
+{
+	p11_lexer lexer;
+	CK_ATTRIBUTE *attrs;
+	bool failed;
+	bool skip;
+
+	return_val_if_fail (persist != NULL, false);
+
+	skip = false;
+	attrs = NULL;
+	failed = false;
+
+	p11_lexer_init (&lexer, filename, (const char *)data, length);
+	while (p11_lexer_next (&lexer, NULL)) {
+		switch (lexer.tok_type) {
+		case TOK_SECTION:
+			if (attrs)
+				p11_attrs_free (attrs);
+			attrs = NULL;
+			if (strcmp (lexer.tok.section.name, PERSIST_HEADER) != 0) {
+				p11_lexer_msg (&lexer, "unrecognized or invalid section header");
+				skip = true;
+			} else {
+				attrs = p11_attrs_build (NULL, NULL);
+				return_val_if_fail (attrs != NULL, false);
+				skip = false;
+			}
+			break;
+		case TOK_FIELD:
+			if (!skip && !attrs) {
+				p11_lexer_msg (&lexer, "attribute before p11-kit section header");
+				failed = true;
+			} else if (!field_to_attribute (persist, &lexer, &attrs)) {
+				failed = true;
+			}
+			break;
+		case TOK_PEM:
+			if (!skip && !attrs) {
+				p11_lexer_msg (&lexer, "pem block before p11-kit section header");
+				failed = true;
+			} else if (!pem_to_attributes (&lexer, &attrs)) {
+				failed = true;
+			}
+			break;
+		}
+	}
+
+	p11_attrs_free (attrs);
+	p11_lexer_done (&lexer);
+	return !failed;
+}
