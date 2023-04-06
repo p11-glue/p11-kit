@@ -379,6 +379,16 @@ int        fdwalk           (int (* cb) (void *data, int fd),
 
 #endif
 
+#ifdef HAVE_ISATTY
+
+#include <unistd.h>
+
+#else
+
+int        isatty           (int fd);
+
+#endif /* HAVE_ISATTY */
+
 /* If either locale_t or newlocale() is not available, strerror_l()
  * cannot be used */
 #if !defined(HAVE_LOCALE_T) || !defined(HAVE_NEWLOCALE)

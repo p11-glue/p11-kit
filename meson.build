@@ -180,6 +180,7 @@ if host_system != 'windows'
     'getpeerucred',
     'getprogname',
     'getresuid',
+    'isatty',
     'issetugid',
     'mkdtemp',
     'mkstemp',

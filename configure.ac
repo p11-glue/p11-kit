@@ -142,6 +142,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getpeereid])
 	AC_CHECK_FUNCS([getpeerucred])
 	AC_CHECK_FUNCS([issetugid])
+	AC_CHECK_FUNCS([isatty])
 
 	AC_CACHE_CHECK([for thread-local storage class],
 		[ac_cv_tls_keyword],

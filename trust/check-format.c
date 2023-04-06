@@ -47,7 +47,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #ifdef ENABLE_NLS
 #include <libintl.h>
