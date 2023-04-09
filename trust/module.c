@@ -451,8 +451,8 @@ sys_C_GetInfo (CK_INFO_PTR info)
 
 	if (rv == CKR_OK) {
 		memset (info, 0, sizeof (*info));
-		info->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
-		info->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
+		info->cryptokiVersion.major = CRYPTOKI_LEGACY_VERSION_MAJOR;
+		info->cryptokiVersion.minor = CRYPTOKI_LEGACY_VERSION_MINOR;
 		info->libraryVersion.major = PACKAGE_MAJOR;
 		info->libraryVersion.minor = PACKAGE_MINOR;
 		info->flags = 0;
@@ -1761,7 +1761,7 @@ sys_C_GenerateRandom (CK_SESSION_HANDLE handle,
  */
 
 static CK_FUNCTION_LIST sys_function_list = {
-	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
+	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },  /* version */
 	sys_C_Initialize,
 	sys_C_Finalize,
 	sys_C_GetInfo,
