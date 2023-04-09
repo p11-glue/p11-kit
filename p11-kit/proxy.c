@@ -2255,62 +2255,81 @@ static const CK_VERSION version_three = {
 	CRYPTOKI_VERSION_MINOR
 };
 
-static int
+/* We are not going to support any special interfaces */
+#define NUM_INTERFACES 2
+
+static CK_RV
 get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLAGS flags)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
 	CK_FUNCTION_LIST **loaded = NULL;
-	State *state;
-	int rv;
+	State *state = NULL;
+	CK_RV rv;
 
-	if (version &&
-	    memcmp (version, &version_three, sizeof(*version)) != 0 &&
+	return_val_if_fail (interface, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (version, CKR_ARGUMENTS_BAD);
+
+	if (memcmp (version, &version_three, sizeof(*version)) != 0 &&
 	    memcmp (version, &version_two, sizeof(*version)) != 0)
 		return CKR_ARGUMENTS_BAD;
 
 	/* WARNING: Reentrancy can occur here */
 	rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
-	if (rv == CKR_OK) {
-		state = calloc (1, sizeof (State));
-		if (!state) {
-			rv = CKR_HOST_MEMORY;
+	if (rv != CKR_OK)
+		goto cleanup;
 
-		} else {
-			p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
-			if (version) {
-				state->virt.funcs.version = *version;
-			}
-			state->last_handle = FIRST_HANDLE;
-			state->loaded = loaded;
-			loaded = NULL;
-
-			module = p11_virtual_wrap (&state->virt, free);
-			if (module == NULL) {
-				rv = CKR_GENERAL_ERROR;
-
-			} else {
-				if (version)
-					module->version = *version;
-				state->wrapped.pInterfaceName = (char *)p11_interface_name;
-				state->wrapped.pFunctionList = module;
-				state->wrapped.flags = flags;
-				state->next = all_instances;
-				all_instances = state;
-			}
-		}
+	state = calloc (1, sizeof (State));
+	if (!state) {
+		rv = CKR_HOST_MEMORY;
+		goto cleanup;
 	}
 
-	if (rv == CKR_OK)
-		*interface = &state->wrapped;
+	p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
 
+	state->last_handle = FIRST_HANDLE;
+
+	state->loaded = loaded;
+	loaded = NULL;
+
+	/* Version must be set before calling p11_virtual_wrap, as it
+	 * is used to determine which functions are wrapped with
+	 * libffi closure.
+	 */
+	state->virt.funcs.version = *version;
+
+	module = p11_virtual_wrap (&state->virt, free);
+	if (module == NULL) {
+		rv = CKR_GENERAL_ERROR;
+		goto cleanup;
+	}
+
+	module->version = *version;
+
+	state->wrapped.pInterfaceName = (char *)p11_interface_name;
+
+	state->wrapped.pFunctionList = module;
+	module = NULL;
+
+	state->wrapped.flags = flags;
+
+	*interface = &state->wrapped;
+
+	state->next = all_instances;
+	all_instances = state;
+	state = NULL;
+
+ cleanup:
+	if (module)
+		p11_virtual_unwrap (module);
 	if (loaded)
 		p11_kit_modules_release (loaded);
-
+	if (state) {
+		p11_virtual_unwrap (state->wrapped.pFunctionList);
+		p11_kit_modules_release (state->loaded);
+		free (state);
+	}
 	return rv;
 }
-
-/* We are not going to support any special interfaces */
-#define NUM_INTERFACES 2
 
 #ifdef OS_WIN32
 __declspec(dllexport)
@@ -2360,7 +2379,7 @@ C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, CK_ULONG_PTR pulCount)
 	p11_library_init_once ();
 	p11_lock ();
 
-	rv = get_interface_inlock (&interfaces[count++], NULL, 0);
+	rv = get_interface_inlock (&interfaces[count++], &version_three, 0);
 	if (rv != CKR_OK)
 		goto cleanup;
 
@@ -2399,11 +2418,9 @@ C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
 	p11_library_init_once ();
 	p11_lock ();
 
-	if (pVersion &&
-	    memcmp (pVersion, &version_three, sizeof(*pVersion)) == 0)
-		pVersion = NULL;
-
-	rv = get_interface_inlock (ppInterface, pVersion, flags);
+	rv = get_interface_inlock (ppInterface,
+				   pVersion ? pVersion : &version_three,
+				   flags);
 
 	p11_unlock ();
 
