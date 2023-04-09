@@ -36,6 +36,7 @@
 
 #include "client.h"
 #include "compat.h"
+#include "debug.h"
 #include "library.h"
 #include "runtime.h"
 #include "path.h"
@@ -49,7 +50,7 @@
 typedef struct _State {
 	p11_virtual virt;
 	p11_rpc_transport *rpc;
-	CK_FUNCTION_LIST_3_0 *wrapped;
+	CK_INTERFACE wrapped;
 	struct _State *next;
 } State;
 
@@ -97,57 +98,184 @@ get_server_address (char **addressp)
 	return CKR_OK;
 }
 
+static const char p11_interface_name[] = "PKCS 11";
+
+static const CK_VERSION version_two = {
+	CRYPTOKI_LEGACY_VERSION_MAJOR,
+	CRYPTOKI_LEGACY_VERSION_MINOR
+};
+
+static const CK_VERSION version_three = {
+	CRYPTOKI_VERSION_MAJOR,
+	CRYPTOKI_VERSION_MINOR
+};
+
+/* We are not going to support any special interfaces */
+#define NUM_INTERFACES 2
+
+static CK_RV
+get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLAGS flags)
+{
+	char *address = NULL;
+	State *state = NULL;
+	CK_FUNCTION_LIST_PTR module = NULL;
+	CK_RV rv;
+
+	return_val_if_fail (interface, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (version, CKR_ARGUMENTS_BAD);
+
+	if (memcmp (version, &version_three, sizeof(*version)) != 0 &&
+	    memcmp (version, &version_two, sizeof(*version)) != 0)
+		return CKR_ARGUMENTS_BAD;
+
+	rv = get_server_address (&address);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	state = calloc (1, sizeof (State));
+	if (!state) {
+		rv = CKR_HOST_MEMORY;
+		goto cleanup;
+	}
+
+	state->rpc = p11_rpc_transport_new (&state->virt, address, "client");
+	if (!state->rpc) {
+		rv = CKR_GENERAL_ERROR;
+		goto cleanup;
+	}
+
+	/* Version must be set before calling p11_virtual_wrap, as it
+	 * is used to determine which functions are wrapped with
+	 * libffi closures.
+	 */
+	state->virt.funcs.version = *version;
+
+	module = p11_virtual_wrap (&state->virt,
+				   (p11_destroyer)p11_virtual_uninit);
+	if (!module) {
+		rv = CKR_GENERAL_ERROR;
+		goto cleanup;
+	}
+
+	module->version = *version;
+
+	state->wrapped.pInterfaceName = (char *)p11_interface_name;
+
+	state->wrapped.pFunctionList = (CK_FUNCTION_LIST_3_0 *)module;
+	module = NULL;
+
+	state->wrapped.flags = flags;
+
+	*interface = &state->wrapped;
+
+	state->next = all_instances;
+	all_instances = state;
+	state = NULL;
+
+ cleanup:
+	if (module)
+		p11_virtual_unwrap (module);
+	if (state) {
+		p11_virtual_unwrap (state->wrapped.pFunctionList);
+		p11_rpc_transport_free (state->rpc);
+		free (state);
+	}
+	free (address);
+	return rv;
+}
+
 #ifdef OS_WIN32
 __declspec(dllexport)
 #endif
 CK_RV
 C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 {
-	char *address = NULL;
-	State *state;
-	CK_FUNCTION_LIST_PTR module = NULL;
 	CK_RV rv = CKR_OK;
+	CK_INTERFACE *res = NULL;
 
 	p11_library_init_once ();
 	p11_lock ();
 
-	rv = get_server_address (&address);
-
-	if (rv == CKR_OK) {
-		state = calloc (1, sizeof (State));
-		if (!state)
-			rv = CKR_HOST_MEMORY;
-	}
-
-	if (rv == CKR_OK) {
-		state->rpc = p11_rpc_transport_new (&state->virt,
-						    address,
-						    "client");
-		if (!state->rpc) {
-			free (state);
-			rv = CKR_GENERAL_ERROR;
-		}
-	}
-
-	if (rv == CKR_OK) {
-		module = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
-		if (!module) {
-			p11_rpc_transport_free (state->rpc);
-			free (state);
-			rv = CKR_GENERAL_ERROR;
-		}
-	}
-
-	if (rv == CKR_OK) {
-		*list = module;
-		state->wrapped = (CK_FUNCTION_LIST_3_0 *)module;
-		state->next = all_instances;
-		all_instances = state;
-	}
+	rv = get_interface_inlock (&res, &version_two, 0);
+	if (rv == CKR_OK)
+		*list = res->pFunctionList;
 
 	p11_unlock ();
 
-	free (address);
+	return rv;
+}
+
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+CK_RV
+C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, CK_ULONG_PTR pulCount)
+{
+	CK_RV rv = CKR_OK;
+	CK_INTERFACE *interfaces[NUM_INTERFACES];
+	CK_ULONG count = 0;
+	CK_ULONG i;
+
+	if (pulCount == NULL_PTR)
+		return CKR_ARGUMENTS_BAD;
+
+	if (pInterfacesList == NULL_PTR) {
+		*pulCount = NUM_INTERFACES;
+		return CKR_OK;
+	}
+
+	if (*pulCount < NUM_INTERFACES) {
+		*pulCount = NUM_INTERFACES;
+		return CKR_BUFFER_TOO_SMALL;
+	}
+
+	p11_library_init_once ();
+	p11_lock ();
+
+	rv = get_interface_inlock (&interfaces[count++], &version_three, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	rv = get_interface_inlock (&interfaces[count++], &version_two, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	for (i = 0; i < count; i++)
+		pInterfacesList[i] = *interfaces[i];
+	*pulCount = count;
+
+ cleanup:
+	p11_unlock ();
+
+	return rv;
+}
+
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+CK_RV
+C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
+                CK_INTERFACE_PTR_PTR ppInterface, CK_FLAGS flags)
+{
+	int rv;
+
+	if (ppInterface == NULL) {
+		return CKR_ARGUMENTS_BAD;
+	}
+
+	if (pInterfaceName &&
+	    strcmp ((const char *)pInterfaceName, p11_interface_name) != 0) {
+		return CKR_ARGUMENTS_BAD;
+	}
+
+	p11_library_init_once ();
+	p11_lock ();
+
+	rv = get_interface_inlock (ppInterface,
+				   pVersion ? pVersion : &version_three,
+				   flags);
+
+	p11_unlock ();
 
 	return rv;
 }
@@ -163,7 +291,7 @@ p11_client_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_rpc_transport_free (state->rpc);
-		p11_virtual_unwrap ((CK_FUNCTION_LIST *)state->wrapped);
+		p11_virtual_unwrap (state->wrapped.pFunctionList);
 		free (state);
 	}
 }
