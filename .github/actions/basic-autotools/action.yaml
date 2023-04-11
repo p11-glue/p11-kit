@@ -51,6 +51,11 @@ runs:
       run: |
         cd $GITHUB_WORKSPACE/$BUILDDIR
         P11_KIT_DEBUG=all $RUNASUSER make check -j$(nproc) V=1
+        ret=$?
+        if test $ret -ne 0; then
+          cat $GITHUB_WORKSPACE/$BUILDDIR/test-suite.log
+          exit $ret
+        fi
         if [ "$RUNNER_OS" = "Linux" ]; then
           P11_KIT_DEBUG=all $RUNASUSER make distcheck -j$(nproc) V=1
         fi
