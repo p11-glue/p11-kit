@@ -202,6 +202,28 @@ AC_CHECK_DECLS([asprintf, vasprintf], [], [], [[#include <stdio.h>]])
 AC_CHECK_LIB(intl, dgettext)
 
 # ------------------------------------------------------------------------------
+#PKCS11 structure packing
+AC_ARG_ENABLE(pkcs11_packing,
+	AS_HELP_STRING([--enable-pkcs11-packing],
+		[enable 1 byte structure packing for PKCS11 API]
+	),
+		[enable_pkcs11_packing="no"],
+                [enable_pkcs11_packing="yes"]
+)
+	if test "${enable_pkcs11_packing}" = "yes"; then
+		CFLAGS="${CFLAGS} -DPKCS11_PACKING"
+	fi
+#PKCS11 unsigned long size
+AC_ARG_WITH(pkcs11-longtype,
+        AC_HELP_STRING([--with-pkcs11-longtype=type],
+                [Set pkcs11 longtype 32,64,0 (0=ulong)]
+        ),
+        [pkcs11_longtype="${withval}"],
+        [pkcs11_longtype="0"]
+)
+CFLAGS="${CFLAGS} -DPKCS11_LONGTYPE=${pkcs11_longtype}"
+
+# ------------------------------------------------------------------------------
 # PKCS#11 Directories
 
 AC_ARG_WITH([module-config],
