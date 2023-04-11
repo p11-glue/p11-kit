@@ -33,6 +33,9 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit print-config</command>
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit extract</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -75,6 +78,21 @@ $ p11-kit list-modules
 
 	<para>The modules, information about them and the tokens present in
 	the PKCS#11 modules will be displayed.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-print-config">
+	<title>Print Config</title>
+
+	<para>Print merged configuration.</para>
+
+<programlisting>
+$ p11-kit print-config
+</programlisting>
+
+	<para>P11-kit provides 3 levels of configuration: system wide, per-module, and per-user.
+	At run-time all 3 levels are merged into a single configuration. This command displays the
+	merged configuration.</para>
 
 </refsect1>
 
