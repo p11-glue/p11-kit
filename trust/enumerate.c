@@ -144,6 +144,7 @@ load_attached_extensions (p11_enumerate *ex,
 			p11_attrs_free (attrs);
 			break;
 		}
+		p11_attrs_free (attrs);
 	}
 
 	assert (rv != CKR_OK);
