@@ -979,8 +979,10 @@ binding_C_GetInterfaceList (ffi_cif *cif,
 	CK_INTERFACE *interface_list = *(CK_INTERFACE_PTR *)args[0];
 	CK_ULONG *count = *(CK_ULONG_PTR *)args[1];
 
-	if (count == NULL)
+	if (count == NULL) {
 		*ret = CKR_ARGUMENTS_BAD;
+		return;
+	}
 
 	if (interface_list == NULL) {
 		if (*count < NUM_INTERFACES)
@@ -1019,6 +1021,7 @@ binding_C_GetInterface (ffi_cif *cif,
 	                         version->minor != wrapper->bound.version.minor)) ||
 	    ((flags & virtual_interfaces[0].flags) != flags)) {
 		*ret = CKR_ARGUMENTS_BAD;
+		return;
 	}
 	virtual_interfaces[0].pFunctionList = &wrapper->bound;
 	*interface = &virtual_interfaces[0];
