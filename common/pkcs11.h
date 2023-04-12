@@ -1798,6 +1798,7 @@ struct ck_c_initialize_args
 #define CKR_PIN_TOO_WEAK			(0x1c3UL)
 #define CKR_PUBLIC_KEY_INVALID			(0x1c4UL)
 #define CKR_FUNCTION_REJECTED			(0x200UL)
+#define CKR_OPERATION_CANCEL_FAILED		(0x202UL)
 #define CKR_VENDOR_DEFINED			((unsigned long) (1UL << 31))
 
 
