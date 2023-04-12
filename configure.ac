@@ -288,8 +288,8 @@ AC_ARG_WITH([closures],
 	    [closures=$withval],
 	    [closures=64])
 
-if test "$closures" -lt 1; then
-	AC_MSG_ERROR([at least one closure must be compiled in])
+if test "$with_libffi" != yes && test "$closures" -lt 1; then
+	AC_MSG_ERROR([libffi needs to be enabled or at least one closure must be compiled in])
 fi
 
 AC_DEFINE_UNQUOTED(P11_VIRTUAL_MAX_FIXED, [$closures], [the number of closures])
