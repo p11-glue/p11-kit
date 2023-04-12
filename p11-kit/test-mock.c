@@ -2554,6 +2554,8 @@ test_pkcs11_3_not_supported (void)
 
 	rv = (module->C_MessageVerifyInit) (session, &sign_mech, MOCK_PUBLIC_KEY_PREFIX);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR) module);
 }
 
 static void

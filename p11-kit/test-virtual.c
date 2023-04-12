@@ -188,7 +188,7 @@ test_get_interface (void)
 	rv = (module->C_GetInterfaceList) (NULL, &count);
 	assert_num_eq (CKR_OK, rv);
 
-	list = malloc (sizeof(CK_INTERFACE) * count);
+	list = reallocarray (NULL, count, sizeof(CK_INTERFACE));
 	assert (list != NULL);
 
 	rv = (module->C_GetInterfaceList) (list, &count);
@@ -197,6 +197,7 @@ test_get_interface (void)
 	assert_ptr_eq (module, list[0].pFunctionList);
 	assert (strcmp("PKCS 11", list[0].pInterfaceName) == 0);
 
+	free (list);
 	p11_virtual_unwrap ((CK_FUNCTION_LIST *)module);
 }
 
