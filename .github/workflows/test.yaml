@@ -104,3 +104,14 @@ jobs:
         run: |
           echo /usr/local/opt/gettext/bin >>${GITHUB_PATH}
       - uses: ./.github/actions/basic-autotools
+
+  libffi:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/p11-glue/p11-kit:master
+    env:
+      MESON_BUILD_OPTS: -Db_sanitize=address -Db_sanitize=undefined -Dclosures=0
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/basic-meson
