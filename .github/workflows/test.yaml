@@ -53,7 +53,7 @@ jobs:
     env:
       MESON_BUILD_OPTS: --cross-file build/cross_file_mingw64.txt
       MESON_TEST_OPTS: --num-processes 1
-      WINEPATH: /usr/x86_64-x64-mingw32/sys-root/mingw/bin
+      WINEPATH: /usr/x86_64-w64-mingw32/sys-root/mingw/bin
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
