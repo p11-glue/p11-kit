@@ -134,7 +134,7 @@ test_interface_list (void)
 	assert (rv == CKR_OK);
 	assert_num_eq (count, 2);
 
-	interfaces = malloc (sizeof(CK_INTERFACE) * count);
+	interfaces = reallocarray (NULL, count, sizeof(CK_INTERFACE));
 	assert (interfaces != NULL);
 
 	rv = C_GetInterfaceList (interfaces, &count);
@@ -143,6 +143,7 @@ test_interface_list (void)
 	test_interface_version (&interfaces[0], test_version_three);
 	test_interface_version (&interfaces[1], test_version_two);
 
+	free (interfaces);
 	p11_proxy_module_cleanup ();
 }
 
