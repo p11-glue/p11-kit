@@ -28,6 +28,7 @@ runs:
       shell: bash
 
     - name: Test
+      if: ${{ env.SCAN_BUILD == 0 }}
       run: |
         P11_KIT_DEBUG=all runuser -u user -- meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
         ret=$?
