@@ -209,6 +209,7 @@ test_file_duplicated (void)
 	ret = p11_parse_file (parser, SRCDIR "/trust/fixtures/duplicated1.der", NULL,
 	                      P11_PARSE_FLAG_NONE);
 
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	assert_num_eq (1, parsed->num);
 	duplicated1 = parsed->elem[0];
 	parsed->elem[0] = NULL;
@@ -226,6 +227,7 @@ test_file_duplicated (void)
 	ret = p11_parse_file (parser, SRCDIR "/trust/fixtures/duplicated2.der", NULL,
 	                      P11_PARSE_FLAG_NONE);
 
+	assert_num_eq (ret, P11_PARSE_SUCCESS);
 	assert_num_eq (1, parsed->num);
 	duplicated2 = parsed->elem[0];
 	parsed->elem[0] = NULL;

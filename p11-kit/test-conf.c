@@ -402,7 +402,8 @@ test_parse_boolean (void)
 /* These tests do not work under ASan, as it spawns another
  * process with setuid bit set.
  */
-#if !__SANITIZE_ADDRESS__ && __has_feature(address_sanitizer)
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
 
 static void
 test_setuid (void)
@@ -464,7 +465,8 @@ main (int argc,
 	/* These tests do not work under ASan, as it spawns another
 	 * process with setuid bit set.
 	 */
-#if !__SANITIZE_ADDRESS__ && __has_feature(address_sanitizer)
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
 	/* Don't run this test when under fakeroot, or the binary is
 	 * written under /tmp */
 	if (!getenv ("FAKED_MODE") && strncmp (BUILDDIR, "/tmp/", 5) != 0) {

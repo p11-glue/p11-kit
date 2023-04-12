@@ -190,6 +190,10 @@ transform_sha1 (uint32_t state[5],
 	POST(a); POST(b); POST(c); POST(d); POST(e);
 	*/
 	(void)a;
+	(void)b;
+	(void)c;
+	(void)d;
+	(void)e;
 }
 
 

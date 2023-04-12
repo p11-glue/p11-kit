@@ -295,7 +295,9 @@ parse_argument (char *arg,
 		gl.paths = value ? strdup (value) : NULL;
 
 	} else if (strcmp (arg, "verbose") == 0) {
-		if (strcmp (value, "yes") == 0)
+		if (!value)
+			p11_message (_("value required for %s"), arg);
+		else if (strcmp (value, "yes") == 0)
 			p11_message_loud ();
 		else if (strcmp (value, "no") == 0)
 			p11_message_quiet ();

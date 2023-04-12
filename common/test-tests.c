@@ -56,6 +56,9 @@ test_failure (void)
 static void
 test_memory (void)
 {
+#ifdef __clang_analyzer__
+	assert_skip ("cannot perform test with clang-analyzer build", NULL);
+#else
 	char *mem;
 
 	if (getenv ("TEST_FAIL")) {
@@ -65,12 +68,15 @@ test_memory (void)
 		/* cppcheck-suppress deallocuse */
 		*mem = 1;
 	}
+#endif	/* __clang_analyzer__ */
 }
-
 
 static void
 test_leak (void)
 {
+#ifdef __clang_analyzer__
+	assert_skip ("cannot perform test with clang-analyzer build", NULL);
+#else
 	char *mem;
 
 	if (getenv ("TEST_FAIL")) {
@@ -79,6 +85,7 @@ test_leak (void)
 		*mem = 1;
 	}
 	/* cppcheck-suppress memleak */
+#endif	/* __clang_analyzer__ */
 }
 
 int

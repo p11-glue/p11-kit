@@ -377,6 +377,9 @@ index_build (p11_index *index,
 		nmerge = p11_attrs_count (merge);
 		nextra = p11_attrs_count (extra);
 
+		assert (*attrs || nattrs == 0);
+		assert (extra || nextra == 0);
+
 		/* Make a shallow copy of the combined attributes for validation */
 		built = calloc (nmerge + nattrs + nextra + 1, sizeof (CK_ATTRIBUTE));
 		return_val_if_fail (built != NULL, CKR_GENERAL_ERROR);
