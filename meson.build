@@ -320,8 +320,8 @@ if libffi.found()
 endif
 
 closures = get_option('closures')
-if closures < 1
-  error('at least one closure must be compiled in')
+if not libffi.found() and closures < 1
+  error('libffi needs to be enabled or at least one closure must be compiled in')
 endif
 
 conf.set('P11_VIRTUAL_MAX_FIXED', closures)
