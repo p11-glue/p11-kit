@@ -1009,6 +1009,11 @@ binding_C_GetInterface (ffi_cif *cif,
 	CK_INTERFACE_PTR *interface = *(CK_INTERFACE_PTR_PTR *)args[2];
 	CK_FLAGS flags = *(CK_FLAGS *)args[3];
 
+	if (interface == NULL) {
+		*ret = CKR_ARGUMENTS_BAD;
+		return;
+	}
+
 	if (interface_name == NULL) {
 		virtual_interfaces[0].pFunctionList = &wrapper->bound;
 		*interface = &virtual_interfaces[0];
@@ -3742,27 +3747,27 @@ static const BindingInfo binding_info[] = {
         { binding_C_WaitForSlotEvent, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
         /* PKCS #11 3.0 */
         { binding_C_LoginUser, { &ffi_type_ulong, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_SessionCancel, { &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SessionCancel, { &ffi_type_ulong, &ffi_type_ulong, NULL } },
         { binding_C_MessageEncryptInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_EncryptMessage, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-        { binding_C_EncryptMessageBegin, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_EncryptMessageNext, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_MessageEncryptFinal, { &ffi_type_pointer, NULL } },
-        { binding_C_MessageDecryptInit, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_DecryptMessage, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-        { binding_C_DecryptMessageBegin, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_DecryptMessageNext, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_MessageDecryptFinal, { &ffi_type_pointer, NULL } },
-        { binding_C_MessageSignInit, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_SignMessage, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-        { binding_C_SignMessageBegin, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_SignMessageNext, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
-        { binding_C_MessageSignFinal, { &ffi_type_pointer, NULL } },
-        { binding_C_MessageVerifyInit, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_VerifyMessage, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_VerifyMessageBegin, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_VerifyMessageNext, { &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
-        { binding_C_MessageVerifyFinal, { &ffi_type_pointer, NULL } },
+        { binding_C_EncryptMessage, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_EncryptMessageBegin, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_EncryptMessageNext, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_MessageEncryptFinal, { &ffi_type_ulong, NULL } },
+        { binding_C_MessageDecryptInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_DecryptMessage, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_DecryptMessageBegin, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_DecryptMessageNext, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_MessageDecryptFinal, { &ffi_type_ulong, NULL } },
+        { binding_C_MessageSignInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SignMessage, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_SignMessageBegin, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_SignMessageNext, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_pointer, NULL } },
+        { binding_C_MessageSignFinal, { &ffi_type_ulong, NULL } },
+        { binding_C_MessageVerifyInit, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyMessage, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyMessageBegin, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_VerifyMessageNext, { &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, &ffi_type_pointer, &ffi_type_ulong, NULL } },
+        { binding_C_MessageVerifyFinal, { &ffi_type_ulong, NULL } },
         { 0, }
 };
 
