@@ -1968,8 +1968,8 @@ mock_C_EncryptInit (CK_SESSION_HANDLE session,
 		if (sess->crypto_method & CKF_ENCRYPT) {
 			sess->crypto_method &= ~CKF_ENCRYPT;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	/* Starting an operation, cancels any previous one */
@@ -2179,8 +2179,8 @@ mock_C_DecryptInit (CK_SESSION_HANDLE session,
 		if (sess->crypto_method & CKF_DECRYPT) {
 			sess->crypto_method &= ~CKF_DECRYPT;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	/* Starting an operation, cancels any previous one */
@@ -2387,10 +2387,10 @@ mock_C_DigestInit (CK_SESSION_HANDLE session,
 	/* can be called with pMechanism set to NULL_PTR to terminate an active message-digesting operation */
 	if (mechanism == NULL) {
 		if (sess->hash_method == CKF_DIGEST) {
-			sess->hash_method = 0;
+			sess->hash_method &= ~CKF_DIGEST;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	/* Starting an operation, cancels any previous one */
@@ -2693,10 +2693,10 @@ mock_C_SignInit (CK_SESSION_HANDLE session,
 	/* can be called with pMechanism set to NULL_PTR to terminate an active signature operation */
 	if (mechanism == NULL) {
 		if (sess->hash_method == CKF_SIGN) {
-			sess->hash_method = 0;
+			sess->hash_method &= ~CKF_SIGN;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	return prefix_mechanism_init (session, CKF_SIGN, mechanism, key);
@@ -2894,10 +2894,10 @@ mock_C_SignRecoverInit (CK_SESSION_HANDLE session,
 	 * an active signature with data recovery operation */
 	if (mechanism == NULL) {
 		if (sess->hash_method == CKF_SIGN_RECOVER) {
-			sess->hash_method = 0;
+			sess->hash_method &= ~CKF_SIGN_RECOVER;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	return prefix_mechanism_init (session, CKF_SIGN_RECOVER, mechanism, key);
@@ -3005,10 +3005,10 @@ mock_C_VerifyInit (CK_SESSION_HANDLE session,
 	/* can be called with pMechanism set to NULL_PTR to terminate an active verification operation */
 	if (mechanism == NULL) {
 		if (sess->hash_method == CKF_VERIFY) {
-			sess->hash_method = 0;
+			sess->hash_method &= ~CKF_VERIFY;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	return prefix_mechanism_init (session, CKF_VERIFY, mechanism, key);
@@ -3177,10 +3177,10 @@ mock_C_VerifyRecoverInit (CK_SESSION_HANDLE session,
 	 * an active verification with data recovery operation */
 	if (mechanism == NULL) {
 		if (sess->hash_method == CKF_VERIFY_RECOVER) {
-			sess->hash_method = 0;
+			sess->hash_method &= ~CKF_VERIFY_RECOVER;
 			return CKR_OK;
-		} else
-			return CKR_ARGUMENTS_BAD;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 
 	return prefix_mechanism_init (session, CKF_VERIFY_RECOVER, mechanism, key);
@@ -4049,9 +4049,12 @@ mock_C_MessageEncryptInit (CK_SESSION_HANDLE session,
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
-	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_ENCRYPT) {
-		sess->message_method = 0;
-		return CKR_OK;
+	if (mechanism == NULL) {
+		if (sess->message_method & CKF_MESSAGE_ENCRYPT) {
+			sess->message_method &= ~CKF_MESSAGE_ENCRYPT;
+			return CKR_OK;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 	if (sess->message_method != 0)
 		return CKR_OPERATION_ACTIVE;
@@ -4285,9 +4288,12 @@ mock_C_MessageDecryptInit (CK_SESSION_HANDLE session,
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
-	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_DECRYPT) {
-		sess->message_method = 0;
-		return CKR_OK;
+	if (mechanism == NULL) {
+		if (sess->message_method & CKF_MESSAGE_DECRYPT) {
+			sess->message_method &= ~CKF_MESSAGE_DECRYPT;
+			return CKR_OK;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 	if (sess->message_method != 0)
 		return CKR_OPERATION_ACTIVE;
@@ -4522,9 +4528,12 @@ mock_C_MessageSignInit (CK_SESSION_HANDLE session,
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
-	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_SIGN) {
-		sess->message_method = 0;
-		return CKR_OK;
+	if (mechanism == NULL) {
+		if (sess->message_method & CKF_MESSAGE_SIGN) {
+			sess->message_method &= ~CKF_MESSAGE_SIGN;
+			return CKR_OK;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 	if (sess->message_method != 0)
 		return CKR_OPERATION_ACTIVE;
@@ -4756,9 +4765,12 @@ mock_C_MessageVerifyInit (CK_SESSION_HANDLE session,
 	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
-	if (mechanism == NULL && sess->message_method == CKF_MESSAGE_VERIFY) {
-		sess->message_method = 0;
-		return CKR_OK;
+	if (mechanism == NULL) {
+		if (sess->message_method & CKF_MESSAGE_VERIFY) {
+			sess->message_method &= ~CKF_MESSAGE_VERIFY;
+			return CKR_OK;
+		}
+		return CKR_OPERATION_CANCEL_FAILED;
 	}
 	if (sess->message_method != 0)
 		return CKR_OPERATION_ACTIVE;

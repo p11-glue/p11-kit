@@ -1179,7 +1179,7 @@ test_sign (void)
 
 	/* null mechanism cancels operation only for the same operation */
 	rv = (module->C_VerifyInit) (session, NULL, MOCK_PUBLIC_KEY_PREFIX);
-	assert_num_eq (rv, CKR_ARGUMENTS_BAD);
+	assert_num_eq (rv, CKR_OPERATION_CANCEL_FAILED);
 
 	/* NULL mechanisms cancel the operation */
 	rv = (module->C_SignInit) (session, NULL, MOCK_PRIVATE_KEY_PREFIX);
@@ -1269,7 +1269,7 @@ test_sign_recover (void)
 
 	/* null mechanism cancels operation only for the same operation */
 	rv = (module->C_VerifyRecoverInit) (session, NULL, MOCK_PRIVATE_KEY_PREFIX);
-	assert_num_eq (rv, CKR_ARGUMENTS_BAD);
+	assert_num_eq (rv, CKR_OPERATION_CANCEL_FAILED);
 
 	/* NULL mech cancels the operation */
 	rv = (module->C_SignRecoverInit) (session, NULL, MOCK_PRIVATE_KEY_PREFIX);
