@@ -1,4 +1,4 @@
 
 # This is a duplicate of the 'two' module
 module: mock-two.dll
-# no order, use name
+# no priority, use name

@@ -359,6 +359,7 @@ endif
 
 test_conf_SOURCES = p11-kit/test-conf.c
 test_conf_LDADD = $(p11_kit_LIBS)
+test_conf_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_deprecated_SOURCES = p11-kit/test-deprecated.c
 test_deprecated_LDADD = $(p11_kit_LIBS)
