@@ -492,7 +492,7 @@ proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
 			Mapping *mappings = NULL;
 			unsigned int n_mappings = 0;
 
-			if (state->px->mappings) {
+			if (state->px->n_mappings > 0) {
 				mappings = state->px->mappings;
 				n_mappings = state->px->n_mappings;
 				state->px->mappings = NULL;
