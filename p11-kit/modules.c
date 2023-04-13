@@ -43,6 +43,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "dict.h"
+#include "profile.h"
 #include "library.h"
 #include "log.h"
 #include "message.h"
@@ -1938,16 +1939,86 @@ p11_modules_release_inlock_reentrant (CK_FUNCTION_LIST **modules)
 	return ret;
 }
 
+static CK_PROFILE_ID
+str_to_profile (const char *str,
+		size_t len)
+{
+	if (len == 17 && memcmp (str, "baseline_provider", len) == 0)
+		return CKP_BASELINE_PROVIDER;
+	else if (len == 17 && memcmp (str, "extended_provider", len) == 0)
+		return CKP_EXTENDED_PROVIDER;
+	else if (len == 20 && memcmp (str, "authentication_token", len) == 0)
+		return CKP_AUTHENTICATION_TOKEN;
+	else if (len == 25 && memcmp (str, "public_certificates_token", len) == 0)
+		return CKP_PUBLIC_CERTIFICATES_TOKEN;
+	else if (len == 14 && memcmp (str, "vendor_defined", len) == 0)
+		return CKP_VENDOR_DEFINED;
+	return CKP_INVALID_ID;
+}
+
+static CK_PROFILE_ID
+parse_profile_value (const char *begin,
+		     const char *end)
+{
+	/* skip initial whitespace */
+	while (isspace (*begin))
+		++begin;
+
+	/* fail on empty value */
+	if (begin == end)
+		return CKP_INVALID_ID;
+
+	/* skip ending whitespace */
+	--end;
+	while (isspace (*end))
+		--end;
+
+	return str_to_profile (begin, end - begin + 1);
+}
+
+static bool
+parse_profiles (const char *profiles,
+		CK_PROFILE_ID *ids,
+		CK_ULONG_PTR n_ids)
+{
+	const char *delim, *begin;
+	const size_t max_ids = *n_ids;
+	CK_PROFILE_ID profile;
+
+	*n_ids = 0;
+	for (begin = profiles; (delim = strchr (begin, ',')); begin = delim + 1) {
+		profile = parse_profile_value (begin, delim);
+		if (profile == CKP_INVALID_ID || *n_ids >= max_ids)
+			return false;
+
+		ids[*n_ids] = profile;
+		++*n_ids;
+	}
+
+	profile = parse_profile_value (begin, begin + strlen (begin));
+	if (profile == CKP_INVALID_ID || *n_ids >= max_ids)
+		return false;
+
+	ids[*n_ids] = profile;
+	++*n_ids;
+
+	return true;
+}
+
 static CK_RV
 prepare_module_inlock_reentrant (Module *mod,
                                  int flags,
                                  CK_FUNCTION_LIST **module)
 {
 	p11_destroyer destroyer;
+	const char *profiles;
 	const char *trusted;
 	p11_virtual *virt;
 	bool is_managed;
 	bool with_log;
+	CK_PROFILE_ID ids[8];
+	CK_ULONG n_ids = sizeof (ids) / sizeof (CK_PROFILE_ID);
+	CK_RV rv;
 
 	assert (module != NULL);
 
@@ -1969,6 +2040,19 @@ prepare_module_inlock_reentrant (Module *mod,
 		virt = managed_create_inlock (mod);
 		return_val_if_fail (virt != NULL, CKR_HOST_MEMORY);
 		destroyer = managed_free_inlock;
+
+		/* Add fake profile object if configured */
+		profiles = module_get_option_inlock (mod, "profile");
+		if (profiles != NULL) {
+			if (!parse_profiles (profiles, ids, &n_ids))
+				return CKR_GENERAL_ERROR;
+
+			virt = p11_profile_subclass (virt, destroyer);
+			destroyer = p11_profile_release;
+
+			rv = p11_profile_add_profile (virt, ids, n_ids);
+			return_val_if_fail (rv == CKR_OK, rv);
+		}
 
 		/* Add the logger if configured */
 		if (p11_log_force || with_log) {

@@ -13,6 +13,7 @@ COMMON_SRCS = \
 	p11-kit/conf.c p11-kit/conf.h \
 	p11-kit/iter.c \
 	p11-kit/log.c p11-kit/log.h \
+	p11-kit/profile.c p11-kit/profile.h \
 	p11-kit/filter.c p11-kit/filter.h \
 	p11-kit/modules.c p11-kit/modules.h \
 	p11-kit/pkcs11.h \
@@ -421,6 +422,7 @@ c_tests += \
 	test-log \
 	test-log3 \
 	test-filter \
+	test-profile \
 	test-transport \
 	test-transport3 \
 	$(NULL)
@@ -433,6 +435,10 @@ test_log3_LDADD = $(p11_kit_LIBS)
 
 test_filter_SOURCES = p11-kit/test-filter.c
 test_filter_LDADD = $(p11_kit_LIBS)
+
+test_profile_SOURCES = p11-kit/test-profile.c
+test_profile_LDADD = $(p11_kit_LIBS)
+test_profile_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_managed_SOURCES = p11-kit/test-managed.c
 test_managed_LDADD = $(p11_kit_LIBS)
@@ -460,7 +466,8 @@ check_LTLIBRARIES += \
 	mock-seven.la \
 	mock-eight.la \
 	mock-nine.la \
-	mock-ten.la
+	mock-ten.la \
+	mock-eleven.la
 
 mock_one_la_SOURCES = p11-kit/mock-module-ep.c
 mock_one_la_LIBADD = libp11-test.la libp11-common.la
@@ -520,6 +527,10 @@ mock_nine_la_LIBADD = $(mock_one_la_LIBADD)
 mock_ten_la_SOURCES = p11-kit/mock-module-ep8.c
 mock_ten_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_ten_la_LIBADD = $(mock_one_la_LIBADD)
+
+mock_eleven_la_SOURCES = $(mock_one_la_SOURCES)
+mock_eleven_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_eleven_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST += \
 	p11-kit/fixtures \

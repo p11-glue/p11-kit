@@ -10,6 +10,7 @@ libp11_kit_internal_sources = [
   'conf.c',
   'log.c',
   'filter.c',
+  'profile.c',
   'rpc-transport.c',
   'rpc-message.c',
   'rpc-client.c'
@@ -251,6 +252,7 @@ if get_option('test')
     'test-log',
     'test-log3',
     'test-filter',
+    'test-profile',
     'test-transport',
     'test-transport3'
   ]
@@ -322,7 +324,8 @@ if get_option('test')
                    'mock-seven': ['mock-module-ep5.c'],
                    'mock-eight': ['mock-module-ep6.c'],
                    'mock-nine': ['mock-module-ep7.c'],
-                   'mock-ten': ['mock-module-ep8.c']
+                   'mock-ten': ['mock-module-ep8.c'],
+                   'mock-eleven': ['mock-module-ep.c']
                  }
 
   if host_system != 'windows'
