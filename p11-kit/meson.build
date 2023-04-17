@@ -162,7 +162,7 @@ if get_option('test')
              'remote.c',
              c_args: common_c_args,
              dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
-             link_with: libp11_kit_testable)
+             link_whole: libp11_kit_testable)
 endif
 
 executable('p11-kit-server',
@@ -184,7 +184,7 @@ if get_option('test')
              ],
              implicit_include_directories: false,
              dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
-             link_with: libp11_kit_testable)
+             link_whole: libp11_kit_testable)
 endif
 
 if with_systemd
@@ -246,16 +246,31 @@ if get_option('test')
     'test-transport3'
   ]
 
+  # Some tests fail to link on macOS because they need p11_library_mutex, but
+  # it isn't included unless libp11_kit_testable is linked with
+  # -Wl,--whole-archive or -Wl,-force_load.
+  p11_kit_tests_whole = [
+    'test-uri',
+    'test-util'
+  ]
+
   if host_system != 'windows'
     p11_kit_tests += 'test-server'
   endif
 
   foreach name : p11_kit_tests
+    link_whole = []
+    link_with = [libp11_kit_testable]
+    if p11_kit_tests_whole.contains(name)
+      link_whole = [libp11_kit_testable]
+      link_with = []
+    endif
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args + libp11_kit_testable_c_args,
                    include_directories: [configinc, commoninc],
                    dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
-                   link_with: libp11_kit_testable)
+                   link_with: link_with,
+                   link_whole: link_whole)
     test(name, t)
   endforeach
 
