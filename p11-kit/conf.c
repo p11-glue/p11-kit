@@ -408,7 +408,6 @@ load_configs_from_directory (const char *directory,
 	int error = 0;
 	bool is_dir;
 	char *path;
-	int count = 0;
 
 	p11_debug ("loading module configs in: %s", directory);
 
@@ -450,7 +449,6 @@ load_configs_from_directory (const char *directory,
 		}
 
 		free (path);
-		count ++;
 	}
 
 	closedir (dir);
