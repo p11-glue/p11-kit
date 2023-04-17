@@ -33,6 +33,9 @@ libp11_library = static_library('p11-library', 'library.c',
 libp11_library_dep = declare_dependency(link_with: libp11_library,
                                         dependencies: [libp11_common_dep] + thread_deps)
 
+libp11_library_whole_dep = declare_dependency(link_whole: libp11_library,
+                                              dependencies: [libp11_common_dep] + thread_deps)
+
 if get_option('test')
   libp11_test_sources = [
     'mock.c',
