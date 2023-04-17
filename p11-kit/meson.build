@@ -92,10 +92,19 @@ p11_module_ldflags = cc.get_supported_link_arguments([
   '-Wl,--version-script,' + p11_module_symbol_map
 ])
 
+# On macOS, the default suffix for loadable modules is .so, but meson uses
+# .dylib by default. Since the code expects .so and autotools was using .so,
+# make meson do the same.
+module_suffix = []
+if ['darwin', 'ios'].contains(host_system)
+  module_suffix = 'so'
+endif
+
 if host_system != 'windows'
   shared_module('p11-kit-client',
                 'client.c', 'client-init.c',
                 name_prefix: '',
+                name_suffix: module_suffix,
                 include_directories: [configinc, commoninc],
                 dependencies: dlopen_deps,
                 link_args: p11_module_ldflags,
@@ -324,6 +333,7 @@ if get_option('test')
     shared_module(name,
                   sources,
                   name_prefix: '',
+                  name_suffix: module_suffix,
                   link_args: p11_module_ldflags,
                   link_depends: [p11_module_symbol_map],
                   dependencies: [libp11_test_dep])
