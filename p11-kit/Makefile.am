@@ -239,6 +239,7 @@ bin_PROGRAMS += p11-kit/p11-kit
 p11_kit_p11_kit_CFLAGS = $(COMMON_CFLAGS)
 
 p11_kit_p11_kit_SOURCES = \
+	p11-kit/list-profiles.c \
 	p11-kit/lists.c \
 	p11-kit/p11-kit.c \
 	p11-kit/print-config.c \

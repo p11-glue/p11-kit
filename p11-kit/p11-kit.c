@@ -62,6 +62,9 @@
 int       p11_kit_list_modules    (int argc,
                                    char *argv[]);
 
+int       p11_kit_list_profiles   (int argc,
+                                   char *argv[]);
+
 int       p11_kit_print_config    (int argc,
                                    char *argv[]);
 
@@ -73,6 +76,7 @@ int       p11_kit_external        (int argc,
 
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, N_("List modules and tokens") },
+	{ "list-profiles", p11_kit_list_profiles, N_("List PKCS#11 profiles supported by the token") },
 	{ "print-config", p11_kit_print_config, N_("Print merged configuration") },
 	{ "remote", p11_kit_external, N_("Run a specific PKCS#11 module remotely") },
 	{ "server", p11_kit_external, N_("Run a server process that exposes PKCS#11 module remotely") },

@@ -79,4 +79,6 @@ extern const p11_constant    p11_constant_users[];
 
 extern const p11_constant    p11_constant_returns[];
 
+extern const p11_constant    p11_constant_profiles[];
+
 #endif /* P11_CONSTANTS_H_ */
