@@ -636,6 +636,15 @@ const p11_constant p11_constant_mechanisms[] = {
 	{ CKA_INVALID },
 };
 
+const p11_constant p11_constant_profiles[] = {
+	CT (CKP_BASELINE_PROVIDER, "baseline-provider")
+	CT (CKP_EXTENDED_PROVIDER, "extended-provider")
+	CT (CKP_AUTHENTICATION_TOKEN, "authentication-token")
+	CT (CKP_PUBLIC_CERTIFICATES_TOKEN, "public-certificates-token")
+	CT (CKP_VENDOR_DEFINED, "vendor-defined")
+	{ CKA_INVALID },
+};
+
 #undef CT
 
 struct {
@@ -653,6 +662,7 @@ struct {
 	{ p11_constant_states, ELEMS (p11_constant_states) - 1 },
 	{ p11_constant_users, ELEMS (p11_constant_users) - 1 },
 	{ p11_constant_returns, ELEMS (p11_constant_returns) - 1 },
+	{ p11_constant_profiles, ELEMS (p11_constant_profiles) - 1 },
 };
 
 static int
