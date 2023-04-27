@@ -159,6 +159,14 @@ executable('p11-kit',
            link_with: [libp11_kit, libp11_kit_internal],
            install: true)
 
+if get_option('test')
+  executable('p11-kit-testable',
+             p11_kit_sources,
+             c_args: common_c_args + libp11_kit_internal_c_args,
+             dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+             link_whole: libp11_kit_testable)
+endif
+
 executable('p11-kit-remote',
            'remote.c',
            c_args: common_c_args,
@@ -302,6 +310,10 @@ if get_option('test')
   p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
 
   if host_system != 'windows'
+    test('test-profiles.sh',
+         find_program('test-profiles.sh'),
+         env: p11_kit_tests_env)
+
     test('test-messages.sh',
          find_program('test-messages.sh'),
          env: p11_kit_tests_env)
@@ -323,7 +335,8 @@ if get_option('test')
                    'mock-seven': ['mock-module-ep5.c'],
                    'mock-eight': ['mock-module-ep6.c'],
                    'mock-nine': ['mock-module-ep7.c'],
-                   'mock-ten': ['mock-module-ep8.c']
+                   'mock-ten': ['mock-module-ep8.c'],
+                   'mock-eleven': ['mock-module-ep9.c']
                  }
 
   if host_system != 'windows'
