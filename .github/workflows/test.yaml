@@ -3,9 +3,12 @@ on: [push, pull_request]
 env:
   BUILDDIR: "builddir"
   INSTALLDIR: "installdir"
+  RUNUSER: "user"
 jobs:
   autotools:
     runs-on: ubuntu-latest
+    env:
+      BUILD_OPTS: --enable-doc
     container:
       image: ghcr.io/p11-glue/p11-kit:master
     steps:
