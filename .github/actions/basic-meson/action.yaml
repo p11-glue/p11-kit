@@ -5,37 +5,31 @@ runs:
   using: composite
   steps:
     - name: Create user
-      run: useradd -m user
+      run: $GITHUB_WORKSPACE/build/setup-wrapper.sh
       shell: bash
 
-    - name: Setup directories
+    - name: Setup
       run: |
-        mkdir $GITHUB_WORKSPACE/$BUILDDIR
-        chown -R user $GITHUB_WORKSPACE/$BUILDDIR
-        mkdir $GITHUB_WORKSPACE/$INSTALLDIR
-        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
-        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+        $GITHUB_WORKSPACE/build/run-wrapper.sh meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust_paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source -Dsystemd=disabled -Dbash_completion=disabled $MESON_BUILD_OPTS
+      shell: bash
+
+    - name: Build (scan-build)
+      if: ${{ env.SCAN_BUILD != 0 }}
+      run: $GITHUB_WORKSPACE/build/run-wrapper.sh ninja scan-build -C $GITHUB_WORKSPACE/$BUILDDIR
       shell: bash
 
     - name: Build
-      run: |
-        runuser -u user -- meson $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust_paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source $MESON_BUILD_OPTS
-        if test -n "$SCAN_BUILD"; then
-          runuser -u user -- ninja scan-build -C $GITHUB_WORKSPACE/$BUILDDIR
-        else
-          runuser -u user -- ninja -C $GITHUB_WORKSPACE/$BUILDDIR
-        fi
+      if: ${{ env.SCAN_BUILD == 0 }}
+      run: $GITHUB_WORKSPACE/build/run-wrapper.sh ninja -C $GITHUB_WORKSPACE/$BUILDDIR
       shell: bash
 
     - name: Test
       if: ${{ env.SCAN_BUILD == 0 }}
       run: |
-        P11_KIT_DEBUG=all runuser -u user -- meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
+        P11_KIT_DEBUG=all $GITHUB_WORKSPACE/build/run-wrapper.sh meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
         ret=$?
-        if test $ret -ne 0; then
-          cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt
-          exit $ret
-        fi
+        test $ret -eq 0 || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt
+        exit $ret
       shell: bash
 
     - name: Install
