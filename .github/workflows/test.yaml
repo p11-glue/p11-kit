@@ -94,19 +94,19 @@ jobs:
 
   macos:
     runs-on: macos-12
+    env:
+      MESON_BUILD_OPTS: -Dclosures=0
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           brew update
-          for pkg in autoconf automake coreutils gettext libffi libtasn1 libtool; do
-            brew install $pkg || true
-          done
+          brew install coreutils gettext libffi libtasn1 meson
       - name: Update path
         run: |
           echo /usr/local/opt/gettext/bin >>${GITHUB_PATH}
-      - uses: ./.github/actions/basic-autotools
+      - uses: ./.github/actions/basic-meson
 
   libffi:
     runs-on: ubuntu-latest
