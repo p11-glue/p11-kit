@@ -59,8 +59,15 @@ endif
 
 conf.set10('WITH_STRICT', get_option('strict'))
 
+libintl_deps = []
 if get_option('nls') and cc.has_header('libintl.h')
   conf.set('ENABLE_NLS', 1)
+  libintl = dependency('intl', required: false)
+  if libintl.found()
+    if cc.has_function('dgettext', dependencies : libintl)
+      libintl_deps += [libintl]
+    endif
+  endif
 endif
 
 prefix = get_option('prefix')
