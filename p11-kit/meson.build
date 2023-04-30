@@ -161,7 +161,7 @@ executable('p11-kit',
 executable('p11-kit-remote',
            'remote.c',
            c_args: common_c_args,
-           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libintl_deps + libffi_deps + dlopen_deps,
            link_with: libp11_kit,
            install: true,
            install_dir: prefix / privatedir)
@@ -179,7 +179,7 @@ executable('p11-kit-server',
            c_args: common_c_args + [
              '-DP11_KIT_REMOTE="p11-kit-remote"'
            ],
-           dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libsystemd_deps + libintl_deps + libffi_deps + dlopen_deps,
            implicit_include_directories: false,
            link_with: libp11_kit,
            install: true,
