@@ -36,6 +36,9 @@
 		<command>p11-kit list-profiles</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit delete-profile</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit print-config</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -95,6 +98,20 @@ $ p11-kit list-profiles pkcs11:token
 
 	<para>This searches the given token for profile objects that contain profile IDs
 	which are then displayed in human-readable form.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-delete-profile">
+	<title>Delete Profile</title>
+
+	<para>Delete PKCS#11 profile from the token.</para>
+
+<programlisting>
+$ p11-kit delete-profile --profile profile pkcs11:token
+</programlisting>
+
+	<para>Searches the token for profile object that matches given PKCS#11
+	profile ID and attempts to destroy it.</para>
 
 </refsect1>
 

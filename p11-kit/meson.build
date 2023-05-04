@@ -146,6 +146,7 @@ if get_option('test')
 endif
 
 p11_kit_sources = [
+  'delete-profile.c',
   'list-profiles.c',
   'lists.c',
   'p11-kit.c',
