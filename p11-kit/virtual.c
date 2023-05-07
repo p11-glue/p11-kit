@@ -985,10 +985,7 @@ binding_C_GetInterfaceList (ffi_cif *cif,
 	}
 
 	if (interface_list == NULL) {
-		if (*count < NUM_INTERFACES)
-			*ret = CKR_BUFFER_TOO_SMALL;
-		else
-			*ret = CKR_OK;
+		*ret = CKR_OK;
 		*count = NUM_INTERFACES;
 		return;
 	}
