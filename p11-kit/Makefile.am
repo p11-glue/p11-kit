@@ -239,6 +239,7 @@ bin_PROGRAMS += p11-kit/p11-kit
 p11_kit_p11_kit_CFLAGS = $(COMMON_CFLAGS)
 
 p11_kit_p11_kit_SOURCES = \
+	p11-kit/add-profile.c \
 	p11-kit/delete-profile.c \
 	p11-kit/list-profiles.c \
 	p11-kit/lists.c \
@@ -260,6 +261,7 @@ endif
 
 check_PROGRAMS += p11-kit/p11-kit-testable
 p11_kit_p11_kit_testable_SOURCES = \
+	p11-kit/add-profile.c \
 	p11-kit/delete-profile.c \
 	p11-kit/list-profiles.c \
 	p11-kit/lists.c \
