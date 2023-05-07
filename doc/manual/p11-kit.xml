@@ -36,6 +36,9 @@
 		<command>p11-kit list-profiles</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit add-profile</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit delete-profile</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -98,6 +101,19 @@ $ p11-kit list-profiles pkcs11:token
 
 	<para>This searches the given token for profile objects that contain profile IDs
 	which are then displayed in human-readable form.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-add-profile">
+	<title>Add Profile</title>
+
+	<para>Add PKCS#11 profile to the token.</para>
+
+<programlisting>
+$ p11-kit add-profile --profile profile pkcs11:token
+</programlisting>
+
+	<para>Creates a new PKCS#11 profile object on the token if it doesn't already exist.</para>
 
 </refsect1>
 

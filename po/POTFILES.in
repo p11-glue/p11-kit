@@ -1,5 +1,6 @@
 # List of source files which contain translatable strings.
 common/tool.c
+p11-kit/add-profile.c
 p11-kit/conf.c
 p11-kit/delete-profile.c
 p11-kit/filter.c
