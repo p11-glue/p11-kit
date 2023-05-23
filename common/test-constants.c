@@ -97,6 +97,7 @@ main (int argc,
 	p11_testx (test_constants, (void *)p11_constant_users, "/constants/users");
 	p11_testx (test_constants, (void *)p11_constant_states, "/constants/states");
 	p11_testx (test_constants, (void *)p11_constant_returns, "/constants/returns");
+	p11_testx (test_constants, (void *)p11_constant_profiles, "/constants/profiles");
 
 	return p11_test_run (argc, argv);
 }
