@@ -36,6 +36,7 @@
 
 #include "config.h"
 
+#include "attrs.h"
 #include "constants.h"
 #include "debug.h"
 #include "iter.h"
@@ -125,7 +126,7 @@ p11_kit_delete_profile (int argc,
 			char *argv[])
 {
 	int opt, ret = 2;
-	CK_PROFILE_ID profile = CKP_INVALID_ID;
+	CK_ULONG profile = CKA_INVALID;
 	p11_dict *profile_nicks = NULL;
 
 	enum {
@@ -168,15 +169,15 @@ p11_kit_delete_profile (int argc,
 			ret = 0;
 			goto cleanup;
 		case opt_profile:
-			if (profile != CKP_INVALID_ID) {
+			if (profile != CKA_INVALID) {
 				p11_message (_("multiple profiles specified"));
 				goto cleanup;
 			}
 
 			profile = p11_constant_resolve (profile_nicks, optarg);
-			if (profile == CKP_INVALID_ID)
+			if (profile == CKA_INVALID)
 				profile = strtol (optarg, NULL, 0);
-			if (profile == CKP_INVALID_ID) {
+			if (profile == 0) {
 				p11_message (_("failed to convert profile argument: %s"), optarg);
 				goto cleanup;
 			}
@@ -197,7 +198,7 @@ p11_kit_delete_profile (int argc,
 		goto cleanup;
 	}
 
-	if (profile == CKP_INVALID_ID) {
+	if (profile == CKA_INVALID) {
 		p11_message (_("no profile specified"));
 		goto cleanup;
 	}
