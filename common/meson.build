@@ -49,6 +49,7 @@ if get_option('test')
 endif
 
 libp11_tool_sources = [
+  'print.c',
   'tool.c'
 ]
 

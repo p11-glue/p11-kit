@@ -44,6 +44,7 @@ libp11_test_la_SOURCES = \
 	$(NULL)
 
 libp11_tool_la_SOURCES = \
+	common/print.c common/print.h \
 	common/tool.c common/tool.h \
 	$(NULL)
 
