@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "message.h"
 #include "persist.h"
+#include "print.h"
 #include "tool.h"
 
 #include <assert.h>
@@ -61,23 +62,21 @@ enum format_result {
 	FORMAT_ERROR
 };
 
-static bool color_out;
-static bool color_err;
-
 static inline void
 print_result (enum format_result result,
 	      const char *filename)
 {
-	printf (color_out ? "\033[1m%s:\033[0m " : "%s: ", filename);
+	p11_print_word (stdout, filename, P11_COLOR_DEFAULT, P11_FONT_BOLD);
+	p11_print_word (stdout, ": ", P11_COLOR_DEFAULT, P11_FONT_BOLD);
 	switch (result) {
 	case FORMAT_OK:
-		printf (color_out ? "\033[1;32mOK\033[0m\n" : "OK\n");
+		p11_print_word (stdout, "OK\n", P11_COLOR_GREEN, P11_FONT_BOLD);
 		break;
 	case FORMAT_FAIL:
-		printf (color_out ? "\033[1;31mFAIL\033[0m\n" : "FAIL\n");
+		p11_print_word (stdout, "FAIL\n", P11_COLOR_RED, P11_FONT_BOLD);
 		break;
 	case FORMAT_ERROR:
-		printf (color_out ? "\033[1;31mERROR\033[0m\n" : "ERROR\n");
+		p11_print_word (stdout, "ERROR\n", P11_COLOR_RED, P11_FONT_BOLD);
 		break;
 	default:
 		assert_not_reached ();
@@ -172,9 +171,6 @@ p11_trust_check_format (int argc,
 		p11_message (_("specify a .p11-kit file"));
 		return 2;
 	}
-
-	color_out = isatty (fileno (stdout));
-	color_err = isatty (fileno (stderr));
 
 	for (i = 0; i < argc; ++i) {
 		result = check_format (argv[i]);

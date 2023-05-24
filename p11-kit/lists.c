@@ -48,6 +48,7 @@
 
 #include "message.h"
 #include "p11-kit.h"
+#include "print.h"
 #include "tool.h"
 #include "uri.h"
 
@@ -119,35 +120,33 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 	}
 
 	value = p11_kit_space_strdup (info.label, sizeof (info.label));
-	printf ("    token: %s\n", value);
+	p11_print_value (stdout, 4, "token", P11_COLOR_GREEN, P11_FONT_BOLD, value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
-	printf ("        manufacturer: %s\n", value);
+	P11_PRINT_VALUE_BOLD (8, "manufacturer", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.model, sizeof (info.model));
-	printf ("        model: %s\n", value);
+	P11_PRINT_VALUE_BOLD (8, "model", value);
 	free (value);
 
 	if (is_ascii_string (info.serialNumber, sizeof (info.serialNumber)))
 		value = p11_kit_space_strdup (info.serialNumber, sizeof (info.serialNumber));
 	else
 		value = hex_encode (info.serialNumber, sizeof (info.serialNumber));
-	printf ("        serial-number: %s\n", value);
+	P11_PRINT_VALUE_BOLD (8, "serial-number", value);
 	free (value);
 
 	if (info.hardwareVersion.major || info.hardwareVersion.minor)
-		printf ("        hardware-version: %d.%d\n",
-		        info.hardwareVersion.major,
-		        info.hardwareVersion.minor);
+		p11_print_value (stdout, 8, "hardware-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
+				 "%d.%d", info.hardwareVersion.major, info.hardwareVersion.minor);
 
 	if (info.firmwareVersion.major || info.firmwareVersion.minor)
-		printf ("        firmware-version: %d.%d\n",
-		        info.firmwareVersion.major,
-		        info.firmwareVersion.minor);
+		p11_print_value (stdout, 8, "firmware-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
+				 "%d.%d", info.firmwareVersion.major, info.firmwareVersion.minor);
 
-	printf ("        flags:\n");
+	p11_print_value (stdout, 8, "flags", P11_COLOR_DEFAULT, P11_FONT_BOLD, "");
 	#define X(x, y)   if (info.flags & (x)) printf ("               %s\n", (y))
 	X(CKF_RNG, "rng");
 	X(CKF_WRITE_PROTECTED, "write-protected");
@@ -185,19 +184,16 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 		return;
 	}
 
-	value = p11_kit_space_strdup (info.libraryDescription,
-	                              sizeof (info.libraryDescription));
-	printf ("    library-description: %s\n", value);
+	value = p11_kit_space_strdup (info.libraryDescription, sizeof (info.libraryDescription));
+	P11_PRINT_VALUE_BOLD (4, "library-description", value);
 	free (value);
 
-	value = p11_kit_space_strdup (info.manufacturerID,
-	                              sizeof (info.manufacturerID));
-	printf ("    library-manufacturer: %s\n", value);
+	value = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
+	P11_PRINT_VALUE_BOLD (4, "library-manufacturer", value);
 	free (value);
 
-	printf ("    library-version: %d.%d\n",
-	        info.libraryVersion.major,
-	        info.libraryVersion.minor);
+	p11_print_value (stdout, 4, "library-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
+			 "%d.%d", info.libraryVersion.major, info.libraryVersion.minor);
 
 	count = sizeof (slot_list) / sizeof (slot_list[0]);
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
@@ -226,9 +222,8 @@ print_modules (void)
 		name = p11_kit_module_get_name (module_list[i]);
 		path = p11_kit_config_option (module_list[i], "module");
 
-		printf ("%s: %s\n",
-			name ? name : "(null)",
-			path ? path : "(null)");
+		p11_print_value (stdout, 0, name ? name : "(null)", P11_COLOR_BLUE,
+				 P11_FONT_BOLD, path ? path : "(null)");
 		print_module_info (module_list[i]);
 
 		free (name);
