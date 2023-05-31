@@ -103,6 +103,9 @@ list_iterate (p11_enumerate *ex,
 	const char *nick;
 	char *string;
 	int flags;
+	p11_list_printer printer;
+
+	p11_list_printer_init (&printer, stdout, 1);
 
 	flags = P11_KIT_URI_FOR_OBJECT;
 	if (details)
@@ -130,27 +133,27 @@ list_iterate (p11_enumerate *ex,
 		if (p11_attrs_find_ulong (ex->attrs, CKA_CLASS, &klass)) {
 			nick = p11_constant_nick (p11_constant_classes, klass);
 			if (nick != NULL)
-				P11_PRINT_VALUE_BOLD (4, "type", nick);
+				p11_list_printer_write_value (&printer, "type", "%s", nick);
 		}
 
 		attr = p11_attrs_find_valid (ex->attrs, CKA_LABEL);
 		if (attr && attr->pValue && attr->ulValueLen) {
 			string = strndup (attr->pValue, attr->ulValueLen);
-			P11_PRINT_VALUE_BOLD (4, "label", string);
+			p11_list_printer_write_value (&printer, "label", "%s", string);
 			free (string);
 		}
 
 		if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &val) && val)
-			P11_PRINT_VALUE_BOLD (4, "trust", "distrusted");
+			p11_list_printer_write_value (&printer, "trust", "distrusted");
 		else if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &val) && val)
-			P11_PRINT_VALUE_BOLD (4, "trust", "anchor");
+			p11_list_printer_write_value (&printer, "trust", "anchor");
 		else
-			P11_PRINT_VALUE_BOLD (4, "trust", "unspecified");
+			p11_list_printer_write_value (&printer, "trust", "unspecified");
 
 		if (p11_attrs_find_ulong (ex->attrs, CKA_CERTIFICATE_CATEGORY, &category)) {
 			nick = p11_constant_nick (p11_constant_categories, category);
 			if (nick != NULL)
-				P11_PRINT_VALUE_BOLD (4, "category", nick);
+				p11_list_printer_write_value (&printer, "category", "%s", nick);
 		}
 
 		if (details) {
@@ -159,8 +162,8 @@ list_iterate (p11_enumerate *ex,
 				p11_buffer_init (&buf, 1024);
 				bytes = attr->pValue;
 				p11_url_encode (bytes, bytes + attr->ulValueLen, "", &buf);
-				p11_print_value (stdout, 4, "public-key-info", P11_COLOR_DEFAULT, P11_FONT_BOLD,
-						 "%.*s", (int)buf.len, (char *)buf.data);
+				p11_list_printer_write_value (&printer, "public-key-info",
+							      "%.*s", (int)buf.len, (char *)buf.data);
 				p11_buffer_uninit (&buf);
 			}
 		}

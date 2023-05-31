@@ -36,9 +36,7 @@
 #define P11_PRINT_H_
 
 #include <stdio.h>
-
-#define P11_PRINT_VALUE_BOLD(INDENT, KEY, VALUE) \
-	p11_print_value (stdout, INDENT, KEY, P11_COLOR_DEFAULT, P11_FONT_BOLD, VALUE)
+#include "array.h"
 
 typedef enum {
 	P11_COLOR_DEFAULT,
@@ -58,20 +56,37 @@ typedef enum {
 	P11_FONT_UNDERLINE = 1<<1
 } p11_font;
 
-void p11_highlight_word (FILE *fp,
-			 const char *string);
+typedef struct {
+	FILE *fp;
+	bool use_color;
+	size_t depth;
+} p11_list_printer;
 
-void p11_print_word     (FILE *fp,
-			 const char *string,
-			 p11_color color,
-			 p11_font font);
+void p11_list_printer_init          (p11_list_printer *printer,
+                                     FILE *fp,
+                                     size_t depth);
 
-void p11_print_value    (FILE *fp,
-			 size_t indent,
-			 const char *key,
-			 p11_color color,
-			 p11_font font,
-			 const char *value_fmt,
-			 ...);
+void p11_list_printer_start_section (p11_list_printer *printer,
+                                     const char *header,
+                                     const char *value_fmt,
+                                     ...);
+void p11_list_printer_end_section   (p11_list_printer *printer);
+
+void p11_list_printer_write_value   (p11_list_printer *printer,
+                                     const char *name,
+                                     const char *value_fmt,
+                                     ...);
+
+void p11_list_printer_write_array   (p11_list_printer *printer,
+                                     const char *name,
+                                     const p11_array *array);
+
+void p11_highlight_word             (FILE *fp,
+                                     const char *string);
+
+void p11_print_word                 (FILE *fp,
+                                     const char *string,
+                                     p11_color color,
+                                     p11_font font);
 
 #endif /* P11_PRINT_H_ */

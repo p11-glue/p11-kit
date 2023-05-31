@@ -107,11 +107,12 @@ is_ascii_string (const unsigned char *data,
 }
 
 static void
-print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
+print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 {
 	CK_TOKEN_INFO info;
 	char *value;
 	CK_RV rv;
+	p11_array *flags;
 
 	rv = (module->C_GetTokenInfo) (slot_id, &info);
 	if (rv != CKR_OK) {
@@ -120,34 +121,36 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 	}
 
 	value = p11_kit_space_strdup (info.label, sizeof (info.label));
-	p11_print_value (stdout, 4, "token", P11_COLOR_GREEN, P11_FONT_BOLD, value);
+	p11_list_printer_start_section (printer, "token", "%s", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
-	P11_PRINT_VALUE_BOLD (8, "manufacturer", value);
+	p11_list_printer_write_value (printer, "manufacturer", "%s", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.model, sizeof (info.model));
-	P11_PRINT_VALUE_BOLD (8, "model", value);
+	p11_list_printer_write_value (printer, "model", "%s", value);
 	free (value);
 
 	if (is_ascii_string (info.serialNumber, sizeof (info.serialNumber)))
 		value = p11_kit_space_strdup (info.serialNumber, sizeof (info.serialNumber));
 	else
 		value = hex_encode (info.serialNumber, sizeof (info.serialNumber));
-	P11_PRINT_VALUE_BOLD (8, "serial-number", value);
+	p11_list_printer_write_value (printer, "serial-number", "%s", value);
 	free (value);
 
 	if (info.hardwareVersion.major || info.hardwareVersion.minor)
-		p11_print_value (stdout, 8, "hardware-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
-				 "%d.%d", info.hardwareVersion.major, info.hardwareVersion.minor);
+		p11_list_printer_write_value (printer, "hardware-version",
+					      "%d.%d", info.hardwareVersion.major, info.hardwareVersion.minor);
 
 	if (info.firmwareVersion.major || info.firmwareVersion.minor)
-		p11_print_value (stdout, 8, "firmware-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
-				 "%d.%d", info.firmwareVersion.major, info.firmwareVersion.minor);
+		p11_list_printer_write_value (printer, "firmware-version",
+					      "%d.%d", info.firmwareVersion.major, info.firmwareVersion.minor);
 
-	p11_print_value (stdout, 8, "flags", P11_COLOR_DEFAULT, P11_FONT_BOLD, "");
-	#define X(x, y)   if (info.flags & (x)) printf ("               %s\n", (y))
+	flags = p11_array_new (NULL);
+	return_if_fail (flags);
+
+	#define X(x, y)   if (info.flags & (x)) (void) p11_array_push (flags, y)
 	X(CKF_RNG, "rng");
 	X(CKF_WRITE_PROTECTED, "write-protected");
 	X(CKF_LOGIN_REQUIRED, "login-required");
@@ -167,10 +170,15 @@ print_token_info (CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
 	X(CKF_SO_PIN_LOCKED, "so-pin-locked");
 	X(CKF_SO_PIN_TO_BE_CHANGED, "so-pin-to-be-changed");
 	#undef X
+
+	p11_list_printer_write_array (printer, "flags", flags);
+	p11_array_free (flags);
+
+	p11_list_printer_end_section (printer);
 }
 
 static void
-print_module_info (CK_FUNCTION_LIST_PTR module)
+print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module)
 {
 	CK_SLOT_ID slot_list[256];
 	CK_ULONG i, count;
@@ -185,15 +193,15 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 	}
 
 	value = p11_kit_space_strdup (info.libraryDescription, sizeof (info.libraryDescription));
-	P11_PRINT_VALUE_BOLD (4, "library-description", value);
+	p11_list_printer_write_value (printer, "library-description", "%s", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
-	P11_PRINT_VALUE_BOLD (4, "library-manufacturer", value);
+	p11_list_printer_write_value (printer, "library-manufacturer", "%s", value);
 	free (value);
 
-	p11_print_value (stdout, 4, "library-version", P11_COLOR_DEFAULT, P11_FONT_BOLD,
-			 "%d.%d", info.libraryVersion.major, info.libraryVersion.minor);
+	p11_list_printer_write_value (printer, "library-version",
+				 "%d.%d", info.libraryVersion.major, info.libraryVersion.minor);
 
 	count = sizeof (slot_list) / sizeof (slot_list[0]);
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
@@ -203,7 +211,7 @@ print_module_info (CK_FUNCTION_LIST_PTR module)
 	}
 
 	for (i = 0; i < count; i++)
-		print_token_info (module, slot_list[i]);
+		print_token_info (printer, module, slot_list[i]);
 }
 
 static int
@@ -212,19 +220,24 @@ print_modules (void)
 	CK_FUNCTION_LIST_PTR *module_list;
 	char *name;
 	char *path;
+	p11_list_printer printer;
 	int i;
 
 	module_list = p11_kit_modules_load_and_initialize (0);
 	if (!module_list)
 		return 1;
 
+	p11_list_printer_init (&printer, stdout, 0);
+
 	for (i = 0; module_list[i]; i++) {
 		name = p11_kit_module_get_name (module_list[i]);
 		path = p11_kit_config_option (module_list[i], "module");
 
-		p11_print_value (stdout, 0, name ? name : "(null)", P11_COLOR_BLUE,
-				 P11_FONT_BOLD, path ? path : "(null)");
-		print_module_info (module_list[i]);
+		p11_list_printer_start_section (&printer,
+						name ? name : "(null)",
+						"%s", path ? path : "(null)");
+		print_module_info (&printer, module_list[i]);
+		p11_list_printer_end_section (&printer);
 
 		free (name);
 		free (path);

@@ -36,8 +36,9 @@
 
 #include "print.h"
 
+#include "compat.h"
+#include "debug.h"
 #include <stdarg.h>
-#include <unistd.h>
 
 static const char *
 color_to_sgr (p11_color color)
@@ -84,26 +85,106 @@ p11_print_word (FILE *fp,
 	fprintf (fp, "m%s\033[0m", string);
 }
 
+/* List of colors used for nested section headers */
+static p11_color header_colors[] = {
+	P11_COLOR_BLUE,
+	P11_COLOR_GREEN
+};
+
 void
-p11_print_value (FILE *fp,
-		 size_t indent,
-		 const char *key,
-		 p11_color color,
-		 p11_font font,
-		 const char *value_fmt,
-		 ...)
+p11_list_printer_init (p11_list_printer *printer, FILE *fp, size_t depth)
+{
+	printer->fp = fp;
+	printer->use_color = isatty (fileno (fp));
+	printer->depth = depth;
+}
+
+static inline void
+print_indent (FILE *fp, size_t depth)
 {
 	size_t i;
+
+	for (i = 0; i < depth; ++i)
+		fputs ("    ", fp);
+}
+
+void
+p11_list_printer_start_section (p11_list_printer *printer,
+			   const char *header,
+			   const char *value_fmt,
+			   ...)
+{
 	va_list args;
 
-	for (i = 0; i < indent; ++i)
-		fputc (' ', fp);
+	return_if_fail (printer->depth < sizeof(header_colors) / sizeof(*header_colors));
 
-	p11_print_word (fp, key, color, font);
-	p11_print_word (fp, ": ", color, font);
+	print_indent (printer->fp, printer->depth);
+
+	if (printer->use_color) {
+		fprintf (printer->fp, "\033[%s;1m%s\033[0m: ",
+			 color_to_sgr (header_colors[printer->depth]),
+			 header);
+	} else {
+		fprintf (printer->fp, "%s: ", header);
+	}
 
 	va_start (args, value_fmt);
-	vfprintf (fp, value_fmt, args);
+	vfprintf (printer->fp, value_fmt, args);
 	va_end (args);
-	fputc ('\n', fp);
+
+	fputc ('\n', printer->fp);
+
+	printer->depth++;
+}
+
+void
+p11_list_printer_end_section (p11_list_printer *printer)
+{
+	printer->depth--;
+}
+
+void
+p11_list_printer_write_value (p11_list_printer *printer,
+			 const char *name,
+			 const char *value_fmt,
+			 ...)
+{
+	va_list args;
+
+	print_indent (printer->fp, printer->depth);
+
+	if (printer->use_color) {
+		fprintf (printer->fp, "\033[0;1m%s\033[0m: ", name);
+	} else {
+		fprintf (printer->fp, "%s: ", name);
+	}
+
+	va_start (args, value_fmt);
+	vfprintf (printer->fp, value_fmt, args);
+	va_end (args);
+
+	fputc ('\n', printer->fp);
+}
+
+void
+p11_list_printer_write_array (p11_list_printer *printer,
+			 const char *name,
+			 const p11_array *array)
+{
+	size_t i;
+
+	print_indent (printer->fp, printer->depth);
+
+	if (printer->use_color) {
+		fprintf (printer->fp, "\033[0;1m%s\033[0m: \n", name);
+	} else {
+		fprintf (printer->fp, "%s: \n", name);
+	}
+
+	for (i = 0; i < array->num; i++) {
+		print_indent (printer->fp, printer->depth + 1);
+
+		/* List elements are preceded by a couple of additional spaces */
+		fprintf (printer->fp, "  %s\n", (const char *)array->elem[i]);
+	}
 }
