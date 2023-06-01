@@ -1059,6 +1059,27 @@ p11_rpc_buffer_add_byte_array_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_fix_length (p11_buffer *buffer, p11_rpc_value_type value_type, uint32_t length) {
+        switch(value_type) {
+#ifdef OS_WIN32
+        case P11_RPC_VALUE_ULONG:
+                /* Windows uses LLP64, sizeof(CK_ULONG) is 32-bit,
+                   while others use LP64, sizeof(CK_ULONG) is 64-bit.
+                   When others receive an ULONG from Windows,
+                   decode_length is set to 8, however the expected length is set to 4,
+                   p11_rpc_buffer_get_attribute will fail.
+                   Because of this, we change to 8 here.
+                */
+                p11_rpc_buffer_add_uint32(buffer, 8);
+        case P11_RPC_VALUE_MECHANISM_TYPE_ARRAY:
+                p11_rpc_buffer_add_uint32(buffer, length / sizeof (CK_MECHANISM_TYPE) * 8);
+#endif
+        default:
+                p11_rpc_buffer_add_uint32(buffer, length);
+        }
+}
+
+void
 p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
 {
 	unsigned char validity;
@@ -1084,10 +1105,11 @@ p11_rpc_buffer_add_attribute (p11_buffer *buffer, const CK_ATTRIBUTE *attr)
 		p11_buffer_fail (buffer);
 		return;
 	}
-	p11_rpc_buffer_add_uint32 (buffer, attr->ulValueLen);
 
 	/* The attribute value */
 	value_type = map_attribute_to_value_type (attr->type);
+        p11_rpc_buffer_add_fix_length (buffer, value_type, attr->ulValueLen);
+
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
@@ -1251,6 +1273,31 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 	return true;
 }
 
+uint32_t
+p11_rpc_buffer_get_fix_length (p11_buffer *buffer, size_t *offset, p11_rpc_value_type value_type, uint32_t *length) {
+        uint32_t len;
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &len))
+		return false;
+
+        switch(value_type) {
+#ifdef OS_WIN32
+        case P11_RPC_VALUE_ULONG:
+                /* Windows uses LLP64, sizeof(CK_ULONG) is 32-bit,
+                   while others use LP64, sizeof(CK_ULONG) is 64-bit.
+                   When Windows receive an ULONG from others,
+                   decode_length is set to sizeof(CK_ULONG) which is 4,
+                   thus we have to set expected length to 4.
+                */
+                *length = 4;
+        case P11_RPC_VALUE_MECHANISM_TYPE_ARRAY:
+                *length = len / 8 * sizeof (CK_MECHANISM_TYPE);
+#endif
+        default:
+                *length = len;
+        }
+        return true;
+}
+
 bool
 p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 			      size_t *offset,
@@ -1276,12 +1323,14 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 		return true;
 	}
 
-	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
-		return false;
 
 	/* Decode the attribute value */
 	value_type = map_attribute_to_value_type (type);
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
+
+	if (!p11_rpc_buffer_get_fix_length (buffer, offset, value_type, &length))
+		return false;
+
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
 	if (!serializer->decode (buffer, offset, attr->pValue, &attr->ulValueLen))
