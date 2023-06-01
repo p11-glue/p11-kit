@@ -1,0 +1,5 @@
+
+module: mock-v3-four.dll
+enable-in: test-proxy3, test-log3, test-rpc
+priority: 4
+trust-policy: no

@@ -43,6 +43,7 @@
 #include "list.h"
 #include "message.h"
 #include "pkcs11x.h"
+#include "print.h"
 #include "tool.h"
 #include "url.h"
 
@@ -102,6 +103,9 @@ list_iterate (p11_enumerate *ex,
 	const char *nick;
 	char *string;
 	int flags;
+	p11_list_printer printer;
+
+	p11_list_printer_init (&printer, stdout, 1);
 
 	flags = P11_KIT_URI_FOR_OBJECT;
 	if (details)
@@ -123,33 +127,33 @@ list_iterate (p11_enumerate *ex,
 			continue;
 		}
 
-		printf ("%s\n", string);
+		p11_highlight_word (stdout, string);
 		free (string);
 
 		if (p11_attrs_find_ulong (ex->attrs, CKA_CLASS, &klass)) {
 			nick = p11_constant_nick (p11_constant_classes, klass);
 			if (nick != NULL)
-				printf ("    type: %s\n", nick);
+				p11_list_printer_write_value (&printer, "type", "%s", nick);
 		}
 
 		attr = p11_attrs_find_valid (ex->attrs, CKA_LABEL);
 		if (attr && attr->pValue && attr->ulValueLen) {
 			string = strndup (attr->pValue, attr->ulValueLen);
-			printf ("    label: %s\n", string);
+			p11_list_printer_write_value (&printer, "label", "%s", string);
 			free (string);
 		}
 
 		if (p11_attrs_find_bool (ex->attrs, CKA_X_DISTRUSTED, &val) && val)
-			printf ("    trust: distrusted\n");
+			p11_list_printer_write_value (&printer, "trust", "distrusted");
 		else if (p11_attrs_find_bool (ex->attrs, CKA_TRUSTED, &val) && val)
-			printf ("    trust: anchor\n");
+			p11_list_printer_write_value (&printer, "trust", "anchor");
 		else
-			printf ("    trust: unspecified\n");
+			p11_list_printer_write_value (&printer, "trust", "unspecified");
 
 		if (p11_attrs_find_ulong (ex->attrs, CKA_CERTIFICATE_CATEGORY, &category)) {
 			nick = p11_constant_nick (p11_constant_categories, category);
 			if (nick != NULL)
-				printf ("    category: %s\n", nick);
+				p11_list_printer_write_value (&printer, "category", "%s", nick);
 		}
 
 		if (details) {
@@ -158,7 +162,8 @@ list_iterate (p11_enumerate *ex,
 				p11_buffer_init (&buf, 1024);
 				bytes = attr->pValue;
 				p11_url_encode (bytes, bytes + attr->ulValueLen, "", &buf);
-				printf ("    public-key-info: %.*s\n", (int)buf.len, (char *)buf.data);
+				p11_list_printer_write_value (&printer, "public-key-info",
+							      "%.*s", (int)buf.len, (char *)buf.data);
 				p11_buffer_uninit (&buf);
 			}
 		}

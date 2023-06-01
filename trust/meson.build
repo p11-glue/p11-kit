@@ -58,10 +58,8 @@ shared_module('p11-kit-trust',
               c_args: p11_kit_trust_c_args,
               dependencies: [asn_h_dep, libp11_library_dep] + dlopen_deps + libtasn1_deps,
               link_args: p11_module_ldflags,
-              link_depends: [p11_module_symbol_map,
-                             p11_module_symbol_def],
+              link_depends: [p11_module_symbol_map],
               link_with: libtrust_data,
-              vs_module_defs: p11_module_symbol_def,
               install: true,
               install_dir: prefix / p11_module_path)
 
@@ -80,6 +78,7 @@ endif
 
 trust_sources = [
   'anchor.c',
+  'check-format.c',
   'parser.c',
   'persist.c',
   'digest.c',
@@ -102,7 +101,7 @@ executable('trust',
            link_with: libtrust_data,
            dependencies: [asn_h_dep,
                           libp11_kit_dep,
-                          libp11_tool_dep] + libffi_deps + dlopen_deps + libtasn1_deps,
+                          libp11_tool_dep] + libintl_deps + libffi_deps + dlopen_deps + libtasn1_deps,
            install: true)
 
 install_data('trust-extract-compat',
@@ -143,12 +142,23 @@ if get_option('test')
     'test-jks'
   ]
 
+  # Some tests fail to link on macOS because they need p11_library_mutex, but
+  # it isn't included unless libp11_kit_testable is linked with
+  # -Wl,--whole-archive or -Wl,-force_load.
+  trust_tests_whole = [
+    'test-index',
+    'test-builder',
+    'test-token'
+  ]
+
   foreach name : trust_tests
     t = executable(name, '@0@.c'.format(name),
                    c_args: common_c_args + tests_c_args + libtrust_testable_c_args,
                    dependencies: [asn_h_dep,
                                   libp11_kit_dep,
-                                  libp11_library_dep,
+                                  trust_tests_whole.contains(name) ?
+                                    libp11_library_whole_dep :
+                                    libp11_library_dep,
                                   libp11_test_dep] + libtasn1_deps + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
     test(name, t)
@@ -166,12 +176,21 @@ if get_option('test')
     'frob-oid'
   ]
 
+  # Some tests fail to link on macOS because they need p11_library_mutex, but
+  # it isn't included unless libp11_kit_testable is linked with
+  # -Wl,--whole-archive or -Wl,-force_load.
+  trust_progs_whole = [
+    'frob-token'
+  ]
+
   foreach name : trust_progs
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args,
                    dependencies: [asn_h_dep,
                                   libp11_kit_dep,
-                                  libp11_library_dep,
+                                  trust_progs_whole.contains(name) ?
+                                    libp11_library_whole_dep :
+                                    libp11_library_dep,
                                   libp11_test_dep] + libtasn1_deps + libffi_deps + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
   endforeach

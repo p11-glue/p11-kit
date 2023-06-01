@@ -105,6 +105,7 @@ frob-*
 /p11-kit/virtual-fixed-generated.h
 /p11-kit/*.gnu.c
 
+/p11-kit/p11-kit-testable
 /p11-kit/p11-kit-remote
 /p11-kit/p11-kit-server
 /p11-kit/p11-kit-remote-testable

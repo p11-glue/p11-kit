@@ -19,7 +19,7 @@ libp11_kit_internal_sources += custom_target('generate virtual-fixed-generated.h
                                              output: 'virtual-fixed-generated.h',
                                              command: [
                                                meson.current_source_dir() / 'gen-virtual-fixed.sh',
-                                               '@OUTPUT@', '64'
+                                               '@OUTPUT@', '@0@'.format(closures)
                                              ])
 libp11_kit_internal_sources += 'virtual.c'
 
@@ -91,19 +91,25 @@ p11_module_symbol_map = meson.current_source_dir() / 'p11-module.map'
 p11_module_ldflags = cc.get_supported_link_arguments([
   '-Wl,--version-script,' + p11_module_symbol_map
 ])
-p11_module_symbol_def = meson.current_source_dir() / 'p11-module.def'
+
+# On macOS, the default suffix for loadable modules is .so, but meson uses
+# .dylib by default. Since the code expects .so and autotools was using .so,
+# make meson do the same.
+module_suffix = []
+if ['darwin', 'ios'].contains(host_system)
+  module_suffix = 'so'
+endif
 
 if host_system != 'windows'
   shared_module('p11-kit-client',
                 'client.c', 'client-init.c',
                 name_prefix: '',
+                name_suffix: module_suffix,
                 include_directories: [configinc, commoninc],
                 dependencies: dlopen_deps,
                 link_args: p11_module_ldflags,
-                link_depends: [p11_module_symbol_map,
-                               p11_module_symbol_def],
+                link_depends: [p11_module_symbol_map],
                 link_with: [libp11_kit_internal],
-                vs_module_defs: p11_module_symbol_def,
                 install: true,
                 install_dir: p11_module_path)
 endif
@@ -140,21 +146,33 @@ if get_option('test')
 endif
 
 p11_kit_sources = [
+  'add-profile.c',
+  'delete-profile.c',
+  'list-profiles.c',
   'lists.c',
-  'p11-kit.c'
+  'p11-kit.c',
+  'print-config.c'
 ]
 
 executable('p11-kit',
            p11_kit_sources,
-           c_args: common_c_args,
+           c_args: common_c_args + libp11_kit_internal_c_args,
            dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
-           link_with: libp11_kit,
+           link_with: [libp11_kit, libp11_kit_internal],
            install: true)
+
+if get_option('test')
+  executable('p11-kit-testable',
+             p11_kit_sources,
+             c_args: common_c_args + libp11_kit_internal_c_args,
+             dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+             link_whole: libp11_kit_testable)
+endif
 
 executable('p11-kit-remote',
            'remote.c',
            c_args: common_c_args,
-           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libintl_deps + libffi_deps + dlopen_deps,
            link_with: libp11_kit,
            install: true,
            install_dir: prefix / privatedir)
@@ -164,7 +182,7 @@ if get_option('test')
              'remote.c',
              c_args: common_c_args,
              dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
-             link_with: libp11_kit_testable)
+             link_whole: libp11_kit_testable)
 endif
 
 executable('p11-kit-server',
@@ -172,7 +190,7 @@ executable('p11-kit-server',
            c_args: common_c_args + [
              '-DP11_KIT_REMOTE="p11-kit-remote"'
            ],
-           dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libsystemd_deps + libintl_deps + libffi_deps + dlopen_deps,
            implicit_include_directories: false,
            link_with: libp11_kit,
            install: true,
@@ -186,7 +204,7 @@ if get_option('test')
              ],
              implicit_include_directories: false,
              dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
-             link_with: libp11_kit_testable)
+             link_whole: libp11_kit_testable)
 endif
 
 if with_systemd
@@ -235,13 +253,25 @@ if get_option('test')
     'test-modules',
     'test-deprecated',
     'test-proxy',
+    'test-proxy3',
     'test-iter',
     'test-rpc',
+    'test-rpc-message',
     'test-virtual',
     'test-managed',
     'test-log',
+    'test-log3',
     'test-filter',
-    'test-transport'
+    'test-transport',
+    'test-transport3'
+  ]
+
+  # Some tests fail to link on macOS because they need p11_library_mutex, but
+  # it isn't included unless libp11_kit_testable is linked with
+  # -Wl,--whole-archive or -Wl,-force_load.
+  p11_kit_tests_whole = [
+    'test-uri',
+    'test-util'
   ]
 
   if host_system != 'windows'
@@ -249,11 +279,18 @@ if get_option('test')
   endif
 
   foreach name : p11_kit_tests
+    link_whole = []
+    link_with = [libp11_kit_testable]
+    if p11_kit_tests_whole.contains(name)
+      link_whole = [libp11_kit_testable]
+      link_with = []
+    endif
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args + libp11_kit_testable_c_args,
                    include_directories: [configinc, commoninc],
                    dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
-                   link_with: libp11_kit_testable)
+                   link_with: link_with,
+                   link_whole: link_whole)
     test(name, t)
   endforeach
 
@@ -275,6 +312,10 @@ if get_option('test')
   p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
 
   if host_system != 'windows'
+    test('test-profiles.sh',
+         find_program('test-profiles.sh'),
+         env: p11_kit_tests_env)
+
     test('test-messages.sh',
          find_program('test-messages.sh'),
          env: p11_kit_tests_env)
@@ -286,14 +327,18 @@ if get_option('test')
 
   mock_sources = {
                    'mock-one': ['mock-module-ep.c'],
+                   'mock-v3-one': ['mock-module-v3-ep.c'],
                    'mock-two': ['mock-module-ep2.c'],
+                   'mock-v3-two': ['mock-module-v3-ep2.c'],
                    'mock-three': ['mock-module-ep.c'],
                    'mock-four': ['mock-module-ep.c'],
+                   'mock-v3-four': ['mock-module-v3-ep.c'],
                    'mock-five': ['mock-module-ep3.c'],
                    'mock-seven': ['mock-module-ep5.c'],
                    'mock-eight': ['mock-module-ep6.c'],
                    'mock-nine': ['mock-module-ep7.c'],
-                   'mock-ten': ['mock-module-ep8.c']
+                   'mock-ten': ['mock-module-ep8.c'],
+                   'mock-eleven': ['mock-module-ep9.c']
                  }
 
   if host_system != 'windows'
@@ -304,10 +349,9 @@ if get_option('test')
     shared_module(name,
                   sources,
                   name_prefix: '',
+                  name_suffix: module_suffix,
                   link_args: p11_module_ldflags,
-                  link_depends: [p11_module_symbol_map,
-                                 p11_module_symbol_def],
-                  vs_module_defs: p11_module_symbol_def,
+                  link_depends: [p11_module_symbol_map],
                   dependencies: [libp11_test_dep])
   endforeach
 endif

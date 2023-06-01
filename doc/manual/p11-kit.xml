@@ -33,6 +33,18 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit list-profiles</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>p11-kit add-profile</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>p11-kit delete-profile</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
+		<command>p11-kit print-config</command>
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit extract</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -75,6 +87,62 @@ $ p11-kit list-modules
 
 	<para>The modules, information about them and the tokens present in
 	the PKCS#11 modules will be displayed.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-list-profiles">
+	<title>List Profiles</title>
+
+	<para>List PKCS#11 profiles supported by the token.</para>
+
+<programlisting>
+$ p11-kit list-profiles pkcs11:token
+</programlisting>
+
+	<para>This searches the given token for profile objects that contain profile IDs
+	which are then displayed in human-readable form.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-add-profile">
+	<title>Add Profile</title>
+
+	<para>Add PKCS#11 profile to the token.</para>
+
+<programlisting>
+$ p11-kit add-profile --profile profile pkcs11:token
+</programlisting>
+
+	<para>Creates a new PKCS#11 profile object on the token if it doesn't already exist.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-delete-profile">
+	<title>Delete Profile</title>
+
+	<para>Delete PKCS#11 profile from the token.</para>
+
+<programlisting>
+$ p11-kit delete-profile --profile profile pkcs11:token
+</programlisting>
+
+	<para>Searches the token for profile object that matches given PKCS#11
+	profile ID and attempts to destroy it.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-print-config">
+	<title>Print Config</title>
+
+	<para>Print merged configuration.</para>
+
+<programlisting>
+$ p11-kit print-config
+</programlisting>
+
+	<para>P11-kit provides 3 levels of configuration: system wide, per-module, and per-user.
+	At run-time all 3 levels are merged into a single configuration. This command displays the
+	merged configuration.</para>
 
 </refsect1>
 

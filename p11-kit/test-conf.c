@@ -270,9 +270,9 @@ test_load_modules_merge (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
-	                                  SRCDIR "/p11-kit/fixtures/package-modules",
-	                                  SRCDIR "/p11-kit/fixtures/system-modules",
-	                                  SRCDIR "/p11-kit/fixtures/user-modules");
+	                                  P11_PACKAGE_CONFIG_MODULES,
+	                                  P11_SYSTEM_CONFIG_MODULES,
+	                                  P11_USER_CONFIG_MODULES);
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
@@ -303,9 +303,9 @@ test_load_modules_user_none (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_NONE,
-	                                  SRCDIR "/p11-kit/fixtures/package-modules",
-	                                  SRCDIR "/p11-kit/fixtures/system-modules",
-	                                  SRCDIR "/p11-kit/fixtures/user-modules");
+	                                  P11_PACKAGE_CONFIG_MODULES,
+	                                  P11_SYSTEM_CONFIG_MODULES,
+	                                  P11_USER_CONFIG_MODULES);
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
 
@@ -334,9 +334,9 @@ test_load_modules_user_only (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_ONLY,
-	                                  SRCDIR "/p11-kit/fixtures/package-modules",
-	                                  SRCDIR "/p11-kit/fixtures/system-modules",
-	                                  SRCDIR "/p11-kit/fixtures/user-modules");
+	                                  P11_PACKAGE_CONFIG_MODULES,
+	                                  P11_SYSTEM_CONFIG_MODULES,
+	                                  P11_USER_CONFIG_MODULES);
 	assert_ptr_not_null (configs);
 	assert_ptr_eq (NULL, (void *)p11_message_last ());
 
@@ -365,8 +365,8 @@ test_load_modules_no_user (void)
 	p11_message_clear ();
 
 	configs = _p11_conf_load_modules (CONF_USER_MERGE,
-	                                  SRCDIR "/p11-kit/fixtures/package-modules",
-	                                  SRCDIR "/p11-kit/fixtures/system-modules",
+	                                  P11_PACKAGE_CONFIG_MODULES,
+	                                  P11_SYSTEM_CONFIG_MODULES,
 	                                  SRCDIR "/p11-kit/fixtures/non-existant");
 	assert_ptr_not_null (configs);
 	assert (assert_msg_contains (p11_message_last (), "invalid config filename"));
@@ -399,6 +399,12 @@ test_parse_boolean (void)
 
 #ifdef OS_UNIX
 
+/* These tests do not work under ASan, as it spawns another
+ * process with setuid bit set.
+ */
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
+
 static void
 test_setuid (void)
 {
@@ -428,6 +434,8 @@ test_setuid (void)
 	free (path);
 }
 
+#endif
+
 #endif /* OS_UNIX */
 
 extern bool p11_conf_force_user_config;
@@ -454,11 +462,17 @@ main (int argc,
 	p11_test (test_load_modules_user_none, "/conf/test_load_modules_user_none");
 	p11_test (test_parse_boolean, "/conf/test_parse_boolean");
 #ifdef OS_UNIX
+	/* These tests do not work under ASan, as it spawns another
+	 * process with setuid bit set.
+	 */
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
 	/* Don't run this test when under fakeroot, or the binary is
 	 * written under /tmp */
 	if (!getenv ("FAKED_MODE") && strncmp (BUILDDIR, "/tmp/", 5) != 0) {
 		p11_test (test_setuid, "/conf/setuid");
 	}
+#endif
 #endif
 	return p11_test_run (argc, argv);
 }

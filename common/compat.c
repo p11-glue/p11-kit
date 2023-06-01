@@ -941,6 +941,16 @@ strerror_r (int errnum,
 
 #endif /* HAVE_STRERROR_R */
 
+#ifndef HAVE_ISATTY
+
+int
+isatty (int fd)
+{
+	return 0;
+}
+
+#endif /* HAVE_ISATTY */
+
 void
 p11_dl_close (void *dl)
 {

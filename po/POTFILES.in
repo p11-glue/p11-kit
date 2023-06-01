@@ -1,11 +1,15 @@
 # List of source files which contain translatable strings.
 common/tool.c
+p11-kit/add-profile.c
 p11-kit/conf.c
+p11-kit/delete-profile.c
 p11-kit/filter.c
+p11-kit/list-profiles.c
 p11-kit/lists.c
 p11-kit/messages.c
 p11-kit/modules.c
 p11-kit/p11-kit.c
+p11-kit/print-config.c
 p11-kit/remote.c
 p11-kit/rpc-client.c
 p11-kit/rpc-message.c
@@ -14,6 +18,7 @@ p11-kit/rpc-transport.c
 p11-kit/server.c
 trust/anchor.c
 trust/builder.c
+trust/check-format.c
 trust/dump.c
 trust/enumerate.c
 trust/extract.c

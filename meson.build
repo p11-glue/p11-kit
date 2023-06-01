@@ -59,8 +59,15 @@ endif
 
 conf.set10('WITH_STRICT', get_option('strict'))
 
+libintl_deps = []
 if get_option('nls') and cc.has_header('libintl.h')
   conf.set('ENABLE_NLS', 1)
+  libintl = dependency('intl', required: false)
+  if libintl.found()
+    if cc.has_function('dgettext', dependencies : libintl)
+      libintl_deps += [libintl]
+    endif
+  endif
 endif
 
 prefix = get_option('prefix')
@@ -180,6 +187,7 @@ if host_system != 'windows'
     'getpeerucred',
     'getprogname',
     'getresuid',
+    'isatty',
     'issetugid',
     'mkdtemp',
     'mkstemp',
@@ -200,7 +208,7 @@ if host_system != 'windows'
   tls_test_code_template = '''
 #include <stdlib.h>
 int main (void) {
-static @0@ foo;
+static @0@ int foo;
 return 0;
 }
 '''
@@ -319,8 +327,8 @@ if libffi.found()
 endif
 
 closures = get_option('closures')
-if closures < 1
-  error('at least one closure must be compiled in')
+if not libffi.found() and closures < 1
+  error('libffi needs to be enabled or at least one closure must be compiled in')
 endif
 
 conf.set('P11_VIRTUAL_MAX_FIXED', closures)

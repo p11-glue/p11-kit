@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2008 Stefan Walter
  * Copyright (C) 2011 Collabora Ltd.
+ * Copyright (C) 2021-2023 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -90,7 +91,7 @@ typedef struct _State {
 	p11_virtual virt;
 	struct _State *next;
 	CK_FUNCTION_LIST **loaded;
-	CK_FUNCTION_LIST *wrapped;
+	CK_INTERFACE wrapped;
 	CK_ULONG last_handle;
 	Proxy *px;
 } State;
@@ -192,7 +193,7 @@ proxy_free (Proxy *py, unsigned finalize)
 {
 	if (py) {
 		if (finalize)
-			p11_kit_modules_finalize (py->inited);
+			p11_kit_modules_finalize ((CK_FUNCTION_LIST **)py->inited);
 		free (py->inited);
 		p11_dict_free (py->sessions);
 		free (py->mappings);
@@ -456,8 +457,8 @@ proxy_C_GetInfo (CK_X_FUNCTION_LIST *self,
 		return rv;
 
 	memset (info, 0, sizeof (CK_INFO));
-	info->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
-	info->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
+	info->cryptokiVersion.major = self->version.major;
+	info->cryptokiVersion.minor = self->version.minor;
 	info->libraryVersion.major = LIBRARY_VERSION_MAJOR;
 	info->libraryVersion.minor = LIBRARY_VERSION_MINOR;
 	info->flags = 0;
@@ -491,7 +492,7 @@ proxy_C_GetSlotList (CK_X_FUNCTION_LIST *self,
 			Mapping *mappings = NULL;
 			unsigned int n_mappings = 0;
 
-			if (state->px->mappings) {
+			if (state->px->n_mappings > 0) {
 				mappings = state->px->mappings;
 				n_mappings = state->px->n_mappings;
 				state->px->mappings = NULL;
@@ -1672,6 +1673,480 @@ proxy_C_GenerateRandom (CK_X_FUNCTION_LIST *self,
 	return (map.funcs->C_GenerateRandom) (handle, random_data, random_len);
 }
 
+static CK_RV
+proxy_C_LoginUser (CK_X_FUNCTION_LIST *self,
+                   CK_SESSION_HANDLE session,
+                   CK_USER_TYPE user_type,
+                   CK_UTF8CHAR_PTR pin,
+                   CK_ULONG pin_len,
+                   CK_UTF8CHAR_PTR username,
+                   CK_ULONG username_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_LoginUser) (session, user_type, pin,
+								     pin_len, username, username_len);
+}
+
+static CK_RV
+proxy_C_SessionCancel (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE session,
+                       CK_FLAGS flags)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_SessionCancel) (session, flags);
+}
+
+static CK_RV
+proxy_C_MessageEncryptInit (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_MECHANISM_PTR mechanism,
+                            CK_OBJECT_HANDLE key)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageEncryptInit) (session, mechanism, key);
+}
+
+static CK_RV
+proxy_C_EncryptMessage (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE session,
+                        CK_VOID_PTR parameter,
+                        CK_ULONG parameter_len,
+                        CK_BYTE_PTR associated_data,
+                        CK_ULONG associated_data_len,
+                        CK_BYTE_PTR plaintext,
+                        CK_ULONG plaintext_len,
+                        CK_BYTE_PTR ciphertext,
+                        CK_ULONG_PTR ciphertext_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_EncryptMessage) (session, parameter,
+									  parameter_len,
+									  associated_data,
+									  associated_data_len,
+									  plaintext, plaintext_len,
+									  ciphertext, ciphertext_len);
+}
+
+static CK_RV
+proxy_C_EncryptMessageBegin (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE session,
+                             CK_VOID_PTR parameter,
+                             CK_ULONG parameter_len,
+                             CK_BYTE_PTR associated_data,
+                             CK_ULONG associated_data_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_EncryptMessageBegin) (session, parameter,
+									       parameter_len,
+									       associated_data,
+									       associated_data_len);
+}
+
+static CK_RV
+proxy_C_EncryptMessageNext (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_VOID_PTR parameter,
+                            CK_ULONG parameter_len,
+                            CK_BYTE_PTR plaintext_part,
+                            CK_ULONG plaintext_part_len,
+                            CK_BYTE_PTR ciphertext_part,
+                            CK_ULONG_PTR ciphertext_part_len,
+                            CK_FLAGS flags)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_EncryptMessageNext) (session, parameter,
+									      parameter_len,
+									      plaintext_part,
+									      plaintext_part_len,
+									      ciphertext_part,
+									      ciphertext_part_len,
+									      flags);
+}
+
+static CK_RV
+proxy_C_MessageEncryptFinal (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE session)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageEncryptFinal) (session);
+}
+
+static CK_RV
+proxy_C_MessageDecryptInit (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_MECHANISM_PTR mechanism,
+                            CK_OBJECT_HANDLE key)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageDecryptInit) (session, mechanism, key);
+}
+
+static CK_RV
+proxy_C_DecryptMessage (CK_X_FUNCTION_LIST *self,
+                        CK_SESSION_HANDLE session,
+                        CK_VOID_PTR parameter,
+                        CK_ULONG parameter_len,
+                        CK_BYTE_PTR associated_data,
+                        CK_ULONG associated_data_len,
+                        CK_BYTE_PTR ciphertext,
+                        CK_ULONG ciphertext_len,
+                        CK_BYTE_PTR plaintext,
+                        CK_ULONG_PTR plaintext_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_DecryptMessage) (session, parameter,
+									  parameter_len,
+									  associated_data,
+									  associated_data_len,
+									  ciphertext, ciphertext_len,
+									  plaintext, plaintext_len);
+}
+
+static CK_RV
+proxy_C_DecryptMessageBegin (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE session,
+                             CK_VOID_PTR parameter,
+                             CK_ULONG parameter_len,
+                             CK_BYTE_PTR associated_data,
+                             CK_ULONG associated_data_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_DecryptMessageBegin) (session, parameter,
+									       parameter_len,
+									       associated_data,
+									       associated_data_len);
+}
+
+static CK_RV
+proxy_C_DecryptMessageNext (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_VOID_PTR parameter,
+                            CK_ULONG parameter_len,
+                            CK_BYTE_PTR ciphertext_part,
+                            CK_ULONG ciphertext_part_len,
+                            CK_BYTE_PTR plaintext_part,
+                            CK_ULONG_PTR plaintext_part_len,
+                            CK_FLAGS flags)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_DecryptMessageNext) (session, parameter,
+									      parameter_len,
+									      ciphertext_part,
+									      ciphertext_part_len,
+									      plaintext_part,
+									      plaintext_part_len,
+									      flags);
+}
+
+static CK_RV
+proxy_C_MessageDecryptFinal (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE session)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageDecryptFinal) (session);
+}
+
+static CK_RV
+proxy_C_MessageSignInit (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE session,
+                         CK_MECHANISM_PTR mechanism,
+                         CK_OBJECT_HANDLE key)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageSignInit) (session, mechanism, key);
+}
+
+static CK_RV
+proxy_C_SignMessage (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE session,
+                     CK_VOID_PTR parameter,
+                     CK_ULONG parameter_len,
+                     CK_BYTE_PTR data,
+                     CK_ULONG data_len,
+                     CK_BYTE_PTR signature,
+                     CK_ULONG_PTR signature_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_SignMessage) (session, parameter,
+								       parameter_len, data, data_len,
+								       signature, signature_len);
+}
+
+static CK_RV
+proxy_C_SignMessageBegin (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session,
+                          CK_VOID_PTR parameter,
+                          CK_ULONG parameter_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_SignMessageBegin) (session, parameter,
+									    parameter_len);
+}
+
+static CK_RV
+proxy_C_SignMessageNext (CK_X_FUNCTION_LIST *self,
+                         CK_SESSION_HANDLE session,
+                         CK_VOID_PTR parameter,
+                         CK_ULONG parameter_len,
+                         CK_BYTE_PTR data,
+                         CK_ULONG data_len,
+                         CK_BYTE_PTR signature,
+                         CK_ULONG_PTR signature_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_SignMessageNext) (session, parameter,
+									   parameter_len, data,
+									   data_len, signature,
+									   signature_len);
+}
+
+static CK_RV
+proxy_C_MessageSignFinal (CK_X_FUNCTION_LIST *self,
+                          CK_SESSION_HANDLE session)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageSignFinal) (session);
+}
+
+static CK_RV
+proxy_C_MessageVerifyInit (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session,
+                           CK_MECHANISM_PTR mechanism,
+                           CK_OBJECT_HANDLE key)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageVerifyInit) (session, mechanism, key);
+}
+
+static CK_RV
+proxy_C_VerifyMessage (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE session,
+                       CK_VOID_PTR parameter,
+                       CK_ULONG parameter_len,
+                       CK_BYTE_PTR data,
+                       CK_ULONG data_len,
+                       CK_BYTE_PTR signature,
+                       CK_ULONG signature_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_VerifyMessage) (session, parameter,
+									 parameter_len, data,
+									 data_len, signature,
+									 signature_len);
+}
+
+static CK_RV
+proxy_C_VerifyMessageBegin (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_VOID_PTR parameter,
+                            CK_ULONG parameter_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_VerifyMessageBegin) (session, parameter,
+									      parameter_len);
+}
+
+static CK_RV
+proxy_C_VerifyMessageNext (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session,
+                           CK_VOID_PTR parameter,
+                           CK_ULONG parameter_len,
+                           CK_BYTE_PTR data,
+                           CK_ULONG data_len,
+                           CK_BYTE_PTR signature,
+                           CK_ULONG signature_len)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_VerifyMessageNext) (session, parameter,
+									     parameter_len, data,
+									     data_len, signature,
+									     signature_len);
+}
+
+static CK_RV
+proxy_C_MessageVerifyFinal (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session)
+{
+	State *state = (State *)self;
+	Mapping map;
+	CK_RV rv;
+
+	rv = map_session_to_real (state->px, &session, &map, NULL);
+	if (rv != CKR_OK)
+		return rv;
+	if (map.funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
+	return (((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->C_MessageVerifyFinal) (session);
+}
+
 /* --------------------------------------------------------------------
  * MODULE ENTRY POINT
  */
@@ -1743,21 +2218,55 @@ static CK_X_FUNCTION_LIST proxy_functions = {
 	proxy_C_SeedRandom,
 	proxy_C_GenerateRandom,
 	proxy_C_WaitForSlotEvent,
+	/* PKCS #11 3.0 */
+	proxy_C_LoginUser,
+	proxy_C_SessionCancel,
+	proxy_C_MessageEncryptInit,
+	proxy_C_EncryptMessage,
+	proxy_C_EncryptMessageBegin,
+	proxy_C_EncryptMessageNext,
+	proxy_C_MessageEncryptFinal,
+	proxy_C_MessageDecryptInit,
+	proxy_C_DecryptMessage,
+	proxy_C_DecryptMessageBegin,
+	proxy_C_DecryptMessageNext,
+	proxy_C_MessageDecryptFinal,
+	proxy_C_MessageSignInit,
+	proxy_C_SignMessage,
+	proxy_C_SignMessageBegin,
+	proxy_C_SignMessageNext,
+	proxy_C_MessageSignFinal,
+	proxy_C_MessageVerifyInit,
+	proxy_C_VerifyMessage,
+	proxy_C_VerifyMessageBegin,
+	proxy_C_VerifyMessageNext,
+	proxy_C_MessageVerifyFinal
 };
 
-#ifdef OS_WIN32
-__declspec(dllexport)
-#endif
-CK_RV
-C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
+static const char p11_interface_name[] = "PKCS 11";
+
+static const CK_VERSION version_two = {
+	CRYPTOKI_LEGACY_VERSION_MAJOR,
+	CRYPTOKI_LEGACY_VERSION_MINOR
+};
+
+static const CK_VERSION version_three = {
+	CRYPTOKI_VERSION_MAJOR,
+	CRYPTOKI_VERSION_MINOR
+};
+
+static int
+get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLAGS flags)
 {
 	CK_FUNCTION_LIST_PTR module = NULL;
 	CK_FUNCTION_LIST **loaded = NULL;
 	State *state;
-	CK_RV rv = CKR_OK;
+	int rv;
 
-	p11_library_init_once ();
-	p11_lock ();
+	if (version &&
+	    memcmp (version, &version_three, sizeof(*version)) != 0 &&
+	    memcmp (version, &version_two, sizeof(*version)) != 0)
+		return CKR_ARGUMENTS_BAD;
 
 	/* WARNING: Reentrancy can occur here */
 	rv = p11_modules_load_inlock_reentrant (P11_KIT_MODULE_LOADED_FROM_PROXY, &loaded);
@@ -1768,6 +2277,9 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 
 		} else {
 			p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
+			if (version) {
+				state->virt.funcs.version = *version;
+			}
 			state->last_handle = FIRST_HANDLE;
 			state->loaded = loaded;
 			loaded = NULL;
@@ -1777,7 +2289,11 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 				rv = CKR_GENERAL_ERROR;
 
 			} else {
-				state->wrapped = module;
+				if (version)
+					module->version = *version;
+				state->wrapped.pInterfaceName = (char *)p11_interface_name;
+				state->wrapped.pFunctionList = module;
+				state->wrapped.flags = flags;
 				state->next = all_instances;
 				all_instances = state;
 			}
@@ -1785,10 +2301,109 @@ C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
 	}
 
 	if (rv == CKR_OK)
-		*list = module;
+		*interface = &state->wrapped;
 
 	if (loaded)
 		p11_kit_modules_release (loaded);
+
+	return rv;
+}
+
+/* We are not going to support any special interfaces */
+#define NUM_INTERFACES 2
+
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+CK_RV
+C_GetFunctionList (CK_FUNCTION_LIST_PTR_PTR list)
+{
+	CK_RV rv = CKR_OK;
+	CK_INTERFACE *res = NULL;
+
+	p11_library_init_once ();
+	p11_lock ();
+
+	rv = get_interface_inlock (&res, &version_two, 0);
+	if (rv == CKR_OK)
+		*list = res->pFunctionList;
+
+	p11_unlock ();
+
+	return rv;
+}
+
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+CK_RV
+C_GetInterfaceList (CK_INTERFACE_PTR pInterfacesList, CK_ULONG_PTR pulCount)
+{
+	CK_RV rv = CKR_OK;
+	CK_INTERFACE *interfaces[NUM_INTERFACES];
+	CK_ULONG count = 0;
+	CK_ULONG i;
+
+	if (pulCount == NULL_PTR)
+		return CKR_ARGUMENTS_BAD;
+
+	if (pInterfacesList == NULL_PTR) {
+		*pulCount = NUM_INTERFACES;
+		return CKR_OK;
+	}
+
+	if (*pulCount < NUM_INTERFACES) {
+		*pulCount = NUM_INTERFACES;
+		return CKR_BUFFER_TOO_SMALL;
+	}
+
+	p11_library_init_once ();
+	p11_lock ();
+
+	rv = get_interface_inlock (&interfaces[count++], NULL, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	rv = get_interface_inlock (&interfaces[count++], &version_two, 0);
+	if (rv != CKR_OK)
+		goto cleanup;
+
+	for (i = 0; i < count; i++)
+		pInterfacesList[i] = *interfaces[i];
+	*pulCount = count;
+
+ cleanup:
+	p11_unlock ();
+
+	return rv;
+}
+
+#ifdef OS_WIN32
+__declspec(dllexport)
+#endif
+CK_RV
+C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
+                CK_INTERFACE_PTR_PTR ppInterface, CK_FLAGS flags)
+{
+	int rv;
+
+	if (ppInterface == NULL) {
+		return CKR_ARGUMENTS_BAD;
+	}
+
+	if (pInterfaceName &&
+	    strcmp ((const char *)pInterfaceName, p11_interface_name) != 0) {
+		return CKR_ARGUMENTS_BAD;
+	}
+
+	p11_library_init_once ();
+	p11_lock ();
+
+	if (pVersion &&
+	    memcmp (pVersion, &version_three, sizeof(*pVersion)) == 0)
+		pVersion = NULL;
+
+	rv = get_interface_inlock (ppInterface, pVersion, flags);
 
 	p11_unlock ();
 
@@ -1806,7 +2421,7 @@ p11_proxy_module_cleanup (void)
 	for (; state != NULL; state = next) {
 		next = state->next;
 		p11_kit_modules_release (state->loaded);
-		p11_virtual_unwrap (state->wrapped);
+		p11_virtual_unwrap (state->wrapped.pFunctionList);
 	}
 }
 
@@ -1821,7 +2436,7 @@ p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
 
 	p11_lock ();
 	for (state = all_instances; state != NULL; state = state->next)
-		if (state->wrapped == module) {
+		if (state->wrapped.pFunctionList == module) {
 			ret = true;
 			break;
 		}
@@ -1847,14 +2462,14 @@ p11_proxy_module_create (CK_FUNCTION_LIST_PTR *module,
 	p11_virtual_init (&state->virt, &proxy_functions, state, NULL);
 	state->last_handle = FIRST_HANDLE;
 	state->loaded = modules_dup (modules);
-	state->wrapped = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
-	if (state->wrapped == NULL) {
+	state->wrapped.pFunctionList = p11_virtual_wrap (&state->virt, (p11_destroyer)p11_virtual_uninit);
+	if (state->wrapped.pFunctionList == NULL) {
 		p11_kit_modules_release (state->loaded);
 		free (state);
 		return CKR_GENERAL_ERROR;
 	}
 
-	*module = state->wrapped;
+	*module = state->wrapped.pFunctionList;
 
 	return rv;
 }

@@ -67,6 +67,12 @@ test_strndup (void)
 
 #ifdef OS_UNIX
 
+/* These tests do not work under ASan, as it spawns another
+ * process with setuid bit set.
+ */
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
+
 static void
 test_getauxval (void)
 {
@@ -115,6 +121,8 @@ test_secure_getenv (void)
 		assert_fail ("unlink failed", strerror (errno));
 	free (path);
 }
+
+#endif
 
 static void
 test_mmap (void)
@@ -171,12 +179,18 @@ main (int argc,
 	p11_test (test_strndup, "/compat/strndup");
 #endif
 #ifdef OS_UNIX
+	/* These tests do not work under ASan, as it spawns another
+	 * process with setuid bit set.
+	 */
+#if !((defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__) || \
+      __has_feature(address_sanitizer))
 	/* Don't run this test when under fakeroot, or the binary is
 	 * written under /tmp */
 	if (!getenv ("FAKED_MODE") && strncmp (BUILDDIR, "/tmp/", 5) != 0) {
 		p11_test (test_getauxval, "/compat/getauxval");
 		p11_test (test_secure_getenv, "/compat/secure_getenv");
 	}
+#endif
 	p11_test (test_mmap, "/compat/mmap");
 	p11_test (test_getprogname, "/compat/getprogname");
 #endif

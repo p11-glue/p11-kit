@@ -1,0 +1,4 @@
+
+module: mock-eleven.so
+managed: yes
+enable-in: p11-kit-testable

@@ -39,20 +39,21 @@
 
 #include "compat.h"
 
-enum {
-	TOK_EOF = 0,
-	TOK_SECTION = 1,
+typedef enum _p11_lexer_token_type {
+	TOK_EOF,
+	TOK_SECTION,
 	TOK_FIELD,
 	TOK_PEM,
-};
+} p11_lexer_token_type;
 
 typedef struct {
 	char *filename;
+	size_t line;
 	const char *at;
-	int remaining;
-	int complained;
+	size_t remaining;
+	bool complained;
 
-	int tok_type;
+	p11_lexer_token_type tok_type;
 	union {
 		struct {
 			char *name;

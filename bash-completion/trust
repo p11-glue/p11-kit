@@ -7,7 +7,7 @@ _trust()
 
     local commands command
 
-    commands='list extract extract-compat anchor dump'
+    commands='list extract extract-compat anchor dump check-format'
 
     if [[ $cword -eq 1 ]]; then
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )

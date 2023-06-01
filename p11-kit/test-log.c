@@ -103,7 +103,7 @@ main (int argc,
 	p11_library_init ();
 	mock_module_init ();
 
-	test_mock_add_tests ("/log");
+	test_mock_add_tests ("/log", NULL);
 
 	p11_kit_be_quiet ();
 	p11_log_output = false;

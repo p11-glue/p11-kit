@@ -31,7 +31,10 @@ libp11_library = static_library('p11-library', 'library.c',
                                 include_directories: configinc)
 
 libp11_library_dep = declare_dependency(link_with: libp11_library,
-                                        dependencies: [libp11_common_dep] + thread_deps)
+                                        dependencies: [libp11_common_dep] + thread_deps + libintl_deps)
+
+libp11_library_whole_dep = declare_dependency(link_whole: libp11_library,
+                                              dependencies: [libp11_common_dep] + thread_deps + libintl_deps)
 
 if get_option('test')
   libp11_test_sources = [
@@ -46,6 +49,7 @@ if get_option('test')
 endif
 
 libp11_tool_sources = [
+  'print.c',
   'tool.c'
 ]
 

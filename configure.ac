@@ -142,13 +142,14 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getpeereid])
 	AC_CHECK_FUNCS([getpeerucred])
 	AC_CHECK_FUNCS([issetugid])
+	AC_CHECK_FUNCS([isatty])
 
 	AC_CACHE_CHECK([for thread-local storage class],
 		[ac_cv_tls_keyword],
 		[ac_cv_tls_keyword=
 		for keyword in _Thread_local __thread; do
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
-			[[static ]$keyword[ foo;]])],
+			[[static ]$keyword[ int foo;]])],
 			[ac_cv_tls_keyword=$keyword])
 		done])
 	if test -n "$ac_cv_tls_keyword"; then
@@ -296,8 +297,8 @@ AC_ARG_WITH([closures],
 	    [closures=$withval],
 	    [closures=64])
 
-if test "$closures" -lt 1; then
-	AC_MSG_ERROR([at least one closure must be compiled in])
+if test "$with_libffi" != yes && test "$closures" -lt 1; then
+	AC_MSG_ERROR([libffi needs to be enabled or at least one closure must be compiled in])
 fi
 
 AC_DEFINE_UNQUOTED(P11_VIRTUAL_MAX_FIXED, [$closures], [the number of closures])

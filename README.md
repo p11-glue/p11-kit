@@ -1,6 +1,6 @@
 # p11-kit
 
-[![GitHub Build Status](https://github.com/p11-glue/p11-kit/workflows/test/badge.svg)](https://github.com/p11-glue/p11-kit/actions?query=workflow%3Atest) [![Coverage Status](https://img.shields.io/coveralls/p11-glue/p11-kit.svg)](https://coveralls.io/r/p11-glue/p11-kit) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1627/badge)](https://bestpractices.coreinfrastructure.org/en/projects/1627) [![Total alerts](https://img.shields.io/lgtm/alerts/g/p11-glue/p11-kit.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/p11-glue/p11-kit/alerts/) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/p11-glue/p11-kit.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/p11-glue/p11-kit/context:cpp)
+[![GitHub Build Status](https://github.com/p11-glue/p11-kit/workflows/test/badge.svg)](https://github.com/p11-glue/p11-kit/actions?query=workflow%3Atest) [![Coverage Status](https://img.shields.io/coveralls/p11-glue/p11-kit.svg)](https://coveralls.io/r/p11-glue/p11-kit) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1627/badge)](https://bestpractices.coreinfrastructure.org/en/projects/1627)
 
 p11-kit aims to solve problems with coordinating the use of [PKCS #11]
 by different components or libraries living in the same process, by
@@ -18,7 +18,7 @@ way that they're discoverable.
 To build and install p11-kit, you can use the following commands:
 
 ```console
-$ meson _build
+$ meson setup _build
 $ meson compile -C _build
 $ meson test -C _build
 # meson install -C _build
