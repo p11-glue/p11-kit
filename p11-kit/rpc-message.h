@@ -137,6 +137,8 @@ enum {
 	P11_RPC_CALL_C_VerifyMessageNext,
 	P11_RPC_CALL_C_MessageVerifyFinal,
 
+	P11_RPC_CALL_C_InitToken2,
+
 	P11_RPC_CALL_MAX
 };
 
@@ -249,6 +251,8 @@ static const p11_rpc_call p11_rpc_calls[] = {
 	{ P11_RPC_CALL_C_VerifyMessageBegin,   "C_VerifyMessageBegin",   "uay",     ""                     },
 	{ P11_RPC_CALL_C_VerifyMessageNext,    "C_VerifyMessageNext",    "uayayay", ""                     },
 	{ P11_RPC_CALL_C_MessageVerifyFinal,   "C_MessageVerifyFinal",   "u",       ""                     },
+
+	{ P11_RPC_CALL_C_InitToken2,           "C_InitToken2",           "uays",    ""                     },
 };
 
 #ifdef _DEBUG

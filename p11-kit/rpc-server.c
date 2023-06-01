@@ -428,6 +428,37 @@ proto_read_null_string (p11_rpc_message *msg,
 }
 
 static CK_RV
+proto_read_space_string (p11_rpc_message *msg,
+                         CK_UTF8CHAR_PTR *val,
+                         CK_ULONG len)
+{
+	const unsigned char *data;
+	size_t n_data;
+
+	assert (msg != NULL);
+	assert (val != NULL);
+	assert (msg->input != NULL);
+
+	/* Check that we're supposed to have this at this point */
+	assert (!msg->signature || p11_rpc_message_verify_part (msg, "s"));
+
+	if (!p11_rpc_buffer_get_byte_array (msg->input, &msg->parsed, &data, &n_data))
+		return PARSE_ERROR;
+
+	if (n_data != len)
+		return PARSE_ERROR;
+
+	/* Allocate a block of memory for it */
+	*val = p11_rpc_message_alloc_extra (msg, n_data);
+	if (*val == NULL)
+		return CKR_DEVICE_MEMORY;
+
+	memcpy (*val, data, n_data);
+
+	return CKR_OK;
+}
+
+static CK_RV
 proto_read_mechanism (p11_rpc_message *msg,
                       CK_MECHANISM_PTR *mech)
 {
@@ -629,8 +660,12 @@ call_ready (p11_rpc_message *msg)
 	if (!p11_rpc_message_read_ulong (msg, &val)) \
 		{ _ret = PARSE_ERROR; goto _cleanup; }
 
-#define IN_STRING(val) \
+#define IN_ZERO_STRING(val) \
 	_ret = proto_read_null_string (msg, &val); \
+	if (_ret != CKR_OK) goto _cleanup;
+
+#define IN_SPACE_STRING(val, len) \
+	_ret = proto_read_space_string (msg, &val, len); \
 	if (_ret != CKR_OK) goto _cleanup;
 
 #define IN_BYTE_BUFFER(buffer, buffer_len) \
@@ -866,7 +901,24 @@ rpc_C_InitToken (CK_X_FUNCTION_LIST *self,
 	BEGIN_CALL (InitToken);
 		IN_ULONG (slot_id);
 		IN_BYTE_ARRAY (pin, pin_len);
-		IN_STRING (label);
+		IN_ZERO_STRING (label);
+	PROCESS_CALL ((self, slot_id, pin, pin_len, label));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_InitToken2 (CK_X_FUNCTION_LIST *self,
+                  p11_rpc_message *msg)
+{
+	CK_SLOT_ID slot_id;
+	CK_UTF8CHAR_PTR pin;
+	CK_ULONG pin_len;
+	CK_UTF8CHAR_PTR label;
+
+	BEGIN_CALL (InitToken);
+		IN_ULONG (slot_id);
+		IN_BYTE_ARRAY (pin, pin_len);
+		IN_SPACE_STRING (label, 32);
 	PROCESS_CALL ((self, slot_id, pin, pin_len, label));
 	END_CALL;
 }
@@ -2365,6 +2417,8 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	CASE_CALL (C_VerifyMessageBegin)
 	CASE_CALL (C_VerifyMessageNext)
 	CASE_CALL (C_MessageVerifyFinal)
+
+	CASE_CALL (C_InitToken2)
 	#undef CASE_CALL
 	default:
 		/* This should have been caught by the parse code */

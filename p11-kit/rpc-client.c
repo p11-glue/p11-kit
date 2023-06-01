@@ -578,6 +578,9 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		return _ret; \
 	}
 
+#define RPC_VERSION \
+		((rpc_client *)((p11_virtual *)self)->lower_module)->version
+
 #define IN_BYTE(val) \
 	if (!p11_rpc_message_write_byte (&_msg, val)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
@@ -586,8 +589,12 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 	if (!p11_rpc_message_write_ulong (&_msg, val)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
-#define IN_STRING(val) \
+#define IN_ZERO_STRING(val) \
 	if (!p11_rpc_message_write_zero_string (&_msg, val)) \
+		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
+
+#define IN_SPACE_STRING(val, len) \
+	if (!p11_rpc_message_write_space_string (&_msg, val, len)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_BYTE_BUFFER(arr, len) \
@@ -979,17 +986,45 @@ rpc_C_GetMechanismInfo (CK_X_FUNCTION_LIST *self,
 }
 
 static CK_RV
+C_InitToken1 (CK_X_FUNCTION_LIST *self,
+              CK_SLOT_ID slot_id,
+              CK_UTF8CHAR_PTR pin, CK_ULONG pin_len,
+              CK_UTF8CHAR_PTR label)
+{
+	BEGIN_CALL_OR (C_InitToken, self, CKR_SLOT_ID_INVALID);
+		IN_ULONG (slot_id);
+		IN_BYTE_ARRAY (pin, pin_len);
+		IN_ZERO_STRING (label);
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
+C_InitToken2 (CK_X_FUNCTION_LIST *self,
+              CK_SLOT_ID slot_id,
+              CK_UTF8CHAR_PTR pin, CK_ULONG pin_len,
+              CK_UTF8CHAR_PTR label)
+{
+	BEGIN_CALL_OR (C_InitToken2, self, CKR_SLOT_ID_INVALID);
+		IN_ULONG (slot_id);
+		IN_BYTE_ARRAY (pin, pin_len);
+		IN_SPACE_STRING (label, 32);
+	PROCESS_CALL;
+	END_CALL;
+}
+
+static CK_RV
 rpc_C_InitToken (CK_X_FUNCTION_LIST *self,
                  CK_SLOT_ID slot_id,
                  CK_UTF8CHAR_PTR pin, CK_ULONG pin_len,
                  CK_UTF8CHAR_PTR label)
 {
-	BEGIN_CALL_OR (C_InitToken, self, CKR_SLOT_ID_INVALID);
-		IN_ULONG (slot_id);
-		IN_BYTE_ARRAY (pin, pin_len);
-		IN_STRING (label);
-	PROCESS_CALL;
-	END_CALL;
+        uint8_t version = RPC_VERSION;
+
+        if (version == 0)
+		return C_InitToken1 (self, slot_id, pin, pin_len, label);
+	else
+		return C_InitToken2 (self, slot_id, pin, pin_len, label);
 }
 
 static CK_RV
