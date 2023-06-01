@@ -8,7 +8,7 @@
 
 #include <p11-kit/p11-kit.h>
 
-#define TRUST_SO "/usr/lib64/pkcs11/p11-kit-trust.so"
+#define TRUST_SO P11_MODULE_PATH "/p11-kit-trust" SHLEXT
 
 int
 main (void)
