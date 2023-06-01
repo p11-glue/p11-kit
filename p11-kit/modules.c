@@ -656,6 +656,7 @@ out:
 	return rv;
 }
 
+#ifdef P11_ENV_OVERRIDE_PATHS
 /**
  * p11_get_paths_from_env:
  *
@@ -663,35 +664,23 @@ out:
  * can be changed at run-time, based on system environment variables
  *
  */
-#ifdef P11_ENV_OVERRIDE_PATHS
 static void
-p11_get_paths_from_env(void)
+p11_get_paths_from_env (void)
 {
-	char * path;
+	char *path;
 
-	if((path = secure_getenv("P11_SYSTEM_CONFIG_FILE"))){
+	if ((path = secure_getenv ("P11_SYSTEM_CONFIG_FILE")))
 		p11_config_system_file = path;
-	}
-
-	if((path = secure_getenv("P11_USER_CONFIG_FILE"))){
+	if ((path = secure_getenv ("P11_USER_CONFIG_FILE")))
 		p11_config_user_file = path;
-	}
-
-	if((path = secure_getenv("P11_PACKAGE_CONFIG_MODULES"))){
+	if ((path = secure_getenv ("P11_PACKAGE_CONFIG_MODULES")))
 		p11_config_package_modules = path;
-	}
-
-	if((path = secure_getenv("P11_SYSTEM_CONFIG_MODULES"))){
+	if ((path = secure_getenv ("P11_SYSTEM_CONFIG_MODULES")))
 		p11_config_system_modules = path;
-	}
-
-	if((path = secure_getenv("P11_USER_CONFIG_MODULES"))){
+	if ((path = secure_getenv ("P11_USER_CONFIG_MODULES")))
 		p11_config_user_modules = path;
-	}
-
-	if((path = secure_getenv("P11_MODULE_PATH"))){
+	if ((path = secure_getenv ("P11_MODULE_PATH")))
 		p11_module_path = path;
-	}
 }
 #endif
 
@@ -709,7 +698,7 @@ load_registered_modules_unlocked (int flags)
 	bool verbose;
 
 #ifdef P11_ENV_OVERRIDE_PATHS
-	p11_get_paths_from_env();
+	p11_get_paths_from_env ();
 #endif
 
 	if (gl.config)
