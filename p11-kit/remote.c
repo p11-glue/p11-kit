@@ -44,6 +44,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,6 +114,11 @@ main (int argc,
 		p11_message (_("the 'remote' tool is not meant to be run from a terminal"));
 		return 2;
 	}
+
+#ifdef OS_WIN32
+	_setmode (_fileno (stdin), _O_BINARY);
+	_setmode (_fileno (stdout), _O_BINARY);
+#endif
 
 	if (strncmp (argv[0], "pkcs11:", 7) == 0) {
 		CK_FUNCTION_LIST *module = NULL;
