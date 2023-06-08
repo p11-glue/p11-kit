@@ -881,7 +881,7 @@ mock_C_InitToken__specific_args (CK_SLOT_ID slot_id,
 	if (strlen ("TEST PIN") != pin_len ||
 	    strncmp ((char *)pin, "TEST PIN", pin_len) != 0)
 		return CKR_PIN_INVALID;
-	if (strcmp ((char *)label, "TEST LABEL") != 0)
+	if (strncmp ((char *)label, "TEST LABEL                      ", 32) != 0)
 		return CKR_ARGUMENTS_BAD;
 
 	free (the_pin);
