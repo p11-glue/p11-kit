@@ -138,10 +138,10 @@ test_allowed (void)
 	rv = (module->C_GetMechanismInfo) (slots[0], mechs[0], &mech);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = (module->C_InitToken) (99, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (99, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
 
-	rv = (module->C_InitToken) (slots[0], (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (slots[0], (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert_num_eq (CKR_OK, rv);
 
 	rv = (module->C_WaitForSlotEvent) (0, &slot, NULL);
@@ -269,10 +269,10 @@ test_write_protected (void)
 	rv = (module->C_GetMechanismInfo) (slots[0], mechs[0], &mech);
 	assert_num_eq (CKR_OK, rv);
 
-	rv = (module->C_InitToken) (99, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (99, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert_num_eq (CKR_SLOT_ID_INVALID, rv);
 
-	rv = (module->C_InitToken) (slots[0], (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (slots[0], (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert_num_eq (CKR_TOKEN_WRITE_PROTECTED, rv);
 
 	rv = (module->C_WaitForSlotEvent) (0, &slot, NULL);

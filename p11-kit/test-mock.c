@@ -253,14 +253,14 @@ test_init_token (void)
 
 	module = setup_mock_module (NULL);
 
-	rv = (module->C_InitToken) (MOCK_SLOT_ONE_ID, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (MOCK_SLOT_ONE_ID, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert (rv == CKR_OK);
 
-	rv = (module->C_InitToken) (MOCK_SLOT_ONE_ID, (CK_UTF8CHAR_PTR)"OTHER", 5, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (MOCK_SLOT_ONE_ID, (CK_UTF8CHAR_PTR)"OTHER", 5, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert (rv == CKR_PIN_INVALID);
-	rv = (module->C_InitToken) (MOCK_SLOT_TWO_ID, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (MOCK_SLOT_TWO_ID, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert (rv == CKR_TOKEN_NOT_PRESENT);
-	rv = (module->C_InitToken) (0, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL");
+	rv = (module->C_InitToken) (0, (CK_UTF8CHAR_PTR)"TEST PIN", 8, (CK_UTF8CHAR_PTR)"TEST LABEL                      ");
 	assert (rv == CKR_SLOT_ID_INVALID);
 
 	teardown_mock_module (module);
