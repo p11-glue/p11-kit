@@ -608,11 +608,12 @@ log_slot_info (p11_buffer *buf,
 }
 
 static void
-log_string (p11_buffer *buf,
-            const char *pref,
-            const char *name,
-            CK_UTF8CHAR_PTR str,
-            const CK_RV status)
+log_space_string (p11_buffer *buf,
+                  const char *pref,
+                  const char *name,
+                  CK_UTF8CHAR_PTR str,
+                  CK_ULONG len,
+                  const CK_RV status)
 {
 	if (status != CKR_OK)
 		return;
@@ -622,7 +623,7 @@ log_string (p11_buffer *buf,
 		p11_buffer_add (buf, pref, -1);
 		p11_buffer_add (buf, name, -1);
 		p11_buffer_add (buf, " = \"", 4);
-		p11_buffer_add (buf, str, -1);
+		p11_buffer_add (buf, str, strnlen ((const char *)str, len));
 		p11_buffer_add (buf, "\"\n", 2);
 	}
 }
@@ -917,8 +918,8 @@ flush_buffer (p11_buffer *buf)
 #define IN_SLOT_ID(a) \
 		log_ulong (&_buf, LIN, #a, a, "SL", CKR_OK);
 
-#define IN_STRING(a) \
-		log_string (&_buf, LIN, #a, a, CKR_OK);
+#define IN_SPACE_STRING(a, n) \
+		log_space_string (&_buf, LIN, #a, a, n, CKR_OK);
 
 #define IN_ULONG(a) \
 		log_ulong (&_buf, LIN, #a, a, NULL, CKR_OK);
@@ -1087,7 +1088,7 @@ log_C_InitToken (CK_X_FUNCTION_LIST *self,
 	BEGIN_CALL (InitToken)
 		IN_SLOT_ID (slotID)
 		IN_BYTE_ARRAY (pPin, ulPinLen)
-		IN_STRING (pLabel)
+		IN_SPACE_STRING (pLabel, 32)
 	PROCESS_CALL ((self, slotID, pPin, ulPinLen, pLabel))
 	DONE_CALL
 }
