@@ -624,6 +624,9 @@ AC_SUBST(SHLEXT)
 
 AC_DEFINE_UNQUOTED(EXEEXT, ["$EXEEXT"], [File extension for executables])
 
+p11_shlext=$SHLEXT
+AC_SUBST(p11_shlext)
+
 privatedir='${libexecdir}/p11-kit'
 AC_SUBST(privatedir)
 
