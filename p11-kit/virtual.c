@@ -3415,6 +3415,8 @@ base_C_MessageSignFinal (CK_X_FUNCTION_LIST *self,
 {
 	p11_virtual *virt = (p11_virtual *)self;
 	CK_FUNCTION_LIST_3_0 *funcs = virt->lower_module;
+	if (funcs->version.major < 3)
+		return CKR_FUNCTION_NOT_SUPPORTED;
 	return funcs->C_MessageSignFinal (session);
 }
 
