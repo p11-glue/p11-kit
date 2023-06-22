@@ -134,7 +134,7 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_MEMBERS([struct dirent.d_type],,,[#include <dirent.h>])
 	AC_CHECK_FUNCS([getprogname getexecname basename mkstemp mkdtemp])
 	AC_CHECK_FUNCS([getauxval getresuid secure_getenv])
-	AC_CHECK_FUNCS([strnstr memdup strndup strerror_r])
+	AC_CHECK_FUNCS([strnstr memdup strndup])
 	AC_CHECK_FUNCS([reallocarray])
 	AC_CHECK_DECLS([reallocarray], [], [], [[#include <stdlib.h>]])
 	AC_CHECK_FUNCS([fdwalk])
@@ -143,6 +143,24 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getpeerucred])
 	AC_CHECK_FUNCS([issetugid])
 	AC_CHECK_FUNCS([isatty])
+
+	AC_CHECK_FUNC(
+		[strerror_r],
+		[AC_RUN_IFELSE(
+			[AC_LANG_SOURCE([[
+				#include <errno.h>
+				#include <string.h>
+
+				int main (void)
+				{
+					char buf[32];
+					return strerror_r (EINVAL, buf, 32);
+				}
+			]])],
+                        [AC_DEFINE([HAVE_XSI_STRERROR_R], 1, [Whether XSI-compliant strerror_r() is available])],
+			[AC_DEFINE([HAVE_GNU_STRERROR_R], 1, [Whether GNU-specific strerror_r() is available])],
+			[])],
+		[])
 
 	AC_CACHE_CHECK([for thread-local storage class],
 		[ac_cv_tls_keyword],

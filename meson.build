@@ -289,7 +289,6 @@ functions = [
   'reallocarray',
   'secure_getenv',
   'setenv',
-  'strerror_r',
   'strnstr',
   'vasprintf'
 ]
@@ -299,6 +298,25 @@ foreach f : functions
     conf.set('HAVE_' + f.underscorify().to_upper(), 1)
   endif
 endforeach
+
+if cc.has_function('strerror_r', prefix: '#include <string.h>')
+  strerror_r_code = '''
+#include <errno.h>
+#include <string.h>
+
+int main (void)
+{
+    char buf[32];
+    return strerror_r (EINVAL, buf, 32);
+}
+'''
+  strerror_r_check = cc.run(strerror_r_code, name : 'strerror_r check')
+  if strerror_r_check.returncode() == 0
+    conf.set('HAVE_XSI_STRERROR_R', 1)
+  else
+    conf.set('HAVE_GNU_STRERROR_R', 1)
+  endif
+endif
 
 conf.set10('HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME',
            cc.has_header_symbol('errno.h',

@@ -910,37 +910,6 @@ secure_getenv (const char *name)
 	return getenv (name);
 }
 
-#ifndef HAVE_STRERROR_R
-
-int
-strerror_r (int errnum,
-            char *buf,
-            size_t buflen)
-{
-#ifdef OS_WIN32
-#if _WIN32_WINNT < 0x502 /* WinXP or older */
-	int n = sys_nerr;
-	const char *p;
-	if (errnum < 0 || errnum >= n)
-		p = sys_errlist[n];
-	else
-		p = sys_errlist[errnum];
-	if (buf == NULL || buflen == 0)
-		return EINVAL;
-	strncpy(buf, p, buflen);
-	buf[buflen-1] = 0;
-	return 0;
-#else /* Server 2003 or newer */
-	return strerror_s (buf, buflen, errnum);
-#endif /*_WIN32_WINNT*/
-
-#else
-	#error no strerror_r implementation
-#endif
-}
-
-#endif /* HAVE_STRERROR_R */
-
 #ifndef HAVE_ISATTY
 
 int
@@ -1036,6 +1005,36 @@ fdwalk (int (* cb) (void *data, int fd),
 #endif /* HAVE_FDWALK */
 
 #endif /* OS_UNIX */
+
+void
+p11_strerror_r (int errnum,
+		char *buf,
+		size_t buflen)
+{
+#if defined(HAVE_XSI_STRERROR_R)
+	strerror_r (errnum, buf, buflen);
+#elif defined(HAVE_GNU_STRERROR_R)
+	char *str = strerror_r (errnum, buf, buflen);
+	strncpy (buf, str, buflen);
+#elif defined(OS_WIN32)
+#if _WIN32_WINNT < 0x502 /* WinXP or older */
+	int n = sys_nerr;
+	const char *p;
+	if (errnum < 0 || errnum >= n)
+		p = sys_errlist[n];
+	else
+		p = sys_errlist[errnum];
+	if (buf == NULL || buflen == 0)
+		return;
+	strncpy(buf, p, buflen);
+	buf[buflen - 1] = '\0';
+#else /* Server 2003 or newer */
+	strerror_s (buf, buflen, errnum);
+#endif /* _WIN32_WINNT */
+#else
+	#error no strerror_r implementation
+#endif
+}
 
 int
 p11_ascii_tolower (int c)
