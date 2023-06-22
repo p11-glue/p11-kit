@@ -165,7 +165,7 @@ p11_debug_message_err (int flag,
 		if (p11_message_locale != (locale_t) 0)
 			strncpy (strerr, strerror_l (errnum, p11_message_locale), sizeof (strerr));
 #else
-		strerror_r (errnum, strerr, sizeof (strerr));
+		p11_strerror_r (errnum, strerr, sizeof (strerr));
 #endif
 		strerr[P11_DEBUG_MESSAGE_MAX - 1] = 0;
 		fprintf (stderr, ": %s\n", strerr);

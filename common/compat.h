@@ -364,14 +364,6 @@ unsigned long     getauxval (unsigned long type);
 
 char *            secure_getenv (const char *name);
 
-#ifndef HAVE_STRERROR_R
-
-int         strerror_r      (int errnum,
-                             char *buf,
-                             size_t buflen);
-
-#endif /* HAVE_STRERROR_R */
-
 #ifndef HAVE_FDWALK
 
 int        fdwalk           (int (* cb) (void *data, int fd),
@@ -401,6 +393,10 @@ int        isatty           (int fd);
 	- sizeof((sa)->sun_path) + strlen((sa)->sun_path))
 
 #endif
+
+void       p11_strerror_r    (int errnum,
+                              char *buf,
+                              size_t buflen);
 
 int        p11_ascii_tolower (int c);
 int        p11_ascii_toupper (int c);
