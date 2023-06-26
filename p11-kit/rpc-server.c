@@ -2761,7 +2761,7 @@ p11_kit_remote_serve_tokens (const char **tokens,
 				goto out;
 			}
 			p11_virtual_init (lower, &p11_virtual_base, module, NULL);
-			filter = p11_filter_subclass (lower, NULL);
+			filter = p11_filter_subclass (lower, free);
 			if (filter == NULL) {
 				error = EINVAL;
 				p11_message_err (error, "couldn't subclass filter");
@@ -2786,8 +2786,7 @@ p11_kit_remote_serve_tokens (const char **tokens,
 	filtered = p11_array_new ((p11_destroyer)module_unwrap);
 	p11_dict_iterate (filters, &filters_iter);
 	while (p11_dict_next (&filters_iter, NULL, &value)) {
-		module = p11_virtual_wrap ((p11_virtual *)value,
-					   (p11_destroyer)p11_virtual_uninit);
+		module = p11_virtual_wrap ((p11_virtual *)value, NULL);
 		if (module == NULL) {
 			error = EINVAL;
 			p11_message_err (error, "couldn't wrap filter module");
