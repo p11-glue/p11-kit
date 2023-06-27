@@ -20,11 +20,9 @@ cd "$testdir"
 unset P11_KIT_SERVER_ADDRESS
 unset P11_KIT_SERVER_PID
 
-XDG_RUNTIME_DIR="$testdir"
-export XDG_RUNTIME_DIR
-
-P11_KIT_PRIVATEDIR="${abs_top_builddir}/p11-kit"
-export P11_KIT_PRIVATEDIR
+export XDG_RUNTIME_DIR="$testdir"
+export P11_KIT_PRIVATEDIR="${abs_top_builddir}/p11-kit"
+export ASAN_OPTIONS="verify_asan_link_order=0"
 
 echo 1..5
 
@@ -54,7 +52,7 @@ if p11tool --version > /dev/null; then
 	else
 		pkill -f p11-kit-server
 		echo "not ok 3 /server/client-access"
-		sed 's/^/# /' start.err
+		sed 's/^/# /' p11tool.err
 		exit 1
 	fi
 else
