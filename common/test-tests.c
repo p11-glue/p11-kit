@@ -53,6 +53,8 @@ test_failure (void)
 	}
 }
 
+#ifndef WITH_STRICT
+
 static void
 test_memory (void)
 {
@@ -70,6 +72,8 @@ test_memory (void)
 	}
 #endif	/* __clang_analyzer__ */
 }
+
+#endif /* WITH_STRICT */
 
 static void
 test_leak (void)
@@ -96,7 +100,9 @@ main (int argc,
 
 	if (getenv ("TEST_FAIL")) {
 		p11_test (test_failure, "/test/failure");
+#ifndef WITH_STRICT
 		p11_test (test_memory, "/test/memory");
+#endif /* WITH_STRICT */
 		p11_test (test_leak, "/test/leak");
 	}
 
