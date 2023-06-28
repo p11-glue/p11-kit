@@ -1,5 +1,5 @@
 project('p11-kit', 'c',
-        version: '0.24.1',
+        version: '0.25.0',
         meson_version: '>= 0.49')
 
 version_arr = meson.project_version().split('.')
