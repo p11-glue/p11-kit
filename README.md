@@ -31,6 +31,6 @@ system locations.
 
 # Releases
 
-Releases are made available via the [primary github site](https://github.com/p11-glue/p11-kit/releases). They are signed with the current maintainer's [OpenPGP key](https://keys.openpgp.org/search?q=462225C3B46F34879FC8496CD605848ED7E69871).
+Releases are made available via the [primary github site](https://github.com/p11-glue/p11-kit/releases). They are signed with OpenPGP key of one of the maintainers: [Daiki Ueno](https://keys.openpgp.org/search?q=462225C3B46F34879FC8496CD605848ED7E69871), [Zoltan Fridrich](https://keys.openpgp.org/search?q=5D46CB0F763405A7053556F47A75A648B3F9220C).
 
 [PKCS #11]: https://en.wikipedia.org/wiki/PKCS_11
