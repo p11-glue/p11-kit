@@ -301,6 +301,7 @@ endforeach
 
 if cc.has_function('strerror_r', prefix: '#include <string.h>')
   strerror_r_code = '''
+#define _GNU_SOURCE
 #include <errno.h>
 #include <string.h>
 
