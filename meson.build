@@ -306,15 +306,15 @@ if cc.has_function('strerror_r', prefix: '#include <string.h>')
 
 int main (void)
 {
+    /* GNU strerror_r returns char *, XSI returns int */
     char buf[32];
-    return strerror_r (EINVAL, buf, 32);
+    return *strerror_r (EINVAL, buf, 32);
 }
 '''
-  strerror_r_check = cc.run(strerror_r_code, name : 'strerror_r check')
-  if strerror_r_check.returncode() == 0
-    conf.set('HAVE_XSI_STRERROR_R', 1)
-  else
+  if cc.compiles(strerror_r_code, name : 'GNU strerror_r check')
     conf.set('HAVE_GNU_STRERROR_R', 1)
+  else
+    conf.set('HAVE_XSI_STRERROR_R', 1)
   endif
 endif
 
