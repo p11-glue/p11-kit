@@ -146,19 +146,14 @@ if test "$os_unix" = "yes"; then
 
 	AC_CHECK_FUNC(
 		[strerror_r],
-		[AC_RUN_IFELSE(
-			[AC_LANG_SOURCE([[
-				#include <errno.h>
-				#include <string.h>
-
-				int main (void)
-				{
-					char buf[32];
-					return strerror_r (EINVAL, buf, 32);
-				}
-			]])],
-                        [AC_DEFINE([HAVE_XSI_STRERROR_R], 1, [Whether XSI-compliant strerror_r() is available])],
+		[AC_COMPILE_IFELSE(
+			[AC_LANG_PROGRAM([[#include <errno.h>
+					   #include <string.h>]],
+					 [[/* GNU strerror_r returns char *, XSI returns int */
+					    char buf[32];
+					    return *strerror_r (EINVAL, buf, 32);]])],
 			[AC_DEFINE([HAVE_GNU_STRERROR_R], 1, [Whether GNU-specific strerror_r() is available])],
+                        [AC_DEFINE([HAVE_XSI_STRERROR_R], 1, [Whether XSI-compliant strerror_r() is available])],
 			[])],
 		[])
 
