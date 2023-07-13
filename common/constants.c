@@ -138,6 +138,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_REQUIRED_CMS_ATTRIBUTES, "required-cms-attributes")
 	CT (CKA_DEFAULT_CMS_ATTRIBUTES, "default-cms-attributes")
 	CT (CKA_SUPPORTED_CMS_ATTRIBUTES, "supported-cms-attributes")
+	CT (CKA_PROFILE_ID, "profile-id")
 	CT (CKA_WRAP_TEMPLATE, "wrap-template")
 	CT (CKA_UNWRAP_TEMPLATE, "unwrap-template")
 	CT (CKA_ALLOWED_MECHANISMS, "allowed-mechanisms")
@@ -215,6 +216,7 @@ const p11_constant p11_constant_classes[] = {
 	CT (CKO_HW_FEATURE, "hw-feature")
 	CT (CKO_DOMAIN_PARAMETERS, "domain-parameters")
 	CT (CKO_MECHANISM, "mechanism")
+	CT (CKO_PROFILE, "profile")
 	CT (CKO_NSS_CRL, "nss-crl")
 	CT (CKO_NSS_SMIME, "nss-smime")
 	CT (CKO_NSS_TRUST, "nss-trust")
@@ -636,6 +638,14 @@ const p11_constant p11_constant_mechanisms[] = {
 	{ CKA_INVALID },
 };
 
+const p11_constant p11_constant_hw_features[] = {
+	CT (CKH_MONOTONIC_COUNTER, "monotonic-counter")
+	CT (CKH_CLOCK, "clock")
+	CT (CKH_USER_INTERFACE, "user-interface")
+	CT (CKH_VENDOR_DEFINED, "vendor-defined")
+	{ CKA_INVALID },
+};
+
 const p11_constant p11_constant_profiles[] = {
 	CT (CKP_BASELINE_PROVIDER, "baseline-provider")
 	CT (CKP_EXTENDED_PROVIDER, "extended-provider")
@@ -662,6 +672,7 @@ struct {
 	{ p11_constant_states, ELEMS (p11_constant_states) - 1 },
 	{ p11_constant_users, ELEMS (p11_constant_users) - 1 },
 	{ p11_constant_returns, ELEMS (p11_constant_returns) - 1 },
+	{ p11_constant_hw_features, ELEMS (p11_constant_hw_features) - 1 },
 	{ p11_constant_profiles, ELEMS (p11_constant_profiles) - 1 },
 };
 
