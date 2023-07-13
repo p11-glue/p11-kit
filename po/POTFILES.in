@@ -4,6 +4,7 @@ p11-kit/add-profile.c
 p11-kit/conf.c
 p11-kit/delete-profile.c
 p11-kit/filter.c
+p11-kit/list-objects.c
 p11-kit/list-profiles.c
 p11-kit/lists.c
 p11-kit/messages.c

@@ -66,6 +66,7 @@ struct p11_kit_iter {
 	CK_ATTRIBUTE *match_attrs;
 	CK_SLOT_ID match_slot_id;
 	Callback *callbacks;
+	char *pin;
 
 	/* The input modules */
 	p11_array *modules;
@@ -104,6 +105,7 @@ struct p11_kit_iter {
 	unsigned int with_slots : 1;
 	unsigned int with_tokens : 1;
 	unsigned int with_objects : 1;
+	unsigned int with_login : 1;
 };
 
 /**
@@ -168,6 +170,7 @@ p11_kit_iter_new (P11KitUri *uri,
 	iter->with_slots = !!(behavior & P11_KIT_ITER_WITH_SLOTS);
 	iter->with_tokens = !!(behavior & P11_KIT_ITER_WITH_TOKENS);
 	iter->with_objects = !(behavior & P11_KIT_ITER_WITHOUT_OBJECTS);
+	iter->with_login = !!(behavior & P11_KIT_ITER_WITH_LOGIN);
 
 	p11_kit_iter_set_uri (iter, uri);
 	return iter;
@@ -199,6 +202,7 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 	CK_SLOT_INFO *sinfo;
 	CK_INFO *minfo;
 	CK_ULONG count;
+	const char *pin;
 
 	return_if_fail (iter != NULL);
 
@@ -224,6 +228,10 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 			tinfo = p11_kit_uri_get_token_info (uri);
 			if (tinfo != NULL)
 				memcpy (&iter->match_token, tinfo, sizeof (CK_TOKEN_INFO));
+
+			pin = p11_kit_uri_get_pin_value (uri);
+			if (pin != NULL)
+				iter->pin = strdup (pin);
 		}
 	} else {
 		/* Match any module version number and slot ID */
@@ -597,6 +605,14 @@ move_next_session (P11KitIter *iter)
 			return finish_iterating (iter, rv);
 
 		if (iter->session != 0) {
+			if (iter->with_login && iter->pin != NULL) {
+				rv = (iter->module->C_Login) (iter->session, CKU_CONTEXT_SPECIFIC,
+							      (unsigned char *)iter->pin,
+							      strlen (iter->pin));
+				if (rv != CKR_OK)
+					return finish_iterating (iter, rv);
+			}
+
 			iter->move_next_session_state = 0;
 			iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
 			return CKR_OK;
@@ -1081,6 +1097,7 @@ p11_kit_iter_free (P11KitIter *iter)
 	p11_attrs_free (iter->match_attrs);
 	free (iter->objects);
 	free (iter->slots);
+	free (iter->pin);
 
 	for (cb = iter->callbacks; cb != NULL; cb = next) {
 		next = cb->next;

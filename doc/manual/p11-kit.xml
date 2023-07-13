@@ -33,6 +33,9 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit list-objects</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit list-profiles</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -87,6 +90,20 @@ $ p11-kit list-modules
 
 	<para>The modules, information about them and the tokens present in
 	the PKCS#11 modules will be displayed.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-list-objects">
+	<title>List Objects</title>
+
+	<para>List objects of a token.</para>
+
+<programlisting>
+$ p11-kit list-objects pkcs11:token
+</programlisting>
+
+	<para>This retrieves all objects of the given token and displays
+	some of their common attributes.</para>
 
 </refsect1>
 
