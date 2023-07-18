@@ -107,12 +107,13 @@ is_ascii_string (const unsigned char *data,
 }
 
 static void
-print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, CK_SLOT_ID slot_id)
+print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11KitUri *uri, CK_SLOT_ID slot_id)
 {
 	CK_TOKEN_INFO info;
 	char *value;
 	CK_RV rv;
 	p11_array *flags;
+	int ret;
 
 	rv = (module->C_GetTokenInfo) (slot_id, &info);
 	if (rv != CKR_OK) {
@@ -122,6 +123,15 @@ print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, CK_SLO
 
 	value = p11_kit_space_strdup (info.label, sizeof (info.label));
 	p11_list_printer_start_section (printer, "token", "%s", value);
+	free (value);
+
+	memcpy (p11_kit_uri_get_token_info (uri), &info, sizeof (info));
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_TOKEN, &value);
+	if (ret != P11_KIT_URI_OK) {
+		p11_message (_("couldn't format URI into string: %s"), p11_kit_uri_message (ret));
+		return;
+	}
+	p11_list_printer_write_value (printer, "uri", "%s", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.manufacturerID, sizeof (info.manufacturerID));
@@ -178,19 +188,29 @@ print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, CK_SLO
 }
 
 static void
-print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module)
+print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11KitUri *uri)
 {
 	CK_SLOT_ID slot_list[256];
 	CK_ULONG i, count;
 	CK_INFO info;
 	char *value;
 	CK_RV rv;
+	int ret;
 
 	rv = (module->C_GetInfo) (&info);
 	if (rv != CKR_OK) {
 		p11_message (_("couldn't load module info: %s"), p11_kit_strerror (rv));
 		return;
 	}
+
+	memcpy (p11_kit_uri_get_module_info (uri), &info, sizeof (info));
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_MODULE, &value);
+	if (ret != P11_KIT_URI_OK) {
+		p11_message (_("couldn't format URI into string: %s"), p11_kit_uri_message (ret));
+		return;
+	}
+	p11_list_printer_write_value (printer, "uri", "%s", value);
+	free (value);
 
 	value = p11_kit_space_strdup (info.libraryDescription, sizeof (info.libraryDescription));
 	p11_list_printer_write_value (printer, "library-description", "%s", value);
@@ -211,7 +231,7 @@ print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module)
 	}
 
 	for (i = 0; i < count; i++)
-		print_token_info (printer, module, slot_list[i]);
+		print_token_info (printer, module, uri, slot_list[i]);
 }
 
 static int
@@ -221,11 +241,18 @@ print_modules (void)
 	char *name;
 	char *path;
 	p11_list_printer printer;
+	P11KitUri *uri;
 	int i;
 
 	module_list = p11_kit_modules_load_and_initialize (0);
 	if (!module_list)
 		return 1;
+
+	uri = p11_kit_uri_new ();
+	if (uri == NULL) {
+		p11_message (_("failed to allocate memory for URI"));
+		return 1;
+	}
 
 	p11_list_printer_init (&printer, stdout, 0);
 
@@ -233,16 +260,20 @@ print_modules (void)
 		name = p11_kit_module_get_name (module_list[i]);
 		path = p11_kit_config_option (module_list[i], "module");
 
+		p11_kit_uri_set_module_name (uri, name);
+		p11_kit_uri_set_module_path (uri, path);
+
 		p11_list_printer_start_section (&printer,
 						name ? name : "(null)",
 						"%s", path ? path : "(null)");
-		print_module_info (&printer, module_list[i]);
+		print_module_info (&printer, module_list[i], uri);
 		p11_list_printer_end_section (&printer);
 
 		free (name);
 		free (path);
 	}
 
+	p11_kit_uri_free (uri);
 	p11_kit_modules_finalize_and_release (module_list);
 	return 0;
 }
