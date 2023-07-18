@@ -8,12 +8,14 @@ P11KitUri
 p11_kit_uri
 p11_kit_uri_new
 p11_kit_uri_get_module_info
+p11_kit_uri_set_module_info
 p11_kit_uri_match_module_info
 p11_kit_uri_get_slot_info
 p11_kit_uri_match_slot_info
 p11_kit_uri_get_slot_id
 p11_kit_uri_set_slot_id
 p11_kit_uri_get_token_info
+p11_kit_uri_set_token_info
 p11_kit_uri_match_token_info
 p11_kit_uri_get_attributes
 p11_kit_uri_set_attributes

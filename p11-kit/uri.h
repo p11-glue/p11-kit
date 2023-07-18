@@ -98,6 +98,8 @@ typedef struct p11_kit_uri P11KitUri;
 typedef struct p11_kit_uri p11_kit_uri;
 
 CK_INFO_PTR         p11_kit_uri_get_module_info             (P11KitUri *uri);
+void                p11_kit_uri_set_module_info             (P11KitUri *uri,
+                                                             const CK_INFO *info);
 
 int                 p11_kit_uri_match_module_info           (const P11KitUri *uri,
                                                              const CK_INFO *info);
@@ -112,6 +114,8 @@ void                p11_kit_uri_set_slot_id                 (P11KitUri *uri,
                                                              CK_SLOT_ID slot_id);
 
 CK_TOKEN_INFO_PTR   p11_kit_uri_get_token_info              (P11KitUri *uri);
+void                p11_kit_uri_set_token_info              (P11KitUri *uri,
+                                                             const CK_TOKEN_INFO *token_info);
 
 int                 p11_kit_uri_match_token_info            (const P11KitUri *uri,
                                                              const CK_TOKEN_INFO *token_info);

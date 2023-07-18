@@ -232,6 +232,13 @@ p11_kit_uri_get_module_info (P11KitUri *uri)
 	return &uri->module;
 }
 
+void
+p11_kit_uri_set_module_info (P11KitUri *uri, const CK_INFO *info)
+{
+	return_if_fail (uri != NULL);
+	uri->module = *info;
+}
+
 int
 p11_match_uri_module_info (CK_INFO const *one,
                            CK_INFO const *two)
@@ -385,6 +392,14 @@ p11_kit_uri_get_token_info (P11KitUri *uri)
 {
 	return_val_if_fail (uri != NULL, NULL);
 	return &uri->token;
+}
+
+void
+p11_kit_uri_set_token_info (P11KitUri *uri,
+			    const CK_TOKEN_INFO *token_info)
+{
+	return_if_fail (uri != NULL);
+	uri->token = *token_info;
 }
 
 int

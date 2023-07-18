@@ -94,12 +94,14 @@ LIBP11_KIT_1.0 {
 		p11_kit_uri_parse;
 		p11_kit_uri_set_attribute;
 		p11_kit_uri_set_attributes;
+		p11_kit_uri_set_module_info;
 		p11_kit_uri_set_module_name;
 		p11_kit_uri_set_module_path;
 		p11_kit_uri_set_pinfile;
 		p11_kit_uri_set_pin_source;
 		p11_kit_uri_set_pin_value;
 		p11_kit_uri_set_slot_id;
+		p11_kit_uri_set_token_info;
 		p11_kit_uri_set_unrecognized;
 		p11_kit_uri_set_vendor_query;
 	local:
