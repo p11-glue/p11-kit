@@ -36,6 +36,7 @@
 
 #include "compat.h"
 #include "debug.h"
+#include "hex.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -63,33 +64,6 @@ int p11_kit_list_modules (int argc,
                           char *argv[]);
 
 bool verbose = false;
-
-static const char HEXC_LOWER[] = "0123456789abcdef";
-
-static char *
-hex_encode (const unsigned char *data,
-            size_t n_data)
-{
-	char *result;
-	size_t i;
-	size_t o;
-
-	if ((SIZE_MAX - 1) / 3 < n_data)
-		return NULL;
-	result = malloc (n_data * 3 + 1);
-	if (result == NULL)
-		return NULL;
-
-	for (i = 0, o = 0; i < n_data; i++) {
-		if (i > 0)
-			result[o++] = ':';
-		result[o++] = HEXC_LOWER[data[i] >> 4 & 0xf];
-		result[o++] = HEXC_LOWER[data[i] & 0xf];
-	}
-
-	result[o] = 0;
-	return result;
-}
 
 static bool
 is_ascii_string (const unsigned char *data,

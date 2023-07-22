@@ -24,6 +24,7 @@ libp11_common_la_SOURCES = \
 	common/debug.c common/debug.h \
 	common/dict.c common/dict.h \
 	common/hash.c common/hash.h \
+	common/hex.c common/hex.h \
 	common/lexer.c common/lexer.h \
 	common/message.c common/message.h \
 	common/path.c common/path.h \
