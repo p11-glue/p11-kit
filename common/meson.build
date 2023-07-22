@@ -10,6 +10,7 @@ libp11_common_sources = [
   'debug.c',
   'dict.c',
   'hash.c',
+  'hex.c',
   'lexer.c',
   'message.c',
   'path.c',
