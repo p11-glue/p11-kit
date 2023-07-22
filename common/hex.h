@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2011, Collabora Ltd.
  * Copyright (c) 2023 Red Hat Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,12 +29,14 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
+ *
+ * Author: Stef Walter <stefw@collabora.co.uk>, Daiki Ueno
  */
 
 #ifndef P11_HEX_H
 #define P11_HEX_H
 
-#include "compat.h"
+#include <stddef.h>
 
 char *hex_encode (const unsigned char *data,
 		  size_t n_data);
