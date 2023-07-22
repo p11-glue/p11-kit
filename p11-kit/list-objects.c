@@ -38,6 +38,7 @@
 
 #include "constants.h"
 #include "debug.h"
+#include "hex.h"
 #include "iter.h"
 #include "message.h"
 #include "print.h"
@@ -94,6 +95,25 @@ print_string_attribute (p11_list_printer *printer,
 		type_str = "(unknown)";
 
 	p11_list_printer_write_value (printer, type_str, "%s", attr.pValue);
+}
+
+static inline void
+print_byte_array_attribute (p11_list_printer *printer,
+			    CK_ATTRIBUTE attr)
+{
+	const char *type_str;
+	char *value;
+
+	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+		return;
+
+	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	if (type_str == NULL)
+		type_str = "(unknown)";
+
+	value = hex_encode (attr.pValue, attr.ulValueLen);
+	p11_list_printer_write_value (printer, type_str, "%s", value);
+	free (value);
 }
 
 static inline void
@@ -166,6 +186,7 @@ print_object (p11_list_printer *printer,
 		/* string attributes */
 		{ CKA_LABEL, label, sizeof (label) - 1 },
 		{ CKA_APPLICATION, application, sizeof (application) - 1 },
+		/* byte array attributes */
 		{ CKA_ID, id, sizeof (id) - 1 },
 		/* date attributes */
 		{ CKA_START_DATE, &start_date, sizeof (start_date) },
@@ -192,7 +213,7 @@ print_object (p11_list_printer *printer,
 	print_ulong_attribute (printer, attrs[6], p11_constant_profiles);
 	print_string_attribute (printer, attrs[7]);
 	print_string_attribute (printer, attrs[8]);
-	print_string_attribute (printer, attrs[9]);
+	print_byte_array_attribute (printer, attrs[9]);
 	print_date_attribute (printer, attrs[10]);
 	print_date_attribute (printer, attrs[11]);
 	print_bool_attribute (printer, attrs[12]);
