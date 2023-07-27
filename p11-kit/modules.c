@@ -383,6 +383,12 @@ dlopen_and_get_function_list (Module *mod,
 	mod->loaded_module = dl;
 
 	gi = p11_dl_symbol (dl, "C_GetInterface");
+
+#ifndef OS_WIN32
+	if (gi == C_GetInterface)
+		gi = NULL;
+#endif
+
 	if (gi) {
 		/* Get the default standard interface */
 		rv = gi ((unsigned char *)"PKCS 11", NULL, &interface, 0);
