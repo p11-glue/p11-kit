@@ -147,6 +147,7 @@ endif
 
 p11_kit_sources = [
   'add-profile.c',
+  'delete-object.c',
   'delete-profile.c',
   'list-objects.c',
   'list-profiles.c',
