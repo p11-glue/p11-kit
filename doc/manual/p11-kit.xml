@@ -36,6 +36,9 @@
 		<command>p11-kit list-objects</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit delete-object</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit list-profiles</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -104,6 +107,19 @@ $ p11-kit list-objects pkcs11:token
 
 	<para>This retrieves all objects of the given token and displays
 	some of their common attributes.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-delete-object">
+	<title>Delete Object</title>
+
+	<para>Delete objects matching PKCS#11 URI.</para>
+
+<programlisting>
+$ p11-kit delete-object pkcs11:token
+</programlisting>
+
+	<para>This destroys every storage object matching given PKCS#11 URI.</para>
 
 </refsect1>
 

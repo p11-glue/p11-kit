@@ -240,6 +240,7 @@ p11_kit_p11_kit_CFLAGS = $(COMMON_CFLAGS)
 
 p11_kit_p11_kit_SOURCES = \
 	p11-kit/add-profile.c \
+	p11-kit/delete-object.c \
 	p11-kit/delete-profile.c \
 	p11-kit/list-objects.c \
 	p11-kit/list-profiles.c \
@@ -263,6 +264,7 @@ endif
 check_PROGRAMS += p11-kit/p11-kit-testable
 p11_kit_p11_kit_testable_SOURCES = \
 	p11-kit/add-profile.c \
+	p11-kit/delete-object.c \
 	p11-kit/delete-profile.c \
 	p11-kit/list-objects.c \
 	p11-kit/list-profiles.c \
