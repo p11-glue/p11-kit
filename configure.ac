@@ -63,6 +63,8 @@ AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
+AM_MISSING_PROG([PYTHON], [python])
+AM_MISSING_PROG([CASTXML], [castxml])
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])

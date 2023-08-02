@@ -102,7 +102,7 @@ frob-*
 /p11-kit/p11-kit-1.pc
 /p11-kit/pkcs11.conf.example
 /p11-kit/p11-kit-server.service
-/p11-kit/virtual-fixed-generated.h
+/p11-kit/virtual-*-generated.h
 /p11-kit/*.gnu.c
 
 /p11-kit/p11-kit-testable

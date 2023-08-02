@@ -14,6 +14,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-autotools
 
   address-sanitizer:
@@ -25,6 +27,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
 
   undefined-sanitizer:
@@ -36,6 +40,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
 
   scan-build:
@@ -47,6 +53,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
 
   mingw:
@@ -60,6 +68,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
 
   cppcheck:
@@ -71,6 +81,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - run: |
           find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1
 
@@ -83,6 +95,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
       - name: Genereate coverage
         run: runuser -u user -- ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR
@@ -99,6 +113,8 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Install dependencies
         run: |
           brew upgrade -f
@@ -117,4 +133,6 @@ jobs:
     steps:
       # Checkout repo
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: ./.github/actions/basic-meson
