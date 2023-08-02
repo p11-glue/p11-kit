@@ -25,44 +25,39 @@ COMMON_SRCS = \
 	p11-kit/rpc-client.c \
 	p11-kit/uri.c \
 	p11-kit/virtual.c p11-kit/virtual.h \
-	p11-kit/virtual-fixed.h \
 	$(inc_HEADERS)
 
-BUILT_SOURCES += \
+VIRTUAL_GENERATED = \
+	p11-kit/virtual-ffi-generated.h \
 	p11-kit/virtual-fixed-generated.h \
+	p11-kit/virtual-stack-generated.h \
+	p11-kit/virtual-base-generated.h \
 	$(NULL)
 
-p11-kit/virtual.c: p11-kit/virtual-fixed-generated.h
+BUILT_SOURCES += $(VIRTUAL_GENERATED) \
+	$(NULL)
+
+p11-kit/virtual.c: $(VIRTUAL_GENERATED)
 
 CLEANFILES += \
-	p11-kit/virtual-fixed-generated.h \
+	$(VIRTUAL_GENERATED) \
 	$(NULL)
 
-p11-kit/virtual-fixed-generated.h: Makefile
-	$(AM_V_GEN)rm -f $@-t $@ && \
-	{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
-	  echo; \
-	  counter=0; \
-	  while test $$counter -lt $(closures); do \
-	    echo "P11_VIRTUAL_FIXED_FUNCTIONS($$counter)"; \
-	    counter=`expr $$counter + 1`; \
-	  done; \
-	  echo; \
-	  echo "CK_FUNCTION_LIST_3_0 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {"; \
-	  counter=0; \
-	  while test $$counter -lt $(closures); do \
-	    echo "	P11_VIRTUAL_FIXED_INITIALIZER($$counter),"; \
-	    counter=`expr $$counter + 1`; \
-	  done; \
-	  echo '};'; \
-	  echo; \
-	  counter=0; \
-	  while test $$counter -lt $(closures); do \
-	    echo "P11_VIRTUAL_FIXED_GET_FUNCTION_LIST($$counter)"; \
-	    counter=`expr $$counter + 1`; \
-	  done; \
-	} > $@-t && \
-	mv -f $@-t $@
+p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --ffi \
+		$(srcdir)/pkcs11-json/pkcs11.json $@
+
+p11-kit/virtual-fixed-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --fixed $(closures) \
+		$(srcdir)/pkcs11-json/pkcs11.json $@
+
+p11-kit/virtual-stack-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --stack \
+		$(srcdir)/pkcs11-json/pkcs11.json $@
+
+p11-kit/virtual-base-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --base \
+		$(srcdir)/pkcs11-json/pkcs11.json $@
 
 lib_LTLIBRARIES += \
 	libp11-kit.la
@@ -225,7 +220,7 @@ example_DATA = p11-kit/pkcs11.conf.example
 EXTRA_DIST += \
 	p11-kit/docs.h \
 	p11-kit/gen-pkcs11-gnu.sh \
-	p11-kit/gen-virtual-fixed.sh \
+	p11-kit/gen-virtual.py \
 	p11-kit/meson.build \
 	p11-kit/meson_post_install.sh \
 	p11-kit/libp11-kit.map \

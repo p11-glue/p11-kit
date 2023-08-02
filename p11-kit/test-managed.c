@@ -41,7 +41,6 @@
 #include "modules.h"
 #include "p11-kit.h"
 #include "virtual.h"
-#include "virtual-fixed.h"
 
 #include <sys/types.h>
 #ifdef OS_UNIX

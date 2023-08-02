@@ -27,7 +27,7 @@ CLEANFILES =
 EXTRA_DIST = CONTRIBUTING.md meson.build meson_options.txt po/meson.build \
 	doc/manual/meson.build doc/manual/userdir.xml.in \
 	doc/manual/sysdir.xml.in doc/manual/version.xml.in \
-	bash-completion
+	bash-completion pkcs11-json
 
 incdir = $(includedir)/p11-kit-1/p11-kit
 inc_HEADERS =
@@ -54,6 +54,10 @@ include fuzz/Makefile.am
 if WITH_TRUST_MODULE
 include trust/Makefile.am
 endif
+
+PKCS11_JSON_INPUT = $(srcdir)/common/pkcs11.h
+
+include pkcs11-json/Makefile.am
 
 SUBDIRS = . doc po
 

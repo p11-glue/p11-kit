@@ -15,11 +15,45 @@ libp11_kit_internal_sources = [
   'rpc-client.c'
 ]
 
+libp11_kit_internal_sources += custom_target('generate virtual-ffi-generated.h',
+                                             input: pkcs11_json,
+                                             output: 'virtual-ffi-generated.h',
+                                             command: [
+                                               python,
+                                               meson.current_source_dir() / 'gen-virtual.py',
+                                               '--ffi',
+                                               '@INPUT@',
+                                               '@OUTPUT@',
+                                             ])
 libp11_kit_internal_sources += custom_target('generate virtual-fixed-generated.h',
+                                             input: pkcs11_json,
                                              output: 'virtual-fixed-generated.h',
                                              command: [
-                                               meson.current_source_dir() / 'gen-virtual-fixed.sh',
-                                               '@OUTPUT@', '@0@'.format(closures)
+                                               python,
+                                               meson.current_source_dir() / 'gen-virtual.py',
+                                               '--fixed', '@0@'.format(closures),
+                                               '@INPUT@',
+                                               '@OUTPUT@',
+                                             ])
+libp11_kit_internal_sources += custom_target('generate virtual-stack-generated.h',
+                                             input: pkcs11_json,
+                                             output: 'virtual-stack-generated.h',
+                                             command: [
+                                               python,
+                                               meson.current_source_dir() / 'gen-virtual.py',
+                                               '--stack',
+                                               '@INPUT@',
+                                               '@OUTPUT@',
+                                             ])
+libp11_kit_internal_sources += custom_target('generate virtual-base-generated.h',
+                                             input: pkcs11_json,
+                                             output: 'virtual-base-generated.h',
+                                             command: [
+                                               python,
+                                               meson.current_source_dir() / 'gen-virtual.py',
+                                               '--base',
+                                               '@INPUT@',
+                                               '@OUTPUT@',
                                              ])
 libp11_kit_internal_sources += 'virtual.c'
 

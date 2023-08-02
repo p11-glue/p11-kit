@@ -433,7 +433,14 @@ configure_file(output: 'config.h', configuration: conf)
 gnome = import('gnome')
 i18n = import('i18n')
 pkg = import('pkgconfig')
+python = import('python').find_installation()
+python_version = python.language_version()
+python_version_req = '>=3.6'
+if not python_version.version_compare(python_version_req)
+  error('Requires Python @0@, @1@ found.'.format(python_version_req, python_version))
+endif
 
+subdir('pkcs11-json')
 subdir('common')
 subdir('p11-kit')
 subdir('fuzz')
