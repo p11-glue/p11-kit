@@ -63,20 +63,20 @@ libp11_kit_ldflags += cc.get_supported_link_arguments([
   '-Wl,-z,nodelete'
 ])
 
-libp11_kit = shared_library('p11-kit',
-                            libp11_kit_sources,
-                            install: true,
-                            version: library_version,
-                            soversion: soversion,
-                            dependencies: libffi_deps + dlopen_deps,
-                            include_directories: [configinc, commoninc],
-                            implicit_include_directories: false,
-                            c_args: libp11_kit_internal_c_args,
-                            link_args: libp11_kit_ldflags,
-                            link_depends: [libp11_kit_symbol_map,
-                                           libp11_kit_symbol_def],
-                            link_with: libp11_kit_internal,
-                            vs_module_defs: libp11_kit_symbol_def)
+libp11_kit = library('p11-kit',
+                     libp11_kit_sources,
+                     install: true,
+                     version: library_version,
+                     soversion: soversion,
+                     dependencies: libffi_deps + dlopen_deps,
+                     include_directories: [configinc, commoninc],
+                     implicit_include_directories: false,
+                     c_args: libp11_kit_internal_c_args,
+                     link_args: libp11_kit_ldflags,
+                     link_depends: [libp11_kit_symbol_map,
+                                    libp11_kit_symbol_def],
+                     link_with: libp11_kit_internal,
+                     vs_module_defs: libp11_kit_symbol_def)
 
 libp11_kit_dep = declare_dependency(link_with: libp11_kit,
                                     include_directories: [configinc, commoninc])
