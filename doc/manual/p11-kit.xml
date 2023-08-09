@@ -36,6 +36,9 @@
 		<command>p11-kit list-objects</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit export-object</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit delete-object</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -107,6 +110,20 @@ $ p11-kit list-objects pkcs11:token
 
 	<para>This retrieves all objects of the given token and displays
 	some of their common attributes.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-export-object">
+	<title>Export Object</title>
+
+	<para>Export object matching PKCS#11 URI.</para>
+
+<programlisting>
+$ p11-kit export-object pkcs11:token
+</programlisting>
+
+	<para>If a given URI references a storage object that is a X.509 certificate,
+	it displays the concents of the certificate in PEM format.</para>
 
 </refsect1>
 
