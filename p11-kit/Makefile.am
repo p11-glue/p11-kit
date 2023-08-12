@@ -29,7 +29,8 @@ COMMON_SRCS = \
 
 VIRTUAL_GENERATED = \
 	p11-kit/virtual-ffi-generated.h \
-	p11-kit/virtual-fixed-generated.h \
+	p11-kit/virtual-fixed-wrappers.h \
+	p11-kit/virtual-fixed-closures.h \
 	p11-kit/virtual-stack-generated.h \
 	p11-kit/virtual-base-generated.h \
 	$(NULL)
@@ -43,21 +44,35 @@ CLEANFILES += \
 	$(VIRTUAL_GENERATED) \
 	$(NULL)
 
-p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
-	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --ffi \
-		$(srcdir)/pkcs11-json/pkcs11.json $@
+p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
+		--template $(srcdir)/p11-kit/templates/binding-wrappers.py \
+		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
+		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
 
-p11-kit/virtual-fixed-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
-	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --fixed $(closures) \
-		$(srcdir)/pkcs11-json/pkcs11.json $@
+p11-kit/virtual-fixed-wrappers.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
+		--template $(srcdir)/p11-kit/templates/fixed-wrappers.py \
+		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
+		--renames C_GetFunctionStatus:short C_CancelFunction:short \
+		--concat-lines \
+		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
 
-p11-kit/virtual-stack-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
-	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --stack \
-		$(srcdir)/pkcs11-json/pkcs11.json $@
+p11-kit/virtual-fixed-closures.h: Makefile p11-kit/gen-fixed-closures.py
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-fixed-closures.py \
+		--closures $(closures) --outfile $@
 
-p11-kit/virtual-base-generated.h: Makefile p11-kit/gen-virtual.py pkcs11-json/pkcs11.json
-	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-virtual.py --base \
-		$(srcdir)/pkcs11-json/pkcs11.json $@
+p11-kit/virtual-stack-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
+		--template $(srcdir)/p11-kit/templates/stack-wrappers.py \
+		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
+		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
+
+p11-kit/virtual-base-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
+		--template $(srcdir)/p11-kit/templates/base-wrappers.py \
+		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
+		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
 
 lib_LTLIBRARIES += \
 	libp11-kit.la
@@ -220,7 +235,8 @@ example_DATA = p11-kit/pkcs11.conf.example
 EXTRA_DIST += \
 	p11-kit/docs.h \
 	p11-kit/gen-pkcs11-gnu.sh \
-	p11-kit/gen-virtual.py \
+	p11-kit/gen-wrappers.py \
+	p11-kit/gen-fixed-closures.py \
 	p11-kit/meson.build \
 	p11-kit/meson_post_install.sh \
 	p11-kit/libp11-kit.map \
@@ -553,6 +569,7 @@ mock_eleven_la_LIBADD = $(mock_one_la_LIBADD)
 
 EXTRA_DIST += \
 	p11-kit/fixtures \
+	p11-kit/templates \
 	p11-kit/test-mock.c \
 	p11-kit/test-transport-base.c \
 	p11-kit/test-profiles.sh \
