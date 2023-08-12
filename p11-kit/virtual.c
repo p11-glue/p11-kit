@@ -623,7 +623,8 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 	free (wrapper);
 }
 
-#include "p11-kit/virtual-fixed-generated.h"
+#include "p11-kit/virtual-fixed-wrappers.h"
+#include "p11-kit/virtual-fixed-closures.h"
 
 static CK_FUNCTION_LIST_3_0 *
 p11_virtual_wrap_fixed (p11_virtual *virt,
