@@ -440,7 +440,9 @@ if not python_version.version_compare(python_version_req)
   error('Requires Python @0@, @1@ found.'.format(python_version_req, python_version))
 endif
 
-subdir('pkcs11-json')
+pkcs11_json_project = subproject('pkcs11-json')
+pkcs11_json = pkcs11_json_project.get_variable('pkcs11_json')
+
 subdir('common')
 subdir('p11-kit')
 subdir('fuzz')

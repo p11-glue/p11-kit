@@ -44,35 +44,35 @@ CLEANFILES += \
 	$(VIRTUAL_GENERATED) \
 	$(NULL)
 
-p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-wrappers.py subprojects/pkcs11-json/pkcs11.json
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
 		--template $(srcdir)/p11-kit/templates/binding-wrappers.py \
 		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
-		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
+		--infile $(srcdir)/subprojects/pkcs11-json/pkcs11.json --outfile $@
 
-p11-kit/virtual-fixed-wrappers.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+p11-kit/virtual-fixed-wrappers.h: Makefile p11-kit/gen-wrappers.py subprojects/pkcs11-json/pkcs11.json
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
 		--template $(srcdir)/p11-kit/templates/fixed-wrappers.py \
 		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
 		--renames C_GetFunctionStatus:short C_CancelFunction:short \
 		--concat-lines \
-		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
+		--infile $(srcdir)/subprojects/pkcs11-json/pkcs11.json --outfile $@
 
 p11-kit/virtual-fixed-closures.h: Makefile p11-kit/gen-fixed-closures.py
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-fixed-closures.py \
 		--closures $(closures) --outfile $@
 
-p11-kit/virtual-stack-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+p11-kit/virtual-stack-generated.h: Makefile p11-kit/gen-wrappers.py subprojects/pkcs11-json/pkcs11.json
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
 		--template $(srcdir)/p11-kit/templates/stack-wrappers.py \
 		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
-		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
+		--infile $(srcdir)/subprojects/pkcs11-json/pkcs11.json --outfile $@
 
-p11-kit/virtual-base-generated.h: Makefile p11-kit/gen-wrappers.py pkcs11-json/pkcs11.json
+p11-kit/virtual-base-generated.h: Makefile p11-kit/gen-wrappers.py subprojects/pkcs11-json/pkcs11.json
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
 		--template $(srcdir)/p11-kit/templates/base-wrappers.py \
 		--excludes $(srcdir)/p11-kit/templates/virtual-excludes.list \
-		--infile $(srcdir)/pkcs11-json/pkcs11.json --outfile $@
+		--infile $(srcdir)/subprojects/pkcs11-json/pkcs11.json --outfile $@
 
 lib_LTLIBRARIES += \
 	libp11-kit.la
