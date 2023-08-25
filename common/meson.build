@@ -4,6 +4,7 @@ libp11_common_sources = [
   'argv.c',
   'attrs.c',
   'array.c',
+  'base64.c',
   'buffer.c',
   'compat.c',
   'constants.c',
@@ -14,6 +15,7 @@ libp11_common_sources = [
   'lexer.c',
   'message.c',
   'path.c',
+  'pem.c',
   'runtime.c',
   'url.c',
   'vsock.c'

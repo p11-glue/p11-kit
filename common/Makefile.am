@@ -18,6 +18,7 @@ libp11_common_la_SOURCES = \
 	common/argv.c common/argv.h \
 	common/attrs.c common/attrs.h \
 	common/array.c common/array.h \
+	common/base64.c common/base64.h \
 	common/buffer.c common/buffer.h \
 	common/compat.c common/compat.h \
 	common/constants.c common/constants.h \
@@ -28,6 +29,7 @@ libp11_common_la_SOURCES = \
 	common/lexer.c common/lexer.h \
 	common/message.c common/message.h \
 	common/path.c common/path.h \
+	common/pem.c common/pem.h \
 	common/pkcs11.h common/pkcs11x.h common/pkcs11i.h \
 	common/runtime.c common/runtime.h \
 	common/url.c common/url.h \

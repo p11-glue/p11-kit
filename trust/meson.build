@@ -1,7 +1,5 @@
 libtrust_data_sources = [
   'asn1.c',
-  'base64.c',
-  'pem.c',
   'oid.c',
   'utf8.c',
   'x509.c'
