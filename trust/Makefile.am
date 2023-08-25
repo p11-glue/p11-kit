@@ -9,8 +9,6 @@ check_LTLIBRARIES += \
 
 libtrust_data_la_SOURCES = \
 	trust/asn1.c trust/asn1.h \
-	trust/base64.c trust/base64.h \
-	trust/pem.c trust/pem.h \
 	trust/oid.c trust/oid.h \
 	trust/utf8.c trust/utf8.h \
 	trust/x509.c trust/x509.h \
