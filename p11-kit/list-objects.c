@@ -242,7 +242,7 @@ list_objects (const char *token_str)
 		goto cleanup;
 	}
 
-	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
+	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_OBJECT_ON_TOKEN, uri) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse the token URI"));
 		goto cleanup;
 	}
