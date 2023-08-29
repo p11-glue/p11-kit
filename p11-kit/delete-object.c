@@ -98,9 +98,9 @@ delete_object (const char *token_str)
 
 cleanup:
 	p11_kit_iter_free (iter);
-	p11_kit_modules_finalize (modules);
-	p11_kit_modules_release (modules);
 	p11_kit_uri_free (uri);
+	if (modules != NULL)
+		p11_kit_modules_finalize_and_release (modules);
 
 	return ret;
 }
