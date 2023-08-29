@@ -43,6 +43,7 @@
 #include "message.h"
 #include "print.h"
 #include "tool.h"
+#include "uri.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -58,6 +59,13 @@
 int
 p11_kit_list_objects (int argc,
 		      char *argv[]);
+
+static inline bool
+is_storage_object (CK_OBJECT_CLASS klass)
+{
+	return klass == CKO_DATA || klass == CKO_CERTIFICATE || klass == CKO_PUBLIC_KEY ||
+	       klass == CKO_PRIVATE_KEY || klass == CKO_SECRET_KEY;
+}
 
 static inline void
 print_ulong_attribute (p11_list_printer *printer,
@@ -87,7 +95,7 @@ print_string_attribute (p11_list_printer *printer,
 {
 	const char *type_str;
 
-	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr.pValue == NULL || attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
 	type_str = p11_constant_nick (p11_constant_types, attr.type);
@@ -104,7 +112,7 @@ print_byte_array_attribute (p11_list_printer *printer,
 	const char *type_str;
 	char *value;
 
-	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr.pValue == NULL || attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
 	type_str = p11_constant_nick (p11_constant_types, attr.type);
@@ -156,6 +164,62 @@ print_bool_attribute (p11_list_printer *printer,
 				      *((CK_BBOOL *)attr.pValue) ? "true" : "false");
 }
 
+static char *
+get_object_uri (P11KitIter *iter,
+		CK_OBJECT_CLASS klass,
+		char *label,
+		size_t label_len,
+		char *id,
+		size_t id_len)
+{
+	int ret;
+	P11KitUri *uri;
+	char *str = NULL;
+	CK_ATTRIBUTE attr_class = { CKA_CLASS, &klass, sizeof (klass) };
+	CK_ATTRIBUTE attr_label = { CKA_LABEL, label, label_len };
+	CK_ATTRIBUTE attr_id = { CKA_ID, id, id_len };
+
+	uri = p11_kit_uri_new ();
+	if (uri == NULL) {
+		p11_message (_("failed to allocate memory for URI"));
+		return NULL;
+	}
+
+	ret = p11_kit_uri_set_attribute (uri, &attr_class);
+	if (ret != P11_KIT_URI_OK) {
+		p11_message (_("failed to set attribute for URI: %s"), p11_kit_uri_message (ret));
+		goto cleanup;
+	}
+
+	if (label != NULL) {
+	        ret = p11_kit_uri_set_attribute (uri, &attr_label);
+	        if (ret != P11_KIT_URI_OK) {
+		        p11_message (_("failed to set attribute for URI: %s"), p11_kit_uri_message (ret));
+		        goto cleanup;
+	        }
+	}
+
+	if (id != NULL) {
+		ret = p11_kit_uri_set_attribute (uri, &attr_id);
+		if (ret != P11_KIT_URI_OK) {
+			p11_message (_("failed to set attribute for URI: %s"), p11_kit_uri_message (ret));
+			goto cleanup;
+		}
+	}
+
+	memcpy (p11_kit_uri_get_token_info (uri), p11_kit_iter_get_token (iter), sizeof (CK_TOKEN_INFO));
+
+	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_OBJECT_ON_TOKEN, &str);
+	if (ret != P11_KIT_URI_OK) {
+		p11_message (_("couldn't format URI into string: %s"), p11_kit_uri_message (ret));
+		goto cleanup;
+	}
+
+cleanup:
+	p11_kit_uri_free (uri);
+	return str;
+}
+
 static void
 print_object (p11_list_printer *printer,
 	      P11KitIter *iter,
@@ -170,9 +234,9 @@ print_object (p11_list_printer *printer,
 	CK_MECHANISM_TYPE mechanism_type;
 	CK_BBOOL trusted, local, token, private, modifiable, copyable, destroyable;
 	CK_DATE start_date, end_date;
-	char label[128] = { '\0' };
-	char application[128] = { '\0' };
-	char id[128] = { '\0' };
+	p11_array *allocated;
+	char *uri_str;
+	size_t i;
 
 	CK_ATTRIBUTE attrs[] = {
 		/* ulong attributes */
@@ -184,10 +248,10 @@ print_object (p11_list_printer *printer,
 		{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
 		{ CKA_PROFILE_ID, &profile_id, sizeof (profile_id) },
 		/* string attributes */
-		{ CKA_LABEL, label, sizeof (label) - 1 },
-		{ CKA_APPLICATION, application, sizeof (application) - 1 },
+		{ CKA_LABEL, NULL_PTR, 0 },
+		{ CKA_APPLICATION, NULL_PTR, 0 },
 		/* byte array attributes */
-		{ CKA_ID, id, sizeof (id) - 1 },
+		{ CKA_ID, NULL_PTR, 0 },
 		/* date attributes */
 		{ CKA_START_DATE, &start_date, sizeof (start_date) },
 		{ CKA_END_DATE, &end_date, sizeof (end_date) },
@@ -202,8 +266,45 @@ print_object (p11_list_printer *printer,
 	};
 	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
 
+	allocated = p11_array_new (free);
+	if (allocated == NULL) {
+		p11_message (_("failed to allocate memory"));
+		return;
+	}
+
 	p11_kit_iter_get_attributes (iter, attrs, n_attrs);
+	for (i = 0; i < n_attrs; ++i) {
+		if (attrs[i].pValue != NULL_PTR ||
+		    attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION)
+			continue;
+
+		if (attrs[i].ulValueLen >= SIZE_MAX) {
+			p11_message (_("allocation would result in overflow"));
+			goto cleanup;
+		}
+		attrs[i].pValue = malloc (attrs[i].ulValueLen + 1);
+		if (attrs[i].pValue == NULL) {
+			p11_message (_("failed to allocate memory"));
+			goto cleanup;
+		}
+		((char *)attrs[i].pValue)[attrs[i].ulValueLen] = '\0';
+		p11_array_push (allocated, attrs[i].pValue);
+	}
+	p11_kit_iter_get_attributes (iter, attrs, n_attrs);
+
+	/* print section header */
 	p11_list_printer_start_section (printer, "Object", "#%lu", index);
+	if (is_storage_object (klass)) {
+		uri_str = get_object_uri (iter, klass,
+					  attrs[7].pValue, attrs[7].ulValueLen,
+					  attrs[9].pValue, attrs[9].ulValueLen);
+		if (uri_str == NULL)
+			goto cleanup;
+
+		p11_list_printer_write_value (printer, "uri", "%s", uri_str);
+		free (uri_str);
+	}
+
 	print_ulong_attribute (printer, attrs[0], p11_constant_classes);
 	print_ulong_attribute (printer, attrs[1], p11_constant_hw_features);
 	print_ulong_attribute (printer, attrs[2], p11_constant_mechanisms);
@@ -224,6 +325,9 @@ print_object (p11_list_printer *printer,
 	print_bool_attribute (printer, attrs[17]);
 	print_bool_attribute (printer, attrs[18]);
 	p11_list_printer_end_section (printer);
+
+cleanup:
+	p11_array_free (allocated);
 }
 
 static int
