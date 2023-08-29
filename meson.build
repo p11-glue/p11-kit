@@ -441,7 +441,8 @@ if not python_version.version_compare(python_version_req)
 endif
 
 pkcs11_json_project = subproject('pkcs11-json')
-pkcs11_json = pkcs11_json_project.get_variable('pkcs11_json')
+pkcs11_json_gen = pkcs11_json_project.get_variable('pkcs11_json_gen')
+pkcs11_json = pkcs11_json_gen.process('common/pkcs11.h')
 
 subdir('common')
 subdir('p11-kit')
