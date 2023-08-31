@@ -36,6 +36,7 @@
 
 #include "config.h"
 
+#include "attrs.h"
 #include "buffer.h"
 #include "constants.h"
 #include "debug.h"
@@ -70,115 +71,111 @@ is_storage_object (CK_OBJECT_CLASS klass)
 
 static inline void
 print_ulong_attribute (p11_list_printer *printer,
-		       CK_ATTRIBUTE attr,
+		       const CK_ATTRIBUTE *attr,
 		       const p11_constant *constants)
 {
 	const char *type_str;
 	const char *value_str;
 
-	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
-	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
-	value_str = p11_constant_nick (constants, *((CK_ULONG *)attr.pValue));
+	value_str = p11_constant_nick (constants, *((CK_ULONG *)attr->pValue));
 	if (value_str == NULL)
-		p11_list_printer_write_value (printer, type_str, "0x%lX (unknown)", attr.pValue);
+		p11_list_printer_write_value (printer, type_str, "0x%lX (unknown)", attr->pValue);
 	else
 		p11_list_printer_write_value (printer, type_str, "%s", value_str);
 }
 
 static inline void
 print_string_attribute (p11_list_printer *printer,
-			CK_ATTRIBUTE attr)
+			const CK_ATTRIBUTE *attr)
 {
 	const char *type_str;
 
-	if (attr.pValue == NULL || attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->pValue == NULL || attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
-	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
-	p11_list_printer_write_value (printer, type_str, "%s", attr.pValue);
+	p11_list_printer_write_value (printer, type_str, "%s", attr->pValue);
 }
 
 static inline void
 print_byte_array_attribute (p11_list_printer *printer,
-			    CK_ATTRIBUTE attr)
+			    const CK_ATTRIBUTE *attr)
 {
 	const char *type_str;
 	char *value;
 
-	if (attr.pValue == NULL || attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->pValue == NULL || attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
-	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
-	value = hex_encode (attr.pValue, attr.ulValueLen);
+	value = hex_encode (attr->pValue, attr->ulValueLen);
 	p11_list_printer_write_value (printer, type_str, "%s", value);
 	free (value);
 }
 
 static inline void
 print_date_attribute (p11_list_printer *printer,
-		      CK_ATTRIBUTE attr)
+		      const CK_ATTRIBUTE *attr)
 {
 	const char *type_str;
 	char year[5] = { '\0' };
 	char month[3] = { '\0' };
 	char day[3] = { '\0' };
 
-	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
-	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
-	memcpy (year, ((CK_DATE *)attr.pValue)->year, 4);
-	memcpy (month, ((CK_DATE *)attr.pValue)->month, 2);
-	memcpy (day, ((CK_DATE *)attr.pValue)->day, 2);
+	memcpy (year, ((CK_DATE *)attr->pValue)->year, 4);
+	memcpy (month, ((CK_DATE *)attr->pValue)->month, 2);
+	memcpy (day, ((CK_DATE *)attr->pValue)->day, 2);
 
 	p11_list_printer_write_value (printer, type_str, "%s.%s.%s", year, month, day);
 }
 
 static inline void
 print_bool_attribute (p11_list_printer *printer,
-		      CK_ATTRIBUTE attr)
+		      const CK_ATTRIBUTE *attr)
 {
 	const char *type_str;
 
-	if (attr.ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
 		return;
 
-	type_str = p11_constant_nick (p11_constant_types, attr.type);
+	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
 	p11_list_printer_write_value (printer, type_str, "%s",
-				      *((CK_BBOOL *)attr.pValue) ? "true" : "false");
+				      *((CK_BBOOL *)attr->pValue) ? "true" : "false");
 }
 
 static char *
 get_object_uri (P11KitIter *iter,
 		CK_OBJECT_CLASS klass,
-		char *label,
-		size_t label_len,
-		char *id,
-		size_t id_len)
+		CK_ATTRIBUTE *attr_label,
+		CK_ATTRIBUTE *attr_id)
 {
 	int ret;
 	P11KitUri *uri;
 	char *str = NULL;
 	CK_ATTRIBUTE attr_class = { CKA_CLASS, &klass, sizeof (klass) };
-	CK_ATTRIBUTE attr_label = { CKA_LABEL, label, label_len };
-	CK_ATTRIBUTE attr_id = { CKA_ID, id, id_len };
 
 	uri = p11_kit_uri_new ();
 	if (uri == NULL) {
@@ -192,16 +189,16 @@ get_object_uri (P11KitIter *iter,
 		goto cleanup;
 	}
 
-	if (label != NULL) {
-	        ret = p11_kit_uri_set_attribute (uri, &attr_label);
+	if (attr_label->ulValueLen != CK_UNAVAILABLE_INFORMATION) {
+	        ret = p11_kit_uri_set_attribute (uri, attr_label);
 	        if (ret != P11_KIT_URI_OK) {
 		        p11_message (_("failed to set attribute for URI: %s"), p11_kit_uri_message (ret));
 		        goto cleanup;
 	        }
 	}
 
-	if (id != NULL) {
-		ret = p11_kit_uri_set_attribute (uri, &attr_id);
+	if (attr_id->ulValueLen != CK_UNAVAILABLE_INFORMATION) {
+		ret = p11_kit_uri_set_attribute (uri, attr_id);
 		if (ret != P11_KIT_URI_OK) {
 			p11_message (_("failed to set attribute for URI: %s"), p11_kit_uri_message (ret));
 			goto cleanup;
@@ -300,8 +297,8 @@ print_object (p11_list_printer *printer,
 	p11_list_printer_start_section (printer, "Object", "#%lu", index);
 	if (is_storage_object (klass)) {
 		uri_str = get_object_uri (iter, klass,
-					  attrs[7].pValue, attrs[7].ulValueLen,
-					  attrs[9].pValue, attrs[9].ulValueLen);
+					  p11_attrs_findn (attrs, n_attrs, CKA_LABEL),
+					  p11_attrs_findn (attrs, n_attrs, CKA_ID));
 		if (uri_str == NULL)
 			goto cleanup;
 
@@ -309,25 +306,25 @@ print_object (p11_list_printer *printer,
 		free (uri_str);
 	}
 
-	print_ulong_attribute (printer, attrs[0], p11_constant_classes);
-	print_ulong_attribute (printer, attrs[1], p11_constant_hw_features);
-	print_ulong_attribute (printer, attrs[2], p11_constant_mechanisms);
-	print_ulong_attribute (printer, attrs[3], p11_constant_certs);
-	print_ulong_attribute (printer, attrs[4], p11_constant_categories);
-	print_ulong_attribute (printer, attrs[5], p11_constant_keys);
-	print_ulong_attribute (printer, attrs[6], p11_constant_profiles);
-	print_string_attribute (printer, attrs[7]);
-	print_string_attribute (printer, attrs[8]);
-	print_byte_array_attribute (printer, attrs[9]);
-	print_date_attribute (printer, attrs[10]);
-	print_date_attribute (printer, attrs[11]);
-	print_bool_attribute (printer, attrs[12]);
-	print_bool_attribute (printer, attrs[13]);
-	print_bool_attribute (printer, attrs[14]);
-	print_bool_attribute (printer, attrs[15]);
-	print_bool_attribute (printer, attrs[16]);
-	print_bool_attribute (printer, attrs[17]);
-	print_bool_attribute (printer, attrs[18]);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_CLASS), p11_constant_classes);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_HW_FEATURE_TYPE), p11_constant_hw_features);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_MECHANISM_TYPE), p11_constant_mechanisms);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_CERTIFICATE_TYPE), p11_constant_certs);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_CERTIFICATE_CATEGORY), p11_constant_categories);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_KEY_TYPE), p11_constant_keys);
+	print_ulong_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_PROFILE_ID), p11_constant_profiles);
+	print_string_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_LABEL));
+	print_string_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_APPLICATION));
+	print_byte_array_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_ID));
+	print_date_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_START_DATE));
+	print_date_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_END_DATE));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_TRUSTED));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_LOCAL));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_TOKEN));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_PRIVATE));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_MODIFIABLE));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_COPYABLE));
+	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_DESTROYABLE));
 	p11_list_printer_end_section (printer);
 
 cleanup:
