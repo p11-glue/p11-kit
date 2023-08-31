@@ -36,6 +36,7 @@
 
 #include "config.h"
 
+#include "buffer.h"
 #include "constants.h"
 #include "debug.h"
 #include "hex.h"
@@ -274,21 +275,24 @@ print_object (p11_list_printer *printer,
 
 	p11_kit_iter_get_attributes (iter, attrs, n_attrs);
 	for (i = 0; i < n_attrs; ++i) {
+		p11_buffer buffer;
+
 		if (attrs[i].pValue != NULL_PTR ||
 		    attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION)
 			continue;
 
-		if (attrs[i].ulValueLen >= SIZE_MAX) {
-			p11_message (_("allocation would result in overflow"));
-			goto cleanup;
-		}
-		attrs[i].pValue = malloc (attrs[i].ulValueLen + 1);
-		if (attrs[i].pValue == NULL) {
+		if (!p11_buffer_init_null (&buffer, attrs[i].ulValueLen) ||
+		    !p11_buffer_append (&buffer, attrs[i].ulValueLen)) {
 			p11_message (_("failed to allocate memory"));
 			goto cleanup;
 		}
-		((char *)attrs[i].pValue)[attrs[i].ulValueLen] = '\0';
-		p11_array_push (allocated, attrs[i].pValue);
+
+		attrs[i].pValue = p11_buffer_steal (&buffer, NULL);
+		if (!p11_array_push (allocated, attrs[i].pValue)) {
+			free (attrs[i].pValue);
+			p11_message (_("failed to allocate memory"));
+			goto cleanup;
+		}
 	}
 	p11_kit_iter_get_attributes (iter, attrs, n_attrs);
 
