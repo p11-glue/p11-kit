@@ -60,12 +60,14 @@ p11_kit_export_object (int argc,
 		       char *argv[]);
 
 static void
-export_x509_certificate (P11KitIter *iter)
+export_attr (P11KitIter *iter,
+	     CK_ATTRIBUTE_TYPE type,
+	     const char *label)
 {
 	p11_buffer buf;
-	CK_ATTRIBUTE attr = { CKA_VALUE, NULL_PTR, 0 };
+	CK_ATTRIBUTE attr = { type, NULL_PTR, 0 };
 
-	if (!p11_buffer_init_null (&buf, 0)) {
+	if (!p11_buffer_init (&buf, 0)) {
 		p11_message (_("failed to initialize buffer"));
 		return;
 	}
@@ -86,13 +88,13 @@ export_x509_certificate (P11KitIter *iter)
 		goto cleanup;
 	}
 
-	if (!p11_pem_write (attr.pValue, attr.ulValueLen, "CERTIFICATE", &buf)) {
-		p11_message (_("failed to write X.509 certificate"));
+	if (!p11_pem_write (attr.pValue, attr.ulValueLen, label, &buf)) {
+		p11_message (_("failed to convert DER to PEM"));
 		goto cleanup;
 	}
 
 	if (fwrite (buf.data, 1, buf.len, stdout) != buf.len) {
-		p11_message (_("failed to write the data to stdout"));
+		p11_message (_("failed to write PEM data to stdout"));
 		goto cleanup;
 	}
 
@@ -115,7 +117,7 @@ export_certificate (P11KitIter *iter)
 
 	switch (cert_type) {
 	case CKC_X_509:
-		export_x509_certificate (iter);
+		export_attr (iter, CKA_VALUE, "CERTIFICATE");
 		break;
 	case CKC_WTLS:
 	case CKC_X_509_ATTR_CERT:
@@ -170,8 +172,14 @@ export_object (const char *token_str)
 			goto cleanup;
 		}
 
-		if (klass == CKO_CERTIFICATE) {
+		switch (klass) {
+		case CKO_CERTIFICATE:
 			export_certificate (iter);
+			break;
+		case CKO_PUBLIC_KEY:
+			export_attr (iter, CKA_PUBLIC_KEY_INFO, "PUBLIC KEY");
+			break;
+		default:
 			break;
 		}
 	}
