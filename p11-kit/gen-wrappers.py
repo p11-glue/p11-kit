@@ -9,6 +9,13 @@ import json
 import sys
 
 INDENT = "        "
+X_EXCLUDES = [
+    "C_GetFunctionList",
+    "C_GetFunctionStatus",
+    "C_CancelFunction",
+    "C_GetInterfaceList",
+    "C_GetInterface",
+]
 
 
 def emit_wrapper_function(function, templates, concat_lines=False):
@@ -45,10 +52,29 @@ def emit_wrapper_function(function, templates, concat_lines=False):
         for index, argument in enumerate(function["arguments"])
     ])
 
-    function_body_template = templates["function_body"]
-    if function["version"] >= 3:
+    has_slot_id = next((argument for argument in function["arguments"] if argument["type"] == "CK_SLOT_ID"), None)
+    has_session_handle = next((argument for argument in function["arguments"] if argument["type"] == "CK_SESSION_HANDLE"), None)
+    assert not (has_slot_id and has_session_handle)
+
+    function_body_template = templates.get("function_body")
+    if function_body_template and function["version"] >= 3:
         function_body_template = templates.get("function_body_v3",
                                                function_body_template)
+
+    if has_slot_id:
+        template = templates.get("function_body_with_slot")
+        if template is not None:
+            function_body_template = templates.get(
+                "function_body_with_slot_v3",
+                template,
+            )
+    elif has_session_handle:
+        template = templates.get("function_body_with_session")
+        if template is not None:
+            function_body_template = templates.get(
+                "function_body_with_session_v3",
+                template,
+            )
 
     return function_body_template.format(
         indent=INDENT,
@@ -126,7 +152,7 @@ if __name__ == "__main__":
             templates,
             renames.get(function["name"]),
         )
-        for function in functions if function["name"] not in excludes
+        for function in functions if function["name"] not in X_EXCLUDES
     ])
     entries = separator.join([
         INDENT + emit_wrapper_entry(
