@@ -1,0 +1,14 @@
+C_CancelFunction
+C_CloseAllSessions
+C_CloseSession
+C_Finalize
+C_GetFunctionList
+C_GetFunctionStatus
+C_GetInfo
+C_GetInterface
+C_GetInterfaceList
+C_GetSessionInfo
+C_GetSlotList
+C_Initialize
+C_OpenSession
+C_WaitForSlotEvent
