@@ -266,6 +266,7 @@ p11_kit_p11_kit_SOURCES = \
 	p11-kit/delete-profile.c \
 	p11-kit/export-object.c \
 	p11-kit/generate-keypair.c \
+	p11-kit/import-object.c \
 	p11-kit/list-objects.c \
 	p11-kit/list-profiles.c \
 	p11-kit/list-mechanisms.c \
@@ -431,6 +432,7 @@ sh_tests += \
 if WITH_ASN1
 sh_tests += \
 	p11-kit/test-export-public.sh \
+	p11-kit/test-import-public.sh \
 	p11-kit/test-profiles.sh \
 	$(NULL)
 endif
@@ -632,6 +634,7 @@ EXTRA_DIST += \
 	p11-kit/test-server.sh \
 	p11-kit/test-list-tokens.sh \
 	p11-kit/test-export-public.sh \
+	p11-kit/test-import-public.sh \
 	p11-kit/test-list-mechanisms.sh \
 	p11-kit/test-generate-keypair.sh \
 	$(NULL)
