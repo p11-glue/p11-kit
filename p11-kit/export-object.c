@@ -60,9 +60,9 @@ p11_kit_export_object (int argc,
 		       char *argv[]);
 
 static void
-export_attr (P11KitIter *iter,
-	     CK_ATTRIBUTE_TYPE type,
-	     const char *label)
+export_attribute (P11KitIter *iter,
+		  CK_ATTRIBUTE_TYPE type,
+		  const char *label)
 {
 	p11_buffer buf;
 	CK_ATTRIBUTE attr = { type, NULL_PTR, 0 };
@@ -117,10 +117,8 @@ export_certificate (P11KitIter *iter)
 
 	switch (cert_type) {
 	case CKC_X_509:
-		export_attr (iter, CKA_VALUE, "CERTIFICATE");
+		export_attribute (iter, CKA_VALUE, "CERTIFICATE");
 		break;
-	case CKC_WTLS:
-	case CKC_X_509_ATTR_CERT:
 	default:
 		type_str = p11_constant_nick (p11_constant_certs, cert_type);
 		if (type_str == NULL)
@@ -177,7 +175,7 @@ export_object (const char *token_str)
 			export_certificate (iter);
 			break;
 		case CKO_PUBLIC_KEY:
-			export_attr (iter, CKA_PUBLIC_KEY_INFO, "PUBLIC KEY");
+			export_attribute (iter, CKA_PUBLIC_KEY_INFO, "PUBLIC KEY");
 			break;
 		default:
 			break;
