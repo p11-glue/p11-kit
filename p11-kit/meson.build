@@ -215,6 +215,7 @@ p11_kit_sources = [
   'delete-profile.c',
   'export-object.c',
   'generate-keypair.c',
+  'import-object.c',
   'list-objects.c',
   'list-profiles.c',
   'list-mechanisms.c',
@@ -420,6 +421,10 @@ if get_option('test')
   if with_asn1 and host_system != 'windows'
     test('test-export-public.sh',
          find_program('test-export-public.sh'),
+         env: p11_kit_tests_env)
+
+    test('test-import-public.sh',
+         find_program('test-import-public.sh'),
          env: p11_kit_tests_env)
 
     test('test-profiles.sh',
