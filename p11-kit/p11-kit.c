@@ -59,41 +59,45 @@
 
 #include "tool.h"
 
-int       p11_kit_list_modules    (int argc,
-                                   char *argv[]);
+int       p11_kit_list_modules     (int argc,
+                                    char *argv[]);
 
-int       p11_kit_list_objects    (int argc,
-                                   char *argv[]);
+int       p11_kit_list_objects     (int argc,
+                                    char *argv[]);
 
-int       p11_kit_export_object   (int argc,
-                                   char *argv[]);
+int       p11_kit_export_object    (int argc,
+                                    char *argv[]);
 
-int       p11_kit_delete_object   (int argc,
-                                   char *argv[]);
+int       p11_kit_delete_object    (int argc,
+                                    char *argv[]);
 
-int       p11_kit_list_profiles   (int argc,
-                                   char *argv[]);
+int       p11_kit_generate_keypair (int argc,
+                                    char *argv[]);
 
-int       p11_kit_add_profile     (int argc,
-                                   char *argv[]);
+int       p11_kit_list_profiles    (int argc,
+                                    char *argv[]);
 
-int       p11_kit_delete_profile  (int argc,
-                                   char *argv[]);
+int       p11_kit_add_profile      (int argc,
+                                    char *argv[]);
 
-int       p11_kit_print_config    (int argc,
-                                   char *argv[]);
+int       p11_kit_delete_profile   (int argc,
+                                    char *argv[]);
 
-int       p11_kit_trust           (int argc,
-                                   char *argv[]);
+int       p11_kit_print_config     (int argc,
+                                    char *argv[]);
 
-int       p11_kit_external        (int argc,
-                                   char *argv[]);
+int       p11_kit_trust            (int argc,
+                                    char *argv[]);
+
+int       p11_kit_external         (int argc,
+                                    char *argv[]);
 
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, N_("List modules and tokens") },
 	{ "list-objects", p11_kit_list_objects, N_("List objects of a token") },
 	{ "export-object", p11_kit_export_object, N_("Export object matching PKCS#11 URI") },
 	{ "delete-object", p11_kit_delete_object, N_("Delete objects matching PKCS#11 URI") },
+	{ "generate-keypair", p11_kit_generate_keypair, N_("Generate key-pair on a PKCS#11 token") },
 	{ "list-profiles", p11_kit_list_profiles, N_("List PKCS#11 profiles supported by the token") },
 	{ "add-profile", p11_kit_add_profile, N_("Add PKCS#11 profile to the token") },
 	{ "delete-profile", p11_kit_delete_profile, N_("Delete PKCS#11 profile from the token") },

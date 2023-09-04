@@ -394,11 +394,14 @@ int        isatty           (int fd);
 
 #endif
 
-void       p11_strerror_r    (int errnum,
-                              char *buf,
-                              size_t buflen);
+void       p11_strerror_r      (int errnum,
+                                char *buf,
+                                size_t buflen);
 
-int        p11_ascii_tolower (int c);
-int        p11_ascii_toupper (int c);
+int        p11_ascii_tolower   (int c);
+int        p11_ascii_toupper   (int c);
+
+bool       p11_ascii_strcaseeq (const char *s1,
+                                const char *s2);
 
 #endif /* __COMPAT_H__ */

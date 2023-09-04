@@ -1051,3 +1051,13 @@ p11_ascii_toupper (int c)
 		return 'A' + (c - 'a');
 	return c;
 }
+
+bool
+p11_ascii_strcaseeq (const char *s1,
+		     const char *s2)
+{
+	while (p11_ascii_tolower (*s1) == p11_ascii_tolower (*s2++))
+		if (*s1++ == '\0')
+			return true;
+	return false;
+}
