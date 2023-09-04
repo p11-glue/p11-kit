@@ -42,6 +42,9 @@
 		<command>p11-kit delete-object</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit generate-keypair</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit list-profiles</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -137,6 +140,44 @@ $ p11-kit delete-object pkcs11:token
 </programlisting>
 
 	<para>This destroys every storage object matching given PKCS#11 URI.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-generate-keypair">
+	<title>Generate Key-pair</title>
+
+	<para>Generate key-pair on a PKCS#11 token.</para>
+
+<programlisting>
+    $ p11-kit generate-keypair &lsqb;--label=label&rsqb; --type=algorithm &lcub;--bits=n|--curve=name&rcub; pkcs11:token
+</programlisting>
+
+	<para>Generate private-public key-pair of given type on specified PKCS#11 token.
+	Should be used together with --type option and one of --bits or --curve options.</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--label=&lt;label&gt;</option></term>
+			<listitem><para>Assigns label to the generated key-pair objects.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--type=&lt;algorithm&gt;</option></term>
+			<listitem><para>Specify the type of keys to generate.
+			Supported values are rsa, ecdsa, ed25519.
+			This option is required.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--bits=&lt;n&gt;</option></term>
+			<listitem><para>Specify the number of bits for the key-pair generation.
+			Cannot be used together with --curve option.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--curve=&lt;name&gt;</option></term>
+                        <listitem><para>Specify an elliptic curve for the key-pair generation.
+                        Supported values are secp256r1, secp384r1, secp521r1.
+			Cannot be used together with --bits option.</para></listitem>
+		</varlistentry>
+	</variablelist>
 
 </refsect1>
 

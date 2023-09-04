@@ -214,6 +214,7 @@ p11_kit_sources = [
   'delete-object.c',
   'delete-profile.c',
   'export-object.c',
+  'generate-keypair.c',
   'list-objects.c',
   'list-profiles.c',
   'lists.c',
@@ -231,7 +232,9 @@ executable('p11-kit',
 if get_option('test')
   executable('p11-kit-testable',
              p11_kit_sources,
-             c_args: common_c_args + libp11_kit_internal_c_args,
+             c_args: common_c_args + libp11_kit_internal_c_args + [
+               '-DP11_KIT_TESTABLE'
+             ],
              dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
              link_whole: libp11_kit_testable)
 endif
