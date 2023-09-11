@@ -135,7 +135,8 @@ print_date_attribute (p11_list_printer *printer,
 	char month[3] = { '\0' };
 	char day[3] = { '\0' };
 
-	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION ||
+	    attr->ulValueLen < sizeof (CK_DATE))
 		return;
 
 	type_str = p11_constant_nick (p11_constant_types, attr->type);
@@ -155,7 +156,8 @@ print_bool_attribute (p11_list_printer *printer,
 {
 	const char *type_str;
 
-	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION)
+	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION ||
+	    attr->ulValueLen < sizeof (CK_BBOOL))
 		return;
 
 	type_str = p11_constant_nick (p11_constant_types, attr->type);
