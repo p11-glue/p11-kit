@@ -68,6 +68,23 @@ libp11_tool_dep = declare_dependency(link_with: libp11_tool,
 # Tests ----------------------------------------------------------------
 
 if get_option('test')
+  test_init_conf = configuration_data()
+  test_init_conf.set_quoted('prefix', prefix)
+  test_init_conf.set_quoted('exec_prefix', prefix)
+  test_init_conf.set_quoted('datarootdir', prefix / datadir)
+  test_init_conf.set_quoted('datadir', prefix / datadir)
+  test_init_conf.set_quoted('sysconfdir', prefix / sysconfdir)
+  test_init_conf.set_quoted('libdir', prefix / libdir)
+  test_init_conf.set_quoted('libexecdir', prefix / libexecdir)
+  test_init_conf.set_quoted('privatedir', prefix / privatedir)
+  test_init_conf.set_quoted('with_trust_paths', trust_paths)
+
+  configure_file(
+    input: 'test-init.sh.in',
+    output: 'test-init.sh',
+    configuration: test_init_conf,
+  )
+
   common_tests = [
     'test-tests',
     'test-compat',

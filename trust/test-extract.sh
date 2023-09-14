@@ -1,6 +1,11 @@
 #!/bin/sh
 
-. "${builddir=.}/test-init.sh"
+test "${abs_top_builddir+set}" = set || {
+	echo "set abs_top_builddir" 1>&2
+	exit 1
+}
+
+. "$abs_top_builddir/common/test-init.sh"
 : ${DD=dd}
 
 teardown()

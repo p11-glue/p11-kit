@@ -684,12 +684,12 @@ AM_CONDITIONAL(WITH_BASH_COMPLETION, [test "$with_bash_completion" = "yes"])
 
 
 AC_CONFIG_FILES([Makefile
+	common/test-init.sh
 	doc/Makefile
 	doc/manual/Makefile
 	po/Makefile.in
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
-	trust/test-init.sh
 ])
 AC_OUTPUT
 
