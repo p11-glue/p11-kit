@@ -1,18 +1,24 @@
 #!/bin/sh
 
-set -e
+test "${abs_top_builddir+set}" = set || {
+	echo "set abs_top_builddir" 1>&2
+	exit 1
+}
 
-testdir=$PWD/test-messages-$$
-test -d "$testdir" || mkdir "$testdir"
+. "$abs_top_builddir/common/test-init.sh"
 
-cleanup () {
+setup() {
+	testdir=$PWD/test-messages-$$
+	test -d "$testdir" || mkdir "$testdir"
+	cd "$testdir"
+}
+
+teardown() {
 	rm -rf "$testdir"
 }
-trap cleanup 0
 
-cd "$testdir"
-
-cat > messages.exp <<EOF
+test_messages() {
+	cat > messages.exp <<EOF
 CKR_CANCEL: The operation was cancelled
 CKR_FUNCTION_CANCELED: The operation was cancelled
 CKR_HOST_MEMORY: Insufficient memory available
@@ -96,15 +102,16 @@ CKR_MUTEX_NOT_LOCKED: The data cannot be locked
 CKR_FUNCTION_REJECTED: The request was rejected by the user
 EOF
 
-${WINE} "$abs_top_builddir"/p11-kit/print-messages | tr -d '\r' > messages.out
+	: ${WINE=}
+	if ! ${WINE} "$abs_top_builddir"/p11-kit/print-messages | tr -d '\r' > messages.out; then
+		assert_fail "unable to run print-messages"
+	fi
 
-echo 1..1
+	: ${DIFF=diff}
+	if ! ${DIFF} messages.exp messages.out > messages.diff; then
+		sed 's/^/# /' messages.diff
+		assert_fail "output contains incorrect messages"
+	fi
+}
 
-: ${DIFF=diff}
-if ${DIFF} messages.exp messages.out > messages.diff; then
-	echo "ok 1 /messages/return-code"
-else
-	echo "not ok 1 /messages/return-code"
-	sed 's/^/# /' messages.diff
-	exit 1
-fi
+run test_messages
