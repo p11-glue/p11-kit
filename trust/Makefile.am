@@ -325,8 +325,8 @@ noinst_SCRIPTS += trust/test-extract.sh trust/test-trust.sh
 
 if !OS_WIN32
 installcheck-local:
-	builddir="$(abs_top_builddir)/trust" $(SHELL) $(srcdir)/trust/test-extract.sh
-	builddir="$(abs_top_builddir)/trust" $(SHELL) $(srcdir)/trust/test-trust.sh
+	abs_top_builddir="$(abs_top_builddir)" $(SHELL) $(srcdir)/trust/test-extract.sh
+	abs_top_builddir="$(abs_top_builddir)" $(SHELL) $(srcdir)/trust/test-trust.sh
 endif
 
 EXTRA_DIST += \
