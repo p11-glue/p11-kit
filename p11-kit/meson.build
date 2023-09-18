@@ -390,6 +390,10 @@ if get_option('test')
          find_program('test-objects.sh'),
          env: p11_kit_tests_env)
 
+    test('test-lists.sh',
+         find_program('test-lists.sh'),
+         env: p11_kit_tests_env)
+
     test('test-messages.sh',
          find_program('test-messages.sh'),
          env: p11_kit_tests_env)
