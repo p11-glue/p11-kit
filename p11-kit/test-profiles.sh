@@ -22,7 +22,9 @@ test_list_profiles() {
 public-certificates-token
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable list-profiles -q pkcs11: > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-profiles -q pkcs11: > list.out; then
+		assert_fail "unable to run: p11-kit list-profiles"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then

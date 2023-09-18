@@ -90,7 +90,9 @@ Object: #14
     private: false
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -119,7 +121,9 @@ Object: #3
     label: TEST LABEL
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:type=data" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:type=data" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -137,7 +141,9 @@ Object: #0
     label: TEST CERTIFICATE
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -150,7 +156,9 @@ test_list_nonexistent() {
 	cat > list.exp <<EOF
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:model=NONEXISTENT" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:model=NONEXISTENT" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -173,7 +181,9 @@ X4wmG2aWDmRSHACW+4F3ojodSQwD1RnyagEpMfv1
 -----END CERTIFICATE-----
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert" > list.out; then
+		assert_fail "unable to run: p11-kit export-object"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -191,7 +201,9 @@ Nkn3Eos8EiZByi9DVsyfy9eejh+8AXgp
 -----END PUBLIC KEY-----
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20PUBLIC%20KEY;type=public" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20PUBLIC%20KEY;type=public" > list.out; then
+		assert_fail "unable to run: p11-kit export-object"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
@@ -204,7 +216,9 @@ test_generate_keypair() {
 	cat > list.exp <<EOF
 EOF
 
-	"$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair -q --type=mock "pkcs11:" > list.out
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair -q --type=mock "pkcs11:" > list.out; then
+		assert_fail "unable to run: p11-kit generate-keypair"
+	fi
 
 	: ${DIFF=diff}
 	if ! ${DIFF} list.exp list.out > list.diff; then
