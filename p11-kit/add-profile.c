@@ -109,9 +109,11 @@ add_profile (const char *token_str,
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
+	CK_BBOOL token = CK_TRUE;
 	CK_OBJECT_CLASS klass = CKO_PROFILE;
 	CK_ATTRIBUTE template[] = {
 	    { CKA_CLASS, &klass, sizeof (klass) },
+	    { CKA_TOKEN, &token, sizeof (token) },
 	    { CKA_PROFILE_ID, &profile, sizeof (profile) }
 	};
 	CK_ULONG template_len = sizeof (template) / sizeof (template[0]);
