@@ -103,7 +103,7 @@ print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11Kit
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_TOKEN, &value);
 	if (ret != P11_KIT_URI_OK) {
 		p11_message (_("couldn't format URI into string: %s"), p11_kit_uri_message (ret));
-		return;
+		goto out;
 	}
 	p11_list_printer_write_value (printer, "uri", "%s", value);
 	free (value);
@@ -158,6 +158,7 @@ print_token_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11Kit
 	p11_list_printer_write_array (printer, "flags", flags);
 	p11_array_free (flags);
 
+ out:
 	p11_list_printer_end_section (printer);
 }
 
@@ -177,13 +178,21 @@ print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11Ki
 		return;
 	}
 
+	value = p11_kit_module_get_name (module);
+	p11_list_printer_start_section (printer, "module", "%s", value);
+	free (value);
+
 	memcpy (p11_kit_uri_get_module_info (uri), &info, sizeof (info));
 	ret = p11_kit_uri_format (uri, P11_KIT_URI_FOR_MODULE, &value);
 	if (ret != P11_KIT_URI_OK) {
 		p11_message (_("couldn't format URI into string: %s"), p11_kit_uri_message (ret));
-		return;
+		goto out;
 	}
 	p11_list_printer_write_value (printer, "uri", "%s", value);
+	free (value);
+
+	value = p11_kit_module_get_filename (module);
+	p11_list_printer_write_value (printer, "path", "%s", value);
 	free (value);
 
 	value = p11_kit_space_strdup (info.libraryDescription, sizeof (info.libraryDescription));
@@ -201,19 +210,20 @@ print_module_info (p11_list_printer *printer, CK_FUNCTION_LIST_PTR module, P11Ki
 	rv = (module->C_GetSlotList) (CK_TRUE, slot_list, &count);
 	if (rv != CKR_OK) {
 		p11_message (_("couldn't load module info: %s"), p11_kit_strerror (rv));
-		return;
+		goto out;
 	}
 
 	for (i = 0; i < count; i++)
 		print_token_info (printer, module, uri, slot_list[i]);
+
+ out:
+	p11_list_printer_end_section (printer);
 }
 
 static int
 print_modules (void)
 {
 	CK_FUNCTION_LIST_PTR *module_list;
-	char *name;
-	char *path;
 	p11_list_printer printer;
 	P11KitUri *uri;
 	int i;
@@ -231,20 +241,7 @@ print_modules (void)
 	p11_list_printer_init (&printer, stdout, 0);
 
 	for (i = 0; module_list[i]; i++) {
-		name = p11_kit_module_get_name (module_list[i]);
-		path = p11_kit_config_option (module_list[i], "module");
-
-		p11_kit_uri_set_module_name (uri, name);
-		p11_kit_uri_set_module_path (uri, path);
-
-		p11_list_printer_start_section (&printer,
-						name ? name : "(null)",
-						"%s", path ? path : "(null)");
 		print_module_info (&printer, module_list[i], uri);
-		p11_list_printer_end_section (&printer);
-
-		free (name);
-		free (path);
 	}
 
 	p11_kit_uri_free (uri);

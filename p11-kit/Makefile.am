@@ -413,6 +413,7 @@ c_tests += test-server
 sh_tests += \
 	p11-kit/test-profiles.sh \
 	p11-kit/test-objects.sh \
+	p11-kit/test-lists.sh \
 	p11-kit/test-server.sh \
 	$(NULL)
 endif
@@ -593,6 +594,7 @@ EXTRA_DIST += \
 	p11-kit/test-transport-base.c \
 	p11-kit/test-profiles.sh \
 	p11-kit/test-objects.sh \
+	p11-kit/test-lists.sh \
 	p11-kit/test-messages.sh \
 	p11-kit/test-server.sh \
 	$(NULL)

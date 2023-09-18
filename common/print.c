@@ -176,9 +176,9 @@ p11_list_printer_write_array (p11_list_printer *printer,
 	print_indent (printer->fp, printer->depth);
 
 	if (printer->use_color) {
-		fprintf (printer->fp, "\033[0;1m%s\033[0m: \n", name);
+		fprintf (printer->fp, "\033[0;1m%s\033[0m:\n", name);
 	} else {
-		fprintf (printer->fp, "%s: \n", name);
+		fprintf (printer->fp, "%s:\n", name);
 	}
 
 	for (i = 0; i < array->num; i++) {
