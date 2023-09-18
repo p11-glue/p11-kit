@@ -181,7 +181,7 @@ get_object_uri (P11KitIter *iter,
 
 	uri = p11_kit_uri_new ();
 	if (uri == NULL) {
-		p11_message (_("failed to allocate memory for URI"));
+		p11_message (_("failed to allocate memory"));
 		return NULL;
 	}
 
@@ -345,12 +345,12 @@ list_objects (const char *token_str)
 
 	uri = p11_kit_uri_new ();
 	if (uri == NULL) {
-		p11_message (_("failed to allocate memory for URI"));
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 
 	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_OBJECT_ON_TOKEN, uri) != P11_KIT_URI_OK) {
-		p11_message (_("failed to parse the token URI"));
+		p11_message (_("failed to parse URI"));
 		goto cleanup;
 	}
 
