@@ -81,7 +81,7 @@ profile_exists (CK_FUNCTION_LIST *module,
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
 		rv = p11_kit_iter_get_attributes (iter, &attr, 1);
 		if (rv != CKR_OK) {
-			p11_message (_("failed to retrieve attribute of an object"));
+			p11_message (_("failed to retrieve attribute of an object: %s"), p11_kit_strerror (rv));
 			p11_kit_iter_free (iter);
 			return false;
 		}
@@ -118,12 +118,12 @@ add_profile (const char *token_str,
 
 	uri = p11_kit_uri_new ();
 	if (uri == NULL) {
-		p11_message (_("failed to allocate memory for URI"));
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 
 	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
-		p11_message (_("failed to parse the token URI"));
+		p11_message (_("failed to parse URI"));
 		goto cleanup;
 	}
 
@@ -150,7 +150,7 @@ add_profile (const char *token_str,
 		session = p11_kit_iter_get_session (iter);
 		rv = module->C_CreateObject (session, template, template_len, &object);
 		if (rv != CKR_OK) {
-			p11_message (_("failed to create the profile object: %s"), p11_kit_strerror (rv));
+			p11_message (_("failed to create profile object: %s"), p11_kit_strerror (rv));
 			goto cleanup;
 		}
 
