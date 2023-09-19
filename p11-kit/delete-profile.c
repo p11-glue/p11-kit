@@ -44,6 +44,7 @@
 #include "tool.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 #ifdef ENABLE_NLS
@@ -62,6 +63,8 @@ delete_profile (const char *token_str,
 		CK_PROFILE_ID profile)
 {
 	int ret = 1;
+	bool first_iteration = true;
+	CK_SLOT_ID slot = 0;
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
@@ -97,6 +100,15 @@ delete_profile (const char *token_str,
 	p11_kit_iter_add_filter (iter, &matching, 1);
 	p11_kit_iter_begin (iter, modules);
 	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
+		if (first_iteration) {
+			first_iteration = false;
+			slot = p11_kit_iter_get_slot (iter);
+		}
+
+		/* token URI can match multiple tokens but we want to only match one */
+		if (slot != p11_kit_iter_get_slot (iter))
+			break;
+
 		rv = p11_kit_iter_get_attributes (iter, &attr, 1);
 		if (rv != CKR_OK) {
 			p11_message (_("failed to retrieve attribute of an object: %s"), p11_kit_strerror (rv));
