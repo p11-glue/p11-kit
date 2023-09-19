@@ -88,7 +88,7 @@ delete_profile (const char *token_str,
 		goto cleanup;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_WRITABLE);
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_LOGIN);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
 		goto cleanup;
