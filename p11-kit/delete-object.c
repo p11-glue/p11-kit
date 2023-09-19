@@ -88,10 +88,16 @@ delete_object (const char *token_str)
 	}
 
 	p11_kit_iter_begin (iter, modules);
-	while (p11_kit_iter_next (iter) == CKR_OK) {
-		rv = p11_kit_iter_destroy_object (iter);
-		if (rv != CKR_OK)
-			p11_message (_("failed to destroy an object: %s"), p11_kit_strerror (rv));
+	rv = p11_kit_iter_next (iter);
+	if (rv != CKR_OK) {
+		p11_message (_("failed to find the object: %s"), p11_kit_strerror (rv));
+		goto cleanup;
+	}
+
+	rv = p11_kit_iter_destroy_object (iter);
+	if (rv != CKR_OK) {
+		p11_message (_("failed to destroy an object: %s"), p11_kit_strerror (rv));
+		goto cleanup;
 	}
 
 	ret = 0;
