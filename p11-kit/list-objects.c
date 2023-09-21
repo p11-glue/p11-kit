@@ -151,21 +151,21 @@ print_date_attribute (p11_list_printer *printer,
 }
 
 static inline void
-print_bool_attribute (p11_list_printer *printer,
-		      const CK_ATTRIBUTE *attr)
+p11_array_push_flag (p11_array *flags,
+		     const CK_ATTRIBUTE *attr)
 {
 	const char *type_str;
 
 	if (attr->ulValueLen == CK_UNAVAILABLE_INFORMATION ||
-	    attr->ulValueLen < sizeof (CK_BBOOL))
+	    attr->ulValueLen < sizeof (CK_BBOOL) ||
+	    !*((CK_BBOOL *)attr->pValue))
 		return;
 
 	type_str = p11_constant_nick (p11_constant_types, attr->type);
 	if (type_str == NULL)
 		type_str = "(unknown)";
 
-	p11_list_printer_write_value (printer, type_str, "%s",
-				      *((CK_BBOOL *)attr->pValue) ? "true" : "false");
+	p11_array_push (flags, (void *)type_str);
 }
 
 static char *
@@ -234,7 +234,7 @@ print_object (p11_list_printer *printer,
 	CK_MECHANISM_TYPE mechanism_type;
 	CK_BBOOL trusted, local, token, private, modifiable, copyable, destroyable;
 	CK_DATE start_date, end_date;
-	p11_array *allocated;
+	p11_array *allocated = NULL, *flags = NULL;
 	char *uri_str;
 	size_t i;
 
@@ -269,7 +269,7 @@ print_object (p11_list_printer *printer,
 	allocated = p11_array_new (free);
 	if (allocated == NULL) {
 		p11_message (_("failed to allocate memory"));
-		return;
+		goto cleanup;
 	}
 
 	p11_kit_iter_get_attributes (iter, attrs, n_attrs);
@@ -320,17 +320,28 @@ print_object (p11_list_printer *printer,
 	print_byte_array_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_ID));
 	print_date_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_START_DATE));
 	print_date_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_END_DATE));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_TRUSTED));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_LOCAL));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_TOKEN));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_PRIVATE));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_MODIFIABLE));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_COPYABLE));
-	print_bool_attribute (printer, p11_attrs_findn (attrs, n_attrs, CKA_DESTROYABLE));
+
+	/* print flags */
+	flags = p11_array_new (NULL);
+	if (flags == NULL) {
+		p11_message (_("failed to allocate memory"));
+		goto cleanup;
+	}
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_TRUSTED));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_LOCAL));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_TOKEN));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_PRIVATE));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_MODIFIABLE));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_COPYABLE));
+	p11_array_push_flag (flags, p11_attrs_findn (attrs, n_attrs, CKA_DESTROYABLE));
+	if (flags->num > 0)
+		p11_list_printer_write_array (printer, "flags", flags);
+
 	p11_list_printer_end_section (printer);
 
 cleanup:
 	p11_array_free (allocated);
+	p11_array_free (flags);
 }
 
 static int

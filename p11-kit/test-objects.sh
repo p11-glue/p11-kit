@@ -27,12 +27,10 @@ Object: #1
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-    private: false
 Object: #2
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
-    private: false
 Object: #3
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
@@ -41,12 +39,10 @@ Object: #4
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-    private: false
 Object: #5
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
-    private: false
 Object: #6
     class: profile
     profile-id: public-certificates-token
@@ -55,6 +51,10 @@ Object: #7
     class: certificate
     certificate-type: x-509
     label: TEST CERTIFICATE
+    flags:
+          trusted
+          copyable
+          destroyable
 Object: #8
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20PUBLIC%20KEY;type=public
     class: public-key
@@ -68,12 +68,10 @@ Object: #10
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-    private: false
 Object: #11
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
-    private: false
 Object: #12
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
@@ -82,12 +80,10 @@ Object: #13
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-    private: false
 Object: #14
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
-    private: false
 EOF
 
 	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:" > list.out; then
@@ -139,6 +135,10 @@ Object: #0
     class: certificate
     certificate-type: x-509
     label: TEST CERTIFICATE
+    flags:
+          trusted
+          copyable
+          destroyable
 EOF
 
 	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert" > list.out; then
