@@ -62,7 +62,7 @@ if get_option('gtk_doc')
 
   glib_prefix = get_option('glib_prefix')
   if glib_prefix == ''
-    glib_prefix = dependency('glib-2.0').get_pkgconfig_variable('prefix')
+    glib_prefix = dependency('glib-2.0').get_variable(pkgconfig : 'prefix')
   endif
   fixxref_args = [
     '--html-dir=' + (prefix / gnome.gtkdoc_html_dir(meson.project_name())),
