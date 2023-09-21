@@ -141,4 +141,51 @@ common_frob_getprogname_SOURCES = common/frob-getprogname.c
 common_frob_getprogname_LDADD = $(common_LIBS)
 endif
 
+if WITH_ASN1
+SUFFIXES += .asn .asn.h
+.asn.asn.h:
+	$(AM_V_GEN)$(ASN1PARSER) -o $@ $<
+
+asn_h = \
+	common/basic.asn.h \
+	common/openssl.asn.h \
+	common/pkix.asn.h \
+	$(NULL)
+
+BUILT_SOURCES += $(asn_h)
+
+EXTRA_DIST += \
+	common/basic.asn \
+	common/openssl.asn \
+	common/pkix.asn \
+	$(NULL)
+
+noinst_LTLIBRARIES += libp11-asn1.la
+
+libp11_asn1_la_SOURCES = \
+	common/asn1.c common/asn1.h \
+	common/oid.c common/oid.h \
+	$(asn_h) \
+	$(NULL)
+
+asn1_LIBS = \
+	libp11-asn1.la \
+	$(LIBTASN1_LIBS) \
+	$(common_LIBS) \
+	$(NULL)
+
+test_asn1_SOURCES = common/test-asn1.c
+test_asn1_LDADD = $(asn1_LIBS)
+test_asn1_CFLAGS = $(LIBTASN1_CFLAGS)
+
+test_oid_SOURCES = common/test-oid.c
+test_oid_LDADD = $(asn1_LIBS)
+test_oid_CFLAGS = $(LIBTASN1_CFLAGS)
+
+c_tests += \
+	test-asn1 \
+	test-oid \
+	$(NULL)
+endif
+
 EXTRA_DIST += common/meson.build

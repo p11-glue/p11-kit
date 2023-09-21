@@ -398,6 +398,7 @@ endif
 # --------------------------------------------------------------------
 # Trust Module
 
+with_asn1 = false
 with_trust_module = false
 libtasn1_deps = []
 libtasn1 = dependency('libtasn1', version: '>= 2.3',
@@ -407,6 +408,7 @@ if libtasn1.found()
   if asn1Parser.found()
     conf.set('WITH_ASN1', 1)
     libtasn1_deps += libtasn1
+    with_asn1 = true
     with_trust_module = true
   endif
 endif
