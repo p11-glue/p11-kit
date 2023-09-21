@@ -225,7 +225,7 @@ p11_kit_sources = [
 executable('p11-kit',
            p11_kit_sources,
            c_args: common_c_args + libp11_kit_internal_c_args,
-           dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libp11_asn1_deps + libffi_deps + dlopen_deps,
            link_with: [libp11_kit, libp11_kit_internal],
            install: true)
 
@@ -235,7 +235,7 @@ if get_option('test')
              c_args: common_c_args + libp11_kit_internal_c_args + [
                '-DP11_KIT_TESTABLE'
              ],
-             dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
+             dependencies: [libp11_tool_dep] + libp11_asn1_deps + libffi_deps + dlopen_deps,
              link_whole: libp11_kit_testable)
 endif
 
@@ -403,6 +403,12 @@ if get_option('test')
          env: p11_kit_tests_env)
   endif
 
+  if with_asn1 and host_system != 'windows'
+    test('test-export-public.sh',
+         find_program('test-export-public.sh'),
+         env: p11_kit_tests_env)
+  endif
+
   mock_sources = {
                    'mock-one': ['mock-module-ep.c'],
                    'mock-v3-one': ['mock-module-v3-ep.c'],
@@ -416,7 +422,8 @@ if get_option('test')
                    'mock-eight': ['mock-module-ep6.c'],
                    'mock-nine': ['mock-module-ep7.c'],
                    'mock-ten': ['mock-module-ep8.c'],
-                   'mock-eleven': ['mock-module-ep9.c']
+                   'mock-eleven': ['mock-module-ep9.c'],
+                   'mock-twelve': ['mock-module-ep10.c']
                  }
 
   if host_system != 'windows'

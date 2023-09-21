@@ -73,14 +73,41 @@ Object: #11
     class: public-key
     label: Public prefix key
 Object: #12
-    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=TEST%20LABEL;type=data
     class: data
     label: TEST LABEL
 Object: #13
-    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
 Object: #14
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=Public%20prefix%20key;type=public
+    class: public-key
+    label: Public prefix key
+Object: #15
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=RSA;type=public
+    class: public-key
+    key-type: rsa
+    label: RSA
+Object: #16
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=EC;type=public
+    class: public-key
+    key-type: ec
+    label: EC
+Object: #17
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=SPKI;type=public
+    class: public-key
+    key-type: ec
+    label: SPKI
+Object: #18
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
+    class: data
+    label: TEST LABEL
+Object: #19
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
+    class: public-key
+    label: Public Capitalize Key
+Object: #20
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
@@ -112,6 +139,10 @@ Object: #2
     class: data
     label: TEST LABEL
 Object: #3
+    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=TEST%20LABEL;type=data
+    class: data
+    label: TEST LABEL
+Object: #4
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
     label: TEST LABEL
