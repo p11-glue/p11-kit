@@ -65,6 +65,54 @@ libp11_tool = static_library('p11-tool', libp11_tool_sources,
 libp11_tool_dep = declare_dependency(link_with: libp11_tool,
                                      dependencies: [libp11_common_dep])
 
+libp11_asn1_deps = []
+
+if with_asn1
+  libp11_asn1_sources = [
+    'asn1.c',
+    'oid.c',
+  ]
+
+  basic_asn_h = custom_target(
+    'basic.asn.h',
+    output: 'basic.asn.h',
+    input: 'basic.asn',
+    command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'],
+  )
+
+  pkix_asn_h = custom_target(
+    'pkix.asn.h',
+    output: 'pkix.asn.h',
+    input: 'pkix.asn',
+    command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'],
+  )
+
+  openssl_asn_h = custom_target(
+    'openssl.asn.h',
+    output: 'openssl.asn.h',
+    input: 'openssl.asn',
+    command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'],
+  )
+
+  asn_h_dep = declare_dependency(
+    sources: [basic_asn_h, pkix_asn_h, openssl_asn_h],
+  )
+
+  libp11_asn1 = static_library(
+    'p11-asn1', libp11_asn1_sources,
+    gnu_symbol_visibility: 'hidden',
+    include_directories: configinc,
+  )
+
+  libp11_asn1_dep = declare_dependency(
+    include_directories: [configinc, commoninc],
+    link_with: libp11_asn1,
+    dependencies: [asn_h_dep] + libtasn1_deps,
+  )
+
+  libp11_asn1_deps += libp11_asn1_dep
+endif
+
 # Tests ----------------------------------------------------------------
 
 if get_option('test')
@@ -110,6 +158,22 @@ if get_option('test')
                    link_with: [libp11_test, libp11_common])
     test(name, t)
   endforeach
+
+  if with_asn1
+    asn1_tests = [
+      'test-asn1',
+      'test-oid',
+    ]
+
+    foreach name : asn1_tests
+      t = executable(name, '@0@.c'.format(name),
+                     c_args: tests_c_args,
+                     include_directories: configinc,
+                     dependencies: libp11_asn1_deps + dlopen_deps,
+                     link_with: [libp11_test, libp11_common])
+      test(name, t)
+    endforeach
+  endif
 
   common_progs = [
     'frob-getauxval',

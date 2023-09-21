@@ -1,33 +1,12 @@
 libtrust_data_sources = [
-  'asn1.c',
-  'oid.c',
   'utf8.c',
   'x509.c'
 ]
 
-basic_asn_h = custom_target('basic.asn.h',
-                            output: 'basic.asn.h',
-                            input: 'basic.asn',
-                            command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
-
-pkix_asn_h = custom_target('pkix.asn.h',
-                           output: 'pkix.asn.h',
-                           input: 'pkix.asn',
-                           command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
-
-openssl_asn_h = custom_target('openssl.asn.h',
-                            output: 'openssl.asn.h',
-                            input: 'openssl.asn',
-                            command: [asn1Parser, '-o', '@OUTPUT@', '@INPUT@'])
-
-asn_h_dep = declare_dependency(
-  sources: [basic_asn_h, pkix_asn_h, openssl_asn_h]
-)
-
 libtrust_data = static_library('libtrust-data',
                                libtrust_data_sources,
                                include_directories: [configinc, commoninc],
-                               dependencies: [asn_h_dep] + libtasn1_deps)
+                               dependencies: libp11_asn1_deps)
 
 libtrust_sources = [
   'builder.c',
@@ -54,7 +33,7 @@ shared_module('p11-kit-trust',
               'module-init.c',
               name_prefix: '',
               c_args: p11_kit_trust_c_args,
-              dependencies: [asn_h_dep, libp11_library_dep] + dlopen_deps + libtasn1_deps,
+              dependencies: [libp11_library_dep] + libp11_asn1_deps + dlopen_deps,
               link_args: p11_module_ldflags,
               link_depends: [p11_module_symbol_map],
               link_with: libtrust_data,
@@ -119,10 +98,8 @@ if get_option('test')
 
   trust_tests = [
     'test-digest',
-    'test-asn1',
     'test-base64',
     'test-pem',
-    'test-oid',
     'test-utf8',
     'test-x509',
     'test-persist',

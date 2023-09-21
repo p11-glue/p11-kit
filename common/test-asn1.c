@@ -38,7 +38,6 @@
 #include "asn1.h"
 #include "debug.h"
 #include "oid.h"
-#include "x509.h"
 
 #include <stdlib.h>
 #include <stdio.h>
