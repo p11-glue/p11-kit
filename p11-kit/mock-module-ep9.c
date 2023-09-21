@@ -48,6 +48,7 @@ override_initialize (CK_VOID_PTR init_args)
 	CK_OBJECT_CLASS cert_klass = CKO_CERTIFICATE;
 	char *cert_label = "TEST CERTIFICATE";
 	CK_CERTIFICATE_TYPE cert_type = CKC_X_509;
+	CK_BBOOL ck_true = CK_TRUE;
 	char cert_data[] = {
 		0x30, 0x82, 0x01, 0x6a, 0x30, 0x82, 0x01, 0x14, 0xa0, 0x03,
 		0x02, 0x01, 0x02, 0x02, 0x02, 0x03, 0xe7, 0x30, 0x0d, 0x06,
@@ -90,6 +91,9 @@ override_initialize (CK_VOID_PTR init_args)
 	CK_ATTRIBUTE cert_attrs[] = {
 		{ CKA_CLASS, &cert_klass, sizeof (cert_klass) },
 		{ CKA_LABEL, cert_label, strlen (cert_label) },
+		{ CKA_TRUSTED, &ck_true, sizeof (ck_true) },
+		{ CKA_COPYABLE, &ck_true, sizeof (ck_true) },
+		{ CKA_DESTROYABLE, &ck_true, sizeof (ck_true) },
 		{ CKA_CERTIFICATE_TYPE, &cert_type, sizeof (cert_type) },
 		{ CKA_VALUE, cert_data, sizeof (cert_data) },
 		{ CKA_INVALID, NULL, 0 },
