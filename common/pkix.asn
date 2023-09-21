@@ -537,4 +537,8 @@ ProxyPolicy ::= SEQUENCE {
   policyLanguage   OBJECT IDENTIFIER,
   policy           OCTET STRING OPTIONAL }
 
+RSAPublicKey ::= SEQUENCE {
+    modulus INTEGER,
+    publicExponent INTEGER }
+
 END

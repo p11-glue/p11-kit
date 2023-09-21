@@ -241,4 +241,7 @@ static const unsigned char P11_OID_RESERVED_PURPOSE[] =
 	{ 0x06, 0x0a, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x99, 0x77, 0x06, 0x0a, 0x10 };
 static const char P11_OID_RESERVED_PURPOSE_STR[] = "1.3.6.1.4.1.3319.6.10.16";
 
+static const char P11_OID_PKIX1_RSA_STR[] = "1.2.840.113549.1.1.1";
+static const char P11_OID_PKIX1_EC_STR[] = "1.2.840.10045.2.1";
+
 #endif

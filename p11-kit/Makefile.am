@@ -283,6 +283,11 @@ p11_kit_p11_kit_LDADD = \
 	$(LTLIBINTL) \
 	$(NULL)
 
+if WITH_ASN1
+p11_kit_p11_kit_CFLAGS += $(LIBTASN1_CFLAGS)
+p11_kit_p11_kit_LDADD += libp11-asn1.la $(LIBTASN1_LIBS)
+endif
+
 if WITH_BASH_COMPLETION
 bashcomp_DATA += bash-completion/p11-kit
 endif
@@ -311,6 +316,11 @@ p11_kit_p11_kit_testable_CFLAGS = \
 	-DP11_KIT_TESTABLE \
 	$(COMMON_CFLAGS) \
 	$(NULL)
+
+if WITH_ASN1
+p11_kit_p11_kit_testable_CFLAGS += $(LIBTASN1_CFLAGS)
+p11_kit_p11_kit_testable_LDADD += libp11-asn1.la $(LIBTASN1_LIBS)
+endif
 
 private_PROGRAMS += p11-kit/p11-kit-remote
 
@@ -416,6 +426,11 @@ sh_tests += \
 	p11-kit/test-lists.sh \
 	p11-kit/test-server.sh \
 	$(NULL)
+
+if WITH_ASN1
+sh_tests += p11-kit/test-export-public.sh
+endif
+
 endif
 
 test_conf_SOURCES = p11-kit/test-conf.c
@@ -522,7 +537,8 @@ check_LTLIBRARIES += \
 	mock-eight.la \
 	mock-nine.la \
 	mock-ten.la \
-	mock-eleven.la
+	mock-eleven.la \
+	mock-twelve.la
 
 mock_one_la_SOURCES = p11-kit/mock-module-ep.c
 mock_one_la_LIBADD = libp11-test.la libp11-common.la
@@ -587,6 +603,10 @@ mock_eleven_la_SOURCES = p11-kit/mock-module-ep9.c
 mock_eleven_la_LDFLAGS = $(mock_one_la_LDFLAGS)
 mock_eleven_la_LIBADD = $(mock_one_la_LIBADD)
 
+mock_twelve_la_SOURCES = p11-kit/mock-module-ep10.c
+mock_twelve_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+mock_twelve_la_LIBADD = $(mock_one_la_LIBADD)
+
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/templates \
@@ -597,4 +617,5 @@ EXTRA_DIST += \
 	p11-kit/test-lists.sh \
 	p11-kit/test-messages.sh \
 	p11-kit/test-server.sh \
+	p11-kit/test-export-public.sh \
 	$(NULL)

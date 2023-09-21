@@ -70,6 +70,23 @@ module: one
               user-pin-initialized
               clock-on-token
               token-initialized
+module: twelve
+    uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
+    library-description: MOCK LIBRARY
+    library-manufacturer: MOCK MANUFACTURER
+    library-version: 45.145
+    token: PUBKEY LABEL
+        uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL
+        manufacturer: PUBKEY MANUFACTURER
+        model: PUBKEY MODEL
+        serial-number: PUBKEY SERIAL
+        hardware-version: 75.175
+        firmware-version: 85.185
+        flags:
+              login-required
+              user-pin-initialized
+              clock-on-token
+              token-initialized
 module: two-duplicate
     uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
     library-description: MOCK LIBRARY
