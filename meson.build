@@ -1,6 +1,6 @@
 project('p11-kit', 'c',
         version: '0.25.0',
-        meson_version: '>= 0.49')
+        meson_version: '>= 0.51')
 
 version_arr = meson.project_version().split('.')
 major_version = version_arr[0].to_int()
@@ -62,10 +62,16 @@ conf.set10('WITH_STRICT', get_option('strict'))
 libintl_deps = []
 if get_option('nls') and cc.has_header('libintl.h')
   conf.set('ENABLE_NLS', 1)
-  libintl = dependency('intl', required: false)
+  libintl = cc.find_library('intl', required: false)
   if libintl.found()
     if cc.has_function('dgettext', dependencies : libintl)
-      libintl_deps += [libintl]
+      libintl_deps += libintl
+      if ['darwin', 'ios'].contains(host_system)
+        appleframeworks = dependency('appleframeworks', modules : 'foundation')
+        if appleframeworks.found()
+          libintl_deps += appleframeworks
+        endif
+      endif
     endif
   endif
 endif
@@ -424,7 +430,7 @@ libsystemd_deps = []
 libsystemd = dependency('libsystemd', required: get_option('systemd'))
 systemd = dependency('systemd', required: get_option('systemd'))
 if libsystemd.found() and systemd.found()
-  systemduserunitdir = systemd.get_pkgconfig_variable('systemduserunitdir')
+  systemduserunitdir = systemd.get_variable(pkgconfig : 'systemduserunitdir')
   conf.set('WITH_SYSTEMD', 1)
   libsystemd_deps += libsystemd
   with_systemd = true
