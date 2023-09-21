@@ -114,6 +114,8 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_ALWAYS_SENSITIVE, "always-sensitive")
 	CT (CKA_KEY_GEN_MECHANISM, "key-gen-mechanism")
 	CT (CKA_MODIFIABLE, "modifiable")
+	CT (CKA_COPYABLE, "copyable")
+	CT (CKA_DESTROYABLE, "destroyable")
 	CT (CKA_ECDSA_PARAMS, "ecdsa-params")
 	/* CT (CKA_EC_PARAMS) */
 	CT (CKA_EC_POINT, "ec-point")
