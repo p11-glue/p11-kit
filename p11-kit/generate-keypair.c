@@ -292,7 +292,10 @@ generate_keypair (const char *token_str,
 	p11_kit_iter_begin (iter, modules);
 	rv = p11_kit_iter_next (iter);
 	if (rv != CKR_OK) {
-		p11_message (_("failed to find the token: %s"), p11_kit_strerror (rv));
+		if (rv == CKR_CANCEL)
+			p11_message (_("no matching token"));
+		else
+			p11_message (_("failed to find token: %s"), p11_kit_strerror (rv));
 		goto cleanup;
 	}
 
