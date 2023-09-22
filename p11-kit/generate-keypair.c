@@ -301,12 +301,7 @@ generate_keypair (const char *token_str,
 		p11_message (_("failed to obtain module"));
 		goto cleanup;
 	}
-
 	slot = p11_kit_iter_get_slot (iter);
-	if (slot == 0) {
-		p11_message (_("failed to obtain slot"));
-		goto cleanup;
-	}
 
 	rv = module->C_OpenSession (slot, CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
 	if (rv != CKR_OK) {
