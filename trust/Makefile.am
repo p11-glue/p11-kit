@@ -46,8 +46,8 @@ p11_kit_trust_la_CFLAGS = \
 p11_kit_trust_la_LIBADD = \
 	libtrust-data.la \
 	libp11-library.la \
-	libp11-common.la \
 	libp11-asn1.la \
+	libp11-common.la \
 	$(LIBTASN1_LIBS) \
 	$(HASH_LIBS) \
 	$(NULL)
@@ -79,9 +79,9 @@ bin_PROGRAMS += trust/trust
 trust_trust_LDADD = \
 	libtrust-data.la \
 	libp11-kit.la \
+	libp11-asn1.la \
 	libp11-common.la \
 	libp11-tool.la \
-	libp11-asn1.la \
 	$(LTLIBINTL) \
 	$(LIBTASN1_LIBS) \
 	$(HASH_LIBS) \
@@ -137,8 +137,8 @@ trust_LIBS = \
 	libp11-kit.la \
 	libp11-library.la \
 	libp11-test.la \
-	libp11-common.la \
 	libp11-asn1.la \
+	libp11-common.la \
 	$(LIBTASN1_LIBS) \
 	$(HASH_LIBS) \
 	$(NULL)

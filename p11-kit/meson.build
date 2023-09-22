@@ -383,10 +383,6 @@ if get_option('test')
   p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
 
   if host_system != 'windows'
-    test('test-profiles.sh',
-         find_program('test-profiles.sh'),
-         env: p11_kit_tests_env)
-
     test('test-objects.sh',
          find_program('test-objects.sh'),
          env: p11_kit_tests_env)
@@ -412,6 +408,10 @@ if get_option('test')
     test('test-export-public.sh',
          find_program('test-export-public.sh'),
          env: p11_kit_tests_env)
+
+    test('test-profiles.sh',
+         find_program('test-profiles.sh'),
+         env: p11_kit_tests_env)
   endif
 
   mock_sources = {
@@ -428,7 +428,8 @@ if get_option('test')
                    'mock-nine': ['mock-module-ep7.c'],
                    'mock-ten': ['mock-module-ep8.c'],
                    'mock-eleven': ['mock-module-ep9.c'],
-                   'mock-twelve': ['mock-module-ep10.c']
+                   'mock-twelve': ['mock-module-ep10.c'],
+                   'mock-thirteen': ['mock-module-ep11.c']
                  }
 
   if host_system != 'windows'
@@ -442,7 +443,7 @@ if get_option('test')
                   name_suffix: module_suffix,
                   link_args: p11_module_ldflags,
                   link_depends: [p11_module_symbol_map],
-                  dependencies: [libp11_test_dep])
+                  dependencies: [libp11_test_dep] + libp11_asn1_deps)
   endforeach
 endif
 

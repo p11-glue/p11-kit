@@ -44,9 +44,6 @@ Object: #5
     class: public-key
     label: Public prefix key
 Object: #6
-    class: profile
-    profile-id: public-certificates-token
-Object: #7
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20CERTIFICATE;type=cert
     class: certificate
     certificate-type: x-509
@@ -55,65 +52,38 @@ Object: #7
           trusted
           copyable
           destroyable
-Object: #8
+Object: #7
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20PUBLIC%20KEY;type=public
     class: public-key
     key-type: ec
     label: TEST PUBLIC KEY
-Object: #9
+Object: #8
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
     label: TEST LABEL
-Object: #10
+Object: #9
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-Object: #11
+Object: #10
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
-Object: #12
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=TEST%20LABEL;type=data
-    class: data
-    label: TEST LABEL
-Object: #13
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=Public%20Capitalize%20Key;type=public
-    class: public-key
-    label: Public Capitalize Key
-Object: #14
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=Public%20prefix%20key;type=public
-    class: public-key
-    label: Public prefix key
-Object: #15
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=RSA;type=public
-    class: public-key
-    key-type: rsa
-    label: RSA
-Object: #16
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=EC;type=public
-    class: public-key
-    key-type: ec
-    label: EC
-Object: #17
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=SPKI;type=public
-    class: public-key
-    key-type: ec
-    label: SPKI
-Object: #18
+Object: #11
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
     label: TEST LABEL
-Object: #19
+Object: #12
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20Capitalize%20Key;type=public
     class: public-key
     label: Public Capitalize Key
-Object: #20
+Object: #13
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Public%20prefix%20key;type=public
     class: public-key
     label: Public prefix key
 EOF
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:" > list.out; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:token=TEST%20LABEL" > list.out; then
 		assert_fail "unable to run: p11-kit list-objects"
 	fi
 
@@ -139,16 +109,12 @@ Object: #2
     class: data
     label: TEST LABEL
 Object: #3
-    uri: pkcs11:model=PUBKEY%20MODEL;manufacturer=PUBKEY%20MANUFACTURER;serial=PUBKEY%20SERIAL;token=PUBKEY%20LABEL;object=TEST%20LABEL;type=data
-    class: data
-    label: TEST LABEL
-Object: #4
     uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=TEST%20LABEL;type=data
     class: data
     label: TEST LABEL
 EOF
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:type=data" > list.out; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:token=TEST%20LABEL;type=data" > list.out; then
 		assert_fail "unable to run: p11-kit list-objects"
 	fi
 
