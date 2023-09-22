@@ -165,6 +165,8 @@ noinst_LTLIBRARIES += libp11-asn1.la
 libp11_asn1_la_SOURCES = \
 	common/asn1.c common/asn1.h \
 	common/oid.c common/oid.h \
+	common/persist.c common/persist.h \
+	common/types.h \
 	$(asn_h) \
 	$(NULL)
 

@@ -25,12 +25,10 @@ TRUST_SRCS = \
 	trust/digest.c trust/digest.h \
 	trust/index.c trust/index.h \
 	trust/parser.c trust/parser.h \
-	trust/persist.c trust/persist.h \
 	trust/module.c trust/module.h \
 	trust/save.c trust/save.h \
 	trust/session.c trust/session.h \
 	trust/token.c trust/token.h \
-	trust/types.h \
 	$(NULL)
 
 configdir = $(p11_package_config_modules)
@@ -98,7 +96,6 @@ trust_trust_CFLAGS = \
 trust_trust_SOURCES = \
 	trust/anchor.c trust/anchor.h \
 	trust/parser.c trust/parser.h \
-	trust/persist.c trust/persist.h \
 	trust/digest.c trust/digest.h \
 	trust/dump.c trust/dump.h \
 	trust/enumerate.c trust/enumerate.h \
