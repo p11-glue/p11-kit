@@ -270,6 +270,7 @@ p11_kit_p11_kit_SOURCES = \
 	p11-kit/generate-keypair.c \
 	p11-kit/list-objects.c \
 	p11-kit/list-profiles.c \
+	p11-kit/list-mechanisms.c \
 	p11-kit/lists.c \
 	p11-kit/p11-kit.c \
 	p11-kit/print-config.c \
@@ -301,6 +302,7 @@ p11_kit_p11_kit_testable_SOURCES = \
 	p11-kit/generate-keypair.c \
 	p11-kit/list-objects.c \
 	p11-kit/list-profiles.c \
+	p11-kit/list-mechanisms.c \
 	p11-kit/lists.c \
 	p11-kit/p11-kit.c \
 	p11-kit/print-config.c \
@@ -425,6 +427,7 @@ sh_tests += \
 	p11-kit/test-objects.sh \
 	p11-kit/test-lists.sh \
 	p11-kit/test-server.sh \
+	p11-kit/test-list-mechanisms.sh \
 	$(NULL)
 
 if WITH_ASN1
@@ -618,4 +621,5 @@ EXTRA_DIST += \
 	p11-kit/test-messages.sh \
 	p11-kit/test-server.sh \
 	p11-kit/test-export-public.sh \
+	p11-kit/test-list-mechanisms.sh \
 	$(NULL)

@@ -10,7 +10,7 @@ _p11-kit()
         COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
         return
     elif [[ $cword -eq 1 ]]; then
-        local commands='generate-keypair export-object delete-object list-objects add-profile delete-profile list-profiles list-modules print-config extract server remote'
+        local commands='list-mechanisms generate-keypair export-object delete-object list-objects add-profile delete-profile list-profiles list-modules print-config extract server remote'
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
     fi
 } &&

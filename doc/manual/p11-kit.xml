@@ -54,6 +54,9 @@
 		<command>p11-kit delete-profile</command> ...
 	</cmdsynopsis>
 	<cmdsynopsis>
+		<command>p11-kit list-mechanisms</command> ...
+	</cmdsynopsis>
+	<cmdsynopsis>
 		<command>p11-kit print-config</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -219,6 +222,19 @@ $ p11-kit delete-profile --profile profile pkcs11:token
 
 	<para>Searches the token for profile object that matches given PKCS#11
 	profile ID and attempts to destroy it.</para>
+
+</refsect1>
+
+<refsect1 id="p11-kit-list-mechanisms">
+	<title>List Mechanisms</title>
+
+	<para>List PKCS#11 mechanisms supported by the token.</para>
+
+<programlisting>
+$ p11-kit list-mechanisms pkcs11:token
+</programlisting>
+
+	<para>This lists all available mechanimsms for a PKCS#11 token</para>
 
 </refsect1>
 

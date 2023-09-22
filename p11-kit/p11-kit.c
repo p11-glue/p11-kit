@@ -83,6 +83,9 @@ int       p11_kit_add_profile      (int argc,
 int       p11_kit_delete_profile   (int argc,
                                     char *argv[]);
 
+int       p11_kit_list_mechanisms  (int argc,
+                                    char *argv[]);
+
 int       p11_kit_print_config     (int argc,
                                     char *argv[]);
 
@@ -102,6 +105,7 @@ static const p11_tool_command commands[] = {
 	{ "add-profile", p11_kit_add_profile, N_("Add PKCS#11 profile to the token") },
 	{ "delete-profile", p11_kit_delete_profile, N_("Delete PKCS#11 profile from the token") },
 	{ "print-config", p11_kit_print_config, N_("Print merged configuration") },
+	{ "list-mechanisms", p11_kit_list_mechanisms, N_("List supported mechanisms") },
 	{ "remote", p11_kit_external, N_("Run a specific PKCS#11 module remotely") },
 	{ "server", p11_kit_external, N_("Run a server process that exposes PKCS#11 module remotely") },
 	{ P11_TOOL_FALLBACK, p11_kit_external, NULL },
