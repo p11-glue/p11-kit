@@ -1,4 +1,5 @@
 # List of source files which contain translatable strings.
+common/persist.c
 common/tool.c
 p11-kit/add-profile.c
 p11-kit/conf.c
@@ -35,7 +36,6 @@ trust/extract-pem.c
 trust/list.c
 trust/module.c
 trust/parser.c
-trust/persist.c
 trust/save.c
 trust/token.c
 trust/trust.c

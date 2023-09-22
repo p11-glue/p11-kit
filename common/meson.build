@@ -71,6 +71,7 @@ if with_asn1
   libp11_asn1_sources = [
     'asn1.c',
     'oid.c',
+    'persist.c',
   ]
 
   basic_asn_h = custom_target(
