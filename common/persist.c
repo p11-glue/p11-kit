@@ -384,6 +384,9 @@ format_constant (CK_ATTRIBUTE *attr,
 	case CKA_MECHANISM_TYPE:
 		table = p11_constant_mechanisms;
 		break;
+	case CKA_PROFILE_ID:
+		table = p11_constant_profiles;
+		break;
 	default:
 		table = NULL;
 	};

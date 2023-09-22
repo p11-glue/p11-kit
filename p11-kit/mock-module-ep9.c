@@ -127,7 +127,6 @@ override_initialize (CK_VOID_PTR init_args)
 	CK_RV rv = mock_C_Initialize (init_args);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, cert_attrs);
 	mock_module_add_object (MOCK_SLOT_ONE_ID, pubkey_attrs);
-	mock_module_add_profile (MOCK_SLOT_ONE_ID, CKP_PUBLIC_CERTIFICATES_TOKEN);
 	return rv;
 }
 

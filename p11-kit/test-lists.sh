@@ -70,6 +70,23 @@ module: one
               user-pin-initialized
               clock-on-token
               token-initialized
+module: thirteen
+    uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
+    library-description: MOCK LIBRARY
+    library-manufacturer: MOCK MANUFACTURER
+    library-version: 45.145
+    token: PROFILE LABEL ONE
+        uri: pkcs11:model=PROFILE%20MODEL;manufacturer=PROFILE%20MANUFACTURER;serial=PROFILE%20SERIAL;token=PROFILE%20LABEL%20ONE
+        manufacturer: PROFILE MANUFACTURER
+        model: PROFILE MODEL
+        serial-number: PROFILE SERIAL
+        hardware-version: 75.175
+        firmware-version: 85.185
+        flags:
+              login-required
+              user-pin-initialized
+              clock-on-token
+              token-initialized
 module: twelve
     uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
     library-description: MOCK LIBRARY
