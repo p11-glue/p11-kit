@@ -32,14 +32,14 @@ assert_fail()
 
 assert_contains()
 {
-	if ! grep -qF $2 $1; then
+	if ! grep -qF "$2" "$1"; then
 		assert_fail "$1 does not contain $2"
 	fi
 }
 
 assert_not_contains()
 {
-	if grep -qF $2 $1; then
+	if grep -qF "$2" "$1"; then
 		assert_fail "$1 contains $2"
 	fi
 }

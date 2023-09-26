@@ -258,5 +258,38 @@ EOF
 	fi
 }
 
+test_generate_keypair_nonexistent_token() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --type=mock "pkcs11:token=NONEXISTENT" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit generate-keypair"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong result"
+	fi
+	assert_contains err.out "no matching token"
+}
+
+test_delete_nonexistent_token() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable delete-object "pkcs11:token=NONEXISTENT" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit delete-object"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong result"
+	fi
+	assert_contains err.out "no matching object"
+}
+
 run test_list_all test_list_with_type test_list_exact test_list_nonexistent \
-    test_export_cert test_export_pubkey test_generate_keypair
+    test_export_cert test_export_pubkey test_generate_keypair test_generate_keypair_nonexistent_token \
+    test_delete_nonexistent_token
