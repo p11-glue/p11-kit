@@ -62,6 +62,9 @@
 int       p11_kit_list_modules     (int argc,
                                     char *argv[]);
 
+int       p11_kit_list_tokens      (int argc,
+                                    char *argv[]);
+
 int       p11_kit_list_objects     (int argc,
                                     char *argv[]);
 
@@ -97,6 +100,7 @@ int       p11_kit_external         (int argc,
 
 static const p11_tool_command commands[] = {
 	{ "list-modules", p11_kit_list_modules, N_("List modules and tokens") },
+	{ "list-tokens", p11_kit_list_tokens, N_("List tokens") },
 	{ "list-objects", p11_kit_list_objects, N_("List objects of a token") },
 	{ "export-object", p11_kit_export_object, N_("Export object matching PKCS#11 URI") },
 	{ "delete-object", p11_kit_delete_object, N_("Delete objects matching PKCS#11 URI") },

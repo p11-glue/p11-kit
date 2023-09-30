@@ -218,6 +218,7 @@ p11_kit_sources = [
   'list-objects.c',
   'list-profiles.c',
   'list-mechanisms.c',
+  'list-tokens.c',
   'lists.c',
   'p11-kit.c',
   'print-config.c'
@@ -401,6 +402,10 @@ if get_option('test')
 
     test('test-list-mechanisms.sh',
          find_program('test-list-mechanisms.sh'),
+         env: p11_kit_tests_env)
+
+    test('test-list-tokens.sh',
+         find_program('test-list-tokens.sh'),
          env: p11_kit_tests_env)
   endif
 

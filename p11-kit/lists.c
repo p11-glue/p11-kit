@@ -80,7 +80,12 @@ is_ascii_string (const unsigned char *data,
 	return true;
 }
 
-static char *
+char *format_token_uri (CK_TOKEN_INFO    *info);
+
+void  print_token_info (p11_list_printer *printer,
+                        CK_TOKEN_INFO    *info);
+
+char *
 format_token_uri (CK_TOKEN_INFO *info)
 {
 	char *value;
@@ -105,7 +110,7 @@ format_token_uri (CK_TOKEN_INFO *info)
 	return value;
 }
 
-static void
+void
 print_token_info (p11_list_printer *printer,
 		  CK_TOKEN_INFO *info)
 {
