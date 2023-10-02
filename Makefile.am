@@ -66,6 +66,7 @@ ACLOCAL_AMFLAGS = -I build/m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-doc \
+	--with-libtasn1 \
 	--without-systemd \
 	--without-bash-completion \
 	--disable-coverage \

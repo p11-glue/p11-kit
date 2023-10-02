@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUILD_OPTS: --enable-doc
+      DISTCHECK: true
     container:
       image: ghcr.io/p11-glue/p11-kit:master
     steps:
@@ -17,6 +18,32 @@ jobs:
         with:
           submodules: true
       - uses: ./.github/actions/basic-autotools
+
+  autotools-no-asn1:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_OPTS: --enable-doc --without-libtasn1 --without-trust-paths
+    container:
+      image: ghcr.io/p11-glue/p11-kit:master
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: dnf remove -y libtasn1-devel
+      - uses: ./.github/actions/basic-autotools
+
+  meson-no-asn1:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/p11-glue/p11-kit:master
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: dnf remove -y libtasn1-devel
+      - uses: ./.github/actions/basic-meson
 
   address-sanitizer:
     runs-on: ubuntu-latest

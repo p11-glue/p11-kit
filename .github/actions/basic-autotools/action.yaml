@@ -26,6 +26,12 @@ runs:
           cat $GITHUB_WORKSPACE/$BUILDDIR/test-suite.log
           exit $ret
         fi
+      shell: bash
+
+    - name: Distcheck
+      if: ${{ env.DISTCHECK != 0 }}
+      run: |
+        cd $GITHUB_WORKSPACE/$BUILDDIR
         if [ "$RUNNER_OS" = "Linux" ]; then
           P11_KIT_DEBUG=all $GITHUB_WORKSPACE/build/run-wrapper.sh make distcheck -j$(nproc) V=1
         fi
