@@ -102,6 +102,22 @@ EOF
 	fi
 }
 
+test_list_profiles_nonexistent_token() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable list-profiles "pkcs11:token=NONEXISTENT" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit list-profiles"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "no matching token"
+}
+
 test_add_profile() {
 	cat > test-profiles.p11-kit <<EOF
 [p11-kit-object-v1]
@@ -223,6 +239,38 @@ EOF
 	assert_contains err.out "no matching token"
 }
 
+test_add_profile_no_args() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable add-profile "pkcs11:token=pkcs11:token=PROFILE%20LABEL%20ONE" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit add-profile"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "no profile specified"
+}
+
+test_add_profile_duplicate_args() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable add-profile --profile="baseline-provider" --profile="extended-provider" "pkcs11:token=pkcs11:token=PROFILE%20LABEL%20ONE" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit add-profile"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "multiple profiles specified"
+}
+
 test_delete_profile() {
 	cat > test-profiles.p11-kit <<EOF
 [p11-kit-object-v1]
@@ -296,7 +344,27 @@ test_delete_profile_multiple() {
 [p11-kit-object-v1]
 class: profile
 token: true
+profile-id: extended-provider
+
+[p11-kit-object-v1]
+class: profile
+token: true
+profile-id: extended-provider
+
+[p11-kit-object-v1]
+class: profile
+token: true
+profile-id: extended-provider
+
+[p11-kit-object-v1]
+class: profile
+token: true
 profile-id: baseline-provider
+
+[p11-kit-object-v1]
+class: profile
+token: true
+profile-id: extended-provider
 
 [p11-kit-object-v1]
 class: profile
@@ -349,8 +417,70 @@ EOF
 	fi
 }
 
-run test_list_profiles test_list_profiles_session test_list_profiles_empty \
-    test_add_profile test_add_profile_empty test_add_profile_duplicate \
-    test_add_profile_session_duplicate test_add_profile_nonexistent_token \
-    test_delete_profile test_delete_profile_last test_delete_profile_empty \
-    test_delete_profile_multiple test_delete_profile_session
+test_delete_profile_nonexistent_token() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable delete-profile --profile="baseline-provider" "pkcs11:token=NONEXISTENT" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit delete-profile"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "no matching token"
+}
+
+test_delete_profile_no_args() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable delete-profile "pkcs11:token=pkcs11:token=PROFILE%20LABEL%20ONE" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit delete-profile"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "no profile specified"
+}
+
+test_delete_profile_duplicate_args() {
+	cat > list.exp <<EOF
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable delete-profile --profile="baseline-provider" --profile="extended-provider" "pkcs11:token=pkcs11:token=PROFILE%20LABEL%20ONE" > list.out 2> err.out; then
+		assert_fail "expected to fail: p11-kit delete-profile"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong results"
+	fi
+	assert_contains err.out "multiple profiles specified"
+}
+
+run test_list_profiles \
+    test_list_profiles_session \
+    test_list_profiles_empty \
+    test_list_profiles_nonexistent_token \
+    test_add_profile \
+    test_add_profile_empty \
+    test_add_profile_duplicate \
+    test_add_profile_session_duplicate \
+    test_add_profile_nonexistent_token \
+    test_add_profile_no_args \
+    test_add_profile_duplicate_args \
+    test_delete_profile \
+    test_delete_profile_last \
+    test_delete_profile_empty \
+    test_delete_profile_multiple \
+    test_delete_profile_session \
+    test_delete_profile_nonexistent_token \
+    test_delete_profile_no_args \
+    test_delete_profile_duplicate_args
