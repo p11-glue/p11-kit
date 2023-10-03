@@ -76,6 +76,8 @@ frob-*
 /build/trust/
 /local
 
+/common/test-init.sh
+
 /doc/manual/html
 /doc/manual/p11-kit-decl-list.txt
 /doc/manual/p11-kit-decl.txt
