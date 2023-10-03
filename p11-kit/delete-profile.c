@@ -44,8 +44,8 @@
 #include "tool.h"
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef ENABLE_NLS
 #include <libintl.h>
@@ -53,6 +53,8 @@
 #else
 #define _(x) (x)
 #endif
+
+#define MAX_OBJECTS 4
 
 int
 p11_kit_delete_profile (int argc,
@@ -63,16 +65,22 @@ delete_profile (const char *token_str,
 		CK_PROFILE_ID profile)
 {
 	int ret = 1;
-	bool first_iteration = true;
+	CK_RV rv;
+	const char *pin = NULL;
+	CK_OBJECT_HANDLE objects[MAX_OBJECTS];
+	CK_ULONG i, count = 0;
+	CK_SESSION_HANDLE session = 0;
 	CK_SLOT_ID slot = 0;
+	CK_FUNCTION_LIST *module = NULL;
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
 	CK_OBJECT_CLASS klass = CKO_PROFILE;
-	CK_PROFILE_ID profile_id = CKP_INVALID_ID;
-	CK_ATTRIBUTE matching = { CKA_CLASS, &klass, sizeof (klass) };
-	CK_ATTRIBUTE attr = { CKA_PROFILE_ID, &profile_id, sizeof (profile_id) };
-	CK_RV rv;
+	CK_ATTRIBUTE template[] = {
+		{ CKA_CLASS, &klass, sizeof (klass) },
+		{ CKA_PROFILE_ID, &profile, sizeof (profile) }
+	};
+	CK_ULONG template_len = sizeof (template) / sizeof (template[0]);
 
 	uri = p11_kit_uri_new ();
 	if (uri == NULL) {
@@ -91,40 +99,79 @@ delete_profile (const char *token_str,
 		goto cleanup;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_LOGIN);
+	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
 		goto cleanup;
 	}
 
-	p11_kit_iter_add_filter (iter, &matching, 1);
 	p11_kit_iter_begin (iter, modules);
-	while ((rv = p11_kit_iter_next (iter)) == CKR_OK) {
-		if (first_iteration) {
-			first_iteration = false;
-			slot = p11_kit_iter_get_slot (iter);
-		}
+	rv = p11_kit_iter_next (iter);
+	if (rv != CKR_OK) {
+		if (rv == CKR_CANCEL)
+			p11_message (_("no matching token"));
+		else
+			p11_message (_("failed to find token: %s"), p11_kit_strerror (rv));
+		goto cleanup;
+	}
 
-		/* token URI can match multiple tokens but we want to only match one */
-		if (slot != p11_kit_iter_get_slot (iter))
-			break;
+	module = p11_kit_iter_get_module (iter);
+	if (module == NULL) {
+		p11_message (_("failed to obtain module"));
+		goto cleanup;
+	}
+	slot = p11_kit_iter_get_slot (iter);
 
-		rv = p11_kit_iter_get_attributes (iter, &attr, 1);
+	rv = module->C_OpenSession (slot, CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);
+	if (rv != CKR_OK) {
+		p11_message (_("failed to open session: %s"), p11_kit_strerror (rv));
+		goto cleanup;
+	}
+
+	pin = p11_kit_uri_get_pin_value (uri);
+	if (pin != NULL) {
+		rv = module->C_Login (session, CKU_USER, (unsigned char *)pin, strlen (pin));
 		if (rv != CKR_OK) {
-			p11_message (_("failed to retrieve attribute of an object: %s"), p11_kit_strerror (rv));
+			p11_message (_("failed to login: %s"), p11_kit_strerror (rv));
+			goto cleanup;
+		}
+	}
+
+	rv = module->C_FindObjectsInit (session, template, template_len);
+	if (rv != CKR_OK) {
+		p11_message (_("failed to initialize search for objects: %s"), p11_kit_strerror (rv));
+		goto cleanup;
+	}
+
+	do {
+		rv = module->C_FindObjects (session, objects, MAX_OBJECTS, &count);
+		if (rv != CKR_OK) {
+			module->C_FindObjectsFinal (session);
+			p11_message (_("failed to search for objects: %s"), p11_kit_strerror (rv));
 			goto cleanup;
 		}
 
-		if (profile_id == profile) {
-			rv = p11_kit_iter_destroy_object (iter);
-			if (rv != CKR_OK)
-				p11_message (_("failed to delete profile: %s"), p11_kit_strerror (rv));
+		for (i = 0; i < count; ++i) {
+			rv = module->C_DestroyObject (session, objects[i]);
+			if (rv != CKR_OK) {
+				module->C_FindObjectsFinal (session);
+				p11_message (_("failed to destroy an object: %s"), p11_kit_strerror (rv));
+				goto cleanup;
+			}
 		}
+	} while (count > 0);
+
+	rv = module->C_FindObjectsFinal (session);
+	if (rv != CKR_OK) {
+		p11_message (_("failed to finalize search for objects: %s"), p11_kit_strerror (rv));
+		goto cleanup;
 	}
 
 	ret = 0;
 
 cleanup:
+	if (session != 0)
+		module->C_CloseSession (session);
 	p11_kit_iter_free (iter);
 	p11_kit_uri_free (uri);
 	if (modules != NULL)
