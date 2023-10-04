@@ -58,6 +58,16 @@ libp11_tool_sources = [
 
 if host_system != 'windows'
   libp11_tool_sources += ['unix-peer.c', 'unix-peer.h']
+
+  rpl_functions = [
+    'readpassphrase',
+  ]
+
+  foreach f : rpl_functions
+    if not cc.has_function(f)
+      libp11_tool_sources += '@0@.c'.format(f)
+    endif
+  endforeach
 endif
 
 libp11_tool = static_library('p11-tool', libp11_tool_sources,
