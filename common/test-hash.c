@@ -50,12 +50,12 @@ test_murmur3 (void)
 
 	assert (sizeof (one) == P11_HASH_MURMUR3_LEN);
 
-	p11_hash_murmur3 ((unsigned char *)&one, "one", 3, NULL);
-	p11_hash_murmur3 ((unsigned char *)&two, "two", 3, NULL);
-	p11_hash_murmur3 ((unsigned char *)&four, "four", 4, NULL);
-	p11_hash_murmur3 ((unsigned char *)&seven, "seven", 5, NULL);
-	p11_hash_murmur3 ((unsigned char *)&eleven, "eleven", 6, NULL);
-	p11_hash_murmur3 ((unsigned char *)&split, "ele", 3, "ven", 3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&one, "one", (size_t)3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&two, "two", (size_t)3, NULL);
+	p11_hash_murmur3 ((unsigned char *)&four, "four", (size_t)4, NULL);
+	p11_hash_murmur3 ((unsigned char *)&seven, "seven", (size_t)5, NULL);
+	p11_hash_murmur3 ((unsigned char *)&eleven, "eleven", (size_t)6, NULL);
+	p11_hash_murmur3 ((unsigned char *)&split, "ele", (size_t)3, "ven", (size_t)3, NULL);
 
 	assert (one != two);
 	assert (one != four);
