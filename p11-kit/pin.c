@@ -104,7 +104,7 @@
  *                              const char *pin_description, P11KitPinFlags pin_flags,
  *                              void *callback_data)
  * {
- *     return p11_kit_pin_new_from_string ("pin-value");
+ *     return p11_kit_pin_new_for_string ("pin-value");
  * }
  *
  * p11_kit_pin_register_callback ("my-application", my_application_pin_callback,

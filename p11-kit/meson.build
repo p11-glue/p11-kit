@@ -224,6 +224,10 @@ p11_kit_sources = [
   'print-config.c'
 ]
 
+if host_system != 'windows'
+  p11_kit_sources += 'tty.c'
+endif
+
 executable('p11-kit',
            p11_kit_sources,
            c_args: common_c_args + libp11_kit_internal_c_args,

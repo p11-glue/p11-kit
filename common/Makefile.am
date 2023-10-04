@@ -55,6 +55,12 @@ if !OS_WIN32
 libp11_tool_la_SOURCES += \
 	common/unix-peer.c common/unix-peer.h \
 	$(NULL)
+
+if NEED_READPASSPHRASE
+libp11_tool_la_SOURCES += \
+	common/readpassphrase.c \
+	$(NULL)
+endif
 endif
 
 # Tests ----------------------------------------------------------------

@@ -275,6 +275,10 @@ p11_kit_p11_kit_SOURCES = \
 	p11-kit/print-config.c \
 	$(NULL)
 
+if !OS_WIN32
+p11_kit_p11_kit_SOURCES += p11-kit/tty.c p11-kit/tty.h
+endif
+
 p11_kit_p11_kit_CFLAGS = $(COMMON_CFLAGS)
 p11_kit_p11_kit_LDADD =
 
@@ -296,20 +300,7 @@ bashcomp_DATA += bash-completion/p11-kit
 endif
 
 check_PROGRAMS += p11-kit/p11-kit-testable
-p11_kit_p11_kit_testable_SOURCES = \
-	p11-kit/add-profile.c \
-	p11-kit/delete-object.c \
-	p11-kit/delete-profile.c \
-	p11-kit/export-object.c \
-	p11-kit/generate-keypair.c \
-	p11-kit/list-objects.c \
-	p11-kit/list-profiles.c \
-	p11-kit/list-mechanisms.c \
-	p11-kit/list-tokens.c \
-	p11-kit/lists.c \
-	p11-kit/p11-kit.c \
-	p11-kit/print-config.c \
-	$(NULL)
+p11_kit_p11_kit_testable_SOURCES = $(p11_kit_p11_kit_SOURCES)
 
 p11_kit_p11_kit_testable_CFLAGS =
 p11_kit_p11_kit_testable_LDADD =

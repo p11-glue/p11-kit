@@ -176,7 +176,7 @@ if host_system != 'windows'
   headers = [
     'sys/resource.h',
     'sys/un.h',
-    'ucred.h'
+    'ucred.h',
   ]
 
   foreach h : headers
@@ -197,6 +197,7 @@ if host_system != 'windows'
     'issetugid',
     'mkdtemp',
     'mkstemp',
+    'readpassphrase',
     'secure_getenv',
     'strndup'
   ]

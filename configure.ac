@@ -145,6 +145,8 @@ if test "$os_unix" = "yes"; then
 	AC_CHECK_FUNCS([getpeerucred])
 	AC_CHECK_FUNCS([issetugid])
 	AC_CHECK_FUNCS([isatty])
+	AC_CHECK_FUNCS([readpassphrase])
+	AM_CONDITIONAL([NEED_READPASSPHRASE], [test "$ac_cv_func_readpassphrase" != "yes"])
 
 	AC_CHECK_FUNC(
 		[strerror_r],
