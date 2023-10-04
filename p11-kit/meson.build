@@ -407,6 +407,10 @@ if get_option('test')
     test('test-list-tokens.sh',
          find_program('test-list-tokens.sh'),
          env: p11_kit_tests_env)
+
+    test('test-generate-keypair.sh',
+         find_program('test-generate-keypair.sh'),
+         env: p11_kit_tests_env)
   endif
 
   if with_asn1 and host_system != 'windows'

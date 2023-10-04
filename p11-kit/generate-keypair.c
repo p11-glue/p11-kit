@@ -80,7 +80,8 @@ get_mechanism (const char *type)
 		m.mechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
 	else if (p11_ascii_strcaseeq (type, "ecdsa"))
 		m.mechanism = CKM_ECDSA_KEY_PAIR_GEN;
-	else if (p11_ascii_strcaseeq (type, "ed25519"))
+	else if (p11_ascii_strcaseeq (type, "ed25519") ||
+		 p11_ascii_strcaseeq (type, "ed448"))
 		m.mechanism = CKM_EC_EDWARDS_KEY_PAIR_GEN;
 
 	return m;
@@ -93,6 +94,8 @@ get_ec_params (const char *curve,
 	static const uint8_t OID_SECP256R1[] = { 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07 };
 	static const uint8_t OID_SECP384R1[] = { 0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22 };
 	static const uint8_t OID_SECP521R1[] = { 0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23 };
+	static const uint8_t OID_ED25519[] = { 0x06, 0x03, 0x2b, 0x65, 0x70 };
+	static const uint8_t OID_ED448[] = { 0x06, 0x03, 0x2b, 0x65, 0x71 };
 
 	if (p11_ascii_strcaseeq (curve, "secp256r1")) {
 		*ec_params_len = sizeof (OID_SECP256R1);
@@ -103,6 +106,12 @@ get_ec_params (const char *curve,
 	} else if (p11_ascii_strcaseeq (curve, "secp521r1")) {
 		*ec_params_len = sizeof (OID_SECP521R1);
 		return OID_SECP521R1;
+	} else if (p11_ascii_strcaseeq (curve, "ed25519")) {
+		*ec_params_len = sizeof (OID_ED25519);
+		return OID_ED25519;
+	} else if (p11_ascii_strcaseeq (curve, "ed448")) {
+		*ec_params_len = sizeof (OID_ED448);
+		return OID_ED448;
 	}
 
 	return NULL;

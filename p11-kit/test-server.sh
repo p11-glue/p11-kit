@@ -58,6 +58,7 @@ test_server_access() {
 		fi
 	else
 		skip "p11tool not found"
+		return
 	fi
 
 	"$abs_top_builddir"/p11-kit/p11-kit-server-testable -s -k > stop.env 2> stop.err

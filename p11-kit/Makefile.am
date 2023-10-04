@@ -434,6 +434,7 @@ sh_tests += \
 	p11-kit/test-server.sh \
 	p11-kit/test-list-mechanisms.sh \
 	p11-kit/test-list-tokens.sh \
+	p11-kit/test-generate-keypair.sh \
 	$(NULL)
 
 if WITH_ASN1
@@ -641,4 +642,5 @@ EXTRA_DIST += \
 	p11-kit/test-list-tokens.sh \
 	p11-kit/test-export-public.sh \
 	p11-kit/test-list-mechanisms.sh \
+	p11-kit/test-generate-keypair.sh \
 	$(NULL)
