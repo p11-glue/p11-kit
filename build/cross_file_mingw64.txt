@@ -4,7 +4,7 @@ cpu_family = 'x86_64'
 cpu = 'x86_64'
 endian = 'little'
 
-[properties]
+[built-in options]
 c_args = ['-fstack-protector']
 c_link_args = ['-fstack-protector']
 
