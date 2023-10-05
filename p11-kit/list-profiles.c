@@ -65,15 +65,14 @@ list_profiles (const char *token_str)
 	int ret = 1;
 	CK_RV rv;
 	const char *profile_nick = NULL;
-	const char *pin = NULL;
 	CK_OBJECT_HANDLE objects[MAX_OBJECTS];
 	CK_ULONG i, count = 0;
 	CK_SESSION_HANDLE session = 0;
-	CK_SLOT_ID slot = 0;
 	CK_FUNCTION_LIST *module = NULL;
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
+	P11KitIterBehavior behavior;
 	CK_PROFILE_ID profile_id = CKP_INVALID_ID;
 	CK_OBJECT_CLASS klass = CKO_PROFILE;
 	CK_ATTRIBUTE template = { CKA_CLASS, &klass, sizeof (klass) };
@@ -96,7 +95,10 @@ list_profiles (const char *token_str)
 		goto cleanup;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
+	behavior = P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS;
+	if (p11_kit_uri_get_pin_value (uri))
+		behavior |= P11_KIT_ITER_WITH_LOGIN;
+	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
 		goto cleanup;
@@ -112,27 +114,11 @@ list_profiles (const char *token_str)
 		goto cleanup;
 	}
 
+	/* Module and session should always be set at this point.  */
 	module = p11_kit_iter_get_module (iter);
-	if (module == NULL) {
-		p11_message (_("failed to obtain module"));
-		goto cleanup;
-	}
-	slot = p11_kit_iter_get_slot (iter);
-
-	rv = module->C_OpenSession (slot, CKF_SERIAL_SESSION, NULL, NULL, &session);
-	if (rv != CKR_OK) {
-		p11_message (_("failed to open session: %s"), p11_kit_strerror (rv));
-		goto cleanup;
-	}
-
-	pin = p11_kit_uri_get_pin_value (uri);
-	if (pin != NULL) {
-		rv = module->C_Login (session, CKU_USER, (unsigned char *)pin, strlen (pin));
-		if (rv != CKR_OK) {
-			p11_message (_("failed to login: %s"), p11_kit_strerror (rv));
-			goto cleanup;
-		}
-	}
+	return_val_if_fail (module != NULL, 1);
+	session = p11_kit_iter_get_session (iter);
+	return_val_if_fail (session != CK_INVALID_HANDLE, 1);
 
 	rv = module->C_FindObjectsInit (session, &template, 1);
 	if (rv != CKR_OK) {
@@ -174,8 +160,6 @@ list_profiles (const char *token_str)
 	ret = 0;
 
 cleanup:
-	if (session != 0)
-		module->C_CloseSession (session);
 	p11_kit_iter_free (iter);
 	p11_kit_uri_free (uri);
 	if (modules != NULL)
