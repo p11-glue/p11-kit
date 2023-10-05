@@ -1207,7 +1207,7 @@ p11_rpc_buffer_get_date_value (p11_buffer *buffer,
 			       void *value,
 			       CK_ULONG *value_length)
 {
-	CK_DATE date_value;
+	CK_DATE date_value = { 0 };
 	const unsigned char *array;
 	size_t array_length;
 
@@ -1540,13 +1540,13 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 						       void *value,
 						       CK_ULONG *value_length)
 {
-	uint64_t val;
+	uint64_t val = 0;
 
 	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
 		return false;
 
 	if (value) {
-		CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params;
+		CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params = { 0 };
 
 		params.hSignVerifyKey = val;
 

@@ -91,7 +91,7 @@ has_handle (CK_ULONG *objects,
 static void
 test_all (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR *modules;
 	CK_FUNCTION_LIST_PTR module;
 	CK_SESSION_HANDLE session;
@@ -179,7 +179,7 @@ on_iter_callback (P11KitIter *iter,
 static void
 test_callback (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR *modules;
 	P11KitIter *iter;
 	CK_RV rv;
@@ -273,7 +273,7 @@ test_callback_destroyer (void)
 static void
 test_with_session (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_SESSION_HANDLE session;
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot;
@@ -331,7 +331,7 @@ test_with_session (void)
 static void
 test_with_slot (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot;
 	P11KitIter *iter;
@@ -379,7 +379,7 @@ test_with_slot (void)
 static void
 test_with_module (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR module;
 	P11KitIter *iter;
 	CK_RV rv;
@@ -483,7 +483,7 @@ test_unrecognized (void)
 static void
 test_uri_with_type (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR *modules;
 	P11KitIter *iter;
 	P11KitUri *uri;
@@ -556,7 +556,7 @@ test_set_uri (void)
 static void
 test_filter (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_FUNCTION_LIST_PTR *modules;
 	P11KitIter *iter;
 	CK_RV rv;
@@ -1625,7 +1625,7 @@ test_exhaustive_match (void)
 static void
 test_profile (void)
 {
-	CK_OBJECT_HANDLE objects[128];
+	CK_OBJECT_HANDLE objects[128] = { 0 };
 	CK_SESSION_HANDLE session;
 	CK_FUNCTION_LIST_PTR module;
 	CK_SLOT_ID slot;

@@ -322,15 +322,18 @@ char *
 p11_dl_error (void)
 {
 	DWORD code = GetLastError();
-	LPVOID msg_buf;
+	LPVOID msg_buf = NULL;
 	char *result;
 
 	FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
-	                FORMAT_MESSAGE_FROM_SYSTEM |
-	                FORMAT_MESSAGE_IGNORE_INSERTS,
-	                NULL, code,
-	                MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-	                (LPSTR)&msg_buf, 0, NULL);
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, code,
+			MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPSTR)&msg_buf, 0, NULL);
+
+	if (msg_buf == NULL);
+		return NULL;
 
 	result = strdup (msg_buf);
 	LocalFree (msg_buf);

@@ -509,8 +509,8 @@ test_get_attribute_value (void)
 	CK_FUNCTION_LIST_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_ATTRIBUTE attrs[8];
-	char label[32];
-	CK_OBJECT_CLASS klass;
+	char label[32] = { '\0' };
+	CK_OBJECT_CLASS klass = -1ul;
 	CK_RV rv;
 
 	module = setup_mock_module (&session);
@@ -711,7 +711,7 @@ test_copy_object (void)
 	CK_SESSION_HANDLE session = 0;
 	CK_OBJECT_HANDLE object;
 	CK_ATTRIBUTE attrs[8];
-	char label[32];
+	char label[32] = { '\0' };
 	CK_ULONG bits;
 	CK_RV rv;
 
@@ -751,7 +751,7 @@ test_copy_object_private (void)
 	CK_SESSION_HANDLE session = 0;
 	CK_OBJECT_HANDLE object;
 	CK_ATTRIBUTE attrs[8];
-	char label[32];
+	char label[32] = { '\0' };
 	CK_ULONG bits;
 	CK_RV rv;
 
@@ -1619,7 +1619,7 @@ test_generate_key (void)
 	CK_MECHANISM mech = { CKM_MOCK_GENERATE, NULL, 0 };
 	CK_ATTRIBUTE attrs[8];
 	char label[32];
-	char value[64];
+	char value[64] = { '\0' };
 	CK_ULONG bits;
 	CK_RV rv;
 
@@ -1674,9 +1674,9 @@ test_generate_key_pair (void)
 	CK_ATTRIBUTE pub_attrs[8];
 	CK_ATTRIBUTE priv_attrs[8];
 	char pub_label[32];
-	char pub_value[64];
+	char pub_value[64] = { '\0' };
 	char priv_label[32];
-	char priv_value[64];
+	char priv_value[64] = { '\0' };
 	CK_ULONG pub_bits;
 	CK_ULONG priv_bits;
 	CK_RV rv;
@@ -1797,7 +1797,7 @@ test_unwrap_key (void)
 	CK_MECHANISM mech = { CKM_MOCK_WRAP, NULL, 0 };
 	CK_ATTRIBUTE attrs[8];
 	char label[32];
-	char value[64];
+	char value[64] = { '\0' };
 	CK_ULONG bits;
 	CK_RV rv;
 
@@ -1852,7 +1852,7 @@ test_derive_key (void)
 	CK_MECHANISM mech = { CKM_MOCK_DERIVE, NULL, 0 };
 	CK_ATTRIBUTE attrs[8];
 	char label[32];
-	char value[64];
+	char value[64] = { '\0' };
 	CK_ULONG bits;
 	CK_RV rv;
 
