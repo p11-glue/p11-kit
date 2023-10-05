@@ -36,14 +36,23 @@
 
 #include "array.h"
 #include "attrs.h"
+#include "compat.h"
 #include "debug.h"
 #include "iter.h"
 #include "pin.h"
 #include "private.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) dgettext(PACKAGE_NAME, x)
+#else
+#define _(x) (x)
+#endif
 
 typedef struct _Callback {
 	p11_kit_iter_callback func;
@@ -66,7 +75,8 @@ struct p11_kit_iter {
 	CK_ATTRIBUTE *match_attrs;
 	CK_SLOT_ID match_slot_id;
 	Callback *callbacks;
-	char *pin;
+	char *pin_value;
+	char *pin_source;
 
 	/* The input modules */
 	p11_array *modules;
@@ -202,7 +212,7 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 	CK_SLOT_INFO *sinfo;
 	CK_INFO *minfo;
 	CK_ULONG count;
-	const char *pin;
+	const char *pin_value;
 
 	return_if_fail (iter != NULL);
 
@@ -229,9 +239,20 @@ p11_kit_iter_set_uri (P11KitIter *iter,
 			if (tinfo != NULL)
 				memcpy (&iter->match_token, tinfo, sizeof (CK_TOKEN_INFO));
 
-			pin = p11_kit_uri_get_pin_value (uri);
-			if (pin != NULL)
-				iter->pin = strdup (pin);
+			pin_value = p11_kit_uri_get_pin_value (uri);
+			if (pin_value != NULL)
+				iter->pin_value = strdup (pin_value);
+			else {
+				/* If the PIN is not immediately available
+				 * through pin-value, keep pin-source for later
+				 * retrieval.
+				 */
+				const char *pin_source;
+
+				pin_source = p11_kit_uri_get_pin_source (uri);
+				if (pin_source != NULL)
+					iter->pin_source = strdup (pin_source);
+			}
 		}
 	} else {
 		/* Match any module version number and slot ID */
@@ -516,6 +537,32 @@ call_all_filters (P11KitIter *iter,
 #define COROUTINE_RETURN(name,i,x) do { iter->name ## _state = i; return x; case i:; } while (0)
 #define COROUTINE_END(name) }
 
+static P11KitPin *
+request_pin (P11KitIter *iter)
+{
+	P11KitPin *pin;
+	char *pin_description;
+
+	if (iter->pin_value) {
+		return p11_kit_pin_new_for_string (iter->pin_value);
+	}
+
+	if (asprintf (&pin_description,
+		      _("PIN for %.*s"),
+		      (int) p11_kit_space_strlen (iter->token_info.label,
+						  sizeof (iter->token_info.label)),
+		      iter->token_info.label) < 0) {
+		return NULL;
+	}
+
+	pin = p11_kit_pin_request (iter->pin_source,
+				   NULL,
+				   pin_description,
+				   P11_KIT_PIN_FLAGS_USER_LOGIN);
+	free (pin_description);
+	return pin;
+}
+
 static CK_RV
 move_next_session (P11KitIter *iter)
 {
@@ -588,10 +635,6 @@ move_next_session (P11KitIter *iter)
 		rv = (iter->module->C_GetTokenInfo) (iter->slot, &iter->token_info);
 		if (rv != CKR_OK || !p11_match_uri_token_info (&iter->match_token, &iter->token_info))
 			continue;
-		if (iter->with_tokens) {
-			iter->kind = P11_KIT_ITER_KIND_TOKEN;
-			COROUTINE_RETURN (move_next_session, 3, CKR_OK);
-		}
 
 		session_flags = CKF_SERIAL_SESSION;
 
@@ -605,18 +648,32 @@ move_next_session (P11KitIter *iter)
 			return finish_iterating (iter, rv);
 
 		if (iter->session != 0) {
-			if (iter->with_login && iter->pin != NULL) {
-				rv = (iter->module->C_Login) (iter->session, CKU_CONTEXT_SPECIFIC,
-							      (unsigned char *)iter->pin,
-							      strlen (iter->pin));
+			if (iter->with_login &&
+			    (iter->pin_value != NULL || iter->pin_source != NULL)) {
+				P11KitPin *pin;
+
+				pin = request_pin (iter);
+				if (!pin)
+					continue;
+
+				rv = (iter->module->C_Login) (iter->session, CKU_USER,
+							      (unsigned char *) p11_kit_pin_get_value (pin, NULL),
+							      p11_kit_pin_get_length (pin));
+				p11_kit_pin_unref (pin);
 				if (rv != CKR_OK)
 					return finish_iterating (iter, rv);
 			}
 
-			iter->move_next_session_state = 0;
-			iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
-			return CKR_OK;
 		}
+
+		if (iter->with_tokens) {
+			iter->kind = P11_KIT_ITER_KIND_TOKEN;
+			COROUTINE_RETURN (move_next_session, 3, CKR_OK);
+		}
+
+		iter->move_next_session_state = 0;
+		iter->kind = P11_KIT_ITER_KIND_UNKNOWN;
+		return CKR_OK;
 	}
 
 	COROUTINE_END (move_next_session);
@@ -1097,7 +1154,8 @@ p11_kit_iter_free (P11KitIter *iter)
 	p11_attrs_free (iter->match_attrs);
 	free (iter->objects);
 	free (iter->slots);
-	free (iter->pin);
+	free (iter->pin_value);
+	free (iter->pin_source);
 
 	for (cb = iter->callbacks; cb != NULL; cb = next) {
 		next = cb->next;

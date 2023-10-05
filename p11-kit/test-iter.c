@@ -43,6 +43,7 @@
 #include "library.h"
 #include "message.h"
 #include "mock.h"
+#include "pin.h"
 
 #include <assert.h>
 #include <string.h>
@@ -958,7 +959,9 @@ test_slot_info (void)
 }
 
 static void
-test_token_match (void)
+iter_token_match (const char *string,
+		  P11KitIterBehavior behavior,
+		  int expected_count)
 {
 	CK_FUNCTION_LIST_PTR *modules;
 	P11KitIter *iter;
@@ -970,10 +973,10 @@ test_token_match (void)
 	modules = initialize_and_get_modules ();
 
 	uri = p11_kit_uri_new ();
-	ret = p11_kit_uri_parse ("pkcs11:manufacturer=TEST%20MANUFACTURER", P11_KIT_URI_FOR_TOKEN, uri);
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_TOKEN, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri, 0);
+	iter = p11_kit_iter_new (uri, behavior);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -985,11 +988,51 @@ test_token_match (void)
 	assert (rv == CKR_CANCEL);
 
 	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (9, count);
+	assert_num_eq (expected_count, count);
 
 	p11_kit_iter_free (iter);
 
 	finalize_and_free_modules (modules);
+}
+
+static void
+test_token_match (void)
+{
+	/* Three modules, each with 1 slot, and 3 public objects */
+	iter_token_match ("pkcs11:manufacturer=TEST%20MANUFACTURER", 0, 9);
+}
+
+static P11KitPin *
+login_callback (const char *pin_source,
+		P11KitUri *pin_uri,
+		const char *pin_description,
+		P11KitPinFlags pin_flags,
+		void *callback_data)
+{
+	int *called = callback_data;
+	(*called)++;
+
+	assert_str_eq ("PIN for TEST LABEL", pin_description);
+	return p11_kit_pin_new_for_buffer ((unsigned char*)strdup ("booo"), 4,
+					   free);
+}
+
+static void
+test_token_match_with_login (void)
+{
+	int called = 0;
+
+	p11_kit_pin_register_callback ("my-pin-source", login_callback,
+	                               &called, NULL);
+
+	/* Three modules, each with 1 slot, 3 public and 2 private objects */
+	iter_token_match ("pkcs11:manufacturer=TEST%20MANUFACTURER"
+			  "?pin-source=my-pin-source",
+			  P11_KIT_ITER_WITH_LOGIN, 15);
+
+	assert_num_eq (3, called);
+
+	p11_kit_pin_unregister_callback ("my-pin-source", login_callback, NULL);
 }
 
 static void
@@ -1028,7 +1071,9 @@ test_token_mismatch (void)
 }
 
 static void
-test_token_only (void)
+iter_token_only (const char *string,
+		 P11KitIterBehavior behavior,
+		 int expected_count)
 {
 	CK_FUNCTION_LIST_PTR *modules;
 	P11KitIter *iter;
@@ -1040,10 +1085,13 @@ test_token_only (void)
 	modules = initialize_and_get_modules ();
 
 	uri = p11_kit_uri_new ();
-	ret = p11_kit_uri_parse ("pkcs11:manufacturer=TEST%20MANUFACTURER", P11_KIT_URI_FOR_TOKEN, uri);
+	ret = p11_kit_uri_parse (string, P11_KIT_URI_FOR_TOKEN, uri);
 	assert_num_eq (P11_KIT_URI_OK, ret);
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
+	iter = p11_kit_iter_new (uri,
+				 behavior |
+				 P11_KIT_ITER_WITH_TOKENS |
+				 P11_KIT_ITER_WITHOUT_OBJECTS);
 	p11_kit_uri_free (uri);
 
 	p11_kit_iter_begin (iter, modules);
@@ -1057,12 +1105,36 @@ test_token_only (void)
 
 	assert (rv == CKR_CANCEL);
 
-	/* Three modules, each with 1 slot, and 3 public objects */
-	assert_num_eq (3, count);
+	assert_num_eq (expected_count, count);
 
 	p11_kit_iter_free (iter);
 
 	finalize_and_free_modules (modules);
+}
+
+static void
+test_token_only (void)
+{
+	/* Three modules, each with 1 slot, and 3 public objects */
+	iter_token_only ("pkcs11:manufacturer=TEST%20MANUFACTURER", 0, 3);
+}
+
+static void
+test_token_only_with_login (void)
+{
+	int called = 0;
+
+	p11_kit_pin_register_callback ("my-pin-source", login_callback,
+	                               &called, NULL);
+
+	/* Three modules, each with 1 slot, and 3 public objects */
+	iter_token_only ("pkcs11:manufacturer=TEST%20MANUFACTURER"
+			 "?pin-source=my-pin-source",
+			 P11_KIT_ITER_WITH_LOGIN, 3);
+
+	assert_num_eq (3, called);
+
+	p11_kit_pin_unregister_callback ("my-pin-source", login_callback, NULL);
 }
 
 static void
@@ -1703,9 +1775,11 @@ main (int argc,
 	p11_test (test_with_module, "/iter/test_with_module");
 	p11_test (test_keep_session, "/iter/test_keep_session");
 	p11_test (test_token_match, "/iter/test_token_match");
+	p11_test (test_token_match_with_login, "/iter/test_token_match_with_login");
 	p11_test (test_token_mismatch, "/iter/test_token_mismatch");
 	p11_test (test_token_info, "/iter/token-info");
 	p11_test (test_token_only, "/iter/test_token_only");
+	p11_test (test_token_only_with_login, "/iter/test_token_only_with_login");
 	p11_test (test_slot_match, "/iter/test_slot_match");
 	p11_test (test_slot_mismatch, "/iter/test_slot_mismatch");
 	p11_test (test_slot_match_by_id, "/iter/test_slot_match_by_id");
