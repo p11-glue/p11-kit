@@ -125,6 +125,60 @@ EOF
 	fi
 }
 
+test_list_private() {
+	cat > list.exp <<EOF
+Object: #0
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private
+    class: private-key
+    label: Private Capitalize Key
+    flags:
+          private
+Object: #1
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private
+    class: private-key
+    label: Private Capitalize Key
+    flags:
+          private
+Object: #2
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private
+    class: private-key
+    label: Private Capitalize Key
+    flags:
+          private
+Object: #3
+    uri: pkcs11:model=TEST%20MODEL;manufacturer=TEST%20MANUFACTURER;serial=TEST%20SERIAL;token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private
+    class: private-key
+    label: Private Capitalize Key
+    flags:
+          private
+EOF
+
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects --login -q "pkcs11:token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private?pin-value=booo" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong result"
+	fi
+}
+
+test_list_private_without_login() {
+	cat > list.exp <<EOF
+EOF
+
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable list-objects -q "pkcs11:token=TEST%20LABEL;object=Private%20Capitalize%20Key;type=private?pin-value=booo" > list.out; then
+		assert_fail "unable to run: p11-kit list-objects"
+	fi
+
+	: ${DIFF=diff}
+	if ! ${DIFF} list.exp list.out > list.diff; then
+		sed 's/^/# /' list.diff
+		assert_fail "output contains wrong result"
+	fi
+}
+
 test_list_exact() {
 	cat > list.exp <<EOF
 Object: #0
@@ -258,4 +312,5 @@ EOF
 
 run test_list_all test_list_with_type test_list_exact test_list_nonexistent \
     test_export_cert test_export_pubkey test_generate_keypair test_generate_keypair_nonexistent_token \
-    test_delete_nonexistent_token
+    test_delete_nonexistent_token \
+    test_list_private test_list_private_without_login

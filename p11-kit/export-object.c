@@ -46,6 +46,10 @@
 #include "pem.h"
 #include "tool.h"
 
+#ifdef OS_UNIX
+#include "tty.h"
+#endif
+
 #ifdef WITH_ASN1
 #include "asn1.h"
 #include "oid.h"
@@ -424,13 +428,15 @@ export_certificate (P11KitIter *iter,
 }
 
 static int
-export_object (const char *token_str)
+export_object (const char *token_str,
+	       bool login)
 {
 	int ret = 1;
 	CK_RV rv;
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
+	P11KitIterBehavior behavior;
 	CK_OBJECT_CLASS klass;
 	CK_ATTRIBUTE attr = { CKA_CLASS, &klass, sizeof (klass) };
 	p11_buffer buf;
@@ -455,7 +461,14 @@ export_object (const char *token_str)
 		goto cleanup;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_LOGIN);
+	behavior = 0;
+	if (login) {
+		behavior |= P11_KIT_ITER_WITH_LOGIN;
+#ifdef OS_UNIX
+		p11_kit_uri_set_pin_source (uri, "tty");
+#endif
+	}
+	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
 		goto cleanup;
@@ -512,23 +525,27 @@ int
 p11_kit_export_object (int argc,
 		       char *argv[])
 {
-	int opt;
+	int opt, ret;
+	bool login = false;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
+		opt_login = 'l',
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
+		{ "login", no_argument, NULL, opt_login },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit export-object pkcs11:token" },
+		{ opt_login, "login to the token" },
 		{ 0 },
 	};
 
@@ -543,6 +560,9 @@ p11_kit_export_object (int argc,
 		case opt_help:
 			p11_tool_usage (usages, options);
 			return 0;
+		case opt_login:
+			login = true;
+			break;
 		case '?':
 			return 2;
 		default:
@@ -559,5 +579,18 @@ p11_kit_export_object (int argc,
 		return 2;
 	}
 
-	return export_object (*argv);
+#ifdef OS_UNIX
+	/* Register a fallback PIN callback that reads from terminal.
+	 * We don't care whether the registration succeeds as it is a fallback.
+	 */
+	(void)p11_kit_pin_register_callback ("tty", p11_pin_tty_callback, NULL, NULL);
+#endif
+
+	ret = export_object (*argv, login);
+
+#ifdef OS_UNIX
+	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
+#endif
+
+	return ret;
 }

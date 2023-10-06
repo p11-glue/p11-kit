@@ -43,6 +43,10 @@
 #include "message.h"
 #include "tool.h"
 
+#ifdef OS_UNIX
+#include "tty.h"
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,7 +64,8 @@ p11_kit_add_profile (int argc,
 
 static int
 add_profile (const char *token_str,
-	     CK_PROFILE_ID profile)
+	     CK_PROFILE_ID profile,
+	     bool login)
 {
 	int ret = 1;
 	CK_RV rv;
@@ -99,8 +104,12 @@ add_profile (const char *token_str,
 	}
 
 	behavior = P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS;
-	if (p11_kit_uri_get_pin_value (uri))
+	if (login) {
 		behavior |= P11_KIT_ITER_WITH_LOGIN;
+#ifdef OS_UNIX
+		p11_kit_uri_set_pin_source (uri, "tty");
+#endif
+	}
 	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
@@ -171,12 +180,14 @@ p11_kit_add_profile (int argc,
 	int opt, ret = 2;
 	CK_ULONG profile = CKA_INVALID;
 	p11_dict *profile_nicks = NULL;
+	bool login = false;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
 		opt_profile = 'p',
+		opt_login = 'l',
 	};
 
 	struct option options[] = {
@@ -184,12 +195,14 @@ p11_kit_add_profile (int argc,
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
 		{ "profile", required_argument, NULL, opt_profile },
+		{ "login", no_argument, NULL, opt_login },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit add-profile --profile profile pkcs11:token" },
 		{ opt_profile, "specify the profile to add" },
+		{ opt_login, "login to the token" },
 		{ 0 },
 	};
 
@@ -225,6 +238,9 @@ p11_kit_add_profile (int argc,
 				goto cleanup;
 			}
 			break;
+		case opt_login:
+			login = true;
+			break;
 		case '?':
 			goto cleanup;
 		default:
@@ -246,9 +262,19 @@ p11_kit_add_profile (int argc,
 		goto cleanup;
 	}
 
-	ret = add_profile (*argv, profile);
+#ifdef OS_UNIX
+	/* Register a fallback PIN callback that reads from terminal.
+	 * We don't care whether the registration succeeds as it is a fallback.
+	 */
+	(void)p11_kit_pin_register_callback ("tty", p11_pin_tty_callback, NULL, NULL);
+#endif
+
+	ret = add_profile (*argv, profile, login);
 
 cleanup:
+#ifdef OS_UNIX
+	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
+#endif
 	p11_dict_free (profile_nicks);
 
 	return ret;

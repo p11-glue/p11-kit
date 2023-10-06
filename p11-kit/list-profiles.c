@@ -42,6 +42,10 @@
 #include "message.h"
 #include "tool.h"
 
+#ifdef OS_UNIX
+#include "tty.h"
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -60,7 +64,8 @@ p11_kit_list_profiles (int argc,
 		       char *argv[]);
 
 static int
-list_profiles (const char *token_str)
+list_profiles (const char *token_str,
+	       bool login)
 {
 	int ret = 1;
 	CK_RV rv;
@@ -96,8 +101,12 @@ list_profiles (const char *token_str)
 	}
 
 	behavior = P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS;
-	if (p11_kit_uri_get_pin_value (uri))
+	if (login) {
 		behavior |= P11_KIT_ITER_WITH_LOGIN;
+#ifdef OS_UNIX
+		p11_kit_uri_set_pin_source (uri, "tty");
+#endif
+	}
 	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
@@ -172,23 +181,27 @@ int
 p11_kit_list_profiles (int argc,
 		       char *argv[])
 {
-	int opt;
+	int opt, ret;
+	bool login = false;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
+		opt_login = 'l',
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
+		{ "login", no_argument, NULL, opt_login },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit list-profiles pkcs11:token" },
+		{ opt_login, "login to the token" },
 		{ 0 },
 	};
 
@@ -203,6 +216,9 @@ p11_kit_list_profiles (int argc,
 		case opt_help:
 			p11_tool_usage (usages, options);
 			return 0;
+		case opt_login:
+			login = true;
+			break;
 		case '?':
 			return 2;
 		default:
@@ -219,5 +235,18 @@ p11_kit_list_profiles (int argc,
 		return 2;
 	}
 
-	return list_profiles (*argv);
+#ifdef OS_UNIX
+	/* Register a fallback PIN callback that reads from terminal.
+	 * We don't care whether the registration succeeds as it is a fallback.
+	 */
+	(void)p11_kit_pin_register_callback ("tty", p11_pin_tty_callback, NULL, NULL);
+#endif
+
+	ret = list_profiles (*argv, login);
+
+#ifdef OS_UNIX
+	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
+#endif
+
+	return ret;
 }
