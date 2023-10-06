@@ -43,6 +43,10 @@
 #include "message.h"
 #include "tool.h"
 
+#ifdef OS_UNIX
+#include "tty.h"
+#endif
+
 #ifdef P11_KIT_TESTABLE
 #include "mock.h"
 #endif
@@ -255,7 +259,8 @@ generate_keypair (const char *token_str,
 		  CK_MECHANISM mechanism,
 		  CK_ULONG bits,
 		  const uint8_t *ec_params,
-		  size_t ec_params_len)
+		  size_t ec_params_len,
+		  bool login)
 {
 	int ret = 1;
 	CK_RV rv;
@@ -292,8 +297,12 @@ generate_keypair (const char *token_str,
 	}
 
 	behavior = P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS;
-	if (p11_kit_uri_get_pin_value (uri))
+	if (login) {
 		behavior |= P11_KIT_ITER_WITH_LOGIN;
+#ifdef OS_UNIX
+		p11_kit_uri_set_pin_source (uri, "tty");
+#endif
+	}
 	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
@@ -348,15 +357,17 @@ p11_kit_generate_keypair (int argc,
 	const uint8_t *ec_params = NULL;
 	size_t ec_params_len = 0;
 	CK_MECHANISM mechanism = { CKA_INVALID, NULL_PTR, 0 };
+	bool login = false;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
-		opt_label = 'l',
+		opt_label = 'L',
 		opt_type = 't',
 		opt_bits = 'b',
 		opt_curve = 'c',
+		opt_login = 'l',
 	};
 
 	struct option options[] = {
@@ -367,6 +378,7 @@ p11_kit_generate_keypair (int argc,
 		{ "type", required_argument, NULL, opt_type },
 		{ "bits", required_argument, NULL, opt_bits },
 		{ "curve", required_argument, NULL, opt_curve },
+		{ "login", no_argument, NULL, opt_login },
 		{ 0 },
 	};
 
@@ -377,6 +389,7 @@ p11_kit_generate_keypair (int argc,
 		{ opt_type, "type of keys to generate" },
 		{ opt_bits, "number of bits for key generation" },
 		{ opt_curve, "name of the curve for key generation" },
+		{ opt_login, "login to the token" },
 		{ 0 },
 	};
 
@@ -410,6 +423,9 @@ p11_kit_generate_keypair (int argc,
 				goto cleanup;
 			}
 			break;
+		case opt_login:
+			login = true;
+			break;
 		case opt_verbose:
 			p11_kit_be_loud ();
 			break;
@@ -439,9 +455,19 @@ p11_kit_generate_keypair (int argc,
 	if (!check_args (mechanism.mechanism, bits, ec_params))
 		goto cleanup;
 
-	ret = generate_keypair (*argv, label, mechanism, bits, ec_params, ec_params_len);
+#ifdef OS_UNIX
+	/* Register a fallback PIN callback that reads from terminal.
+	 * We don't care whether the registration succeeds as it is a fallback.
+	 */
+	(void)p11_kit_pin_register_callback ("tty", p11_pin_tty_callback, NULL, NULL);
+#endif
+
+	ret = generate_keypair (*argv, label, mechanism, bits, ec_params, ec_params_len, login);
 
 cleanup:
+#ifdef OS_UNIX
+	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
+#endif
 	free (label);
 
 	return ret;

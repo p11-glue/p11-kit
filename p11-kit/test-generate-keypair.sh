@@ -47,19 +47,19 @@ teardown() {
 }
 
 test_generate_keypair_rsa() {
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --label=rsa --type=rsa --bits=2048 "pkcs11:token=test-genkey?pin-value=12345"; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --login --label=rsa --type=rsa --bits=2048 "pkcs11:token=test-genkey?pin-value=12345"; then
 		assert_fail "unable to run: p11-kit generate-keypair"
 	fi
 }
 
 test_generate_keypair_ecdsa() {
 	for curve in secp256r1 secp384r1 secp521r1; do
-		if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --label="ecdsa-$curve" --type=ecdsa --curve="$curve" "pkcs11:token=test-genkey?pin-value=12345"; then
+		if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --login --label="ecdsa-$curve" --type=ecdsa --curve="$curve" "pkcs11:token=test-genkey?pin-value=12345"; then
 			assert_fail "unable to run: p11-kit generate-keypair"
 		fi
 	done
 
-	if "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --label="ecdsa-unknown" --type=ecdsa --curve=unknown "pkcs11:token=test-genkey?pin-value=12345"; then
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --login --label="ecdsa-unknown" --type=ecdsa --curve=unknown "pkcs11:token=test-genkey?pin-value=12345"; then
 		assert_fail "p11-kit generate-keypair succeeded for unknown ecdsa curve"
 	fi
 }
@@ -78,12 +78,12 @@ test_generate_keypair_eddsa() {
 		curve="$curve ed448"
 	fi
 	for curve in $curves; do
-		if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --label="eddsa-$curve" --type=eddsa --curve="$curve" "pkcs11:token=test-genkey?pin-value=12345"; then
+		if ! "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --login --label="eddsa-$curve" --type=eddsa --curve="$curve" "pkcs11:token=test-genkey?pin-value=12345"; then
 			assert_fail "unable to run: p11-kit generate-keypair"
 		fi
 	done
 
-	if "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --label="eddsa-unknown" --type=eddsa --curve=unknown "pkcs11:token=test-genkey?pin-value=12345"; then
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable generate-keypair --login --label="eddsa-unknown" --type=eddsa --curve=unknown "pkcs11:token=test-genkey?pin-value=12345"; then
 		assert_fail "p11-kit generate-keypair succeeded for unknown eddsa curve"
 	fi
 }
