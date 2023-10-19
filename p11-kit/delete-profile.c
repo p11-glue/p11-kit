@@ -103,7 +103,7 @@ delete_profile (const char *token_str,
 		goto cleanup;
 	}
 
-	behavior = P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS;
+	behavior = P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_SESSIONS | P11_KIT_ITER_WITHOUT_OBJECTS;
 	if (login) {
 		behavior |= P11_KIT_ITER_WITH_LOGIN;
 #ifdef OS_UNIX
