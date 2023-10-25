@@ -1,3 +1,16 @@
+0.25.1 (stable)
+ * fix probing of C_GetInterface [PR#535]
+ * p11-kit: add command to list tokens [PR#581]
+ * p11-kit: add command to list mechanisms supported by a token [PR#576]
+ * p11-kit: add command to generate private-public keypair on a token [PR#551, PR#582]
+ * p11-kit: add commands to import/export certificates and public keys into/from a token [PR#543, PR#549, PR#568, PR#588]
+ * p11-kit: add commands to list and delete objects of a token [PR#533, PR#544, PR#571]
+ * p11-kit: add --login option to login into a token with object and profile management commands [PR#587]
+ * p11-kit: adjust behavior of PKCS#11 profile management commands [PR#558, PR#560, PR#583, PR#591]
+ * p11-kit: print PKCS#11 URIs in list-modules [PR#532]
+ * bug and build fixes [PR#528 PR#529, PR#534, PR#537, PR#540, PR#541, PR#545, PR#547, PR#550, PR#557, PR#572, PR#575, PR#579, PR#585, PR#586, PR#590]
+ * test fixes [PR#553, PR#580]
+
 0.25.0 (stable)
  * add PKCS#11 3.0 support [PR#458, PR#461, PR#462, PR#463, PR#464, PR#467, PR#469, PR#470, PR#475, PR#485, PR#486]
  * add support for profile objects [PR#479]
