@@ -41,6 +41,10 @@
 #include "message.h"
 #include "tool.h"
 
+#ifdef OS_UNIX
+#include "tty.h"
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -56,10 +60,12 @@ p11_kit_delete_object (int argc,
 		       char *argv[]);
 
 static int
-delete_object (const char *token_str)
+delete_object (const char *token_str,
+	       bool login)
 {
 	int ret = 1;
 	CK_RV rv;
+	P11KitIterBehavior behavior;
 	CK_FUNCTION_LIST **modules = NULL;
 	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
@@ -81,7 +87,14 @@ delete_object (const char *token_str)
 		goto cleanup;
 	}
 
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_LOGIN);
+	behavior = P11_KIT_ITER_WANT_WRITABLE;
+	if (login) {
+		behavior |= P11_KIT_ITER_WITH_LOGIN;
+#ifdef OS_UNIX
+		p11_kit_uri_set_pin_source (uri, "tty");
+#endif
+	}
+	iter = p11_kit_iter_new (uri, behavior);
 	if (iter == NULL) {
 		p11_message (_("failed to initialize iterator"));
 		goto cleanup;
@@ -118,28 +131,35 @@ int
 p11_kit_delete_object (int argc,
 		       char *argv[])
 {
-	int opt;
+	int opt, ret;
+	bool login = false;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
+		opt_login = 'l',
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
+		{ "login", no_argument, NULL, opt_login },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit delete-object pkcs11:token" },
+		{ opt_login, "login to the token" },
 		{ 0 },
 	};
 
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
+		case opt_login:
+			login = true;
+			break;
 		case opt_verbose:
 			p11_kit_be_loud ();
 			break;
@@ -165,5 +185,18 @@ p11_kit_delete_object (int argc,
 		return 2;
 	}
 
-	return delete_object (*argv);
+#ifdef OS_UNIX
+	/* Register a fallback PIN callback that reads from terminal.
+	 * We don't care whether the registration succeeds as it is a fallback.
+	 */
+	(void)p11_kit_pin_register_callback ("tty", p11_pin_tty_callback, NULL, NULL);
+#endif
+
+	ret = delete_object (*argv, login);
+
+#ifdef OS_UNIX
+	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
+#endif
+
+	return ret;
 }
