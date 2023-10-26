@@ -66,7 +66,7 @@ p11_pin_tty_callback (const char *pin_source,
 	if (asprintf (&prompt, "%s: ", pin_description) < 0)
 		return NULL;
 
-	if (readpassphrase (prompt, buf, sizeof(buf), 0) < 0)
+	if (readpassphrase (prompt, buf, sizeof(buf), 0) == NULL)
 		goto cleanup;
 
 	pin = p11_kit_pin_new_for_string (buf);
