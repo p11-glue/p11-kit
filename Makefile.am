@@ -43,6 +43,9 @@ c_tests =
 sh_tests =
 TESTS = $(c_tests) $(sh_tests)
 
+post_install_tests =
+noinst_SCRIPTS = $(post_install_tests)
+
 moduledir = $(p11_module_path)
 module_LTLIBRARIES =
 
@@ -76,6 +79,8 @@ DISTCHECK_CONFIGURE_FLAGS = \
 AM_TESTS_ENVIRONMENT = \
 	abs_top_builddir="$(abs_top_builddir)"; \
 	export abs_top_builddir; \
+	abs_top_srcdir="$(abs_top_srcdir)"; \
+	export abs_top_srcdir; \
 	P11_MODULE_PATH="$(abs_top_builddir)/.libs"; \
 	export P11_MODULE_PATH;
 AM_TESTS_FD_REDIRECT = 9>&2;
@@ -112,6 +117,15 @@ dist-hook:
 	else \
 		echo A git clone is required to generate a ChangeLog >&2; \
 	fi
+
+noinst_SCRIPTS += $(post_install_tests)
+
+if !OS_WIN32
+installcheck-local:
+	for t in $(post_install_tests); do \
+		abs_top_builddir="$(abs_top_builddir)" $(SHELL) $(srcdir)/$$t; \
+	done
+endif
 
 if WITH_COVERAGE
 coverage:

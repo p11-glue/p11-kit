@@ -386,6 +386,7 @@ if get_option('test')
 
   p11_kit_tests_env = environment()
   p11_kit_tests_env.set('abs_top_builddir', top_build_dir)
+  p11_kit_tests_env.set('abs_top_srcdir', top_source_dir)
   p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
 
   if host_system != 'windows'
@@ -432,6 +433,15 @@ if get_option('test')
          env: p11_kit_tests_env)
   endif
 
+  if get_option('post_install_test') and with_asn1 and host_system != 'windows'
+    meson.add_install_script(
+      top_source_dir / 'meson_post_install_test.sh',
+      bindir,
+      libdir,
+      find_program('test-softhsm2.sh'),
+    )
+  endif
+
   mock_sources = {
                    'mock-one': ['mock-module-ep.c'],
                    'mock-v3-one': ['mock-module-v3-ep.c'],
@@ -447,7 +457,8 @@ if get_option('test')
                    'mock-ten': ['mock-module-ep8.c'],
                    'mock-eleven': ['mock-module-ep9.c'],
                    'mock-twelve': ['mock-module-ep10.c'],
-                   'mock-thirteen': ['mock-module-ep11.c']
+                   'mock-thirteen': ['mock-module-ep11.c'],
+                   'mock-fourteen': ['mock-module-ep12.c']
                  }
 
   if host_system != 'windows'

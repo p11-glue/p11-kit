@@ -545,7 +545,8 @@ check_LTLIBRARIES += \
 	mock-ten.la \
 	mock-eleven.la \
 	mock-twelve.la \
-	mock-thirteen.la
+	mock-thirteen.la \
+	mock-fourteen.la
 
 mock_one_la_SOURCES = p11-kit/mock-module-ep.c
 mock_one_la_LIBADD = libp11-test.la libp11-common.la
@@ -622,6 +623,18 @@ else
 mock_thirteen_la_LIBADD = $(mock_one_la_LIBADD)
 endif
 
+mock_fourteen_la_SOURCES = p11-kit/mock-module-ep12.c
+mock_fourteen_la_LDFLAGS = $(mock_one_la_LDFLAGS)
+if WITH_ASN1
+mock_fourteen_la_LIBADD = libp11-asn1.la $(mock_one_la_LIBADD) $(LIBTASN1_LIBS)
+else
+mock_fourteen_la_LIBADD = $(mock_one_la_LIBADD)
+endif
+
+if WITH_ASN1
+post_install_tests += p11-kit/test-softhsm2.sh
+endif
+
 EXTRA_DIST += \
 	p11-kit/fixtures \
 	p11-kit/templates \
@@ -637,4 +650,5 @@ EXTRA_DIST += \
 	p11-kit/test-import-public.sh \
 	p11-kit/test-list-mechanisms.sh \
 	p11-kit/test-generate-keypair.sh \
+	p11-kit/test-softhsm2.sh \
 	$(NULL)

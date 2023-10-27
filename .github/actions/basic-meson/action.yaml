@@ -10,7 +10,7 @@ runs:
 
     - name: Setup
       run: |
-        $GITHUB_WORKSPACE/build/run-wrapper.sh meson setup $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust_paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source -Dsystemd=disabled -Dbash_completion=disabled $MESON_BUILD_OPTS
+        $GITHUB_WORKSPACE/build/run-wrapper.sh meson setup $GITHUB_WORKSPACE/$BUILDDIR -Dstrict=true -Dprefix=$GITHUB_WORKSPACE/$INSTALLDIR -Dlibdir=$GITHUB_WORKSPACE/$INSTALLDIR/lib -Dsysconfdir=$GITHUB_WORKSPACE/$INSTALLDIR/etc -Dtrust_paths=$GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source:$GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source -Dsystemd=disabled -Dbash_completion=disabled -Dpost_install_test=true $MESON_BUILD_OPTS
       shell: bash
 
     - name: Build (scan-build)
@@ -30,6 +30,21 @@ runs:
         ret=$?
         test $ret -eq 0 || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt
         exit $ret
+      shell: bash
+
+    - name: Prepare for post-install tests
+      run: |
+        # This is necessary for 'trust/test-extract.sh'
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit
+        ln -sf /usr/bin/true $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit/trust-extract-compat
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          export DD=gdd
+        fi
+        # This is necessary for 'p11-kit/test-softhsm2.sh'
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/p11-kit/modules
+        ln -sf /usr/share/p11-kit/modules/softhsm2.module $GITHUB_WORKSPACE/$INSTALLDIR/share/p11-kit/modules || :
       shell: bash
 
     - name: Install

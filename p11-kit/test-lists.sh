@@ -53,6 +53,23 @@ module: eleven
               user-pin-initialized
               clock-on-token
               token-initialized
+module: fourteen
+    uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
+    library-description: MOCK LIBRARY
+    library-manufacturer: MOCK MANUFACTURER
+    library-version: 45.145
+    token: PERSIST LABEL ONE
+        uri: pkcs11:model=PERSIST%20MODEL;manufacturer=PERSIST%20MANUFACTURER;serial=PERSIST%20SERIAL;token=PERSIST%20LABEL%20ONE
+        manufacturer: PERSIST MANUFACTURER
+        model: PERSIST MODEL
+        serial-number: PERSIST SERIAL
+        hardware-version: 75.175
+        firmware-version: 85.185
+        flags:
+              login-required
+              user-pin-initialized
+              clock-on-token
+              token-initialized
 module: one
     uri: pkcs11:library-description=MOCK%20LIBRARY;library-manufacturer=MOCK%20MANUFACTURER
     library-description: MOCK LIBRARY

@@ -167,4 +167,23 @@ if get_option('test')
                                   libp11_test_dep] + libtasn1_deps + libffi_deps + dlopen_deps,
                    link_with: [libtrust_testable, libtrust_data, libtrust_test])
   endforeach
+
+  if get_option('post_install_test') and host_system != 'windows'
+    # TODO: this cannot run under meson, as it installs a placeholder
+    # extract-compat script and there is no way to replace it.
+    #
+    # meson.add_install_script(
+    #   top_source_dir / 'meson_post_install_test.sh',
+    #   bindir,
+    #   libdir,
+    #   find_program('test-extract.sh'),
+    # )
+
+    meson.add_install_script(
+      top_source_dir / 'meson_post_install_test.sh',
+      bindir,
+      libdir,
+      find_program('test-trust.sh'),
+    )
+  endif
 endif
