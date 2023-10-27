@@ -1,4 +1,4 @@
 
-module: libsofthsm2.so
+module: mock-fourteen.so
 managed: yes
 enable-in: p11-kit-testable

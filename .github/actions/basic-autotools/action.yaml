@@ -42,11 +42,19 @@ runs:
         cd $GITHUB_WORKSPACE/$BUILDDIR
         make install
         # This is necessary for 'trust/test-extract.sh'
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/pki/ca-trust-source
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit
         ln -sf /usr/bin/true $GITHUB_WORKSPACE/$INSTALLDIR/libexec/p11-kit/trust-extract-compat
         if [ "$RUNNER_OS" = "macOS" ]; then
-          DD=gdd
-          export DD
+          export DD=gdd
         fi
+        # This is necessary for 'p11-kit/test-softhsm2.sh'
+        mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/share/p11-kit/modules
+        ln -sf /usr/share/p11-kit/modules/softhsm2.module $GITHUB_WORKSPACE/$INSTALLDIR/share/p11-kit/modules || :
+        export PATH=$GITHUB_WORKSPACE/$INSTALLDIR/bin:$PATH
+        export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/$INSTALLDIR/lib
+        export abs_top_builddir=$GITHUB_WORKSPACE/$BUILDDIR
+        export abs_top_srcdir=$GITHUB_WORKSPACE
         make installcheck
       shell: bash

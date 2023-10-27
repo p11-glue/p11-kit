@@ -74,6 +74,10 @@ option('test', type : 'boolean',
        value : true,
        description : 'Enable building test programs')
 
+option('post_install_test', type : 'boolean',
+       value : false,
+       description : 'Enable running post-install test programs')
+
 option('rpc_min', type : 'integer',
        min : 0, max : 0, value : 0,
        description : 'Minimum RPC protocol version we support')

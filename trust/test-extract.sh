@@ -29,6 +29,11 @@ openssl_quiet()
 
 setup()
 {
+	if [ -z "$with_trust_paths" ]; then
+		skip "with_trust_paths is empty"
+		return
+	fi
+
 	# Parse the trust paths
 	oldifs="$IFS"
 	IFS=:
