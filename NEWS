@@ -1,3 +1,8 @@
+0.25.2 (stable)
+* fix error code checking of readpassphrase for --login option [PR#595]
+* build fixes [PR#594]
+* test fixes [PR#596]
+
 0.25.1 (stable)
  * fix probing of C_GetInterface [PR#535]
  * p11-kit: add command to list tokens [PR#581]
