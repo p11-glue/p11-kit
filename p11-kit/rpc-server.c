@@ -480,8 +480,14 @@ proto_read_mechanism (p11_rpc_message *msg,
 		return PARSE_ERROR;
 	}
 
-	if (temp.mechanism == 0) {
+	/*
+	 * The NULL mechanism is used for C_*Init () functions to
+	 * cancel operation.  We use a special value 0xffffffff as a
+	 * marker to indicate that.
+	 */
+	if (temp.mechanism == 0xffffffff) {
 		*mech = NULL;
+		msg->parsed = offset;
 		return CKR_OK;
 	}
 
