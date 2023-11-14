@@ -2114,8 +2114,14 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 
 	mech->mechanism = mechanism;
 
-	/* special NULL case */
-	if (mechanism == 0) {
+	/*
+	 * The NULL mechanism is used for C_*Init () functions to
+	 * cancel operation.  We use a special value 0xffffffff as a
+	 * marker to indicate that.
+	 */
+	if (mechanism == 0xffffffff) {
+		mech->ulParameterLen = 0;
+		mech->pParameter = NULL;
 		return true;
 	}
 

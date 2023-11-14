@@ -430,9 +430,13 @@ proto_write_mechanism (p11_rpc_message *msg,
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "M"));
 
-	/* This case is valid for C_*Init () functions to cancel operation */
+	/*
+	 * The NULL mechanism is used for C_*Init () functions to
+	 * cancel operation.  We use a special value 0xffffffff as a
+	 * marker to indicate that.
+	 */
 	if (mech == NULL) {
-		p11_rpc_buffer_add_uint32 (msg->output, 0);
+		p11_rpc_buffer_add_uint32 (msg->output, 0xffffffff);
 		return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 	}
 

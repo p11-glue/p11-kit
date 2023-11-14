@@ -675,6 +675,31 @@ test_simultaneous_functions (void *module)
 	p11_mutex_uninit (&delay_mutex);
 }
 
+static void
+test_mechanism_unsupported (void *module)
+{
+	CK_FUNCTION_LIST_PTR rpc_module;
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mech;
+	CK_RV rv;
+
+	rpc_module = setup_test_rpc_module (&test_normal_vtable,
+	                                    module, &session);
+
+	memset (&mech, 0, sizeof(mech));
+
+	/*
+	 * This mechanism is not supported by the remote mock module,
+	 * but it should be able to return an error through RPC.
+	 */
+	mech.mechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
+
+	rv = (rpc_module->C_DigestInit) (session, &mech);
+	assert_num_eq (rv, CKR_MECHANISM_INVALID);
+
+	teardown_mock_module (rpc_module);
+}
+
 #ifdef OS_UNIX
 
 static void
@@ -759,6 +784,7 @@ main (int argc,
 	p11_testx (test_get_info_stand_in, &mock_module_no_slots, "/rpc/get-info-stand-in");
 	p11_testx (test_get_slot_list_no_device, &mock_module_no_slots, "/rpc/get-slot-list-no-device");
 	p11_testx (test_simultaneous_functions, &mock_module_no_slots, "/rpc/simultaneous-functions");
+	p11_testx (test_mechanism_unsupported, &mock_module, "/rpc/mechanism-unsupported");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_no_slots, "/rpc/fork-and-reinitialize");
@@ -778,6 +804,7 @@ main (int argc,
 	p11_testx (test_get_info_stand_in, &mock_module_v3_no_slots, "/rpc3/get-info-stand-in");
 	p11_testx (test_get_slot_list_no_device, &mock_module_v3_no_slots, "/rpc3/get-slot-list-no-device");
 	p11_testx (test_simultaneous_functions, &mock_module_v3_no_slots, "/rpc3/simultaneous-functions");
+	p11_testx (test_mechanism_unsupported, &mock_module_v3, "/rpc3/mechanism-unsupported");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_v3_no_slots, "/rpc3/fork-and-reinitialize");
