@@ -67,7 +67,7 @@ if get_option('nls') and cc.has_header('libintl.h')
     if cc.has_function('dgettext', dependencies : libintl)
       libintl_deps += libintl
       if ['darwin', 'ios'].contains(host_system)
-        appleframeworks = dependency('appleframeworks', modules : 'foundation')
+        appleframeworks = dependency('appleframeworks', modules : 'CoreFoundation')
         if appleframeworks.found()
           libintl_deps += appleframeworks
         endif
