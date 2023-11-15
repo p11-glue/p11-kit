@@ -1,3 +1,7 @@
+0.25.3 (stable)
+* rpc: fix serialization of NULL mechanism pointer [PR#601]
+* fix meson build failure in macOS (appleframeworks not found) [PR#603]
+
 0.25.2 (stable)
 * fix error code checking of readpassphrase for --login option [PR#595]
 * build fixes [PR#594]

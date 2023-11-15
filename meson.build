@@ -1,5 +1,5 @@
 project('p11-kit', 'c',
-        version: '0.25.2',
+        version: '0.25.3',
         meson_version: '>= 0.51')
 
 version_arr = meson.project_version().split('.')
@@ -10,7 +10,7 @@ micro_version = version_arr[2].to_int()
 cc = meson.get_compiler('c')
 
 current = 3
-revision = 0
+revision = 1
 age = 3
 
 soversion = current - age
