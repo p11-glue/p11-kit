@@ -176,6 +176,10 @@ libp11_asn1_la_SOURCES = \
 	$(asn_h) \
 	$(NULL)
 
+libp11_asn1_la_CFLAGS = $(LIBTASN1_CFLAGS)
+
+libp11_asn1_la_LIBADD = $(LIBTASN1_LIBS)
+
 asn1_LIBS = \
 	libp11-asn1.la \
 	$(LIBTASN1_LIBS) \
