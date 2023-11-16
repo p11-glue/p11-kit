@@ -1019,7 +1019,7 @@ test_uri_get_set_unrecognized (void)
 static void
 test_uri_match_token (void)
 {
-	CK_TOKEN_INFO token;
+	CK_TOKEN_INFO token = { 0 };
 	P11KitUri *uri;
 	int ret;
 
@@ -1056,7 +1056,7 @@ test_uri_match_token (void)
 static void
 test_uri_match_module (void)
 {
-	CK_INFO info;
+	CK_INFO info = { 0 };
 	P11KitUri *uri;
 	int ret;
 

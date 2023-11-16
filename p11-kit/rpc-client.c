@@ -173,6 +173,8 @@ call_done (rpc_client *module,
            p11_rpc_message *msg,
            CK_RV ret)
 {
+	p11_buffer *buf;
+
 	assert (module != NULL);
 	assert (msg != NULL);
 
@@ -189,9 +191,9 @@ call_done (rpc_client *module,
 
 	/* We used the same buffer for input/output, so this frees both */
 	assert (msg->input == msg->output);
-	p11_rpc_buffer_free (msg->input);
-
+	buf = msg->input;
 	p11_rpc_message_clear (msg);
+	p11_rpc_buffer_free (buf);
 
 	return ret;
 }

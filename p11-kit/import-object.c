@@ -500,7 +500,7 @@ int
 p11_kit_import_object (int argc,
 		       char *argv[])
 {
-	int opt, ret = 2;
+	int opt, ret;
 	char *label = NULL;
 	char *file = NULL;
 	bool login = false;
@@ -536,18 +536,10 @@ p11_kit_import_object (int argc,
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
 		case opt_label:
-			label = strdup (optarg);
-			if (label == NULL) {
-				p11_message (_("failed to allocate memory"));
-				goto cleanup;
-			}
+			label = optarg;
 			break;
 		case opt_file:
-			file = strdup (optarg);
-			if (file == NULL) {
-				p11_message (_("failed to allocate memory"));
-				goto cleanup;
-			}
+			file = optarg;
 			break;
 		case opt_login:
 			login = true;
@@ -574,12 +566,12 @@ p11_kit_import_object (int argc,
 
 	if (argc != 1) {
 		p11_tool_usage (usages, options);
-		goto cleanup;
+		return 2;
 	}
 
 	if (file == NULL) {
 		p11_message (_("no file specified"));
-		goto cleanup;
+		return 2;
 	}
 
 #ifdef OS_UNIX
@@ -594,10 +586,6 @@ p11_kit_import_object (int argc,
 #ifdef OS_UNIX
 	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
 #endif
-
-cleanup:
-	free (label);
-	free (file);
 
 	return ret;
 }

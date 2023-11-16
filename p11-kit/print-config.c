@@ -74,8 +74,10 @@ print_config (void)
 					       P11_PACKAGE_CONFIG_MODULES,
 					       P11_SYSTEM_CONFIG_MODULES,
 					       P11_USER_CONFIG_MODULES);
-	if (modules_conf == NULL)
+	if (modules_conf == NULL) {
+		p11_dict_free (global_conf);
 		return 1;
+	}
 
 	printf ("[global]\n");
 	p11_dict_iterate (global_conf, &i);

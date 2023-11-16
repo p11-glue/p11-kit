@@ -258,7 +258,7 @@ test_check_symlink_msg (const char *file,
 	if (asprintf (&filename, "%s/%s", directory, name) < 0)
 		assert_not_reached ();
 
-	if (readlink (filename, buf, sizeof (buf)) < 0)
+	if (readlink (filename, buf, sizeof (buf) - 1) < 0)
 		p11_test_fail (file, line, function, "Couldn't read symlink: %s", filename);
 
 	if (strcmp (destination, buf) != 0)
