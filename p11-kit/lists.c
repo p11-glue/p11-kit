@@ -295,6 +295,7 @@ print_modules (void)
 		if (rv != CKR_OK) {
 			p11_message (_("couldn't load module info: %s"),
 				     p11_kit_strerror (rv));
+			p11_kit_modules_finalize_and_release (module_list);
 			return 1;
 		}
 

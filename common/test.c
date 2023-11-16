@@ -272,7 +272,6 @@ p11_testx (void (* function) (void *),
 	test_item item = { TEST, };
 	va_list va;
 
-	item.type = TEST;
 	item.x.test.func = function;
 	item.x.test.argument = argument;
 
@@ -287,9 +286,8 @@ void
 p11_fixture (void (* setup) (void *),
              void (* teardown) (void *))
 {
-	test_item item;
+	test_item item = { FIXTURE, };
 
-	item.type = FIXTURE;
 	item.x.fix.setup = setup;
 	item.x.fix.teardown = teardown;
 

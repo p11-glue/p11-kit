@@ -351,7 +351,7 @@ int
 p11_kit_generate_keypair (int argc,
 			  char *argv[])
 {
-	int opt, ret = 2;
+	int opt, ret;
 	char *label = NULL;
 	CK_ULONG bits = 0;
 	const uint8_t *ec_params = NULL;
@@ -396,31 +396,27 @@ p11_kit_generate_keypair (int argc,
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
 		case opt_label:
-			label = strdup (optarg);
-			if (label == NULL) {
-				p11_message (_("failed to allocate memory"));
-				goto cleanup;
-			}
+			label = optarg;
 			break;
 		case opt_type:
 			mechanism = get_mechanism (optarg);
 			if (mechanism.mechanism == CKA_INVALID) {
 				p11_message (_("unknown mechanism type: %s"), optarg);
-				goto cleanup;
+				return 2;
 			}
 			break;
 		case opt_bits:
 			bits = strtol (optarg, NULL, 10);
 			if (bits == 0) {
 				p11_message (_("failed to parse bits value: %s"), optarg);
-				goto cleanup;
+				return 2;
 			}
 			break;
 		case opt_curve:
 			ec_params = get_ec_params (optarg, &ec_params_len);
 			if (ec_params == NULL) {
 				p11_message (_("unknown curve name: %s"), optarg);
-				goto cleanup;
+				return 2;
 			}
 			break;
 		case opt_login:
@@ -434,10 +430,9 @@ p11_kit_generate_keypair (int argc,
 			break;
 		case opt_help:
 			p11_tool_usage (usages, options);
-			ret = 0;
-			goto cleanup;
+			return 0;
 		case '?':
-			goto cleanup;
+			return 2;
 		default:
 			assert_not_reached ();
 			break;
@@ -449,11 +444,11 @@ p11_kit_generate_keypair (int argc,
 
 	if (argc != 1) {
 		p11_tool_usage (usages, options);
-		goto cleanup;
+		return 2;
 	}
 
 	if (!check_args (mechanism.mechanism, bits, ec_params))
-		goto cleanup;
+		return 2;
 
 #ifdef OS_UNIX
 	/* Register a fallback PIN callback that reads from terminal.
@@ -464,11 +459,9 @@ p11_kit_generate_keypair (int argc,
 
 	ret = generate_keypair (*argv, label, mechanism, bits, ec_params, ec_params_len, login);
 
-cleanup:
 #ifdef OS_UNIX
 	p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
 #endif
-	free (label);
 
 	return ret;
 }

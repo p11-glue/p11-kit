@@ -76,14 +76,14 @@ main (int argc,
 			execv (BUILDDIR "/common/frob-getprogname" EXEEXT, args);
 		} else {
 			int status;
-			char buffer[1024];
+			char buffer[1024] = { 0 };
 			size_t offset = 0;
 			ssize_t nread;
 			char *p;
 
 			close (pfds[1]);
 			while (1) {
-				nread = read (pfds[0], buffer + offset, sizeof(buffer) - offset);
+				nread = read (pfds[0], buffer + offset, sizeof(buffer) - offset - 1);
 				if (nread < 0) {
 					perror ("read");
 					exit (EXIT_FAILURE);
