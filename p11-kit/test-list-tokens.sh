@@ -21,7 +21,7 @@ teardown() {
 
 test_list_tokens_without_uri() {
 	cat > list.exp <<EOF
-usage: p11-kit list-tokens
+usage: p11-kit list-tokens [--only-uris] pkcs11:token
 
   -v, --verbose       show verbose debug output
   -q, --quiet         suppress command output

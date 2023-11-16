@@ -151,7 +151,7 @@ p11_kit_list_tokens (int argc,
 	};
 
 	p11_tool_desc usages[] = {
-		{ 0, "usage: p11-kit list-tokens" },
+		{ 0, "usage: p11-kit list-tokens [--only-uris] pkcs11:token" },
 		{ opt_verbose, "show verbose debug output", },
 		{ opt_quiet, "suppress command output", },
 		{ opt_only_urls, "only print token URIs", },
