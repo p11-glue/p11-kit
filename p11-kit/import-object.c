@@ -55,6 +55,7 @@
 #endif
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -201,6 +202,7 @@ add_attrs_pubkey_rsa (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE attr_encrypt = { CKA_ENCRYPT, &tval, sizeof (tval) };
 	CK_ATTRIBUTE attr_modulus = { CKA_MODULUS, };
 	CK_ATTRIBUTE attr_exponent = { CKA_PUBLIC_EXPONENT, };
+	size_t len = 0;
 
 	pubkey = p11_asn1_read (info, "subjectPublicKey", &pubkey_len);
 	if (pubkey == NULL) {
@@ -220,17 +222,31 @@ add_attrs_pubkey_rsa (CK_ATTRIBUTE *attrs,
 		goto cleanup;
 	}
 
-	attr_modulus.pValue = p11_asn1_read (asn, "modulus", &attr_modulus.ulValueLen);
+	attr_modulus.pValue = p11_asn1_read (asn, "modulus", &len);
 	if (attr_modulus.pValue == NULL) {
 		p11_message (_("failed to obtain modulus"));
 		goto cleanup;
 	}
+#if ULONG_MAX < SIZE_MAX
+	if (len > ULONG_MAX) {
+		p11_message (_("failed to obtain modulus"));
+		goto cleanup;
+	}
+#endif
+	attr_modulus.ulValueLen = len;
 
-	attr_exponent.pValue = p11_asn1_read (asn, "publicExponent", &attr_exponent.ulValueLen);
+	attr_exponent.pValue = p11_asn1_read (asn, "publicExponent", &len);
 	if (attr_exponent.pValue == NULL) {
 		p11_message (_("failed to obtain exponent"));
 		goto cleanup;
 	}
+#if ULONG_MAX < SIZE_MAX
+	if (len > ULONG_MAX) {
+		p11_message (_("failed to obtain exponent"));
+		goto cleanup;
+	}
+#endif
+	attr_exponent.ulValueLen = len;
 
 	result = p11_attrs_build (attrs, &attr_key_type, &attr_encrypt, &attr_modulus, &attr_exponent, NULL);
 	if (result == NULL) {
@@ -260,12 +276,20 @@ add_attrs_pubkey_ec (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE attr_key_type = { CKA_KEY_TYPE, &key_type, sizeof (key_type) };
 	CK_ATTRIBUTE attr_ec_params = { CKA_EC_PARAMS, };
 	CK_ATTRIBUTE attr_ec_point = { CKA_EC_POINT, };
+	size_t len = 0;
 
-	attr_ec_params.pValue = p11_asn1_read (info, "algorithm.parameters", &attr_ec_params.ulValueLen);
+	attr_ec_params.pValue = p11_asn1_read (info, "algorithm.parameters", &len);
 	if (attr_ec_params.pValue == NULL) {
 		p11_message (_("failed to obtain EC parameters"));
 		goto cleanup;
 	}
+#if ULONG_MAX < SIZE_MAX
+	if (len > ULONG_MAX) {
+		p11_message (_("failed to obtain EC parameters"));
+		goto cleanup;
+	}
+#endif
+	attr_ec_params.ulValueLen = len;
 
 	/* subjectPublicKey is read as BIT STRING value which contains
 	 * EC point data. We need to DER encode this data as OCTET STRING.
