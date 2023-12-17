@@ -95,6 +95,15 @@ AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "yes")
 
 AC_C_BIGENDIAN
 
+case "$host_os" in
+kfreebsd*-gnu | gnu*)
+	PKG_CHECK_MODULES([LIBBSD], [libbsd-overlay], [
+			   CFLAGS="$CFLAGS $LIBBSD_CFLAGS"
+			   LIBS="$LIBS $LIBBSD_LIBS"
+			   ], AC_MSG_WARN([libbsd-overlay not found but probably needed]))
+;;
+esac
+
 # ------------------------------------------------------------------------------
 # Checks for libraries and headers
 
