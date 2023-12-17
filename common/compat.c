@@ -871,7 +871,7 @@ getauxval (unsigned long type)
 	assert (type == AT_SECURE);
 
 	if (!check_secure_initialized) {
-#if defined(HAVE___LIBC_ENABLE_SECURE)
+#if defined(HAVE___LIBC_ENABLE_SECURE) && !defined(__GNU__)
 		extern int __libc_enable_secure;
 		secure = __libc_enable_secure;
 
