@@ -70,7 +70,7 @@ main (void)
 	printf ("'setting' on module 'one': %s\n", field ? field : "(null)");
 
 	assert (field != NULL);
-	if (getauxval (AT_SECURE))
+	if (_p11_getauxval (AT_SECURE))
 		assert (strcmp (field, "system1") == 0);
 	else
 		assert (strcmp (field, "user1") == 0);

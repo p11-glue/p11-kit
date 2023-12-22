@@ -859,7 +859,7 @@ mkdtemp (char *template)
 #ifndef HAVE_GETAUXVAL
 
 unsigned long
-getauxval (unsigned long type)
+_p11_getauxval (unsigned long type)
 {
 	static unsigned long secure = 0UL;
 	static bool check_secure_initialized = false;
@@ -908,7 +908,7 @@ getauxval (unsigned long type)
 char *
 secure_getenv (const char *name)
 {
-	if (getauxval (AT_SECURE))
+	if (_p11_getauxval (AT_SECURE))
 		return NULL;
 	return getenv (name);
 }

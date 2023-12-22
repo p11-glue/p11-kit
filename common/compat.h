@@ -353,10 +353,11 @@ time_t      timegm          (struct tm *tm);
 #ifdef HAVE_GETAUXVAL
 
 #include <sys/auxv.h>
+#define _p11_getauxval(X) getauxval(X)
 
 #else /* !HAVE_GETAUXVAL */
 
-unsigned long     getauxval (unsigned long type);
+unsigned long     _p11_getauxval (unsigned long type);
 
 #define AT_SECURE 23
 
