@@ -114,7 +114,7 @@ expand_homedir (const char *remainder)
 {
 	const char *env;
 
-	if (getauxval (AT_SECURE)) {
+	if (_p11_getauxval (AT_SECURE)) {
 		errno = EPERM;
 		return NULL;
 	}

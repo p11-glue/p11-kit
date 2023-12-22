@@ -55,7 +55,7 @@ main (int argc,
 		abort ();
 	}
 
-	ret = getauxval (type);
+	ret = _p11_getauxval (type);
 	printf ("getauxval(%lu) == %lu\n", type, ret);
 	return (int)ret;
 }
