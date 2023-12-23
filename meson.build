@@ -206,7 +206,8 @@ if host_system != 'windows'
     'mkstemp',
     'readpassphrase',
     'secure_getenv',
-    'strndup'
+    'strndup',
+    'strnstr'
   ]
   if ['linux'].contains(host_system)
     functions += [
