@@ -64,7 +64,7 @@ if host_system != 'windows'
   ]
 
   foreach f : rpl_functions
-    if not cc.has_function(f)
+    if not cc.has_function(f, dependencies: system_deps)
       libp11_tool_sources += '@0@.c'.format(f)
     endif
   endforeach
