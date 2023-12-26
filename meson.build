@@ -59,6 +59,14 @@ endif
 
 conf.set10('WITH_STRICT', get_option('strict'))
 
+system_deps = []
+
+if ['gnu', 'gnu/kfreebsd'].contains(host_system)
+  libbsd_overlay_dep = dependency('libbsd-overlay')
+  system_deps += libbsd_overlay_dep
+  add_project_dependencies(libbsd_overlay_dep, language: 'c')
+endif
+
 libintl_deps = []
 if get_option('nls') and cc.has_header('libintl.h')
   conf.set('ENABLE_NLS', 1)
@@ -180,7 +188,7 @@ if host_system != 'windows'
   ]
 
   foreach h : headers
-    if cc.has_header(h)
+    if cc.has_header(h, dependencies: system_deps)
       conf.set('HAVE_' + h.underscorify().to_upper(), 1)
     endif
   endforeach
@@ -203,7 +211,7 @@ if host_system != 'windows'
   ]
 
   foreach f : functions
-    if cc.has_function(f)
+    if cc.has_function(f, dependencies: system_deps)
       conf.set('HAVE_' + f.underscorify().to_upper(), 1)
     endif
   endforeach
