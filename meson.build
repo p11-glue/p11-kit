@@ -195,7 +195,6 @@ if host_system != 'windows'
 
   functions = [
     'fdwalk',
-    'getauxval',
     'getexecname',
     'getpeereid',
     'getpeerucred',
@@ -209,6 +208,11 @@ if host_system != 'windows'
     'secure_getenv',
     'strndup'
   ]
+  if ['linux'].contains(host_system)
+    functions += [
+      'getauxval'
+    ]
+  endif
 
   foreach f : functions
     if cc.has_function(f, dependencies: system_deps)
