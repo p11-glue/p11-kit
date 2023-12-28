@@ -49,6 +49,7 @@
 #endif
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -324,6 +325,7 @@ p11_kit_generate_keypair (int argc,
 	CK_MECHANISM mechanism = { CKA_INVALID, NULL_PTR, 0 };
 	bool login = false;
 	p11_tool *tool = NULL;
+	const char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
@@ -334,6 +336,7 @@ p11_kit_generate_keypair (int argc,
 		opt_bits = 'b',
 		opt_curve = 'c',
 		opt_login = 'l',
+		opt_provider = CHAR_MAX + 2,
 	};
 
 	struct option options[] = {
@@ -345,6 +348,7 @@ p11_kit_generate_keypair (int argc,
 		{ "bits", required_argument, NULL, opt_bits },
 		{ "curve", required_argument, NULL, opt_curve },
 		{ "login", no_argument, NULL, opt_login },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
@@ -356,6 +360,7 @@ p11_kit_generate_keypair (int argc,
 		{ opt_bits, "number of bits for key generation" },
 		{ opt_curve, "name of the curve for key generation" },
 		{ opt_login, "login to the token" },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -387,6 +392,9 @@ p11_kit_generate_keypair (int argc,
 			break;
 		case opt_login:
 			login = true;
+			break;
+		case opt_provider:
+			provider = optarg;
 			break;
 		case opt_verbose:
 			p11_kit_be_loud ();
@@ -424,6 +432,11 @@ p11_kit_generate_keypair (int argc,
 
 	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	if (!p11_tool_set_provider (tool, provider)) {
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 

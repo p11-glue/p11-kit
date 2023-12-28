@@ -130,6 +130,13 @@ $ p11-kit list-tokens pkcs11:token
 			<term><option>--only-uris</option></term>
 			<listitem><para>Print only the matching token URIs.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
+		</varlistentry>
 	</variablelist>
 </refsect1>
 
@@ -152,6 +159,13 @@ $ p11-kit list-objects pkcs11:object_on_token
 		<varlistentry>
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
 		</varlistentry>
 	</variablelist>
 </refsect1>
@@ -189,6 +203,13 @@ $ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; pkcs11:token
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
+		</varlistentry>
 	</variablelist>
 </refsect1>
 
@@ -211,6 +232,13 @@ $ p11-kit export-object pkcs11:object_on_token
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
+		</varlistentry>
 	</variablelist>
 </refsect1>
 
@@ -231,6 +259,13 @@ $ p11-kit delete-object pkcs11:object_on_token
 		<varlistentry>
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
 		</varlistentry>
 	</variablelist>
 </refsect1>
@@ -280,6 +315,13 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
+		</varlistentry>
 	</variablelist>
 </refsect1>
 
@@ -301,6 +343,13 @@ $ p11-kit list-profiles pkcs11:token
 		<varlistentry>
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
 		</varlistentry>
 	</variablelist>
 </refsect1>
@@ -335,6 +384,13 @@ $ p11-kit add-profile --profile=profile pkcs11:token
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
+		</varlistentry>
 	</variablelist>
 </refsect1>
 
@@ -366,6 +422,13 @@ $ p11-kit delete-profile --profile=profile pkcs11:token
 		<varlistentry>
 			<term><option>--login</option></term>
 			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--provider=&lt;module_path&gt;</option></term>
+			<listitem><para>Load only the given PKCS#11 module instead of enumerating modules installed on the system. If <parameter>module_path</parameter> is a relative path, the module is loaded from the default module path. This path can be determined by running:</para>
+			<programlisting>
+$ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
+/usr/lib64/pkcs11</programlisting></listitem>
 		</varlistentry>
 	</variablelist>
 </refsect1>

@@ -51,6 +51,9 @@ P11KitUriResult p11_tool_set_uri    (p11_tool *tool,
 				     P11KitUriType type);
 void            p11_tool_set_login  (p11_tool *tool,
 				     bool login);
+bool            p11_tool_set_provider
+                                    (p11_tool *tool,
+				     const char *provider);
 P11KitIter     *p11_tool_begin_iter (p11_tool *tool,
 				     P11KitIterBehavior behavior);
 void            p11_tool_end_iter   (p11_tool *tool,

@@ -493,6 +493,7 @@ p11_kit_import_object (int argc,
 	char *file = NULL;
 	bool login = false;
 	p11_tool *tool = NULL;
+	const char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
@@ -501,6 +502,7 @@ p11_kit_import_object (int argc,
 		opt_label = 'L',
 		opt_file = 'f',
 		opt_login = 'l',
+		opt_provider = CHAR_MAX + 2,
 	};
 
 	struct option options[] = {
@@ -510,6 +512,7 @@ p11_kit_import_object (int argc,
 		{ "label", required_argument, NULL, opt_label },
 		{ "file", required_argument, NULL, opt_file },
 		{ "login", no_argument, NULL, opt_login },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
@@ -519,6 +522,7 @@ p11_kit_import_object (int argc,
 		{ opt_label, "label to be associated with imported object" },
 		{ opt_file, "object data to import" },
 		{ opt_login, "login to the token" },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -532,6 +536,9 @@ p11_kit_import_object (int argc,
 			break;
 		case opt_login:
 			login = true;
+			break;
+		case opt_provider:
+			provider = optarg;
 			break;
 		case opt_verbose:
 			p11_kit_be_loud ();
@@ -571,6 +578,11 @@ p11_kit_import_object (int argc,
 
 	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	if (!p11_tool_set_provider (tool, provider)) {
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 
