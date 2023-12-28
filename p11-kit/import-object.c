@@ -43,7 +43,7 @@
 #include "iter.h"
 #include "message.h"
 #include "pem.h"
-#include "tool.h"
+#include "options.h"
 
 #ifdef OS_UNIX
 #include "tty.h"

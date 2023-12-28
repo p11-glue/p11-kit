@@ -50,7 +50,7 @@
 #include "message.h"
 #include "p11-kit.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 #include "uri.h"
 
 #ifdef ENABLE_NLS

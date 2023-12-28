@@ -42,7 +42,7 @@
 #include "enumerate.h"
 #include "message.h"
 #include "persist.h"
-#include "tool.h"
+#include "options.h"
 #include "url.h"
 
 #include "p11-kit/iter.h"

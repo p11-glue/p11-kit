@@ -57,7 +57,7 @@
 #endif
 #define N_(x) (x)
 
-#include "tool.h"
+#include "options.h"
 
 int       p11_kit_list_modules     (int argc,
                                     char *argv[]);

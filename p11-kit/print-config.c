@@ -39,7 +39,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "message.h"
-#include "tool.h"
+#include "options.h"
 
 #include <assert.h>
 #include <stdio.h>

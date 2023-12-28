@@ -39,7 +39,7 @@
 #include "iter.h"
 #include "message.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 
 #include <assert.h>
 #include <limits.h>

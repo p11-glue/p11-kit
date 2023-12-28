@@ -40,7 +40,7 @@
 #include "message.h"
 #include "p11-kit.h"
 #include "remote.h"
-#include "tool.h"
+#include "options.h"
 
 #include <assert.h>
 #include <errno.h>
