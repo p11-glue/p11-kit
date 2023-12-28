@@ -222,7 +222,8 @@ p11_kit_sources = [
   'list-tokens.c',
   'lists.c',
   'p11-kit.c',
-  'print-config.c'
+  'print-config.c',
+  'tool.c'
 ]
 
 if host_system != 'windows'
