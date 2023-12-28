@@ -48,6 +48,7 @@
 #include "uri.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -214,27 +215,34 @@ p11_kit_list_mechanisms (int argc,
 {
 	int opt, ret = 2;
 	p11_tool *tool = NULL;
+	const char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
+		opt_provider = CHAR_MAX + 2,
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit list-mechanisms pkcs11:token" },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
 	while ((opt = p11_tool_getopt (argc, argv, options)) != -1) {
 		switch (opt) {
+		case opt_provider:
+			provider = optarg;
+			break;
 		case opt_verbose:
 			p11_kit_be_loud ();
 			break;
@@ -268,6 +276,11 @@ p11_kit_list_mechanisms (int argc,
 
 	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	if (!p11_tool_set_provider (tool, provider)) {
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 

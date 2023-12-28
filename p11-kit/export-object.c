@@ -493,12 +493,14 @@ p11_kit_export_object (int argc,
 	int opt, ret = 2;
 	bool login = false;
 	p11_tool *tool = NULL;
+	const char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
 		opt_login = 'l',
+		opt_provider = CHAR_MAX + 2,
 	};
 
 	struct option options[] = {
@@ -506,12 +508,14 @@ p11_kit_export_object (int argc,
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
 		{ "login", no_argument, NULL, opt_login },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ 0 },
 	};
 
 	p11_tool_desc usages[] = {
 		{ 0, "usage: p11-kit export-object pkcs11:token" },
 		{ opt_login, "login to the token" },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -528,6 +532,9 @@ p11_kit_export_object (int argc,
 			return 0;
 		case opt_login:
 			login = true;
+			break;
+		case opt_provider:
+			provider = optarg;
 			break;
 		case '?':
 			return 2;
@@ -553,6 +560,11 @@ p11_kit_export_object (int argc,
 
 	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_OBJECT_ON_TOKEN) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	if (!p11_tool_set_provider (tool, provider)) {
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 

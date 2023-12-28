@@ -49,6 +49,7 @@
 struct p11_tool {
 	P11KitUri *uri;
 	bool login;
+	char *provider;
 	CK_FUNCTION_LIST **modules;
 };
 
@@ -72,6 +73,7 @@ p11_tool_free (p11_tool *tool)
 		p11_kit_pin_unregister_callback ("tty", p11_pin_tty_callback, NULL);
 #endif
 
+	free (tool->provider);
 	free (tool);
 }
 
@@ -114,6 +116,21 @@ p11_tool_set_login (p11_tool *tool,
 #endif
 }
 
+bool
+p11_tool_set_provider (p11_tool *tool,
+		       const char *provider)
+{
+	free (tool->provider);
+
+	if (provider) {
+		tool->provider = strdup (provider);
+		return tool->provider != NULL;
+	} else {
+		tool->provider = NULL;
+		return true;
+	}
+}
+
 P11KitIter *
 p11_tool_begin_iter (p11_tool *tool,
 		     P11KitIterBehavior behavior)
@@ -125,7 +142,29 @@ p11_tool_begin_iter (p11_tool *tool,
 	/* Iteration is already in progress */
 	return_val_if_fail (!tool->modules, NULL);
 
-	tool->modules = p11_kit_modules_load_and_initialize (0);
+	if (tool->provider) {
+		CK_FUNCTION_LIST **modules;
+
+		modules = calloc (2, sizeof (CK_FUNCTION_LIST *));
+		return_val_if_fail (modules, NULL);
+
+		modules[0] = p11_kit_module_load (tool->provider, 0);
+		if (!modules[0]) {
+			free (modules);
+			return NULL;
+		}
+
+		if (p11_kit_module_initialize (modules[0]) != CKR_OK) {
+			p11_kit_module_release (modules[0]);
+			free (modules);
+			return NULL;
+		}
+
+		tool->modules = modules;
+	} else {
+		tool->modules = p11_kit_modules_load_and_initialize (0);
+	}
+
 	if (!tool->modules)
 		return NULL;
 

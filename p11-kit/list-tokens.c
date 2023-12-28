@@ -109,18 +109,21 @@ p11_kit_list_tokens (int argc,
 	int opt, ret = 2;
 	bool only_uris = false;
 	p11_tool *tool = NULL;
+	const char *provider = NULL;
 
 	enum {
 		opt_verbose = 'v',
 		opt_quiet = 'q',
 		opt_help = 'h',
 		opt_only_urls = CHAR_MAX + 1,
+		opt_provider = CHAR_MAX + 2,
 	};
 
 	struct option options[] = {
 		{ "verbose", no_argument, NULL, opt_verbose },
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "only-uris", no_argument, NULL, opt_only_urls },
+		{ "provider", required_argument, NULL, opt_provider },
 		{ "help", no_argument, NULL, opt_help },
 		{ 0 },
 	};
@@ -130,6 +133,7 @@ p11_kit_list_tokens (int argc,
 		{ opt_verbose, "show verbose debug output", },
 		{ opt_quiet, "suppress command output", },
 		{ opt_only_urls, "only print token URIs", },
+		{ opt_provider, "specify the module to use" },
 		{ 0 },
 	};
 
@@ -146,6 +150,10 @@ p11_kit_list_tokens (int argc,
 
 		case opt_only_urls:
 			only_uris = true;
+			break;
+
+		case opt_provider:
+			provider = optarg;
 			break;
 
 		case opt_help:
@@ -175,6 +183,11 @@ p11_kit_list_tokens (int argc,
 
 	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
 		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	if (!p11_tool_set_provider (tool, provider)) {
+		p11_message (_("failed to allocate memory"));
 		goto cleanup;
 	}
 
