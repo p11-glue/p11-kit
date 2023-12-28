@@ -44,6 +44,7 @@
 #include "pkcs11.h"
 #include "print.h"
 #include "options.h"
+#include "tool.h"
 #include "uri.h"
 
 #include <assert.h>
@@ -120,12 +121,10 @@ print_mechanism_with_info (CK_MECHANISM_TYPE mechanism,
 }
 
 static int
-list_mechanisms (const char *token_str)
+list_mechanisms (p11_tool *tool)
 {
 	int ret = 1;
-	CK_FUNCTION_LIST **modules = NULL;
 	CK_FUNCTION_LIST *module = NULL;
-	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
 	CK_SESSION_HANDLE session = 0;
 	CK_SLOT_ID slot = 0;
@@ -138,31 +137,14 @@ list_mechanisms (const char *token_str)
 	p11_list_printer printer;
 	CK_RV rv;
 
-	uri = p11_kit_uri_new ();
-	if (uri == NULL) {
-		p11_message (_("failed to allocate memory"));
-		goto cleanup;
-	}
+	p11_list_printer_init (&printer, stdout, 0);
 
-	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
-		p11_message (_("failed to parse URI"));
-		goto cleanup;
-	}
-
-	modules = p11_kit_modules_load_and_initialize (0);
-	if (modules == NULL) {
-		p11_message (_("failed to load and initialize modules"));
-		goto cleanup;
-	}
-
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_LOGIN | P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
+	iter = p11_tool_begin_iter (tool, P11_KIT_ITER_WITH_LOGIN | P11_KIT_ITER_WITH_TOKENS | P11_KIT_ITER_WITHOUT_OBJECTS);
 	if (iter == NULL) {
 		p11_debug ("failed to initialize iterator");
-		goto cleanup;
+		return 1;
 	}
 
-	p11_list_printer_init (&printer, stdout, 0);
-	p11_kit_iter_begin (iter, modules);
 	rv = p11_kit_iter_next (iter);
 	if (rv != CKR_OK) {
 		if (rv == CKR_CANCEL)
@@ -221,10 +203,7 @@ cleanup:
 		module->C_CloseSession (session);
 	if (mechanisms)
 		free (mechanisms);
-	p11_kit_iter_free (iter);
-	p11_kit_uri_free (uri);
-	if (modules != NULL)
-		p11_kit_modules_finalize_and_release (modules);
+	p11_tool_end_iter (tool, iter);
 
 	return ret;
 }
@@ -233,7 +212,8 @@ int
 p11_kit_list_mechanisms (int argc,
 		         char *argv[])
 {
-	int opt;
+	int opt, ret = 2;
+	p11_tool *tool = NULL;
 
 	enum {
 		opt_verbose = 'v',
@@ -280,5 +260,20 @@ p11_kit_list_mechanisms (int argc,
 		return 2;
 	}
 
-	return list_mechanisms (*argv);
+	tool = p11_tool_new ();
+	if (!tool) {
+		p11_message (_("failed to allocate memory"));
+		goto cleanup;
+	}
+
+	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
+		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	ret = list_mechanisms (tool);
+ cleanup:
+	p11_tool_free (tool);
+
+	return ret;
 }

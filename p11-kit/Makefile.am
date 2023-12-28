@@ -274,6 +274,8 @@ p11_kit_p11_kit_SOURCES = \
 	p11-kit/lists.c \
 	p11-kit/p11-kit.c \
 	p11-kit/print-config.c \
+	p11-kit/tool.c \
+	p11-kit/tool.h \
 	$(NULL)
 
 if !OS_WIN32

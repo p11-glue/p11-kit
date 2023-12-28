@@ -40,6 +40,7 @@
 #include "message.h"
 #include "print.h"
 #include "options.h"
+#include "tool.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -62,42 +63,21 @@ int   p11_kit_list_tokens (int               argc,
                            char             *argv[]);
 
 static int
-list_tokens (const char *token_str,
+list_tokens (p11_tool *tool,
 	     bool only_uris)
 {
-	int ret = 1;
-	CK_FUNCTION_LIST **modules = NULL;
-	P11KitUri *uri = NULL;
 	P11KitIter *iter = NULL;
 	p11_list_printer printer;
 
 	p11_list_printer_init (&printer, stdout, 0);
 
-	uri = p11_kit_uri_new ();
-	if (uri == NULL) {
-		p11_message (_("failed to allocate memory"));
-		goto cleanup;
-	}
-
-	if (p11_kit_uri_parse (token_str, P11_KIT_URI_FOR_TOKEN, uri) != P11_KIT_URI_OK) {
-		p11_message (_("failed to parse URI"));
-		goto cleanup;
-	}
-
-	modules = p11_kit_modules_load_and_initialize (0);
-	if (modules == NULL) {
-		p11_message (_("failed to load and initialize modules"));
-		goto cleanup;
-	}
-
-	iter = p11_kit_iter_new (uri, P11_KIT_ITER_WITH_TOKENS |
-				 P11_KIT_ITER_WITHOUT_OBJECTS);
+	iter = p11_tool_begin_iter (tool, P11_KIT_ITER_WITH_TOKENS |
+				    P11_KIT_ITER_WITHOUT_OBJECTS);
 	if (iter == NULL) {
 		p11_debug ("failed to initialize iterator");
-		goto cleanup;
+		return 1;
 	}
 
-	p11_kit_iter_begin (iter, modules);
 	while (p11_kit_iter_next (iter) == CKR_OK) {
 		CK_TOKEN_INFO *info = p11_kit_iter_get_token (iter);
 		char *value;
@@ -117,23 +97,18 @@ list_tokens (const char *token_str,
 		}
 	}
 
-	ret = 0;
+	p11_tool_end_iter (tool, iter);
 
-cleanup:
-	p11_kit_iter_free (iter);
-	p11_kit_uri_free (uri);
-	if (modules != NULL)
-		p11_kit_modules_finalize_and_release (modules);
-
-	return ret;
+	return 0;
 }
 
 int
 p11_kit_list_tokens (int argc,
 		     char *argv[])
 {
-	int opt;
+	int opt, ret = 2;
 	bool only_uris = false;
+	p11_tool *tool = NULL;
 
 	enum {
 		opt_verbose = 'v',
@@ -192,5 +167,20 @@ p11_kit_list_tokens (int argc,
 		return 2;
 	}
 
-	return list_tokens (*argv, only_uris);
+	tool = p11_tool_new ();
+	if (!tool) {
+		p11_message (_("failed to allocate memory"));
+		goto cleanup;
+	}
+
+	if (p11_tool_set_uri (tool, *argv, P11_KIT_URI_FOR_TOKEN) != P11_KIT_URI_OK) {
+		p11_message (_("failed to parse URI"));
+		goto cleanup;
+	}
+
+	ret = list_tokens (tool, only_uris);
+ cleanup:
+	p11_tool_free (tool);
+
+	return ret;
 }
