@@ -44,7 +44,7 @@
 #include "iter.h"
 #include "message.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 
 #ifdef OS_UNIX
 #include "tty.h"

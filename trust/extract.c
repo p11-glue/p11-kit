@@ -43,7 +43,7 @@
 #include "path.h"
 #include "pkcs11x.h"
 #include "save.h"
-#include "tool.h"
+#include "options.h"
 #include "digest.h"
 
 #include "p11-kit/iter.h"

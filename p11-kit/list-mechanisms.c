@@ -43,7 +43,7 @@
 #include "message.h"
 #include "pkcs11.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 #include "uri.h"
 
 #include <assert.h>

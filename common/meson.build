@@ -52,8 +52,8 @@ if get_option('test')
 endif
 
 libp11_tool_sources = [
+  'options.c'
   'print.c',
-  'tool.c'
 ]
 
 if host_system != 'windows'

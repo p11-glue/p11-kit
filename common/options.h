@@ -32,8 +32,8 @@
  * Author: Stef Walter <stefw@collabora.co.uk>
  */
 
-#ifndef P11_TOOL_H_
-#define P11_TOOL_H_
+#ifndef P11_OPTIONS_H_
+#define P11_OPTIONS_H_
 
 #include <getopt.h>
 
@@ -62,4 +62,4 @@ int        p11_tool_getopt            (int argc,
 void       p11_tool_usage             (const p11_tool_desc *usages,
                                        const struct option *longopts);
 
-#endif /* P11_TOOL_H_ */
+#endif /* P11_OPTIONS_H_ */

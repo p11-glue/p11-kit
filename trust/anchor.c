@@ -43,7 +43,7 @@
 #include "extract.h"
 #include "message.h"
 #include "parser.h"
-#include "tool.h"
+#include "options.h"
 #include "pkcs11x.h"
 
 #include "p11-kit/iter.h"

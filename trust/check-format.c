@@ -41,7 +41,7 @@
 #include "message.h"
 #include "persist.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 
 #include <assert.h>
 #include <errno.h>

@@ -59,7 +59,7 @@
 #define _(x) (x)
 #endif
 
-#include "tool.h"
+#include "options.h"
 
 static char
 short_option (int opt)

@@ -44,7 +44,7 @@
 #include "message.h"
 #include "pkcs11x.h"
 #include "print.h"
-#include "tool.h"
+#include "options.h"
 #include "url.h"
 
 #include "p11-kit/iter.h"

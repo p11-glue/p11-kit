@@ -47,8 +47,8 @@ libp11_test_la_SOURCES = \
 	$(NULL)
 
 libp11_tool_la_SOURCES = \
+	common/options.c common/options.h \
 	common/print.c common/print.h \
-	common/tool.c common/tool.h \
 	$(NULL)
 
 if !OS_WIN32
