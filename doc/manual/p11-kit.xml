@@ -117,13 +117,20 @@ $ p11-kit list-modules
 	<para>List all tokens available in system configured PKCS#11 modules.</para>
 
 <programlisting>
-$ p11-kit list-tokens &lsqb;--only-uris&rsqb; pkcs11:token
+$ p11-kit list-tokens pkcs11:token
 </programlisting>
 
 	<para>This retrieves all tokens and displays some of their
-	common attributes. If <option>--only-uris</option> is given,
-	only the matching token URIs are printed.</para>
+	common attributes.</para>
 
+	<para>This subcommand takes the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--only-uris</option></term>
+			<listitem><para>Print only the matching token URIs.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-list-objects">
@@ -132,13 +139,21 @@ $ p11-kit list-tokens &lsqb;--only-uris&rsqb; pkcs11:token
 	<para>List objects matching given PKCS#11 URI.</para>
 
 <programlisting>
-$ p11-kit list-objects &lsqb;--login&rsqb; pkcs11:object_on_token
+$ p11-kit list-objects pkcs11:object_on_token
 </programlisting>
 
 	<para>This retrieves all objects that match given PKCS#11 URI and displays
         some of their common attributes. Storage objects also have their PKCS#11 URI
         displayed.</para>
 
+	<para>This subcommand takes the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-import-object">
@@ -147,24 +162,34 @@ $ p11-kit list-objects &lsqb;--login&rsqb; pkcs11:object_on_token
 	<para>Import object into PKCS#11 token.</para>
 
 <programlisting>
-$ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; &lsqb;--login&rsqb; pkcs11:token
+$ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; pkcs11:token
 </programlisting>
 
 	<para>Takes either an X.509 certificate or a public key in the form of a PEM file
 	and imports it into the first token matched by given PKCS#11 URI.</para>
 
+	<para>The following options are required:</para>
+
 	<variablelist>
 		<varlistentry>
 			<term><option>--file=&lt;file.pem&gt;</option></term>
 			<listitem><para>File containing either an X.509 certificate
-			or a public key in PEM format. This option is required.</para></listitem>
+			or a public key in PEM format.</para></listitem>
 		</varlistentry>
+	</variablelist>
+
+	<para>This subcommand also accepts the following options:</para>
+
+	<variablelist>
 		<varlistentry>
 			<term><option>--label=&lt;label&gt;</option></term>
 			<listitem><para>Assigns label to the imported object.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
 	</variablelist>
-
 </refsect1>
 
 <refsect1 id="p11-kit-export-object">
@@ -173,12 +198,20 @@ $ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; &lsqb;--login&
 	<para>Export object matching PKCS#11 URI.</para>
 
 <programlisting>
-$ p11-kit export-object &lsqb;--login&rsqb; pkcs11:object_on_token
+$ p11-kit export-object pkcs11:object_on_token
 </programlisting>
 
 	<para>Displays PEM formatted contents of the first object matched by given PKCS#11 URI.
 	The matched object has to either be an X.509 certificate or a public key.</para>
 
+	<para>This subcommand takes the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-delete-object">
@@ -187,11 +220,19 @@ $ p11-kit export-object &lsqb;--login&rsqb; pkcs11:object_on_token
 	<para>Delete object matching PKCS#11 URI.</para>
 
 <programlisting>
-$ p11-kit delete-object &lsqb;--login&rsqb; pkcs11:object_on_token
+$ p11-kit delete-object pkcs11:object_on_token
 </programlisting>
 
 	<para>Destroys the first object matched by given PKCS#11 URI.</para>
 
+	<para>This subcommand takes the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-generate-keypair">
@@ -200,19 +241,20 @@ $ p11-kit delete-object &lsqb;--login&rsqb; pkcs11:object_on_token
 	<para>Generate key-pair on a PKCS#11 token.</para>
 
 <programlisting>
-$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &lsqb;--label=label&rsqb; &lsqb;--login&rsqb; pkcs11:token
+$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &lsqb;--label=label&rsqb; pkcs11:token
 </programlisting>
 
 	<para>Generate private-public key-pair of given type on the first
 	token matched by given PKCS#11 URI. This command should be used
 	together with --type option and one of --bits or --curve options.</para>
 
+	<para>The following options are required:</para>
+
 	<variablelist>
 		<varlistentry>
 			<term><option>--type=&lt;algorithm&gt;</option></term>
 			<listitem><para>Specify the type of keys to generate.
-			Supported values are rsa, ecdsa and ed25519.
-			This option is required.</para></listitem>
+			Supported values are rsa, ecdsa and ed25519.</para></listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--bits=&lt;n&gt;</option></term>
@@ -225,12 +267,20 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
                         Supported values are secp256r1, secp384r1, secp521r1, ed25519 and ed448.
 			Cannot be used together with --bits option.</para></listitem>
 		</varlistentry>
+	</variablelist>
+
+	<para>This subcommand also accepts the following options:</para>
+
+	<variablelist>
 		<varlistentry>
 			<term><option>--label=&lt;label&gt;</option></term>
 			<listitem><para>Assigns label to the generated key-pair objects.</para></listitem>
 		</varlistentry>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
 	</variablelist>
-
 </refsect1>
 
 <refsect1 id="p11-kit-list-profiles">
@@ -239,12 +289,20 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
 	<para>List PKCS#11 profiles supported by the token.</para>
 
 <programlisting>
-$ p11-kit list-profiles &lsqb;--login&rsqb; pkcs11:token
+$ p11-kit list-profiles pkcs11:token
 </programlisting>
 
 	<para>Displays profile IDs of the first token matched by given
 	PKCS#11 URI in human-readable form.</para>
 
+	<para>This subcommand takes the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-add-profile">
@@ -253,21 +311,31 @@ $ p11-kit list-profiles &lsqb;--login&rsqb; pkcs11:token
 	<para>Add PKCS#11 profile to a token.</para>
 
 <programlisting>
-$ p11-kit add-profile --profile=profile &lsqb;--login&rsqb; pkcs11:token
+$ p11-kit add-profile --profile=profile pkcs11:token
 </programlisting>
 
 	<para>Creates new profile object with given profile ID on the
 	first token matched by given PKCS#11 URI. This command fails
 	if the profile ID already exists on the token.</para>
 
+	<para>The following options are required:</para>
+
 	<variablelist>
 		<varlistentry>
 			<term><option>--profile=&lt;profile&gt;</option></term>
 			<listitem><para>Profile ID to add. Value can either
-			be numerical or textual. This option is required.</para></listitem>
+			be numerical or textual.</para></listitem>
 		</varlistentry>
 	</variablelist>
 
+	<para>This subcommand also accepts the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-delete-profile">
@@ -276,20 +344,30 @@ $ p11-kit add-profile --profile=profile &lsqb;--login&rsqb; pkcs11:token
 	<para>Delete PKCS#11 profile from a token.</para>
 
 <programlisting>
-$ p11-kit delete-profile --profile=profile &lsqb;--login&rsqb; pkcs11:token
+$ p11-kit delete-profile --profile=profile pkcs11:token
 </programlisting>
 
 	<para>Destroys all profile objects with given profile ID from
 	the first token matched by given PKCS#11 URI.</para>
 
+	<para>The following options are required:</para>
+
 	<variablelist>
 		<varlistentry>
 			<term><option>--profile=&lt;profile&gt;</option></term>
 			<listitem><para>Profile ID to delete. Value can either
-			be numerical or textual. This option is required.</para></listitem>
+			be numerical or textual.</para></listitem>
 		</varlistentry>
 	</variablelist>
 
+	<para>This subcommand also accepts the following options:</para>
+
+	<variablelist>
+		<varlistentry>
+			<term><option>--login</option></term>
+			<listitem><para>Authenticate to the token before enumerating objects. The PIN value is read from either the <literal>pin-value</literal> attribute in the URI or from the terminal.</para></listitem>
+		</varlistentry>
+	</variablelist>
 </refsect1>
 
 <refsect1 id="p11-kit-list-mechanisms">
