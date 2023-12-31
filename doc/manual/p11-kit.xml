@@ -33,43 +33,43 @@
 		<command>p11-kit list-modules</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit list-tokens</command> ...
+		<command>p11-kit list-tokens ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit list-objects</command> ...
+		<command>p11-kit list-objects ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit import-object</command> ...
+		<command>p11-kit import-object ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit export-object</command> ...
+		<command>p11-kit export-object ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit delete-object</command> ...
+		<command>p11-kit delete-object ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit generate-keypair</command> ...
+		<command>p11-kit generate-keypair ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit list-profiles</command> ...
+		<command>p11-kit list-profiles ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit add-profile</command> ...
+		<command>p11-kit add-profile ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit delete-profile</command> ...
+		<command>p11-kit delete-profile ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit list-mechanisms</command> ...
+		<command>p11-kit list-mechanisms ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
 		<command>p11-kit print-config</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit extract</command> ...
+		<command>p11-kit extract ...</command>
 	</cmdsynopsis>
 	<cmdsynopsis>
-		<command>p11-kit server</command> ...
+		<command>p11-kit server ...</command>
 	</cmdsynopsis>
 </refsynopsisdiv>
 
@@ -326,7 +326,7 @@ $ p11-kit print-config
 	<para>Extract certificates from configured PKCS#11 modules.</para>
 
 	<para>This operation has been moved to a separate command <command>trust extract</command>.
-	See <member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member>
+	See <simplelist><member><citerefentry><refentrytitle>trust</refentrytitle><manvolnum>1</manvolnum></citerefentry></member></simplelist>
 	for more information</para>
 </refsect1>
 
