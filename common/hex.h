@@ -38,7 +38,12 @@
 
 #include <stddef.h>
 
-char *hex_encode (const unsigned char *data,
-		  size_t n_data);
+char *
+hex_encode (const unsigned char *data,
+	    size_t n_data);
+
+unsigned char *
+hex_decode (const char *hex,
+	    size_t *bin_len);
 
 #endif /* P11_HEX_H */

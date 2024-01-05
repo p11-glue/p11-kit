@@ -40,6 +40,7 @@
 #include "compat.h"
 #include "debug.h"
 #include "dict.h"
+#include "hex.h"
 #include "iter.h"
 #include "message.h"
 #include "pem.h"
@@ -76,6 +77,7 @@ typedef struct {
 	CK_FUNCTION_LIST *module;
 	CK_SESSION_HANDLE session;
 	const char *label;
+	const char *id;
 } import_data;
 
 static bool
@@ -134,6 +136,29 @@ import_x509_cert (const unsigned char *der,
 		attrs = tmp;
 	}
 
+	if (data->id != NULL) {
+		size_t bin_len = 0;
+		unsigned char *bin = NULL;
+		CK_ATTRIBUTE attr_id = { CKA_ID, NULL, 0 };
+
+		bin = hex_decode (data->id, &bin_len);
+		if (bin == NULL) {
+			p11_message (_("failed to decode hex value: %s"), data->id);
+			goto cleanup;
+		}
+
+		attr_id.pValue = (void *)bin;
+		attr_id.ulValueLen = bin_len;
+
+		tmp = p11_attrs_build (attrs, &attr_id, NULL);
+		free (bin);
+		if (tmp == NULL) {
+			p11_message (_("failed to allocate memory"));
+			goto cleanup;
+		}
+		attrs = tmp;
+	}
+
 	rv = data->module->C_CreateObject (data->session, attrs, p11_attrs_count (attrs), &object);
 	if (rv != CKR_OK) {
 		p11_message (_("failed to create object: %s"), p11_kit_strerror (rv));
@@ -167,14 +192,42 @@ init_attrs_pubkey (const unsigned char *info,
 
 	attrs = p11_attrs_build (NULL, &attr_class, &attr_token, &attr_private,
 				 &attr_verify, &attr_info, NULL);
-	if (attrs == NULL)
+	if (attrs == NULL) {
+		p11_message (_("failed to allocate memory"));
 		return NULL;
+	}
 
 	if (data->label != NULL) {
 		CK_ATTRIBUTE attr_label = { CKA_LABEL, (void *)data->label, strlen (data->label) };
 
 		tmp = p11_attrs_build (attrs, &attr_label, NULL);
 		if (tmp == NULL) {
+			p11_message (_("failed to allocate memory"));
+			p11_attrs_free (attrs);
+			return NULL;
+		}
+		attrs = tmp;
+	}
+
+	if (data->id != NULL) {
+		size_t bin_len = 0;
+		unsigned char *bin = NULL;
+		CK_ATTRIBUTE attr_id = { CKA_ID, NULL, 0 };
+
+		bin = hex_decode (data->id, &bin_len);
+		if (bin == NULL) {
+			p11_message (_("failed to decode hex value: %s"), data->id);
+			p11_attrs_free (attrs);
+			return NULL;
+		}
+
+		attr_id.pValue = (void *)bin;
+		attr_id.ulValueLen = bin_len;
+
+		tmp = p11_attrs_build (attrs, &attr_id, NULL);
+		free (bin);
+		if (tmp == NULL) {
+			p11_message (_("failed to allocate memory"));
 			p11_attrs_free (attrs);
 			return NULL;
 		}
@@ -364,10 +417,8 @@ import_pubkey (const unsigned char *der,
 	}
 
 	attrs = init_attrs_pubkey (der, der_len, data);
-	if (attrs == NULL) {
-		p11_message (_("failed to allocate memory"));
+	if (attrs == NULL)
 		goto cleanup;
-	}
 
 	if (strcmp (oid, P11_OID_PKIX1_RSA_STR) == 0)
 		tmp = add_attrs_pubkey_rsa (attrs, asn, data->defs);
@@ -422,7 +473,8 @@ import_pem (const char *type,
 static int
 import_object (p11_tool *tool,
 	       const char *file,
-	       const char *label)
+	       const char *label,
+	       const char *id)
 {
 	int ret = 1;
 	void *data = NULL;
@@ -431,7 +483,7 @@ import_object (p11_tool *tool,
 	CK_RV rv;
 	p11_mmap *mmap = NULL;
 	P11KitIter *iter = NULL;
-	import_data user_data = { false, NULL, NULL, 0, label };
+	import_data user_data = { false, NULL, NULL, 0, label, id };
 
 	iter = p11_tool_begin_iter (tool, P11_KIT_ITER_WANT_WRITABLE | P11_KIT_ITER_WITH_SESSIONS | P11_KIT_ITER_WITHOUT_OBJECTS);
 	if (iter == NULL) {
@@ -493,6 +545,7 @@ p11_kit_import_object (int argc,
 	char *file = NULL;
 	bool login = false;
 	p11_tool *tool = NULL;
+	const char *id = NULL;
 	const char *provider = NULL;
 
 	enum {
@@ -500,6 +553,7 @@ p11_kit_import_object (int argc,
 		opt_quiet = 'q',
 		opt_help = 'h',
 		opt_label = 'L',
+		opt_id = CHAR_MAX + 3,
 		opt_file = 'f',
 		opt_login = 'l',
 		opt_provider = CHAR_MAX + 2,
@@ -510,6 +564,7 @@ p11_kit_import_object (int argc,
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
 		{ "label", required_argument, NULL, opt_label },
+		{ "id", required_argument, NULL, opt_id },
 		{ "file", required_argument, NULL, opt_file },
 		{ "login", no_argument, NULL, opt_login },
 		{ "provider", required_argument, NULL, opt_provider },
@@ -520,6 +575,7 @@ p11_kit_import_object (int argc,
 		{ 0, "usage: p11-kit import-object --file=<file.pem>"
 		     " [--label=<label>] [--login] pkcs11:token" },
 		{ opt_label, "label to be associated with imported object" },
+		{ opt_id, "id to be associated with imported object" },
 		{ opt_file, "object data to import" },
 		{ opt_login, "login to the token" },
 		{ opt_provider, "specify the module to use" },
@@ -530,6 +586,9 @@ p11_kit_import_object (int argc,
 		switch (opt) {
 		case opt_label:
 			label = optarg;
+			break;
+		case opt_id:
+			id = optarg;
 			break;
 		case opt_file:
 			file = optarg;
@@ -588,7 +647,7 @@ p11_kit_import_object (int argc,
 
 	p11_tool_set_login (tool, login);
 
-	ret = import_object (tool, file, label);
+	ret = import_object (tool, file, label, id);
 
  cleanup:
 	p11_tool_free (tool);

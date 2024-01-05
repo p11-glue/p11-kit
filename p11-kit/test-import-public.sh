@@ -23,11 +23,11 @@ teardown() {
 }
 
 test_import_cert() {
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="$abs_top_srcdir"/trust/fixtures/cacert3.pem --label=cert "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="$abs_top_srcdir"/trust/fixtures/cacert3.pem --label=cert --id="1a:bc:f6:9a" "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
 		assert_fail "unable to run: p11-kit import-object"
 	fi
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=cert?pin-value=booo" > export.out; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=cert;id=%1A%BC%F6%9A?pin-value=booo" > export.out; then
 		assert_fail "unable to run: p11-kit export-object"
 	fi
 
@@ -54,11 +54,11 @@ fQIDAQAB
 -----END PUBLIC KEY-----
 EOF
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="export.exp" --label=rsa "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="export.exp" --label=rsa --id="2a:bc:f6:9a" "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
 		assert_fail "unable to run: p11-kit import-object"
 	fi
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=rsa?pin-value=booo" > export.out; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=rsa;id=%2A%BC%F6%9A?pin-value=booo" > export.out; then
 		assert_fail "unable to run: p11-kit export-object"
 	fi
 
@@ -80,11 +80,11 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsaTJt0debXaW7Hpcrpn7X07SsTk9
 -----END PUBLIC KEY-----
 EOF
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="export.exp" --label=ec "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="export.exp" --label=ec --id="3a:bc:f6:9a" "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
 		assert_fail "unable to run: p11-kit import-object"
 	fi
 
-	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=ec?pin-value=booo" > export.out; then
+	if ! "$abs_top_builddir"/p11-kit/p11-kit-testable export-object -q --login "pkcs11:token=PERSIST%20LABEL%20ONE;object=ec;id=%3A%BC%F6%9A?pin-value=booo" > export.out; then
 		assert_fail "unable to run: p11-kit export-object"
 	fi
 

@@ -76,6 +76,7 @@ c_tests += \
 	test-hash \
 	test-dict \
 	test-array \
+	test-hex \
 	test-constants \
 	test-attrs \
 	test-buffer \
@@ -92,6 +93,9 @@ test_argv_LDADD = $(common_LIBS)
 
 test_array_SOURCES = common/test-array.c
 test_array_LDADD = $(common_LIBS)
+
+test_hex_SOURCES = common/test-hex.c
+test_hex_LDADD = $(common_LIBS)
 
 test_attrs_SOURCES = common/test-attrs.c
 test_attrs_LDADD = $(common_LIBS)
