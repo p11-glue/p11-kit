@@ -39,6 +39,7 @@
 #include "attrs.h"
 #include "compat.h"
 #include "debug.h"
+#include "hex.h"
 #include "iter.h"
 #include "message.h"
 #include "options.h"
@@ -160,6 +161,7 @@ check_args (CK_MECHANISM_TYPE type,
 
 static bool
 get_templates (const char *label,
+	       const char *id,
 	       CK_MECHANISM_TYPE type,
 	       CK_ULONG bits,
 	       const uint8_t *ec_params,
@@ -200,6 +202,36 @@ get_templates (const char *label,
 		}
 		pub = tmp;
 		tmp = p11_attrs_build (priv, &attr_label, NULL);
+		if (tmp == NULL) {
+			p11_message (_("failed to allocate memory"));
+			goto error;
+		}
+		priv = tmp;
+	}
+
+	if (id != NULL) {
+		size_t bin_len = 0;
+		unsigned char *bin = NULL;
+		CK_ATTRIBUTE attr_id = { CKA_ID, NULL, 0 };
+
+		bin = hex_decode (id, &bin_len);
+		if (bin == NULL) {
+			p11_message (_("failed to decode hex value: %s"), id);
+			goto error;
+		}
+
+		attr_id.pValue = (void *)bin;
+		attr_id.ulValueLen = bin_len;
+
+		tmp = p11_attrs_build (pub, &attr_id, NULL);
+		if (tmp == NULL) {
+			free (bin);
+			p11_message (_("failed to allocate memory"));
+			goto error;
+		}
+		pub = tmp;
+		tmp = p11_attrs_build (priv, &attr_id, NULL);
+		free (bin);
 		if (tmp == NULL) {
 			p11_message (_("failed to allocate memory"));
 			goto error;
@@ -254,6 +286,7 @@ error:
 static int
 generate_keypair (p11_tool *tool,
 		  const char *label,
+		  const char *id,
 		  CK_MECHANISM mechanism,
 		  CK_ULONG bits,
 		  const uint8_t *ec_params,
@@ -267,7 +300,7 @@ generate_keypair (p11_tool *tool,
 	CK_ATTRIBUTE *pubkey = NULL, *privkey = NULL;
 	CK_OBJECT_HANDLE pubkey_obj, privkey_obj;
 
-	if (!get_templates (label, mechanism.mechanism, bits,
+	if (!get_templates (label, id, mechanism.mechanism, bits,
 			    ec_params, ec_params_len, &pubkey, &privkey)) {
 	        p11_message (_("failed to create key templates"));
 		return 1;
@@ -318,7 +351,8 @@ p11_kit_generate_keypair (int argc,
 			  char *argv[])
 {
 	int opt, ret = 2;
-	char *label = NULL;
+	const char *label = NULL;
+	const char *id = NULL;
 	CK_ULONG bits = 0;
 	const uint8_t *ec_params = NULL;
 	size_t ec_params_len = 0;
@@ -332,6 +366,7 @@ p11_kit_generate_keypair (int argc,
 		opt_quiet = 'q',
 		opt_help = 'h',
 		opt_label = 'L',
+		opt_id = CHAR_MAX + 3,
 		opt_type = 't',
 		opt_bits = 'b',
 		opt_curve = 'c',
@@ -344,6 +379,7 @@ p11_kit_generate_keypair (int argc,
 		{ "quiet", no_argument, NULL, opt_quiet },
 		{ "help", no_argument, NULL, opt_help },
 		{ "label", required_argument, NULL, opt_label },
+		{ "id", required_argument, NULL, opt_id },
 		{ "type", required_argument, NULL, opt_type },
 		{ "bits", required_argument, NULL, opt_bits },
 		{ "curve", required_argument, NULL, opt_curve },
@@ -356,6 +392,7 @@ p11_kit_generate_keypair (int argc,
 		{ 0, "usage: p11-kit generate-keypair [--label=<label>]"
 		     " --type=<algorithm> {--bits=<n>|--curve=<name>} pkcs11:token" },
 		{ opt_label, "label to be associated with generated key objects" },
+		{ opt_id, "id to be associated with generated key objects" },
 		{ opt_type, "type of keys to generate" },
 		{ opt_bits, "number of bits for key generation" },
 		{ opt_curve, "name of the curve for key generation" },
@@ -368,6 +405,9 @@ p11_kit_generate_keypair (int argc,
 		switch (opt) {
 		case opt_label:
 			label = optarg;
+			break;
+		case opt_id:
+			id = optarg;
 			break;
 		case opt_type:
 			mechanism = get_mechanism (optarg);
@@ -442,7 +482,7 @@ p11_kit_generate_keypair (int argc,
 
 	p11_tool_set_login (tool, login);
 
-	ret = generate_keypair (tool, label, mechanism, bits, ec_params, ec_params_len);
+	ret = generate_keypair (tool, label, id, mechanism, bits, ec_params, ec_params_len);
 
  cleanup:
 	p11_tool_free (tool);

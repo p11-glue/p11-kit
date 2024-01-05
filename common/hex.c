@@ -30,13 +30,18 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
- * Author: Stef Walter <stefw@collabora.co.uk>, Daiki Ueno
+ * Authors: Stef Walter <stefw@collabora.co.uk>,
+ *          Daiki Ueno,
+ *          Zoltan Fridrich <zfridric@redhat.com>
  */
 
 #include "config.h"
+
+#include "debug.h"
 #include "hex.h"
-#include <stdint.h>
+
 #include <stdlib.h>
+#include <string.h>
 
 static const char HEXC_LOWER[] = "0123456789abcdef";
 
@@ -47,6 +52,8 @@ hex_encode (const unsigned char *data,
 	char *result;
 	size_t i;
 	size_t o;
+
+	return_val_if_fail (data != NULL, NULL);
 
 	if ((SIZE_MAX - 1) / 3 < n_data)
 		return NULL;
@@ -63,4 +70,58 @@ hex_encode (const unsigned char *data,
 
 	result[o] = 0;
 	return result;
+}
+
+unsigned char *
+hex_decode (const char *hex,
+            size_t *bin_len)
+{
+	int i, j;
+	size_t bin_len_, hex_len;
+	unsigned char *bin, c;
+	bool with_separator;
+
+	return_val_if_fail (hex != NULL, NULL);
+	return_val_if_fail (bin_len != NULL, NULL);
+
+	hex_len = strlen (hex);
+	if (hex_len == 0)
+		return NULL;
+
+	with_separator = hex_len > 2 && hex[2] == ':';
+	if (with_separator)
+		for (i = 5; i < hex_len; i += 3)
+			if (hex[i] != ':')
+				return NULL;
+
+	if (SIZE_MAX - 1 < hex_len ||
+	    (with_separator && (hex_len + 1) % 3 != 0) ||
+	    (!with_separator && hex_len % 2 != 0))
+		return NULL;
+
+	bin_len_ = with_separator ? (hex_len + 1) / 3 : hex_len / 2;
+	bin = calloc (bin_len_, 1);
+	if (bin == NULL)
+		return NULL;
+
+	for (i = 0; i < bin_len_; ++i) {
+		for (j = 0; j < 2; ++j) {
+			c = with_separator ? hex[i * 3 + j] : hex[i * 2 + j];
+			if ('0' <= c && c <= '9')
+				bin[i] |= c - '0';
+			else if ('a' <= c && c <= 'f')
+				bin[i] |= c - 'a' + 10;
+			else if ('A' <= c && c <= 'F')
+				bin[i] |= c - 'A' + 10;
+			else {
+				free (bin);
+				return NULL;
+			}
+			if (j == 0)
+				bin[i] <<= 4;
+		}
+	}
+
+	*bin_len = bin_len_;
+	return bin;
 }

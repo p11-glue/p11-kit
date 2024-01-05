@@ -176,7 +176,7 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 	<para>Import object into PKCS#11 token.</para>
 
 <programlisting>
-$ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; pkcs11:token
+$ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; &lsqb;--id=object_id&rsqb; pkcs11:token
 </programlisting>
 
 	<para>Takes either an X.509 certificate or a public key in the form of a PEM file
@@ -198,6 +198,10 @@ $ p11-kit import-object --file=file.pem &lsqb;--label=label&rsqb; pkcs11:token
 		<varlistentry>
 			<term><option>--label=&lt;label&gt;</option></term>
 			<listitem><para>Assigns label to the imported object.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--id=&lt;object_id&gt;</option></term>
+			<listitem><para>Assigns ID to the imported object. The ID should be specified in hexadecimal format without '0x' prefix.</para></listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--login</option></term>
@@ -276,7 +280,7 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 	<para>Generate key-pair on a PKCS#11 token.</para>
 
 <programlisting>
-$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &lsqb;--label=label&rsqb; pkcs11:token
+$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &lsqb;--label=label&rsqb; &lsqb;--id=object_id&rsqb; pkcs11:token
 </programlisting>
 
 	<para>Generate private-public key-pair of given type on the first
@@ -310,6 +314,10 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
 		<varlistentry>
 			<term><option>--label=&lt;label&gt;</option></term>
 			<listitem><para>Assigns label to the generated key-pair objects.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--id=&lt;object_id&gt;</option></term>
+			<listitem><para>Assigns ID to the generated key-pair objects. The ID should be specified in hexadecimal format without '0x' prefix.</para></listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--login</option></term>

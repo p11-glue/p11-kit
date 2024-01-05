@@ -150,6 +150,7 @@ if get_option('test')
     'test-hash',
     'test-dict',
     'test-array',
+    'test-hex',
     'test-constants',
     'test-attrs',
     'test-buffer',
