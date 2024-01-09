@@ -980,7 +980,7 @@ p11_kit_iter_destroy_object (P11KitIter *iter)
 /**
  * p11_kit_iter_get_attributes:
  * @iter: the iterator
- * @template: (array length=count) (inout): the attributes to get
+ * @templ: (array length=count) (inout): the attributes to get
  * @count: the number of attributes
  *
  * Get attributes for the current matching object.
@@ -999,7 +999,7 @@ p11_kit_iter_destroy_object (P11KitIter *iter)
  */
 CK_RV
 p11_kit_iter_get_attributes (P11KitIter *iter,
-                             CK_ATTRIBUTE *template,
+                             CK_ATTRIBUTE *templ,
                              CK_ULONG count)
 {
 	return_val_if_fail (iter != NULL, CKR_GENERAL_ERROR);
@@ -1009,13 +1009,13 @@ p11_kit_iter_get_attributes (P11KitIter *iter,
 	return_val_if_fail (iter->object != 0, CKR_GENERAL_ERROR);
 
 	return (iter->module->C_GetAttributeValue) (iter->session, iter->object,
-	                                            template, count);
+	                                            templ, count);
 }
 
 /**
  * p11_kit_iter_load_attributes:
  * @iter: the iterator
- * @template: (array length=count) (inout): the attributes to load
+ * @templ: (array length=count) (inout): the attributes to load
  * @count: the number of attributes
  *
  * Retrieve attributes for the current matching object.
@@ -1043,7 +1043,7 @@ p11_kit_iter_get_attributes (P11KitIter *iter,
  */
 CK_RV
 p11_kit_iter_load_attributes (P11KitIter *iter,
-                              CK_ATTRIBUTE *template,
+                              CK_ATTRIBUTE *templ,
                               CK_ULONG count)
 {
 	CK_ATTRIBUTE *original = NULL;
@@ -1059,13 +1059,13 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 	if (count == 0)
 		return CKR_OK;
 
-	original = memdup (template, count * sizeof (CK_ATTRIBUTE));
+	original = memdup (templ, count * sizeof (CK_ATTRIBUTE));
 	return_val_if_fail (original != NULL, CKR_HOST_MEMORY);
 
 	for (i = 0; i < count; i++)
-		template[i].pValue = NULL;
+		templ[i].pValue = NULL;
 
-	rv = (iter->module->C_GetAttributeValue) (iter->session, iter->object, template, count);
+	rv = (iter->module->C_GetAttributeValue) (iter->session, iter->object, templ, count);
 
 	switch (rv) {
 	case CKR_OK:
@@ -1079,23 +1079,23 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 	}
 
 	for (i = 0; i < count; i++) {
-		if (template[i].ulValueLen == (CK_ULONG)-1 ||
-		    template[i].ulValueLen == 0) {
+		if (templ[i].ulValueLen == (CK_ULONG)-1 ||
+		    templ[i].ulValueLen == 0) {
 			free (original[i].pValue);
 
 		} else if (original[i].pValue != NULL &&
-		           template[i].ulValueLen == original[i].ulValueLen) {
-			template[i].pValue = original[i].pValue;
+		           templ[i].ulValueLen == original[i].ulValueLen) {
+			templ[i].pValue = original[i].pValue;
 
 		} else {
-			template[i].pValue = realloc (original[i].pValue, template[i].ulValueLen);
-			return_val_if_fail (template[i].pValue != NULL, CKR_HOST_MEMORY);
+			templ[i].pValue = realloc (original[i].pValue, templ[i].ulValueLen);
+			return_val_if_fail (templ[i].pValue != NULL, CKR_HOST_MEMORY);
 		}
 	}
 
 	free (original);
 
-	rv = (iter->module->C_GetAttributeValue) (iter->session, iter->object, template, count);
+	rv = (iter->module->C_GetAttributeValue) (iter->session, iter->object, templ, count);
 
 	switch (rv) {
 	case CKR_OK:
@@ -1109,10 +1109,10 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 	}
 
 	for (i = 0; i < count; i++) {
-		if (template[i].ulValueLen == (CK_ULONG)-1 ||
-		    template[i].ulValueLen == 0) {
-			free (template[i].pValue);
-			template[i].pValue = NULL;
+		if (templ[i].ulValueLen == (CK_ULONG)-1 ||
+		    templ[i].ulValueLen == 0) {
+			free (templ[i].pValue);
+			templ[i].pValue = NULL;
 		}
 	}
 
