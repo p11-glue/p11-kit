@@ -83,8 +83,7 @@ get_mechanism (const char *type)
 		m.mechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
 	else if (p11_ascii_strcaseeq (type, "ecdsa"))
 		m.mechanism = CKM_ECDSA_KEY_PAIR_GEN;
-	else if (p11_ascii_strcaseeq (type, "ed25519") ||
-		 p11_ascii_strcaseeq (type, "ed448"))
+	else if (p11_ascii_strcaseeq (type, "eddsa"))
 		m.mechanism = CKM_EC_EDWARDS_KEY_PAIR_GEN;
 
 	return m;

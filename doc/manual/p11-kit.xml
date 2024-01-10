@@ -293,7 +293,7 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
 		<varlistentry>
 			<term><option>--type=&lt;algorithm&gt;</option></term>
 			<listitem><para>Specify the type of keys to generate.
-			Supported values are rsa, ecdsa and ed25519.</para></listitem>
+			Supported values are rsa, ecdsa and eddsa.</para></listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--bits=&lt;n&gt;</option></term>
