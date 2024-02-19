@@ -286,10 +286,16 @@ module_reset_objects (CK_SLOT_ID slot_id)
 	{
 		CK_OBJECT_CLASS klass = CKO_PUBLIC_KEY;
 		char *label = "Public prefix key";
+		char *wrapped_label = "Wrapped label";
 		char *value = "value";
 		CK_MECHANISM_TYPE type = CKM_MOCK_PREFIX;
 		CK_BBOOL btrue = CK_TRUE;
 		CK_BBOOL bfalse = CK_FALSE;
+		CK_ATTRIBUTE wrap_template[] = {
+			{ CKA_LABEL, wrapped_label, strlen (wrapped_label) },
+			{ CKA_VERIFY, &btrue, sizeof (btrue) },
+			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
+		};
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
 			{ CKA_LABEL, label, strlen (label) },
@@ -297,6 +303,7 @@ module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_VERIFY, &btrue, sizeof (btrue) },
 			{ CKA_PRIVATE, &bfalse, sizeof (bfalse) },
 			{ CKA_ALWAYS_AUTHENTICATE, &btrue, sizeof (btrue) },
+			{ CKA_WRAP_TEMPLATE, wrap_template, sizeof (wrap_template) },
 			{ CKA_VALUE, value, strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
@@ -1618,6 +1625,51 @@ mock_X_GetObjectSize__invalid_handle (CK_X_FUNCTION_LIST *self,
 	return CKR_SESSION_HANDLE_INVALID;
 }
 
+static CK_RV
+get_recursive_attribute_value (CK_ATTRIBUTE_PTR dst,
+			       CK_ATTRIBUTE_PTR src,
+			       CK_ULONG count)
+{
+	CK_RV rv, ret = CKR_OK;
+	CK_ULONG i;
+	CK_ATTRIBUTE *result, *attr;
+
+	for (i = 0; i < count; ++i) {
+		result = dst + i;
+		attr = src + i;
+
+		result->type = attr->type;
+
+		if (result->pValue == NULL) {
+			result->ulValueLen = attr->ulValueLen;
+			continue;
+		}
+
+		if (result->ulValueLen < attr->ulValueLen) {
+			result->ulValueLen = (CK_ULONG)-1;
+			ret = CKR_BUFFER_TOO_SMALL;
+			continue;
+		}
+
+		if (IS_ATTRIBUTE_ARRAY (attr)) {
+			rv = get_recursive_attribute_value (result->pValue,
+				attr->pValue, attr->ulValueLen / sizeof (CK_ATTRIBUTE));
+			if (rv != CKR_OK) {
+				result->ulValueLen = (CK_ULONG)-1;
+				ret = rv;
+				continue;
+			}
+			result->ulValueLen = attr->ulValueLen;
+			continue;
+		}
+
+		memcpy (result->pValue, attr->pValue, attr->ulValueLen);
+		result->ulValueLen = attr->ulValueLen;
+	}
+
+	return ret;
+}
+
 CK_RV
 mock_C_GetAttributeValue (CK_SESSION_HANDLE session,
                           CK_OBJECT_HANDLE object,
@@ -1654,14 +1706,26 @@ mock_C_GetAttributeValue (CK_SESSION_HANDLE session,
 			continue;
 		}
 
-		if (result->ulValueLen >= attr->ulValueLen) {
-			memcpy (result->pValue, attr->pValue, attr->ulValueLen);
+		if (result->ulValueLen < attr->ulValueLen) {
+			result->ulValueLen = (CK_ULONG)-1;
+			ret = CKR_BUFFER_TOO_SMALL;
+			continue;
+		}
+
+		if (IS_ATTRIBUTE_ARRAY (attr)) {
+			rv = get_recursive_attribute_value (result->pValue,
+				attr->pValue, attr->ulValueLen / sizeof (CK_ATTRIBUTE));
+			if (rv != CKR_OK) {
+				result->ulValueLen = (CK_ULONG)-1;
+				ret = rv;
+				continue;
+			}
 			result->ulValueLen = attr->ulValueLen;
 			continue;
 		}
 
-		result->ulValueLen = (CK_ULONG)-1;
-		ret = CKR_BUFFER_TOO_SMALL;
+		memcpy (result->pValue, attr->pValue, attr->ulValueLen);
+		result->ulValueLen = attr->ulValueLen;
 	}
 
 	return ret;

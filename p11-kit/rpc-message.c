@@ -36,6 +36,7 @@
 #include "config.h"
 
 #define P11_DEBUG_FLAG P11_DEBUG_RPC
+#include "attrs.h"
 #include "debug.h"
 #include "library.h"
 #include "message.h"
@@ -243,34 +244,47 @@ p11_rpc_message_verify_part (p11_rpc_message *msg,
 	return ok;
 }
 
-bool
-p11_rpc_message_write_attribute_buffer (p11_rpc_message *msg,
-                                        CK_ATTRIBUTE_PTR arr,
-                                        CK_ULONG num)
+static void
+p11_rpc_message_write_attribute_buffer_array (p11_rpc_message *msg,
+					      CK_ATTRIBUTE_PTR arr,
+					      CK_ULONG num)
 {
 	CK_ATTRIBUTE_PTR attr;
 	CK_ULONG i;
 
 	assert (num == 0 || arr != NULL);
-	assert (msg != NULL);
-	assert (msg->output != NULL);
-
-	/* Make sure this is in the right order */
-	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fA"));
 
 	/* Write the number of items */
 	p11_rpc_buffer_add_uint32 (msg->output, num);
 
 	for (i = 0; i < num; ++i) {
-		attr = &(arr[i]);
+		attr = arr + i;
 
 		/* The attribute type */
 		p11_rpc_buffer_add_uint32 (msg->output, attr->type);
 
 		/* And the attribute buffer length */
 		p11_rpc_buffer_add_uint32 (msg->output, attr->pValue ? attr->ulValueLen : 0);
-	}
 
+		if (IS_ATTRIBUTE_ARRAY (attr))
+			p11_rpc_message_write_attribute_buffer_array (
+				msg, attr->pValue,
+				attr->ulValueLen / sizeof (CK_ATTRIBUTE));
+	}
+}
+
+bool
+p11_rpc_message_write_attribute_buffer (p11_rpc_message *msg,
+					CK_ATTRIBUTE_PTR arr,
+					CK_ULONG num)
+{
+	assert (msg != NULL);
+	assert (msg->output != NULL);
+
+	/* Make sure this is in the right order */
+	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fA"));
+
+	p11_rpc_message_write_attribute_buffer_array (msg, arr, num);
 	return !p11_buffer_failed (msg->output);
 }
 
@@ -903,19 +917,95 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	}
 }
 
+static bool
+p11_rpc_message_get_byte_value (p11_rpc_message *msg,
+			        p11_buffer *buffer,
+			        size_t *offset,
+			        void *value,
+			        CK_ULONG *value_length)
+{
+	return p11_rpc_buffer_get_byte_value (buffer, offset, value, value_length);
+}
+
+static bool
+p11_rpc_message_get_ulong_value (p11_rpc_message *msg,
+			         p11_buffer *buffer,
+			         size_t *offset,
+			         void *value,
+			         CK_ULONG *value_length)
+{
+	return p11_rpc_buffer_get_ulong_value (buffer, offset, value, value_length);
+}
+
+static bool
+p11_rpc_message_get_attribute_array_value (p11_rpc_message *msg,
+					   p11_buffer *buffer,
+					   size_t *offset,
+					   void *value,
+					   CK_ULONG *value_length)
+{
+	uint32_t count, i;
+	CK_ATTRIBUTE *attr = value;
+
+	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
+		return false;
+
+	if (value_length != NULL)
+		*value_length = count * sizeof (CK_ATTRIBUTE);
+
+	if (value == NULL)
+		return true;
+
+	for (i = 0; i < count; ++i)
+		if (!p11_rpc_message_get_attribute (msg, buffer, offset, attr + i))
+			return false;
+
+	return true;
+}
+
+static bool
+p11_rpc_message_get_mechanism_type_array_value (p11_rpc_message *msg,
+					        p11_buffer *buffer,
+					        size_t *offset,
+					        void *value,
+					        CK_ULONG *value_length)
+{
+	return p11_rpc_buffer_get_mechanism_type_array_value (buffer, offset, value, value_length);
+}
+
+static bool
+p11_rpc_message_get_date_value (p11_rpc_message *msg,
+			        p11_buffer *buffer,
+			        size_t *offset,
+			        void *value,
+			        CK_ULONG *value_length)
+{
+	return p11_rpc_buffer_get_date_value (buffer, offset, value, value_length);
+}
+
+static bool
+p11_rpc_message_get_byte_array_value (p11_rpc_message *msg,
+				      p11_buffer *buffer,
+				      size_t *offset,
+				      void *value,
+				      CK_ULONG *value_length)
+{
+	return p11_rpc_buffer_get_byte_array_value (buffer, offset, value, value_length);
+}
+
 typedef struct {
 	p11_rpc_value_type type;
 	p11_rpc_value_encoder encode;
-	p11_rpc_value_decoder decode;
+	p11_rpc_message_decoder decode;
 } p11_rpc_attribute_serializer;
 
 static p11_rpc_attribute_serializer p11_rpc_attribute_serializers[] = {
-	{ P11_RPC_VALUE_BYTE, p11_rpc_buffer_add_byte_value, p11_rpc_buffer_get_byte_value },
-	{ P11_RPC_VALUE_ULONG, p11_rpc_buffer_add_ulong_value, p11_rpc_buffer_get_ulong_value },
-	{ P11_RPC_VALUE_ATTRIBUTE_ARRAY, p11_rpc_buffer_add_attribute_array_value, p11_rpc_buffer_get_attribute_array_value },
-	{ P11_RPC_VALUE_MECHANISM_TYPE_ARRAY, p11_rpc_buffer_add_mechanism_type_array_value, p11_rpc_buffer_get_mechanism_type_array_value },
-	{ P11_RPC_VALUE_DATE, p11_rpc_buffer_add_date_value, p11_rpc_buffer_get_date_value },
-	{ P11_RPC_VALUE_BYTE_ARRAY, p11_rpc_buffer_add_byte_array_value, p11_rpc_buffer_get_byte_array_value }
+	{ P11_RPC_VALUE_BYTE, p11_rpc_buffer_add_byte_value, p11_rpc_message_get_byte_value },
+	{ P11_RPC_VALUE_ULONG, p11_rpc_buffer_add_ulong_value, p11_rpc_message_get_ulong_value },
+	{ P11_RPC_VALUE_ATTRIBUTE_ARRAY, p11_rpc_buffer_add_attribute_array_value, p11_rpc_message_get_attribute_array_value },
+	{ P11_RPC_VALUE_MECHANISM_TYPE_ARRAY, p11_rpc_buffer_add_mechanism_type_array_value, p11_rpc_message_get_mechanism_type_array_value },
+	{ P11_RPC_VALUE_DATE, p11_rpc_buffer_add_date_value, p11_rpc_message_get_date_value },
+	{ P11_RPC_VALUE_BYTE_ARRAY, p11_rpc_buffer_add_byte_array_value, p11_rpc_message_get_byte_array_value }
 };
 
 P11_STATIC_ASSERT(sizeof(CK_BYTE) <= sizeof(uint8_t));
@@ -974,6 +1064,12 @@ p11_rpc_buffer_add_attribute_array_value (p11_buffer *buffer,
 	/* Check if count can be converted to uint32_t. */
 	if (count > UINT32_MAX) {
 		p11_buffer_fail (buffer);
+		return;
+	}
+
+	/* When value is NULL, write an empty attribute array */
+	if (attrs == NULL) {
+		p11_rpc_buffer_add_uint32 (buffer, 0);
 		return;
 	}
 
@@ -1144,29 +1240,7 @@ p11_rpc_buffer_get_attribute_array_value (p11_buffer *buffer,
 					  void *value,
 					  CK_ULONG *value_length)
 {
-	uint32_t count, i;
-	CK_ATTRIBUTE *attr, temp;
-
-	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
-		return false;
-
-	if (!value) {
-		memset (&temp, 0, sizeof (CK_ATTRIBUTE));
-		attr = &temp;
-	} else
-		attr = value;
-
-	for (i = 0; i < count; i++) {
-		if (!p11_rpc_buffer_get_attribute (buffer, offset, attr))
-			return false;
-		if (value)
-			attr++;
-	}
-
-	if (value_length)
-		*value_length = count * sizeof (CK_ATTRIBUTE);
-
-	return true;
+	return p11_rpc_message_get_attribute_array_value (NULL, buffer, offset, value, value_length);
 }
 
 bool
@@ -1252,11 +1326,13 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 }
 
 bool
-p11_rpc_buffer_get_attribute (p11_buffer *buffer,
-			      size_t *offset,
-			      CK_ATTRIBUTE *attr)
+p11_rpc_message_get_attribute (p11_rpc_message *msg,
+			       p11_buffer *buffer,
+			       size_t *offset,
+			       CK_ATTRIBUTE *attr)
 {
-	uint32_t type, length, decode_length;
+	uint32_t type, length;
+	CK_ULONG decode_length;
 	unsigned char validity;
 	p11_rpc_attribute_serializer *serializer;
 	p11_rpc_value_type value_type;
@@ -1279,22 +1355,35 @@ p11_rpc_buffer_get_attribute (p11_buffer *buffer,
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
 		return false;
 
+	if (length == 0) {
+		attr->pValue = NULL;
+	} else if (msg != NULL) {
+		/* Allocate memory for the attribute value */
+		attr->pValue = p11_rpc_message_alloc_extra (msg, length);
+		if (attr->pValue == NULL)
+			return false;
+	}
+
 	/* Decode the attribute value */
 	value_type = map_attribute_to_value_type (type);
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
-	if (!serializer->decode (buffer, offset, attr->pValue, &attr->ulValueLen))
+	if (!serializer->decode (msg, buffer, offset, attr->pValue, &decode_length))
 		return false;
-	if (!attr->pValue) {
-		decode_length = attr->ulValueLen;
-		attr->ulValueLen = length;
-		if (decode_length > length) {
-			return false;
-		}
-	}
+	if (attr->pValue == NULL && length != 0 && decode_length > length)
+		return false;
 	attr->type = type;
+	attr->ulValueLen = length;
 	return true;
+}
+
+bool
+p11_rpc_buffer_get_attribute (p11_buffer *buffer,
+			      size_t *offset,
+			      CK_ATTRIBUTE *attr)
+{
+	return p11_rpc_message_get_attribute (NULL, buffer, offset, attr);
 }
 
 /* Used to override the supported mechanisms in tests */

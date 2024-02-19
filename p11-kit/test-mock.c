@@ -607,6 +607,135 @@ test_set_attribute_value (void)
 }
 
 static void
+test_get_wrap_template (void)
+{
+	CK_RV rv;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	char label[sizeof ("Wrapped label") - 1] = { 0 };
+	CK_BBOOL verify = CK_FALSE;
+	CK_BBOOL encrypt = CK_FALSE;
+	CK_ATTRIBUTE temp[] = {
+		{ 0 },
+		{ 0 },
+		{ 0 },
+	};
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_WRAP_TEMPLATE, temp, sizeof (temp) },
+	};
+	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+
+	module = setup_mock_module (&session);
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_LABEL);
+	assert_ptr_eq (temp[0].pValue, NULL);
+	assert_num_eq (temp[0].ulValueLen, sizeof (label));
+	assert_num_eq (temp[1].type, CKA_VERIFY);
+	assert_ptr_eq (temp[1].pValue, NULL);
+	assert_num_eq (temp[1].ulValueLen, sizeof (verify));
+	assert_num_eq (temp[2].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[2].pValue, NULL);
+	assert_num_eq (temp[2].ulValueLen, sizeof (encrypt));
+
+	temp[0].pValue = label;
+	temp[1].pValue = &verify;
+	temp[2].pValue = &encrypt;
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_LABEL);
+	assert_ptr_eq (temp[0].pValue, label);
+	assert_num_eq (temp[0].ulValueLen, sizeof (label));
+	assert_num_eq (temp[1].type, CKA_VERIFY);
+	assert_ptr_eq (temp[1].pValue, &verify);
+	assert_num_eq (temp[1].ulValueLen, sizeof (verify));
+	assert_num_eq (temp[2].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[2].pValue, &encrypt);
+	assert_num_eq (temp[2].ulValueLen, sizeof (encrypt));
+	assert (strncmp (label, "Wrapped label", sizeof (label)) == 0);
+	assert (verify == CK_TRUE);
+	assert (encrypt == CK_TRUE);
+
+	teardown_mock_module (module);
+}
+
+static void
+test_set_wrap_template (void)
+{
+	CK_RV rv;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	char label[] = { 'T', 'E', 'S', 'T' };
+	CK_BBOOL local = CK_TRUE;
+	CK_ATTRIBUTE temp[] = {
+		{ CKA_LABEL, label, sizeof (label) },
+		{ CKA_LOCAL, &local, sizeof (local) },
+	};
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_WRAP_TEMPLATE, temp, sizeof (temp) },
+	};
+	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+
+	module = setup_mock_module (&session);
+
+	rv = (module->C_SetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+
+	attrs[0].pValue = NULL;
+	attrs[0].ulValueLen = 0;
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, NULL);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+
+	memset (temp, 0, sizeof (temp));
+	attrs[0].pValue = temp;
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_LABEL);
+	assert_ptr_eq (temp[0].pValue, NULL);
+	assert_num_eq (temp[0].ulValueLen, sizeof (label));
+	assert_num_eq (temp[1].type, CKA_LOCAL);
+	assert_ptr_eq (temp[1].pValue, NULL);
+	assert_num_eq (temp[1].ulValueLen, sizeof (local));
+
+	memset (label, 0, sizeof (label));
+	local = CK_FALSE;
+	temp[0].pValue = label;
+	temp[1].pValue = &local;
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_LABEL);
+	assert_ptr_eq (temp[0].pValue, label);
+	assert_num_eq (temp[0].ulValueLen, sizeof (label));
+	assert_num_eq (temp[1].type, CKA_LOCAL);
+	assert_ptr_eq (temp[1].pValue, &local);
+	assert_num_eq (temp[1].ulValueLen, sizeof (local));
+	assert (strncmp (label, "TEST", sizeof (label)) == 0);
+	assert (local == CK_TRUE);
+
+	teardown_mock_module (module);
+}
+
+static void
 test_create_object (void)
 {
 	CK_FUNCTION_LIST_PTR module;
@@ -2581,6 +2710,8 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_login_logout, "%s/test_login_logout", prefix);
 	p11_test (test_get_attribute_value, "%s/test_get_attribute_value", prefix);
 	p11_test (test_set_attribute_value, "%s/test_set_attribute_value", prefix);
+	p11_test (test_get_wrap_template, "%s/test_get_wrap_template", prefix);
+	p11_test (test_set_wrap_template, "%s/test_set_wrap_template", prefix);
 	p11_test (test_create_object, "%s/test_create_object", prefix);
 	p11_test (test_create_object_private, "%s/test_create_object_private", prefix);
 	p11_test (test_copy_object, "%s/test_copy_object", prefix);

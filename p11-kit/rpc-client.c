@@ -240,13 +240,8 @@ proto_read_attribute_array (p11_rpc_message *msg,
 		CK_ATTRIBUTE temp;
 
 		memset (&temp, 0, sizeof (temp));
-		if (!p11_rpc_buffer_get_attribute (msg->input, &offset, &temp)) {
+		if (!p11_rpc_message_get_attribute (msg, msg->input, &offset, &temp)) {
 			msg->parsed = offset;
-			return PARSE_ERROR;
-		}
-
-		if (IS_ATTRIBUTE_ARRAY (&temp)) {
-			p11_debug("recursive attribute array is not supported");
 			return PARSE_ERROR;
 		}
 
