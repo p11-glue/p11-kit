@@ -562,6 +562,12 @@ field_to_attribute (p11_persist *persist,
 		return false;
 	}
 
+	/* Ignore recursive attributes */
+	if (IS_ATTRIBUTE_ARRAY (&attr)) {
+		free (attr.pValue);
+		return true;
+	}
+
 	*attrs = p11_attrs_take (*attrs, attr.type,
 	                         attr.pValue, attr.ulValueLen);
 	return true;

@@ -141,12 +141,12 @@ attrs_build (CK_ATTRIBUTE *attrs,
 		/* The attribute exists and we're not overriding */
 		} else if (!override) {
 			if (take_values)
-				free (add->pValue);
+				p11_attr_clear (add);
 			continue;
 
 		/* The attribute exists but we're overriding */
 		} else {
-			free (attr->pValue);
+			p11_attr_clear (attr);
 		}
 
 		if (take_values) {

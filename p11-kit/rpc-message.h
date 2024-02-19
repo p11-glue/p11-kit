@@ -276,9 +276,6 @@ typedef enum _p11_rpc_value_type {
 	P11_RPC_VALUE_BYTE_ARRAY
 } p11_rpc_value_type;
 
-typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
-typedef bool (*p11_rpc_value_decoder) (p11_buffer *, size_t *, void *, CK_ULONG *);
-
 typedef enum _p11_rpc_message_type {
 	P11_RPC_REQUEST = 1,
 	P11_RPC_RESPONSE
@@ -294,6 +291,10 @@ typedef struct {
 	const char *sigverify;
 	void *extra;
 } p11_rpc_message;
+
+typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
+typedef bool (*p11_rpc_value_decoder) (p11_buffer *, size_t *, void *, CK_ULONG *);
+typedef bool (*p11_rpc_message_decoder) (p11_rpc_message *msg, p11_buffer *, size_t *, void *, CK_ULONG *);
 
 void             p11_rpc_message_init                    (p11_rpc_message *msg,
                                                           p11_buffer *input,
@@ -370,6 +371,11 @@ bool             p11_rpc_message_read_space_string       (p11_rpc_message *msg,
 
 bool             p11_rpc_message_read_version            (p11_rpc_message *msg,
                                                           CK_VERSION* version);
+
+bool             p11_rpc_message_get_attribute           (p11_rpc_message *msg,
+							  p11_buffer *buffer,
+							  size_t *offset,
+							  CK_ATTRIBUTE *attr);
 
 p11_buffer *     p11_rpc_buffer_new                      (size_t reserve);
 

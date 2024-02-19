@@ -247,21 +247,15 @@ proto_write_ulong_array (p11_rpc_message *msg,
 }
 
 static CK_RV
-proto_read_attribute_buffer (p11_rpc_message *msg,
-                             CK_ATTRIBUTE_PTR *result,
-                             CK_ULONG *n_result)
+proto_read_attribute_buffer_array (p11_rpc_message *msg,
+				   CK_ATTRIBUTE_PTR *result,
+				   CK_ULONG *n_result)
 {
-	CK_ATTRIBUTE_PTR attrs;
+	CK_RV rv;
+	CK_ATTRIBUTE_PTR attrs, array;
+	CK_ULONG n_array;
 	uint32_t n_attrs, i;
 	uint32_t value;
-
-	assert (msg != NULL);
-	assert (result != NULL);
-	assert (n_result != NULL);
-	assert (msg->input != NULL);
-
-	/* Make sure this is in the right order */
-	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fA"));
 
 	/* Read the number of attributes */
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &n_attrs))
@@ -288,6 +282,13 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 		if (value == 0) {
 			attrs[i].pValue = NULL;
 			attrs[i].ulValueLen = 0;
+		} else if (IS_ATTRIBUTE_ARRAY (attrs + i)) {
+			rv = proto_read_attribute_buffer_array (msg, &array, &n_array);
+			if (rv != CKR_OK)
+				return rv;
+			assert (n_array * sizeof (CK_ATTRIBUTE) <= value);
+			attrs[i].pValue = array;
+			attrs[i].ulValueLen = n_array * sizeof (CK_ATTRIBUTE);
 		} else {
 			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, value);
 			if (!attrs[i].pValue)
@@ -299,6 +300,22 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 	*result = attrs;
 	*n_result = n_attrs;
 	return CKR_OK;
+}
+
+static CK_RV
+proto_read_attribute_buffer (p11_rpc_message *msg,
+			     CK_ATTRIBUTE_PTR *result,
+			     CK_ULONG *n_result)
+{
+	assert (msg != NULL);
+	assert (result != NULL);
+	assert (n_result != NULL);
+	assert (msg->input != NULL);
+
+	/* Make sure this is in the right order */
+	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fA"));
+
+	return proto_read_attribute_buffer_array (msg, result, n_result);
 }
 
 static CK_RV
@@ -327,39 +344,9 @@ proto_read_attribute_array (p11_rpc_message *msg,
 		return CKR_DEVICE_MEMORY;
 
 	/* Now go through and fill in each one */
-	for (i = 0; i < n_attrs; ++i) {
-		size_t offset = msg->parsed;
-		CK_ATTRIBUTE temp;
-
-		/* Check the length needed to store the value */
-		memset (&temp, 0, sizeof (temp));
-		if (!p11_rpc_buffer_get_attribute (msg->input, &offset, &temp)) {
-			msg->parsed = offset;
+	for (i = 0; i < n_attrs; ++i)
+		if (!p11_rpc_message_get_attribute (msg, msg->input, &msg->parsed, &attrs[i]))
 			return PARSE_ERROR;
-		}
-
-		if (IS_ATTRIBUTE_ARRAY (&temp)) {
-			p11_debug("recursive attribute array is not supported");
-			return PARSE_ERROR;
-		}
-
-		attrs[i].type = temp.type;
-
-		/* Whether this one is valid or not */
-		if (temp.ulValueLen != ((CK_ULONG)-1)) {
-			size_t offset2 = msg->parsed;
-			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, temp.ulValueLen);
-			if (!p11_rpc_buffer_get_attribute (msg->input, &offset2, &attrs[i])) {
-				msg->parsed = offset2;
-				return PARSE_ERROR;
-			}
-		} else {
-			attrs[i].pValue = NULL;
-			attrs[i].ulValueLen = -1;
-		}
-
-		msg->parsed = offset;
-	}
 
 	*result = attrs;
 	*n_result = n_attrs;

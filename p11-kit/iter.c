@@ -1012,6 +1012,52 @@ p11_kit_iter_get_attributes (P11KitIter *iter,
 	                                            templ, count);
 }
 
+static CK_RV
+prepare_recursive_attribute (P11KitIter *iter,
+			     CK_ATTRIBUTE *attr,
+			     CK_ATTRIBUTE *templ,
+			     CK_ULONG templ_len)
+{
+	CK_RV rv;
+	CK_ULONG i;
+
+	return_val_if_fail (iter != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (attr != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (templ != NULL, CKR_GENERAL_ERROR);
+	return_val_if_fail (templ_len != 0, CKR_GENERAL_ERROR);
+	return_val_if_fail (IS_ATTRIBUTE_ARRAY (attr), CKR_GENERAL_ERROR);
+
+	memset (templ, 0, templ_len);
+	rv = (iter->module->C_GetAttributeValue) (iter->session, iter->object, attr, 1);
+
+	switch (rv) {
+	case CKR_OK:
+	case CKR_ATTRIBUTE_TYPE_INVALID:
+	case CKR_ATTRIBUTE_SENSITIVE:
+		break;
+	default:
+		return_val_if_fail (rv != CKR_BUFFER_TOO_SMALL, rv);
+		return rv;
+	}
+
+	for (i = 0; i < templ_len / sizeof (CK_ATTRIBUTE); ++i) {
+		return_val_if_fail (templ[i].type != CKA_INVALID, CKR_GENERAL_ERROR);
+		return_val_if_fail (templ[i].ulValueLen != 0, CKR_GENERAL_ERROR);
+		return_val_if_fail (templ[i].ulValueLen != (CK_ULONG)-1, CKR_GENERAL_ERROR);
+
+		templ[i].pValue = malloc (templ[i].ulValueLen);
+		return_val_if_fail (templ[i].pValue != NULL, CKR_HOST_MEMORY);
+
+		if (IS_ATTRIBUTE_ARRAY (attr)) {
+                        rv = prepare_recursive_attribute (iter, attr, templ[i].pValue,
+							  templ[i].ulValueLen);
+			return_val_if_fail (rv == CKR_OK, rv);
+                }
+	}
+
+	return CKR_OK;
+}
+
 /**
  * p11_kit_iter_load_attributes:
  * @iter: the iterator
@@ -1081,7 +1127,7 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 	for (i = 0; i < count; i++) {
 		if (templ[i].ulValueLen == (CK_ULONG)-1 ||
 		    templ[i].ulValueLen == 0) {
-			free (original[i].pValue);
+			p11_attr_clear (original + i);
 
 		} else if (original[i].pValue != NULL &&
 		           templ[i].ulValueLen == original[i].ulValueLen) {
@@ -1090,6 +1136,16 @@ p11_kit_iter_load_attributes (P11KitIter *iter,
 		} else {
 			templ[i].pValue = realloc (original[i].pValue, templ[i].ulValueLen);
 			return_val_if_fail (templ[i].pValue != NULL, CKR_HOST_MEMORY);
+
+			if (IS_ATTRIBUTE_ARRAY (templ + i)) {
+				rv = prepare_recursive_attribute (iter, templ + i,
+								  templ[i].pValue,
+								  templ[i].ulValueLen);
+				if (rv != CKR_OK) {
+					free (original);
+					return rv;
+				}
+			}
 		}
 	}
 
