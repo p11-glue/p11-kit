@@ -365,6 +365,7 @@ dlopen_and_get_function_list (Module *mod,
 	dl_module_t dl;
 	char *error;
 	CK_RV rv;
+	int fallback = 0;
 
 	assert (mod != NULL);
 	assert (path != NULL);
@@ -392,15 +393,22 @@ dlopen_and_get_function_list (Module *mod,
 	if (gi) {
 		/* Get the default standard interface */
 		rv = gi ((unsigned char *)"PKCS 11", NULL, &interface, 0);
-		if (rv != CKR_OK) {
+		switch (rv) {
+		case CKR_FUNCTION_NOT_SUPPORTED:
+			fallback = 1;
+			break;
+		case CKR_OK:
+			/* TODO check the version and flag it somehere? */
+			*funcs = interface->pFunctionList;
+			break;
+		default:
 			p11_message (_("call to C_GetInterface failed in module: %s: %s"),
 				     path, p11_kit_strerror (rv));
 			return rv;
 		}
+	}
 
-		/* TODO check the version and flag it somehere? */
-		*funcs = interface->pFunctionList;
-	} else {
+	if (!gi || fallback) {
 		p11_debug ("C_GetInterface not available. Falling back to C_GetFunctionList()");
 
 		gfl = p11_dl_symbol (dl, "C_GetFunctionList");
