@@ -789,10 +789,11 @@ rpc_C_Initialize (CK_X_FUNCTION_LIST *self,
 			assert (module->vtable->disconnect != NULL);
 			(module->vtable->disconnect) (module->vtable, reserved);
 			ret = (module->vtable->connect) (module->vtable, reserved);
-
-			module->version = 0;
-			ret = (module->vtable->authenticate) (module->vtable,
-							      &module->version);
+			if (ret == CKR_OK) {
+				module->version = 0;
+				ret = (module->vtable->authenticate) (module->vtable,
+								      &module->version);
+			}
 		}
 #endif
 	}

@@ -332,7 +332,7 @@ p11_dl_error (void)
 			MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPSTR)&msg_buf, 0, NULL);
 
-	if (msg_buf == NULL);
+	if (msg_buf == NULL)
 		return NULL;
 
 	result = strdup (msg_buf);
