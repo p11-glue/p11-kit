@@ -1333,6 +1333,7 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 {
 	uint32_t type, length;
 	CK_ULONG decode_length;
+	size_t saved_offset;
 	unsigned char validity;
 	p11_rpc_attribute_serializer *serializer;
 	p11_rpc_value_type value_type;
@@ -1364,15 +1365,26 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 			return false;
 	}
 
-	/* Decode the attribute value */
 	value_type = map_attribute_to_value_type (type);
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
-	if (!serializer->decode (msg, buffer, offset, attr->pValue, &decode_length))
+
+	/* Get the attribute value length */
+	saved_offset = *offset;
+	if (!serializer->decode (NULL, buffer, offset, NULL, &decode_length))
 		return false;
-	if (attr->pValue == NULL && length != 0 && decode_length > length)
-		return false;
+
+	/* Decode the attribute value */
+	if (attr->pValue != NULL) {
+		if (length < decode_length)
+			return false;
+
+		*offset = saved_offset;
+		if (!serializer->decode (msg, buffer, offset, attr->pValue, NULL))
+			return false;
+	}
+
 	attr->type = type;
 	attr->ulValueLen = length;
 	return true;
