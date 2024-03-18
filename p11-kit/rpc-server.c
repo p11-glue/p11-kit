@@ -255,7 +255,7 @@ proto_read_attribute_buffer_array (p11_rpc_message *msg,
 	CK_ATTRIBUTE_PTR attrs, array;
 	CK_ULONG n_array;
 	uint32_t n_attrs, i;
-	uint32_t value;
+	uint32_t type, length;
 
 	/* Read the number of attributes */
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &n_attrs))
@@ -270,30 +270,32 @@ proto_read_attribute_buffer_array (p11_rpc_message *msg,
 	for (i = 0; i < n_attrs; ++i) {
 
 		/* The attribute type */
-		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
+		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &type))
 			return PARSE_ERROR;
 
-		attrs[i].type = value;
+		attrs[i].type = type;
 
 		/* The number of bytes to allocate */
-		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &value))
+		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &length))
 			return PARSE_ERROR;
 
-		if (value == 0) {
+		if (length == 0) {
 			attrs[i].pValue = NULL;
 			attrs[i].ulValueLen = 0;
 		} else if (IS_ATTRIBUTE_ARRAY (attrs + i)) {
 			rv = proto_read_attribute_buffer_array (msg, &array, &n_array);
 			if (rv != CKR_OK)
 				return rv;
-			assert (n_array * sizeof (CK_ATTRIBUTE) <= value);
+			if (ULONG_MAX / n_array < sizeof (CK_ATTRIBUTE) ||
+			    length < n_array * sizeof (CK_ATTRIBUTE))
+				return PARSE_ERROR;
 			attrs[i].pValue = array;
 			attrs[i].ulValueLen = n_array * sizeof (CK_ATTRIBUTE);
 		} else {
-			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, value);
+			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, length);
 			if (!attrs[i].pValue)
 				return CKR_DEVICE_MEMORY;
-			attrs[i].ulValueLen = value;
+			attrs[i].ulValueLen = length;
 		}
 	}
 
