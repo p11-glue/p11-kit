@@ -1,6 +1,5 @@
 # p11-kit
-
-[![GitHub Build Status](https://github.com/p11-glue/p11-kit/workflows/test/badge.svg)](https://github.com/p11-glue/p11-kit/actions?query=workflow%3Atest) [![Coverage Status](https://img.shields.io/coveralls/p11-glue/p11-kit.svg)](https://coveralls.io/r/p11-glue/p11-kit) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1627/badge)](https://bestpractices.coreinfrastructure.org/en/projects/1627)
+[![test](https://github.com/p11-glue/p11-kit/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/p11-glue/p11-kit/actions/workflows/test.yaml) [![Coverage Status](https://img.shields.io/coveralls/p11-glue/p11-kit.svg)](https://coveralls.io/r/p11-glue/p11-kit) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1627/badge)](https://bestpractices.coreinfrastructure.org/en/projects/1627)
 
 p11-kit aims to solve problems with coordinating the use of [PKCS #11]
 by different components or libraries living in the same process, by
