@@ -286,10 +286,10 @@ proto_read_attribute_buffer_array (p11_rpc_message *msg,
 			rv = proto_read_attribute_buffer_array (msg, &array, &n_array);
 			if (rv != CKR_OK)
 				return rv;
-			if (ULONG_MAX / n_array < sizeof (CK_ATTRIBUTE) ||
+			if ((n_array != 0 && ULONG_MAX / n_array < sizeof (CK_ATTRIBUTE)) ||
 			    length < n_array * sizeof (CK_ATTRIBUTE))
 				return PARSE_ERROR;
-			attrs[i].pValue = array;
+			attrs[i].pValue = (n_array == 0) ? NULL : array;
 			attrs[i].ulValueLen = n_array * sizeof (CK_ATTRIBUTE);
 		} else {
 			attrs[i].pValue = p11_rpc_message_alloc_extra (msg, length);
