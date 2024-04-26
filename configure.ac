@@ -638,11 +638,20 @@ AC_SUBST(GENHTML)
 P11KIT_LT_RELEASE=$P11KIT_CURRENT:$P11KIT_REVISION:$P11KIT_AGE
 AC_SUBST(P11KIT_LT_RELEASE)
 
-echo $PACKAGE_VERSION | tr '.' ' ' | while read major minor unused; do
-	AC_DEFINE_UNQUOTED(PACKAGE_MAJOR, $major, [Major version of package])
-	AC_DEFINE_UNQUOTED(PACKAGE_MINOR, $minor, [Minor version of package])
-	break
-done
+v=$PACKAGE_VERSION
+PACKAGE_MAJOR=${v%%\.*}
+v=${v#$PACKAGE_MAJOR\.}
+PACKAGE_MINOR=${v%%\.*}
+v=${v#$PACKAGE_MINOR\.}
+PACKAGE_MICRO=${v%%\.*}
+
+AC_SUBST(PACKAGE_MAJOR)
+AC_SUBST(PACKAGE_MINOR)
+AC_SUBST(PACKAGE_MICRO)
+
+AC_DEFINE_UNQUOTED(PACKAGE_MAJOR, $PACKAGE_MAJOR, [Major version of package])
+AC_DEFINE_UNQUOTED(PACKAGE_MINOR, $PACKAGE_MINOR, [Minor version of package])
+AC_DEFINE_UNQUOTED(PACKAGE_MICRO, $PACKAGE_MICRO, [Micro version of package])
 
 case "$host" in
 *-*-darwin*)
@@ -711,6 +720,7 @@ AC_CONFIG_FILES([Makefile
 	po/Makefile.in
 	p11-kit/p11-kit-1.pc
 	p11-kit/pkcs11.conf.example
+	p11-kit/version.h
 ])
 AC_OUTPUT
 

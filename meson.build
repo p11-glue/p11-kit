@@ -29,6 +29,7 @@ conf = configuration_data()
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set('PACKAGE_MAJOR', major_version)
 conf.set('PACKAGE_MINOR', minor_version)
+conf.set('PACKAGE_MICRO', micro_version)
 
 host_system = host_machine.system()
 if host_system == 'windows'

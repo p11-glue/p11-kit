@@ -507,6 +507,7 @@ c_tests += \
 	test-filter \
 	test-transport \
 	test-transport3 \
+	test-version \
 	$(NULL)
 
 test_log_SOURCES = p11-kit/test-log.c
@@ -531,6 +532,9 @@ test_transport3_CFLAGS = $(AM_CPPFLAGS) $(libp11_kit_testable_la_CFLAGS)
 
 test_virtual_SOURCES = p11-kit/test-virtual.c
 test_virtual_LDADD = $(p11_kit_LIBS)
+
+test_version_SOURCES = p11-kit/test-version.c
+test_version_LDADD = $(p11_kit_LIBS)
 
 check_LTLIBRARIES += \
 	mock-one.la \

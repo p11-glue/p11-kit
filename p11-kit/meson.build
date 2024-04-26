@@ -1,9 +1,18 @@
+version_h = configure_file(
+  input: 'version.h.in',
+  output: '@BASENAME@',
+  configuration: conf,
+)
+
+version_h_dep = declare_dependency(sources: version_h)
+
 install_headers('deprecated.h',
                 'iter.h',
                 'p11-kit.h',
                 'pin.h',
                 'remote.h',
                 'uri.h',
+                version_h,
                 subdir: 'p11-kit-1/p11-kit')
 
 libp11_kit_internal_sources = [
@@ -341,7 +350,8 @@ if get_option('test')
     'test-log3',
     'test-filter',
     'test-transport',
-    'test-transport3'
+    'test-transport3',
+    'test-version',
   ]
 
   # Some tests fail to link on macOS because they need p11_library_mutex, but
@@ -366,7 +376,7 @@ if get_option('test')
     t = executable(name, '@0@.c'.format(name),
                    c_args: tests_c_args + libp11_kit_testable_c_args,
                    include_directories: [configinc, commoninc],
-                   dependencies: [libp11_test_dep] + libffi_deps + dlopen_deps,
+                   dependencies: [libp11_test_dep, version_h_dep] + libffi_deps + dlopen_deps,
                    link_with: link_with,
                    link_whole: link_whole)
     test(name, t)
