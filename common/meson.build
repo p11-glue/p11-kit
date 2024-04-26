@@ -113,7 +113,7 @@ if with_asn1
     'p11-asn1', libp11_asn1_sources,
     gnu_symbol_visibility: 'hidden',
     include_directories: configinc,
-    dependencies: asn_h_dep,
+    dependencies: [asn_h_dep] + libtasn1_deps,
   )
 
   libp11_asn1_dep = declare_dependency(
