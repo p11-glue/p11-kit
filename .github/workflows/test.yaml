@@ -134,7 +134,7 @@ jobs:
           github-token: ${{ secrets.github_token }}
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-latest
     env:
       MESON_BUILD_OPTS: -Dclosures=0
     steps:
