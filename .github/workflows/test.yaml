@@ -14,7 +14,7 @@ jobs:
       image: ghcr.io/p11-glue/p11-kit:master
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-autotools
@@ -27,7 +27,7 @@ jobs:
       image: ghcr.io/p11-glue/p11-kit:master
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - run: dnf remove -y libtasn1-devel
@@ -39,7 +39,7 @@ jobs:
       image: ghcr.io/p11-glue/p11-kit:master
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - run: dnf remove -y libtasn1-devel
@@ -53,7 +53,7 @@ jobs:
       MESON_BUILD_OPTS: -Db_sanitize=address
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
@@ -66,7 +66,7 @@ jobs:
       MESON_BUILD_OPTS: -Db_sanitize=undefined
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
@@ -79,7 +79,7 @@ jobs:
       SCAN_BUILD: scan-build --status-bugs
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
@@ -94,7 +94,7 @@ jobs:
       WINEPATH: /usr/x86_64-w64-mingw32/sys-root/mingw/bin
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
@@ -107,7 +107,7 @@ jobs:
       PROFILE: cppcheck
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - run: |
@@ -121,7 +121,7 @@ jobs:
       MESON_BUILD_OPTS: -Db_coverage=true
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
@@ -139,7 +139,7 @@ jobs:
       MESON_BUILD_OPTS: -Dclosures=0
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Install dependencies
@@ -159,7 +159,7 @@ jobs:
       MESON_BUILD_OPTS: -Db_sanitize=address -Db_sanitize=undefined -Dclosures=0
     steps:
       # Checkout repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
