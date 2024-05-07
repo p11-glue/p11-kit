@@ -39,7 +39,7 @@
 #include "test.h"
 
 static void
-test_check (void)
+test_check_compile_time (void)
 {
 #if !P11_KIT_CHECK_VERSION (P11_KIT_VERSION_MAJOR, P11_KIT_VERSION_MINOR, P11_KIT_VERSION_MICRO)
 	assert_not_reached ();
@@ -66,13 +66,25 @@ test_check (void)
 #endif
 }
 
+static void
+test_check_run_time (void)
+{
+	assert_num_eq (1, p11_kit_check_version (P11_KIT_VERSION_MAJOR, P11_KIT_VERSION_MINOR, P11_KIT_VERSION_MICRO));
+	assert_num_eq (1, p11_kit_check_version (P11_KIT_VERSION_MAJOR, P11_KIT_VERSION_MINOR, 0));
+	assert_num_eq (1, p11_kit_check_version (P11_KIT_VERSION_MAJOR, 0, 0));
+	assert_num_eq (0, p11_kit_check_version (P11_KIT_VERSION_MAJOR + 1, P11_KIT_VERSION_MINOR, P11_KIT_VERSION_MICRO));
+	assert_num_eq (0, p11_kit_check_version (P11_KIT_VERSION_MAJOR, P11_KIT_VERSION_MINOR + 1, P11_KIT_VERSION_MICRO));
+	assert_num_eq (0, p11_kit_check_version (P11_KIT_VERSION_MAJOR, P11_KIT_VERSION_MINOR, P11_KIT_VERSION_MICRO + 1));
+}
+
 int
 main (int argc,
       char *argv[])
 {
 	p11_library_init ();
 
-	p11_test (test_check, "/version/test_check");
+	p11_test (test_check_compile_time, "/version/test_check_compile_time");
+	p11_test (test_check_run_time, "/version/test_check_run_time");
 
 	return p11_test_run (argc, argv);
 }
