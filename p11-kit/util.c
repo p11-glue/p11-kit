@@ -44,6 +44,7 @@
 #include "message.h"
 #include "p11-kit.h"
 #include "private.h"
+#include <p11-kit/version.h>
 
 #include <assert.h>
 #include <stdarg.h>
@@ -235,4 +236,22 @@ _p11_get_progname_unlocked (void)
 	if (p11_my_progname[0] == '\0')
 		return NULL;
 	return p11_my_progname;
+}
+
+/**
+ * p11_kit_check_version:
+ * @major: major version
+ * @minor: minor version
+ * @micro: micro version
+ *
+ * Check if the run-time version of p11-kit meets the requirement
+ * given by a triple: @major, @minor, and @micro.
+ *
+ * Returns: 1 if the version requirement meets; 0 otherwise.
+ * Since: 0.25.4
+ */
+int
+p11_kit_check_version (int major, int minor, int micro)
+{
+	return P11_KIT_CHECK_VERSION (major, minor, micro);
 }

@@ -51,6 +51,8 @@ extern "C" {
 	  P11_KIT_VERSION_MINOR == (minor) &&		\
 	  P11_KIT_VERSION_MICRO >= (micro)))
 
+int p11_kit_check_version (int major, int minor, int micro);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
