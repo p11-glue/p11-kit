@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -558,7 +559,7 @@ server_loop (Server *server,
 
 		/* timeout */
 		if (ret == 0 && children_avail == 0 && timeout != NULL) {
-			p11_message (_("no connections to %s for %lu secs, exiting"), server->socket_name, timeout->tv_sec);
+			p11_message (_("no connections to %s for %" PRIu64 " secs, exiting"), server->socket_name, (uint64_t)timeout->tv_sec);
 			break;
 		}
 
