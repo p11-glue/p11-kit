@@ -1,3 +1,13 @@
+0.25.4 (stable)
+* rpc: add support for recursive attributes [PR#624, PR#629, PR#631, PR#633]
+* p11-kit: add function to check run-time version of the library [PR#637]
+* p11-kit: expose version information through macros [PR#635]
+* p11-kit: add option to specify CKA_ID in generate-keypair and import-object commands [PR#615]
+* p11-kit: add --provider option to specify PKCS#11 module when using p11-kit commands [PR#611]
+* p11-kit: fix a bug where eddsa mechanism isn't recognized in generate-keypair [PR#617]
+* p11-kit: fallback to C_GetFunctionList when C_GetInterface returns CKR_FUNCTION_NOT_SUPPORTED [PR#622]
+* bug and build fixes [PR#603, PR#604, PR#605, PR#606, PR#609, PR#614, PR#616, PR#619, PR#627, PR#628, PR#632, PR#636, PR#639]
+
 0.25.3 (stable)
 * rpc: fix serialization of NULL mechanism pointer [PR#601]
 * fix meson build failure in macOS (appleframeworks not found) [PR#603]
