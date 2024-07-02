@@ -1048,7 +1048,7 @@ prepare_recursive_attribute (P11KitIter *iter,
 		templ[i].pValue = malloc (templ[i].ulValueLen);
 		return_val_if_fail (templ[i].pValue != NULL, CKR_HOST_MEMORY);
 
-		if (IS_ATTRIBUTE_ARRAY (attr)) {
+		if (IS_ATTRIBUTE_ARRAY (templ + i)) {
                         rv = prepare_recursive_attribute (iter, attr, templ[i].pValue,
 							  templ[i].ulValueLen);
 			return_val_if_fail (rv == CKR_OK, rv);
