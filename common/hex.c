@@ -40,6 +40,7 @@
 #include "debug.h"
 #include "hex.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
