@@ -1,3 +1,8 @@
+0.25.5 (stable)
+* iter: fix recursive attribute loading [PR#642]
+* fix building on FreeBSD 14.0 (amd64) [PR#644]
+* test fix [PR#645]
+
 0.25.4 (stable)
 * rpc: add support for recursive attributes [PR#624, PR#629, PR#631, PR#633]
 * p11-kit: add function to check run-time version of the library [PR#637]
