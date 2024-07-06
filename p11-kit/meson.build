@@ -399,6 +399,7 @@ if get_option('test')
   p11_kit_tests_env.set('abs_top_builddir', top_build_dir)
   p11_kit_tests_env.set('abs_top_srcdir', top_source_dir)
   p11_kit_tests_env.set('P11_MODULE_PATH', meson.current_build_dir())
+  p11_kit_tests_env.set('LC_ALL', 'C')
 
   if host_system != 'windows'
     test('test-objects.sh',
