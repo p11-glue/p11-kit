@@ -360,7 +360,8 @@ conf.set10('HAVE_DECL_VASPRINTF',
                                 prefix: '#define _GNU_SOURCE'))
 
 conf.set10('HAVE_DECL_REALLOCARRAY',
-           cc.has_header_symbol('stdlib.h', 'reallocarray'))
+           cc.has_header_symbol('stdlib.h', 'reallocarray',
+                               prefix: '#define _GNU_SOURCE'))
 
 # --------------------------------------------------------------------
 # libffi
