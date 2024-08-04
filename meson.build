@@ -320,12 +320,18 @@ foreach f : functions
   endif
 endforeach
 
-if cc.has_function('strerror_r', prefix: '#include <string.h>')
-  strerror_r_code = '''
+strerror_r_prefix = '''
 #define _GNU_SOURCE
+#ifndef __sun
+#define _XOPEN_SOURCE 700
+#endif
+
 #include <errno.h>
 #include <string.h>
+'''
 
+if cc.has_function('strerror_r', prefix: strerror_r_prefix)
+  strerror_r_code = strerror_r_prefix + '''
 int main (void)
 {
     /* GNU strerror_r returns char *, XSI returns int */
