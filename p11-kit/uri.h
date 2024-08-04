@@ -35,6 +35,7 @@
 #ifndef P11_KIT_URI_H
 #define P11_KIT_URI_H
 
+#include "p11-kit/p11-kit.h"
 #include "p11-kit/pkcs11.h"
 
 #ifdef __cplusplus

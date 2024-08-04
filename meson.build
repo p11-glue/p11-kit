@@ -170,12 +170,20 @@ if host_system != 'windows'
 
   if cc.has_header('locale.h')
     conf.set('HAVE_LOCALE_H', 1)
-    if cc.has_type('locale_t', prefix: '#include <locale.h>')
+    locale_prefix = '''
+#define _GNU_SOURCE
+#include <locale.h>
+'''
+    if cc.has_type('locale_t', prefix: locale_prefix)
       conf.set('HAVE_LOCALE_T', 1)
-      if cc.has_function('newlocale', prefix: '#include <locale.h>')
+      if cc.has_function('newlocale', prefix: locale_prefix)
         conf.set('HAVE_NEWLOCALE', 1)
       endif
-      if cc.has_function('strerror_l', prefix: '#include <string.h>')
+      strerror_l_prefix = '''
+#define _GNU_SOURCE
+#include <string.h>
+'''
+      if cc.has_function('strerror_l', prefix: strerror_l_prefix)
         conf.set('HAVE_STRERROR_L', 1)
       endif
     endif
@@ -320,12 +328,18 @@ foreach f : functions
   endif
 endforeach
 
-if cc.has_function('strerror_r', prefix: '#include <string.h>')
-  strerror_r_code = '''
+strerror_r_prefix = '''
 #define _GNU_SOURCE
+#ifndef __sun
+#define _XOPEN_SOURCE 700
+#endif
+
 #include <errno.h>
 #include <string.h>
+'''
 
+if cc.has_function('strerror_r', prefix: strerror_r_prefix)
+  strerror_r_code = strerror_r_prefix + '''
 int main (void)
 {
     /* GNU strerror_r returns char *, XSI returns int */
@@ -354,7 +368,8 @@ conf.set10('HAVE_DECL_VASPRINTF',
                                 prefix: '#define _GNU_SOURCE'))
 
 conf.set10('HAVE_DECL_REALLOCARRAY',
-           cc.has_header_symbol('stdlib.h', 'reallocarray'))
+           cc.has_header_symbol('stdlib.h', 'reallocarray',
+                               prefix: '#define _GNU_SOURCE'))
 
 # --------------------------------------------------------------------
 # libffi
