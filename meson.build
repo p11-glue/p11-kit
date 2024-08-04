@@ -170,12 +170,20 @@ if host_system != 'windows'
 
   if cc.has_header('locale.h')
     conf.set('HAVE_LOCALE_H', 1)
-    if cc.has_type('locale_t', prefix: '#include <locale.h>')
+    locale_prefix = '''
+#define _GNU_SOURCE
+#include <locale.h>
+'''
+    if cc.has_type('locale_t', prefix: locale_prefix)
       conf.set('HAVE_LOCALE_T', 1)
-      if cc.has_function('newlocale', prefix: '#include <locale.h>')
+      if cc.has_function('newlocale', prefix: locale_prefix)
         conf.set('HAVE_NEWLOCALE', 1)
       endif
-      if cc.has_function('strerror_l', prefix: '#include <string.h>')
+      strerror_l_prefix = '''
+#define _GNU_SOURCE
+#include <string.h>
+'''
+      if cc.has_function('strerror_l', prefix: strerror_l_prefix)
         conf.set('HAVE_STRERROR_L', 1)
       endif
     endif
