@@ -253,15 +253,27 @@ loader_load_if_file (p11_token *token,
 }
 
 static int
+compar_strings (const void *one,
+                const void *two)
+{
+	const char **p1 = (const char **)one;
+	const char **p2 = (const char **)two;
+	return strcmp (*p1, *p2);
+}
+
+
+static int
 loader_load_directory (p11_token *token,
                        const char *directory,
                        p11_dict *present)
 {
 	p11_dictiter iter;
+	p11_array *paths;
 	struct dirent *dp;
 	char *path;
 	int total = 0;
 	int ret;
+	int i;
 	DIR *dir;
 
 	/* First we load all the modules */
@@ -272,10 +284,22 @@ loader_load_directory (p11_token *token,
 		return 0;
 	}
 
+	paths = p11_array_new (NULL);
+	return_val_if_fail (paths != NULL, -1);
+
 	while ((dp = readdir (dir)) != NULL) {
 		path = p11_path_build (directory, dp->d_name, NULL);
 		return_val_if_fail (path != NULL, -1);
+		
+		return_val_if_fail (p11_array_push (paths, path), -1);
+	}
 
+	closedir (dir);
+
+	qsort (paths->elem, paths->num, sizeof (char *), compar_strings);
+
+	for (i = 0; i < paths->num; i++) {
+		path = paths->elem[i];
 		ret = loader_load_if_file (token, path);
 		if (ret >= 0) {
 			if (ret <= INT_MAX - total) {
@@ -291,7 +315,7 @@ loader_load_directory (p11_token *token,
 		free (path);
 	}
 
-	closedir (dir);
+	p11_array_free (paths);
 
 	/* All other files that were present, not here now */
 	p11_dict_iterate (present, &iter);
