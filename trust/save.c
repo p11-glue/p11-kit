@@ -61,6 +61,8 @@
 #define O_DIRECTORY 0
 #endif
 
+#define MAX_FILE_NAME 255
+
 struct _p11_save_file {
 	char *bare;
 	char *extension;
@@ -414,11 +416,22 @@ make_unique_name (const char *bare,
 	p11_buffer buf;
 	int ret;
 	int i;
+	int bare_len, ext_len, diff;
 
 	assert (bare != NULL);
 	assert (check != NULL);
 
 	p11_buffer_init_null (&buf, 0);
+
+	/*
+	 * Make sure the name will not be longer then MAX_FILE_NAME
+	 */
+	bare_len = strlen (bare);
+	ext_len = extension ? strlen (extension) : 0;
+	diff = bare_len + ext_len + sizeof (unique) - MAX_FILE_NAME;
+	if (diff > 0)
+		bare_len -= diff;
+	return_val_if_fail (bare_len > 0, NULL);
 
 	for (i = 0; true; i++) {
 
@@ -431,7 +444,7 @@ make_unique_name (const char *bare,
 		 * provided by the caller.
 		 */
 		case 0:
-			p11_buffer_add (&buf, bare, -1);
+			p11_buffer_add (&buf, bare, bare_len);
 			break;
 
 		/*
@@ -448,14 +461,14 @@ make_unique_name (const char *bare,
 			/* fall through */
 
 		default:
-			p11_buffer_add (&buf, bare, -1);
+			p11_buffer_add (&buf, bare, bare_len);
 			snprintf (unique, sizeof (unique), ".%d", i);
 			p11_buffer_add (&buf, unique, -1);
 			break;
 		}
 
 		if (extension)
-			p11_buffer_add (&buf, extension, -1);
+			p11_buffer_add (&buf, extension, ext_len);
 
 		return_val_if_fail (p11_buffer_ok (&buf), NULL);
 
