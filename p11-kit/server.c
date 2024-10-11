@@ -213,7 +213,7 @@ static bool need_children_cleanup = false;
 static bool terminate = false;
 static unsigned children_avail = 0;
 static bool quiet = false;
-static bool csh_opt = false;
+static int shell_opt = 0;
 
 #define P11_KIT_SERVER_ADDRESS_ENV "P11_KIT_SERVER_ADDRESS"
 #define P11_KIT_SERVER_PID_ENV "P11_KIT_SERVER_PID"
@@ -502,7 +502,7 @@ server_loop (Server *server,
 			close (STDOUT_FILENO);
 		}
 		if (pid != 0) {
-			if (!print_environment (pid, server, csh_opt))
+			if (!print_environment (pid, server, shell_opt == 'c'))
 				return 1;
 			exit (0);
 		}
@@ -536,7 +536,7 @@ server_loop (Server *server,
 	/* for testing purposes, even when started in foreground,
 	 * print the envvars */
 	if (foreground) {
-		if (!print_environment (getpid (), server, csh_opt))
+		if (!print_environment (getpid (), server, shell_opt == 'c'))
 			return 1;
 		fflush (stdout);
 	}
@@ -763,10 +763,10 @@ main (int argc,
 			kill_opt = true;
 			break;
 		case opt_csh:
-			csh_opt = true;
+			shell_opt = opt_csh;
 			break;
 		case opt_sh:
-			csh_opt = false;
+			shell_opt = opt_sh;
 			break;
 		case opt_help:
 		case '?':
@@ -786,12 +786,12 @@ main (int argc,
 		return 2;
 	}
 
-	if (!opt_sh && !opt_csh) {
+	if (!shell_opt) {
 		const char *shell = secure_getenv ("SHELL");
 		size_t len;
 		if (shell != NULL && (len = strlen (shell)) > 2 &&
 		    strncmp (shell + len - 3, "csh", 3) == 0)
-			csh_opt = true;
+			shell_opt = opt_csh;
 	}
 
 	if (kill_opt) {
@@ -815,7 +815,7 @@ main (int argc,
 			exit (1);
 		}
 
-		if (csh_opt) {
+		if (shell_opt == opt_csh) {
 			printf ("unsetenv %s;\n",
 				P11_KIT_SERVER_ADDRESS_ENV);
 			printf ("unsetenv %s;\n",
