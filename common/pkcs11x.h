@@ -238,6 +238,7 @@ the current one in CKA_IBM_OPAQUE. */
 #define CKM_IBM_SHA3_256_HMAC                  (CKM_VENDOR_DEFINED + 0x10026)
 #define CKM_IBM_SHA3_384_HMAC                  (CKM_VENDOR_DEFINED + 0x10027)
 #define CKM_IBM_SHA3_512_HMAC                  (CKM_VENDOR_DEFINED + 0x10028)
+#define CKM_IBM_ECDSA_OTHER                    (CKM_VENDOR_DEFINED + 0x10031)
 #define CKM_IBM_ATTRIBUTEBOUND_WRAP            (CKM_VENDOR_DEFINED + 0x20004)
 
 /*
@@ -247,6 +248,15 @@ the current one in CKA_IBM_OPAQUE. */
 #ifdef CRYPTOKI_GNU
 #define hSignVerifyKey h_sign_verify_key
 #endif
+
+#define CKM_IBM_ECSDSA_RAND                3
+#define CKM_IBM_ECSDSA_COMPR_MULTI         5
+
+struct ck_ibm_ecdsa_other {
+	CK_ULONG submechanism;
+};
+
+typedef struct ck_ibm_ecdsa_other CK_IBM_ECDSA_OTHER_PARAMS;
 
 struct ck_ibm_attributebound_wrap {
 	CK_OBJECT_HANDLE hSignVerifyKey;
