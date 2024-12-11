@@ -223,6 +223,10 @@ the current one in CKA_IBM_OPAQUE. */
 #define CKA_IBM_DILITHIUM_MODE                 (CKA_VENDOR_DEFINED + 0x00010)
 #define CKA_IBM_CCA_AES_KEY_MODE               (CKA_VENDOR_DEFINED + 0xd0101)
 #define CKA_IBM_OPAQUE_PKEY                    (CKA_VENDOR_DEFINED + 0xd0100)
+#define CKA_IBM_KYBER_MODE                     (CKA_VENDOR_DEFINED + 0x0000E)
+#define CKA_IBM_KYBER_KEYFORM                  (CKA_VENDOR_DEFINED + 0xd0009)
+#define CKA_IBM_KYBER_PK                       (CKA_VENDOR_DEFINED + 0xd000A)
+#define CKA_IBM_KYBER_SK                       (CKA_VENDOR_DEFINED + 0xd000B)
 
 #define CKM_IBM_SHA3_224                       (CKM_VENDOR_DEFINED + 0x10001)
 #define CKM_IBM_SHA3_256                       (CKM_VENDOR_DEFINED + 0x10002)
@@ -234,6 +238,7 @@ the current one in CKA_IBM_OPAQUE. */
 #define CKM_IBM_EC_X448                        (CKM_VENDOR_DEFINED + 0x1001e)
 #define CKM_IBM_ED448_SHA3                     (CKM_VENDOR_DEFINED + 0x1001f)
 #define CKM_IBM_DILITHIUM                      (CKM_VENDOR_DEFINED + 0x10023)
+#define CKM_IBM_KYBER                          (CKM_VENDOR_DEFINED + 0x10024)
 #define CKM_IBM_SHA3_224_HMAC                  (CKM_VENDOR_DEFINED + 0x10025)
 #define CKM_IBM_SHA3_256_HMAC                  (CKM_VENDOR_DEFINED + 0x10026)
 #define CKM_IBM_SHA3_384_HMAC                  (CKM_VENDOR_DEFINED + 0x10027)
@@ -248,10 +253,18 @@ the current one in CKA_IBM_OPAQUE. */
  */
 #ifdef CRYPTOKI_GNU
 #define CK_BYTE_PTR unsigned char *
+#define CK_BYTE unsigned char
 
 #define childKeyIndex child_key_index
 #define pChainCode p_chain_code
 #define ulChainCodeLen ul_cahin_code_len
+
+#define ulVersion ul_version
+#define bPrepend b_prepend
+#define pCipher p_cipher
+#define ulCipherLen ul_cipher_len
+#define pSharedData p_shared_data
+#define hSecret h_secret
 
 #define hSignVerifyKey h_sign_verify_key
 #endif
@@ -290,6 +303,31 @@ typedef struct ck_ibm_btc_derive_params CK_IBM_BTC_DERIVE_PARAMS;
 
 #define CK_IBM_BTC_DERIVE_PARAMS_VERSION_1 1
 
+#define CK_IBM_KYBER_KEYFORM_ROUND2_768    1
+#define CK_IBM_KYBER_KEYFORM_ROUND2_1024   2
+
+#define CK_IBM_KYBER_KEM_VERSION           0
+
+typedef CK_ULONG CK_IBM_KYBER_KDF_TYPE;
+typedef CK_ULONG CK_IBM_KYBER_KEM_MODE;
+
+#define CK_IBM_KYBER_KEM_ENCAPSULATE       1
+#define CK_IBM_KYBER_KEM_DECAPSULATE       2
+
+struct ck_ibm_kyber_params {
+    CK_ULONG                ulVersion;
+    CK_IBM_KYBER_KEM_MODE   mode;
+    CK_IBM_KYBER_KDF_TYPE   kdf;
+    CK_BBOOL                bPrepend;
+    CK_BYTE                 *pCipher;
+    CK_ULONG                ulCipherLen;
+    CK_BYTE                 *pSharedData;
+    CK_ULONG                ulSharedDataLen;
+    CK_OBJECT_HANDLE        hSecret;
+};
+
+typedef struct ck_ibm_kyber_params CK_IBM_KYBER_PARAMS;
+
 struct ck_ibm_attributebound_wrap {
 	CK_OBJECT_HANDLE hSignVerifyKey;
 };
@@ -298,10 +336,18 @@ typedef struct ck_ibm_attributebound_wrap CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS;
 
 #ifdef CRYPTOKI_GNU
 #undef CK_BYTE_PTR
+#undef CK_BYTE
 
 #undef childKeyIndex
 #undef pChainCode
 #undef ulChainCodeLen
+
+#undef ulVersion
+#undef bPrepend
+#undef pCipher
+#undef ulCipherLen
+#undef pSharedData
+#undef hSecret
 
 #undef hSignVerifyKey
 #endif

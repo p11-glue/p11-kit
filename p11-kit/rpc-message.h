@@ -517,6 +517,15 @@ bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
+void             p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
 void             p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 							       const void *value,
 							       CK_ULONG value_length);
@@ -594,6 +603,17 @@ void            p11_rpc_buffer_add_ibm_btc_derive_mechanism_value
 							CK_ULONG value_length);
 
 bool            p11_rpc_buffer_get_ibm_btc_derive_mechanism_value
+						   (p11_buffer *buffer,
+						   size_t *offset,
+						   void *value,
+						   CK_ULONG *value_length);
+
+void            p11_rpc_buffer_add_ibm_kyber_mechanism_value
+						   (p11_buffer *buffer,
+						   const void *value,
+						   CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ibm_kyber_mechanism_value
 						  (p11_buffer *buffer,
 						   size_t *offset,
 						   void *value,
