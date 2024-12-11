@@ -187,7 +187,19 @@ typedef CK_ULONG                        CK_TRUST;
 
 #define CKK_IBM_PQC_DILITHIUM    CKK_VENDOR_DEFINED + 0x10023
 
+/* Secure key tokens store the secure key blob in attribute CKA_IBM_OPAQUE
+in their key object. During an HSM master key change, the secure key blob
+is being re-enciphered with the new master key. This re-enciphered secure
+key blob is stored in attribute CKA_IBM_OPAQUE_REENC while the HSM master
+key change operation is active.
+
+When a HSM master key change operation is finalized, the secure key blob
+enciphered with the old master key is backed up into attribute CKA_IBM_OPAQUE_OLD,
+and the re-enciphered secure key blob from CKA_IBM_OPAQUE_REENC becomes
+the current one in CKA_IBM_OPAQUE. */
 #define CKA_IBM_OPAQUE                         (CKA_VENDOR_DEFINED + 1)
+#define CKA_IBM_OPAQUE_REENC                   (CKA_VENDOR_DEFINED + 3)
+#define CKA_IBM_OPAQUE_OLD                     (CKA_VENDOR_DEFINED + 4)
 #define CKA_IBM_RESTRICTABLE                   (CKA_VENDOR_DEFINED + 0x10001)
 #define CKA_IBM_NEVER_MODIFIABLE               (CKA_VENDOR_DEFINED + 0x10002)
 #define CKA_IBM_RETAINKEY                      (CKA_VENDOR_DEFINED + 0x10003)
@@ -208,6 +220,8 @@ typedef CK_ULONG                        CK_TRUST;
 #define CKA_IBM_DILITHIUM_S2                   (CKA_VENDOR_DEFINED + 0xd0006)
 #define CKA_IBM_DILITHIUM_T0                   (CKA_VENDOR_DEFINED + 0xd0007)
 #define CKA_IBM_DILITHIUM_T1                   (CKA_VENDOR_DEFINED + 0xd0008)
+#define CKA_IBM_DILITHIUM_MODE                 (CKA_VENDOR_DEFINED + 0x00010)
+#define CKA_IBM_CCA_AES_KEY_MODE               (CKA_VENDOR_DEFINED + 0xd0101)
 #define CKA_IBM_OPAQUE_PKEY                    (CKA_VENDOR_DEFINED + 0xd0100)
 
 #define CKM_IBM_SHA3_224                       (CKM_VENDOR_DEFINED + 0x10001)
