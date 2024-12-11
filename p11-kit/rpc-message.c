@@ -1665,6 +1665,53 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
+						    const void *value,
+						    CK_ULONG value_length)
+{
+	CK_IBM_ECDSA_OTHER_PARAMS params;
+
+	if (value_length != sizeof (CK_IBM_ECDSA_OTHER_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	if (params.submechanism > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.submechanism);
+}
+
+bool
+p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
+					    size_t *offset,
+					    void *value,
+					    CK_ULONG *value_length)
+{
+	uint64_t val1;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val1))
+		return false;
+
+	if (value) {
+		CK_IBM_ECDSA_OTHER_PARAMS params;
+
+		params.submechanism = val1;
+
+		memcpy (value, &params, sizeof (CK_IBM_ECDSA_OTHER_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_IBM_ECDSA_OTHER_PARAMS);
+
+	return true;
+}
+
+void
 p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
 					   const void *value,
 					   CK_ULONG value_length)
@@ -1961,6 +2008,7 @@ p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 }
 
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
+	{ CKM_IBM_ECDSA_OTHER, p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value, p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value },
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA224_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
