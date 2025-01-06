@@ -124,7 +124,7 @@ _p11_library_get_thread_local (void)
 	return &local;
 }
 #else
-static pthread_key_t thread_local = 0;
+static pthread_key_t threadlocal = 0;
 
 static p11_local *
 _p11_library_get_thread_local (void)
@@ -133,10 +133,10 @@ _p11_library_get_thread_local (void)
 
 	p11_library_init_once ();
 
-	local = pthread_getspecific (thread_local);
+	local = pthread_getspecific (threadlocal);
 	if (local == NULL) {
 		local = calloc (1, sizeof (p11_local));
-		pthread_setspecific (thread_local, local);
+		pthread_setspecific (threadlocal, local);
 	}
 
 	return local;
@@ -158,7 +158,7 @@ p11_library_init_impl (void)
 	P11_RECURSIVE_MUTEX_INIT (p11_library_mutex);
 	P11_RECURSIVE_MUTEX_INIT (p11_virtual_mutex);
 #ifndef P11_TLS_KEYWORD
-	pthread_key_create (&thread_local, free);
+	pthread_key_create (&threadlocal, free);
 #endif
 	p11_message_storage = thread_local_message;
 #ifdef HAVE_STRERROR_L
@@ -181,8 +181,8 @@ p11_library_uninit (void)
 
 #ifndef P11_TLS_KEYWORD
 	/* Some cleanup to pacify valgrind */
-	free (pthread_getspecific (thread_local));
-	pthread_setspecific (thread_local, NULL);
+	free (pthread_getspecific (threadlocal));
+	pthread_setspecific (threadlocal, NULL);
 #endif
 
 #ifdef HAVE_STRERROR_L
@@ -191,7 +191,7 @@ p11_library_uninit (void)
 #endif
 	p11_message_storage = dont_store_message;
 #ifndef P11_TLS_KEYWORD
-	pthread_key_delete (thread_local);
+	pthread_key_delete (threadlocal);
 #endif
 	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
@@ -205,7 +205,7 @@ p11_library_uninit (void)
 
 #ifdef OS_WIN32
 
-static DWORD thread_local = TLS_OUT_OF_INDEXES;
+static DWORD threadlocal = TLS_OUT_OF_INDEXES;
 
 BOOL WINAPI DllMain (HINSTANCE, DWORD, LPVOID);
 
@@ -214,13 +214,13 @@ _p11_library_get_thread_local (void)
 {
 	LPVOID data;
 
-	if (thread_local == TLS_OUT_OF_INDEXES)
+	if (threadlocal == TLS_OUT_OF_INDEXES)
 		return NULL;
 
-	data = TlsGetValue (thread_local);
+	data = TlsGetValue (threadlocal);
 	if (data == NULL) {
 		data = LocalAlloc (LPTR, sizeof (p11_local));
-		TlsSetValue (thread_local, data);
+		TlsSetValue (threadlocal, data);
 	}
 
 	return (p11_local *)data;
@@ -233,8 +233,8 @@ p11_library_init (void)
 	p11_debug ("initializing library");
 	P11_RECURSIVE_MUTEX_INIT (p11_library_mutex);
 	P11_RECURSIVE_MUTEX_INIT (p11_virtual_mutex);
-	thread_local = TlsAlloc ();
-	if (thread_local == TLS_OUT_OF_INDEXES)
+	threadlocal = TlsAlloc ();
+	if (threadlocal == TLS_OUT_OF_INDEXES)
 		p11_debug ("couldn't setup tls");
 	else
 		p11_message_storage = thread_local_message;
@@ -244,9 +244,9 @@ void
 p11_library_thread_cleanup (void)
 {
 	p11_local *local;
-	if (thread_local != TLS_OUT_OF_INDEXES) {
+	if (threadlocal != TLS_OUT_OF_INDEXES) {
 		p11_debug ("thread stopped, freeing tls");
-		local = TlsGetValue (thread_local);
+		local = TlsGetValue (threadlocal);
 		LocalFree (local);
 	}
 }
@@ -258,11 +258,11 @@ p11_library_uninit (void)
 
 	uninit_common ();
 
-	if (thread_local != TLS_OUT_OF_INDEXES) {
+	if (threadlocal != TLS_OUT_OF_INDEXES) {
 		p11_message_storage = dont_store_message;
-		data = TlsGetValue (thread_local);
+		data = TlsGetValue (threadlocal);
 		LocalFree (data);
-		TlsFree (thread_local);
+		TlsFree (threadlocal);
 	}
 	p11_mutex_uninit (&p11_virtual_mutex);
 	p11_mutex_uninit (&p11_library_mutex);
