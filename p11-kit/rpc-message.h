@@ -138,6 +138,7 @@ enum {
 	P11_RPC_CALL_C_MessageVerifyFinal,
 
 	P11_RPC_CALL_C_InitToken2,
+	P11_RPC_CALL_C_DeriveKey2,
 
 	P11_RPC_CALL_MAX
 };
@@ -159,6 +160,7 @@ typedef struct {
  *  v  = CK_VERSION
  *  y  = CK_BYTE
  *  z  = null terminated string
+ *  P  = mechanism parameter
  */
 
 static const p11_rpc_call p11_rpc_calls[] = {
@@ -253,6 +255,7 @@ static const p11_rpc_call p11_rpc_calls[] = {
 	{ P11_RPC_CALL_C_MessageVerifyFinal,   "C_MessageVerifyFinal",   "u",       ""                     },
 
 	{ P11_RPC_CALL_C_InitToken2,           "C_InitToken2",           "uays",    ""                     },
+	{ P11_RPC_CALL_C_DeriveKey2,            "C_DeriveKey2",            "uMuaA",   "uPu"                    },
 };
 
 #ifdef _DEBUG
@@ -511,6 +514,13 @@ void             p11_rpc_buffer_add_mechanism            (p11_buffer *buffer,
 							  const CK_MECHANISM *mech);
 
 bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_MECHANISM *mech);
+
+void             p11_rpc_buffer_add_mech_param_update            (p11_buffer *buffer,
+							  const CK_MECHANISM *mech);
+
+bool             p11_rpc_buffer_get_mech_param_update            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
