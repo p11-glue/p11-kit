@@ -2007,6 +2007,9 @@ p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
+static p11_rpc_mechanism_serializer p11_rpc_mech_param_update_serializers[] = {
+};
+
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_IBM_ECDSA_OTHER, p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value, p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value },
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
@@ -2233,11 +2236,17 @@ p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 	p11_rpc_buffer_add_uint32 (buffer, mech->mechanism);
 
 	if (mechanism_has_no_parameters (mech->mechanism)) {
-		p11_rpc_buffer_add_byte_array (buffer, NULL, 0);
 		return;
 	}
 
 	assert (mechanism_has_sane_parameters (mech->mechanism));
+
+	if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
+		p11_rpc_buffer_add_byte (buffer, 0);
+		return;
+	} else {
+		p11_rpc_buffer_add_byte (buffer, 1);
+	}
 
 	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
 		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
@@ -2260,6 +2269,7 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 	uint32_t mechanism;
 	p11_rpc_mechanism_serializer *serializer = NULL;
 	size_t i;
+	unsigned char has_param;
 
 	/* The mechanism type */
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &mechanism))
@@ -2276,6 +2286,17 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 		mech->ulParameterLen = 0;
 		mech->pParameter = NULL;
 		return true;
+	} else if (mechanism_has_no_parameters (mech->mechanism)) {
+		return true;
+	}
+
+	if (!p11_rpc_buffer_get_byte(buffer, offset, &has_param))
+		return false;
+
+	if (has_param == 0) {
+		mech->ulParameterLen = 0;
+		mech->pParameter = NULL;
+		return true;
 	}
 
 	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
@@ -2287,6 +2308,77 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 
 	if (serializer == NULL)
 		serializer = &p11_rpc_byte_array_mechanism_serializer;
+
+	if (!serializer->decode (buffer, offset,
+				 mech->pParameter, &mech->ulParameterLen))
+		return false;
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_mech_param_update (p11_buffer *buffer, const CK_MECHANISM *mech)
+{
+	p11_rpc_mechanism_serializer *serializer = NULL;
+	size_t i;
+
+	if (mechanism_has_no_parameters (mech->mechanism)) {
+		return;
+	}
+
+	if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
+		p11_rpc_buffer_add_byte (buffer, 0);
+		return;
+	} else {
+		p11_rpc_buffer_add_byte (buffer, 1);
+	}
+
+	for (i = 0; i < ELEMS (p11_rpc_mech_param_update_serializers); i++) {
+		if (p11_rpc_mech_param_update_serializers[i].type == mech->mechanism) {
+			serializer = &p11_rpc_mech_param_update_serializers[i];
+			break;
+		}
+	}
+
+	if (serializer == NULL)
+		return;
+
+	serializer->encode (buffer, mech->pParameter, mech->ulParameterLen);
+}
+
+bool
+p11_rpc_buffer_get_mech_param_update (p11_buffer *buffer,
+			      size_t *offset,
+			      CK_MECHANISM *mech)
+{
+	p11_rpc_mechanism_serializer *serializer = NULL;
+	size_t i;
+	unsigned char has_param;
+
+	if (mechanism_has_no_parameters (mech->mechanism)) {
+		mech->ulParameterLen = 0;
+		mech->pParameter = NULL;
+		return true;
+	}
+
+	if (!p11_rpc_buffer_get_byte(buffer, offset, &has_param))
+		return false;
+
+	if (has_param == 0) {
+		mech->ulParameterLen = 0;
+		mech->pParameter = NULL;
+		return true;
+	}
+
+	for (i = 0; i < ELEMS (p11_rpc_mech_param_update_serializers); i++) {
+		if (p11_rpc_mech_param_update_serializers[i].type == mech->mechanism) {
+			serializer = &p11_rpc_mech_param_update_serializers[i];
+			break;
+		}
+	}
+
+	if (serializer == NULL)
+		return true;
 
 	if (!serializer->decode (buffer, offset,
 				 mech->pParameter, &mech->ulParameterLen))

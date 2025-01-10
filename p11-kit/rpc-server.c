@@ -581,6 +581,30 @@ proto_write_mechanism_info (p11_rpc_message *msg,
 }
 
 static CK_RV
+proto_write_error (p11_rpc_message *msg, CK_RV err)
+{
+	if(!p11_rpc_message_write_ulong(msg, err))
+		return CKR_HOST_MEMORY;
+
+	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
+}
+
+static CK_RV
+proto_write_mech_param_update (p11_rpc_message *msg,
+                       CK_MECHANISM_PTR *mech)
+{
+	assert (msg != NULL);
+	assert (msg->output != NULL);
+
+	/* Make sure this is in the right order */
+	assert (!msg->signature || p11_rpc_message_verify_part (msg, "P"));
+
+	p11_rpc_buffer_add_mech_param_update (msg->output, *mech);
+
+	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
+}
+
+static CK_RV
 proto_write_session_info (p11_rpc_message *msg,
                           CK_SESSION_INFO_PTR info)
 {
@@ -692,6 +716,24 @@ call_ready (p11_rpc_message *msg)
 #define OUT_ULONG(val) \
 	if (_ret == CKR_OK && !p11_rpc_message_write_ulong (msg, val)) \
 		_ret = PREP_ERROR;
+
+#define OUT_MECH_PARAM_UPDATE(mech) \
+	_ret2 = proto_write_mech_param_update (msg, &mech); \
+	if (_ret2 != CKR_OK) { \
+		_ret = _ret2; \
+		goto _cleanup; \
+	}
+
+#define CHECK_ERROR \
+	if (_ret != CKR_OK && _ret != CKR_BUFFER_TOO_SMALL) \
+		goto _cleanup;
+
+#define OUT_ERROR \
+	_ret2 = proto_write_error (msg, _ret); \
+	if (_ret2 != CKR_OK) { \
+		_ret = _ret2; \
+		goto _cleanup; \
+	}
 
 #define OUT_BYTE_ARRAY(array, len) \
 	/* Note how we filter return codes */ \
@@ -1852,6 +1894,32 @@ rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
 }
 
 static CK_RV
+rpc_C_DeriveKey2 (CK_X_FUNCTION_LIST *self,
+                 p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE base_key;
+	CK_ATTRIBUTE_PTR template;
+	CK_ULONG attribute_count;
+	CK_OBJECT_HANDLE key;
+	CK_RV _ret2;
+
+	BEGIN_CALL (DeriveKey);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (base_key);
+		IN_ATTRIBUTE_ARRAY (template, attribute_count);
+	PROCESS_CALL ((self, session, mechanism, base_key, template, attribute_count, &key));
+		CHECK_ERROR;
+		OUT_ERROR;
+		OUT_MECH_PARAM_UPDATE (mechanism);
+		OUT_ULONG (key);
+	END_CALL;
+}
+
+static CK_RV
 rpc_C_SeedRandom (CK_X_FUNCTION_LIST *self,
                   p11_rpc_message *msg)
 {
@@ -2415,6 +2483,7 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	CASE_CALL (C_MessageVerifyFinal)
 
 	CASE_CALL (C_InitToken2)
+	CASE_CALL (C_DeriveKey2)
 	#undef CASE_CALL
 	default:
 		/* This should have been caught by the parse code */
@@ -2429,14 +2498,16 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	}
 
 	/* A filled in response */
-	if (ret == CKR_OK) {
+	if (ret == CKR_OK || ret == CKR_BUFFER_TOO_SMALL) {
 
 		/*
 		 * Since we're dealing with many many functions above generating
 		 * these messages we want to make sure each of them actually
 		 * does what it's supposed to.
 		 */
-		assert (p11_rpc_message_is_verified (&msg));
+		if (ret == CKR_OK)
+			assert (p11_rpc_message_is_verified (&msg));
+
 		assert (msg.call_type == P11_RPC_RESPONSE);
 		assert (msg.call_id == req_id);
 		assert (p11_rpc_calls[msg.call_id].response);
