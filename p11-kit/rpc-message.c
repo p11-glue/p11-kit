@@ -1665,6 +1665,70 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 }
 
 void
+p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
+					 const void *value,
+					 CK_ULONG value_length)
+{
+	CK_IBM_BTC_DERIVE_PARAMS params;
+
+	if (value_length != sizeof (CK_IBM_BTC_DERIVE_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	if (params.pChainCode == NULL) {
+		p11_rpc_buffer_add_byte(buffer, 0);
+		p11_rpc_buffer_add_uint32(buffer, params.ulChainCodeLen);
+	} else {
+		p11_rpc_buffer_add_byte(buffer, 1);
+		p11_rpc_buffer_add_byte_array(buffer, (unsigned char *)params.pChainCode, params.ulChainCodeLen);
+	}
+}
+
+bool
+p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
+					 size_t *offset,
+					 void *value,
+					 CK_ULONG *value_length)
+{
+	const unsigned char *data;
+	unsigned char has_data;
+	size_t len;
+	uint32_t length;
+
+	if (!p11_rpc_buffer_get_byte(buffer, offset, &has_data))
+		return false;
+
+	if (has_data == 0) {
+		if (!p11_rpc_buffer_get_uint32(buffer, offset, &length))
+			return false;
+		len = length;
+	} else {
+		if (!p11_rpc_buffer_get_byte_array(buffer, offset, &data, &len))
+			return false;
+	}
+
+	if (value) {
+		CK_IBM_BTC_DERIVE_PARAMS *params = (CK_IBM_BTC_DERIVE_PARAMS *) value;
+
+		if (params->pChainCode && params->ulChainCodeLen == len) {
+			memcpy(params->pChainCode, data, len);
+			params->ulChainCodeLen = len;
+		} else {
+			params->pChainCode = (void *) data;
+			params->ulChainCodeLen = len;
+		}
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_IBM_BTC_DERIVE_PARAMS);
+
+	return true;
+}
+
+void
 p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 						    const void *value,
 						    CK_ULONG value_length)
@@ -1707,6 +1771,77 @@ p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 
 	if (value_length)
 		*value_length = sizeof (CK_IBM_ECDSA_OTHER_PARAMS);
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
+						       const void *value,
+						       CK_ULONG value_length)
+{
+	CK_IBM_BTC_DERIVE_PARAMS params;
+
+	if (value_length != sizeof (CK_IBM_BTC_DERIVE_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	if (params.type > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	p11_rpc_buffer_add_uint64(buffer, params.type);
+
+	if (params.childKeyIndex > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	p11_rpc_buffer_add_uint64(buffer, params.childKeyIndex);
+
+	p11_rpc_buffer_add_byte_array(buffer, (unsigned char *)params.pChainCode, params.ulChainCodeLen);
+
+	if (params.version > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+	p11_rpc_buffer_add_uint64(buffer, params.version);
+}
+
+bool
+p11_rpc_buffer_get_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
+						   size_t *offset,
+						   void *value,
+						   CK_ULONG *value_length)
+{
+	uint64_t val1;
+	uint64_t val2;
+	size_t len;
+	const unsigned char *data;
+	uint64_t val3;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val1) ||
+	    !p11_rpc_buffer_get_uint64 (buffer, offset, &val2) ||
+	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len) ||
+	    !p11_rpc_buffer_get_uint64 (buffer, offset, &val3))
+		return false;
+
+	if (value) {
+		CK_IBM_BTC_DERIVE_PARAMS params = { 0 };
+
+		params.type = val1;
+		params.childKeyIndex = val2;
+		params.ulChainCodeLen = len;
+		params.pChainCode = (void *) data;
+		params.version = val3;
+
+		memcpy (value, &params, sizeof (CK_IBM_BTC_DERIVE_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_IBM_BTC_DERIVE_PARAMS);
 
 	return true;
 }
@@ -2008,10 +2143,12 @@ p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 }
 
 static p11_rpc_mechanism_serializer p11_rpc_mech_param_update_serializers[] = {
+	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mech_param_update, p11_rpc_buffer_get_ibm_btc_derive_mech_param_update },
 };
 
 static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_IBM_ECDSA_OTHER, p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value, p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value },
+	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mechanism_value, p11_rpc_buffer_get_ibm_btc_derive_mechanism_value },
 	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_SHA224_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },

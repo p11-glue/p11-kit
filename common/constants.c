@@ -642,6 +642,7 @@ const p11_constant p11_constant_mechanisms[] = {
 	CT (CKM_IBM_SHA3_512_HMAC, "ibm-sha3-512-hmac")
 	CT (CKM_IBM_ECDSA_OTHER, "ibm-ecdsa-other")
 	CT (CKM_IBM_ATTRIBUTEBOUND_WRAP, "ibm-attributebound-wrap")
+	CT (CKM_IBM_BTC_DERIVE, "ibm-btc-derive")
 	{ CKA_INVALID },
 };
 
