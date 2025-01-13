@@ -240,12 +240,19 @@ the current one in CKA_IBM_OPAQUE. */
 #define CKM_IBM_SHA3_512_HMAC                  (CKM_VENDOR_DEFINED + 0x10028)
 #define CKM_IBM_ECDSA_OTHER                    (CKM_VENDOR_DEFINED + 0x10031)
 #define CKM_IBM_ATTRIBUTEBOUND_WRAP            (CKM_VENDOR_DEFINED + 0x20004)
+#define CKM_IBM_BTC_DERIVE                     (CKM_VENDOR_DEFINED + 0x70001)
 
 /*
  * If the caller is using the PKCS#11 GNU calling convention, then we cater
  * to that here.
  */
 #ifdef CRYPTOKI_GNU
+#define CK_BYTE_PTR unsigned char *
+
+#define childKeyIndex child_key_index
+#define pChainCode p_chain_code
+#define ulChainCodeLen ul_cahin_code_len
+
 #define hSignVerifyKey h_sign_verify_key
 #endif
 
@@ -258,6 +265,31 @@ struct ck_ibm_ecdsa_other {
 
 typedef struct ck_ibm_ecdsa_other CK_IBM_ECDSA_OTHER_PARAMS;
 
+struct ck_ibm_btc_derive_params {
+    CK_ULONG type;
+    CK_ULONG childKeyIndex;
+    CK_BYTE_PTR pChainCode;
+    CK_ULONG ulChainCodeLen;
+    CK_ULONG version;
+};
+
+typedef struct ck_ibm_btc_derive_params CK_IBM_BTC_DERIVE_PARAMS;
+
+#define CK_IBM_BIP0032_HARDENED 0x80000000 // key index flag
+
+#define CK_IBM_BIP0032_PRV2PRV 1
+#define CK_IBM_BIP0032_PRV2PUB 2
+#define CK_IBM_BIP0032_PUB2PUB 3
+#define CK_IBM_BIP0032_MASTERK 4
+#define CK_IBM_SLIP0010_PRV2PRV 5
+#define CK_IBM_SLIP0010_PRV2PUB 6
+#define CK_IBM_SLIP0010_PUB2PUB 7
+#define CK_IBM_SLIP0010_MASTERK 8
+
+#define CK_IBM_BTC_CHAINCODE_LENGTH 32
+
+#define CK_IBM_BTC_DERIVE_PARAMS_VERSION_1 1
+
 struct ck_ibm_attributebound_wrap {
 	CK_OBJECT_HANDLE hSignVerifyKey;
 };
@@ -265,6 +297,12 @@ struct ck_ibm_attributebound_wrap {
 typedef struct ck_ibm_attributebound_wrap CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS;
 
 #ifdef CRYPTOKI_GNU
+#undef CK_BYTE_PTR
+
+#undef childKeyIndex
+#undef pChainCode
+#undef ulChainCodeLen
+
 #undef hSignVerifyKey
 #endif
 
