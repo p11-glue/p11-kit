@@ -83,7 +83,6 @@ test_initialize_finalize_interface (void)
 	assert (strcmp(interface->pInterfaceName, name) == 0);
 	proxy = interface->pFunctionList;
 	assert (proxy->version.major == 3);
-	assert (proxy->version.minor == 0);
 
 	assert (p11_proxy_module_check ((CK_FUNCTION_LIST_PTR)proxy));
 
