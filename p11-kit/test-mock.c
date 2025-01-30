@@ -2737,7 +2737,7 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_derive_key, "%s/test_derive_key", prefix);
 	p11_test (test_random, "%s/test_random", prefix);
 	/* PKCS #11 3.0 tests */
-	if (version && version->major == 3 && version->minor == 0) {
+	if (version && version->major == 3) {
 		p11_test (test_login_user, "%s/test_login_user", prefix);
 		p11_test (test_session_cancel, "%s/test_session_cancel", prefix);
 		p11_test (test_message_encrypt, "%s/test_message_encrypt", prefix);
