@@ -234,7 +234,7 @@ export_pubkey_ec (const ExportData *data,
 	unsigned char *der = NULL;
 
 	attrs = p11_attrs_buildn (NULL, template, p11_attrs_count (template));
-	return_val_if_fail (attrs, false);
+	return_val_if_fail (attrs, NULL);
 
 	if (p11_kit_iter_load_attributes (data->iter,
 					  attrs,
