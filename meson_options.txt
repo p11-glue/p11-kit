@@ -54,6 +54,14 @@ option('bash_completion', type : 'feature',
        value : 'auto',
        description : 'Install bash completion files')
 
+option('zshcompdir', type : 'string',
+       value : '',
+       description : 'Override default location for zsh completion files')
+
+option('zsh_completion', type : 'feature',
+       value : 'auto',
+       description : 'Install zsh completion files')
+
 option('gtk_doc', type : 'boolean',
        value : false,
        description : 'Build documentation using gtk-doc')

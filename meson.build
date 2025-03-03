@@ -493,3 +493,4 @@ if get_option('nls')
   subdir('po')
 endif
 subdir('bash-completion')
+subdir('zsh-completion')
