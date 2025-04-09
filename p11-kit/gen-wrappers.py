@@ -163,9 +163,10 @@ if __name__ == "__main__":
         for function in functions
     ])
 
-    args.outfile.write(templates["outer"].format(
-        indent=INDENT,
-        wrappers=wrappers,
-        xentries=xentries,
-        entries=entries,
-    ))
+    with args.outfile:
+        args.outfile.write(templates["outer"].format(
+            indent=INDENT,
+            wrappers=wrappers,
+            xentries=xentries,
+            entries=entries,
+        ))

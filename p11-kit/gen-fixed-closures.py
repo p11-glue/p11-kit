@@ -39,5 +39,5 @@ if __name__ == "__main__":
     parser.add_argument("--outfile", type=argparse.FileType("w"),
                         default=sys.stdout)
     args = parser.parse_args()
-
-    write_fixed_instantiate(args.outfile, args.closures)
+    with args.outfile:
+        write_fixed_instantiate(args.outfile, args.closures)
