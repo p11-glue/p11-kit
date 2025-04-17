@@ -228,7 +228,8 @@ if test "$os_unix" = "yes"; then
 	                          [Whether vsock support available])
 	                AC_MSG_RESULT([yes])],
 	               [AC_MSG_RESULT([no])])
-
+else
+    AM_CONDITIONAL([NEED_READPASSPHRASE], [false])
 fi
 
 # These are thngs we can work around
