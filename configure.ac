@@ -229,6 +229,9 @@ if test "$os_unix" = "yes"; then
 	                AC_MSG_RESULT([yes])],
 	               [AC_MSG_RESULT([no])])
 else
+    # ($os_unix != "yes")
+    # termios-based passphrase query is only supported on Unix platforms
+    # See common/Makefile.am
     AM_CONDITIONAL([NEED_READPASSPHRASE], [false])
 fi
 
