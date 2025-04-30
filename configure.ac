@@ -687,9 +687,6 @@ AC_ARG_WITH([systemd],
                            [Disable systemd socket activation]))
 
 AS_IF([test "$with_systemd" != "no"], [
-	PKG_CHECK_MODULES([LIBSYSTEMD], [libsystemd], [],
-		[with_systemd=no])
-
 	PKG_CHECK_VAR([systemduserunitdir], [systemd], [systemduserunitdir], [],
 		[with_systemd=no])
 

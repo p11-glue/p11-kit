@@ -277,7 +277,7 @@ executable('p11-kit-server',
            c_args: common_c_args + [
              '-DP11_KIT_REMOTE="p11-kit-remote"'
            ],
-           dependencies: [libp11_tool_dep] + libsystemd_deps + libintl_deps + libffi_deps + dlopen_deps,
+           dependencies: [libp11_tool_dep] + libintl_deps + libffi_deps + dlopen_deps,
            implicit_include_directories: false,
            link_with: libp11_kit,
            install: true,
@@ -290,7 +290,7 @@ if get_option('test')
                '-DP11_KIT_REMOTE="p11-kit-remote-testable"'
              ],
              implicit_include_directories: false,
-             dependencies: [libp11_tool_dep] + libsystemd_deps + libffi_deps + dlopen_deps,
+             dependencies: [libp11_tool_dep] + libffi_deps + dlopen_deps,
              link_whole: libp11_kit_testable)
 endif
 
