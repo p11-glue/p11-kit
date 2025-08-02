@@ -319,7 +319,7 @@ p11_test_run (int argc,
 	test_item *next;
 	int count;
 	int ret = 0;
-	int setup;
+	volatile int setup;
 	int opt;
 
 	/* p11-kit specific stuff */
