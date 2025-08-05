@@ -1,4 +1,4 @@
-FROM fedora:38
+FROM fedora-minimal:42
 
 MAINTAINER Daiki Ueno <ueno@gnu.org>
 
