@@ -1,4 +1,4 @@
-FROM fedora-minimal:42
+FROM --platform=linux/amd64 registry.fedoraproject.org/fedora-minimal:42
 
 MAINTAINER Daiki Ueno <ueno@gnu.org>
 
