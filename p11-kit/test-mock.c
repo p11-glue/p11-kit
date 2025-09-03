@@ -624,6 +624,11 @@ test_get_wrap_template (void)
 		{ CKA_WRAP_TEMPLATE, temp, sizeof (temp) },
 	};
 	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+	CK_ATTRIBUTE attrs_empty_template[] = {
+		{ CKA_WRAP_TEMPLATE, NULL, 0 },
+		{ CKA_UNWRAP_TEMPLATE, NULL, 0 },
+	};
+	CK_ULONG n_attrs_empty_template = sizeof(attrs_empty_template) / sizeof(attrs_empty_template[0]);
 
 	module = setup_mock_module (&session);
 
@@ -663,6 +668,12 @@ test_get_wrap_template (void)
 	assert (strncmp (label, "Wrapped label", sizeof (label)) == 0);
 	assert (verify == CK_TRUE);
 	assert (encrypt == CK_TRUE);
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_CAPITALIZE, attrs_empty_template, n_attrs_empty_template);
+	assert (rv == CKR_ATTRIBUTE_TYPE_INVALID);
+	assert_num_eq (attrs_empty_template[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs_empty_template[0].pValue, NULL);
+	assert_num_eq (attrs_empty_template[0].ulValueLen, (CK_ULONG)-1);
 
 	teardown_mock_module (module);
 }
