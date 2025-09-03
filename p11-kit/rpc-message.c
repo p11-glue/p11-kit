@@ -266,7 +266,7 @@ p11_rpc_message_write_attribute_buffer_array (p11_rpc_message *msg,
 		/* And the attribute buffer length */
 		p11_rpc_buffer_add_uint32 (msg->output, attr->pValue ? attr->ulValueLen : 0);
 
-		if (IS_ATTRIBUTE_ARRAY (attr))
+		if (attr->pValue && IS_ATTRIBUTE_ARRAY (attr))
 			p11_rpc_message_write_attribute_buffer_array (
 				msg, attr->pValue,
 				attr->ulValueLen / sizeof (CK_ATTRIBUTE));
