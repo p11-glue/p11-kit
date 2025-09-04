@@ -828,6 +828,8 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_IBM_USE_AS_DATA:
 	case CKA_IBM_PROTKEY_EXTRACTABLE:
 	case CKA_IBM_PROTKEY_NEVER_EXTRACTABLE:
+	case CKA_NSS_MOZILLA_CA_POLICY:
+	case CKA_X_DISTRUSTED:
 		return P11_RPC_VALUE_BYTE;
 	case CKA_CLASS:
 	case CKA_CERTIFICATE_TYPE:
@@ -891,6 +893,7 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_EXPONENT_1:
 	case CKA_EXPONENT_2:
 	case CKA_COEFFICIENT:
+	case CKA_PUBLIC_KEY_INFO:
 	case CKA_PRIME:
 	case CKA_SUBPRIME:
 	case CKA_BASE:
@@ -921,6 +924,8 @@ map_attribute_to_value_type (CK_ATTRIBUTE_TYPE type)
 	case CKA_IBM_KYBER_MODE:
 	case CKA_IBM_KYBER_PK:
 	case CKA_IBM_KYBER_SK:
+	case CKA_NSS_SERVER_DISTRUST_AFTER:
+	case CKA_NSS_EMAIL_DISTRUST_AFTER:
 		return P11_RPC_VALUE_BYTE_ARRAY;
 	}
 }
