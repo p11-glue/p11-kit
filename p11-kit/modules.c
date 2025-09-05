@@ -40,6 +40,7 @@
 #define P11_KIT_NO_DEPRECATIONS
 #define P11_DEBUG_FLAG P11_DEBUG_LIB
 
+#include "client.h"
 #include "conf.h"
 #include "debug.h"
 #include "dict.h"
@@ -355,8 +356,29 @@ p11_proxy_module_check (CK_FUNCTION_LIST_PTR module)
 #endif
 
 static CK_RV
+set_server_address (CK_C_GetInterface gi, const char *server_address)
+{
+	CK_INTERFACE *interface;
+	struct p11_client_function_list *client_funcs;
+	CK_RV rv;
+
+	/* Get the vendor interface to set server address */
+	rv = gi ((unsigned char *)P11_CLIENT_INTERFACE_NAME, NULL, &interface, 0);
+	if (rv != CKR_OK)
+		return rv;
+
+	client_funcs = interface->pFunctionList;
+	if (!client_funcs)
+		return CKR_DEVICE_ERROR;
+
+	client_funcs->set_server_address (server_address);
+	return CKR_OK;
+}
+
+static CK_RV
 dlopen_and_get_function_list (Module *mod,
                               const char *path,
+                              p11_dict *config,
                               CK_FUNCTION_LIST **funcs)
 {
 	CK_C_GetFunctionList gfl;
@@ -391,6 +413,14 @@ dlopen_and_get_function_list (Module *mod,
 #endif
 
 	if (gi) {
+		if (config) {
+			const char *server_address;
+
+			server_address = p11_dict_get (config, "server-address");
+			if (server_address)
+				set_server_address (gi, server_address);
+		}
+
 		/* Get the default standard interface */
 		rv = gi ((unsigned char *)"PKCS 11", NULL, &interface, 0);
 		switch (rv) {
@@ -440,6 +470,7 @@ dlopen_and_get_function_list (Module *mod,
 static CK_RV
 load_module_from_file_inlock (const char *name,
                               const char *path,
+                              p11_dict *config,
                               Module **result)
 {
 	CK_FUNCTION_LIST *funcs;
@@ -465,7 +496,7 @@ load_module_from_file_inlock (const char *name,
 
 	mod->filename = strdup (path);
 
-	rv = dlopen_and_get_function_list (mod, path, &funcs);
+	rv = dlopen_and_get_function_list (mod, path, config, &funcs);
 	free (expand);
 
 	if (rv != CKR_OK) {
@@ -633,7 +664,7 @@ take_config_and_load_module_inlock (char **name,
 
 	} else {
 
-		rv = load_module_from_file_inlock (*name, filename, &mod);
+		rv = load_module_from_file_inlock (*name, filename, *config, &mod);
 		if (rv != CKR_OK)
 			goto out;
 	}
@@ -2592,7 +2623,7 @@ p11_kit_module_load (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, NULL, &mod);
 			if (rv == CKR_OK) {
 				/* WARNING: Reentrancy can occur here */
 				rv = prepare_module_inlock_reentrant (mod, flags, &module);
@@ -2858,7 +2889,7 @@ p11_kit_load_initialize_module (const char *module_path,
 		rv = init_globals_unlocked ();
 		if (rv == CKR_OK) {
 
-			rv = load_module_from_file_inlock (NULL, module_path, &mod);
+			rv = load_module_from_file_inlock (NULL, module_path, NULL, &mod);
 			if (rv == CKR_OK) {
 
 				/* WARNING: Reentrancy can occur here */
