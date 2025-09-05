@@ -186,6 +186,13 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 			<para>This argument is optional and defaults to <literal>no</literal>.</para>
 		</listitem>
 	</varlistentry>
+	<varlistentry id="option-server-address">
+		<term><option>server-address:</option></term>
+		<listitem>
+			<para>A socket address which the p11-kit server is listening on. Only applicable to the <literal>p11-kit-client</literal> module.</para>
+			<para>This option can be overridden with the <literal>P11_KIT_SERVER_ADDRESS</literal> environment variable.</para>
+		</listitem>
+	</varlistentry>
 	</variablelist>
 
 	<para>Do not specify both <literal>enable-in</literal> and <literal>disable-in</literal>

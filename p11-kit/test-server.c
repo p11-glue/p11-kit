@@ -42,6 +42,7 @@
 #include "mock.h"
 #include "modules.h"
 #include "p11-kit.h"
+#include "path.h"
 #include "remote.h"
 #include "virtual.h"
 
@@ -59,6 +60,8 @@
 struct {
 	char *directory;
 	char *socket_path;
+	char *user_config;
+	char *user_modules;
 	pid_t pid;
 } test;
 
@@ -79,6 +82,7 @@ setup_server (void *arg)
 	int ret;
 	const char *envvar;
 	char *path;
+	char *data;
 
 	args = p11_array_new (NULL);
 	if (!p11_array_push (args, "p11-kit-server-testable"))
@@ -101,6 +105,27 @@ setup_server (void *arg)
 		assert_not_reached ();
 	free (path);
 	unlink (test.socket_path);
+
+	data = "user-config: only\n";
+	test.user_config = p11_path_build (test.directory, "pkcs11.conf", NULL);
+	p11_test_file_write (NULL, test.user_config, data, strlen (data));
+
+	test.user_modules = p11_path_build (test.directory, "modules", NULL);
+#ifdef OS_UNIX
+	if (mkdir (test.user_modules, 0700) < 0)
+#else
+	if (mkdir (test.user_modules) < 0)
+#endif
+		assert_not_reached ();
+	if (asprintf (&data,
+		      /* cppcheck-suppress unknownMacro */
+		      "module: " P11_MODULE_PATH "/mock-one" SHLEXT
+		      "\nserver-address: unix:path=%s",
+		      test.socket_path) < 0)
+		assert_not_reached ();
+
+	p11_test_file_write (test.user_modules, "server.module", data, strlen (data));
+	free (data);
 
 	ret = socketpair (AF_UNIX, SOCK_STREAM, 0, fds);
 	assert_num_cmp (-1, !=, ret);
@@ -162,6 +187,8 @@ teardown_server (void *unused)
 	p11_test_directory_delete (test.directory);
 	free (test.directory);
 	free (test.socket_path);
+	free (test.user_config);
+	free (test.user_modules);
 }
 
 static void
@@ -201,6 +228,44 @@ test_initialize_no_address (void *unused)
 	assert (rv == CKR_OK);
 
 	p11_kit_module_release (module);
+}
+
+extern const char *p11_config_system_file;
+extern const char *p11_config_user_modules;
+
+static void
+test_initialize_address_from_config (void *unused)
+{
+	CK_FUNCTION_LIST **modules, *module;
+	CK_RV rv;
+	const char *user_config;
+	const char *user_modules;
+
+	unsetenv ("P11_KIT_SERVER_ADDRESS");
+	unsetenv ("XDG_RUNTIME_DIR");
+
+	user_config = p11_config_system_file;
+	user_modules = p11_config_user_modules;
+
+	p11_config_system_file = test.user_config;
+	p11_config_user_modules = test.user_modules;
+
+	modules = p11_kit_modules_load (NULL, 0);
+	assert (modules != NULL);
+
+	module = p11_kit_module_for_name (modules, "server");
+	assert (module != NULL);
+
+	rv = p11_kit_module_initialize (module);
+	assert (rv == CKR_OK);
+
+	rv = p11_kit_module_finalize (module);
+	assert (rv == CKR_OK);
+
+	p11_kit_modules_release (modules);
+
+	p11_config_system_file = user_config;
+	p11_config_user_modules = user_modules;
 }
 
 static void
@@ -291,6 +356,7 @@ main (int argc,
 	p11_fixture (setup_server, teardown_server);
 	p11_testx (test_initialize, (void *)&with_provider, "/server/initialize");
 	p11_testx (test_initialize_no_address, (void *)&with_provider, "/server/initialize-no-address");
+	p11_testx (test_initialize_address_from_config, (void *)&with_provider, "/server/initialize-address-from-config");
 	p11_testx (test_open_session, (void *)&with_provider, "/server/open-session");
 	p11_testx (test_open_session_write_protected, (void *)&write_protected, "/server/open-session-write-protected");
 
