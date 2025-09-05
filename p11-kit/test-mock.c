@@ -674,6 +674,9 @@ test_get_wrap_template (void)
 	assert_num_eq (attrs_empty_template[0].type, CKA_WRAP_TEMPLATE);
 	assert_ptr_eq (attrs_empty_template[0].pValue, NULL);
 	assert_num_eq (attrs_empty_template[0].ulValueLen, (CK_ULONG)-1);
+	assert_num_eq (attrs_empty_template[1].type, CKA_UNWRAP_TEMPLATE);
+	assert_ptr_eq (attrs_empty_template[1].pValue, NULL);
+	assert_num_eq (attrs_empty_template[1].ulValueLen, (CK_ULONG)-1);
 
 	teardown_mock_module (module);
 }
