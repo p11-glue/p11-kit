@@ -35,6 +35,17 @@
 #ifndef __P11_CLIENT_H__
 #define __P11_CLIENT_H__
 
+#include "pkcs11.h"
+
+#define P11_CLIENT_INTERFACE_NAME "Vendor p11-kit client"
+
+typedef void (*set_server_address_func) (const char *server_address);
+
+struct p11_client_function_list {
+	CK_VERSION version;
+	set_server_address_func set_server_address;
+};
+
 void       p11_client_module_cleanup                  (void);
 
 
