@@ -26,7 +26,7 @@ runs:
     - name: Test
       if: ${{ env.SCAN_BUILD == 0 }}
       run: |
-        P11_KIT_DEBUG=all $GITHUB_WORKSPACE/build/run-wrapper.sh meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
+        P11_KIT_DEBUG=all LSAN_OPTIONS=suppressions=$GITHUB_WORKSPACE/build/lsan.supp $GITHUB_WORKSPACE/build/run-wrapper.sh meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
         ret=$?
         test $ret -eq 0 || cat $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/testlog.txt
         exit $ret

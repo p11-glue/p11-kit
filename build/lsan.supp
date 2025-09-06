@@ -1,3 +1,6 @@
 leak:bash
 leak:bfd
 leak:gcc
+# libffi uses shared memory and leak is intentional to avoid crash in
+# multi-process applications. See p11-kit/virtual.c.
+leak:ffi_closure_alloc
