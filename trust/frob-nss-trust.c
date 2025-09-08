@@ -42,6 +42,7 @@
 #include "p11-kit/iter.h"
 #include "p11-kit/p11-kit.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +68,7 @@ dump_object (P11KitIter *iter,
 		name = strndup (attr->pValue, attr->ulValueLen);
 	else
 		name = strdup ("unknown");
+	assert (name);
 
 	string = p11_attrs_to_string (attrs, -1);
 	printf ("\"%s\" = %s\n", name, string);

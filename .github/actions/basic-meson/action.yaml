@@ -24,7 +24,7 @@ runs:
       shell: bash
 
     - name: Test
-      if: ${{ env.SCAN_BUILD == 0 }}
+      if: ${{ env.PROFILE != 'static-analysis' }}
       run: |
         P11_KIT_DEBUG=all LSAN_OPTIONS=suppressions=$GITHUB_WORKSPACE/build/lsan.supp $GITHUB_WORKSPACE/build/run-wrapper.sh meson test -C $GITHUB_WORKSPACE/$BUILDDIR $MESON_TEST_OPTS
         ret=$?
@@ -33,6 +33,7 @@ runs:
       shell: bash
 
     - name: Prepare for post-install tests
+      if: ${{ env.PROFILE != 'static-analysis' }}
       run: |
         # This is necessary for 'trust/test-extract.sh'
         mkdir -p $GITHUB_WORKSPACE/$INSTALLDIR/etc/pki/ca-trust-source
@@ -48,5 +49,6 @@ runs:
       shell: bash
 
     - name: Install
+      if: ${{ env.PROFILE != 'static-analysis' }}
       run: ninja -C $GITHUB_WORKSPACE/$BUILDDIR install
       shell: bash
