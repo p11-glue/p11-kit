@@ -89,6 +89,7 @@ setup (void *unused)
 	assert (rv == CKR_OK);
 
 	memset (&args, 0, sizeof (args));
+	/* cppcheck-suppress unknownMacro */
 	paths = SRCDIR "/trust/input" P11_PATH_SEP \
 		SRCDIR "/trust/fixtures/self-signed-with-ku.der" P11_PATH_SEP \
 		SRCDIR "/trust/fixtures/thawte.pem";

@@ -4,6 +4,7 @@ env:
   BUILDDIR: "builddir"
   INSTALLDIR: "installdir"
   RUNUSER: "user"
+  PROFILE: "testable"
 jobs:
   autotools:
     runs-on: ubuntu-latest
@@ -77,6 +78,7 @@ jobs:
       image: ghcr.io/p11-glue/p11-kit:master
     env:
       SCAN_BUILD: scan-build --status-bugs
+      PROFILE: static-analysis
     steps:
       # Checkout repo
       - uses: actions/checkout@v4
@@ -104,14 +106,15 @@ jobs:
     container:
       image: ghcr.io/p11-glue/p11-kit:master
     env:
-      PROFILE: cppcheck
+      PROFILE: static-analysis
     steps:
       # Checkout repo
       - uses: actions/checkout@v4
         with:
           submodules: true
+      - uses: ./.github/actions/basic-meson
       - run: |
-          find common p11-kit trust -name '*.c' -print | cppcheck -f --platform=unix64 --relative-paths --language=c --quiet -I common -I p11-kit -I trust --file-list=- --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1
+          cppcheck --project=$GITHUB_WORKSPACE/$BUILDDIR/compile_commands.json --quiet --inline-suppr --template='{file}:{line},{severity},{id},{message}' --error-exitcode=1 -DSO_PEERCRED -D__cppcheck__ --suppress=normalCheckLevelMaxBranches
 
   coverage:
     runs-on: ubuntu-latest
