@@ -459,6 +459,7 @@ with_systemd = false
 systemd = dependency('systemd', required: get_option('systemd'))
 if systemd.found()
   systemduserunitdir = systemd.get_variable(pkgconfig : 'systemduserunitdir')
+  with_systemd = true
 endif
 
 configure_file(output: 'config.h', configuration: conf)
