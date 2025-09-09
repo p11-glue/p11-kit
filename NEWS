@@ -1,3 +1,18 @@
+0.25.6 (stable)
+* rpc: Add module configuration option to specify server address [PR#707]
+* rpc: Correctly map Mozilla certificate distrust attributes [PR#705]
+* rpc: Fix empty array attribute handling [PR#704]
+* server: Remove libsystemd dependency for socket activation [PR#685]
+* Avoid segfault if p11_library_init_impl/p11_library_uninit are called multiple times [PR#682]
+* Add zsh completions [PR#674]
+* pkcs11: Update pkcs11.h to version 3.1 [PR#671]
+* pkcs11: Add IBM specific mechanisms [PR#669]
+* server: check SHELL if (and only if) neither --sh nor --csh is specified [PR#661]
+* trust: don't create file names longer then 255 [PR#659]
+* trust: sort paths for reproducible extract [PR#656]
+* Build and test fixes [PR#647, PR#653, PR#654, PR#657, PR#660, PR#667, PR#673, PR#681, PR#683, PR#688, PR#694]
+* Update translations [PR#663, PR#701]
+
 0.25.5 (stable)
 * iter: fix recursive attribute loading [PR#642]
 * fix building on FreeBSD 14.0 (amd64) [PR#644]
