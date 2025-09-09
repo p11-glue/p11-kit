@@ -122,7 +122,7 @@ p11_x509_parse_subject_key_identifier  (p11_dict *asn1_defs,
 	unsigned char *keyid;
 	asn1_node ext;
 
-	return_val_if_fail (keyid_len != NULL, false);
+	return_val_if_fail (keyid_len != NULL, NULL);
 
 	ext = p11_asn1_decode (asn1_defs, "PKIX1.SubjectKeyIdentifier", ext_der, ext_len, NULL);
 	if (ext == NULL)
@@ -259,7 +259,7 @@ p11_x509_parse_directory_string (const unsigned char *input,
 	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
 
 	octet_len = asn1_get_length_der (input + tag_len, input_len - tag_len, &len_len);
-	return_val_if_fail (octet_len >= 0, false);
+	return_val_if_fail (octet_len >= 0, NULL);
 	return_val_if_fail (tag_len + len_len + octet_len == input_len, NULL);
 
 	octets = input + tag_len + len_len;

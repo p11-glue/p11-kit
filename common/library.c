@@ -162,7 +162,8 @@ p11_library_init_impl (void)
 #endif
 	p11_message_storage = thread_local_message;
 #ifdef HAVE_STRERROR_L
-	p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
+	if (p11_message_locale == (locale_t) 0)
+		p11_message_locale = newlocale (LC_ALL_MASK, "POSIX", (locale_t) 0);
 #endif
 
 	pthread_atfork (NULL, NULL, count_forks);
@@ -188,6 +189,7 @@ p11_library_uninit (void)
 #ifdef HAVE_STRERROR_L
 	if (p11_message_locale != (locale_t) 0)
 		freelocale (p11_message_locale);
+	p11_message_locale = 0;
 #endif
 	p11_message_storage = dont_store_message;
 #ifndef P11_TLS_KEYWORD

@@ -64,10 +64,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef WITH_SYSTEMD
-#include <systemd/sd-daemon.h>
-#endif
-
 #ifdef HAVE_VSOCK
 #include "vsock.h"
 #include <linux/vm_sockets.h>
@@ -83,6 +79,8 @@
 typedef void (*sighandler_t)(int);
 #define SIGHANDLER_T sighandler_t
 #endif
+
+#define SD_LISTEN_FDS_START 3
 
 #endif /* OS_UNIX */
 
@@ -263,12 +261,29 @@ handle_term (int signo)
 }
 
 static int
-set_cloexec_on_fd (void *data,
-                   int fd)
+set_cloexec_on_fd (int fd)
 {
-	int *max_fd = data;
-	if (fd >= *max_fd)
-		fcntl (fd, F_SETFD, FD_CLOEXEC);
+	int flags, nflags;
+
+	flags = fcntl (fd, F_GETFD, 0);
+	if (flags < 0)
+		return flags;
+
+	nflags = flags | FD_CLOEXEC;
+	if (nflags == flags)
+		return 0;
+
+	return fcntl (fd, F_SETFD, nflags);
+}
+
+static int
+set_cloexec_on_fd_above (void *data,
+			 int fd)
+{
+	int *min_fd = data;
+	if (fd > *min_fd) {
+		return set_cloexec_on_fd (fd);
+	}
 	return 0;
 }
 
@@ -465,6 +480,51 @@ print_environment (pid_t pid, Server *server, bool csh)
 }
 
 static int
+listen_fds (void)
+{
+	const char *envvar;
+	char *endptr;
+	long listen_pid, listen_fds;
+
+        envvar = secure_getenv ("LISTEN_PID");
+        if (envvar == NULL || envvar[0] == '\0') {
+                return 0;
+	}
+
+	listen_pid = strtol (envvar, &endptr, 10);
+	if (errno == ERANGE &&
+	    (listen_pid == LONG_MAX || listen_pid == LONG_MIN)) {
+		return 0;
+	}
+
+	if (getpid () != listen_pid) {
+		return 0;
+	}
+
+        envvar = secure_getenv ("LISTEN_FDS");
+        if (envvar == NULL || envvar[0] == '\0') {
+                return 0;
+	}
+
+	listen_fds = strtol (envvar, &endptr, 10);
+	if (errno == ERANGE &&
+	    (listen_fds == LONG_MAX || listen_fds == LONG_MIN)) {
+		return 0;
+	}
+
+	if (listen_fds <= 0 || listen_fds > INT_MAX - SD_LISTEN_FDS_START) {
+		return 0;
+	}
+
+	for (int fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + listen_fds; fd++) {
+		if (set_cloexec_on_fd (fd) < 0)
+			return 0;
+	}
+
+	return listen_fds;
+}
+
+static int
 server_loop (Server *server,
 	     bool foreground,
 	     struct timespec *timeout)
@@ -478,7 +538,7 @@ server_loop (Server *server,
 	sigset_t emptyset, blockset;
 	char **args;
 	size_t n_args, i;
-	int max_fd;
+	int min_fd;
 	int errn;
 
 	sigemptyset (&blockset);
@@ -512,15 +572,13 @@ server_loop (Server *server,
 		}
 	}
 
-#ifdef WITH_SYSTEMD
-	ret = sd_listen_fds (0);
+	ret = listen_fds ();
 	if (ret > 1) {
 		p11_message (_("too many file descriptors received"));
 		return 1;
 	} else if (ret == 1) {
 		server->socket = SD_LISTEN_FDS_START + 0;
 	} else
-#endif
 	if (server->socket_name) {
 		server->socket = create_unix_socket (server->socket_name, server->uid, server->gid);
 #ifdef HAVE_VSOCK
@@ -591,9 +649,9 @@ server_loop (Server *server,
 					_exit (errn);
 				}
 
-				/* Close file descriptors, except for above on exec */
-				max_fd = STDERR_FILENO + 1;
-				fdwalk (set_cloexec_on_fd, &max_fd);
+				/* Close file descriptors above min_fd upon exec */
+				min_fd = STDERR_FILENO;
+				fdwalk (set_cloexec_on_fd_above, &min_fd);
 
 				/* Execute 'p11-kit remote'; this shouldn't return */
 				args = calloc (3 + server->n_tokens + 1, sizeof (char *));

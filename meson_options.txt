@@ -54,6 +54,14 @@ option('bash_completion', type : 'feature',
        value : 'auto',
        description : 'Install bash completion files')
 
+option('zshcompdir', type : 'string',
+       value : '',
+       description : 'Override default location for zsh completion files')
+
+option('zsh_completion', type : 'feature',
+       value : 'auto',
+       description : 'Install zsh completion files')
+
 option('gtk_doc', type : 'boolean',
        value : false,
        description : 'Build documentation using gtk-doc')
@@ -83,5 +91,5 @@ option('rpc_min', type : 'integer',
        description : 'Minimum RPC protocol version we support')
 
 option('rpc_max', type : 'integer',
-       min : 0, max : 1, value : 1,
+       min : 0, max : 2, value : 2,
        description : 'Maximum RPC protocol version we support')

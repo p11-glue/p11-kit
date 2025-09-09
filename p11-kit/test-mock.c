@@ -624,6 +624,11 @@ test_get_wrap_template (void)
 		{ CKA_WRAP_TEMPLATE, temp, sizeof (temp) },
 	};
 	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+	CK_ATTRIBUTE attrs_empty_template[] = {
+		{ CKA_WRAP_TEMPLATE, NULL, 0 },
+		{ CKA_UNWRAP_TEMPLATE, NULL, 0 },
+	};
+	CK_ULONG n_attrs_empty_template = sizeof(attrs_empty_template) / sizeof(attrs_empty_template[0]);
 
 	module = setup_mock_module (&session);
 
@@ -663,6 +668,15 @@ test_get_wrap_template (void)
 	assert (strncmp (label, "Wrapped label", sizeof (label)) == 0);
 	assert (verify == CK_TRUE);
 	assert (encrypt == CK_TRUE);
+
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_CAPITALIZE, attrs_empty_template, n_attrs_empty_template);
+	assert (rv == CKR_ATTRIBUTE_TYPE_INVALID);
+	assert_num_eq (attrs_empty_template[0].type, CKA_WRAP_TEMPLATE);
+	assert_ptr_eq (attrs_empty_template[0].pValue, NULL);
+	assert_num_eq (attrs_empty_template[0].ulValueLen, (CK_ULONG)-1);
+	assert_num_eq (attrs_empty_template[1].type, CKA_UNWRAP_TEMPLATE);
+	assert_ptr_eq (attrs_empty_template[1].pValue, NULL);
+	assert_num_eq (attrs_empty_template[1].ulValueLen, (CK_ULONG)-1);
 
 	teardown_mock_module (module);
 }
@@ -2737,7 +2751,7 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_derive_key, "%s/test_derive_key", prefix);
 	p11_test (test_random, "%s/test_random", prefix);
 	/* PKCS #11 3.0 tests */
-	if (version && version->major == 3 && version->minor == 0) {
+	if (version && version->major == 3) {
 		p11_test (test_login_user, "%s/test_login_user", prefix);
 		p11_test (test_session_cancel, "%s/test_session_cancel", prefix);
 		p11_test (test_message_encrypt, "%s/test_message_encrypt", prefix);

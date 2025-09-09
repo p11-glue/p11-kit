@@ -458,6 +458,55 @@ proto_write_mechanism (p11_rpc_message *msg,
 }
 
 static CK_RV
+proto_read_error (p11_rpc_message *msg, CK_RV *error)
+{
+	if (!p11_rpc_message_read_ulong(msg, error))
+		return PARSE_ERROR;
+
+	return CKR_OK;
+}
+
+static CK_RV
+proto_read_mech_param_update (p11_rpc_message *msg,
+                      CK_MECHANISM_PTR *mech)
+{
+	size_t offset;
+	CK_MECHANISM temp;
+
+	assert (msg != NULL);
+	assert (mech != NULL);
+	assert (msg->input != NULL);
+
+	/* Make sure this is in the right order */
+	assert (!msg->signature || p11_rpc_message_verify_part (msg, "P"));
+
+	/* Check the length needed to store the parameter */
+	memset (&temp, 0, sizeof (temp));
+	temp.mechanism = (*mech)->mechanism;
+	offset = msg->parsed;
+	if (!p11_rpc_buffer_get_mech_param_update (msg->input, &offset, &temp)) {
+		msg->parsed = offset;
+		return PARSE_ERROR;
+	}
+
+	/* The mechanism doesn't require parameter */
+	if (temp.ulParameterLen == 0) {
+		msg->parsed = offset;
+		return CKR_OK;
+	}
+
+	/* Actually retrieve the parameter */
+	if ((*mech)->ulParameterLen != temp.ulParameterLen)
+		return CKR_MECHANISM_PARAM_INVALID;
+	if (!p11_rpc_buffer_get_mech_param_update (msg->input, &msg->parsed, *mech))
+		return PARSE_ERROR;
+
+	assert (msg->parsed == offset);
+
+	return CKR_OK;
+}
+
+static CK_RV
 proto_read_info (p11_rpc_message *msg,
                  CK_INFO_PTR info)
 {
@@ -652,6 +701,16 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 	if (_ret == CKR_OK && !p11_rpc_message_read_ulong (&_msg, val)) \
 		_ret = PARSE_ERROR;
 
+#define OUT_MECH_PARAM_UPDATE(mech) \
+	if (_ret != CKR_OK) goto _cleanup; \
+	_ret = proto_read_mech_param_update (&_msg, &mech); \
+	if (_ret != CKR_OK) goto _cleanup;
+
+#define OUT_ERROR(err) \
+	if (_ret != CKR_OK) goto _cleanup; \
+	_ret = proto_read_error (&_msg, &err);
+
+
 #define OUT_BYTE_ARRAY(arr, len)  \
 	if (len == NULL) \
 		_ret = CKR_ARGUMENTS_BAD; \
@@ -705,6 +764,17 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		_ret = CKR_ARGUMENTS_BAD; \
 	if (_ret == CKR_OK) \
 		_ret = proto_read_mechanism_info (&_msg, info);
+
+// EARLY_EXIT_ON_FAIL
+#define PREP_EEOF \
+	CK_RV err;
+
+#define PROCESS_CALL_NO_CHECK \
+		_ret = call_run (_mod, &_msg);
+
+#define CHECK_EEOF \
+	if(err != CKR_OK) \
+		_ret = err;
 
 
 /* -------------------------------------------------------------------
@@ -1874,13 +1944,13 @@ rpc_C_UnwrapKey (CK_X_FUNCTION_LIST *self,
 }
 
 static CK_RV
-rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
-                 CK_SESSION_HANDLE session,
-                 CK_MECHANISM_PTR mechanism,
-                 CK_OBJECT_HANDLE base_key,
-                 CK_ATTRIBUTE_PTR template,
-                 CK_ULONG count,
-                 CK_OBJECT_HANDLE_PTR key)
+C_DeriveKey1 (CK_X_FUNCTION_LIST *self,
+              CK_SESSION_HANDLE session,
+              CK_MECHANISM_PTR mechanism,
+              CK_OBJECT_HANDLE base_key,
+              CK_ATTRIBUTE_PTR template,
+              CK_ULONG count,
+              CK_OBJECT_HANDLE_PTR key)
 {
 	BEGIN_CALL_OR (C_DeriveKey, self, CKR_SESSION_HANDLE_INVALID);
 		IN_ULONG (session);
@@ -1890,6 +1960,46 @@ rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
 	PROCESS_CALL;
 		OUT_ULONG (key);
 	END_CALL;
+}
+
+static CK_RV
+C_DeriveKey2 (CK_X_FUNCTION_LIST *self,
+              CK_SESSION_HANDLE session,
+              CK_MECHANISM_PTR mechanism,
+              CK_OBJECT_HANDLE base_key,
+              CK_ATTRIBUTE_PTR template,
+              CK_ULONG count,
+              CK_OBJECT_HANDLE_PTR key)
+{
+	PREP_EEOF;
+	BEGIN_CALL_OR (C_DeriveKey2, self, CKR_SESSION_HANDLE_INVALID);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (base_key);
+		IN_ATTRIBUTE_ARRAY (template, count);
+	PROCESS_CALL_NO_CHECK;
+		OUT_ERROR (err);
+		OUT_MECH_PARAM_UPDATE (mechanism);
+		CHECK_EEOF;
+		OUT_ULONG (key);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_DeriveKey (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE session,
+                 CK_MECHANISM_PTR mechanism,
+                 CK_OBJECT_HANDLE base_key,
+                 CK_ATTRIBUTE_PTR template,
+                 CK_ULONG count,
+                 CK_OBJECT_HANDLE_PTR key)
+{
+	uint8_t version = RPC_VERSION;
+
+	if (version <= 1)
+		return C_DeriveKey1 (self, session, mechanism, base_key, template, count, key);
+	else
+		return C_DeriveKey2 (self, session, mechanism, base_key, template, count, key);
 }
 
 static CK_RV

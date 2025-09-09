@@ -84,6 +84,7 @@ setup_remote (void *unused)
 	p11_test_file_write (NULL, test.user_config, data, strlen (data));
 
 	setenv ("P11_KIT_PRIVATEDIR", BUILDDIR "/p11-kit", 1);
+	/* cppcheck-suppress unknownMacro */
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/" MOCK_MODULE_TWO SHLEXT "\n";
 	p11_test_file_write (test.user_modules, "remote.module", data, strlen (data));
 	data = "remote: |" BUILDDIR "/p11-kit/p11-kit" EXEEXT " remote " P11_MODULE_PATH "/mock-five" SHLEXT "\nx-init-reserved: initialize-arg";

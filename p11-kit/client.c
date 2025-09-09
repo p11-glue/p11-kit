@@ -55,6 +55,9 @@ typedef struct _State {
 } State;
 
 static State *all_instances = NULL;
+
+static char *server_address_from_interface = NULL;
+
 static CK_RV
 get_server_address (char **addressp)
 {
@@ -72,6 +75,16 @@ get_server_address (char **addressp)
 		if (!address)
 			return CKR_HOST_MEMORY;
 		*addressp = address;
+
+		free (server_address_from_interface);
+		server_address_from_interface = NULL;
+
+		return CKR_OK;
+	}
+
+	if (server_address_from_interface) {
+		*addressp = server_address_from_interface;
+		server_address_from_interface = NULL;
 		return CKR_OK;
 	}
 
@@ -97,6 +110,26 @@ get_server_address (char **addressp)
 	*addressp = address;
 	return CKR_OK;
 }
+
+/*
+ * A hidden vendor interface to externally set server socket address.
+ */
+static const char p11_client_interface_name[] = P11_CLIENT_INTERFACE_NAME;
+
+static void set_server_address (const char *server_address) {
+	server_address_from_interface = strdup (server_address);
+}
+
+static const struct p11_client_function_list p11_client_function_list = {
+	{ 0, 0 },
+	set_server_address,
+};
+
+static const CK_INTERFACE p11_client_interface = {
+	(char *)p11_client_interface_name,
+	(void *)&p11_client_function_list,
+	0,
+};
 
 static const char p11_interface_name[] = "PKCS 11";
 
@@ -176,7 +209,8 @@ get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLA
 	if (module)
 		p11_virtual_unwrap (module);
 	if (state) {
-		p11_virtual_unwrap (state->wrapped.pFunctionList);
+		if (state->wrapped.pFunctionList)
+			p11_virtual_unwrap (state->wrapped.pFunctionList);
 		p11_rpc_transport_free (state->rpc);
 		free (state);
 	}
@@ -263,9 +297,15 @@ C_GetInterface (CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
 		return CKR_ARGUMENTS_BAD;
 	}
 
-	if (pInterfaceName &&
-	    strcmp ((const char *)pInterfaceName, p11_interface_name) != 0) {
-		return CKR_ARGUMENTS_BAD;
+	if (pInterfaceName) {
+		if (strcmp ((const char *)pInterfaceName, p11_client_interface_name) == 0) {
+			*ppInterface = (CK_INTERFACE_PTR)&p11_client_interface;
+			return CKR_OK;
+		} else if (strcmp ((const char *)pInterfaceName, p11_interface_name) == 0) {
+			/* fall through */
+		} else {
+			return CKR_ARGUMENTS_BAD;
+		}
 	}
 
 	p11_library_init_once ();

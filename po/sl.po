@@ -3,113 +3,455 @@
 # This file is distributed under the same license as the p11-kit package.
 #
 # Translators:
-# Martin Srebotnjak <miles@filmsi.net>, 2012-2013
+# Jure Repinc <jlp@holodeck1.com>, 2024.
+# Martin Srebotnjak <miles@filmsi.net>, 2012-2013, 2021, 2025.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
-"POT-Creation-Date: 2022-10-19 03:26+0000\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: Martin Srebotnjak <miles@filmsi.net>, 2012-2013\n"
-"Language-Team: Slovenian (http://www.transifex.com/freedesktop/p11-kit/"
-"language/sl/)\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?component=p11-"
+"kit&product=p11-glue&resolution=---\n"
+"POT-Creation-Date: 2025-06-21 03:26+0000\n"
+"PO-Revision-Date: 2025-06-21 12:40+0200\n"
+"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
+"Language-Team: Slovenian GNOME Translation Team <gnome-si@googlegroups.com>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
-"%100==4 ? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
+"%100==4 ? 3 : 0);\n"
+"X-Generator: Poedit 2.2.1\n"
 
-#: common/tool.c:184
+#: common/options.c:184
 #, c-format
 msgid "usage: %s command <args>...\n"
-msgstr ""
+msgstr "uporaba: %s ukaz <argumenti>...\n"
 
-#: common/tool.c:185
+#: common/options.c:185
 #, c-format
 msgid ""
 "\n"
 "Common %s commands are:\n"
 msgstr ""
+"\n"
+"Pogosti ukazi za %s so:\n"
 
-#: common/tool.c:198
+#: common/options.c:198
 #, c-format
 msgid ""
 "\n"
 "See '%s <command> --help' for more information\n"
 msgstr ""
+"\n"
+"Za več informacij glejte »%s <ukaz> --help« \n"
 
-#: common/tool.c:261 common/tool.c:333
+#: common/options.c:261 common/options.c:333
 msgid "no command specified"
-msgstr ""
+msgstr "določen ni bil noben ukaz"
 
-#: common/tool.c:277
+#: common/options.c:277
 #, c-format
 msgid "unknown global option: %s"
-msgstr ""
+msgstr "neznana splošna možnost: %s"
 
-#: common/tool.c:306
+#: common/options.c:306
 #, c-format
 msgid "unknown global option: -%c"
-msgstr ""
+msgstr "neznana splošna možnost: -%c"
 
 #. At this point we have no command
-#: common/tool.c:358
+#: common/options.c:358
 #, c-format
 msgid "'%s' is not a valid command. See '%s --help'"
-msgstr ""
+msgstr "»%s« ni veljaven ukaz. Glejte »%s --help«"
+
+#: common/persist.c:496
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "neveljavna vrednost oid: %s"
+
+#: p11-kit/add-profile.c:85 p11-kit/delete-object.c:69
+#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:442
+#: p11-kit/generate-keypair.c:310 p11-kit/import-object.c:490
+#: p11-kit/list-objects.c:361 p11-kit/list-profiles.c:83
+msgid "failed to initialize iterator"
+msgstr "inicializacija iteratorja ni uspela"
+
+#: p11-kit/add-profile.c:92 p11-kit/delete-profile.c:92
+#: p11-kit/generate-keypair.c:317 p11-kit/import-object.c:497
+#: p11-kit/list-profiles.c:90 p11-kit/list-mechanisms.c:152
+msgid "no matching token"
+msgstr "ni ujemajočega se žetona"
+
+#: p11-kit/add-profile.c:94 p11-kit/delete-profile.c:94
+#: p11-kit/generate-keypair.c:319 p11-kit/import-object.c:499
+#: p11-kit/list-profiles.c:92 p11-kit/list-mechanisms.c:154
+#, c-format
+msgid "failed to find token: %s"
+msgstr "žetona ni možno najti: %s"
+
+#: p11-kit/add-profile.c:106 p11-kit/delete-profile.c:106
+#: p11-kit/list-profiles.c:104
+#, c-format
+msgid "failed to initialize search for objects: %s"
+msgstr "inicializacija iskanja predmetov ni uspela: %s"
+
+#: p11-kit/add-profile.c:113 p11-kit/delete-profile.c:114
+#: p11-kit/list-profiles.c:112
+#, c-format
+msgid "failed to search for objects: %s"
+msgstr "iskanje predmetov ni uspelo: %s"
+
+#: p11-kit/add-profile.c:119 p11-kit/delete-profile.c:130
+#: p11-kit/list-profiles.c:135
+#, c-format
+msgid "failed to finalize search for objects: %s"
+msgstr "iskanja predmetov ni uspelo dokončati: %s"
+
+#: p11-kit/add-profile.c:124
+msgid "profile already exists"
+msgstr "profil že obstaja"
+
+#: p11-kit/add-profile.c:130
+#, c-format
+msgid "failed to create profile object: %s"
+msgstr "ustvarjanje predmeta profila je spodletelo: %s"
+
+#: p11-kit/add-profile.c:182 p11-kit/add-profile.c:241
+#: p11-kit/add-profile.c:251 p11-kit/delete-object.c:164
+#: p11-kit/delete-object.c:174 p11-kit/delete-profile.c:182
+#: p11-kit/delete-profile.c:241 p11-kit/delete-profile.c:251
+#: p11-kit/export-object.c:557 p11-kit/export-object.c:567
+#: p11-kit/generate-keypair.c:185 p11-kit/generate-keypair.c:190
+#: p11-kit/generate-keypair.c:199 p11-kit/generate-keypair.c:205
+#: p11-kit/generate-keypair.c:228 p11-kit/generate-keypair.c:235
+#: p11-kit/generate-keypair.c:249 p11-kit/generate-keypair.c:255
+#: p11-kit/generate-keypair.c:264 p11-kit/generate-keypair.c:468
+#: p11-kit/generate-keypair.c:478 p11-kit/import-object.c:124
+#: p11-kit/import-object.c:133 p11-kit/import-object.c:156
+#: p11-kit/import-object.c:196 p11-kit/import-object.c:205
+#: p11-kit/import-object.c:230 p11-kit/import-object.c:303
+#: p11-kit/import-object.c:371 p11-kit/import-object.c:379
+#: p11-kit/import-object.c:634 p11-kit/import-object.c:644
+#: p11-kit/list-objects.c:187 p11-kit/list-objects.c:274
+#: p11-kit/list-objects.c:288 p11-kit/list-objects.c:295
+#: p11-kit/list-objects.c:330 p11-kit/list-objects.c:441
+#: p11-kit/list-objects.c:451 p11-kit/list-profiles.c:215
+#: p11-kit/list-profiles.c:225 p11-kit/list-mechanisms.c:180
+#: p11-kit/list-mechanisms.c:273 p11-kit/list-mechanisms.c:283
+#: p11-kit/list-tokens.c:180 p11-kit/list-tokens.c:190 p11-kit/lists.c:97
+#: p11-kit/lists.c:185 p11-kit/lists.c:239
+msgid "failed to allocate memory"
+msgstr "ni mogoče dodeliti pomnilnika"
+
+#: p11-kit/add-profile.c:200 p11-kit/delete-profile.c:200
+msgid "multiple profiles specified"
+msgstr "določenih je več profilov"
+
+#: p11-kit/add-profile.c:208 p11-kit/delete-profile.c:208
+#, c-format
+msgid "failed to convert profile argument: %s"
+msgstr "pretvorba argumenta profila ni uspela: %s"
+
+#: p11-kit/add-profile.c:235 p11-kit/delete-profile.c:235
+msgid "no profile specified"
+msgstr "profil ni določen"
+
+#: p11-kit/add-profile.c:246 p11-kit/delete-object.c:169
+#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:562
+#: p11-kit/generate-keypair.c:473 p11-kit/import-object.c:639
+#: p11-kit/list-objects.c:446 p11-kit/list-profiles.c:220
+#: p11-kit/list-mechanisms.c:278 p11-kit/list-tokens.c:185
+msgid "failed to parse URI"
+msgstr "razčlenjevanje URI je spodletelo"
 
 #: p11-kit/conf.c:161
 #, c-format
 msgid "%s: unexpected pem block"
-msgstr ""
+msgstr "%s: nepričakovan blok pem"
 
 #: p11-kit/conf.c:165
 #, c-format
 msgid "%s: unexpected section header"
-msgstr ""
+msgstr "%s: nepričakovana glava odseka"
 
 #: p11-kit/conf.c:208
 #, c-format
 msgid "invalid mode for 'user-config': %s"
-msgstr ""
+msgstr "neveljaven način za »user-config«: %s"
 
 #: p11-kit/conf.c:367
 #, c-format
 msgid "invalid config filename, will be ignored in the future: %s"
-msgstr ""
+msgstr "neveljavno ime nastavitvene datoteke, v prihodnje bo prezrta: %s"
 
-#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#: p11-kit/conf.c:427 trust/save.c:586 trust/token.c:282
 #, c-format
 msgid "couldn't list directory: %s"
-msgstr ""
+msgstr "ni bilo moč izpisati vsebine mape: %s"
 
-#: p11-kit/conf.c:439
+#: p11-kit/conf.c:438
 #, c-format
 msgid "couldn't stat path: %s"
-msgstr ""
+msgstr "ni bilo moč dobiti stanja poti: %s"
 
-#: p11-kit/conf.c:528
+#: p11-kit/conf.c:526
 #, c-format
 msgid "invalid setting '%s' defaulting to '%s'"
-msgstr ""
+msgstr "neveljavna nastavitev »%s«, privzeto bo »%s«"
+
+#: p11-kit/delete-object.c:76 p11-kit/export-object.c:449
+msgid "no matching object"
+msgstr "ni ujemajočega se predmeta"
+
+#: p11-kit/delete-object.c:78 p11-kit/export-object.c:451
+#, c-format
+msgid "failed to find object: %s"
+msgstr "predmeta ni možno najti: %s"
+
+#: p11-kit/delete-object.c:84 p11-kit/delete-profile.c:122
+#, c-format
+msgid "failed to destroy an object: %s"
+msgstr "ni možno uničiti predmeta: %s"
+
+#: p11-kit/export-object.c:116 p11-kit/export-object.c:176
+#: p11-kit/export-object.c:242 p11-kit/export-object.c:250
+#: p11-kit/export-object.c:344 p11-kit/export-object.c:399
+msgid "failed to retrieve attributes"
+msgstr "atributov ni bilo mogoče pridobiti"
+
+#: p11-kit/export-object.c:276
+msgid "corrupted value in attributes"
+msgstr "poškodovana vrednost v atributih"
+
+#: p11-kit/export-object.c:317
+#, c-format
+msgid "unsupported key type: %lu"
+msgstr "nepodprta vrsta ključa: %lu"
+
+#: p11-kit/export-object.c:358
+msgid "unable to determine key type"
+msgstr "vrste ključa ni možno določiti"
+
+#: p11-kit/export-object.c:364 p11-kit/import-object.c:664
+msgid "ASN.1 support is not compiled in"
+msgstr "Podpora ASN.1 ni prevedena v"
+
+#: p11-kit/export-object.c:371
+msgid "failed to export public key"
+msgstr "izvoz javnega ključa ni uspel"
+
+#: p11-kit/export-object.c:405
+msgid "unrecognized certificate type"
+msgstr "neprepoznana vrsta potrdila"
+
+#: p11-kit/export-object.c:411
+msgid "no valid certificate value"
+msgstr "ni veljavne vrednosti potrdila"
+
+#: p11-kit/export-object.c:416
+msgid "failed to convert DER to PEM"
+msgstr "pretvorba DER v PEM ni uspela"
+
+#: p11-kit/export-object.c:457
+msgid "failed to retrieve attribute of an object"
+msgstr "pridobivanje atributa predmeta ni uspelo"
+
+#: p11-kit/export-object.c:471
+msgid "unsupported object class"
+msgstr "nepodprt razred predmeta"
+
+#: p11-kit/export-object.c:476
+msgid "failed to write PEM data to stdout"
+msgstr "ni bilo mogoče zapisati podatkov PEM v stdout"
 
 #: p11-kit/filter.c:183
 msgid "filter cannot be initialized"
-msgstr ""
+msgstr "ni moč nastaviti filtra"
 
-#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#: p11-kit/generate-keypair.c:134
+msgid "no bits specified"
+msgstr "ni določenih bitov"
+
+#: p11-kit/generate-keypair.c:141
+msgid "no curve specified"
+msgstr "krivulja ni določena"
+
+#: p11-kit/generate-keypair.c:146
+msgid "no type specified"
+msgstr "vrsta ni določena"
+
+#: p11-kit/generate-keypair.c:149 p11-kit/generate-keypair.c:270
+#, c-format
+msgid "unkwnown mechanism type in %s"
+msgstr "neznana vrsta mehanizma v %s"
+
+#: p11-kit/generate-keypair.c:154
+#, c-format
+msgid "both %s and %s cannot be specified at once"
+msgstr "%s in %s ni mogoče določiti hkrati"
+
+#: p11-kit/generate-keypair.c:218 p11-kit/import-object.c:146
+#: p11-kit/import-object.c:219
+#, c-format
+msgid "failed to decode hex value: %s"
+msgstr "dekodiranje šestnajstiške vrednosti ni uspelo: %s"
+
+#: p11-kit/generate-keypair.c:304
+msgid "failed to create key templates"
+msgstr "ustvarjanje predlog ključa ni uspelo"
+
+#: p11-kit/generate-keypair.c:334
+#, c-format
+msgid "key-pair generation failed: %s"
+msgstr "generiranje parov ključev ni uspelo: %s"
+
+#: p11-kit/generate-keypair.c:414
+#, c-format
+msgid "unknown mechanism type: %s"
+msgstr "neznana vrsta mehanizma: %s"
+
+#: p11-kit/generate-keypair.c:421
+#, c-format
+msgid "failed to parse bits value: %s"
+msgstr "ni bilo moč razčleniti bitne vrednosti: %s"
+
+#: p11-kit/generate-keypair.c:428
+#, c-format
+msgid "unknown curve name: %s"
+msgstr "neznano ime krivulje: %s"
+
+#: p11-kit/import-object.c:109 p11-kit/import-object.c:265
+#: p11-kit/import-object.c:271 p11-kit/import-object.c:409
+msgid "failed to parse ASN.1 structure"
+msgstr "ni bilo moč razčleniti strukture ASN.1"
+
+#: p11-kit/import-object.c:115
+msgid "failed to obtain certificate subject name"
+msgstr "pridobivanje imena subjekta potrdila ni uspelo"
+
+#: p11-kit/import-object.c:164 p11-kit/import-object.c:437
+#, c-format
+msgid "failed to create object: %s"
+msgstr "ni bilo moč ustvariti predmeta: %s"
+
+#: p11-kit/import-object.c:259
+msgid "failed to obtain subject public key data"
+msgstr "ni uspelo pridobiti podatkov o javnem ključu subjekta"
+
+#: p11-kit/import-object.c:277 p11-kit/import-object.c:282
+msgid "failed to obtain modulus"
+msgstr "pridobivanja modulusa (ostanka) ni uspelo"
+
+#: p11-kit/import-object.c:290 p11-kit/import-object.c:295
+msgid "failed to obtain exponent"
+msgstr "Pridobivanje eksponenta je spodletelo"
+
+#: p11-kit/import-object.c:333 p11-kit/import-object.c:338
+msgid "failed to obtain EC parameters"
+msgstr "pridobivanje parametrov EC je spodletelo"
+
+#: p11-kit/import-object.c:349
+msgid "failed to obtain EC point"
+msgstr "pridobivanje točke EC je spodletelo"
+
+#: p11-kit/import-object.c:357
+msgid "corrupted EC point value"
+msgstr "poškodovana vrednost EC točke"
+
+#: p11-kit/import-object.c:364
+msgid "failed to DER encode EC point"
+msgstr "kodiranje točke EC z DER je spodletelo"
+
+#: p11-kit/import-object.c:415
+msgid "failed to obtain algorithm OID"
+msgstr "ni uspelo pridobiti algoritma OID"
+
+#: p11-kit/import-object.c:428
+#, c-format
+msgid "unrecognized algorithm OID: %s"
+msgstr "neprepoznan algoritem OID: %s"
+
+#: p11-kit/import-object.c:468
+#, c-format
+msgid "unrecognized PEM label: %s"
+msgstr "neprepoznana oznaka PEM: %s"
+
+#: p11-kit/import-object.c:510
+msgid "failed to load ASN.1 definitions"
+msgstr "ni bilo mogoče naložiti definicij ASN.1"
+
+#: p11-kit/import-object.c:516
+#, c-format
+msgid "failed to read file: %s"
+msgstr "branje datoteke je spodletelo: %s"
+
+#: p11-kit/import-object.c:522
+msgid "no object to import"
+msgstr "ni predmeta za uvoz"
+
+#: p11-kit/import-object.c:628
+msgid "no file specified"
+msgstr "datoteka ni določena"
+
+#: p11-kit/iter.c:557
+#, c-format
+msgid "PIN for %.*s"
+msgstr "PIN za %.*s"
+
+#: p11-kit/list-objects.c:193 p11-kit/list-objects.c:200
+#: p11-kit/list-objects.c:208
+#, c-format
+msgid "failed to set attribute for URI: %s"
+msgstr "nastavljanje atributa za URI ni uspelo: %s"
+
+#: p11-kit/list-objects.c:217 p11-kit/lists.c:105 p11-kit/lists.c:193
+#, c-format
+msgid "couldn't format URI into string: %s"
+msgstr "URI ni možno oblikovati v niz: %s"
+
+#: p11-kit/list-profiles.c:120
+#, c-format
+msgid "failed to retrieve attribute of an object: %s"
+msgstr "pridobivanje atributa predmeta ni uspelo: %s"
+
+#: p11-kit/list-mechanisms.c:160
+msgid "failed to obtain module"
+msgstr "modula ni možno pridobiti"
+
+#: p11-kit/list-mechanisms.c:168 p11-kit/lists.c:256
+#, c-format
+msgid "couldn't load token info: %s"
+msgstr "ni bilo moč naložiti podatkov žetona: %s"
+
+#: p11-kit/list-mechanisms.c:174
+#, c-format
+msgid "querying amount of mechanisms failed: %s"
+msgstr "poizvedovanje o količini mehanizmov ni uspelo: %s"
+
+#: p11-kit/list-mechanisms.c:187
+#, c-format
+msgid "querying mechanisms failed: %s"
+msgstr "mehanizem za poizvedovanje je spodletel: %s"
+
+#: p11-kit/list-mechanisms.c:194
+#, c-format
+msgid "querying mechanism info failed: %s"
+msgstr "info poizvedovanje o mehanizmu je spodletelo: %s"
+
+#: p11-kit/lists.c:233 p11-kit/lists.c:245 p11-kit/lists.c:296
 #, c-format
 msgid "couldn't load module info: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti podatkov modula: %s"
 
-#: p11-kit/lists.c:296
+#: p11-kit/lists.c:374 p11-kit/print-config.c:134
 msgid "extra arguments specified"
-msgstr ""
+msgstr "navedeni dodatni argumenti"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr "Operacija je bila preklicana"
+msgstr "Dejanje je bilo preklicano"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
@@ -125,7 +467,7 @@ msgstr "Notranja napaka"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr "Operacija ni uspela"
+msgstr "Dejanje ni uspelo"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
@@ -145,7 +487,7 @@ msgstr "Polje je samo za branje"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr "Polje je občutljive narave in ga ni mogoče razkriti"
+msgstr "Polje je občutljive narave in ga ni moč razkriti"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
@@ -165,7 +507,7 @@ msgstr "Podatki so preobsežni"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr "Na napravi je prišlo do naprave"
+msgstr "Na napravi je prišlo do napake"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
@@ -173,7 +515,7 @@ msgstr "Na napravi ni dovolj pomnilnika"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr "Naprava je bila odstranjena ali iztaknjena"
+msgstr "Naprava je bila odstranjena ali odklopljena"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
@@ -185,7 +527,7 @@ msgstr "Šifrirani podatki so preobsežni"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr "Ta operacija ni podprta"
+msgstr "To dejanje ni podprto"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
@@ -213,19 +555,19 @@ msgstr "Potreben je ključ"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr "Ključa ni mogoče vključiti v povzetek"
+msgstr "Ključa ni moč vključiti v povzetek"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr "S tem ključem te operacije ni moč opraviti"
+msgstr "S tem ključem tega dejanja ni moč opraviti"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr "Ključa ni mogoče ovijati"
+msgstr "Ključa ni moč oviti"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr "Tega ključa ni mogoče izvoziti"
+msgstr "Tega ključa ni moč izvoziti"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
@@ -241,11 +583,11 @@ msgstr "Predmet manjka ali ni veljaven"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr "Poteka že druga operacija"
+msgstr "Poteka že drugo dejanje"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr "Ne poteka nobena operacija"
+msgstr "Ne poteka nobeno dejanje"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
@@ -297,11 +639,11 @@ msgstr "Obstaja skrbniška seja"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr "Podpis je slab ali okvarjen"
+msgstr "Podpis je slab ali pokvarjen"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr "Podpis ni razpoznaven ali je okvarjen"
+msgstr "Podpis ni razpoznaven ali je pokvarjen"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
@@ -313,7 +655,7 @@ msgstr "Določena polja imajo neveljavne vrednosti"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr "Naprava ni prisotna ali pa je iztaknjena"
+msgstr "Naprava ni prisotna ali pa je odklopljena"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
@@ -325,7 +667,7 @@ msgstr "Naprava je zaščitena pred pisanjem"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr "Uvoz ni možen, ker je ključ neveljaven"
+msgstr "Uvoz ni možen, ker ključ ni veljaven"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
@@ -361,31 +703,31 @@ msgstr "Prijavljenih je preveč uporabnikov različnih vrst"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr "Neveljavnega ključa ni mogoče uvoziti"
+msgstr "Neveljavnega ključa ni moč uvoziti"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr "Ključa neprimerne velikosti ni mogoče uvoziti"
+msgstr "Ključa neprimerne velikosti ni moč uvoziti"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr "Ključa ni mogoče izvoziti, ker je neveljaven"
+msgstr "Ključa ni moč izvoziti, ker ni veljaven"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr "Ključa ni mogoče izvoziti, ker ni ustrezne velikosti"
+msgstr "Ključa ni moč izvoziti, ker ni ustrezne velikosti"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr "Ključa ni mogoče izvoziti, ker je napačne vrste"
+msgstr "Ključa ni moč izvoziti, ker je napačne vrste"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr "Generatorja naključnih števil ni mogoče inicializirati"
+msgstr "Ustvarjalnika naključnih števil ni moč nastaviti"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr "Noben generator naključnih števil ni na voljo"
+msgstr "Noben ustvarjalnik naključnih števil ni na voljo"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
@@ -393,7 +735,7 @@ msgstr "Mehanizem šifriranja ima neveljaven parameter"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr "Za shranjevanje rezultata primanjkuje prostora"
+msgstr "Za shranjevanje rezultata ni dovolj prostora"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
@@ -401,27 +743,27 @@ msgstr "Shranjeno stanje ni veljavno"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr "Podatki so občutljive narave in jih ni mogoče razkriti"
+msgstr "Podatki so občutljive narave in jih ni moč razkriti"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr "Stanja ni mogoče shraniti"
+msgstr "Stanja ni moč shraniti"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr "Modil ni bil inicializiran"
+msgstr "Modul ni bil začetno nastavljen"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr "Modul je že inicializiran"
+msgstr "Modul je že bil začetno nastavljen"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr "Podatkov ni mogoče zakleniti"
+msgstr "Podatkov ni moč zakleniti"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr "Podatkov ni mogoče zakleniti"
+msgstr "Podatkov ni moč zakleniti"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
@@ -431,770 +773,836 @@ msgstr "Zahtevo je zavrnil uporabnik"
 msgid "Unknown error"
 msgstr "Neznana napaka"
 
-#: p11-kit/modules.c:373
+#: p11-kit/modules.c:377
 #, c-format
 msgid "couldn't load module: %s: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti modula: %s: %s"
 
-#: p11-kit/modules.c:385
+#: p11-kit/modules.c:405
+#, c-format
+msgid "call to C_GetInterface failed in module: %s: %s"
+msgstr "v modulu ni bilo moč klicati C_GetInterface: %s: %s"
+
+#: p11-kit/modules.c:417
 #, c-format
 msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
-msgstr ""
+msgstr "v modulu ni bilo moč najti vstopne točke C_GetFunctionList: %s: %s"
 
-#: p11-kit/modules.c:393
+#: p11-kit/modules.c:424
 #, c-format
 msgid "call to C_GetFunctiontList failed in module: %s: %s"
-msgstr ""
+msgstr "v modulu ni bilo moč klicati C_GetFunctiontList: %s: %s"
 
-#: p11-kit/modules.c:399
+#: p11-kit/modules.c:431
 msgid "refusing to load the p11-kit-proxy.so module as a registered module"
-msgstr ""
+msgstr "zavrnitev nalaganja modula p11-kit-proxy.so kot registriranega"
 
-#: p11-kit/modules.c:548
+#: p11-kit/modules.c:580
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
 msgstr ""
+"modul »%s« ima tako možnost enable-in (omogoči v) kot tudi disable-in "
+"(onemogoči v)"
 
-#: p11-kit/modules.c:698
+#: p11-kit/modules.c:762
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
 msgstr ""
+"prekinitev začetnega nastavljanja, ker je bil modul »%s« označen kot kritičen"
 
-#: p11-kit/modules.c:723
+#: p11-kit/modules.c:787
 msgid "p11-kit initialization called recursively"
-msgstr ""
+msgstr "začetna nastavitev p11-kit klicana rekurzivno"
 
-#: p11-kit/modules.c:909
+#: p11-kit/modules.c:973
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
-msgstr ""
+msgstr "začetno nastavljanje kritičnega modula »%s« ni uspelo: %s"
 
-#: p11-kit/modules.c:912
+#: p11-kit/modules.c:976
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
-msgstr ""
+msgstr "izpuščanje modula »%s«, za katerega začetno nastavljanje ni uspelo: %s"
 
-#: p11-kit/modules.c:1687
+#: p11-kit/modules.c:1751
 #, c-format
 msgid "couldn't close session: %s"
-msgstr ""
+msgstr "seje ni bilo moč zapreti: %s"
 
 #.
 #. * This is because the module is running in unmanaged mode, so turn off the
 #.
-#: p11-kit/modules.c:1864
+#: p11-kit/modules.c:1928
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
-msgstr ""
+msgstr "možnost »%s« za modul »%s« je podprta le za upravljane module"
 
-#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#: p11-kit/modules.c:2237 p11-kit/modules.c:2717
 #, c-format
 msgid "%s: module failed to initialize: %s"
-msgstr ""
+msgstr "%s: začetno nastavljanje modula ni uspelo: %s"
 
-#: p11-kit/modules.c:2176
+#: p11-kit/modules.c:2240
 #, c-format
 msgid "%s: module failed to initialize, skipping: %s"
-msgstr ""
+msgstr "%s: modula ni bilo mogoče inicializirati, preskočeno: %s"
 
-#: p11-kit/modules.c:2182
+#: p11-kit/modules.c:2250
 #, c-format
 msgid "%s: module was already initialized"
-msgstr ""
+msgstr "%s: modul je že bil začetno nastavljen"
 
-#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#: p11-kit/modules.c:2346 p11-kit/modules.c:2758
 #, c-format
 msgid "%s: module failed to finalize: %s"
-msgstr ""
+msgstr "%s: zaključitev modula ni uspela: %s"
 
-#: p11-kit/modules.c:2417
+#: p11-kit/modules.c:2485
 #, c-format
 msgid "module initialization failed: %s"
-msgstr ""
+msgstr "začetno nastavljanje modula ni uspelo: %s"
 
-#: p11-kit/p11-kit.c:72
+#: p11-kit/p11-kit.c:105
 msgid "List modules and tokens"
-msgstr ""
+msgstr "Izpiši seznam modulov in žetonov"
 
-#: p11-kit/p11-kit.c:73
+#: p11-kit/p11-kit.c:106
+msgid "List tokens"
+msgstr "Izpiši seznam žetonov"
+
+#: p11-kit/p11-kit.c:107
+msgid "List objects of a token"
+msgstr "Izpiši seznam predmetov žetonov"
+
+#: p11-kit/p11-kit.c:108
+msgid "Import object into a token"
+msgstr "Uvozi predmet v žeton"
+
+#: p11-kit/p11-kit.c:109
+msgid "Export object matching PKCS#11 URI"
+msgstr "Izvozi predmete, ki se ujemajo z URI PKCS#11"
+
+#: p11-kit/p11-kit.c:110
+msgid "Delete objects matching PKCS#11 URI"
+msgstr "Izbriši predmete, ki se ujemajo z URI PKCS#11"
+
+#: p11-kit/p11-kit.c:111
+msgid "Generate key-pair on a PKCS#11 token"
+msgstr "Ustvari par ključev na žetonu PKCS#11"
+
+#: p11-kit/p11-kit.c:112
+msgid "List PKCS#11 profiles supported by the token"
+msgstr "Izpiši seznam profilov PKCS#11, ki jih podpira žeton"
+
+#: p11-kit/p11-kit.c:113
+msgid "Add PKCS#11 profile to the token"
+msgstr "Dodaj profil PKCS#11 žetonu"
+
+#: p11-kit/p11-kit.c:114
+msgid "Delete PKCS#11 profile from the token"
+msgstr "Izbriši profil PKCS#11 iz žetona"
+
+#: p11-kit/p11-kit.c:115
+msgid "Print merged configuration"
+msgstr "Natisni združeno prilagoditev"
+
+#: p11-kit/p11-kit.c:116
+msgid "List supported mechanisms"
+msgstr "Izpiši seznam podprtih mehanizmov"
+
+#: p11-kit/p11-kit.c:117
 msgid "Run a specific PKCS#11 module remotely"
-msgstr ""
+msgstr "Oddaljeno zaženi določen modul PKCS#11"
 
-#: p11-kit/p11-kit.c:74
+#: p11-kit/p11-kit.c:118
 msgid "Run a server process that exposes PKCS#11 module remotely"
-msgstr ""
+msgstr "Zaženi strežniško opravilo, ki oddaljeno razkrije modul PKCS#11"
 
 #. At this point we have no command
-#: p11-kit/p11-kit.c:95
+#: p11-kit/p11-kit.c:139
 msgid "couldn't run trust tool"
-msgstr ""
+msgstr "ni bilo moč zagnati orodja »trust«"
 
 #. At this point we have no command
-#: p11-kit/p11-kit.c:137
+#: p11-kit/p11-kit.c:181
 #, c-format
 msgid "'%s' is not a valid command. See 'p11-kit --help'"
-msgstr ""
+msgstr "»%s« ni veljaven ukaz. Glejte »p11-kit --help«"
 
-#: p11-kit/remote.c:108
+#: p11-kit/remote.c:109
 msgid "specify a module or tokens to remote"
-msgstr ""
+msgstr "navedite modul ali žeton za oddaljenega"
 
-#: p11-kit/remote.c:113
+#: p11-kit/remote.c:114
 msgid "the 'remote' tool is not meant to be run from a terminal"
-msgstr ""
+msgstr "orodje »remote« ni namenjeno zaganjanju iz terminala"
 
-#: p11-kit/remote.c:139
+#: p11-kit/remote.c:145
 msgid "only one module can be specified"
-msgstr ""
+msgstr "naveden je lahko samo en modul"
 
 #: p11-kit/rpc-client.c:146
 msgid "invalid rpc error response: too short"
-msgstr ""
+msgstr "neveljaven odziv napake rpc: prekratko"
 
 #: p11-kit/rpc-client.c:151
 msgid "invalid rpc error response: bad error code"
-msgstr ""
+msgstr "neveljaven odziv napake rpc: neveljavna koda napake"
 
 #: p11-kit/rpc-client.c:161
 msgid "invalid rpc response: call mismatch"
-msgstr ""
+msgstr "neveljaven odziv rpc: neujemanje klica"
 
-#: p11-kit/rpc-client.c:182
+#: p11-kit/rpc-client.c:184
 msgid "invalid rpc response: bad argument data"
-msgstr ""
+msgstr "neveljaven odziv rpc: neveljavni podatki argumenta"
 
-#: p11-kit/rpc-client.c:229
+#: p11-kit/rpc-client.c:231
 msgid "received an attribute array with wrong number of attributes"
-msgstr ""
+msgstr "prejeto polje atributov z napačnim številom atributov"
 
-#: p11-kit/rpc-client.c:256
+#: p11-kit/rpc-client.c:253
 msgid "returned attributes in invalid order"
-msgstr ""
+msgstr "vrnjeni atributi v napačnem vrstnem redu"
 
-#: p11-kit/rpc-client.c:727 trust/module.c:382
+#: p11-kit/rpc-client.c:812 trust/module.c:384
 msgid "invalid set of mutex calls supplied"
-msgstr ""
+msgstr "podan neveljaven nabor klicev mutex"
 
-#: p11-kit/rpc-client.c:736 trust/module.c:391
+#: p11-kit/rpc-client.c:821 trust/module.c:393
 msgid "can't do without os locking"
-msgstr ""
+msgstr "ne gre brez zaklepanja operacijskega sistema"
 
-#: p11-kit/rpc-client.c:749
+#: p11-kit/rpc-client.c:834
 msgid "C_Initialize called twice for same process"
-msgstr ""
+msgstr "C_Initialize klican dvakrat za isto opravilo"
 
-#: p11-kit/rpc-client.c:856
+#: p11-kit/rpc-client.c:942
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
-msgstr ""
+msgstr "zaključevanje rpc modula je vrnilo napako: %lu"
 
-#: p11-kit/rpc-message.c:190
+#: p11-kit/rpc-message.c:191
 msgid "invalid message: couldn't read call identifier"
-msgstr ""
+msgstr "neveljavno sporočilo: ni bilo moč prebrati določila klica"
 
-#: p11-kit/rpc-message.c:199
+#: p11-kit/rpc-message.c:200
 #, c-format
 msgid "invalid message: bad call id: %d"
-msgstr ""
+msgstr "neveljavno sporočilo: neveljaven id klica: %d"
 
-#: p11-kit/rpc-message.c:217
+#: p11-kit/rpc-message.c:218
 msgid "invalid message: couldn't read signature"
-msgstr ""
+msgstr "neveljavno sporočilo: ni bilo moč prebrati podpisa"
 
-#: p11-kit/rpc-message.c:222
+#: p11-kit/rpc-message.c:223
 msgid "invalid message: signature doesn't match"
-msgstr ""
+msgstr "neveljavno sporočilo: podpis se ne ujema"
 
-#: p11-kit/rpc-message.c:483
+#: p11-kit/rpc-message.c:497
 #, c-format
 msgid "invalid length space padded string received: %d != %d"
-msgstr ""
+msgstr "prejet niz zapolnjen s presledki, ki ni veljavne dolžine: %d != %d"
 
-#: p11-kit/rpc-server.c:575
+#: p11-kit/rpc-server.c:634
 msgid "invalid request from module, probably too short"
-msgstr ""
+msgstr "neveljaven zahtevek od modula, verjetno prekratek"
 
-#: p11-kit/rpc-server.c:585
+#: p11-kit/rpc-server.c:644
 msgid "couldn't initialize rpc response"
-msgstr ""
+msgstr "ni bilo moč začetno nastaviti odziva rpc"
 
-#: p11-kit/rpc-server.c:717
+#: p11-kit/rpc-server.c:799
 msgid "invalid handshake received from connecting module"
-msgstr ""
+msgstr "prejeto neveljavno rokovanje od modula, ki se povezuje"
 
-#: p11-kit/rpc-server.c:1834
+#: p11-kit/rpc-server.c:2382
 msgid "couldn't parse pkcs11 rpc message"
-msgstr ""
+msgstr "ni bilo moč razčleniti sporočila rpc pkcs11"
 
-#: p11-kit/rpc-server.c:1921
+#: p11-kit/rpc-server.c:2495
 msgid "out of memory error putting together message"
-msgstr ""
+msgstr "napaka pomanjkanja pomnilnika med sestavljanjem sporočila"
 
-#: p11-kit/rpc-server.c:1945
+#: p11-kit/rpc-server.c:2521
 msgid "out of memory responding with error"
-msgstr ""
+msgstr "pomanjkanje pomnilnika med odzivanjem z napako"
 
-#: p11-kit/rpc-server.c:1991
+#: p11-kit/rpc-server.c:2567
 #, c-format
 msgid "unsupported version received: %d"
-msgstr ""
+msgstr "prejeta nepodprta različica: %d"
 
-#: p11-kit/rpc-server.c:1997
+#: p11-kit/rpc-server.c:2573
 msgid "couldn't read credential byte"
-msgstr ""
+msgstr "ni bilo moč prebrati bajta poverila"
 
-#: p11-kit/rpc-server.c:2009
+#: p11-kit/rpc-server.c:2585
 msgid "couldn't write credential byte"
-msgstr ""
+msgstr "ni bilo moč zapisati bajta poverila"
 
-#: p11-kit/rpc-server.c:2032
+#: p11-kit/rpc-server.c:2608
 msgid "failed to read rpc message"
-msgstr ""
+msgstr "napaka branja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2037
+#: p11-kit/rpc-server.c:2613
 msgid "unexpected error handling rpc message"
-msgstr ""
+msgstr "nepričakovana napaka obravnavanja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2055
+#: p11-kit/rpc-server.c:2631
 msgid "failed to write rpc message"
-msgstr ""
+msgstr "napaka pisanja sporočila rpc"
 
 #: p11-kit/rpc-transport.c:208
 msgid "couldn't send data: closed connection"
-msgstr ""
+msgstr "ni bilo moč poslati podatkov: zaprta povezava"
 
 #: p11-kit/rpc-transport.c:211
 msgid "couldn't send data"
-msgstr ""
+msgstr "ni bilo moč poslati podatkov"
 
 #: p11-kit/rpc-transport.c:234
 msgid "couldn't receive data: closed connection"
-msgstr ""
+msgstr "ni bilo moč prejeti podatkov: zaprta povezava"
 
 #: p11-kit/rpc-transport.c:238
 msgid "couldn't receive data"
-msgstr ""
+msgstr "ni bilo moč prejeti podatkov"
 
 #: p11-kit/rpc-transport.c:416
 msgid "received invalid rpc header values: perhaps wrong protocol"
-msgstr ""
+msgstr "prejete neveljavne vrednosti glav rpc: morda je protokol napačen"
 
 #: p11-kit/rpc-transport.c:459
 msgid "couldn't use select to wait on rpc pipe"
-msgstr ""
+msgstr "ni bilo moč uporabiti izbiranja za čakanje na cev rpc"
 
 #: p11-kit/rpc-transport.c:648
 msgid "couldn't send socket credentials"
-msgstr ""
+msgstr "ni bilo moč poslati poveril vtiča"
 
 #: p11-kit/rpc-transport.c:653
 msgid "couldn't receive socket credentials"
-msgstr ""
+msgstr "poverilnic za vtič ni bilo mogoče prejeti"
 
 #: p11-kit/rpc-transport.c:659
 msgid "peer protocol version is too old"
-msgstr ""
+msgstr "različica protokola vrstnikov je prestara"
 
 #: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
 msgid "closing socket due to protocol failure"
-msgstr ""
+msgstr "zapiranje vtiča zaradi napake protokola"
 
 #: p11-kit/rpc-transport.c:755
 #, c-format
 msgid "process %d did not exit, terminating"
-msgstr ""
+msgstr "opravilo %d ni končalo, končujem"
 
 #: p11-kit/rpc-transport.c:762
 #, c-format
 msgid "failed to wait for executed child: %d"
-msgstr ""
+msgstr "čakanje na izvedeno podrejeno opravilo ni uspelo: %d"
 
 #: p11-kit/rpc-transport.c:769
 #, c-format
 msgid "process %d exited with status %d"
-msgstr ""
+msgstr "opravilo %d je končalo s stanjem %d"
 
 #: p11-kit/rpc-transport.c:773
 #, c-format
 msgid "process %d was terminated with signal %d"
-msgstr ""
+msgstr "opravilo %d je bilo končano s signalom %d"
 
 #: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
 #: p11-kit/rpc-transport.c:960
 msgid "failed to create pipe for remote"
-msgstr ""
+msgstr "ustvarjanje cevi za oddaljenega ni uspelo"
 
 #: p11-kit/rpc-transport.c:828
 msgid "failed to fork for remote"
-msgstr ""
+msgstr "razvejitev za oddaljenega ni uspela"
 
 #: p11-kit/rpc-transport.c:888
 #, c-format
 msgid "process %p did not exit, terminating"
-msgstr ""
+msgstr "opravilo %p ni končalo, končujem"
 
 #: p11-kit/rpc-transport.c:890
 #, c-format
 msgid "couldn't terminate process %p"
-msgstr ""
+msgstr "opravila %p ni bilo moč končati"
 
 #: p11-kit/rpc-transport.c:895
 #, c-format
 msgid "failed to wait for executed child: %p"
-msgstr ""
+msgstr "čakanje na izvedeno podrejeno opravilo ni uspelo: %p"
 
 #: p11-kit/rpc-transport.c:898
 #, c-format
 msgid "failed to get the exit status of %p"
-msgstr ""
+msgstr "pridobivanje stanja končanja za %p ni uspelo"
 
 #: p11-kit/rpc-transport.c:902
 #, c-format
 msgid "process %p exited with status %lu"
-msgstr ""
+msgstr "opravilo %p je končalo s stanjem %lu"
 
 #: p11-kit/rpc-transport.c:968
 msgid "failed to duplicate stdin"
-msgstr ""
+msgstr "podvajanje standardnega vhoda ni uspelo"
 
 #: p11-kit/rpc-transport.c:975
 msgid "failed to duplicate stdout"
-msgstr ""
+msgstr "podvajanje standardnega izpisa ni uspelo"
 
 #: p11-kit/rpc-transport.c:983
 msgid "failed to duplicate child end of pipe"
-msgstr ""
+msgstr "podvajanje konca cevi na strani podrejenega ni uspelo"
 
 #: p11-kit/rpc-transport.c:993
 msgid "failed to spawn remote"
-msgstr ""
+msgstr "oživljanje oddaljenega ni uspelo"
 
 #: p11-kit/rpc-transport.c:1006
 msgid "failed to restore file descriptors"
-msgstr ""
+msgstr "obnavljanje opisnikov datotek ni uspelo"
 
 #: p11-kit/rpc-transport.c:1075
 #, c-format
 msgid "invalid remote command line: %s"
-msgstr ""
+msgstr "neveljavna ukazna vrstica oddaljenega: %s"
 
 #: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
 msgid "failed to create socket for remote"
-msgstr ""
+msgstr "ustvarjanje vtiča za oddaljenega ni uspelo"
 
 #: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
 #, c-format
 msgid "failed to parse vsock address: '%s'"
-msgstr ""
+msgstr "razčlenjevanje naslova vsock ni uspelo: »%s«"
 
 #: p11-kit/rpc-transport.c:1301
 #, c-format
 msgid "remote not supported: %s"
-msgstr ""
+msgstr "oddaljeni ni podprt: %s"
 
 #: p11-kit/server.c:243
 #, c-format
 msgid "child %u died with sigsegv"
-msgstr ""
+msgstr "podrejeno opravilo %u je umrlo s sigsegv"
 
 #: p11-kit/server.c:245
 #, c-format
 msgid "child %u died with signal %d"
-msgstr ""
+msgstr "podrejeno opravilo %u je umrlo s signalom %d"
 
-#: p11-kit/server.c:318
+#: p11-kit/server.c:336
 #, c-format
 msgid "could not create socket %s"
-msgstr ""
+msgstr "ni bilo moč ustvariti vtiča %s"
 
-#: p11-kit/server.c:326
+#: p11-kit/server.c:347
 #, c-format
 msgid "could not bind socket %s"
-msgstr ""
+msgstr "ni bilo moč povezati vtiča %s"
 
-#: p11-kit/server.c:333
+#: p11-kit/server.c:354
 #, c-format
 msgid "could not listen to socket %s"
-msgstr ""
+msgstr "ni bilo moč poslušati na vtiču %s"
 
-#: p11-kit/server.c:341
+#: p11-kit/server.c:362
 #, c-format
 msgid "could not chown socket %s"
-msgstr ""
+msgstr "ni bilo moč spremeniti lastnika vtiča %s"
 
-#: p11-kit/server.c:364
+#: p11-kit/server.c:385
 #, c-format
 msgid "could not create socket %u:%u"
-msgstr ""
+msgstr "ni bilo moč ustvariti vtiča %u:%u"
 
-#: p11-kit/server.c:371
+#: p11-kit/server.c:392
 #, c-format
 msgid "could not bind socket %u:%u"
-msgstr ""
+msgstr "ni bilo moč povezati vtiča %u:%u"
 
-#: p11-kit/server.c:378
+#: p11-kit/server.c:399
 #, c-format
 msgid "could not listen to socket %u:%u"
-msgstr ""
+msgstr "ni bilo moč poslušati na vtiču %u:%u"
 
-#: p11-kit/server.c:397
+#: p11-kit/server.c:418
 msgid "could not check uid from socket"
-msgstr ""
+msgstr "ni bilo moč preveriti uid od vtiča"
 
-#: p11-kit/server.c:403
+#: p11-kit/server.c:424
 #, c-format
 msgid "connecting uid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "uid, ki se povezuje (%u), se ne ujema s pričakovanim (%u)"
 
-#: p11-kit/server.c:410
+#: p11-kit/server.c:431
 #, c-format
 msgid "connecting gid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "gid, ki se povezuje (%u), se ne ujema s pričakovanim (%u)"
 
-#: p11-kit/server.c:491
+#: p11-kit/server.c:557
 msgid "could not fork() to daemonize"
-msgstr ""
+msgstr "ni bilo moč klicati fork() za izvajanje v ozadju"
 
-#: p11-kit/server.c:504
+#: p11-kit/server.c:570
 msgid "could not create a new session"
-msgstr ""
+msgstr "ni bilo moč ustvariti nove seje"
 
-#: p11-kit/server.c:512
+#: p11-kit/server.c:577
 msgid "too many file descriptors received"
-msgstr ""
+msgstr "prejetih preveč opisnikov datotek"
 
-#: p11-kit/server.c:556
+#: p11-kit/server.c:620
 #, c-format
-msgid "no connections to %s for %lu secs, exiting"
-msgstr ""
+msgid "no connections to %s for %<PRIu64> secs, exiting"
+msgstr "ni povezav za %s v %<PRIu64> s, sledi izhod"
 
-#: p11-kit/server.c:565
+#: p11-kit/server.c:629
 #, c-format
 msgid "could not accept from socket %s"
-msgstr ""
+msgstr "ni bilo moč sprejeti od vtiča %s"
 
-#: p11-kit/server.c:576
+#: p11-kit/server.c:640
 msgid "failed to fork for accept"
-msgstr ""
+msgstr "razvejitev za sprejem ni uspela"
 
-#: p11-kit/server.c:721 p11-kit/server.c:737
+#: p11-kit/server.c:785 p11-kit/server.c:801
 #, c-format
 msgid "unknown group: %s"
-msgstr ""
+msgstr "neznana skupina: %s"
 
-#: p11-kit/server.c:729 p11-kit/server.c:745
+#: p11-kit/server.c:793 p11-kit/server.c:809
 #, c-format
 msgid "unknown user: %s"
-msgstr ""
+msgstr "neznan uporabnik: %s"
 
-#: p11-kit/server.c:828
+#: p11-kit/server.c:892
 #, c-format
 msgid "cannot set gid to %u"
-msgstr ""
+msgstr "ni bilo moč nastaviti gid na %u"
 
-#: p11-kit/server.c:834
+#: p11-kit/server.c:898
 #, c-format
 msgid "cannot setgroups to %u"
-msgstr ""
+msgstr "ni bilo moč nastaviti skupin na %u"
 
-#: p11-kit/server.c:842
+#: p11-kit/server.c:906
 #, c-format
 msgid "cannot set uid to %u"
-msgstr ""
+msgstr "ni bilo moč nastaviti uid na %u"
 
-#: p11-kit/server.c:858
+#: p11-kit/server.c:922
 msgid "cannot determine runtime directory"
-msgstr ""
+msgstr "ni moč določiti mape za izvajanje"
 
-#: p11-kit/server.c:870
+#: p11-kit/server.c:934
 #, c-format
 msgid "cannot create %s"
-msgstr ""
+msgstr "ni moč ustvariti %s"
 
-#: p11-kit/server.c:1141
+#: p11-kit/server.c:1205
 msgid "couldn't initialize Windows security functions"
-msgstr ""
+msgstr "ni bilo moč začetno nastaviti varnostnih funkcij Windows"
 
-#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#: p11-kit/server.c:1366 p11-kit/server.c:1378 p11-kit/server.c:1390
 #, c-format
 msgid "unable to construct SID for %s: %lu"
-msgstr ""
+msgstr "ni moč sestaviti SID za %s: %lu"
 
-#: p11-kit/server.c:1369
+#: p11-kit/server.c:1433
 #, c-format
 msgid "unable to construct ACL: %d"
-msgstr ""
+msgstr "ni moč sestaviti ACL: %d"
 
-#: p11-kit/server.c:1375
+#: p11-kit/server.c:1439
 #, c-format
 msgid "unable to allocate security descriptor: %lu"
-msgstr ""
+msgstr "ni moč dodeliti varnostnega opisnika: %lu"
 
-#: p11-kit/server.c:1381
+#: p11-kit/server.c:1445
 #, c-format
 msgid "unable to initialise security descriptor: %lu"
-msgstr ""
+msgstr "ni moč začetno nastaviti varnostnega opisnika: %lu"
 
-#: p11-kit/server.c:1387
+#: p11-kit/server.c:1451
 #, c-format
 msgid "unable to set owner in security descriptor: %lu"
-msgstr ""
+msgstr "ni moč nastaviti lastnika varnostnega opisnika: %lu"
 
-#: p11-kit/server.c:1393
+#: p11-kit/server.c:1457
 #, c-format
 msgid "unable to set DACL in security descriptor: %lu"
-msgstr ""
+msgstr "ni moč nastaviti DACL varnostnega opisnika: %lu"
 
 #: trust/anchor.c:126
 #, c-format
 msgid "invalid PKCS#11 uri: %s"
-msgstr ""
+msgstr "neveljaven uri PKCS#11: %s"
 
 #: trust/anchor.c:148 trust/anchor.c:204
 #, c-format
 msgid "unrecognized file format: %s"
-msgstr ""
+msgstr "neprepoznavna vrsta datoteke: %s"
 
 #: trust/anchor.c:151 trust/anchor.c:207
 #, c-format
 msgid "failed to parse file: %s"
-msgstr ""
+msgstr "ni bilo moč razčleniti datoteke: %s"
 
 #: trust/anchor.c:246
 #, c-format
 msgid "%s: couldn't initialize: %s"
-msgstr ""
+msgstr "%s: ni bilo moč začetno nastaviti: %s"
 
 #: trust/anchor.c:257
 #, c-format
 msgid "%s: couldn't enumerate slots: %s"
-msgstr ""
+msgstr "%s: ni bilo moč oštevilčiti polj: %s"
 
 #: trust/anchor.c:265
 #, c-format
 msgid "%s: couldn't get token info: %s"
-msgstr ""
+msgstr "%s: ni bilo moč pridobiti podatkov o žetonu: %s"
 
 #: trust/anchor.c:277
 #, c-format
 msgid "%s: couldn't open session: %s"
-msgstr ""
+msgstr "%s: ni bilo moč odpreti seje: %s"
 
 #: trust/anchor.c:325
 msgid "no configured writable location to store anchors"
-msgstr ""
+msgstr "nastavljeno ni nobeno zapisljivo mesto za hranjenje sider"
 
 #: trust/anchor.c:327
 msgid "no configured location to store anchors"
-msgstr ""
+msgstr "nastavljeno ni nobeno mesto za hranjenje sider"
 
 #: trust/anchor.c:388 trust/anchor.c:435
 #, c-format
 msgid "couldn't create object: %s"
-msgstr ""
+msgstr "ni bilo moč ustvariti predmeta: %s"
 
 #: trust/anchor.c:487
 msgid "specify at least one anchor input file"
-msgstr ""
+msgstr "navedite vsaj eno vhodno datoteko sidra"
 
 #: trust/anchor.c:570
 #, c-format
 msgid "couldn't remove read-only %s"
-msgstr ""
+msgstr "ni bilo moč odstraniti samo-za-branje %s"
 
 #: trust/anchor.c:573
 #, c-format
 msgid "couldn't remove %s: %s"
-msgstr ""
+msgstr "ni bilo moč odstraniti %s: %s"
 
 #: trust/anchor.c:599
 msgid "at least one file or uri must be specified"
-msgstr ""
+msgstr "navedena more biti vsaj ena datoteka ali uri"
 
 #: trust/anchor.c:665
 msgid "an action was already specified"
-msgstr ""
+msgstr "dejanje je že bilo navedeno"
 
 #: trust/anchor.c:702
 #, c-format
 msgid "%u error while processing"
 msgid_plural "%u errors while processing"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
+msgstr[0] "%u napak med obdelovanjem"
+msgstr[1] "%u napaka med obdelovanjem"
+msgstr[2] "%u napaki med obdelovanjem"
+msgstr[3] "%u napake med obdelovanjem"
 
 #: trust/builder.c:155
 #, c-format
 msgid "%.*s: invalid certificate extension"
-msgstr ""
+msgstr "%.*s: neveljavno podaljšanje potrdila"
 
 #: trust/builder.c:674
 #, c-format
 msgid "%.*s: invalid basic constraints certificate extension"
-msgstr ""
+msgstr "%.*s: neveljavno podaljšanje potrdila osnovnih omejitev"
 
 #: trust/builder.c:676
 msgid "unknown"
-msgstr ""
+msgstr "neznano"
 
 #: trust/builder.c:865
 msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "manjka atribut CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
 
 #: trust/builder.c:870
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "manjka atribut CKA_HASH_OF_ISSUER_PUBLIC_KEY"
 
 #: trust/builder.c:1084
 msgid "the object is not modifiable"
-msgstr ""
+msgstr "predmet ni spremenljiv"
 
 #: trust/builder.c:1091
 msgid "objects of this type cannot be created"
-msgstr ""
+msgstr "predmetov te vrste ni moč ustvariti"
 
 #: trust/builder.c:1111
 #, c-format
 msgid "the %s attribute cannot be set"
-msgstr ""
+msgstr "atributa %s ni moč nastaviti"
 
 #: trust/builder.c:1116
 #, c-format
 msgid "the %s attribute cannot be changed"
-msgstr ""
+msgstr "atributa %s ni moč spremeniti"
 
 #: trust/builder.c:1122
 #, c-format
 msgid "the %s attribute has an invalid value"
-msgstr ""
+msgstr "atribut %s nima veljavne vrednosti"
 
 #: trust/builder.c:1131
 #, c-format
 msgid "the %s attribute is not valid for the object"
-msgstr ""
+msgstr "atribut %s za predmet ni veljaven"
 
 #: trust/builder.c:1154
 #, c-format
 msgid "missing the %s attribute"
-msgstr ""
+msgstr "manjka atribut %s"
 
 #: trust/builder.c:1194
 msgid "no CKA_CLASS attribute found"
-msgstr ""
+msgstr "atribut CKA_CLASS ni bil najden"
 
 #: trust/builder.c:1200
 #, c-format
 msgid "cannot create a %s object"
-msgstr ""
+msgstr "ni moč ustvariti predmeta, %s"
 
 #: trust/builder.c:1200
 msgid "token"
-msgstr ""
+msgstr "ki je žeton"
 
 #: trust/builder.c:1200
 msgid "non-token"
-msgstr ""
+msgstr "ki ni žeton"
 
 #: trust/builder.c:1208
 #, c-format
 msgid "missing %s on object"
-msgstr ""
+msgstr "na predmetu manjka %s"
 
 #: trust/builder.c:1213
 #, c-format
 msgid "%s unsupported %s"
-msgstr ""
+msgstr "%s nepodprto %s"
 
 #: trust/builder.c:1234
 #, c-format
 msgid "%s unsupported object class"
-msgstr ""
+msgstr "%s nepodprt razred predmeta"
 
 #: trust/builder.c:1300
 msgid "invalid key usage certificate extension"
-msgstr ""
+msgstr "neveljavno podaljšanje potrdila uporabe ključa"
 
 #: trust/builder.c:1768
 msgid "invalid extended key usage certificate extension"
-msgstr ""
+msgstr "neveljavno podaljšanje potrdila podaljšane uporabe ključa"
 
 #: trust/builder.c:1776
 msgid "invalid reject key usage certificate extension"
-msgstr ""
+msgstr "neveljavno podaljšanje potrdila uporabe ključa zavrnitve"
+
+#: trust/check-format.c:98 trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "ni bilo moč odpreti in preslikati datoteke: %s"
+
+#: trust/check-format.c:103
+#, c-format
+msgid "file is not recognized as .p11-kit format: %s"
+msgstr "datoteka ni prepoznana kot zapis .p11-KIT: %s"
+
+#: trust/check-format.c:171
+msgid "specify a .p11-kit file"
+msgstr "navedite datoteko .p11-kit"
 
 #: trust/dump.c:113
 msgid "could not dump object"
-msgstr ""
+msgstr "predmeta ni bilo moč izpisati"
 
-#: trust/dump.c:187 trust/list.c:256
+#: trust/dump.c:187 trust/list.c:261
 msgid "extra arguments passed to command"
-msgstr ""
+msgstr "ukazu podani dodatni argumenti"
 
 #: trust/enumerate.c:78
 #, c-format
 msgid "couldn't parse attached certificate extension: %s"
-msgstr ""
+msgstr "ni bilo moč razčleniti priloženega podaljšanja potrdila: %s"
 
-#: trust/enumerate.c:151
+#: trust/enumerate.c:152
 #, c-format
 msgid "couldn't load attached extensions for certificate: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti priloženih podaljšanj za potrdilo: %s"
 
-#: trust/enumerate.c:275
+#: trust/enumerate.c:276
 #, c-format
 msgid "couldn't parse certificate: %s"
-msgstr ""
+msgstr "ni bilo moč razčleniti potrdila: %s"
 
-#: trust/enumerate.c:312
+#: trust/enumerate.c:313
 #, c-format
 msgid "couldn't load attributes: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti atributov: %s"
 
-#: trust/enumerate.c:323
+#: trust/enumerate.c:324
 msgid "skipping non-certificate object"
-msgstr ""
+msgstr "izpuščanje predmeta, ki ni potrdilo"
 
-#: trust/enumerate.c:480 trust/enumerate.c:508
+#: trust/enumerate.c:481 trust/enumerate.c:509
 #, c-format
 msgid "couldn't load blocklist: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti seznama blokov: %s"
 
-#: trust/enumerate.c:582
+#: trust/enumerate.c:583
 msgid "a PKCS#11 URI has already been specified"
-msgstr ""
+msgstr "URI PKCS#11 je že bil določen"
 
-#: trust/enumerate.c:589
+#: trust/enumerate.c:590
 #, c-format
 msgid "couldn't parse pkcs11 uri filter: %s"
-msgstr ""
+msgstr "ni bilo moč razčleniti filtra uri pkcs11: %s"
 
-#: trust/enumerate.c:594
+#: trust/enumerate.c:595
 msgid "uri contained unrecognized components, nothing will be extracted"
-msgstr ""
+msgstr "uri je vseboval neprepoznavne enote, nič ne bo izvlečenega"
 
-#: trust/enumerate.c:621
+#: trust/enumerate.c:622
 #, c-format
 msgid "unsupported or unrecognized filter: %s"
-msgstr ""
+msgstr "nepodprt ali neprepoznaven filter: %s"
 
-#: trust/enumerate.c:670
+#: trust/enumerate.c:671
 #, c-format
 msgid "unsupported or unrecognized purpose: %s"
-msgstr ""
+msgstr "nepodprt ali neprepoznaven namen: %s"
 
-#: trust/enumerate.c:712
+#: trust/enumerate.c:713
 msgid "no modules containing trust policy are registered"
-msgstr ""
+msgstr "registriran ni noben modul, ki bi vseboval pravilo zaupanja"
 
 #: trust/extract.c:98
 msgid "a format was already specified"
-msgstr ""
+msgstr "vrsta je že bila navedena"
 
 #: trust/extract.c:110
 #, c-format
 msgid "unsupported or unrecognized format: %s"
-msgstr ""
+msgstr "nepodprta ali neprepoznavna vrsta: %s"
 
 #.
 #. * If we're extracting *both* anchors and blocklist, then we must have
@@ -1202,69 +1610,72 @@ msgstr ""
 #.
 #: trust/extract.c:148
 msgid "format does not support trust policy"
-msgstr ""
+msgstr "vrsta ne podpira pravil zaupanja"
 
 #: trust/extract.c:159
 msgid ""
 "format requires a purpose, specify it with --purpose; defaulting to 'server-"
 "auth'"
-msgstr ""
+msgstr "vrsta zahteva namen, navedite ga s --purpose; privzet je »server-auth«"
 
 #: trust/extract.c:162
 msgid "format does not support multiple purposes, defaulting to 'server-auth'"
-msgstr ""
+msgstr "vrsta ne podpira več namenov, privzet bo »server-auth«"
 
 #: trust/extract.c:283
 msgid "specify one destination file or directory"
-msgstr ""
+msgstr "navedite eno ciljno datoteko ali mapo"
 
 #: trust/extract.c:288
 msgid "no output format specified"
-msgstr ""
+msgstr "navedena ni nobena vrsta izhoda"
 
 #. At this point we have no command
 #: trust/extract.c:333
 #, c-format
 msgid "could not run %s command"
-msgstr ""
+msgstr "ukaza %s ni bilo moč zagnati"
 
 #: trust/extract-cer.c:62
 msgid "multiple certificates found but could only write one to file"
 msgstr ""
+"najdenih je bilo več potrdil, a v datoteko je lahko bil zapisan samo en"
 
 #: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
 #: trust/extract-openssl.c:369 trust/extract-openssl.c:696
 #: trust/extract-pem.c:94 trust/extract-pem.c:161
 #, c-format
 msgid "failed to find certificates: %s"
-msgstr ""
+msgstr "ni bilo moč najti potrdil: %s"
 
 #: trust/extract-cer.c:80
 msgid "no certificate found"
-msgstr ""
+msgstr "najdeno ni bilo nobeno potrdilo"
 
 #: trust/extract-edk2.c:192
 #, c-format
 msgid "failed to find certificate: %s"
-msgstr ""
+msgstr "ni bilo moč najti potrdila: %s"
 
 #: trust/extract-jks.c:142
 msgid "truncating long string"
-msgstr ""
+msgstr "skrajševanje dolgega niza"
 
 #: trust/extract-jks.c:272
 msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
-msgstr ""
+msgstr "Okoljska spremenljivka $SOURCE_DATE_EPOCH: strtoull"
 
 #: trust/extract-jks.c:276
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
 msgstr ""
+"Okoljska spremenljivka $SOURCE_DATE_EPOCH: najdena ni bila nobena števka: "
+"%s\n"
 
 #: trust/extract-jks.c:280
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
-msgstr ""
+msgstr "Okoljska spremenljivka $SOURCE_DATE_EPOCH: smeti na koncu: %s\n"
 
 #: trust/extract-jks.c:284
 #, c-format
@@ -1272,162 +1683,163 @@ msgid ""
 "Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
 "to %lu but was found to be: %llu \n"
 msgstr ""
+"Okoljska spremenljivka $SOURCE_DATE_EPOCH: vrednost mora biti manjša od ali "
+"enaka %lu a je bila: %llu \n"
 
 #: trust/extract-jks.c:312
 msgid "could not generate a certificate alias name"
-msgstr ""
+msgstr "ni bilo moč ustvariti vzdevka potrdila"
 
-#: trust/list.c:122
+#: trust/list.c:126
 msgid "skipping object, couldn't build uri"
-msgstr ""
+msgstr "izpuščanje predmeta, ni bilo moč zgraditi uri"
 
-#: trust/module.c:303
+#: trust/module.c:299
+#, c-format
+msgid "value required for %s"
+msgstr "za %s je zahtevana vrednost"
+
+#: trust/module.c:305
 #, c-format
 msgid "unrecognized module argument: %s"
-msgstr ""
+msgstr "neprepoznaven argument modula: %s"
 
 #: trust/parser.c:109
 #, c-format
 msgid "certificate with distrust in location for anchors: %s"
-msgstr ""
+msgstr "potrdilo z nezaupanjem na mesto za sidra: %s"
 
 #: trust/parser.c:123
 #, c-format
 msgid "overriding trust for anchor in blocklist: %s"
-msgstr ""
+msgstr "prepisovanje zaupanja za sidro v seznamu blokov: %s"
 
 #: trust/parser.c:596
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
-msgstr ""
+msgstr "ni bilo moč razčleniti bloka PEM vrste %s"
 
-#: trust/parser.c:766
-#, c-format
-msgid "couldn't open and map file: %s"
-msgstr ""
-
-#: trust/persist.c:493
-#, c-format
-msgid "invalid oid value: %s"
-msgstr ""
-
-#: trust/save.c:124
+#: trust/save.c:126
 #, c-format
 msgid "couldn't create file: %s%s"
-msgstr ""
+msgstr "ni bilo moč ustvariti datoteke: %s%s"
 
-#: trust/save.c:172
+#: trust/save.c:174
 #, c-format
 msgid "couldn't write to file: %s"
-msgstr ""
+msgstr "ni bilo moč pisati v datoteko: %s"
 
 #. Continue trying other names
-#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#: trust/save.c:211 trust/save.c:229 trust/save.c:292
 #, c-format
 msgid "couldn't complete writing of file: %s"
-msgstr ""
+msgstr "ni bilo moč zaključiti pisanja datoteke: %s"
 
-#: trust/save.c:260
+#: trust/save.c:262
 #, c-format
 msgid "couldn't write file: %s"
-msgstr ""
+msgstr "ni bilo moč zapisati datoteke: %s"
 
-#: trust/save.c:266
+#: trust/save.c:268
 #, c-format
 msgid "couldn't set file permissions: %s"
-msgstr ""
+msgstr "ni bilo moč nastaviti dovoljenj datoteke: %s"
 
-#: trust/save.c:272 trust/save.c:315
+#: trust/save.c:274 trust/save.c:317
 #, c-format
 msgid "couldn't complete writing file: %s"
-msgstr ""
+msgstr "ni bilo moč zaključiti pisanja datoteke: %s"
 
-#: trust/save.c:309
+#: trust/save.c:311
 #, c-format
 msgid "couldn't remove original file: %s"
-msgstr ""
+msgstr "ni bilo moč odstraniti prvotne datoteke: %s"
 
-#: trust/save.c:355 trust/token.c:635
+#: trust/save.c:357 trust/token.c:687
 #, c-format
 msgid "couldn't create directory: %s"
-msgstr ""
+msgstr "ni bilo moč ustvariti mape: %s"
 
-#: trust/save.c:359
+#: trust/save.c:361
 #, c-format
 msgid "directory already exists: %s"
-msgstr ""
+msgstr "mapa že obstaja: %s"
 
-#: trust/save.c:370
+#: trust/save.c:372
 #, c-format
 msgid "couldn't open directory: %s"
-msgstr ""
+msgstr "ni možno odpreti mape: %s"
 
-#: trust/save.c:374
+#: trust/save.c:376
 #, c-format
 msgid "couldn't check directory permissions: %s"
-msgstr ""
+msgstr "ni možno preveriti dovoljenj mape: %s"
 
-#: trust/save.c:380
+#: trust/save.c:382
 #, c-format
 msgid "couldn't make directory writable: %s"
-msgstr ""
+msgstr "mape ni bilo moč napraviti zapisljive: %s"
 
-#: trust/save.c:541
+#: trust/save.c:554
 #, c-format
 msgid "couldn't create symlink: %s"
-msgstr ""
+msgstr "ni bilo moč ustvariti simbolne povezave: %s"
 
-#: trust/save.c:603 trust/token.c:503
+#: trust/save.c:616 trust/token.c:555
 #, c-format
 msgid "couldn't remove file: %s"
-msgstr ""
+msgstr "ni bilo moč odstraniti datoteke: %s"
 
-#: trust/save.c:631
+#: trust/save.c:644
 #, c-format
 msgid "couldn't set directory permissions: %s"
-msgstr ""
+msgstr "ni bilo moč nastaviti dovoljenj mape: %s"
 
-#: trust/token.c:227
+#: trust/token.c:228
 #, c-format
 msgid "couldn't load file into objects: %s"
-msgstr ""
+msgstr "ni bilo moč naložiti datoteke v predmete: %s"
 
-#: trust/token.c:243
+#: trust/token.c:244
 #, c-format
 msgid "couldn't stat path: %d: %s"
-msgstr ""
+msgstr "ni bilo moč dobiti stanja poti: %d: %s"
 
-#: trust/token.c:312
+#: trust/token.c:342
 #, c-format
 msgid "cannot access trust certificate path: %s"
-msgstr ""
+msgstr "ni moč dostopati do poti potrdila zaupanja: %s"
 
-#: trust/token.c:426
+#: trust/token.c:478
 #, c-format
 msgid "cannot access trust file: %s"
-msgstr ""
+msgstr "ni moč dostopati do datoteke zaupanja: %s"
 
-#: trust/token.c:475
+#: trust/token.c:527
 #, c-format
 msgid "couldn't access: %s"
-msgstr ""
-
-#: trust/trust.c:60
-msgid "List trust or certificates"
-msgstr ""
+msgstr "ni bilo moč dostopati do: %s"
 
 #: trust/trust.c:61
-msgid "Extract certificates and trust"
-msgstr ""
+msgid "List trust or certificates"
+msgstr "Izpiši seznam zaupanja ali potrdil"
 
 #: trust/trust.c:62
-msgid "Extract trust compatibility bundles"
-msgstr ""
+msgid "Extract certificates and trust"
+msgstr "Izlušči potrdila in zaupanja"
 
 #: trust/trust.c:63
-msgid "Add, remove, change trust anchors"
-msgstr ""
+msgid "Extract trust compatibility bundles"
+msgstr "Izvleci pakete združljivosti zaupanja"
 
 #: trust/trust.c:64
+msgid "Add, remove, change trust anchors"
+msgstr "Dodajte, odstranite in spreminjajte sidra zaupanja"
+
+#: trust/trust.c:65
 msgid "Dump trust objects in internal format"
-msgstr ""
+msgstr "Izmeči predmete zaupanja v interni obliki zapisa"
+
+#: trust/trust.c:66
+msgid "Check the format of .p11-kit files"
+msgstr "Preveri obliko zapisa datotek .p11-kit"

@@ -138,6 +138,7 @@ enum {
 	P11_RPC_CALL_C_MessageVerifyFinal,
 
 	P11_RPC_CALL_C_InitToken2,
+	P11_RPC_CALL_C_DeriveKey2,
 
 	P11_RPC_CALL_MAX
 };
@@ -159,6 +160,7 @@ typedef struct {
  *  v  = CK_VERSION
  *  y  = CK_BYTE
  *  z  = null terminated string
+ *  P  = mechanism parameter
  */
 
 static const p11_rpc_call p11_rpc_calls[] = {
@@ -253,6 +255,7 @@ static const p11_rpc_call p11_rpc_calls[] = {
 	{ P11_RPC_CALL_C_MessageVerifyFinal,   "C_MessageVerifyFinal",   "u",       ""                     },
 
 	{ P11_RPC_CALL_C_InitToken2,           "C_InitToken2",           "uays",    ""                     },
+	{ P11_RPC_CALL_C_DeriveKey2,            "C_DeriveKey2",            "uMuaA",   "uPu"                    },
 };
 
 #ifdef _DEBUG
@@ -514,6 +517,31 @@ bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
+void             p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
+							  const void *value,
+							  CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
+							  size_t *offset,
+							  void *value,
+							  CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
+							       const void *value,
+							       CK_ULONG value_length);
+
+bool             p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
+							       size_t *offset,
+							       void *value,
+							       CK_ULONG *value_length);
+
+void             p11_rpc_buffer_add_mech_param_update            (p11_buffer *buffer,
+							  const CK_MECHANISM *mech);
+
+bool             p11_rpc_buffer_get_mech_param_update            (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_MECHANISM *mech);
+
 void             p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value
                                                          (p11_buffer *buffer,
 							  const void *value,
@@ -557,6 +585,39 @@ bool            p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value
 							   size_t *offset,
 							   void *value,
 							   CK_ULONG *value_length);
+
+void            p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value
+							  (p11_buffer *buffer,
+							   const void *value,
+							   CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value
+							  (p11_buffer *buffer,
+							   size_t *offset,
+							   void *value,
+							   CK_ULONG *value_length);
+
+void            p11_rpc_buffer_add_ibm_btc_derive_mechanism_value
+							(p11_buffer *buffer,
+							const void *value,
+							CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ibm_btc_derive_mechanism_value
+						   (p11_buffer *buffer,
+						   size_t *offset,
+						   void *value,
+						   CK_ULONG *value_length);
+
+void            p11_rpc_buffer_add_ibm_kyber_mechanism_value
+						   (p11_buffer *buffer,
+						   const void *value,
+						   CK_ULONG value_length);
+
+bool            p11_rpc_buffer_get_ibm_kyber_mechanism_value
+						  (p11_buffer *buffer,
+						   size_t *offset,
+						   void *value,
+						   CK_ULONG *value_length);
 
 void		p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
 							   const void *value,

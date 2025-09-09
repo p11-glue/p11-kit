@@ -456,14 +456,9 @@ conf.set_quoted('TRUST_PATHS', trust_paths)
 # systemd
 
 with_systemd = false
-libsystemd_deps = []
-libsystemd = dependency('libsystemd', required: get_option('systemd'))
 systemd = dependency('systemd', required: get_option('systemd'))
-if libsystemd.found() and systemd.found()
+if systemd.found()
   systemduserunitdir = systemd.get_variable(pkgconfig : 'systemduserunitdir')
-  conf.set('WITH_SYSTEMD', 1)
-  libsystemd_deps += libsystemd
-  with_systemd = true
 endif
 
 configure_file(output: 'config.h', configuration: conf)
@@ -493,3 +488,4 @@ if get_option('nls')
   subdir('po')
 endif
 subdir('bash-completion')
+subdir('zsh-completion')
