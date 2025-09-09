@@ -330,6 +330,8 @@ test_open_session_write_protected (void *unused)
 	p11_kit_module_release (module);
 }
 
+extern bool p11_conf_force_user_config;
+
 int
 main (int argc,
       char *argv[])
@@ -349,6 +351,8 @@ main (int argc,
 		"pkcs11:?write-protected=yes",
 		1
 	};
+
+	p11_conf_force_user_config = true;
 
 	p11_library_init ();
 	mock_module_init ();
