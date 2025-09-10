@@ -1,3 +1,6 @@
+0.25.7 (stable)
+* Build fixes from tarball with Meson [PR#714]
+
 0.25.6 (stable)
 * rpc: Add module configuration option to specify server address [PR#707]
 * rpc: Correctly map Mozilla certificate distrust attributes [PR#705]
