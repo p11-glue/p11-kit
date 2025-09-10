@@ -97,6 +97,8 @@ frob-*
 /doc/manual/*.5
 /doc/manual/*.8
 
+/common/test-init.sh
+
 /p11-kit/p11-kit
 /p11-kit/p11-kit.pc
 /p11-kit/p11-kit-1.pc
@@ -124,6 +126,7 @@ frob-*
 /po/en@boldquot*
 /po/en@quot*
 /po/Rules-quot
+/po/insert-header.sed
 /po/insert-header.sin
 /po/remove-potcdate.sin
 
