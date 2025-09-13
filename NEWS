@@ -1,3 +1,6 @@
+0.25.8 (stable)
+* rpc: Unbreak protocol compatibility by reverting "rpc: Correctly map Mozilla certificate distrust attributes" [PR#716]
+
 0.25.7 (stable)
 * Build fixes from tarball with Meson [PR#714]
 
