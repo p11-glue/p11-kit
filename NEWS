@@ -1,3 +1,6 @@
+0.25.9 (stable)
+* subprojects/pkcs11-json: Update git submodule [PR#719]
+
 0.25.8 (stable)
 * rpc: Unbreak protocol compatibility by reverting "rpc: Correctly map Mozilla certificate distrust attributes" [PR#716]
 
