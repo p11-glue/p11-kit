@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 
 AC_INIT([p11-kit],
-	[0.25.8],
+	[0.25.9],
 	[https://github.com/p11-glue/p11-kit/issues],
 	[p11-kit],
 	[https://p11-glue.github.io/p11-glue/p11-kit.html])
@@ -14,7 +14,7 @@ AC_INIT([p11-kit],
 #    ?    :    +1    :  ?   == internal changes that doesn't break anything.
 
 P11KIT_CURRENT=4
-P11KIT_REVISION=3
+P11KIT_REVISION=4
 P11KIT_AGE=4
 
 # ------------------------------------------------------------------------------
