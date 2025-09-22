@@ -1,3 +1,6 @@
+0.25.10 (stable)
+* ci fixes [PR#722, PR#723]
+
 0.25.9 (stable)
 * subprojects/pkcs11-json: Update git submodule [PR#719]
 
