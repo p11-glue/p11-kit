@@ -103,10 +103,10 @@ static const CK_INFO MOCK_INFO = {
 };
 
 extern       CK_FUNCTION_LIST                            mock_module;
-extern       CK_FUNCTION_LIST_3_0                        mock_module_v3;
+extern       CK_FUNCTION_LIST_3_2                        mock_module_v3;
 
 extern       CK_FUNCTION_LIST                            mock_module_no_slots;
-extern       CK_FUNCTION_LIST_3_0                        mock_module_v3_no_slots;
+extern       CK_FUNCTION_LIST_3_2                        mock_module_v3_no_slots;
 
 extern       CK_X_FUNCTION_LIST                          mock_x_module_no_slots;
 
@@ -1552,5 +1552,233 @@ CK_RV        mock_C_MessageVerifyFinal__invalid_handle   (CK_SESSION_HANDLE sess
 
 CK_RV        mock_X_MessageVerifyFinal__invalid_handle   (CK_X_FUNCTION_LIST *self,
                                                           CK_SESSION_HANDLE session);
+
+CK_RV        mock_C_EncapsulateKey                       (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE public_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_C_EncapsulateKey__invalid_handle       (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE public_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_X_EncapsulateKey__invalid_handle       (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE public_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_C_DecapsulateKey                       (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE private_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_C_DecapsulateKey__invalid_handle       (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE private_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_X_DecapsulateKey__invalid_handle       (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE private_key,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR ciphertext,
+					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_C_VerifySignatureInit                  (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR signature,
+					                  CK_ULONG signature_len);
+
+CK_RV        mock_C_VerifySignatureInit__invalid_handle  (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR signature,
+					                  CK_ULONG signature_len);
+
+CK_RV        mock_X_VerifySignatureInit__invalid_handle  (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR signature,
+					                  CK_ULONG signature_len);
+
+CK_RV        mock_C_VerifySignature                      (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_C_VerifySignature__invalid_handle      (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_X_VerifySignature__invalid_handle      (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_C_VerifySignatureUpdate                (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR part,
+					                  CK_ULONG part_len);
+
+CK_RV        mock_C_VerifySignatureUpdate__invalid_handle (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR part,
+					                  CK_ULONG part_len);
+
+CK_RV        mock_X_VerifySignatureUpdate__invalid_handle (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR part,
+					                  CK_ULONG part_len);
+
+CK_RV        mock_C_VerifySignatureFinal                 (CK_SESSION_HANDLE session);
+
+CK_RV        mock_C_VerifySignatureFinal__invalid_handle (CK_SESSION_HANDLE session);
+
+CK_RV        mock_X_VerifySignatureFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session);
+
+CK_RV        mock_C_GetSessionValidationFlags            (CK_SESSION_HANDLE session,
+					                  CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					                  CK_FLAGS *flags_ptr);
+
+CK_RV        mock_C_GetSessionValidationFlags__invalid_handle (CK_SESSION_HANDLE session,
+					                  CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					                  CK_FLAGS *flags_ptr);
+
+CK_RV        mock_X_GetSessionValidationFlags__invalid_handle (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					                  CK_FLAGS *flags_ptr);
+
+CK_RV        mock_C_AsyncComplete                        (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ASYNC_DATA_PTR result);
+
+CK_RV        mock_C_AsyncComplete__invalid_handle	 (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ASYNC_DATA_PTR result);
+
+CK_RV        mock_X_AsyncComplete__invalid_handle	 (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ASYNC_DATA_PTR result);
+
+CK_RV        mock_C_AsyncGetID                           (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG_PTR id_ptr);
+
+CK_RV        mock_C_AsyncGetID__invalid_handle           (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG_PTR id_ptr);
+
+CK_RV        mock_X_AsyncGetID__invalid_handle           (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG_PTR id_ptr);
+
+CK_RV        mock_C_AsyncJoin                            (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG id,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_C_AsyncJoin__invalid_handle            (CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG id,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_X_AsyncJoin__invalid_handle            (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_BYTE_PTR function_name,
+					                  CK_ULONG id,
+					                  CK_BYTE_PTR data,
+					                  CK_ULONG data_len);
+
+CK_RV        mock_C_WrapKeyAuthenticated                 (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE wrapping_key,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG_PTR wrapped_key_len);
+
+CK_RV        mock_C_WrapKeyAuthenticated__invalid_handle (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE wrapping_key,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG_PTR wrapped_key_len);
+
+CK_RV        mock_X_WrapKeyAuthenticated__invalid_handle (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE wrapping_key,
+					                  CK_OBJECT_HANDLE key,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG_PTR wrapped_key_len);
+
+CK_RV        mock_C_UnwrapKeyAuthenticated               (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE unwrapping_key,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG wrapped_key_len,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_C_UnwrapKeyAuthenticated__invalid_handle (CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE unwrapping_key,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG wrapped_key_len,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
+
+CK_RV        mock_X_UnwrapKeyAuthenticated__invalid_handle (CK_X_FUNCTION_LIST *self,
+					                  CK_SESSION_HANDLE session,
+					                  CK_MECHANISM_PTR mechanism,
+					                  CK_OBJECT_HANDLE unwrapping_key,
+					                  CK_BYTE_PTR wrapped_key,
+					                  CK_ULONG wrapped_key_len,
+					                  CK_ATTRIBUTE_PTR templ,
+					                  CK_ULONG attribute_count,
+					                  CK_BYTE_PTR associated_data,
+					                  CK_ULONG associated_data_len,
+					                  CK_OBJECT_HANDLE_PTR key_ptr);
 
 #endif /* __MOCK_H__ */

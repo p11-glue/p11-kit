@@ -2,7 +2,7 @@
     "function_name": "proxy_{function}",
     "function_argument": "{argument_type} {argument_name}",
     "call_lower": "return map.funcs->{function}",
-    "call_lower_v3": "return ((CK_FUNCTION_LIST_3_0_PTR)map.funcs)->{function}",
+    "call_lower_v3": "return ((CK_FUNCTION_LIST_3_2_PTR)map.funcs)->{function}",
     "call_lower_argument": "{argument_name}",
     "function_body_with_slot": """\
 static CK_RV

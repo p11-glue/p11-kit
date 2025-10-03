@@ -2071,11 +2071,11 @@ test_random (void)
 static void
 test_login_user (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	/* missing session */
 	rv = (module->C_LoginUser) (0, CKU_USER, (CK_UTF8CHAR_PTR)"booo", 4, (CK_UTF8CHAR_PTR)"yeah", 4);
@@ -2106,14 +2106,14 @@ test_login_user (void)
 static void
 test_session_cancel (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
 	CK_OBJECT_CLASS klass = CKO_PUBLIC_KEY;
 	CK_ATTRIBUTE attr = { CKA_CLASS, &klass, sizeof (klass) };
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
 	assert (rv == CKR_OK);
@@ -2152,7 +2152,7 @@ test_session_cancel (void)
 static void
 test_message_encrypt (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
 	CK_MECHANISM mech_bad = { CKM_MOCK_WRAP, NULL, 0 };
@@ -2160,7 +2160,7 @@ test_message_encrypt (void)
 	CK_ULONG length;
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
 	assert_num_eq (rv, CKR_OK);
@@ -2283,7 +2283,7 @@ test_message_encrypt (void)
 static void
 test_message_decrypt (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
 	CK_MECHANISM mech_bad = { CKM_MOCK_WRAP, NULL, 0 };
@@ -2291,7 +2291,7 @@ test_message_decrypt (void)
 	CK_ULONG length;
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
 	assert_num_eq (rv, CKR_OK);
@@ -2411,7 +2411,7 @@ test_message_decrypt (void)
 static void
 test_message_sign (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
 	CK_MECHANISM mech_bad = { CKM_MOCK_WRAP, NULL, 0 };
@@ -2419,7 +2419,7 @@ test_message_sign (void)
 	CK_ULONG length;
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
 	assert_num_eq (rv, CKR_OK);
@@ -2554,7 +2554,7 @@ test_message_sign (void)
 static void
 test_message_verify (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
 	CK_MECHANISM mech_bad = { CKM_MOCK_WRAP, NULL, 0 };
@@ -2562,7 +2562,7 @@ test_message_verify (void)
 	CK_ULONG length;
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
 	assert_num_eq (rv, CKR_OK);
@@ -2671,13 +2671,13 @@ test_message_verify (void)
 static void
 test_pkcs11_3_not_supported (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM crypt_mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
 	CK_MECHANISM sign_mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
 	CK_RV rv;
 
-	module = (CK_FUNCTION_LIST_3_0_PTR)setup_mock_module (&session);
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
 
 	/* not part of 2.x API */
 	rv = (module->C_LoginUser) (session, CKU_USER, (CK_UTF8CHAR_PTR)"booo", 4, (CK_UTF8CHAR_PTR)"yeah", 4);

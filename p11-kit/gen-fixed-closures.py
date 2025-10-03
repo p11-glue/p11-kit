@@ -18,7 +18,7 @@ def write_fixed_instantiate(output, closures):
         for i in range(closures)
     ])
     output.write(f'''
-CK_FUNCTION_LIST_3_0 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {{
+CK_FUNCTION_LIST_3_2 p11_virtual_fixed[P11_VIRTUAL_MAX_FIXED] = {{
 {initializers_concatenated}
 }};
 

@@ -572,8 +572,8 @@ check_trust_object_hashes (CK_SESSION_HANDLE session,
 	CK_RV rv;
 
 	CK_ATTRIBUTE hashes[] = {
-		{ CKA_CERT_SHA1_HASH, sha1, sizeof (sha1) },
-		{ CKA_CERT_MD5_HASH, md5, sizeof (md5) },
+		{ CKA_NSS_CERT_SHA1_HASH, sha1, sizeof (sha1) },
+		{ CKA_NSS_CERT_MD5_HASH, md5, sizeof (md5) },
 		{ CKA_INVALID, },
 	};
 

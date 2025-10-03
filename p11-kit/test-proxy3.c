@@ -73,7 +73,7 @@ static void
 test_initialize_finalize_interface (void)
 {
 	CK_INTERFACE *interface;
-	CK_FUNCTION_LIST_3_0_PTR proxy;
+	CK_FUNCTION_LIST_3_2_PTR proxy;
 	char *name = "PKCS 11";
 	CK_RV rv;
 
@@ -185,7 +185,7 @@ test_interface (void)
 static CK_FUNCTION_LIST_PTR
 setup_mock_module (CK_SESSION_HANDLE *session)
 {
-	CK_FUNCTION_LIST_3_0_PTR proxy;
+	CK_FUNCTION_LIST_3_2_PTR proxy;
 	CK_INTERFACE_PTR interface;
 	CK_SLOT_ID slots[32];
 	CK_RV rv;
