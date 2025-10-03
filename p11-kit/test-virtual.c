@@ -158,7 +158,7 @@ test_get_function_list (void)
 static void
 test_get_interface (void)
 {
-	CK_FUNCTION_LIST_3_0_PTR module;
+	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_INTERFACE_PTR list;
 	CK_INTERFACE_PTR interface;
 	CK_ULONG count;
@@ -166,7 +166,7 @@ test_get_interface (void)
 	CK_RV rv;
 
 	p11_virtual_init (&virt, &p11_virtual_base, &mock_module_v3_no_slots, NULL);
-	module = (CK_FUNCTION_LIST_3_0_PTR)p11_virtual_wrap(&virt, NULL);
+	module = (CK_FUNCTION_LIST_3_2_PTR)p11_virtual_wrap(&virt, NULL);
 	assert_ptr_not_null (module);
 	module->version.major = CRYPTOKI_VERSION_MAJOR;
 	module->version.minor = CRYPTOKI_VERSION_MINOR;

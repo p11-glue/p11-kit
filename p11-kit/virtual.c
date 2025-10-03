@@ -84,8 +84,8 @@
 #define MAX_ARGS 11
 
 typedef struct {
-	/* This is first so we can cast between CK_FUNCTION_LIST, CK_FUNCTION_LIST_3_0* and Context* */
-	CK_FUNCTION_LIST_3_0 bound;
+	/* This is first so we can cast between CK_FUNCTION_LIST, CK_FUNCTION_LIST_3_2* and Context* */
+	CK_FUNCTION_LIST_3_2 bound;
 
 	/* The PKCS#11 functions to call into */
 	p11_virtual *virt;
@@ -102,14 +102,14 @@ typedef struct {
 	int fixed_index;
 } Wrapper;
 
-static CK_FUNCTION_LIST_3_0 *fixed_closures[P11_VIRTUAL_MAX_FIXED];
+static CK_FUNCTION_LIST_3_2 *fixed_closures[P11_VIRTUAL_MAX_FIXED];
 static CK_INTERFACE *fixed_interfaces[P11_VIRTUAL_MAX_FIXED];
 
 static Wrapper          *create_fixed_wrapper   (p11_virtual         *virt,
                                                  size_t               index,
                                                  p11_destroyer        destroyer);
-static CK_INTERFACE     *create_fixed_interface (CK_FUNCTION_LIST_3_0_PTR functions);
-static CK_FUNCTION_LIST_3_0 *
+static CK_INTERFACE     *create_fixed_interface (CK_FUNCTION_LIST_3_2_PTR functions);
+static CK_FUNCTION_LIST_3_2 *
                          p11_virtual_wrap_fixed (p11_virtual         *virt,
                                                  p11_destroyer        destroyer);
 static void
@@ -253,12 +253,12 @@ typedef struct {
 #define FUNCTION(name) \
 	#name, \
 	stack_C_##name, STRUCT_OFFSET (CK_X_FUNCTION_LIST, C_##name), \
-	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_0, C_##name), {0, 0}
+	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_2, C_##name), {0, 0}
 
 #define FUNCTION3(name) \
 	#name, \
 	stack_C_##name, STRUCT_OFFSET (CK_X_FUNCTION_LIST, C_##name), \
-	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_0, C_##name), {3, 0}
+	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_2, C_##name), {3, 0}
 
 static const FunctionInfo function_info[] = {
         { FUNCTION (Initialize) },
@@ -601,14 +601,14 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 
 	return_if_fail (p11_virtual_is_wrapper (module));
 
-	/* The bound CK_FUNCTION_LIST_3_0 sits at the front of Wrapper */
+	/* The bound CK_FUNCTION_LIST_3_2 sits at the front of Wrapper */
 	wrapper = (Wrapper *)module;
 
 	if (wrapper->fixed_index >= 0)
 		p11_virtual_unwrap_fixed (module);
 
 	/*
-	 * Make sure that the CK_FUNCTION_LIST_3_0_PTR is invalid, and that
+	 * Make sure that the CK_FUNCTION_LIST_3_2_PTR is invalid, and that
 	 * p11_virtual_is_wrapper() recognizes this. This is in case the
 	 * destroyer callback tries to do something fancy.
 	 */
@@ -626,11 +626,11 @@ p11_virtual_unwrap (CK_FUNCTION_LIST_PTR module)
 #include "p11-kit/virtual-fixed-wrappers.h"
 #include "p11-kit/virtual-fixed-closures.h"
 
-static CK_FUNCTION_LIST_3_0 *
+static CK_FUNCTION_LIST_3_2 *
 p11_virtual_wrap_fixed (p11_virtual *virt,
 			p11_destroyer destroyer)
 {
-	CK_FUNCTION_LIST_3_0 *result = NULL;
+	CK_FUNCTION_LIST_3_2 *result = NULL;
 	size_t i;
 
 	p11_mutex_lock (&p11_virtual_mutex);
@@ -663,7 +663,7 @@ p11_virtual_unwrap_fixed (CK_FUNCTION_LIST_PTR module)
 
 	p11_mutex_lock (&p11_virtual_mutex);
 	for (i = 0; i < P11_VIRTUAL_MAX_FIXED; i++) {
-		if (fixed_closures[i] == (CK_FUNCTION_LIST_3_0 *)module) {
+		if (fixed_closures[i] == (CK_FUNCTION_LIST_3_2 *)module) {
 			fixed_closures[i] = NULL;
 			free (fixed_interfaces[i]);
 			break;
@@ -673,7 +673,7 @@ p11_virtual_unwrap_fixed (CK_FUNCTION_LIST_PTR module)
 }
 
 static void
-init_wrapper_funcs_fixed (Wrapper *wrapper, CK_FUNCTION_LIST_3_0 *fixed)
+init_wrapper_funcs_fixed (Wrapper *wrapper, CK_FUNCTION_LIST_3_2 *fixed)
 {
        const FunctionInfo *info;
        void **bound_to, **bound_from;
@@ -742,7 +742,7 @@ create_fixed_wrapper (p11_virtual *virt,
 }
 
 static CK_INTERFACE *
-create_fixed_interface (CK_FUNCTION_LIST_3_0_PTR functions)
+create_fixed_interface (CK_FUNCTION_LIST_3_2_PTR functions)
 {
 	CK_INTERFACE *interface;
 

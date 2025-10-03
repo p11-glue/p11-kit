@@ -575,6 +575,91 @@ typedef CK_RV (* CK_X_VerifyMessageNext)   (CK_X_FUNCTION_LIST *,
 typedef CK_RV (* CK_X_MessageVerifyFinal)  (CK_X_FUNCTION_LIST *,
                                             CK_SESSION_HANDLE session);
 
+typedef CK_RV (* CK_X_EncapsulateKey)      (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE public_key,
+					    CK_ATTRIBUTE_PTR templ,
+					    CK_ULONG attribute_count,
+					    CK_BYTE_PTR ciphertext,
+					    CK_ULONG_PTR ciphertext_len,
+					    CK_OBJECT_HANDLE_PTR key_ptr);
+
+typedef CK_RV (* CK_X_DecapsulateKey)      (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE private_key,
+					    CK_ATTRIBUTE_PTR templ,
+					    CK_ULONG attribute_count,
+					    CK_BYTE_PTR ciphertext,
+					    CK_ULONG_PTR ciphertext_len,
+					    CK_OBJECT_HANDLE_PTR key_ptr);
+
+typedef CK_RV (* CK_X_VerifySignatureInit) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE key,
+					    CK_BYTE_PTR signature,
+					    CK_ULONG signature_len);
+
+typedef CK_RV (* CK_X_VerifySignature)     (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_BYTE_PTR data,
+					    CK_ULONG data_len);
+
+typedef CK_RV (* CK_X_VerifySignatureUpdate) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_BYTE_PTR part,
+					    CK_ULONG part_len);
+
+typedef CK_RV (* CK_X_VerifySignatureFinal) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session);
+
+typedef CK_RV (* CK_X_GetSessionValidationFlags) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					    CK_FLAGS *flags_ptr);
+
+typedef CK_RV (* CK_X_AsyncComplete)	   (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_BYTE_PTR function_name,
+					    CK_ASYNC_DATA_PTR result);
+
+typedef CK_RV (* CK_X_AsyncGetID)          (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_BYTE_PTR function_name,
+					    CK_ULONG_PTR id_ptr);
+
+typedef CK_RV (* CK_X_AsyncJoin)           (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_BYTE_PTR function_name,
+					    CK_ULONG id,
+					    CK_BYTE_PTR data,
+					    CK_ULONG data_len);
+
+typedef CK_RV (* CK_X_WrapKeyAuthenticated) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE wrapping_key,
+					    CK_OBJECT_HANDLE key,
+					    CK_BYTE_PTR associated_data,
+					    CK_ULONG associated_data_len,
+					    CK_BYTE_PTR wrapped_key,
+					    CK_ULONG_PTR wrapped_key_len);
+
+typedef CK_RV (* CK_X_UnwrapKeyAuthenticated) (CK_X_FUNCTION_LIST *,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE unwrapping_key,
+					    CK_BYTE_PTR wrapped_key,
+					    CK_ULONG wrapped_key_len,
+					    CK_ATTRIBUTE_PTR templ,
+					    CK_ULONG attribute_count,
+					    CK_BYTE_PTR associated_data,
+					    CK_ULONG associated_data_len,
+					    CK_OBJECT_HANDLE_PTR key_ptr);
+
+
 struct _CK_X_FUNCTION_LIST {
 	CK_VERSION version;
 	CK_X_Initialize C_Initialize;
@@ -665,6 +750,19 @@ struct _CK_X_FUNCTION_LIST {
 	CK_X_VerifyMessageBegin C_VerifyMessageBegin;
 	CK_X_VerifyMessageNext C_VerifyMessageNext;
 	CK_X_MessageVerifyFinal C_MessageVerifyFinal;
+	/* PKCS #11 3.2 functions */
+	CK_X_EncapsulateKey C_EncapsulateKey;
+	CK_X_DecapsulateKey C_DecapsulateKey;
+	CK_X_VerifySignatureInit C_VerifySignatureInit;
+	CK_X_VerifySignature C_VerifySignature;
+	CK_X_VerifySignatureUpdate C_VerifySignatureUpdate;
+	CK_X_VerifySignatureFinal C_VerifySignatureFinal;
+	CK_X_GetSessionValidationFlags C_GetSessionValidationFlags;
+	CK_X_AsyncComplete C_AsyncComplete;
+	CK_X_AsyncGetID C_AsyncGetID;
+	CK_X_AsyncJoin C_AsyncJoin;
+	CK_X_WrapKeyAuthenticated C_WrapKeyAuthenticated;
+	CK_X_UnwrapKeyAuthenticated C_UnwrapKeyAuthenticated;
 };
 
 #if defined(__cplusplus)

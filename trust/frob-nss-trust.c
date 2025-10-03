@@ -92,14 +92,14 @@ dump_trust_module (const char *path)
 	CK_ATTRIBUTE template[] = {
 		{ CKA_CLASS,},
 		{ CKA_LABEL, },
-		{ CKA_CERT_MD5_HASH, },
-		{ CKA_CERT_SHA1_HASH },
+		{ CKA_NSS_CERT_MD5_HASH, },
+		{ CKA_NSS_CERT_SHA1_HASH },
 		{ CKA_ISSUER, },
 		{ CKA_SERIAL_NUMBER, },
 		{ CKA_TRUST_SERVER_AUTH, },
 		{ CKA_TRUST_EMAIL_PROTECTION, },
 		{ CKA_TRUST_CODE_SIGNING, },
-		{ CKA_TRUST_STEP_UP_APPROVED, },
+		{ CKA_NSS_TRUST_STEP_UP_APPROVED, },
 		{ CKA_INVALID, }
 	};
 
@@ -150,12 +150,12 @@ compare_trust_modules (const char *path1,
 		{ CKA_CLASS, },
 		{ CKA_ISSUER, },
 		{ CKA_SERIAL_NUMBER, },
-		{ CKA_CERT_MD5_HASH, },
-		{ CKA_CERT_SHA1_HASH },
+		{ CKA_NSS_CERT_MD5_HASH, },
+		{ CKA_NSS_CERT_SHA1_HASH },
 		{ CKA_TRUST_SERVER_AUTH, },
 		{ CKA_TRUST_EMAIL_PROTECTION, },
 		{ CKA_TRUST_CODE_SIGNING, },
-		{ CKA_TRUST_STEP_UP_APPROVED, },
+		{ CKA_NSS_TRUST_STEP_UP_APPROVED, },
 		{ CKA_INVALID, }
 	};
 

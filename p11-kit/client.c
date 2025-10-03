@@ -194,7 +194,7 @@ get_interface_inlock(CK_INTERFACE **interface, const CK_VERSION *version, CK_FLA
 
 	state->wrapped.pInterfaceName = (char *)p11_interface_name;
 
-	state->wrapped.pFunctionList = (CK_FUNCTION_LIST_3_0 *)module;
+	state->wrapped.pFunctionList = (CK_FUNCTION_LIST_3_2 *)module;
 	module = NULL;
 
 	state->wrapped.flags = flags;

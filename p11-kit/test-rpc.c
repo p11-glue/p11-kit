@@ -503,7 +503,7 @@ mixin_free (void *data)
 
 static CK_FUNCTION_LIST_PTR
 setup_test_rpc_module (p11_rpc_client_vtable *vtable,
-                       CK_FUNCTION_LIST_3_0 *module_template,
+                       CK_FUNCTION_LIST_3_2 *module_template,
                        CK_SESSION_HANDLE *session)
 {
 	CK_FUNCTION_LIST *rpc_module;
@@ -643,7 +643,7 @@ delayed_C_GetInfo (CK_INFO_PTR info)
 static void
 test_simultaneous_functions (void *module)
 {
-	CK_FUNCTION_LIST_3_0 real_module;
+	CK_FUNCTION_LIST_3_2 real_module;
 	CK_FUNCTION_LIST *rpc_module;
 	const int num_threads = 128;
 	p11_thread_t threads[num_threads];

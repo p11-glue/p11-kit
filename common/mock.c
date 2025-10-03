@@ -5056,6 +5056,378 @@ mock_X_MessageVerifyFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
 	return CKR_SESSION_HANDLE_INVALID;
 }
 
+CK_RV
+mock_C_EncapsulateKey (CK_SESSION_HANDLE session,
+		       CK_MECHANISM_PTR mechanism,
+		       CK_OBJECT_HANDLE public_key,
+		       CK_ATTRIBUTE_PTR templ,
+		       CK_ULONG attribute_count,
+		       CK_BYTE_PTR ciphertext,
+		       CK_ULONG_PTR ciphertext_len,
+		       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_EncapsulateKey__invalid_handle (CK_SESSION_HANDLE session,
+				       CK_MECHANISM_PTR mechanism,
+				       CK_OBJECT_HANDLE public_key,
+				       CK_ATTRIBUTE_PTR templ,
+				       CK_ULONG attribute_count,
+				       CK_BYTE_PTR ciphertext,
+				       CK_ULONG_PTR ciphertext_len,
+				       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_EncapsulateKey__invalid_handle (CK_X_FUNCTION_LIST *self,
+				       CK_SESSION_HANDLE session,
+				       CK_MECHANISM_PTR mechanism,
+				       CK_OBJECT_HANDLE public_key,
+				       CK_ATTRIBUTE_PTR templ,
+				       CK_ULONG attribute_count,
+				       CK_BYTE_PTR ciphertext,
+				       CK_ULONG_PTR ciphertext_len,
+				       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_DecapsulateKey (CK_SESSION_HANDLE session,
+		       CK_MECHANISM_PTR mechanism,
+		       CK_OBJECT_HANDLE private_key,
+		       CK_ATTRIBUTE_PTR templ,
+		       CK_ULONG attribute_count,
+		       CK_BYTE_PTR ciphertext,
+		       CK_ULONG_PTR ciphertext_len,
+		       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_DecapsulateKey__invalid_handle (CK_SESSION_HANDLE session,
+				       CK_MECHANISM_PTR mechanism,
+				       CK_OBJECT_HANDLE private_key,
+				       CK_ATTRIBUTE_PTR templ,
+				       CK_ULONG attribute_count,
+				       CK_BYTE_PTR ciphertext,
+				       CK_ULONG_PTR ciphertext_len,
+				       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_DecapsulateKey__invalid_handle (CK_X_FUNCTION_LIST *self,
+				       CK_SESSION_HANDLE session,
+				       CK_MECHANISM_PTR mechanism,
+				       CK_OBJECT_HANDLE private_key,
+				       CK_ATTRIBUTE_PTR templ,
+				       CK_ULONG attribute_count,
+				       CK_BYTE_PTR ciphertext,
+				       CK_ULONG_PTR ciphertext_len,
+				       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifySignatureInit (CK_SESSION_HANDLE session,
+			    CK_MECHANISM_PTR mechanism,
+			    CK_OBJECT_HANDLE key,
+			    CK_BYTE_PTR signature,
+			    CK_ULONG signature_len)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_VerifySignatureInit__invalid_handle (CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE key,
+					    CK_BYTE_PTR signature,
+					    CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifySignatureInit__invalid_handle (CK_X_FUNCTION_LIST *self,
+					    CK_SESSION_HANDLE session,
+					    CK_MECHANISM_PTR mechanism,
+					    CK_OBJECT_HANDLE key,
+					    CK_BYTE_PTR signature,
+					    CK_ULONG signature_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifySignature (CK_SESSION_HANDLE session,
+			CK_BYTE_PTR data,
+			CK_ULONG data_len)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_VerifySignature__invalid_handle (CK_SESSION_HANDLE session,
+					CK_BYTE_PTR data,
+					CK_ULONG data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifySignature__invalid_handle (CK_X_FUNCTION_LIST *self,
+					CK_SESSION_HANDLE session,
+					CK_BYTE_PTR data,
+					CK_ULONG data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifySignatureUpdate (CK_SESSION_HANDLE session,
+			      CK_BYTE_PTR part,
+			      CK_ULONG part_len)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_VerifySignatureUpdate__invalid_handle (CK_SESSION_HANDLE session,
+					      CK_BYTE_PTR part,
+					      CK_ULONG part_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifySignatureUpdate__invalid_handle (CK_X_FUNCTION_LIST *self,
+					      CK_SESSION_HANDLE session,
+					      CK_BYTE_PTR part,
+					      CK_ULONG part_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_VerifySignatureFinal (CK_SESSION_HANDLE session)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_VerifySignatureFinal__invalid_handle (CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_VerifySignatureFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
+					     CK_SESSION_HANDLE session)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_GetSessionValidationFlags (CK_SESSION_HANDLE session,
+				  CK_SESSION_VALIDATION_FLAGS_TYPE type,
+				  CK_FLAGS *flags_ptr)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_GetSessionValidationFlags__invalid_handle (CK_SESSION_HANDLE session,
+					          CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					          CK_FLAGS *flags_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_GetSessionValidationFlags__invalid_handle (CK_X_FUNCTION_LIST *self,
+					          CK_SESSION_HANDLE session,
+					          CK_SESSION_VALIDATION_FLAGS_TYPE type,
+					          CK_FLAGS *flags_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_AsyncComplete (CK_SESSION_HANDLE session,
+		      CK_BYTE_PTR function_name,
+		      CK_ASYNC_DATA_PTR result)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_AsyncComplete__invalid_handle (CK_SESSION_HANDLE session,
+				      CK_BYTE_PTR function_name,
+				      CK_ASYNC_DATA_PTR result)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_AsyncComplete__invalid_handle (CK_X_FUNCTION_LIST *self,
+				      CK_SESSION_HANDLE session,
+				      CK_BYTE_PTR function_name,
+				      CK_ASYNC_DATA_PTR result)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_AsyncGetID (CK_SESSION_HANDLE session,
+		   CK_BYTE_PTR function_name,
+		   CK_ULONG_PTR id_ptr)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_AsyncGetID__invalid_handle (CK_SESSION_HANDLE session,
+				   CK_BYTE_PTR function_name,
+				   CK_ULONG_PTR id_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_AsyncGetID__invalid_handle (CK_X_FUNCTION_LIST *self,
+				   CK_SESSION_HANDLE session,
+				   CK_BYTE_PTR function_name,
+				   CK_ULONG_PTR id_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_AsyncJoin (CK_SESSION_HANDLE session,
+		  CK_BYTE_PTR function_name,
+		  CK_ULONG id,
+		  CK_BYTE_PTR data,
+		  CK_ULONG data_len)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_AsyncJoin__invalid_handle (CK_SESSION_HANDLE session,
+				  CK_BYTE_PTR function_name,
+				  CK_ULONG id,
+				  CK_BYTE_PTR data,
+				  CK_ULONG data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_AsyncJoin__invalid_handle (CK_X_FUNCTION_LIST *self,
+				  CK_SESSION_HANDLE session,
+				  CK_BYTE_PTR function_name,
+				  CK_ULONG id,
+				  CK_BYTE_PTR data,
+				  CK_ULONG data_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_WrapKeyAuthenticated (CK_SESSION_HANDLE session,
+			     CK_MECHANISM_PTR mechanism,
+			     CK_OBJECT_HANDLE wrapping_key,
+			     CK_OBJECT_HANDLE key,
+			     CK_BYTE_PTR associated_data,
+			     CK_ULONG associated_data_len,
+			     CK_BYTE_PTR wrapped_key,
+			     CK_ULONG_PTR wrapped_key_len)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_WrapKeyAuthenticated__invalid_handle (CK_SESSION_HANDLE session,
+					     CK_MECHANISM_PTR mechanism,
+					     CK_OBJECT_HANDLE wrapping_key,
+					     CK_OBJECT_HANDLE key,
+					     CK_BYTE_PTR associated_data,
+					     CK_ULONG associated_data_len,
+					     CK_BYTE_PTR wrapped_key,
+					     CK_ULONG_PTR wrapped_key_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_WrapKeyAuthenticated__invalid_handle (CK_X_FUNCTION_LIST *self,
+					     CK_SESSION_HANDLE session,
+					     CK_MECHANISM_PTR mechanism,
+					     CK_OBJECT_HANDLE wrapping_key,
+					     CK_OBJECT_HANDLE key,
+					     CK_BYTE_PTR associated_data,
+					     CK_ULONG associated_data_len,
+					     CK_BYTE_PTR wrapped_key,
+					     CK_ULONG_PTR wrapped_key_len)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_C_UnwrapKeyAuthenticated (CK_SESSION_HANDLE session,
+			       CK_MECHANISM_PTR mechanism,
+			       CK_OBJECT_HANDLE unwrapping_key,
+			       CK_BYTE_PTR wrapped_key,
+			       CK_ULONG wrapped_key_len,
+			       CK_ATTRIBUTE_PTR templ,
+			       CK_ULONG attribute_count,
+			       CK_BYTE_PTR associated_data,
+			       CK_ULONG associated_data_len,
+			       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_FUNCTION_NOT_SUPPORTED;
+}
+
+CK_RV
+mock_C_UnwrapKeyAuthenticated__invalid_handle (CK_SESSION_HANDLE session,
+					       CK_MECHANISM_PTR mechanism,
+					       CK_OBJECT_HANDLE unwrapping_key,
+					       CK_BYTE_PTR wrapped_key,
+					       CK_ULONG wrapped_key_len,
+					       CK_ATTRIBUTE_PTR templ,
+					       CK_ULONG attribute_count,
+					       CK_BYTE_PTR associated_data,
+					       CK_ULONG associated_data_len,
+					       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
+CK_RV
+mock_X_UnwrapKeyAuthenticated__invalid_handle (CK_X_FUNCTION_LIST *self,
+					       CK_SESSION_HANDLE session,
+					       CK_MECHANISM_PTR mechanism,
+					       CK_OBJECT_HANDLE unwrapping_key,
+					       CK_BYTE_PTR wrapped_key,
+					       CK_ULONG wrapped_key_len,
+					       CK_ATTRIBUTE_PTR templ,
+					       CK_ULONG attribute_count,
+					       CK_BYTE_PTR associated_data,
+					       CK_ULONG associated_data_len,
+					       CK_OBJECT_HANDLE_PTR key_ptr)
+{
+	return CKR_SESSION_HANDLE_INVALID;
+}
+
 #define MOCK_MODULE_NO_SLOTS_FUNCTIONS \
 	mock_C_Initialize, \
 	mock_C_Finalize, \
@@ -5126,39 +5498,56 @@ mock_X_MessageVerifyFinal__invalid_handle (CK_X_FUNCTION_LIST *self,
 	mock_C_CancelFunction__not_parallel, \
 	mock_C_WaitForSlotEvent__no_event, \
 
+#define MOCK_MODULE_3_0_NO_SLOTS_FUNCTIONS \
+	mock_C_GetInterfaceList_not_supported, \
+	mock_C_GetInterface_not_supported, \
+	mock_C_LoginUser__invalid_handle, \
+	mock_C_SessionCancel__invalid_handle, \
+	mock_C_MessageEncryptInit__invalid_handle, \
+	mock_C_EncryptMessage__invalid_handle, \
+	mock_C_EncryptMessageBegin__invalid_handle, \
+	mock_C_EncryptMessageNext__invalid_handle, \
+	mock_C_MessageEncryptFinal__invalid_handle, \
+	mock_C_MessageDecryptInit__invalid_handle, \
+	mock_C_DecryptMessage__invalid_handle, \
+	mock_C_DecryptMessageBegin__invalid_handle, \
+	mock_C_DecryptMessageNext__invalid_handle, \
+	mock_C_MessageDecryptFinal__invalid_handle, \
+	mock_C_MessageSignInit__invalid_handle, \
+	mock_C_SignMessage__invalid_handle, \
+	mock_C_SignMessageBegin__invalid_handle, \
+	mock_C_SignMessageNext__invalid_handle, \
+	mock_C_MessageSignFinal__invalid_handle, \
+	mock_C_MessageVerifyInit__invalid_handle, \
+	mock_C_VerifyMessage__invalid_handle, \
+	mock_C_VerifyMessageBegin__invalid_handle, \
+	mock_C_VerifyMessageNext__invalid_handle, \
+	mock_C_MessageVerifyFinal__invalid_handle, \
+
+#define MOCK_MODULE_3_2_NO_SLOTS_FUNCTIONS \
+	mock_C_EncapsulateKey__invalid_handle, \
+	mock_C_DecapsulateKey__invalid_handle, \
+	mock_C_VerifySignatureInit__invalid_handle, \
+	mock_C_VerifySignature__invalid_handle, \
+	mock_C_VerifySignatureUpdate__invalid_handle, \
+	mock_C_VerifySignatureFinal__invalid_handle, \
+	mock_C_GetSessionValidationFlags__invalid_handle, \
+	mock_C_AsyncComplete__invalid_handle, \
+	mock_C_AsyncGetID__invalid_handle, \
+	mock_C_AsyncJoin__invalid_handle, \
+	mock_C_WrapKeyAuthenticated__invalid_handle, \
+	mock_C_UnwrapKeyAuthenticated__invalid_handle, \
+
 CK_FUNCTION_LIST mock_module_no_slots = {
 	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },  /* version */
 	MOCK_MODULE_NO_SLOTS_FUNCTIONS
 };
 
-CK_FUNCTION_LIST_3_0 mock_module_v3_no_slots = {
+CK_FUNCTION_LIST_3_2 mock_module_v3_no_slots = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
 	MOCK_MODULE_NO_SLOTS_FUNCTIONS
-	/* PKCS #11 3.0 */
-	mock_C_GetInterfaceList_not_supported,
-	mock_C_GetInterface_not_supported,
-	mock_C_LoginUser__invalid_handle,
-	mock_C_SessionCancel__invalid_handle,
-	mock_C_MessageEncryptInit__invalid_handle,
-	mock_C_EncryptMessage__invalid_handle,
-	mock_C_EncryptMessageBegin__invalid_handle,
-	mock_C_EncryptMessageNext__invalid_handle,
-	mock_C_MessageEncryptFinal__invalid_handle,
-	mock_C_MessageDecryptInit__invalid_handle,
-	mock_C_DecryptMessage__invalid_handle,
-	mock_C_DecryptMessageBegin__invalid_handle,
-	mock_C_DecryptMessageNext__invalid_handle,
-	mock_C_MessageDecryptFinal__invalid_handle,
-	mock_C_MessageSignInit__invalid_handle,
-	mock_C_SignMessage__invalid_handle,
-	mock_C_SignMessageBegin__invalid_handle,
-	mock_C_SignMessageNext__invalid_handle,
-	mock_C_MessageSignFinal__invalid_handle,
-	mock_C_MessageVerifyInit__invalid_handle,
-	mock_C_VerifyMessage__invalid_handle,
-	mock_C_VerifyMessageBegin__invalid_handle,
-	mock_C_VerifyMessageNext__invalid_handle,
-	mock_C_MessageVerifyFinal__invalid_handle
+	MOCK_MODULE_3_0_NO_SLOTS_FUNCTIONS
+	MOCK_MODULE_3_2_NO_SLOTS_FUNCTIONS
 };
 
 CK_X_FUNCTION_LIST mock_x_module_no_slots = {
@@ -5250,7 +5639,20 @@ CK_X_FUNCTION_LIST mock_x_module_no_slots = {
 	mock_X_VerifyMessage__invalid_handle,
 	mock_X_VerifyMessageBegin__invalid_handle,
 	mock_X_VerifyMessageNext__invalid_handle,
-	mock_X_MessageVerifyFinal__invalid_handle
+	mock_X_MessageVerifyFinal__invalid_handle,
+	/* PKCS #11 3.2 */
+	mock_X_EncapsulateKey__invalid_handle,
+	mock_X_DecapsulateKey__invalid_handle,
+	mock_X_VerifySignatureInit__invalid_handle,
+	mock_X_VerifySignature__invalid_handle,
+	mock_X_VerifySignatureUpdate__invalid_handle,
+	mock_X_VerifySignatureFinal__invalid_handle,
+	mock_X_GetSessionValidationFlags__invalid_handle,
+	mock_X_AsyncComplete__invalid_handle,
+	mock_X_AsyncGetID__invalid_handle,
+	mock_X_AsyncJoin__invalid_handle,
+	mock_X_WrapKeyAuthenticated__invalid_handle,
+	mock_X_UnwrapKeyAuthenticated__invalid_handle,
 };
 
 #define MOCK_MODULE_FUNCTIONS \
@@ -5323,44 +5725,60 @@ CK_X_FUNCTION_LIST mock_x_module_no_slots = {
 	mock_C_CancelFunction, \
 	mock_C_WaitForSlotEvent, \
 
+#define MOCK_MODULE_3_0_FUNCTIONS \
+	mock_C_GetInterfaceList_not_supported, \
+	mock_C_GetInterface_not_supported, \
+	mock_C_LoginUser, \
+	mock_C_SessionCancel, \
+	mock_C_MessageEncryptInit, \
+	mock_C_EncryptMessage, \
+	mock_C_EncryptMessageBegin, \
+	mock_C_EncryptMessageNext, \
+	mock_C_MessageEncryptFinal, \
+	mock_C_MessageDecryptInit, \
+	mock_C_DecryptMessage, \
+	mock_C_DecryptMessageBegin, \
+	mock_C_DecryptMessageNext, \
+	mock_C_MessageDecryptFinal, \
+	mock_C_MessageSignInit, \
+	mock_C_SignMessage, \
+	mock_C_SignMessageBegin, \
+	mock_C_SignMessageNext, \
+	mock_C_MessageSignFinal, \
+	mock_C_MessageVerifyInit, \
+	mock_C_VerifyMessage, \
+	mock_C_VerifyMessageBegin, \
+	mock_C_VerifyMessageNext, \
+	mock_C_MessageVerifyFinal, \
+
+#define MOCK_MODULE_3_2_FUNCTIONS \
+	mock_C_EncapsulateKey, \
+	mock_C_DecapsulateKey, \
+	mock_C_VerifySignatureInit, \
+	mock_C_VerifySignature, \
+	mock_C_VerifySignatureUpdate, \
+	mock_C_VerifySignatureFinal, \
+	mock_C_GetSessionValidationFlags, \
+	mock_C_AsyncComplete, \
+	mock_C_AsyncGetID, \
+	mock_C_AsyncJoin, \
+	mock_C_WrapKeyAuthenticated, \
+	mock_C_UnwrapKeyAuthenticated, \
 
 CK_FUNCTION_LIST mock_module = {
 	{ CRYPTOKI_LEGACY_VERSION_MAJOR, CRYPTOKI_LEGACY_VERSION_MINOR },  /* version */
 	MOCK_MODULE_FUNCTIONS
 };
 
-CK_FUNCTION_LIST_3_0 mock_module_v3 = {
+CK_FUNCTION_LIST_3_2 mock_module_v3 = {
 	{ CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },  /* version */
 	MOCK_MODULE_FUNCTIONS
-	/* PKCS #11 3.0 */
-	mock_C_GetInterfaceList_not_supported,
-	mock_C_GetInterface_not_supported,
-	mock_C_LoginUser,
-	mock_C_SessionCancel,
-	mock_C_MessageEncryptInit,
-	mock_C_EncryptMessage,
-	mock_C_EncryptMessageBegin,
-	mock_C_EncryptMessageNext,
-	mock_C_MessageEncryptFinal,
-	mock_C_MessageDecryptInit,
-	mock_C_DecryptMessage,
-	mock_C_DecryptMessageBegin,
-	mock_C_DecryptMessageNext,
-	mock_C_MessageDecryptFinal,
-	mock_C_MessageSignInit,
-	mock_C_SignMessage,
-	mock_C_SignMessageBegin,
-	mock_C_SignMessageNext,
-	mock_C_MessageSignFinal,
-	mock_C_MessageVerifyInit,
-	mock_C_VerifyMessage,
-	mock_C_VerifyMessageBegin,
-	mock_C_VerifyMessageNext,
-	mock_C_MessageVerifyFinal
+	MOCK_MODULE_3_0_FUNCTIONS
+	MOCK_MODULE_3_2_FUNCTIONS
 };
 
 CK_INTERFACE mock_interfaces[MOCK_INTERFACES] = {
-        {"PKCS 11", &mock_module_v3, 0}, /* 3.0 */
+        {"PKCS 11", &mock_module_v3, 0}, /* 3.2 */
 };
 
 

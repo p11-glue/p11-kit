@@ -35,7 +35,7 @@ def emit_wrapper_function(function, templates, concat_lines=False):
     ])
 
     call_lower_template = templates["call_lower"]
-    if function["version"] >= 3:
+    if function["version"][0] >= 3:
         call_lower_template = templates.get("call_lower_v3",
                                             call_lower_template)
 
@@ -57,7 +57,7 @@ def emit_wrapper_function(function, templates, concat_lines=False):
     assert not (has_slot_id and has_session_handle)
 
     function_body_template = templates.get("function_body")
-    if function_body_template and function["version"] >= 3:
+    if function_body_template and function["version"][0] >= 3:
         function_body_template = templates.get("function_body_v3",
                                                function_body_template)
 

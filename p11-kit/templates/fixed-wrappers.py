@@ -8,7 +8,7 @@
 static CK_RV \\
 {function_name} ({arglist}) \\
 {{ \\
-{indent}CK_FUNCTION_LIST_3_0 *bound; \\
+{indent}CK_FUNCTION_LIST_3_2 *bound; \\
 {indent}Wrapper *wrapper; \\
 {indent}CK_X_FUNCTION_LIST *funcs; \\
 {indent}bound = fixed_closures[fixed_index]; \\

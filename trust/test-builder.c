@@ -1686,8 +1686,8 @@ test_changed_trusted_certificate (void)
 	static CK_ATTRIBUTE nss_trust_server_and_client_distrust_email[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
 		{ CKA_ID, "cacert3", 7 },
-		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
-		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
+		{ CKA_NSS_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_NSS_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
 		{ CKA_LABEL, "Custom Label", 12 },
 		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
@@ -1696,17 +1696,17 @@ test_changed_trusted_certificate (void)
 		{ CKA_TRUST_CLIENT_AUTH, &trusted_delegator, sizeof (trusted_delegator) },
 		{ CKA_TRUST_EMAIL_PROTECTION, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_CODE_SIGNING, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_IPSEC_END_SYSTEM, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_IPSEC_TUNNEL, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_IPSEC_USER, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_IPSEC_END_SYSTEM, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_IPSEC_TUNNEL, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_IPSEC_USER, &trust_unknown, sizeof (trust_unknown) },
 		{ CKA_TRUST_TIME_STAMPING, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_DIGITAL_SIGNATURE, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_NON_REPUDIATION, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_KEY_ENCIPHERMENT, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_DATA_ENCIPHERMENT, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_KEY_AGREEMENT, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_KEY_CERT_SIGN, &trusted_delegator, sizeof (trusted_delegator) },
-		{ CKA_TRUST_CRL_SIGN, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_DIGITAL_SIGNATURE, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_NON_REPUDIATION, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_KEY_ENCIPHERMENT, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_DATA_ENCIPHERMENT, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_KEY_AGREEMENT, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_KEY_CERT_SIGN, &trusted_delegator, sizeof (trusted_delegator) },
+		{ CKA_NSS_TRUST_CRL_SIGN, &trusted_delegator, sizeof (trusted_delegator) },
 		{ CKA_INVALID, }
 	};
 
@@ -1812,8 +1812,8 @@ test_changed_distrust_value (void)
 	CK_ATTRIBUTE nss_trust_nothing[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
 		{ CKA_ID, "cacert3", 7 },
-		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
-		{ CKA_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
+		{ CKA_NSS_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_NSS_CERT_MD5_HASH, "\xf7\x25\x12\x82\x4e\x67\xb5\xd0\x8d\x92\xb7\x7c\x0b\x86\x7a\x42", 16 },
 		{ CKA_SUBJECT, (void *)test_cacert3_ca_subject, sizeof (test_cacert3_ca_subject) },
 		{ CKA_ISSUER, (void *)test_cacert3_ca_issuer, sizeof (test_cacert3_ca_issuer) },
 		{ CKA_SERIAL_NUMBER, (void *)test_cacert3_ca_serial, sizeof (test_cacert3_ca_serial) },
@@ -1821,17 +1821,17 @@ test_changed_distrust_value (void)
 		{ CKA_TRUST_CLIENT_AUTH, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_EMAIL_PROTECTION, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_CODE_SIGNING, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_END_SYSTEM, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_TUNNEL, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_USER, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_END_SYSTEM, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_TUNNEL, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_USER, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_TIME_STAMPING, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_DIGITAL_SIGNATURE, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_NON_REPUDIATION, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_DATA_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_AGREEMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_CERT_SIGN, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_CRL_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_DIGITAL_SIGNATURE, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_NON_REPUDIATION, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_DATA_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_AGREEMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_CERT_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_CRL_SIGN, &not_trusted, sizeof (not_trusted) },
 		{ CKA_INVALID, }
 	};
 
@@ -1907,17 +1907,17 @@ test_changed_distrust_serial (void)
 		{ CKA_TRUST_CLIENT_AUTH, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_EMAIL_PROTECTION, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_CODE_SIGNING, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_END_SYSTEM, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_TUNNEL, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_IPSEC_USER, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_END_SYSTEM, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_TUNNEL, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_IPSEC_USER, &not_trusted, sizeof (not_trusted) },
 		{ CKA_TRUST_TIME_STAMPING, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_DIGITAL_SIGNATURE, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_NON_REPUDIATION, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_DATA_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_AGREEMENT, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_KEY_CERT_SIGN, &not_trusted, sizeof (not_trusted) },
-		{ CKA_TRUST_CRL_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_DIGITAL_SIGNATURE, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_NON_REPUDIATION, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_DATA_ENCIPHERMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_AGREEMENT, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_KEY_CERT_SIGN, &not_trusted, sizeof (not_trusted) },
+		{ CKA_NSS_TRUST_CRL_SIGN, &not_trusted, sizeof (not_trusted) },
 		{ CKA_INVALID, }
 	};
 
@@ -1987,7 +1987,7 @@ test_changed_dup_certificates (void)
 
 	static CK_ATTRIBUTE trusted_nss[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
-		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_NSS_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_TRUST_SERVER_AUTH, &trusted_delegator, sizeof (trusted_delegator) },
 		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID, }
@@ -1995,7 +1995,7 @@ test_changed_dup_certificates (void)
 
 	static CK_ATTRIBUTE distrust_nss[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
-		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_NSS_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_TRUST_SERVER_AUTH, &not_trusted, sizeof (not_trusted) },
 		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID, }
@@ -2003,7 +2003,7 @@ test_changed_dup_certificates (void)
 
 	static CK_ATTRIBUTE unknown_nss[] = {
 		{ CKA_CLASS, &nss_trust, sizeof (nss_trust), },
-		{ CKA_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
+		{ CKA_NSS_CERT_SHA1_HASH, "\xad\x7c\x3f\x64\xfc\x44\x39\xfe\xf4\xe9\x0b\xe8\xf4\x7c\x6c\xfa\x8a\xad\xfd\xce", 20 },
 		{ CKA_TRUST_SERVER_AUTH, &trust_unknown, sizeof (trust_unknown) },
 		{ CKA_ID, "cacert3", 7 },
 		{ CKA_INVALID, }
@@ -2220,17 +2220,17 @@ test_changed_staple_ku (void)
 		{ CKA_TRUST_CLIENT_AUTH, &trusted, sizeof (trusted) },
 		{ CKA_TRUST_EMAIL_PROTECTION, &trusted, sizeof (trusted) },
 		{ CKA_TRUST_CODE_SIGNING, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_IPSEC_END_SYSTEM, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_IPSEC_TUNNEL, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_IPSEC_USER, &trusted, sizeof (trusted) },
+		{ CKA_NSS_TRUST_IPSEC_END_SYSTEM, &trusted, sizeof (trusted) },
+		{ CKA_NSS_TRUST_IPSEC_TUNNEL, &trusted, sizeof (trusted) },
+		{ CKA_NSS_TRUST_IPSEC_USER, &trusted, sizeof (trusted) },
 		{ CKA_TRUST_TIME_STAMPING, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_DIGITAL_SIGNATURE, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_NON_REPUDIATION, &trusted, sizeof (trusted) },
-		{ CKA_TRUST_KEY_ENCIPHERMENT, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_DATA_ENCIPHERMENT, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_KEY_AGREEMENT, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_KEY_CERT_SIGN, &trust_unknown, sizeof (trust_unknown) },
-		{ CKA_TRUST_CRL_SIGN, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_DIGITAL_SIGNATURE, &trusted, sizeof (trusted) },
+		{ CKA_NSS_TRUST_NON_REPUDIATION, &trusted, sizeof (trusted) },
+		{ CKA_NSS_TRUST_KEY_ENCIPHERMENT, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_DATA_ENCIPHERMENT, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_KEY_AGREEMENT, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_KEY_CERT_SIGN, &trust_unknown, sizeof (trust_unknown) },
+		{ CKA_NSS_TRUST_CRL_SIGN, &trust_unknown, sizeof (trust_unknown) },
 		{ CKA_INVALID, }
 	};
 
