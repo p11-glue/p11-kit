@@ -450,6 +450,11 @@ bool             p11_rpc_buffer_get_attribute            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_ATTRIBUTE *attr);
 
+bool             p11_rpc_buffer_get_attr_val_length      (p11_buffer *buf,
+                                                          size_t *offset,
+                                                          CK_ATTRIBUTE_TYPE attr_type,
+                                                          uint32_t *length);
+
 void             p11_rpc_buffer_add_byte_value           (p11_buffer *buffer,
 							  const void *value,
 							  CK_ULONG value_length);

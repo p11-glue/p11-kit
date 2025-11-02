@@ -277,7 +277,7 @@ proto_read_attribute_buffer_array (p11_rpc_message *msg,
 		attrs[i].type = type;
 
 		/* The number of bytes to allocate */
-		if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &length))
+		if (!p11_rpc_buffer_get_attr_val_length (msg->input, &msg->parsed, type, &length))
 			return PARSE_ERROR;
 
 		if (length == 0) {
