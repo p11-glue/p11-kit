@@ -329,10 +329,17 @@ p11_x509_lookup_dn_name (asn1_node asn,
 	int end;
 	int ret;
 
-	for (i = 1; true; i++) {
+	snprintf (field, sizeof (field), "%s%srdnSequence",
+	          dn_field ? dn_field : "", dn_field ? "." : "");
+	ret = asn1_number_of_elements(asn, field, &i);
+	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+
+	/* Based on RFC4514 section 2.1,
+	 * RDNSequence should be iterated from the last element */
+	for (; i > 0; i--) {
 		for (j = 1; true; j++) {
 			snprintf (field, sizeof (field), "%s%srdnSequence.?%d.?%d.type",
-			          dn_field, dn_field ? "." : "", i, j);
+			          dn_field ? dn_field : "", dn_field ? "." : "", i, j);
 
 			ret = asn1_der_decoding_startEnd (asn, der, der_len, field, &start, &end);
 
@@ -351,7 +358,7 @@ p11_x509_lookup_dn_name (asn1_node asn,
 				continue;
 
 			snprintf (field, sizeof (field), "%s%srdnSequence.?%d.?%d.value",
-			          dn_field, dn_field ? "." : "", i, j);
+			          dn_field ? dn_field : "", dn_field ? "." : "", i, j);
 
 			value = p11_asn1_read (asn, field, &value_len);
 			return_val_if_fail (value != NULL, NULL);
