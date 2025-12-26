@@ -14,6 +14,9 @@ if test $(id -u) -eq 0; then
 	    chown -R "$RUNUSER" "$GITHUB_WORKSPACE/$BUILDDIR"
 	    # This is necessary to put p11-kit.pot in $(srcdir)
 	    chown -R "$RUNUSER" "$GITHUB_WORKSPACE/po"
+	    # Tell git that the repository permissions are intentional
+	    git config --global --add safe.directory "$GITHUB_WORKSPACE"
+            runuser -u "$RUNUSER" -- git config --global --add safe.directory "$GITHUB_WORKSPACE"
 	    ;;
 	*)
 	    echo "Unsupported OS: $RUNNER_OS" 1>&2
