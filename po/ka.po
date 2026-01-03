@@ -1,30 +1,30 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Collabora Ltd.
+# Georgian translation for p11-kit
+# Copyright (C) 2026 Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
-#
-# Translators:
 # George Machitidze <giomac@gmail.com>, 2012
+# Ekaterine Papava <papava.e@gtu.ge>, 2026.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: p11-kit\n"
+"Project-Id-Version: p11-kit 0.25.10\n"
 "Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
-"POT-Creation-Date: 2022-10-19 03:26+0000\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: George Machitidze <giomac@gmail.com>, 2012\n"
-"Language-Team: Georgian (http://www.transifex.com/freedesktop/p11-kit/"
-"language/ka/)\n"
+"POT-Creation-Date: 2025-12-01 16:22+0100\n"
+"PO-Revision-Date: 2026-01-03 18:20+0100\n"
+"Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
+"Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
 
-#: common/tool.c:184
+#: common/options.c:184
 #, c-format
 msgid "usage: %s command <args>...\n"
 msgstr "გამოყენება: %s ბრძანება <args>...\n"
 
-#: common/tool.c:185
+#: common/options.c:185
 #, c-format
 msgid ""
 "\n"
@@ -33,7 +33,7 @@ msgstr ""
 "\n"
 "გავრცელებული %s ბრძანებები:\n"
 
-#: common/tool.c:198
+#: common/options.c:198
 #, c-format
 msgid ""
 "\n"
@@ -42,25 +42,124 @@ msgstr ""
 "\n"
 "მეტი ინფორმაციისთვის იხილეთ '%s <command> --help'\n"
 
-#: common/tool.c:261 common/tool.c:333
+#: common/options.c:261 common/options.c:333
 msgid "no command specified"
 msgstr "ბრძანება მითითებული არაა"
 
-#: common/tool.c:277
+#: common/options.c:277
 #, c-format
 msgid "unknown global option: %s"
 msgstr "უცნობი გლობალური პარამეტრი: %s"
 
-#: common/tool.c:306
+#: common/options.c:306
 #, c-format
 msgid "unknown global option: -%c"
 msgstr "უცნობი გლობალური პარამეტრი: -%c"
 
-#. At this point we have no command
-#: common/tool.c:358
+#: common/options.c:358
 #, c-format
 msgid "'%s' is not a valid command. See '%s --help'"
-msgstr ""
+msgstr "'%s' არასწორი ბრძანებაა. იხილეთ '%s --help'"
+
+#: common/persist.c:506
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "არასწორი oid-ის მნიშვნელობა: %s"
+
+#: p11-kit/add-profile.c:85 p11-kit/delete-object.c:69
+#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:442
+#: p11-kit/generate-keypair.c:310 p11-kit/import-object.c:490
+#: p11-kit/list-objects.c:361 p11-kit/list-profiles.c:83
+msgid "failed to initialize iterator"
+msgstr "იტერატორის ინიციალიზაციის შეცდომა"
+
+#: p11-kit/add-profile.c:92 p11-kit/delete-profile.c:92
+#: p11-kit/generate-keypair.c:317 p11-kit/import-object.c:497
+#: p11-kit/list-profiles.c:90 p11-kit/list-mechanisms.c:152
+msgid "no matching token"
+msgstr "შესაბამისი ტოკენის გარეშე"
+
+#: p11-kit/add-profile.c:94 p11-kit/delete-profile.c:94
+#: p11-kit/generate-keypair.c:319 p11-kit/import-object.c:499
+#: p11-kit/list-profiles.c:92 p11-kit/list-mechanisms.c:154
+#, c-format
+msgid "failed to find token: %s"
+msgstr "ტოკენის პოვნა შეუძლებელია: %s"
+
+#: p11-kit/add-profile.c:106 p11-kit/delete-profile.c:106
+#: p11-kit/list-profiles.c:104
+#, c-format
+msgid "failed to initialize search for objects: %s"
+msgstr "ობიექტების ძებნის ინიციალიზაცია ჩავარდა: %s"
+
+#: p11-kit/add-profile.c:113 p11-kit/delete-profile.c:114
+#: p11-kit/list-profiles.c:112
+#, c-format
+msgid "failed to search for objects: %s"
+msgstr "ობიექტების ძებნა ჩავარდა: %s"
+
+#: p11-kit/add-profile.c:119 p11-kit/delete-profile.c:130
+#: p11-kit/list-profiles.c:135
+#, c-format
+msgid "failed to finalize search for objects: %s"
+msgstr "ობიექტების ძებნის დასრულება ჩავარდა: %s"
+
+#: p11-kit/add-profile.c:124
+msgid "profile already exists"
+msgstr "პროფილი უკვე არსებობს"
+
+#: p11-kit/add-profile.c:130
+#, c-format
+msgid "failed to create profile object: %s"
+msgstr "პროფილის ობიექტის შექმნა ცავარდა: %s"
+
+#: p11-kit/add-profile.c:182 p11-kit/add-profile.c:241
+#: p11-kit/add-profile.c:251 p11-kit/delete-object.c:164
+#: p11-kit/delete-object.c:174 p11-kit/delete-profile.c:182
+#: p11-kit/delete-profile.c:241 p11-kit/delete-profile.c:251
+#: p11-kit/export-object.c:557 p11-kit/export-object.c:567
+#: p11-kit/generate-keypair.c:185 p11-kit/generate-keypair.c:190
+#: p11-kit/generate-keypair.c:199 p11-kit/generate-keypair.c:205
+#: p11-kit/generate-keypair.c:228 p11-kit/generate-keypair.c:235
+#: p11-kit/generate-keypair.c:249 p11-kit/generate-keypair.c:255
+#: p11-kit/generate-keypair.c:264 p11-kit/generate-keypair.c:468
+#: p11-kit/generate-keypair.c:478 p11-kit/import-object.c:124
+#: p11-kit/import-object.c:133 p11-kit/import-object.c:156
+#: p11-kit/import-object.c:196 p11-kit/import-object.c:205
+#: p11-kit/import-object.c:230 p11-kit/import-object.c:303
+#: p11-kit/import-object.c:371 p11-kit/import-object.c:379
+#: p11-kit/import-object.c:634 p11-kit/import-object.c:644
+#: p11-kit/list-objects.c:187 p11-kit/list-objects.c:274
+#: p11-kit/list-objects.c:288 p11-kit/list-objects.c:295
+#: p11-kit/list-objects.c:330 p11-kit/list-objects.c:441
+#: p11-kit/list-objects.c:451 p11-kit/list-profiles.c:215
+#: p11-kit/list-profiles.c:225 p11-kit/list-mechanisms.c:180
+#: p11-kit/list-mechanisms.c:273 p11-kit/list-mechanisms.c:283
+#: p11-kit/list-tokens.c:180 p11-kit/list-tokens.c:190 p11-kit/lists.c:97
+#: p11-kit/lists.c:185 p11-kit/lists.c:239
+msgid "failed to allocate memory"
+msgstr "მეხსიერების გამოყოფის შეცდომა"
+
+#: p11-kit/add-profile.c:200 p11-kit/delete-profile.c:200
+msgid "multiple profiles specified"
+msgstr "არჩეულია ერთზე მეტი პროფილი"
+
+#: p11-kit/add-profile.c:208 p11-kit/delete-profile.c:208
+#, c-format
+msgid "failed to convert profile argument: %s"
+msgstr "პროფილის არგუმენტის გადაყვანა ჩავარდა: %s"
+
+#: p11-kit/add-profile.c:235 p11-kit/delete-profile.c:235
+msgid "no profile specified"
+msgstr "პროფილი მითითებული არაა"
+
+#: p11-kit/add-profile.c:246 p11-kit/delete-object.c:169
+#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:562
+#: p11-kit/generate-keypair.c:473 p11-kit/import-object.c:639
+#: p11-kit/list-objects.c:446 p11-kit/list-profiles.c:220
+#: p11-kit/list-mechanisms.c:278 p11-kit/list-tokens.c:185
+msgid "failed to parse URI"
+msgstr "URI-ის დამუშავება ჩავარდა"
 
 #: p11-kit/conf.c:161
 #, c-format
@@ -82,31 +181,266 @@ msgstr "'user-config'-ის არასწორი რეჟიმი: %s"
 msgid "invalid config filename, will be ignored in the future: %s"
 msgstr "კონფიგურაციის არასწორი ფაილი. მომავალში იგნორირებული იქნება: %s"
 
-#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#: p11-kit/conf.c:427 trust/save.c:586 trust/token.c:282
 #, c-format
 msgid "couldn't list directory: %s"
 msgstr "საქაღალდის სიის მიღების შეცდომა: %s"
 
-#: p11-kit/conf.c:439
+#: p11-kit/conf.c:438
 #, c-format
 msgid "couldn't stat path: %s"
 msgstr "ბილიკის აღმოჩენის შეცდომა: %s"
 
-#: p11-kit/conf.c:528
+#: p11-kit/conf.c:526
 #, c-format
 msgid "invalid setting '%s' defaulting to '%s'"
 msgstr "არასწორი პარამეტრი %s. ნაგულისხმებად გამოიყენება %s"
+
+#: p11-kit/delete-object.c:76 p11-kit/export-object.c:449
+msgid "no matching object"
+msgstr "შესაბამისი ობიექტის გარეშე"
+
+#: p11-kit/delete-object.c:78 p11-kit/export-object.c:451
+#, c-format
+msgid "failed to find object: %s"
+msgstr "ობიექტის პოვნის შეცდომა: %s"
+
+#: p11-kit/delete-object.c:84 p11-kit/delete-profile.c:122
+#, c-format
+msgid "failed to destroy an object: %s"
+msgstr "ობიექტის განადგურების შეცდომა: %s"
+
+#: p11-kit/export-object.c:116 p11-kit/export-object.c:176
+#: p11-kit/export-object.c:242 p11-kit/export-object.c:250
+#: p11-kit/export-object.c:344 p11-kit/export-object.c:399
+msgid "failed to retrieve attributes"
+msgstr "ატრიბუტების მიღების შეცდომა"
+
+#: p11-kit/export-object.c:276
+msgid "corrupted value in attributes"
+msgstr "დაზიანებული მნიშვნელობა ატრიბუტებში"
+
+#: p11-kit/export-object.c:317
+#, c-format
+msgid "unsupported key type: %lu"
+msgstr "მხარდაუჭერელი გასაღების ტიპი: %lu"
+
+#: p11-kit/export-object.c:358
+msgid "unable to determine key type"
+msgstr "გასაღების ტიპის დადგენა შეუძლებელია"
+
+#: p11-kit/export-object.c:364 p11-kit/import-object.c:664
+msgid "ASN.1 support is not compiled in"
+msgstr "ASN.1-ის მხარდაჭერა აგების დროს ჩართული არ იყო"
+
+#: p11-kit/export-object.c:371
+msgid "failed to export public key"
+msgstr "საჯარო გასაღების გატანის შეცდომა"
+
+#: p11-kit/export-object.c:405
+msgid "unrecognized certificate type"
+msgstr "უცნობი სერტიფიკატის ტიპი"
+
+#: p11-kit/export-object.c:411
+msgid "no valid certificate value"
+msgstr "არასწორი სერტიფიკატის მნიშვნელობა"
+
+#: p11-kit/export-object.c:416
+msgid "failed to convert DER to PEM"
+msgstr "DER-ის PEM-ში გადაყვანა ჩავარდა"
+
+#: p11-kit/export-object.c:457
+msgid "failed to retrieve attribute of an object"
+msgstr "ობიექტის ატრიბუტის მიღება ჩავარდა"
+
+#: p11-kit/export-object.c:471
+msgid "unsupported object class"
+msgstr "მხარდაუჭერელი ობიექტის კლასი"
+
+#: p11-kit/export-object.c:476
+msgid "failed to write PEM data to stdout"
+msgstr "PEM მონაცემების stdout-ზე ჩაწერა ჩავარდა"
 
 #: p11-kit/filter.c:183
 msgid "filter cannot be initialized"
 msgstr "ფილტრის ინიციალიზაციის შეცდომა"
 
-#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#: p11-kit/generate-keypair.c:134
+msgid "no bits specified"
+msgstr "ბიტები მითითებული არაა"
+
+#: p11-kit/generate-keypair.c:141
+msgid "no curve specified"
+msgstr "მრუდი მითითებული არაა"
+
+#: p11-kit/generate-keypair.c:146
+msgid "no type specified"
+msgstr "ტიპი მითითებული არაა"
+
+#: p11-kit/generate-keypair.c:149 p11-kit/generate-keypair.c:270
+#, c-format
+msgid "unkwnown mechanism type in %s"
+msgstr "უცნობი მექანიზმის ტიპი %s-ში"
+
+#: p11-kit/generate-keypair.c:154
+#, c-format
+msgid "both %s and %s cannot be specified at once"
+msgstr "ორივეს, %s და %s ერთდროულად ვერ მიუთითებთ"
+
+#: p11-kit/generate-keypair.c:218 p11-kit/import-object.c:146
+#: p11-kit/import-object.c:219
+#, c-format
+msgid "failed to decode hex value: %s"
+msgstr "თექვსმ. მნიშვნელობის დეკოდირება შეუძლებელია: %s"
+
+#: p11-kit/generate-keypair.c:304
+msgid "failed to create key templates"
+msgstr "გასაღების ნიმუშების შექმნა ჩავარდა"
+
+#: p11-kit/generate-keypair.c:334
+#, c-format
+msgid "key-pair generation failed: %s"
+msgstr "გასაღებების წყვილის გენერაცია ჩავარდა: %s"
+
+#: p11-kit/generate-keypair.c:414
+#, c-format
+msgid "unknown mechanism type: %s"
+msgstr "უცნობი მექანიზმის ტიპი: %s"
+
+#: p11-kit/generate-keypair.c:421
+#, c-format
+msgid "failed to parse bits value: %s"
+msgstr "ბიტების მნიშვნელობის დამუშავება ჩავარდა: %s"
+
+#: p11-kit/generate-keypair.c:428
+#, c-format
+msgid "unknown curve name: %s"
+msgstr "უცნობი მრუდის სახელი: %s"
+
+#: p11-kit/import-object.c:109 p11-kit/import-object.c:265
+#: p11-kit/import-object.c:271 p11-kit/import-object.c:409
+msgid "failed to parse ASN.1 structure"
+msgstr "ASN.1 სტრუქტურის დამუშავება ჩავარდა"
+
+#: p11-kit/import-object.c:115
+msgid "failed to obtain certificate subject name"
+msgstr "სერტიფიკატის თემის სახელის მიღება ჩავარდა"
+
+#: p11-kit/import-object.c:164 p11-kit/import-object.c:437
+#, c-format
+msgid "failed to create object: %s"
+msgstr "ობიექტის შექმნის შეცდომა: %s"
+
+#: p11-kit/import-object.c:259
+msgid "failed to obtain subject public key data"
+msgstr "სუბიექტის საჯარო გასაღების მონაცემების მიღების შეცდომა"
+
+#: p11-kit/import-object.c:277 p11-kit/import-object.c:282
+msgid "failed to obtain modulus"
+msgstr "მოდულის მიღების შეცდომა"
+
+#: p11-kit/import-object.c:290 p11-kit/import-object.c:295
+msgid "failed to obtain exponent"
+msgstr "ექსპონენტის მიღების სეცდომა"
+
+#: p11-kit/import-object.c:333 p11-kit/import-object.c:338
+msgid "failed to obtain EC parameters"
+msgstr "EC-ის პარამეტრების მიღების შეცდომა"
+
+#: p11-kit/import-object.c:349
+msgid "failed to obtain EC point"
+msgstr "EC-ის წერტილის მიღების შეცდომა"
+
+#: p11-kit/import-object.c:357
+msgid "corrupted EC point value"
+msgstr "დაზიანებული EC-ის წერტილის მნისვნელობა"
+
+#: p11-kit/import-object.c:364
+msgid "failed to DER encode EC point"
+msgstr "EC-ის წერტილის DER-ით დაშიფვრის შეცდომა"
+
+#: p11-kit/import-object.c:415
+msgid "failed to obtain algorithm OID"
+msgstr "ალგორითმის OID-ის მიღების შეცდომა"
+
+#: p11-kit/import-object.c:428
+#, c-format
+msgid "unrecognized algorithm OID: %s"
+msgstr "უცნობი ალგორითმის OID: %s"
+
+#: p11-kit/import-object.c:468
+#, c-format
+msgid "unrecognized PEM label: %s"
+msgstr "უცნობი PEM-ის ჭდე: %s"
+
+#: p11-kit/import-object.c:510
+msgid "failed to load ASN.1 definitions"
+msgstr "ASN.1-ის აღწერების ჩატვირთვა ჩავარდა"
+
+#: p11-kit/import-object.c:516
+#, c-format
+msgid "failed to read file: %s"
+msgstr "ფაილის წაკითხვის შეცდომა: %s"
+
+#: p11-kit/import-object.c:522
+msgid "no object to import"
+msgstr "შემოსატანი ობიექტის გარეშე"
+
+#: p11-kit/import-object.c:628
+msgid "no file specified"
+msgstr "ფაილი მითითებული არაა"
+
+#: p11-kit/iter.c:557
+#, c-format
+msgid "PIN for %.*s"
+msgstr "PIN-კოდი %.*s-ისთვის"
+
+#: p11-kit/list-objects.c:193 p11-kit/list-objects.c:200
+#: p11-kit/list-objects.c:208
+#, c-format
+msgid "failed to set attribute for URI: %s"
+msgstr "URI-ისთვის ატრიბუტის დაყენაბის შეცდომა: %s"
+
+#: p11-kit/list-objects.c:217 p11-kit/lists.c:105 p11-kit/lists.c:193
+#, c-format
+msgid "couldn't format URI into string: %s"
+msgstr "URI-ის სტრიქონში გადაფორმატება შეუძლებელია: %s"
+
+#: p11-kit/list-profiles.c:120
+#, c-format
+msgid "failed to retrieve attribute of an object: %s"
+msgstr "ატრიბუტის მიღების შეცდომა ობიექტისთვის: %s"
+
+#: p11-kit/list-mechanisms.c:160
+msgid "failed to obtain module"
+msgstr "მოდულის მიღების შეცდომა"
+
+#: p11-kit/list-mechanisms.c:168 p11-kit/lists.c:256
+#, c-format
+msgid "couldn't load token info: %s"
+msgstr "ტოკენის ინფორმაციის ჩატვირთვა შეუძლებელია: %s"
+
+#: p11-kit/list-mechanisms.c:174
+#, c-format
+msgid "querying amount of mechanisms failed: %s"
+msgstr "მექანიზმების რაოდენობის გამოთხოვა ჩავარდა: %s"
+
+#: p11-kit/list-mechanisms.c:187
+#, c-format
+msgid "querying mechanisms failed: %s"
+msgstr "მექანიზმების გამოთხოვა ჩავარდა: %s"
+
+#: p11-kit/list-mechanisms.c:194
+#, c-format
+msgid "querying mechanism info failed: %s"
+msgstr "მექანიზმის ინფორმაციის გამოთხოვა ჩავარდა: %s"
+
+#: p11-kit/lists.c:233 p11-kit/lists.c:245 p11-kit/lists.c:296
 #, c-format
 msgid "couldn't load module info: %s"
 msgstr "მოდულის ინფორმაციის ჩატვირთვის შეცდომა: %s"
 
-#: p11-kit/lists.c:296
+#: p11-kit/lists.c:374 p11-kit/print-config.c:134
 msgid "extra arguments specified"
 msgstr "მითითებულია დამატებითი არგუმენტები"
 
@@ -132,7 +466,7 @@ msgstr "ოპერაცია ვერ განხორციელდა"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr "არგუმენტები არასწორია"
+msgstr "არასწორი არგუმენტები"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
@@ -216,15 +550,15 @@ msgstr "საჭიროა გასაღები"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "დაიჯესტში გასაღების ჩასმა შეუძლებელია"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "ამ ოპერაციის შესრულება შეუძლებელია ამ გასაღებით"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "გასაღების გადატანა შეუძლებელია"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
@@ -232,11 +566,11 @@ msgstr "ამ გასაღების დაექსპორტება 
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "კრიპტოგრაფიის მექანიზმი არასწორი ან უცნობია"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "კრიპტოგრაფიის მექანიზმში არგუმენტი არასწორია"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
@@ -244,11 +578,11 @@ msgstr "ობიექტი არ არის ან არასწორ�
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "უკვე მიმდინარეობს სხვა ოპერაცია"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "მიმდინარე ოპერაციის გარეშე"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
@@ -292,135 +626,135 @@ msgstr "ღია სესია არსებობს"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "არსებობს, მხოლო-წაკითხვადი სესია"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "არსებობს ადმინისტრატორის სესია"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "ხელმოწერა არასწორი, ან დაზიანებულია"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "ხელმოწერა უცნობია, ან დაზიანებულია"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "ზოგიერთი ველი შევსებული არაა"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "ზოგიერთ ველს არასწორი მნიშვნელობები გააჩნია"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "მოწყობილობა მიერთებული არაა"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "მოწყობილობა არასწორია, ან მისი ამოცნობა შეუძლებელია"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "ეს მოწყობილობა დაცულია ჩაწერისგან"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "შემოტანა შეუძლებელია, რადგან გასაღები არასწორია"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "შემოტანა არასწორია, რადგან გასაღების ზომა არასწორია"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "შემოტანა არასწორია, რადგან გასაღების ტიპი არასწორია"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "უკვე შეხვედით"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "შემოსული მომხმარებლების გარეშე"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "მომხმარებლის პაროლი ან PIN-კოდი დაზიანებული არაა"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "მომხმარებლის ტიპი არასწორია"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "სხვა მომხმარებელი უკვე შემოსულია"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "შემოსულია სხვა ტიპის მეტისმეტად ბევრი მომხმარებელი"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "არასწორი გასაღების შემოტანა შეუძლებელია"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "არასწორი ზომის გასაღების შემოტანა შეუძლებელია"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "გატანა შეუძლებელია, რადგან გასაღები არასწორია"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "გატანა შეუძლებელია, რადგან გასაღების ზომა არასწორია"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "გატანა შეუძლებელია, რადგან გასაღების ტიპი არასწორია"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "შემთხვევითი რიცხვების გენერატორის ინიციალიზაცია ჩავარდა"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "შემთხვევითი რიცხვების გენერატორი ხელმისაწვდომი არაა"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "კრიპტოგრაფიის მექანიზმის პარამეტრი არასწორია"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "არასაკმარისი ადგილი შედეგის შესანახად"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "შენახული მდგომარეობა არასწორია"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "ველი მგრძნობიარეა და მისი გამოტანა არ არის დაშვებული"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "მდგომარეობის შენახვა შეუძლებელია"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "მოდული ინიციალიზებული არაა"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "მოდულის ინიციალიზაცია უკვე მოხდა"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "მონაცემების დაბლოკვის შეცდომა"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
@@ -428,255 +762,302 @@ msgstr "მონაცემების დაბლოკვა შეუძ�
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "მოთხოვნა უარყოფითი იყო მომხმარებლის მიერ"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
 msgstr "უცნობი შეცდომა"
 
-#: p11-kit/modules.c:373
+#: p11-kit/modules.c:399
 #, c-format
 msgid "couldn't load module: %s: %s"
-msgstr ""
+msgstr "ჩატვირთვის შეცდომა მოდულისთვის: %s: %s"
 
-#: p11-kit/modules.c:385
+#: p11-kit/modules.c:435
+#, c-format
+msgid "call to C_GetInterface failed in module: %s: %s"
+msgstr "C_GetInterface-ის გამოძახება ჩავარდა მოდულში: %s: %s"
+
+#: p11-kit/modules.c:447
 #, c-format
 msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
 msgstr ""
+"ვერ ვიპოვე C_GetFunctionList ფუნქციის შესასვლელი წერტილი მოდულში: %s: %s"
 
-#: p11-kit/modules.c:393
+#: p11-kit/modules.c:454
 #, c-format
 msgid "call to C_GetFunctiontList failed in module: %s: %s"
-msgstr ""
+msgstr "C_GetFunctiontList-ის გამოძახება ჩავარდა მოდულში: %s: %s"
 
-#: p11-kit/modules.c:399
+#: p11-kit/modules.c:461
 msgid "refusing to load the p11-kit-proxy.so module as a registered module"
-msgstr ""
+msgstr "მოდულის p11-kit-proxy.so რეგისტრირებულ მოდულად ჩატვირთვა უარყოფილია"
 
-#: p11-kit/modules.c:548
+#: p11-kit/modules.c:611
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
-msgstr ""
+msgstr "მოდულს '%s' აქვს ორივე 'enable-in' და 'disable-in' პარამეტრი"
 
-#: p11-kit/modules.c:698
+#: p11-kit/modules.c:793
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
-msgstr ""
+msgstr "ინიციალიზაცია შეწყდა, რადგან მოდული '%s' მონიშნულია, როგორც კრიტიკული"
 
-#: p11-kit/modules.c:723
+#: p11-kit/modules.c:818
 msgid "p11-kit initialization called recursively"
-msgstr ""
+msgstr "p11-kit-ის ინიციალიზაცია რეკურსიულად იქნა გამოძახებული"
 
-#: p11-kit/modules.c:909
+#: p11-kit/modules.c:1004
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
-msgstr ""
+msgstr "კრიტიკული მოდულის '%s' ინიციალიზაცია ჩავარდა: %s"
 
-#: p11-kit/modules.c:912
+#: p11-kit/modules.c:1007
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
-msgstr ""
+msgstr "გამოტოვებული იქნება მოდული '%s' რომლის ინიციალიზაციაც ჩავარდა: %s"
 
-#: p11-kit/modules.c:1687
+#: p11-kit/modules.c:1782
 #, c-format
 msgid "couldn't close session: %s"
-msgstr ""
+msgstr "ვერ დავხურე სესია: %s"
 
-#.
-#. * This is because the module is running in unmanaged mode, so turn off the
-#.
-#: p11-kit/modules.c:1864
+#: p11-kit/modules.c:1959
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
 msgstr ""
+"'%s' პარამეტრი მოდულისთვის '%s', მხოლოდ, მართული მოდულებისთვისაა მხარდაჭერილი"
 
-#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#: p11-kit/modules.c:2268 p11-kit/modules.c:2748
 #, c-format
 msgid "%s: module failed to initialize: %s"
-msgstr ""
+msgstr "%s: მოდულის ინიციალიზაციის შეცდომა: %s"
 
-#: p11-kit/modules.c:2176
+#: p11-kit/modules.c:2271
 #, c-format
 msgid "%s: module failed to initialize, skipping: %s"
-msgstr ""
+msgstr "%s: მოდულის ინიციალიზაცია ჩავარდა. გამოტოვება: %s"
 
-#: p11-kit/modules.c:2182
+#: p11-kit/modules.c:2281
 #, c-format
 msgid "%s: module was already initialized"
-msgstr ""
+msgstr "%s: მოდული უკვე იყო ინიციალიზებული"
 
-#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#: p11-kit/modules.c:2377 p11-kit/modules.c:2789
 #, c-format
 msgid "%s: module failed to finalize: %s"
-msgstr ""
+msgstr "%s: მოდულის ინიციალიზაცია ჩავარდა: %s"
 
-#: p11-kit/modules.c:2417
+#: p11-kit/modules.c:2516
 #, c-format
 msgid "module initialization failed: %s"
-msgstr ""
+msgstr "მოდულის ინიციალიზაცია ჩავარდა: %s"
 
-#: p11-kit/p11-kit.c:72
+#: p11-kit/p11-kit.c:105
 msgid "List modules and tokens"
-msgstr ""
+msgstr "კოდებისა და მოდულების სია"
 
-#: p11-kit/p11-kit.c:73
+#: p11-kit/p11-kit.c:106
+msgid "List tokens"
+msgstr "ტოკენების ჩამონათვალი"
+
+#: p11-kit/p11-kit.c:107
+msgid "List objects of a token"
+msgstr "ტოკენის ობიექტების ჩამონათვალი"
+
+#: p11-kit/p11-kit.c:108
+msgid "Import object into a token"
+msgstr "ობიექტის შეტანა ტოკენში"
+
+#: p11-kit/p11-kit.c:109
+msgid "Export object matching PKCS#11 URI"
+msgstr "PKCS#11 URI-ის შესაბამისი ობიექტის გატანა"
+
+#: p11-kit/p11-kit.c:110
+msgid "Delete objects matching PKCS#11 URI"
+msgstr "PKCS#11 URI-ის შესაბამისი ობიექტების წაშლა"
+
+#: p11-kit/p11-kit.c:111
+msgid "Generate key-pair on a PKCS#11 token"
+msgstr "გასაღებების წყვილის გენერაცია PKCS#11 ტოკენზე"
+
+#: p11-kit/p11-kit.c:112
+msgid "List PKCS#11 profiles supported by the token"
+msgstr "ტოკენის მიერ მხარდაჭერილი PKCS#11 პროფილების ჩამონათვალი"
+
+#: p11-kit/p11-kit.c:113
+msgid "Add PKCS#11 profile to the token"
+msgstr "PKCS#11 პროფილის დამატება ტოკენში"
+
+#: p11-kit/p11-kit.c:114
+msgid "Delete PKCS#11 profile from the token"
+msgstr "PKCS#11 პროფილის წაშლა ტოკენიდან"
+
+#: p11-kit/p11-kit.c:115
+msgid "Print merged configuration"
+msgstr "შერწყმული კონფიგურაციის გამოტანა"
+
+#: p11-kit/p11-kit.c:116
+msgid "List supported mechanisms"
+msgstr "მხარდაჭერილი მექანიზმების ჩამონათვალი"
+
+#: p11-kit/p11-kit.c:117
 msgid "Run a specific PKCS#11 module remotely"
-msgstr ""
+msgstr "მითითებული PKCS#11 მოდულის დაშორებულად გაშვება"
 
-#: p11-kit/p11-kit.c:74
+#: p11-kit/p11-kit.c:118
 msgid "Run a server process that exposes PKCS#11 module remotely"
 msgstr ""
+"სერვერის პროცესის გაშვება, რომელიც PKCS#11 მოდულთან დაშორებულ წვდომას იზლევა"
 
-#. At this point we have no command
-#: p11-kit/p11-kit.c:95
+#: p11-kit/p11-kit.c:139
 msgid "couldn't run trust tool"
-msgstr ""
+msgstr "ნდობის ხელსაწყოს გაშვება შეუძლებელია"
 
-#. At this point we have no command
-#: p11-kit/p11-kit.c:137
+#: p11-kit/p11-kit.c:181
 #, c-format
 msgid "'%s' is not a valid command. See 'p11-kit --help'"
-msgstr ""
+msgstr "'%s' არასწორი ბრძანებაა. იხილეთ 'p11-kit --help'"
 
-#: p11-kit/remote.c:108
+#: p11-kit/remote.c:109
 msgid "specify a module or tokens to remote"
-msgstr ""
+msgstr "მიუთითეთ მოდული ან ტოკენები დაშორებულისთვის"
 
-#: p11-kit/remote.c:113
+#: p11-kit/remote.c:114
 msgid "the 'remote' tool is not meant to be run from a terminal"
-msgstr ""
+msgstr "ხელსაწყო 'დაშორებული' ტერმინალიდან არ უნდა გაუშვათ"
 
-#: p11-kit/remote.c:139
+#: p11-kit/remote.c:145
 msgid "only one module can be specified"
-msgstr ""
+msgstr "შესაძლებელია, მხოლოდ, ერთი მოდულის მითითება"
 
 #: p11-kit/rpc-client.c:146
 msgid "invalid rpc error response: too short"
-msgstr ""
+msgstr "არასწორი rpc შეცდომის პასუხი: ძალიან მოკლეა"
 
 #: p11-kit/rpc-client.c:151
 msgid "invalid rpc error response: bad error code"
-msgstr ""
+msgstr "არასწორი rpc შეცდომის პასუხი: არასწორი შეცდომის კოდი"
 
 #: p11-kit/rpc-client.c:161
 msgid "invalid rpc response: call mismatch"
-msgstr ""
+msgstr "არასწორი rpc შეცდომის პასუხი: გამოძახება არ ემთხვევა"
 
-#: p11-kit/rpc-client.c:182
+#: p11-kit/rpc-client.c:184
 msgid "invalid rpc response: bad argument data"
-msgstr ""
+msgstr "არასწორი rpc შეცდომის პასუხი: არასწორი არგუმენტის მონაცემები"
 
-#: p11-kit/rpc-client.c:229
+#: p11-kit/rpc-client.c:231
 msgid "received an attribute array with wrong number of attributes"
-msgstr ""
+msgstr "მიღებულ ატრიბუტების მასივში ატრიბუტების რაოდენობა არასწორია"
 
-#: p11-kit/rpc-client.c:256
+#: p11-kit/rpc-client.c:253
 msgid "returned attributes in invalid order"
-msgstr ""
+msgstr "დაბრუნებული ატრიბუტები არასწორი მიმდევრობითაა"
 
-#: p11-kit/rpc-client.c:727 trust/module.c:382
+#: p11-kit/rpc-client.c:812 trust/module.c:384
 msgid "invalid set of mutex calls supplied"
-msgstr ""
+msgstr "მოწოდებულია სემაფორების გამოძახებების არასწორი ნაკრები"
 
-#: p11-kit/rpc-client.c:736 trust/module.c:391
+#: p11-kit/rpc-client.c:821 trust/module.c:393
 msgid "can't do without os locking"
-msgstr ""
+msgstr "ოს-ის დაბლოკვის გარეშე შეუძლებელია"
 
-#: p11-kit/rpc-client.c:749
+#: p11-kit/rpc-client.c:834
 msgid "C_Initialize called twice for same process"
-msgstr ""
+msgstr "C_Initialize გამოძახებულია ორჯერ იგივე პროცესისთვის"
 
-#: p11-kit/rpc-client.c:856
+#: p11-kit/rpc-client.c:942
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
-msgstr ""
+msgstr "rpc მოდულის დასრულებამ შეცდომა დააბრუნა: %lu"
 
-#: p11-kit/rpc-message.c:190
+#: p11-kit/rpc-message.c:191
 msgid "invalid message: couldn't read call identifier"
-msgstr ""
+msgstr "არასწორი შეტყობინება: გამოძახების იდენტიფიკატორის წაკითხვა შეუძლებელია"
 
-#: p11-kit/rpc-message.c:199
+#: p11-kit/rpc-message.c:200
 #, c-format
 msgid "invalid message: bad call id: %d"
-msgstr ""
+msgstr "არასწორი შეტყობინება: არასწორი გამოძახების id: %d"
 
-#: p11-kit/rpc-message.c:217
+#: p11-kit/rpc-message.c:218
 msgid "invalid message: couldn't read signature"
-msgstr ""
+msgstr "არასწორი შეტყობინება: ხელმოწერის წაკითხვა შეუძლებელია"
 
-#: p11-kit/rpc-message.c:222
+#: p11-kit/rpc-message.c:223
 msgid "invalid message: signature doesn't match"
-msgstr ""
+msgstr "არასწორი შეტყობინება: ხელმოწერა არ ემთხვევა"
 
-#: p11-kit/rpc-message.c:483
+#: p11-kit/rpc-message.c:497
 #, c-format
 msgid "invalid length space padded string received: %d != %d"
 msgstr ""
 
-#: p11-kit/rpc-server.c:575
+#: p11-kit/rpc-server.c:634
 msgid "invalid request from module, probably too short"
-msgstr ""
+msgstr "არასწორი მოთხოვნა მოდულიდან. ალბათ, მეტისმეტად მოკლეა"
 
-#: p11-kit/rpc-server.c:585
+#: p11-kit/rpc-server.c:644
 msgid "couldn't initialize rpc response"
-msgstr ""
+msgstr "rpc პასუხის ინიციალიზაცია შეუძლებელია"
 
-#: p11-kit/rpc-server.c:717
+#: p11-kit/rpc-server.c:799
 msgid "invalid handshake received from connecting module"
 msgstr ""
 
-#: p11-kit/rpc-server.c:1834
+#: p11-kit/rpc-server.c:2382
 msgid "couldn't parse pkcs11 rpc message"
-msgstr ""
+msgstr "pkcs11 rpc შეტყობინების დამუშავება შეუძლებელია"
 
-#: p11-kit/rpc-server.c:1921
+#: p11-kit/rpc-server.c:2495
 msgid "out of memory error putting together message"
-msgstr ""
+msgstr "არასაკმარისი მეხსიერება შეტყობინების აწყობისას"
 
-#: p11-kit/rpc-server.c:1945
+#: p11-kit/rpc-server.c:2521
 msgid "out of memory responding with error"
-msgstr ""
+msgstr "არასაკმარისი მეხსიერება შეცდომით პასუხისას"
 
-#: p11-kit/rpc-server.c:1991
+#: p11-kit/rpc-server.c:2567
 #, c-format
 msgid "unsupported version received: %d"
-msgstr ""
+msgstr "მიღებულია მხარდაუჭერელი ვერსია: %d"
 
-#: p11-kit/rpc-server.c:1997
+#: p11-kit/rpc-server.c:2573
 msgid "couldn't read credential byte"
-msgstr ""
+msgstr "ავტორიზაციის დეტალის ბაიტის წაკითხვა შეუძლებელია"
 
-#: p11-kit/rpc-server.c:2009
+#: p11-kit/rpc-server.c:2585
 msgid "couldn't write credential byte"
-msgstr ""
+msgstr "ავტორიზაციის დეტალის ბაიტის ჩაწერა შეუძლებელია"
 
-#: p11-kit/rpc-server.c:2032
+#: p11-kit/rpc-server.c:2608
 msgid "failed to read rpc message"
-msgstr ""
+msgstr "rpc შეტყობინების წაკითხვა შეუძლებელია"
 
-#: p11-kit/rpc-server.c:2037
+#: p11-kit/rpc-server.c:2613
 msgid "unexpected error handling rpc message"
-msgstr ""
+msgstr "rpc შეტყობინების დამუშავების მოულოდნელი შეცდომა"
 
-#: p11-kit/rpc-server.c:2055
+#: p11-kit/rpc-server.c:2631
 msgid "failed to write rpc message"
-msgstr ""
+msgstr "rpc შეტყობინების ჩაწერა შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:208
 msgid "couldn't send data: closed connection"
-msgstr ""
+msgstr "მონაცემების გაგზავნა შეუძლებელია: კავშირი დაიხურა"
 
 #: p11-kit/rpc-transport.c:211
 msgid "couldn't send data"
-msgstr ""
+msgstr "მონაცემების გაგზავნა შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:234
 msgid "couldn't receive data: closed connection"
-msgstr ""
+msgstr "მონაცემების მიღება შეუძლებელია: კავშირი დაიხურა"
 
 #: p11-kit/rpc-transport.c:238
 msgid "couldn't receive data"
-msgstr ""
+msgstr "მონაცემების მიღება შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:416
 msgid "received invalid rpc header values: perhaps wrong protocol"
@@ -688,44 +1069,44 @@ msgstr ""
 
 #: p11-kit/rpc-transport.c:648
 msgid "couldn't send socket credentials"
-msgstr ""
+msgstr "სოკეტის ავტორიზაციის დეტალების გაგზავნა შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:653
 msgid "couldn't receive socket credentials"
-msgstr ""
+msgstr "სოკეტის ავტორიზაციის დეტალების მიღება შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:659
 msgid "peer protocol version is too old"
-msgstr ""
+msgstr "პარტნიორის პროტოკოლის ვერსია მეტისმეტად ძველია"
 
 #: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
 msgid "closing socket due to protocol failure"
-msgstr ""
+msgstr "სოკეტი დაიხურება პროტოკოლის შეცდომის გამო"
 
 #: p11-kit/rpc-transport.c:755
 #, c-format
 msgid "process %d did not exit, terminating"
-msgstr ""
+msgstr "პროცესი %d არ გამოვიდა. ის შეწყდება"
 
 #: p11-kit/rpc-transport.c:762
 #, c-format
 msgid "failed to wait for executed child: %d"
-msgstr ""
+msgstr "შესრულებული შვილის მოლოდინის შეცდომა: %d"
 
 #: p11-kit/rpc-transport.c:769
 #, c-format
 msgid "process %d exited with status %d"
-msgstr ""
+msgstr "პროცესი %d დასრულდა სტატუსით %d"
 
 #: p11-kit/rpc-transport.c:773
 #, c-format
 msgid "process %d was terminated with signal %d"
-msgstr ""
+msgstr "პროცესი %d შეწყვიტეს სიგნალით %d"
 
 #: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
 #: p11-kit/rpc-transport.c:960
 msgid "failed to create pipe for remote"
-msgstr ""
+msgstr "დაშორებულისთვის კომუნიკაციის არხის შექმნის შეცდომა"
 
 #: p11-kit/rpc-transport.c:828
 msgid "failed to fork for remote"
@@ -734,35 +1115,35 @@ msgstr ""
 #: p11-kit/rpc-transport.c:888
 #, c-format
 msgid "process %p did not exit, terminating"
-msgstr ""
+msgstr "პროცესი %p არ გამოვიდა. ის შეწყდება"
 
 #: p11-kit/rpc-transport.c:890
 #, c-format
 msgid "couldn't terminate process %p"
-msgstr ""
+msgstr "შეწყვეტის შეცდომა პროცესისტვის %p"
 
 #: p11-kit/rpc-transport.c:895
 #, c-format
 msgid "failed to wait for executed child: %p"
-msgstr ""
+msgstr "შესრულებული შვილის მოლოდინის შეცდომა: %p"
 
 #: p11-kit/rpc-transport.c:898
 #, c-format
 msgid "failed to get the exit status of %p"
-msgstr ""
+msgstr "%p-ის გამოსვლის სტატუსის მიღება ჩავარდა"
 
 #: p11-kit/rpc-transport.c:902
 #, c-format
 msgid "process %p exited with status %lu"
-msgstr ""
+msgstr "პროცესი %p დასრულდა სტატუსით %lu"
 
 #: p11-kit/rpc-transport.c:968
 msgid "failed to duplicate stdin"
-msgstr ""
+msgstr "stdin-ის დუბლირება ჩავარდა"
 
 #: p11-kit/rpc-transport.c:975
 msgid "failed to duplicate stdout"
-msgstr ""
+msgstr "stdout-ის დუბლირების შეცდომა"
 
 #: p11-kit/rpc-transport.c:983
 msgid "failed to duplicate child end of pipe"
@@ -774,16 +1155,16 @@ msgstr ""
 
 #: p11-kit/rpc-transport.c:1006
 msgid "failed to restore file descriptors"
-msgstr ""
+msgstr "ფაილის დესკრიპტორების აღდგენა შეუძლებელია"
 
 #: p11-kit/rpc-transport.c:1075
 #, c-format
 msgid "invalid remote command line: %s"
-msgstr ""
+msgstr "არასწორი დაშორებული ბრძანების სტრიქონი: %s"
 
 #: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
 msgid "failed to create socket for remote"
-msgstr ""
+msgstr "დაშორებულისთვის სოკეტის შექმნა ჩავარდა"
 
 #: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
 #, c-format
@@ -793,195 +1174,195 @@ msgstr ""
 #: p11-kit/rpc-transport.c:1301
 #, c-format
 msgid "remote not supported: %s"
-msgstr ""
+msgstr "დაშორებული მხარდაჭერილი არაა: %s"
 
 #: p11-kit/server.c:243
 #, c-format
 msgid "child %u died with sigsegv"
-msgstr ""
+msgstr "შვილი %u მოკვდა სიგნალით sigsegv"
 
 #: p11-kit/server.c:245
 #, c-format
 msgid "child %u died with signal %d"
-msgstr ""
+msgstr "შვილი %u მოკვდა სიგნალით %d"
 
-#: p11-kit/server.c:318
+#: p11-kit/server.c:336
 #, c-format
 msgid "could not create socket %s"
-msgstr ""
+msgstr "ვერ შევქმენი სოკეტი %s"
 
-#: p11-kit/server.c:326
+#: p11-kit/server.c:347
 #, c-format
 msgid "could not bind socket %s"
-msgstr ""
+msgstr "მიმაგრების შეცდომა სოკეტისთვის %s"
 
-#: p11-kit/server.c:333
+#: p11-kit/server.c:354
 #, c-format
 msgid "could not listen to socket %s"
-msgstr ""
+msgstr "მოსმენის შეცდომა სოკეტისთვის %s"
 
-#: p11-kit/server.c:341
+#: p11-kit/server.c:362
 #, c-format
 msgid "could not chown socket %s"
-msgstr ""
+msgstr "chown-ის შეცდომა სოკეტზე %s"
 
-#: p11-kit/server.c:364
+#: p11-kit/server.c:385
 #, c-format
 msgid "could not create socket %u:%u"
-msgstr ""
+msgstr "ვერ შევქმენი სოკეტი %u:%u"
 
-#: p11-kit/server.c:371
+#: p11-kit/server.c:392
 #, c-format
 msgid "could not bind socket %u:%u"
-msgstr ""
+msgstr "მიმაგრების შეცდომა სოკეტისთვის %u:%u"
 
-#: p11-kit/server.c:378
+#: p11-kit/server.c:399
 #, c-format
 msgid "could not listen to socket %u:%u"
-msgstr ""
+msgstr "მოსმენის შეცდომა სოკეტისთვის %u:%u"
 
-#: p11-kit/server.c:397
+#: p11-kit/server.c:418
 msgid "could not check uid from socket"
-msgstr ""
+msgstr "სოკეტიდან uid-ის შემოწმება შეუძლებელია"
 
-#: p11-kit/server.c:403
+#: p11-kit/server.c:424
 #, c-format
 msgid "connecting uid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "დამკავშირებელი uid (%u) არ ემთხვევა მოსალოდნელს (%u)"
 
-#: p11-kit/server.c:410
+#: p11-kit/server.c:431
 #, c-format
 msgid "connecting gid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "დამკავშირებელი gid (%u) არ ემთხვევა მოსალოდნელს (%u)"
 
-#: p11-kit/server.c:491
+#: p11-kit/server.c:557
 msgid "could not fork() to daemonize"
-msgstr ""
+msgstr "fork()-ის შეცდომა დემონის რეჟიმში გადასასვლელად"
 
-#: p11-kit/server.c:504
+#: p11-kit/server.c:570
 msgid "could not create a new session"
-msgstr ""
+msgstr "ახალი სესიის შექმნა შეუძლებელია"
 
-#: p11-kit/server.c:512
+#: p11-kit/server.c:577
 msgid "too many file descriptors received"
-msgstr ""
+msgstr "მიღებულია მეტისმეტად ბევრი ფაილის დესკრიპტორები"
 
-#: p11-kit/server.c:556
+#: p11-kit/server.c:620
 #, c-format
-msgid "no connections to %s for %lu secs, exiting"
-msgstr ""
+msgid "no connections to %s for %<PRIu64> secs, exiting"
+msgstr "%s-ზე კავშირები %<PRIu64> წამი არ ყოფილა. გასვლა"
 
-#: p11-kit/server.c:565
+#: p11-kit/server.c:629
 #, c-format
 msgid "could not accept from socket %s"
-msgstr ""
+msgstr "მიღება შეუძლებელია სოკეტიდან %s"
 
-#: p11-kit/server.c:576
+#: p11-kit/server.c:640
 msgid "failed to fork for accept"
 msgstr ""
 
-#: p11-kit/server.c:721 p11-kit/server.c:737
+#: p11-kit/server.c:785 p11-kit/server.c:801
 #, c-format
 msgid "unknown group: %s"
-msgstr ""
+msgstr "უცნობი ჯგუფი: %s"
 
-#: p11-kit/server.c:729 p11-kit/server.c:745
+#: p11-kit/server.c:793 p11-kit/server.c:809
 #, c-format
 msgid "unknown user: %s"
-msgstr ""
+msgstr "უცნობი მომხმარებელი: %s"
 
-#: p11-kit/server.c:828
+#: p11-kit/server.c:892
 #, c-format
 msgid "cannot set gid to %u"
-msgstr ""
+msgstr "ვერ დავაყენე gid მნიშვნელობაზე %u"
 
-#: p11-kit/server.c:834
+#: p11-kit/server.c:898
 #, c-format
 msgid "cannot setgroups to %u"
-msgstr ""
+msgstr "ვერ setgroups მნიშვნელობაზე %u"
 
-#: p11-kit/server.c:842
+#: p11-kit/server.c:906
 #, c-format
 msgid "cannot set uid to %u"
-msgstr ""
+msgstr "uid-ის %u-ზე დაყენების შეცდომა"
 
-#: p11-kit/server.c:858
+#: p11-kit/server.c:922
 msgid "cannot determine runtime directory"
-msgstr ""
+msgstr "გაშვების საქაღალდის დადგენა შეუძლებელია"
 
-#: p11-kit/server.c:870
+#: p11-kit/server.c:934
 #, c-format
 msgid "cannot create %s"
-msgstr ""
+msgstr "ვერ შევქმენი %s"
 
-#: p11-kit/server.c:1141
+#: p11-kit/server.c:1205
 msgid "couldn't initialize Windows security functions"
-msgstr ""
+msgstr "Windows-ის უსაფრთხოების ფუნქციების ინიციალიზაცია შეუძლებელია"
 
-#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#: p11-kit/server.c:1366 p11-kit/server.c:1378 p11-kit/server.c:1390
 #, c-format
 msgid "unable to construct SID for %s: %lu"
-msgstr ""
+msgstr "%s-ისთვის SID-ის აწყობა შეუძლებელია: %lu"
 
-#: p11-kit/server.c:1369
+#: p11-kit/server.c:1433
 #, c-format
 msgid "unable to construct ACL: %d"
-msgstr ""
+msgstr "ACL-ის აგება შეუძლებელია: %d"
 
-#: p11-kit/server.c:1375
+#: p11-kit/server.c:1439
 #, c-format
 msgid "unable to allocate security descriptor: %lu"
-msgstr ""
+msgstr "უსაფრთხოების დესკრიპტორის გამოყოფა შეუძლებელია: %lu"
 
-#: p11-kit/server.c:1381
+#: p11-kit/server.c:1445
 #, c-format
 msgid "unable to initialise security descriptor: %lu"
-msgstr ""
+msgstr "უსაფრთხოების დესკრიპტორის ინიციალიზაცია შეუძლებელია: %lu"
 
-#: p11-kit/server.c:1387
+#: p11-kit/server.c:1451
 #, c-format
 msgid "unable to set owner in security descriptor: %lu"
-msgstr ""
+msgstr "უსაფრთხოების დესკრიპტორის მფლობელის დაყენება შეუძლებელია: %lu"
 
-#: p11-kit/server.c:1393
+#: p11-kit/server.c:1457
 #, c-format
 msgid "unable to set DACL in security descriptor: %lu"
-msgstr ""
+msgstr "უსაფრთხოების დესკრიპტორში DACL-ის დაყენება შეუძლებელია: %lu"
 
 #: trust/anchor.c:126
 #, c-format
 msgid "invalid PKCS#11 uri: %s"
-msgstr ""
+msgstr "არასწორი PKCS#11 uri: %s"
 
 #: trust/anchor.c:148 trust/anchor.c:204
 #, c-format
 msgid "unrecognized file format: %s"
-msgstr ""
+msgstr "ფაილის უცნობი ფორმატი: %s"
 
 #: trust/anchor.c:151 trust/anchor.c:207
 #, c-format
 msgid "failed to parse file: %s"
-msgstr ""
+msgstr "ფაილის დამუშავების შეცდომა: %s"
 
 #: trust/anchor.c:246
 #, c-format
 msgid "%s: couldn't initialize: %s"
-msgstr ""
+msgstr "%s: ინიციალიზაციის შეცდომა: %s"
 
 #: trust/anchor.c:257
 #, c-format
 msgid "%s: couldn't enumerate slots: %s"
-msgstr ""
+msgstr "%s: სლოტების ჩამოთვლა შეუძლებელია: %s"
 
 #: trust/anchor.c:265
 #, c-format
 msgid "%s: couldn't get token info: %s"
-msgstr ""
+msgstr "%s: ვერ მივიღე ტოკენის ინფორმაცია: %s"
 
 #: trust/anchor.c:277
 #, c-format
 msgid "%s: couldn't open session: %s"
-msgstr ""
+msgstr "%s: ვერ გავხსენი სესია: %s"
 
 #: trust/anchor.c:325
 msgid "no configured writable location to store anchors"
@@ -994,7 +1375,7 @@ msgstr ""
 #: trust/anchor.c:388 trust/anchor.c:435
 #, c-format
 msgid "couldn't create object: %s"
-msgstr ""
+msgstr "ვერ შევქმენი ობიეტქი: %s"
 
 #: trust/anchor.c:487
 msgid "specify at least one anchor input file"
@@ -1003,269 +1384,284 @@ msgstr ""
 #: trust/anchor.c:570
 #, c-format
 msgid "couldn't remove read-only %s"
-msgstr ""
+msgstr "მხოლოდ წაკითხვადი %s-ის წაშლა შეუძლებელია"
 
 #: trust/anchor.c:573
 #, c-format
 msgid "couldn't remove %s: %s"
-msgstr ""
+msgstr "ვერ წავშალე %s: %s"
 
 #: trust/anchor.c:599
 msgid "at least one file or uri must be specified"
-msgstr ""
+msgstr "საჭიროა ერთი ფაილი, ან uri მაინც მიუთითოთ"
 
 #: trust/anchor.c:665
 msgid "an action was already specified"
-msgstr ""
+msgstr "ქმედება უკვე მითითებულია"
 
 #: trust/anchor.c:702
 #, c-format
 msgid "%u error while processing"
 msgid_plural "%u errors while processing"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u შეცდომა დამუშავებისას"
+msgstr[1] "%u შეცდომა დამუშავებისას"
 
 #: trust/builder.c:155
 #, c-format
 msgid "%.*s: invalid certificate extension"
-msgstr ""
+msgstr "%.*s: არასწორი სერტიფიკატის გაფართოება"
 
 #: trust/builder.c:674
 #, c-format
 msgid "%.*s: invalid basic constraints certificate extension"
-msgstr ""
+msgstr "%.*s: არასწორი ძირითადი შეზღუდვების სერტიფიკატის გაფართოება"
 
 #: trust/builder.c:676
 msgid "unknown"
-msgstr ""
+msgstr "უცნობი"
 
 #: trust/builder.c:865
 msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "აკლია ატრიბუტი CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
 
 #: trust/builder.c:870
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "აკლია ატრიბუტი CKA_HASH_OF_ISSUER_PUBLIC_KEY"
 
 #: trust/builder.c:1084
 msgid "the object is not modifiable"
-msgstr ""
+msgstr "ობიექტი შეცვლადი არაა"
 
 #: trust/builder.c:1091
 msgid "objects of this type cannot be created"
-msgstr ""
+msgstr "ამ ტიპის ობიექტების შექმნა შეუძლებელია"
 
 #: trust/builder.c:1111
 #, c-format
 msgid "the %s attribute cannot be set"
-msgstr ""
+msgstr "%s ატრიბუტის დაყენება შეუძლებელია"
 
 #: trust/builder.c:1116
 #, c-format
 msgid "the %s attribute cannot be changed"
-msgstr ""
+msgstr "%s ატრიბუტის შეცვლა შეუძლებელია"
 
 #: trust/builder.c:1122
 #, c-format
 msgid "the %s attribute has an invalid value"
-msgstr ""
+msgstr "ატრიბუტს %s არასწორი მნიშვნელობა აქვს"
 
 #: trust/builder.c:1131
 #, c-format
 msgid "the %s attribute is not valid for the object"
-msgstr ""
+msgstr "ატრიბუტი %s არასწორია ობიექტისთვის"
 
 #: trust/builder.c:1154
 #, c-format
 msgid "missing the %s attribute"
-msgstr ""
+msgstr "აკლია %s ატრიბუტი"
 
 #: trust/builder.c:1194
 msgid "no CKA_CLASS attribute found"
-msgstr ""
+msgstr "ატრიბუტი CKA_CLASS აღმოჩენილი არაა"
 
 #: trust/builder.c:1200
 #, c-format
 msgid "cannot create a %s object"
-msgstr ""
+msgstr "%s ობიექტის შექმნა შეუძლებელია"
 
 #: trust/builder.c:1200
 msgid "token"
-msgstr ""
+msgstr "ტოკენი"
 
 #: trust/builder.c:1200
 msgid "non-token"
-msgstr ""
+msgstr "კოდი არაა"
 
 #: trust/builder.c:1208
 #, c-format
 msgid "missing %s on object"
-msgstr ""
+msgstr "ობიექტზე %s აღმოჩენილი არაა"
 
 #: trust/builder.c:1213
 #, c-format
 msgid "%s unsupported %s"
-msgstr ""
+msgstr "%s მხარდაუჭერელი %s"
 
 #: trust/builder.c:1234
 #, c-format
 msgid "%s unsupported object class"
-msgstr ""
+msgstr "%s: მხარდაუჭერელი ობიექტის კლასი"
 
 #: trust/builder.c:1300
 msgid "invalid key usage certificate extension"
-msgstr ""
+msgstr "არასწორი გასაღების გამოყენების სერტიფიკატის გაფართოება"
 
 #: trust/builder.c:1768
 msgid "invalid extended key usage certificate extension"
-msgstr ""
+msgstr "არასწორი გაფართოებული გასაღების გამოყენების სერტიფიკატის გაფართოება"
 
 #: trust/builder.c:1776
 msgid "invalid reject key usage certificate extension"
-msgstr ""
+msgstr "არასწორი უარყოფის გასაღების გამოყენების სერტიფიკატის გაფართოება"
+
+#: trust/check-format.c:98 trust/parser.c:766
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "ფაილის გახსნის და ასახვის შეცდომა: %s"
+
+#: trust/check-format.c:103
+#, c-format
+msgid "file is not recognized as .p11-kit format: %s"
+msgstr "ფაილი .p11-kit ფორმატით არაა: %s"
+
+#: trust/check-format.c:171
+msgid "specify a .p11-kit file"
+msgstr "მიუთითეთ .p11-kit ფაილი"
 
 #: trust/dump.c:113
 msgid "could not dump object"
-msgstr ""
+msgstr "ობიექტის დამპი შეუძლებელია"
 
-#: trust/dump.c:187 trust/list.c:256
+#: trust/dump.c:187 trust/list.c:261
 msgid "extra arguments passed to command"
-msgstr ""
+msgstr "ბრძანებისთვის გადაცემულია დამატებითი არგუმენტები"
 
 #: trust/enumerate.c:78
 #, c-format
 msgid "couldn't parse attached certificate extension: %s"
-msgstr ""
+msgstr "მიმაგრებული სერტიფიკატის გაფართოების დამუშავება შეუძლებელია: %s"
 
-#: trust/enumerate.c:151
+#: trust/enumerate.c:152
 #, c-format
 msgid "couldn't load attached extensions for certificate: %s"
-msgstr ""
+msgstr "მიმაგრებული გაფართოებების ჩატვირთვა შეუძლებელია სერტიფიკატისთვის: %s"
 
-#: trust/enumerate.c:275
+#: trust/enumerate.c:276
 #, c-format
 msgid "couldn't parse certificate: %s"
-msgstr ""
+msgstr "სერტიფიკატის დამუშავება შეუძლებელია: %s"
 
-#: trust/enumerate.c:312
+#: trust/enumerate.c:313
 #, c-format
 msgid "couldn't load attributes: %s"
-msgstr ""
+msgstr "სერტიფიკატის ჩატვირტვა შეუძლებელია: %s"
 
-#: trust/enumerate.c:323
+#: trust/enumerate.c:324
 msgid "skipping non-certificate object"
-msgstr ""
+msgstr "არასერტიფიკატი ობიექტის გამოტოვება"
 
-#: trust/enumerate.c:480 trust/enumerate.c:508
+#: trust/enumerate.c:481 trust/enumerate.c:509
 #, c-format
 msgid "couldn't load blocklist: %s"
-msgstr ""
+msgstr "დაბლოკვის სიის ჩატვირთვა შეუძლებელია: %s"
 
-#: trust/enumerate.c:582
+#: trust/enumerate.c:583
 msgid "a PKCS#11 URI has already been specified"
-msgstr ""
+msgstr "PKCS#11 URI უკვე მითითებულია"
 
-#: trust/enumerate.c:589
+#: trust/enumerate.c:590
 #, c-format
 msgid "couldn't parse pkcs11 uri filter: %s"
-msgstr ""
+msgstr "pkcs11 uri-ის ფილტრის დამუშავება შეუძლებელია: %s"
 
-#: trust/enumerate.c:594
+#: trust/enumerate.c:595
 msgid "uri contained unrecognized components, nothing will be extracted"
-msgstr ""
+msgstr "uri შეიცავდა უცნობ კომპონენტებს. ამოღებული არაფერი იქნება"
 
-#: trust/enumerate.c:621
+#: trust/enumerate.c:622
 #, c-format
 msgid "unsupported or unrecognized filter: %s"
-msgstr ""
+msgstr "მხარდაუჭერელი, ან უცნობი ფილტრი: %s"
 
-#: trust/enumerate.c:670
+#: trust/enumerate.c:671
 #, c-format
 msgid "unsupported or unrecognized purpose: %s"
-msgstr ""
+msgstr "მხარდაუჭერელი, ან უცნობი დანიშნულება: %s"
 
-#: trust/enumerate.c:712
+#: trust/enumerate.c:713
 msgid "no modules containing trust policy are registered"
-msgstr ""
+msgstr "ნდობის პოლიტიკის შემცველი მოდული რეგისტრირებული არაა"
 
 #: trust/extract.c:98
 msgid "a format was already specified"
-msgstr ""
+msgstr "ფორმატი უკვე მითითებულია"
 
 #: trust/extract.c:110
 #, c-format
 msgid "unsupported or unrecognized format: %s"
-msgstr ""
+msgstr "მხარდაუჭერელი, ან უცნობი ფორმატი: %s"
 
-#.
-#. * If we're extracting *both* anchors and blocklist, then we must have
-#. * a format that can represent the different types of information.
-#.
 #: trust/extract.c:148
 msgid "format does not support trust policy"
-msgstr ""
+msgstr "ფორმატს ნდობის პოლიტიკის მხარდაჭერა არ აქვს"
 
 #: trust/extract.c:159
 msgid ""
 "format requires a purpose, specify it with --purpose; defaulting to 'server-"
 "auth'"
 msgstr ""
+"ფორმატს დანიშნულება სჭირდება. მიუთითეთ ის პარამეტრით --purpose. ვიყენებ "
+"ნაგულისხმევ მნიშვნელობას 'server-auth'"
 
 #: trust/extract.c:162
 msgid "format does not support multiple purposes, defaulting to 'server-auth'"
 msgstr ""
+"ფორმატს ერთზე მეტი დანიშნულების მხარდაჭერა არ აქვს. ვიყენებ ნაგულისხმევ "
+"მნიშვნელობას 'server-auth'"
 
 #: trust/extract.c:283
 msgid "specify one destination file or directory"
-msgstr ""
+msgstr "მიუთითეთ ერთი სამიზნე ფაილი ან საქაღალდე"
 
 #: trust/extract.c:288
 msgid "no output format specified"
-msgstr ""
+msgstr "გამოტანის ფორმატი მითითებული არაა"
 
-#. At this point we have no command
 #: trust/extract.c:333
 #, c-format
 msgid "could not run %s command"
-msgstr ""
+msgstr "ვერ გავუშვი %s ბრძანება"
 
 #: trust/extract-cer.c:62
 msgid "multiple certificates found but could only write one to file"
 msgstr ""
+"აღმოჩენილია ერთზე მეტი სერტიფიკატი, მაგრამ ფაილში ჩაწერა, მხოლოდ, ერთისაა "
+"შესაძლებელი"
 
 #: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
 #: trust/extract-openssl.c:369 trust/extract-openssl.c:696
 #: trust/extract-pem.c:94 trust/extract-pem.c:161
 #, c-format
 msgid "failed to find certificates: %s"
-msgstr ""
+msgstr "ვერ ვიპოვე სერტიფიკატი: %s"
 
 #: trust/extract-cer.c:80
 msgid "no certificate found"
-msgstr ""
+msgstr "სერტიფიკატები აღმოჩენილი არაა"
 
 #: trust/extract-edk2.c:192
 #, c-format
 msgid "failed to find certificate: %s"
-msgstr ""
+msgstr "ვერ ვიპოვე სერტიფიკატი: %s"
 
 #: trust/extract-jks.c:142
 msgid "truncating long string"
-msgstr ""
+msgstr "გრძელი სტრიქონის წაკვეთა"
 
 #: trust/extract-jks.c:272
 msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
-msgstr ""
+msgstr "გარემოს ცვლადი $SOURCE_DATE_EPOCH: strtoull"
 
 #: trust/extract-jks.c:276
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
-msgstr ""
+msgstr "გარემოს ცვლადი $SOURCE_DATE_EPOCH: ციფრები აღმოჩნეილი არაა: %s\n"
 
 #: trust/extract-jks.c:280
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
-msgstr ""
+msgstr "გარემოს ცვლადი $SOURCE_DATE_EPOCH: ბოლოში მიწერილი ნაგავი: %s\n"
 
 #: trust/extract-jks.c:284
 #, c-format
@@ -1273,24 +1669,31 @@ msgid ""
 "Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
 "to %lu but was found to be: %llu \n"
 msgstr ""
+"გარემოს ცვლადი $SOURCE_DATE_EPOCH: მნიშვნელობა ნაკლები, ან ტოლი უნდა იყოს "
+"%lu-ზე, მაგრამ არის: %llu \n"
 
 #: trust/extract-jks.c:312
 msgid "could not generate a certificate alias name"
-msgstr ""
+msgstr "სერტიფიკატის ფსევდონიმის სახელის გენერაციის შეცდომა"
 
-#: trust/list.c:122
+#: trust/list.c:126
 msgid "skipping object, couldn't build uri"
-msgstr ""
+msgstr "ობიექტი გამოტოვებული იქნება. uri-ის აგება შეუძლებელია"
 
-#: trust/module.c:303
+#: trust/module.c:299
+#, c-format
+msgid "value required for %s"
+msgstr "%s-ისთვის მნისვნელობა აუაცილებელია"
+
+#: trust/module.c:305
 #, c-format
 msgid "unrecognized module argument: %s"
-msgstr ""
+msgstr "უცნობი მოდულის არგუმენტი: %s"
 
 #: trust/parser.c:109
 #, c-format
 msgid "certificate with distrust in location for anchors: %s"
-msgstr ""
+msgstr "სერტიფიკატი, რომელიც არასანდოა მიმაგრების მდებარეობებში: %s"
 
 #: trust/parser.c:123
 #, c-format
@@ -1300,135 +1703,128 @@ msgstr ""
 #: trust/parser.c:596
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
-msgstr ""
+msgstr "%s ტიპის მქონე PEM ბლოკის დამუშავება შეუძლებელია"
 
-#: trust/parser.c:766
-#, c-format
-msgid "couldn't open and map file: %s"
-msgstr ""
-
-#: trust/persist.c:493
-#, c-format
-msgid "invalid oid value: %s"
-msgstr ""
-
-#: trust/save.c:124
+#: trust/save.c:126
 #, c-format
 msgid "couldn't create file: %s%s"
-msgstr ""
+msgstr "ვერ შევქმენი ფაილი: %s%s"
 
-#: trust/save.c:172
+#: trust/save.c:174
 #, c-format
 msgid "couldn't write to file: %s"
-msgstr ""
+msgstr "ვერ ჩავწერე ფაილში: %s"
 
-#. Continue trying other names
-#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#: trust/save.c:211 trust/save.c:229 trust/save.c:292
 #, c-format
 msgid "couldn't complete writing of file: %s"
-msgstr ""
+msgstr "ვერ დავასრულე ჩაწერა ფაილში: %s"
 
-#: trust/save.c:260
+#: trust/save.c:262
 #, c-format
 msgid "couldn't write file: %s"
-msgstr ""
+msgstr "ვერ ჩავწერე ფაილი: %s"
 
-#: trust/save.c:266
+#: trust/save.c:268
 #, c-format
 msgid "couldn't set file permissions: %s"
-msgstr ""
+msgstr "ფაილის წვდომების დაყენება შეუძლებელია: %s"
 
-#: trust/save.c:272 trust/save.c:315
+#: trust/save.c:274 trust/save.c:317
 #, c-format
 msgid "couldn't complete writing file: %s"
-msgstr ""
+msgstr "ფაილის ჩაწერის დასრულების შეცდომა: %s"
 
-#: trust/save.c:309
+#: trust/save.c:311
 #, c-format
 msgid "couldn't remove original file: %s"
-msgstr ""
+msgstr "ვერ წავშალე ორიგინალი ფაილი: %s"
 
-#: trust/save.c:355 trust/token.c:635
+#: trust/save.c:357 trust/token.c:687
 #, c-format
 msgid "couldn't create directory: %s"
-msgstr ""
+msgstr "ვერ შევქმენი საქაღალდე: %s"
 
-#: trust/save.c:359
+#: trust/save.c:361
 #, c-format
 msgid "directory already exists: %s"
-msgstr ""
+msgstr "საქაღალდე უკვე არსებობს: %s"
 
-#: trust/save.c:370
-#, fuzzy, c-format
+#: trust/save.c:372
+#, c-format
 msgid "couldn't open directory: %s"
-msgstr "საქაღალდის სიის მიღების შეცდომა: %s"
+msgstr "საქაღალდის გახსნის შეცდომა: %s"
 
-#: trust/save.c:374
-#, fuzzy, c-format
+#: trust/save.c:376
+#, c-format
 msgid "couldn't check directory permissions: %s"
-msgstr "საქაღალდის სიის მიღების შეცდომა: %s"
+msgstr "საქაღალდის წვდომების შემოწმების შეცდომა: %s"
 
-#: trust/save.c:380
+#: trust/save.c:382
 #, c-format
 msgid "couldn't make directory writable: %s"
-msgstr ""
+msgstr "საქაღალდის ჩაწერადად შექმნა შეუძლებელია: %s"
 
-#: trust/save.c:541
+#: trust/save.c:554
 #, c-format
 msgid "couldn't create symlink: %s"
-msgstr ""
+msgstr "ვერ შევქმენი სიმბმული: %s"
 
-#: trust/save.c:603 trust/token.c:503
+#: trust/save.c:616 trust/token.c:555
 #, c-format
 msgid "couldn't remove file: %s"
-msgstr ""
+msgstr "ვერ წავშალე ფაილი: %s"
 
-#: trust/save.c:631
+#: trust/save.c:644
 #, c-format
 msgid "couldn't set directory permissions: %s"
-msgstr ""
+msgstr "საქაღალდის წვდომების დაყენების შეცდომა: %s"
 
-#: trust/token.c:227
+#: trust/token.c:228
 #, c-format
 msgid "couldn't load file into objects: %s"
-msgstr ""
+msgstr "ფაილის ობიექტებში ჩატვირთვა შეუძლებელია: %s"
 
-#: trust/token.c:243
+#: trust/token.c:244
 #, c-format
 msgid "couldn't stat path: %d: %s"
-msgstr ""
+msgstr "ბილიკის დადგენის შეცდომა: %d: %s"
 
-#: trust/token.c:312
+#: trust/token.c:342
 #, c-format
 msgid "cannot access trust certificate path: %s"
-msgstr ""
+msgstr "სანდო სერტიფიკატის ბილიკთან წვდომის შეცდომა: %s"
 
-#: trust/token.c:426
+#: trust/token.c:478
 #, c-format
 msgid "cannot access trust file: %s"
-msgstr ""
+msgstr "ნდობის ფაილტან წვდომის შეცდომა: %s"
 
-#: trust/token.c:475
+#: trust/token.c:527
 #, c-format
 msgid "couldn't access: %s"
-msgstr ""
-
-#: trust/trust.c:60
-msgid "List trust or certificates"
-msgstr ""
+msgstr "წვდომა სეუძლებელია: %s"
 
 #: trust/trust.c:61
-msgid "Extract certificates and trust"
-msgstr ""
+msgid "List trust or certificates"
+msgstr "ნდობის ან სერტიფიკატების სია"
 
 #: trust/trust.c:62
-msgid "Extract trust compatibility bundles"
-msgstr ""
+msgid "Extract certificates and trust"
+msgstr "სერტიფიკატების და ნდობის ამოღება"
 
 #: trust/trust.c:63
+msgid "Extract trust compatibility bundles"
+msgstr "ნდობის თავსებადობის პაკეტების ამოღება"
+
+#: trust/trust.c:64
 msgid "Add, remove, change trust anchors"
 msgstr ""
 
-#: trust/trust.c:64
+#: trust/trust.c:65
 msgid "Dump trust objects in internal format"
-msgstr ""
+msgstr "ნდობის ობიექტების დამპი შიდა ფორმატში"
+
+#: trust/trust.c:66
+msgid "Check the format of .p11-kit files"
+msgstr ".p11-kit ფაილების ფორმატის შემოწმება"
