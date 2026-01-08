@@ -122,19 +122,22 @@ jobs:
       image: ghcr.io/p11-glue/p11-kit:master
     env:
       MESON_BUILD_OPTS: -Db_coverage=true
+      PROFILE: coverage
     steps:
       # Checkout repo
       - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: ./.github/actions/basic-meson
-      - name: Genereate coverage
-        run: runuser -u user -- ninja coverage -C $GITHUB_WORKSPACE/$BUILDDIR
+      - name: Use legacy crypto-policies for Coveralls
+        run: |
+          dnf -y install crypto-policies-scripts
+          update-crypto-policies --set LEGACY
       - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@v1.1.2
+        uses: coverallsapp/github-action@v2
         with:
-          path-to-lcov: ./builddir/meson-logs/coverage.info
           github-token: ${{ secrets.github_token }}
+          file: $GITHUB_WORKSPACE/$BUILDDIR/meson-logs/coverage.json
 
   macos:
     runs-on: macos-latest
