@@ -1,3 +1,8 @@
+0.26.0 (stable)
+* pkcs11: Update PKCS11 headers to version 3.2 [PR#731]
+* trust: Lookup DNs in reverse order (RFC4514 section 2.1) [PR#732]
+* Update translations [PR#734]
+
 0.25.10 (stable)
 * ci fixes [PR#722, PR#723]
 
