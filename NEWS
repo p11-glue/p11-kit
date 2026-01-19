@@ -1,3 +1,6 @@
+0.26.1 (stable)
+* trust: Ensure compatibility of CKA_NSS_TRUST and CKA_TRUST
+
 0.26.0 (stable)
 * pkcs11: Update PKCS11 headers to version 3.2 [PR#731]
 * trust: Lookup DNs in reverse order (RFC4514 section 2.1) [PR#732]
