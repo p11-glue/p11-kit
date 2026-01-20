@@ -173,19 +173,17 @@ if ['darwin', 'ios'].contains(host_system)
   module_suffix = 'so'
 endif
 
-if host_system != 'windows'
-  shared_module('p11-kit-client',
-                'client.c', 'client-init.c',
-                name_prefix: '',
-                name_suffix: module_suffix,
-                include_directories: [configinc, commoninc],
-                dependencies: dlopen_deps,
-                link_args: p11_module_ldflags,
-                link_depends: [p11_module_symbol_map],
-                link_with: [libp11_kit_internal],
-                install: true,
-                install_dir: p11_module_path)
-endif
+shared_module('p11-kit-client',
+              'client.c', 'client-init.c',
+              name_prefix: '',
+              name_suffix: module_suffix,
+              include_directories: [configinc, commoninc],
+              dependencies: dlopen_deps,
+              link_args: p11_module_ldflags,
+              link_depends: [p11_module_symbol_map],
+              link_with: [libp11_kit_internal],
+              install: true,
+              install_dir: p11_module_path)
 
 if get_option('test')
   fixtures_dir = meson.current_source_dir() / 'fixtures'
@@ -484,7 +482,7 @@ if get_option('test')
                   name_suffix: module_suffix,
                   link_args: p11_module_ldflags,
                   link_depends: [p11_module_symbol_map],
-                  dependencies: [libp11_test_dep] + libp11_asn1_deps)
+                  dependencies: [libp11_test_dep] + libp11_asn1_deps + libintl_deps)
   endforeach
 endif
 
