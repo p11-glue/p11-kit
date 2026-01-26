@@ -1716,25 +1716,27 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 		if (!p11_rpc_buffer_get_byte(buffer, offset, &has_data))
 			return false;
 
-		if (has_data == 0) {
+		if (has_data) {
+			if (!p11_rpc_buffer_get_byte_array(buffer, offset, &data, &len))
+				return false;
+		} else {
 			if (!p11_rpc_buffer_get_uint32(buffer, offset, &length))
 				return false;
 			len = length;
-		} else {
-			if (!p11_rpc_buffer_get_byte_array(buffer, offset, &data, &len))
-				return false;
 		}
 
 		if (value) {
 			CK_IBM_KYBER_PARAMS *params = (CK_IBM_KYBER_PARAMS *) value;
 
-			if (params->pCipher && params->ulCipherLen == len) {
-				memcpy(params->pCipher, data, len);
-				params->ulCipherLen = len;
-			} else {
-				params->pCipher = (void *) data;
-				params->ulCipherLen = len;
+			if (has_data) {
+				assert (data != NULL);
+
+				if (params->pCipher && params->ulCipherLen == len)
+					memcpy(params->pCipher, data, len);
+				else
+					params->pCipher = (void *) data;
 			}
+			params->ulCipherLen = len;
 		}
 	}
 
@@ -1781,25 +1783,27 @@ p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 	if (!p11_rpc_buffer_get_byte(buffer, offset, &has_data))
 		return false;
 
-	if (has_data == 0) {
+	if (has_data) {
+		if (!p11_rpc_buffer_get_byte_array(buffer, offset, &data, &len))
+			return false;
+	} else {
 		if (!p11_rpc_buffer_get_uint32(buffer, offset, &length))
 			return false;
 		len = length;
-	} else {
-		if (!p11_rpc_buffer_get_byte_array(buffer, offset, &data, &len))
-			return false;
 	}
 
 	if (value) {
 		CK_IBM_BTC_DERIVE_PARAMS *params = (CK_IBM_BTC_DERIVE_PARAMS *) value;
 
-		if (params->pChainCode && params->ulChainCodeLen == len) {
-			memcpy(params->pChainCode, data, len);
-			params->ulChainCodeLen = len;
-		} else {
-			params->pChainCode = (void *) data;
-			params->ulChainCodeLen = len;
+		if (has_data) {
+			assert (data != NULL);
+
+			if (params->pChainCode && params->ulChainCodeLen == len)
+				memcpy(params->pChainCode, data, len);
+			else
+				params->pChainCode = (void *) data;
 		}
+		params->ulChainCodeLen = len;
 	}
 
 	if (value_length)
