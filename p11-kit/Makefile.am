@@ -6,6 +6,7 @@ inc_HEADERS += \
 	p11-kit/pin.h \
 	p11-kit/remote.h \
 	p11-kit/uri.h \
+	p11-kit/version.h \
 	$(NULL)
 
 COMMON_SRCS = \
