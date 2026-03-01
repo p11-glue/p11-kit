@@ -1,28 +1,28 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Collabora Ltd.
+# Copyright (C) 2026 Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
 #
 # Translators:
-# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2014
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2014-2026
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
-"POT-Creation-Date: 2022-10-19 03:26+0000\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2014\n"
-"Language-Team: Kazakh (http://www.transifex.com/freedesktop/p11-kit/language/"
-"kk/)\n"
+"POT-Creation-Date: 2021-03-06 07:45+0100\n"
+"PO-Revision-Date: 2026-03-01 08:39+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <kk_KZ@googlegroups.com>\n"
 "Language: kk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
 
 #: common/tool.c:184
 #, c-format
 msgid "usage: %s command <args>...\n"
-msgstr ""
+msgstr "қолданылуы: %s команда <аргументтер>...\n"
 
 #: common/tool.c:185
 #, c-format
@@ -30,6 +30,8 @@ msgid ""
 "\n"
 "Common %s commands are:\n"
 msgstr ""
+"\n"
+"Жалпы %s командалары:\n"
 
 #: common/tool.c:198
 #, c-format
@@ -37,74 +39,75 @@ msgid ""
 "\n"
 "See '%s <command> --help' for more information\n"
 msgstr ""
+"\n"
+"Көбірек ақпарат алу үшін '%s <команда> --help' қараңыз\n"
 
 #: common/tool.c:261 common/tool.c:333
 msgid "no command specified"
-msgstr ""
+msgstr "команда көрсетілмеген"
 
 #: common/tool.c:277
 #, c-format
 msgid "unknown global option: %s"
-msgstr ""
+msgstr "белгісіз глобалды опция: %s"
 
 #: common/tool.c:306
 #, c-format
 msgid "unknown global option: -%c"
-msgstr ""
+msgstr "белгісіз глобалды опция: -%c"
 
-#. At this point we have no command
 #: common/tool.c:358
 #, c-format
 msgid "'%s' is not a valid command. See '%s --help'"
-msgstr ""
+msgstr "'%s' — жарамды команда емес. '%s --help' қараңыз"
 
 #: p11-kit/conf.c:161
 #, c-format
 msgid "%s: unexpected pem block"
-msgstr ""
+msgstr "%s: күтпеген pem блогы"
 
 #: p11-kit/conf.c:165
 #, c-format
 msgid "%s: unexpected section header"
-msgstr ""
+msgstr "%s: күтпеген бөлім тақырыптамасы"
 
 #: p11-kit/conf.c:208
 #, c-format
 msgid "invalid mode for 'user-config': %s"
-msgstr ""
+msgstr "'user-config' үшін жарамсыз режим: %s"
 
 #: p11-kit/conf.c:367
 #, c-format
 msgid "invalid config filename, will be ignored in the future: %s"
-msgstr ""
+msgstr "баптау файлының аты жарамсыз, болашақта еленбейді: %s"
 
-#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#: p11-kit/conf.c:428 trust/save.c:558 trust/token.c:269
 #, c-format
 msgid "couldn't list directory: %s"
-msgstr ""
+msgstr "бума тізімін шығару мүмкін емес: %s"
 
 #: p11-kit/conf.c:439
 #, c-format
 msgid "couldn't stat path: %s"
-msgstr ""
+msgstr "жол күйін алу мүмкін емес: %s"
 
 #: p11-kit/conf.c:528
 #, c-format
 msgid "invalid setting '%s' defaulting to '%s'"
-msgstr ""
+msgstr "'%s' параметрі жарамсыз, '%s' әдепкі мәні қолданылады"
 
 #: p11-kit/filter.c:183
 msgid "filter cannot be initialized"
-msgstr ""
+msgstr "сүзгіні инициализациялау мүмкін емес"
 
-#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#: p11-kit/lists.c:116 p11-kit/lists.c:183 p11-kit/lists.c:204
 #, c-format
 msgid "couldn't load module info: %s"
-msgstr ""
+msgstr "модуль ақпаратын жүктеу мүмкін емес: %s"
 
-#: p11-kit/lists.c:296
+#: p11-kit/lists.c:295
 msgid "extra arguments specified"
-msgstr ""
+msgstr "артық аргументтер көрсетілген"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
@@ -116,7 +119,7 @@ msgstr "Қолжетерлік жады жеткіліксіз"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "Көрсетілген слот ID жарамсыз"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
@@ -128,1303 +131,1254 @@ msgstr "Әрекет сәтсіз аяқталды"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Жарамсыз аргументтер"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr ""
+msgstr "Модуль қажетті ағындарды жасай алмайды"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr ""
+msgstr "Модуль деректерді дұрыс құлыптай алмайды"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr ""
+msgstr "Өріс тек оқуға арналған"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Өріс құпия және оны көрсетуге болмайды"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr ""
+msgstr "Өріс жарамсыз немесе жоқ"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr ""
+msgstr "Өріс үшін жарамсыз мән"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr ""
+msgstr "Деректер жарамсыз немесе танылмады"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr ""
+msgstr "Деректер тым ұзын"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr ""
+msgstr "Құрылғыда қате орын алды"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr ""
+msgstr "Құрылғыда қолжетімді жады жеткіліксіз"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr ""
+msgstr "Құрылғы алынды немесе ажыратылды"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
+msgstr "Шифрланған деректер жарамсыз немесе танылмады"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr ""
+msgstr "Шифрланған деректер тым ұзын"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr ""
+msgstr "Бұл операцияға қолдау көрсетілмейді"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr ""
+msgstr "Кілт жоқ немесе жарамсыз"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr ""
+msgstr "Кілттің өлшемі дұрыс емес"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr ""
+msgstr "Кілттің түрі дұрыс емес"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr ""
+msgstr "Кілт қажет емес"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr ""
+msgstr "Кілт алдыңғысынан өзгеше"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr ""
+msgstr "Кілт қажет"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Кілтті дайджестке қосу мүмкін емес"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "Бұл операцияны осы кілтпен орындау мүмкін емес"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Кілтті орау мүмкін емес"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr ""
+msgstr "Бұл кілтті экспорттау мүмкін емес"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "Крипто механизмі жарамсыз немесе танылмады"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "Крипто механизмінде жарамсыз аргумент бар"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr ""
+msgstr "Объект жоқ немесе жарамсыз"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "Басқа операция қазірдің өзінде орындалуда"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "Ешқандай операция орындалып жатқан жоқ"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr ""
+msgstr "Пароль немесе PIN дұрыс емес"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr ""
+msgstr "Пароль немесе PIN жарамсыз"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr ""
+msgstr "Пароль немесе PIN ұзындығы жарамсыз"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr ""
+msgstr "Пароль немесе PIN мерзімі аяқталды"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr ""
+msgstr "Пароль немесе PIN құлыпталған"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Сессия жабылған"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "Тым көп сессия белсенді"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Сессия жарамсыз"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Сессия тек оқуға арналған"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Ашық сессия бар"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Тек оқуға арналған сессия бар"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Әкімші сессиясы бар"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "Қолтаңба нашар немесе зақымдалған"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "Қолтаңба танылмады немесе зақымдалған"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "Кейбір қажетті өрістер жоқ"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "Кейбір өрістерде жарамсыз мәндер бар"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "Құрылғы жоқ немесе ажыратылған"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "Құрылғы жарамсыз немесе танылмайды"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "Құрылғы жазудан қорғалған"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "Кілт жарамсыз болғандықтан импорттау мүмкін емес"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "Кілт өлшемі қате болғандықтан импорттау мүмкін емес"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "Кілт түрі қате болғандықтан импорттау мүмкін емес"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "Сіз жүйеге кіріп қойғансыз"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "Ешбір пайдаланушы жүйеге кірмеген"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "Пайдаланушының паролі немесе PIN орнатылмаған"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "Пайдаланушының түрі жарамсыз"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "Басқа пайдаланушы жүйеге кіріп қойған"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "Әртүрлі типтегі тым көп пайдаланушы жүйеге кірген"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "Жарамсыз кілтті импорттау мүмкін емес"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "Өлшемі қате кілтті импорттау мүмкін емес"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "Кілт жарамсыз болғандықтан экспорттау мүмкін емес"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "Кілт өлшемі қате болғандықтан экспорттау мүмкін емес"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "Кілт түрі қате болғандықтан экспорттау мүмкін емес"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "Кездейсоқ сандар генераторын инициализациялау мүмкін емес"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "Кездейсоқ сандар генераторы қолжетімсіз"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "Крипто механизмінде жарамсыз параметр бар"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "Нәтижені сақтау үшін орын жеткіліксіз"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "Сақталған күй жарамсыз"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Ақпарат құпия және оны көрсетуге болмайды"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "Күйді сақтау мүмкін емес"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "Модуль инициализацияланбаған"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "Модуль инициализацияланып қойған"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "Деректерді құлыптау мүмкін емес"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr ""
+msgstr "Деректерді құлыптауға болмайды"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Сұранымды пайдаланушы қабылдамады"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr ""
+msgstr "Белгісіз қате"
 
 #: p11-kit/modules.c:373
 #, c-format
 msgid "couldn't load module: %s: %s"
-msgstr ""
+msgstr "модульді жүктеу мүмкін емес: %s: %s"
 
 #: p11-kit/modules.c:385
 #, c-format
 msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
-msgstr ""
+msgstr "модульден C_GetFunctionList кіру нүктесі табылмады: %s: %s"
 
 #: p11-kit/modules.c:393
 #, c-format
 msgid "call to C_GetFunctiontList failed in module: %s: %s"
-msgstr ""
+msgstr "модульде C_GetFunctiontList шақыру сәтсіз аяқталды: %s: %s"
 
 #: p11-kit/modules.c:399
 msgid "refusing to load the p11-kit-proxy.so module as a registered module"
-msgstr ""
+msgstr "p11-kit-proxy.so модулін тіркелген модуль ретінде жүктеуден бас тартылды"
 
 #: p11-kit/modules.c:548
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
-msgstr ""
+msgstr "'%s' модулінде enable-in және disable-in опцияларының екеуі де бар"
 
 #: p11-kit/modules.c:698
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
-msgstr ""
+msgstr "'%s' модулі критикалық деп белгіленгендіктен, инициализациялау тоқтатылды"
 
 #: p11-kit/modules.c:723
 msgid "p11-kit initialization called recursively"
-msgstr ""
+msgstr "p11-kit инициализациялау рекурсивті түрде шақырылды"
 
 #: p11-kit/modules.c:909
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
-msgstr ""
+msgstr "критикалық '%s' модулін инициализациялау сәтсіз аяқталды: %s"
 
 #: p11-kit/modules.c:912
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
-msgstr ""
+msgstr "инициализациялауы сәтсіз аяқталған '%s' модулі өткізілуде: %s"
 
 #: p11-kit/modules.c:1687
 #, c-format
 msgid "couldn't close session: %s"
-msgstr ""
+msgstr "сессияны жабу мүмкін емес: %s"
 
-#.
-#. * This is because the module is running in unmanaged mode, so turn off the
-#.
 #: p11-kit/modules.c:1864
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
-msgstr ""
+msgstr "'%s' модулі үшін '%s' опциясына тек басқарылатын модульдерде қолдау көрсетіледі"
 
-#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#: p11-kit/modules.c:2171
 #, c-format
-msgid "%s: module failed to initialize: %s"
-msgstr ""
-
-#: p11-kit/modules.c:2176
-#, c-format
-msgid "%s: module failed to initialize, skipping: %s"
-msgstr ""
+msgid "%s: module failed to initialize%s: %s"
+msgstr "%s: модуль инициализацияланбады%s: %s"
 
 #: p11-kit/modules.c:2182
 #, c-format
 msgid "%s: module was already initialized"
-msgstr ""
+msgstr "%s: модуль инициализацияланып қойған"
 
 #: p11-kit/modules.c:2278 p11-kit/modules.c:2690
 #, c-format
 msgid "%s: module failed to finalize: %s"
-msgstr ""
+msgstr "%s: модуль жұмысын аяқтай алмады: %s"
 
 #: p11-kit/modules.c:2417
 #, c-format
 msgid "module initialization failed: %s"
-msgstr ""
+msgstr "модульді инициализациялау сәтсіз: %s"
+
+#: p11-kit/modules.c:2649
+#, c-format
+msgid "%s: module failed to initialize: %s"
+msgstr "%s: модуль инициализацияланбады: %s"
 
 #: p11-kit/p11-kit.c:72
 msgid "List modules and tokens"
-msgstr ""
+msgstr "Модульдер мен токендерді тізімдеу"
 
 #: p11-kit/p11-kit.c:73
 msgid "Run a specific PKCS#11 module remotely"
-msgstr ""
+msgstr "Арнайы PKCS#11 модулін қашықтан іске қосу"
 
 #: p11-kit/p11-kit.c:74
 msgid "Run a server process that exposes PKCS#11 module remotely"
-msgstr ""
+msgstr "PKCS#11 модулін қашықтан ұсынатын сервер процесін іске қосу"
 
-#. At this point we have no command
 #: p11-kit/p11-kit.c:95
 msgid "couldn't run trust tool"
-msgstr ""
+msgstr "trust құралын іске қосу мүмкін емес"
 
-#. At this point we have no command
 #: p11-kit/p11-kit.c:137
 #, c-format
 msgid "'%s' is not a valid command. See 'p11-kit --help'"
-msgstr ""
+msgstr "'%s' — жарамды команда емес. 'p11-kit --help' қараңыз"
 
 #: p11-kit/remote.c:108
 msgid "specify a module or tokens to remote"
-msgstr ""
+msgstr "қашықтан басқару үшін модульді немесе токендерді көрсетіңіз"
 
 #: p11-kit/remote.c:113
 msgid "the 'remote' tool is not meant to be run from a terminal"
-msgstr ""
+msgstr "'remote' құралы терминалдан іске қосуға арналмаған"
 
 #: p11-kit/remote.c:139
 msgid "only one module can be specified"
-msgstr ""
+msgstr "тек бір модуль көрсетуге болады"
 
-#: p11-kit/rpc-client.c:146
+#: p11-kit/rpc-client.c:144
 msgid "invalid rpc error response: too short"
-msgstr ""
+msgstr "жарамсыз rpc қате жауабы: тым қысқа"
 
-#: p11-kit/rpc-client.c:151
+#: p11-kit/rpc-client.c:149
 msgid "invalid rpc error response: bad error code"
-msgstr ""
+msgstr "жарамсыз rpc қате жауабы: қате коды бұрыс"
 
-#: p11-kit/rpc-client.c:161
+#: p11-kit/rpc-client.c:159
 msgid "invalid rpc response: call mismatch"
-msgstr ""
+msgstr "жарамсыз rpc жауабы: шақыру сәйкессіздігі"
 
-#: p11-kit/rpc-client.c:182
+#: p11-kit/rpc-client.c:180
 msgid "invalid rpc response: bad argument data"
-msgstr ""
+msgstr "жарамсыз rpc жауабы: аргумент деректері бұрыс"
 
-#: p11-kit/rpc-client.c:229
+#: p11-kit/rpc-client.c:227
 msgid "received an attribute array with wrong number of attributes"
-msgstr ""
+msgstr "атрибуттар саны қате атрибут массиві алынды"
 
-#: p11-kit/rpc-client.c:256
+#: p11-kit/rpc-client.c:249
 msgid "returned attributes in invalid order"
-msgstr ""
+msgstr "атрибуттар жарамсыз ретпен қайтарылды"
 
-#: p11-kit/rpc-client.c:727 trust/module.c:382
+#: p11-kit/rpc-client.c:720 trust/module.c:382
 msgid "invalid set of mutex calls supplied"
-msgstr ""
+msgstr "mutex шақыруларының жарамсыз жиыны ұсынылды"
 
-#: p11-kit/rpc-client.c:736 trust/module.c:391
+#: p11-kit/rpc-client.c:729 trust/module.c:391
 msgid "can't do without os locking"
-msgstr ""
+msgstr "os құлыптауынсыз орындау мүмкін емес"
 
-#: p11-kit/rpc-client.c:749
+#: p11-kit/rpc-client.c:742
 msgid "C_Initialize called twice for same process"
-msgstr ""
+msgstr "C_Initialize бір процесс үшін екі рет шақырылды"
 
-#: p11-kit/rpc-client.c:856
+#: p11-kit/rpc-client.c:826
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
-msgstr ""
+msgstr "rpc модулін аяқтау қате қайтарды: %lu"
 
 #: p11-kit/rpc-message.c:190
 msgid "invalid message: couldn't read call identifier"
-msgstr ""
+msgstr "жарамсыз хабарлама: шақыру идентификаторын оқу мүмкін емес"
 
 #: p11-kit/rpc-message.c:199
 #, c-format
 msgid "invalid message: bad call id: %d"
-msgstr ""
+msgstr "жарамсыз хабарлама: шақыру id қате: %d"
 
 #: p11-kit/rpc-message.c:217
 msgid "invalid message: couldn't read signature"
-msgstr ""
+msgstr "жарамсыз хабарлама: қолтаңбаны оқу мүмкін емес"
 
 #: p11-kit/rpc-message.c:222
 msgid "invalid message: signature doesn't match"
-msgstr ""
+msgstr "жарамсыз хабарлама: қолтаңба сәйкес келмейді"
 
 #: p11-kit/rpc-message.c:483
 #, c-format
 msgid "invalid length space padded string received: %d != %d"
-msgstr ""
+msgstr "бос орынмен толтырылған жолдың ұзындығы жарамсыз: %d != %d"
 
-#: p11-kit/rpc-server.c:575
+#: p11-kit/rpc-server.c:558
 msgid "invalid request from module, probably too short"
-msgstr ""
+msgstr "модульден жарамсыз сұраным, тым қысқа болуы мүмкін"
 
-#: p11-kit/rpc-server.c:585
+#: p11-kit/rpc-server.c:568
 msgid "couldn't initialize rpc response"
-msgstr ""
+msgstr "rpc жауабын инициализациялау мүмкін емес"
 
-#: p11-kit/rpc-server.c:717
+#: p11-kit/rpc-server.c:700
 msgid "invalid handshake received from connecting module"
-msgstr ""
+msgstr "қосылатын модульден жарамсыз қол алысу (handshake) алынды"
 
-#: p11-kit/rpc-server.c:1834
+#: p11-kit/rpc-server.c:1817
 msgid "couldn't parse pkcs11 rpc message"
-msgstr ""
+msgstr "pkcs11 rpc хабарламасын талдау мүмкін емес"
 
-#: p11-kit/rpc-server.c:1921
+#: p11-kit/rpc-server.c:1904
 msgid "out of memory error putting together message"
-msgstr ""
+msgstr "хабарламаны құрастыру кезінде жады жетіспеу қатесі"
 
-#: p11-kit/rpc-server.c:1945
+#: p11-kit/rpc-server.c:1928
 msgid "out of memory responding with error"
-msgstr ""
+msgstr "қатемен жауап беру кезінде жады жетіспеді"
 
-#: p11-kit/rpc-server.c:1991
+#: p11-kit/rpc-server.c:1974
 #, c-format
 msgid "unsupported version received: %d"
-msgstr ""
+msgstr "қолдау көрсетілмейтін нұсқа алынды: %d"
 
-#: p11-kit/rpc-server.c:1997
+#: p11-kit/rpc-server.c:1979
 msgid "couldn't read credential byte"
-msgstr ""
+msgstr "тіркелгі деректерінің байтын оқу мүмкін емес"
 
-#: p11-kit/rpc-server.c:2009
+#: p11-kit/rpc-server.c:1988
 msgid "couldn't write credential byte"
-msgstr ""
+msgstr "тіркелгі деректерінің байтын жазу мүмкін емес"
 
-#: p11-kit/rpc-server.c:2032
+#: p11-kit/rpc-server.c:2011
 msgid "failed to read rpc message"
-msgstr ""
+msgstr "rpc хабарламасын оқу сәтсіз"
 
-#: p11-kit/rpc-server.c:2037
+#: p11-kit/rpc-server.c:2016
 msgid "unexpected error handling rpc message"
-msgstr ""
+msgstr "rpc хабарламасын өңдеуде күтпеген қате"
 
-#: p11-kit/rpc-server.c:2055
+#: p11-kit/rpc-server.c:2034
 msgid "failed to write rpc message"
-msgstr ""
+msgstr "rpc хабарламасын жазу сәтсіз"
 
-#: p11-kit/rpc-transport.c:208
+#: p11-kit/rpc-transport.c:212
 msgid "couldn't send data: closed connection"
-msgstr ""
+msgstr "деректерді жіберу мүмкін емес: байланыс жабық"
 
-#: p11-kit/rpc-transport.c:211
+#: p11-kit/rpc-transport.c:215
 msgid "couldn't send data"
-msgstr ""
-
-#: p11-kit/rpc-transport.c:234
-msgid "couldn't receive data: closed connection"
-msgstr ""
+msgstr "деректерді жіберу мүмкін емес"
 
 #: p11-kit/rpc-transport.c:238
+msgid "couldn't receive data: closed connection"
+msgstr "деректерді қабылдау мүмкін емес: байланыс жабық"
+
+#: p11-kit/rpc-transport.c:242
 msgid "couldn't receive data"
-msgstr ""
+msgstr "деректерді қабылдау мүмкін емес"
 
-#: p11-kit/rpc-transport.c:416
-msgid "received invalid rpc header values: perhaps wrong protocol"
-msgstr ""
-
-#: p11-kit/rpc-transport.c:459
-msgid "couldn't use select to wait on rpc pipe"
-msgstr ""
-
-#: p11-kit/rpc-transport.c:648
+#: p11-kit/rpc-transport.c:270
 msgid "couldn't send socket credentials"
-msgstr ""
+msgstr "сокет тіркелгі деректерін жіберу мүмкін емес"
 
-#: p11-kit/rpc-transport.c:653
-msgid "couldn't receive socket credentials"
-msgstr ""
+#: p11-kit/rpc-transport.c:439
+msgid "received invalid rpc header values: perhaps wrong protocol"
+msgstr "жарамсыз rpc тақырыптама мәндері алынды: протокол қате болуы мүмкін"
 
-#: p11-kit/rpc-transport.c:659
-msgid "peer protocol version is too old"
-msgstr ""
+#: p11-kit/rpc-transport.c:482
+msgid "couldn't use select to wait on rpc pipe"
+msgstr "rpc арнасында күту үшін select пайдалану мүмкін болмады"
 
-#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
+#: p11-kit/rpc-transport.c:688 p11-kit/rpc-transport.c:694
 msgid "closing socket due to protocol failure"
-msgstr ""
+msgstr "протокол сәтсіздігіне байланысты сокет жабылуда"
 
-#: p11-kit/rpc-transport.c:755
+#: p11-kit/rpc-transport.c:733
 #, c-format
 msgid "process %d did not exit, terminating"
-msgstr ""
+msgstr "%d процесі шықпады, мәжбүрлеп тоқтатылуда"
 
-#: p11-kit/rpc-transport.c:762
+#: p11-kit/rpc-transport.c:740
 #, c-format
 msgid "failed to wait for executed child: %d"
-msgstr ""
+msgstr "орындалған еншілес процесті күту сәтсіз: %d"
 
-#: p11-kit/rpc-transport.c:769
+#: p11-kit/rpc-transport.c:747
 #, c-format
 msgid "process %d exited with status %d"
-msgstr ""
+msgstr "%d процесі %d күйімен аяқталды"
 
-#: p11-kit/rpc-transport.c:773
+#: p11-kit/rpc-transport.c:751
 #, c-format
 msgid "process %d was terminated with signal %d"
-msgstr ""
+msgstr "%d процесі %d сигналымен тоқтатылды"
 
-#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
-#: p11-kit/rpc-transport.c:960
+#: p11-kit/rpc-transport.c:795 p11-kit/rpc-transport.c:931 p11-kit/rpc-transport.c:938
 msgid "failed to create pipe for remote"
-msgstr ""
+msgstr "remote үшін арна жасау сәтсіз"
 
-#: p11-kit/rpc-transport.c:828
+#: p11-kit/rpc-transport.c:806
 msgid "failed to fork for remote"
-msgstr ""
+msgstr "remote үшін тармақтау сәтсіз"
 
-#: p11-kit/rpc-transport.c:888
+#: p11-kit/rpc-transport.c:866
 #, c-format
 msgid "process %p did not exit, terminating"
-msgstr ""
+msgstr "%p процесі шықпады, мәжбүрлеп тоқтатылуда"
 
-#: p11-kit/rpc-transport.c:890
+#: p11-kit/rpc-transport.c:868
 #, c-format
 msgid "couldn't terminate process %p"
-msgstr ""
+msgstr "%p процесін тоқтату мүмкін емес"
 
-#: p11-kit/rpc-transport.c:895
+#: p11-kit/rpc-transport.c:873
 #, c-format
 msgid "failed to wait for executed child: %p"
-msgstr ""
+msgstr "орындалған еншілес процесті күту сәтсіз: %p"
 
-#: p11-kit/rpc-transport.c:898
+#: p11-kit/rpc-transport.c:876
 #, c-format
 msgid "failed to get the exit status of %p"
-msgstr ""
+msgstr "%p процесінің шығу күйін алу сәтсіз"
 
-#: p11-kit/rpc-transport.c:902
+#: p11-kit/rpc-transport.c:880
 #, c-format
 msgid "process %p exited with status %lu"
-msgstr ""
+msgstr "%p процесі %lu күйімен аяқталды"
 
-#: p11-kit/rpc-transport.c:968
+#: p11-kit/rpc-transport.c:946
 msgid "failed to duplicate stdin"
-msgstr ""
+msgstr "stdin қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:975
+#: p11-kit/rpc-transport.c:953
 msgid "failed to duplicate stdout"
-msgstr ""
+msgstr "stdout қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:983
+#: p11-kit/rpc-transport.c:961
 msgid "failed to duplicate child end of pipe"
-msgstr ""
+msgstr "арнаның еншілес соңын қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:993
+#: p11-kit/rpc-transport.c:971
 msgid "failed to spawn remote"
-msgstr ""
+msgstr "remote процесін бастау сәтсіз"
 
-#: p11-kit/rpc-transport.c:1006
+#: p11-kit/rpc-transport.c:984
 msgid "failed to restore file descriptors"
-msgstr ""
+msgstr "файл дескрипторларын қалпына келтіру сәтсіз"
 
-#: p11-kit/rpc-transport.c:1075
+#: p11-kit/rpc-transport.c:1053
 #, c-format
 msgid "invalid remote command line: %s"
-msgstr ""
+msgstr "жарамсыз remote пәрмен жолы: %s"
 
-#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
+#: p11-kit/rpc-transport.c:1092 p11-kit/rpc-transport.c:1172
 msgid "failed to create socket for remote"
-msgstr ""
+msgstr "remote үшін сокет жасау сәтсіз"
 
-#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
+#: p11-kit/rpc-transport.c:1268 p11-kit/server.c:165
 #, c-format
 msgid "failed to parse vsock address: '%s'"
-msgstr ""
+msgstr "vsock адресін талдау сәтсіз: '%s'"
 
-#: p11-kit/rpc-transport.c:1301
+#: p11-kit/rpc-transport.c:1276
 #, c-format
 msgid "remote not supported: %s"
-msgstr ""
+msgstr "remote қолдау көрсетпейді: %s"
 
 #: p11-kit/server.c:243
 #, c-format
 msgid "child %u died with sigsegv"
-msgstr ""
+msgstr "%u еншілес процесі sigsegv қатесімен құлады"
 
 #: p11-kit/server.c:245
 #, c-format
 msgid "child %u died with signal %d"
-msgstr ""
+msgstr "%u еншілес процесі %d сигналымен құлады"
 
 #: p11-kit/server.c:318
 #, c-format
 msgid "could not create socket %s"
-msgstr ""
+msgstr "%s сокетін жасау мүмкін емес"
 
 #: p11-kit/server.c:326
 #, c-format
 msgid "could not bind socket %s"
-msgstr ""
+msgstr "%s сокетін байланыстыру мүмкін емес"
 
 #: p11-kit/server.c:333
 #, c-format
 msgid "could not listen to socket %s"
-msgstr ""
+msgstr "%s сокетін тыңдау мүмкін емес"
 
 #: p11-kit/server.c:341
 #, c-format
 msgid "could not chown socket %s"
-msgstr ""
+msgstr "%s сокетіне chown орындау мүмкін емес"
 
 #: p11-kit/server.c:364
 #, c-format
 msgid "could not create socket %u:%u"
-msgstr ""
+msgstr "%u:%u сокетін жасау мүмкін емес"
 
 #: p11-kit/server.c:371
 #, c-format
 msgid "could not bind socket %u:%u"
-msgstr ""
+msgstr "%u:%u сокетін байланыстыру мүмкін емес"
 
 #: p11-kit/server.c:378
 #, c-format
 msgid "could not listen to socket %u:%u"
-msgstr ""
+msgstr "%u:%u сокетін тыңдау мүмкін емес"
 
 #: p11-kit/server.c:397
 msgid "could not check uid from socket"
-msgstr ""
+msgstr "сокеттен uid тексеру мүмкін емес"
 
 #: p11-kit/server.c:403
 #, c-format
 msgid "connecting uid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "қосылып тұрған uid (%u) күтілгенге сәйкес келмейді (%u)"
 
 #: p11-kit/server.c:410
 #, c-format
 msgid "connecting gid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "қосылып тұрған gid (%u) күтілгенге сәйкес келмейді (%u)"
 
 #: p11-kit/server.c:491
 msgid "could not fork() to daemonize"
-msgstr ""
+msgstr "демон режиміне өту үшін fork() орындау мүмкін емес"
 
 #: p11-kit/server.c:504
 msgid "could not create a new session"
-msgstr ""
+msgstr "жаңа сессия жасау мүмкін емес"
 
 #: p11-kit/server.c:512
 msgid "too many file descriptors received"
-msgstr ""
+msgstr "тым көп файл дескрипторлары алынды"
 
 #: p11-kit/server.c:556
 #, c-format
 msgid "no connections to %s for %lu secs, exiting"
-msgstr ""
+msgstr "%s үшін %lu секунд байланыс жоқ, шығу"
 
 #: p11-kit/server.c:565
 #, c-format
 msgid "could not accept from socket %s"
-msgstr ""
+msgstr "%s сокетінен қабылдау мүмкін емес"
 
 #: p11-kit/server.c:576
 msgid "failed to fork for accept"
-msgstr ""
+msgstr "accept үшін тармақтау сәтсіз"
 
 #: p11-kit/server.c:721 p11-kit/server.c:737
 #, c-format
 msgid "unknown group: %s"
-msgstr ""
+msgstr "белгісіз топ: %s"
 
 #: p11-kit/server.c:729 p11-kit/server.c:745
 #, c-format
 msgid "unknown user: %s"
-msgstr ""
+msgstr "белгісіз пайдаланушы: %s"
 
 #: p11-kit/server.c:828
 #, c-format
 msgid "cannot set gid to %u"
-msgstr ""
+msgstr "gid мәнін %u деп орнату мүмкін емес"
 
 #: p11-kit/server.c:834
 #, c-format
 msgid "cannot setgroups to %u"
-msgstr ""
+msgstr "setgroups мәнін %u деп орнату мүмкін емес"
 
 #: p11-kit/server.c:842
 #, c-format
 msgid "cannot set uid to %u"
-msgstr ""
+msgstr "uid мәнін %u деп орнату мүмкін емес"
 
 #: p11-kit/server.c:858
 msgid "cannot determine runtime directory"
-msgstr ""
+msgstr "орындалу ортасының бумасын анықтау мүмкін емес"
 
 #: p11-kit/server.c:870
 #, c-format
 msgid "cannot create %s"
-msgstr ""
+msgstr "%s жасау мүмкін емес"
 
 #: p11-kit/server.c:1141
 msgid "couldn't initialize Windows security functions"
-msgstr ""
+msgstr "Windows қауіпсіздік функцияларын инициализациялау мүмкін емес"
 
 #: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
 #, c-format
 msgid "unable to construct SID for %s: %lu"
-msgstr ""
+msgstr "%s үшін SID құрастыру мүмкін емес: %lu"
 
 #: p11-kit/server.c:1369
 #, c-format
 msgid "unable to construct ACL: %d"
-msgstr ""
+msgstr "ACL құрастыру мүмкін емес: %d"
 
 #: p11-kit/server.c:1375
 #, c-format
 msgid "unable to allocate security descriptor: %lu"
-msgstr ""
+msgstr "қауіпсіздік дескрипторын бөлу мүмкін емес: %lu"
 
 #: p11-kit/server.c:1381
 #, c-format
 msgid "unable to initialise security descriptor: %lu"
-msgstr ""
+msgstr "қауіпсіздік дескрипторын инициализациялау мүмкін емес: %lu"
 
 #: p11-kit/server.c:1387
 #, c-format
 msgid "unable to set owner in security descriptor: %lu"
-msgstr ""
+msgstr "қауіпсіздік дескрипторында иесін орнату мүмкін емес: %lu"
 
 #: p11-kit/server.c:1393
 #, c-format
 msgid "unable to set DACL in security descriptor: %lu"
-msgstr ""
+msgstr "қауіпсіздік дескрипторында DACL орнату мүмкін емес: %lu"
 
-#: trust/anchor.c:126
+#: trust/anchor.c:125
 #, c-format
 msgid "invalid PKCS#11 uri: %s"
-msgstr ""
+msgstr "жарамсыз PKCS#11 uri: %s"
 
-#: trust/anchor.c:148 trust/anchor.c:204
+#: trust/anchor.c:147 trust/anchor.c:203
 #, c-format
 msgid "unrecognized file format: %s"
-msgstr ""
+msgstr "танылмаған файл пішімі: %s"
 
-#: trust/anchor.c:151 trust/anchor.c:207
+#: trust/anchor.c:150 trust/anchor.c:206
 #, c-format
 msgid "failed to parse file: %s"
-msgstr ""
+msgstr "файлды талдау сәтсіз: %s"
 
-#: trust/anchor.c:246
+#: trust/anchor.c:245
 #, c-format
 msgid "%s: couldn't initialize: %s"
-msgstr ""
+msgstr "%s: инициализациялау мүмкін емес: %s"
 
-#: trust/anchor.c:257
+#: trust/anchor.c:256
 #, c-format
 msgid "%s: couldn't enumerate slots: %s"
-msgstr ""
+msgstr "%s: слоттарды нөмірлеу мүмкін емес: %s"
 
-#: trust/anchor.c:265
+#: trust/anchor.c:264
 #, c-format
 msgid "%s: couldn't get token info: %s"
-msgstr ""
+msgstr "%s: токен ақпаратын алу мүмкін емес: %s"
 
-#: trust/anchor.c:277
+#: trust/anchor.c:276
 #, c-format
 msgid "%s: couldn't open session: %s"
-msgstr ""
+msgstr "%s: сессияны ашу мүмкін емес: %s"
 
-#: trust/anchor.c:325
+#: trust/anchor.c:324
 msgid "no configured writable location to store anchors"
-msgstr ""
+msgstr "зәкірлерді сақтау үшін жазуға болатын орын бапталмаған"
 
-#: trust/anchor.c:327
+#: trust/anchor.c:326
 msgid "no configured location to store anchors"
-msgstr ""
+msgstr "зәкірлерді сақтау орны бапталмаған"
 
-#: trust/anchor.c:388 trust/anchor.c:435
+#: trust/anchor.c:387 trust/anchor.c:434
 #, c-format
 msgid "couldn't create object: %s"
-msgstr ""
+msgstr "объект жасау мүмкін емес: %s"
 
-#: trust/anchor.c:487
+#: trust/anchor.c:486
 msgid "specify at least one anchor input file"
-msgstr ""
+msgstr "кемінде бір зәкір кіріс файлын көрсетіңіз"
 
-#: trust/anchor.c:570
+#: trust/anchor.c:569
 #, c-format
 msgid "couldn't remove read-only %s"
-msgstr ""
+msgstr "тек оқуға арналған %s өшіру мүмкін емес"
 
-#: trust/anchor.c:573
+#: trust/anchor.c:572
 #, c-format
 msgid "couldn't remove %s: %s"
-msgstr ""
+msgstr "%s өшіру мүмкін емес: %s"
 
-#: trust/anchor.c:599
+#: trust/anchor.c:598
 msgid "at least one file or uri must be specified"
-msgstr ""
+msgstr "кемінде бір файл немесе uri көрсетілуі керек"
 
-#: trust/anchor.c:665
+#: trust/anchor.c:664
 msgid "an action was already specified"
-msgstr ""
+msgstr "әрекет көрсетіліп қойған"
 
-#: trust/anchor.c:702
+#: trust/anchor.c:701
 #, c-format
 msgid "%u error while processing"
-msgid_plural "%u errors while processing"
-msgstr[0] ""
-msgstr[1] ""
+msgstr "өңдеу кезінде %u қате"
 
-#: trust/builder.c:155
+#: trust/anchor.c:703
+#, c-format
+msgid "%u errors while processing"
+msgstr "өңдеу кезінде %u қате"
+
+#: trust/builder.c:153
 #, c-format
 msgid "%.*s: invalid certificate extension"
-msgstr ""
+msgstr "%.*s: жарамсыз сертификат кеңейтуі"
 
-#: trust/builder.c:674
+#: trust/builder.c:672
 #, c-format
 msgid "%.*s: invalid basic constraints certificate extension"
-msgstr ""
+msgstr "%.*s: жарамсыз basic constraints сертификат кеңейтуі"
 
-#: trust/builder.c:676
+#: trust/builder.c:674
 msgid "unknown"
-msgstr ""
+msgstr "белгісіз"
 
-#: trust/builder.c:865
+#: trust/builder.c:863
 msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "CKA_HASH_OF_SUBJECT_PUBLIC_KEY атрибуты жоқ"
 
-#: trust/builder.c:870
+#: trust/builder.c:868
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "CKA_HASH_OF_ISSUER_PUBLIC_KEY атрибуты жоқ"
 
-#: trust/builder.c:1084
+#: trust/builder.c:1082
 msgid "the object is not modifiable"
-msgstr ""
+msgstr "объект өзгертілмейді"
 
-#: trust/builder.c:1091
+#: trust/builder.c:1089
 msgid "objects of this type cannot be created"
-msgstr ""
+msgstr "мұндай типті объектілерді жасау мүмкін емес"
 
-#: trust/builder.c:1111
+#: trust/builder.c:1108
 #, c-format
 msgid "the %s attribute cannot be set"
-msgstr ""
+msgstr "%s атрибутын орнату мүмкін емес"
 
-#: trust/builder.c:1116
+#: trust/builder.c:1113
 #, c-format
 msgid "the %s attribute cannot be changed"
-msgstr ""
+msgstr "%s атрибутын өзгерту мүмкін емес"
 
-#: trust/builder.c:1122
+#: trust/builder.c:1119
 #, c-format
 msgid "the %s attribute has an invalid value"
-msgstr ""
+msgstr "%s атрибутының мәні жарамсыз"
 
-#: trust/builder.c:1131
+#: trust/builder.c:1128
 #, c-format
 msgid "the %s attribute is not valid for the object"
-msgstr ""
+msgstr "%s атрибуты объект үшін жарамсыз"
 
-#: trust/builder.c:1154
+#: trust/builder.c:1150
 #, c-format
 msgid "missing the %s attribute"
-msgstr ""
+msgstr "%s атрибуты жоқ"
 
-#: trust/builder.c:1194
+#: trust/builder.c:1190
 msgid "no CKA_CLASS attribute found"
-msgstr ""
+msgstr "CKA_CLASS атрибуты табылмады"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1196
 #, c-format
 msgid "cannot create a %s object"
-msgstr ""
+msgstr "%s объектісін жасау мүмкін емес"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1196
 msgid "token"
-msgstr ""
+msgstr "токен"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1196
 msgid "non-token"
-msgstr ""
+msgstr "токен емес"
 
-#: trust/builder.c:1208
+#: trust/builder.c:1204
 #, c-format
 msgid "missing %s on object"
-msgstr ""
+msgstr "объектіде %s жоқ"
 
-#: trust/builder.c:1213
+#: trust/builder.c:1209
 #, c-format
 msgid "%s unsupported %s"
-msgstr ""
+msgstr "%s қолдау көрсетілмейтін %s"
 
-#: trust/builder.c:1234
+#: trust/builder.c:1230
 #, c-format
 msgid "%s unsupported object class"
-msgstr ""
+msgstr "%s қолдау көрсетілмейтін объект класы"
 
-#: trust/builder.c:1300
+#: trust/builder.c:1296
 msgid "invalid key usage certificate extension"
-msgstr ""
+msgstr "key usage сертификат кеңейтуі жарамсыз"
 
-#: trust/builder.c:1768
+#: trust/builder.c:1762
 msgid "invalid extended key usage certificate extension"
-msgstr ""
+msgstr "extended key usage сертификат кеңейтуі жарамсыз"
 
-#: trust/builder.c:1776
+#: trust/builder.c:1770
 msgid "invalid reject key usage certificate extension"
-msgstr ""
+msgstr "reject key usage сертификат кеңейтуі жарамсыз"
 
 #: trust/dump.c:113
 msgid "could not dump object"
-msgstr ""
+msgstr "объектіні дамптау мүмкін емес"
 
 #: trust/dump.c:187 trust/list.c:256
 msgid "extra arguments passed to command"
-msgstr ""
+msgstr "командаға артық аргументтер берілді"
 
-#: trust/enumerate.c:78
+#: trust/enumerate.c:77
 #, c-format
 msgid "couldn't parse attached certificate extension: %s"
-msgstr ""
+msgstr "тіркелген сертификат кеңейтуін талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:151
+#: trust/enumerate.c:148
 #, c-format
 msgid "couldn't load attached extensions for certificate: %s"
-msgstr ""
+msgstr "сертификат үшін тіркелген кеңейтулерді жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:275
+#: trust/enumerate.c:272
 #, c-format
 msgid "couldn't parse certificate: %s"
-msgstr ""
+msgstr "сертификатты талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:312
+#: trust/enumerate.c:309
 #, c-format
 msgid "couldn't load attributes: %s"
-msgstr ""
+msgstr "атрибуттарды жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:323
+#: trust/enumerate.c:320
 msgid "skipping non-certificate object"
-msgstr ""
+msgstr "сертификат емес объект өткізілуде"
 
-#: trust/enumerate.c:480 trust/enumerate.c:508
+#: trust/enumerate.c:477 trust/enumerate.c:505
 #, c-format
 msgid "couldn't load blocklist: %s"
-msgstr ""
+msgstr "блоктау тізімін жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:582
+#: trust/enumerate.c:579
 msgid "a PKCS#11 URI has already been specified"
-msgstr ""
+msgstr "PKCS#11 URI көрсетіліп қойған"
 
-#: trust/enumerate.c:589
+#: trust/enumerate.c:586
 #, c-format
 msgid "couldn't parse pkcs11 uri filter: %s"
-msgstr ""
+msgstr "pkcs11 uri сүзгісін талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:594
+#: trust/enumerate.c:591
 msgid "uri contained unrecognized components, nothing will be extracted"
-msgstr ""
+msgstr "uri құрамында танылмаған құрамдастар бар, ештеңе алынбайды"
 
-#: trust/enumerate.c:621
+#: trust/enumerate.c:618
 #, c-format
 msgid "unsupported or unrecognized filter: %s"
-msgstr ""
+msgstr "қолдау көрсетілмейтін немесе танылмаған сүзгі: %s"
 
-#: trust/enumerate.c:670
+#: trust/enumerate.c:667
 #, c-format
-msgid "unsupported or unrecognized purpose: %s"
-msgstr ""
+msgid "unsupported or unregonized purpose: %s"
+msgstr "қолдау көрсетілмейтін немесе танылмаған мақсат: %s"
 
-#: trust/enumerate.c:712
+#: trust/enumerate.c:709
 msgid "no modules containing trust policy are registered"
-msgstr ""
+msgstr "сенім саясаты бар ешқандай модуль тіркелмеген"
 
 #: trust/extract.c:98
 msgid "a format was already specified"
-msgstr ""
+msgstr "пішім көрсетіліп қойған"
 
 #: trust/extract.c:110
 #, c-format
 msgid "unsupported or unrecognized format: %s"
-msgstr ""
+msgstr "қолдау көрсетілмейтін немесе танылмаған пішім: %s"
 
-#.
-#. * If we're extracting *both* anchors and blocklist, then we must have
-#. * a format that can represent the different types of information.
-#.
 #: trust/extract.c:148
 msgid "format does not support trust policy"
-msgstr ""
+msgstr "пішім сенім саясатына қолдау көрсетпейді"
 
 #: trust/extract.c:159
-msgid ""
-"format requires a purpose, specify it with --purpose; defaulting to 'server-"
-"auth'"
-msgstr ""
+msgid "format requires a purpose, specify it with --purpose; defaulting to 'server-auth'"
+msgstr "пішім мақсатты талап етеді, оны --purpose арқылы көрсетіңіз; 'server-auth' әдепкі мәні қолданылады"
 
 #: trust/extract.c:162
 msgid "format does not support multiple purposes, defaulting to 'server-auth'"
-msgstr ""
+msgstr "пішім бірнеше мақсатқа қолдау көрсетпейді, 'server-auth' әдепкі мәні қолданылады"
 
 #: trust/extract.c:283
 msgid "specify one destination file or directory"
-msgstr ""
+msgstr "бір мақсатты файлды немесе буманы көрсетіңіз"
 
 #: trust/extract.c:288
 msgid "no output format specified"
-msgstr ""
+msgstr "шығыс пішімі көрсетілмеген"
 
-#. At this point we have no command
-#: trust/extract.c:333
+#: trust/extract.c:332
 #, c-format
 msgid "could not run %s command"
-msgstr ""
+msgstr "%s командасын орындау мүмкін емес"
 
 #: trust/extract-cer.c:62
 msgid "multiple certificates found but could only write one to file"
-msgstr ""
+msgstr "бірнеше сертификат табылды, бірақ файлға тек біреуін жазуға болады"
 
-#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
-#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
-#: trust/extract-pem.c:94 trust/extract-pem.c:161
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331 trust/extract-openssl.c:369
+#: trust/extract-openssl.c:696 trust/extract-pem.c:94 trust/extract-pem.c:161
 #, c-format
 msgid "failed to find certificates: %s"
-msgstr ""
+msgstr "сертификаттарды табу сәтсіз: %s"
 
 #: trust/extract-cer.c:80
 msgid "no certificate found"
-msgstr ""
+msgstr "сертификат табылмады"
 
 #: trust/extract-edk2.c:192
 #, c-format
 msgid "failed to find certificate: %s"
-msgstr ""
+msgstr "сертификатты табу сәтсіз: %s"
 
 #: trust/extract-jks.c:142
 msgid "truncating long string"
-msgstr ""
+msgstr "ұзын жол қысқартылуда"
 
 #: trust/extract-jks.c:272
 msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
-msgstr ""
+msgstr "$SOURCE_DATE_EPOCH орта айнымалысы: strtoull"
 
 #: trust/extract-jks.c:276
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
-msgstr ""
+msgstr "$SOURCE_DATE_EPOCH орта айнымалысы: Цифрлар табылмады: %s\n"
 
 #: trust/extract-jks.c:280
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
-msgstr ""
+msgstr "$SOURCE_DATE_EPOCH орта айнымалысы: Соңындағы қоқыс: %s\n"
 
 #: trust/extract-jks.c:284
 #, c-format
 msgid ""
-"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
-"to %lu but was found to be: %llu \n"
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal to %lu but was found to be: "
+"%llu \n"
 msgstr ""
+"$SOURCE_DATE_EPOCH орта айнымалысы: мән %lu тең немесе кіші болуы керек, бірақ ол мынадай болды: %llu\n"
 
 #: trust/extract-jks.c:312
 msgid "could not generate a certificate alias name"
-msgstr ""
+msgstr "сертификат бүркеншік атын жасау мүмкін емес"
 
 #: trust/list.c:122
 msgid "skipping object, couldn't build uri"
-msgstr ""
+msgstr "uri құру мүмкін емес, объект өткізілуде"
 
 #: trust/module.c:303
 #, c-format
 msgid "unrecognized module argument: %s"
-msgstr ""
+msgstr "танылмаған модуль аргументі: %s"
 
 #: trust/parser.c:109
 #, c-format
 msgid "certificate with distrust in location for anchors: %s"
-msgstr ""
+msgstr "зәкірлер орнында сенімсіздігі бар сертификат: %s"
 
 #: trust/parser.c:123
 #, c-format
 msgid "overriding trust for anchor in blocklist: %s"
-msgstr ""
+msgstr "блоктау тізіміндегі зәкір үшін сенім қайта анықталуда: %s"
 
 #: trust/parser.c:596
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
-msgstr ""
+msgstr "%s түріндегі PEM блогын талдау мүмкін емес"
 
 #: trust/parser.c:766
 #, c-format
 msgid "couldn't open and map file: %s"
-msgstr ""
+msgstr "файлды ашу және бейнелеу (map) мүмкін емес: %s"
 
 #: trust/persist.c:493
 #, c-format
 msgid "invalid oid value: %s"
-msgstr ""
+msgstr "oid мәні жарамсыз: %s"
 
-#: trust/save.c:124
+#: trust/save.c:120
 #, c-format
 msgid "couldn't create file: %s%s"
-msgstr ""
+msgstr "файлды жасау мүмкін емес: %s%s"
 
-#: trust/save.c:172
+#: trust/save.c:168
 #, c-format
 msgid "couldn't write to file: %s"
-msgstr ""
+msgstr "файлға жазу мүмкін емес: %s"
 
-#. Continue trying other names
-#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#: trust/save.c:205 trust/save.c:223 trust/save.c:286
 #, c-format
 msgid "couldn't complete writing of file: %s"
-msgstr ""
+msgstr "файлды жазуды аяқтау мүмкін емес: %s"
 
-#: trust/save.c:260
+#: trust/save.c:256
 #, c-format
 msgid "couldn't write file: %s"
-msgstr ""
+msgstr "файлды жазу мүмкін емес: %s"
 
-#: trust/save.c:266
+#: trust/save.c:262
 #, c-format
 msgid "couldn't set file permissions: %s"
-msgstr ""
+msgstr "файл рұқсаттарын орнату мүмкін емес: %s"
 
-#: trust/save.c:272 trust/save.c:315
+#: trust/save.c:268 trust/save.c:311
 #, c-format
 msgid "couldn't complete writing file: %s"
-msgstr ""
+msgstr "файлды жазуды аяқтау мүмкін емес: %s"
 
-#: trust/save.c:309
+#: trust/save.c:305
 #, c-format
 msgid "couldn't remove original file: %s"
-msgstr ""
+msgstr "түпнұсқа файлды өшіру мүмкін емес: %s"
 
-#: trust/save.c:355 trust/token.c:635
+#: trust/save.c:350 trust/token.c:635
 #, c-format
 msgid "couldn't create directory: %s"
-msgstr ""
+msgstr "буманы жасау мүмкін емес: %s"
 
-#: trust/save.c:359
+#: trust/save.c:354
 #, c-format
 msgid "directory already exists: %s"
-msgstr ""
+msgstr "бума бар болып тұр: %s"
 
-#: trust/save.c:370
-#, c-format
-msgid "couldn't open directory: %s"
-msgstr ""
-
-#: trust/save.c:374
-#, c-format
-msgid "couldn't check directory permissions: %s"
-msgstr ""
-
-#: trust/save.c:380
+#: trust/save.c:366
 #, c-format
 msgid "couldn't make directory writable: %s"
-msgstr ""
+msgstr "буманы жазылатын ету мүмкін емес: %s"
 
-#: trust/save.c:541
+#: trust/save.c:526
 #, c-format
 msgid "couldn't create symlink: %s"
-msgstr ""
+msgstr "символдық сілтеме жасау мүмкін емес: %s"
 
-#: trust/save.c:603 trust/token.c:503
+#: trust/save.c:588 trust/token.c:503
 #, c-format
 msgid "couldn't remove file: %s"
-msgstr ""
+msgstr "файлды өшіру мүмкін емес: %s"
 
-#: trust/save.c:631
+#: trust/save.c:616
 #, c-format
 msgid "couldn't set directory permissions: %s"
-msgstr ""
+msgstr "бума рұқсаттарын орнату мүмкін емес: %s"
 
 #: trust/token.c:227
 #, c-format
 msgid "couldn't load file into objects: %s"
-msgstr ""
+msgstr "файлды объектілерге жүктеу мүмкін емес: %s"
 
 #: trust/token.c:243
 #, c-format
 msgid "couldn't stat path: %d: %s"
-msgstr ""
+msgstr "жол күйін алу мүмкін емес: %d: %s"
 
 #: trust/token.c:312
 #, c-format
 msgid "cannot access trust certificate path: %s"
-msgstr ""
+msgstr "сенім сертификат жолына қол жеткізу мүмкін емес: %s"
 
 #: trust/token.c:426
 #, c-format
 msgid "cannot access trust file: %s"
-msgstr ""
+msgstr "сенім файлына қол жеткізу мүмкін емес: %s"
 
 #: trust/token.c:475
 #, c-format
 msgid "couldn't access: %s"
-msgstr ""
-
-#: trust/trust.c:60
-msgid "List trust or certificates"
-msgstr ""
-
-#: trust/trust.c:61
-msgid "Extract certificates and trust"
-msgstr ""
-
-#: trust/trust.c:62
-msgid "Extract trust compatibility bundles"
-msgstr ""
-
-#: trust/trust.c:63
-msgid "Add, remove, change trust anchors"
-msgstr ""
-
-#: trust/trust.c:64
-msgid "Dump trust objects in internal format"
-msgstr ""
+msgstr "қол жеткізу мүмкін емес: %s"
