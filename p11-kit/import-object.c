@@ -388,6 +388,152 @@ cleanup:
 	return result;
 }
 
+typedef struct {
+	const char *oid;
+	CK_KEY_TYPE key_type;
+	CK_ULONG parameter_set;
+	bool is_kem;
+} PqcOidEntry;
+
+/* Keep in sync with pqc_export_map in export-object.c */
+static const PqcOidEntry pqc_oid_map[] = {
+	/* ML-DSA */
+	{ P11_OID_ML_DSA_44_STR, CKK_ML_DSA, CKP_ML_DSA_44, false },
+	{ P11_OID_ML_DSA_65_STR, CKK_ML_DSA, CKP_ML_DSA_65, false },
+	{ P11_OID_ML_DSA_87_STR, CKK_ML_DSA, CKP_ML_DSA_87, false },
+	/* ML-KEM */
+	{ P11_OID_ML_KEM_512_STR, CKK_ML_KEM, CKP_ML_KEM_512, true },
+	{ P11_OID_ML_KEM_768_STR, CKK_ML_KEM, CKP_ML_KEM_768, true },
+	{ P11_OID_ML_KEM_1024_STR, CKK_ML_KEM, CKP_ML_KEM_1024, true },
+	/* SLH-DSA */
+	{ P11_OID_SLH_DSA_SHA2_128S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_128S, false },
+	{ P11_OID_SLH_DSA_SHA2_128F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_128F, false },
+	{ P11_OID_SLH_DSA_SHA2_192S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_192S, false },
+	{ P11_OID_SLH_DSA_SHA2_192F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_192F, false },
+	{ P11_OID_SLH_DSA_SHA2_256S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_256S, false },
+	{ P11_OID_SLH_DSA_SHA2_256F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHA2_256F, false },
+	{ P11_OID_SLH_DSA_SHAKE_128S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_128S, false },
+	{ P11_OID_SLH_DSA_SHAKE_128F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_128F, false },
+	{ P11_OID_SLH_DSA_SHAKE_192S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_192S, false },
+	{ P11_OID_SLH_DSA_SHAKE_192F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_192F, false },
+	{ P11_OID_SLH_DSA_SHAKE_256S_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_256S, false },
+	{ P11_OID_SLH_DSA_SHAKE_256F_STR, CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_256F, false },
+	{ NULL, 0, 0, false }
+};
+
+static const PqcOidEntry *
+find_pqc_oid (const char *oid)
+{
+	const PqcOidEntry *entry;
+
+	for (entry = pqc_oid_map; entry->oid != NULL; entry++) {
+		if (strcmp (oid, entry->oid) == 0)
+			return entry;
+	}
+
+	return NULL;
+}
+
+static size_t
+expected_pqc_pubkey_size (CK_KEY_TYPE key_type, CK_ULONG parameter_set)
+{
+	if (key_type == CKK_ML_KEM) {
+		switch (parameter_set) {
+		case CKP_ML_KEM_512: return 800;
+		case CKP_ML_KEM_768: return 1184;
+		case CKP_ML_KEM_1024: return 1568;
+		default: return 0;
+		}
+	} else if (key_type == CKK_ML_DSA) {
+		switch (parameter_set) {
+		case CKP_ML_DSA_44: return 1312;
+		case CKP_ML_DSA_65: return 1952;
+		case CKP_ML_DSA_87: return 2592;
+		default: return 0;
+		}
+	} else if (key_type == CKK_SLH_DSA) {
+		switch (parameter_set) {
+		case CKP_SLH_DSA_SHA2_128S:
+		case CKP_SLH_DSA_SHAKE_128S:
+		case CKP_SLH_DSA_SHA2_128F:
+		case CKP_SLH_DSA_SHAKE_128F:
+			return 32;
+		case CKP_SLH_DSA_SHA2_192S:
+		case CKP_SLH_DSA_SHAKE_192S:
+		case CKP_SLH_DSA_SHA2_192F:
+		case CKP_SLH_DSA_SHAKE_192F:
+			return 48;
+		case CKP_SLH_DSA_SHA2_256S:
+		case CKP_SLH_DSA_SHAKE_256S:
+		case CKP_SLH_DSA_SHA2_256F:
+		case CKP_SLH_DSA_SHAKE_256F:
+			return 64;
+		default: return 0;
+		}
+	}
+	return 0;
+}
+
+static CK_ATTRIBUTE *
+add_attrs_pubkey_pqc (CK_ATTRIBUTE *attrs,
+		      asn1_node info,
+		      const PqcOidEntry *entry)
+{
+	unsigned char *pubkey = NULL;
+	size_t pubkey_len = 0;
+	size_t expected_size;
+	CK_ATTRIBUTE *result = NULL;
+	CK_KEY_TYPE key_type = entry->key_type;
+	CK_ULONG parameter_set = entry->parameter_set;
+	CK_BBOOL tval = CK_TRUE;
+	CK_ATTRIBUTE attr_key_type = { CKA_KEY_TYPE, &key_type, sizeof (key_type) };
+	CK_ATTRIBUTE attr_param_set = { CKA_PARAMETER_SET, &parameter_set, sizeof (parameter_set) };
+	CK_ATTRIBUTE attr_value = { CKA_VALUE, };
+
+	pubkey = p11_asn1_read (info, "subjectPublicKey", &pubkey_len);
+	if (pubkey == NULL) {
+		p11_message (_("failed to obtain subject public key data"));
+		goto cleanup;
+	}
+
+	/* BIT STRING length is in bits; PQC public keys are byte-aligned */
+	if (pubkey_len % 8 != 0) {
+		p11_message (_("corrupted public key value"));
+		goto cleanup;
+	}
+	pubkey_len /= 8;
+
+	/* Validate key size against the expected fixed size for this parameter set */
+	expected_size = expected_pqc_pubkey_size (key_type, parameter_set);
+	if (expected_size > 0 && pubkey_len != expected_size) {
+		p11_message (_("invalid public key size %zu for parameter set "
+			       "(expected %zu)"), pubkey_len, expected_size);
+		goto cleanup;
+	}
+
+	attr_value.pValue = pubkey;
+	attr_value.ulValueLen = pubkey_len;
+
+	if (entry->is_kem) {
+		CK_BBOOL fval = CK_FALSE;
+		CK_ATTRIBUTE attr_encapsulate = { CKA_ENCAPSULATE, &tval, sizeof (tval) };
+		CK_ATTRIBUTE attr_no_verify = { CKA_VERIFY, &fval, sizeof (fval) };
+		result = p11_attrs_build (attrs, &attr_key_type, &attr_param_set,
+					  &attr_value, &attr_encapsulate,
+					  &attr_no_verify, NULL);
+	} else {
+		result = p11_attrs_build (attrs, &attr_key_type, &attr_param_set,
+					  &attr_value, NULL);
+	}
+	if (result == NULL)
+		p11_message (_("failed to allocate memory"));
+
+cleanup:
+	free (pubkey);
+
+	return result;
+}
+
 static bool
 import_pubkey (const unsigned char *der,
 	       size_t der_len,
@@ -420,13 +566,18 @@ import_pubkey (const unsigned char *der,
 	if (attrs == NULL)
 		goto cleanup;
 
-	if (strcmp (oid, P11_OID_PKIX1_RSA_STR) == 0)
+	if (strcmp (oid, P11_OID_PKIX1_RSA_STR) == 0) {
 		tmp = add_attrs_pubkey_rsa (attrs, asn, data->defs);
-	else if (strcmp (oid, P11_OID_PKIX1_EC_STR) == 0)
+	} else if (strcmp (oid, P11_OID_PKIX1_EC_STR) == 0) {
 		tmp = add_attrs_pubkey_ec (attrs, asn);
-	else {
-		p11_message (_("unrecognized algorithm OID: %s"), oid);
-		goto cleanup;
+	} else {
+		const PqcOidEntry *pqc_entry = find_pqc_oid (oid);
+		if (pqc_entry != NULL)
+			tmp = add_attrs_pubkey_pqc (attrs, asn, pqc_entry);
+		else {
+			p11_message (_("unrecognized algorithm OID: %s"), oid);
+			goto cleanup;
+		}
 	}
 	if (tmp == NULL)
 		goto cleanup;

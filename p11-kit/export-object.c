@@ -293,6 +293,132 @@ cleanup:
 	return der;
 }
 
+typedef struct {
+	CK_KEY_TYPE key_type;
+	CK_ULONG parameter_set;
+	const char *oid;
+} PqcExportEntry;
+
+/* Keep in sync with pqc_oid_map in import-object.c */
+static const PqcExportEntry pqc_export_map[] = {
+	/* ML-DSA */
+	{ CKK_ML_DSA, CKP_ML_DSA_44, P11_OID_ML_DSA_44_STR },
+	{ CKK_ML_DSA, CKP_ML_DSA_65, P11_OID_ML_DSA_65_STR },
+	{ CKK_ML_DSA, CKP_ML_DSA_87, P11_OID_ML_DSA_87_STR },
+	/* ML-KEM */
+	{ CKK_ML_KEM, CKP_ML_KEM_512, P11_OID_ML_KEM_512_STR },
+	{ CKK_ML_KEM, CKP_ML_KEM_768, P11_OID_ML_KEM_768_STR },
+	{ CKK_ML_KEM, CKP_ML_KEM_1024, P11_OID_ML_KEM_1024_STR },
+	/* SLH-DSA */
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_128S, P11_OID_SLH_DSA_SHA2_128S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_128F, P11_OID_SLH_DSA_SHA2_128F_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_192S, P11_OID_SLH_DSA_SHA2_192S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_192F, P11_OID_SLH_DSA_SHA2_192F_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_256S, P11_OID_SLH_DSA_SHA2_256S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHA2_256F, P11_OID_SLH_DSA_SHA2_256F_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_128S, P11_OID_SLH_DSA_SHAKE_128S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_128F, P11_OID_SLH_DSA_SHAKE_128F_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_192S, P11_OID_SLH_DSA_SHAKE_192S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_192F, P11_OID_SLH_DSA_SHAKE_192F_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_256S, P11_OID_SLH_DSA_SHAKE_256S_STR },
+	{ CKK_SLH_DSA, CKP_SLH_DSA_SHAKE_256F, P11_OID_SLH_DSA_SHAKE_256F_STR },
+	{ 0, 0, NULL }
+};
+
+static const char *
+find_pqc_export_oid (CK_KEY_TYPE key_type,
+		     CK_ULONG parameter_set)
+{
+	const PqcExportEntry *entry;
+
+	for (entry = pqc_export_map; entry->oid != NULL; entry++) {
+		if (entry->key_type == key_type &&
+		    entry->parameter_set == parameter_set)
+			return entry->oid;
+	}
+
+	return NULL;
+}
+
+static unsigned char *
+export_pubkey_pqc (const ExportData *data,
+		   CK_KEY_TYPE key_type,
+		   size_t *len)
+{
+	CK_ATTRIBUTE template[] = {
+		{ CKA_VALUE, },
+		{ CKA_PARAMETER_SET, },
+		{ CKA_INVALID },
+	};
+	CK_ATTRIBUTE *attrs = NULL;
+	const CK_ATTRIBUTE *value;
+	CK_ULONG parameter_set;
+	const char *oid;
+	asn1_node asn = NULL;
+	int result;
+	unsigned char *der = NULL;
+
+	attrs = p11_attrs_buildn (NULL, template, p11_attrs_count (template));
+	return_val_if_fail (attrs, NULL);
+
+	if (p11_kit_iter_load_attributes (data->iter,
+					  attrs,
+					  p11_attrs_count (attrs)) != CKR_OK) {
+		p11_message (_("failed to retrieve attributes"));
+		goto cleanup;
+	}
+
+	value = p11_attrs_find_valid (attrs, CKA_VALUE);
+	if (!value) {
+		p11_message (_("failed to retrieve public key value"));
+		goto cleanup;
+	}
+
+	if (!p11_attrs_find_ulong (attrs, CKA_PARAMETER_SET, &parameter_set)) {
+		p11_message (_("failed to retrieve parameter set"));
+		goto cleanup;
+	}
+
+	oid = find_pqc_export_oid (key_type, parameter_set);
+	if (!oid) {
+		p11_message (_("unknown PQC key type/parameter set combination"));
+		goto cleanup;
+	}
+
+	asn = p11_asn1_create (data->defs, "PKIX1.SubjectPublicKeyInfo");
+	if (!asn) {
+		p11_debug ("unable to create SubjectPublicKeyInfo");
+		goto cleanup;
+	}
+
+	result = asn1_write_value (asn, "algorithm.algorithm", oid, 1);
+	if (result != ASN1_SUCCESS) {
+		p11_debug ("unable to write algorithm OID");
+		goto cleanup;
+	}
+
+	/* PQC algorithms have absent parameters in AlgorithmIdentifier */
+	result = asn1_write_value (asn, "algorithm.parameters", NULL, 0);
+	if (result != ASN1_SUCCESS) {
+		p11_debug ("unable to write algorithm parameters");
+		goto cleanup;
+	}
+
+	result = asn1_write_value (asn, "subjectPublicKey",
+				   value->pValue, value->ulValueLen * 8);
+	if (result != ASN1_SUCCESS) {
+		p11_debug ("unable to write subjectPublicKey");
+		goto cleanup;
+	}
+
+	der = p11_asn1_encode (asn, len);
+
+cleanup:
+	p11_asn1_free (asn);
+	p11_attrs_free (attrs);
+	return der;
+}
+
 static unsigned char *
 export_pubkey_asn1 (P11KitIter *iter,
 		    CK_KEY_TYPE type,
@@ -312,6 +438,11 @@ export_pubkey_asn1 (P11KitIter *iter,
 		break;
 	case CKK_EC:
 		der = export_pubkey_ec (&data, len);
+		break;
+	case CKK_ML_DSA:
+	case CKK_ML_KEM:
+	case CKK_SLH_DSA:
+		der = export_pubkey_pqc (&data, type, len);
 		break;
 	default:
 		p11_message (_("unsupported key type: %lu"), type);
