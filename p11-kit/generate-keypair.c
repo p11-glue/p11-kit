@@ -238,6 +238,35 @@ check_args (CK_MECHANISM_TYPE type,
 		return false;
 	}
 
+	switch (type) {
+#ifdef P11_KIT_TESTABLE
+	case CKM_MOCK_GENERATE:
+		break;
+#endif
+	case CKM_RSA_PKCS_KEY_PAIR_GEN:
+	case CKM_ECDSA_KEY_PAIR_GEN:
+	case CKM_EC_EDWARDS_KEY_PAIR_GEN:
+		if (parameter_set != 0) {
+			p11_message (_("%s cannot be used with this key type"), "--parameter-set");
+			return false;
+		}
+		break;
+	case CKM_ML_DSA_KEY_PAIR_GEN:
+	case CKM_ML_KEM_KEY_PAIR_GEN:
+	case CKM_SLH_DSA_KEY_PAIR_GEN:
+		if (bits != 0) {
+			p11_message (_("%s cannot be used with this key type"), "--bits");
+			return false;
+		}
+		if (ec_params != NULL) {
+			p11_message (_("%s cannot be used with this key type"), "--curve");
+			return false;
+		}
+		break;
+	default:
+		break;
+	}
+
 	return true;
 }
 
@@ -580,6 +609,15 @@ p11_kit_generate_keypair (int argc,
 
 	/* Resolve --parameter-set now that --type is known */
 	if (parameter_set_name != NULL) {
+		switch (mechanism.mechanism) {
+		case CKM_ML_DSA_KEY_PAIR_GEN:
+		case CKM_ML_KEM_KEY_PAIR_GEN:
+		case CKM_SLH_DSA_KEY_PAIR_GEN:
+			break;
+		default:
+			p11_message (_("%s cannot be used with this key type"), "--parameter-set");
+			return 2;
+		}
 		parameter_set = get_parameter_set (mechanism.mechanism, parameter_set_name);
 		if (parameter_set == 0) {
 			p11_message (_("unknown parameter-set: %s"), parameter_set_name);
