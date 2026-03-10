@@ -682,6 +682,48 @@ test_get_wrap_template (void)
 }
 
 static void
+test_get_encapsulate_template (void)
+{
+	CK_RV rv;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_BBOOL encrypt = CK_FALSE;
+	CK_ATTRIBUTE temp[] = {
+		{ 0 },
+	};
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_ENCAPSULATE_TEMPLATE, temp, sizeof (temp) },
+	};
+	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+
+	module = setup_mock_module (&session);
+
+	/* First pass: get inner attribute types and sizes */
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_ENCAPSULATE_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[0].pValue, NULL);
+	assert_num_eq (temp[0].ulValueLen, sizeof (encrypt));
+
+	/* Second pass: get inner attribute values */
+	temp[0].pValue = &encrypt;
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_ENCAPSULATE_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[0].pValue, &encrypt);
+	assert_num_eq (temp[0].ulValueLen, sizeof (encrypt));
+	assert (encrypt == CK_TRUE);
+
+	teardown_mock_module (module);
+}
+
+static void
 test_set_wrap_template (void)
 {
 	CK_RV rv;
@@ -2725,6 +2767,7 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_get_attribute_value, "%s/test_get_attribute_value", prefix);
 	p11_test (test_set_attribute_value, "%s/test_set_attribute_value", prefix);
 	p11_test (test_get_wrap_template, "%s/test_get_wrap_template", prefix);
+	p11_test (test_get_encapsulate_template, "%s/test_get_encapsulate_template", prefix);
 	p11_test (test_set_wrap_template, "%s/test_set_wrap_template", prefix);
 	p11_test (test_create_object, "%s/test_create_object", prefix);
 	p11_test (test_create_object_private, "%s/test_create_object_private", prefix);

@@ -296,6 +296,9 @@ module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_VERIFY, &btrue, sizeof (btrue) },
 			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
 		};
+		CK_ATTRIBUTE encapsulate_template[] = {
+			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
+		};
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
 			{ CKA_LABEL, label, strlen (label) },
@@ -304,6 +307,7 @@ module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_PRIVATE, &bfalse, sizeof (bfalse) },
 			{ CKA_ALWAYS_AUTHENTICATE, &btrue, sizeof (btrue) },
 			{ CKA_WRAP_TEMPLATE, wrap_template, sizeof (wrap_template) },
+			{ CKA_ENCAPSULATE_TEMPLATE, encapsulate_template, sizeof (encapsulate_template) },
 			{ CKA_VALUE, value, strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
