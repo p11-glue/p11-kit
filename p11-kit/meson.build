@@ -452,6 +452,18 @@ if get_option('test')
       libdir,
       find_program('test-softhsm2.sh'),
     )
+    meson.add_install_script(
+      top_source_dir / 'meson_post_install_test.sh',
+      bindir,
+      libdir,
+      find_program('test-kryoptic.sh'),
+    )
+    meson.add_install_script(
+      top_source_dir / 'meson_post_install_test.sh',
+      bindir,
+      libdir,
+      find_program('test-nss-softokn.sh'),
+    )
   endif
 
   mock_sources = {
