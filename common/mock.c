@@ -296,6 +296,9 @@ module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_VERIFY, &btrue, sizeof (btrue) },
 			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
 		};
+		CK_ATTRIBUTE encapsulate_template[] = {
+			{ CKA_ENCRYPT, &btrue, sizeof (btrue) },
+		};
 		CK_ATTRIBUTE attrs[] = {
 			{ CKA_CLASS, &klass, sizeof (klass) },
 			{ CKA_LABEL, label, strlen (label) },
@@ -304,6 +307,7 @@ module_reset_objects (CK_SLOT_ID slot_id)
 			{ CKA_PRIVATE, &bfalse, sizeof (bfalse) },
 			{ CKA_ALWAYS_AUTHENTICATE, &btrue, sizeof (btrue) },
 			{ CKA_WRAP_TEMPLATE, wrap_template, sizeof (wrap_template) },
+			{ CKA_ENCAPSULATE_TEMPLATE, encapsulate_template, sizeof (encapsulate_template) },
 			{ CKA_VALUE, value, strlen (value) },
 			{ CKA_INVALID, NULL, 0 },
 		};
@@ -3590,12 +3594,18 @@ mock_C_GenerateKeyPair (CK_SESSION_HANDLE session,
 	if (!sess)
 		return CKR_SESSION_HANDLE_INVALID;
 
-	if (mechanism->mechanism != CKM_MOCK_GENERATE)
+	if (mechanism->mechanism == CKM_MOCK_GENERATE) {
+		if (!mechanism->pParameter || mechanism->ulParameterLen != 9 ||
+		    memcmp (mechanism->pParameter, "generate", 9) != 0)
+			return CKR_MECHANISM_PARAM_INVALID;
+	} else if (mechanism->mechanism == CKM_ML_DSA_KEY_PAIR_GEN ||
+	           mechanism->mechanism == CKM_ML_KEM_KEY_PAIR_GEN ||
+	           mechanism->mechanism == CKM_SLH_DSA_KEY_PAIR_GEN) {
+		if (mechanism->pParameter != NULL || mechanism->ulParameterLen != 0)
+			return CKR_MECHANISM_PARAM_INVALID;
+	} else {
 		return CKR_MECHANISM_INVALID;
-
-	if (!mechanism->pParameter || mechanism->ulParameterLen != 9 ||
-	    memcmp (mechanism->pParameter, "generate", 9) != 0)
-		return CKR_MECHANISM_PARAM_INVALID;
+	}
 
 	value.type = CKA_VALUE;
 	value.pValue = "generated";

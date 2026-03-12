@@ -806,6 +806,106 @@ test_message_write (void)
 	p11_buffer_uninit (&buffer);
 }
 
+static void
+test_pqc_mechanism_no_params (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM mechs[] = {
+		{ CKM_ML_DSA_KEY_PAIR_GEN, NULL, 0 },
+		{ CKM_ML_DSA, NULL, 0 },
+		{ CKM_ML_KEM_KEY_PAIR_GEN, NULL, 0 },
+		{ CKM_ML_KEM, NULL, 0 },
+		{ CKM_SLH_DSA_KEY_PAIR_GEN, NULL, 0 },
+		{ CKM_SLH_DSA, NULL, 0 },
+		{ CKM_HASH_ML_DSA_SHA256, NULL, 0 },
+		{ CKM_HASH_ML_DSA_SHA512, NULL, 0 },
+		{ CKM_HASH_SLH_DSA_SHA256, NULL, 0 },
+		{ CKM_HASH_SLH_DSA_SHAKE128, NULL, 0 }
+	};
+	CK_MECHANISM val;
+	size_t offset = 0;
+	bool ret;
+	size_t i;
+
+	p11_buffer_init (&buffer, 0);
+
+	for (i = 0; i < ELEMS (mechs); i++) {
+		p11_rpc_buffer_add_mechanism (&buffer, &mechs[i]);
+		assert (!p11_buffer_failed (&buffer));
+
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mechs[i].mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (0, val.ulParameterLen);
+	}
+
+	/* Verify a second decode pass from the same buffer produces
+	 * consistent results (re-read from the start). */
+	offset = 0;
+	for (i = 0; i < ELEMS (mechs); i++) {
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mechs[i].mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (0, val.ulParameterLen);
+	}
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_pqc_attribute_serialization (void)
+{
+	p11_buffer buffer;
+	CK_BBOOL encap = CK_TRUE;
+	CK_BBOOL decap = CK_FALSE;
+	CK_ULONG param_set = CKP_ML_DSA_65;
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_ENCAPSULATE, &encap, sizeof (encap) },
+		{ CKA_DECAPSULATE, &decap, sizeof (decap) },
+		{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) }
+	};
+	CK_BBOOL boolv1 = CK_FALSE, boolv2 = CK_TRUE;
+	CK_ULONG ulongv = 0;
+	CK_ATTRIBUTE val[] = {
+		{ CKA_ENCAPSULATE, &boolv1, sizeof (boolv1) },
+		{ CKA_DECAPSULATE, &boolv2, sizeof (boolv2) },
+		{ CKA_PARAMETER_SET, &ulongv, sizeof (ulongv) }
+	};
+	CK_ULONG val_size;
+	size_t offset = 0, offset2;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	p11_rpc_buffer_add_attribute_array_value (&buffer, attrs, sizeof (attrs));
+	assert (!p11_buffer_failed (&buffer));
+
+	offset2 = offset;
+	ret = p11_rpc_buffer_get_attribute_array_value (&buffer, &offset, NULL, &val_size);
+	assert_num_eq (true, ret);
+
+	offset = offset2;
+	ret = p11_rpc_buffer_get_attribute_array_value (&buffer, &offset, val, &val_size);
+	assert_num_eq (true, ret);
+
+	assert_num_eq (CKA_ENCAPSULATE, val[0].type);
+	assert_num_eq (CK_TRUE, *(CK_BBOOL *)val[0].pValue);
+	assert_num_eq (sizeof (CK_BBOOL), val[0].ulValueLen);
+
+	assert_num_eq (CKA_DECAPSULATE, val[1].type);
+	assert_num_eq (CK_FALSE, *(CK_BBOOL *)val[1].pValue);
+	assert_num_eq (sizeof (CK_BBOOL), val[1].ulValueLen);
+
+	assert_num_eq (CKA_PARAMETER_SET, val[2].type);
+	assert_num_eq (CKP_ML_DSA_65, *(CK_ULONG *)val[2].pValue);
+
+	p11_buffer_uninit (&buffer);
+}
+
 #include "test-mock.c"
 
 static CK_MECHANISM_TYPE mechanisms[] = {
@@ -848,6 +948,8 @@ main (int argc,
 	p11_test (test_byte_array_value, "/rpc-message/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
 	p11_test (test_message_write, "/rpc-message/message-write");
+	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
+	p11_test (test_pqc_attribute_serialization, "/rpc-message/pqc-attribute-serialization");
 
 	test_mock_add_tests ("/rpc-message", NULL);
 
