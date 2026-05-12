@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Red Hat Inc.
+ * Copyright (c) 2026, David Korczynski.
  *
  * All rights reserved.
  *
