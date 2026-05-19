@@ -205,9 +205,10 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 {
 	asn1_node asn;
 	char field[128];
-	p11_array *ekus;
+	p11_array *ekus = NULL;
+	p11_array *ret = NULL;
 	size_t len;
-	char *eku;
+	char *eku = NULL;
 	int i;
 
 	asn = p11_asn1_decode (asn1_defs, "PKIX1.ExtKeyUsageSyntax", ext_der, ext_len, NULL);
@@ -215,10 +216,16 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 		return NULL;
 
 	ekus = p11_array_new (free);
+	if (ekus == NULL) {
+		warn_if_reached ();
+		goto cleanup;
+	}
 
 	for (i = 1; ; i++) {
-		if (snprintf (field, sizeof (field), "?%u", i) < 0)
-			return_val_if_reached (NULL);
+		if (snprintf (field, sizeof (field), "?%u", i) < 0) {
+			warn_if_reached ();
+			goto cleanup;
+		}
 
 		eku = p11_asn1_read (asn, field, &len);
 		if (eku == NULL)
@@ -229,16 +236,25 @@ p11_x509_parse_extended_key_usage (p11_dict *asn1_defs,
 		/* If it's our reserved OID, then skip */
 		if (strcmp (eku, P11_OID_RESERVED_PURPOSE_STR) == 0) {
 			free (eku);
+			eku = NULL;
 			continue;
 		}
 
-		if (!p11_array_push (ekus, eku))
-			return_val_if_reached (NULL);
+		if (!p11_array_push (ekus, eku)) {
+			warn_if_reached ();
+			goto cleanup;
+		}
+		eku = NULL;
 	}
 
-	asn1_delete_structure (&asn);
+	ret = ekus;
+	ekus = NULL;
 
-	return ekus;
+cleanup:
+	free (eku);
+	p11_array_free (ekus);
+	asn1_delete_structure (&asn);
+	return ret;
 }
 
 char *
