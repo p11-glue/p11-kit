@@ -73,19 +73,23 @@ p11_asn1_defs_load (void)
 	int i;
 
 	defs = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, NULL, free_asn1_def);
+	return_val_if_fail (defs != NULL, NULL);
 
 	for (i = 0; asn1_tabs[i].tab != NULL; i++) {
-
 		def = NULL;
 		ret = asn1_array2tree (asn1_tabs[i].tab, &def, message);
 		if (ret != ASN1_SUCCESS) {
 			p11_debug_precond ("failed to load %s* definitions: %s: %s\n",
 			                   asn1_tabs[i].prefix, asn1_strerror (ret), message);
+			p11_dict_free (defs);
 			return NULL;
 		}
 
-		if (!p11_dict_set (defs, (void *)asn1_tabs[i].prefix, def))
+		if (!p11_dict_set (defs, (void *)asn1_tabs[i].prefix, def)) {
+			asn1_delete_structure (&def);
+			p11_dict_free (defs);
 			return_val_if_reached (NULL);
+		}
 	}
 
 	return defs;
@@ -147,13 +151,11 @@ p11_asn1_decode (p11_dict *asn1_defs,
 
 	/* asn1_der_decoding destroys the element if fails */
 	ret = asn1_der_decoding (&asn, der, der_len, message ? message : msg);
-
 	if (ret != ASN1_SUCCESS) {
 		/* If caller passed in a message buffer, assume they're logging */
-		if (!message) {
+		if (!message)
 			p11_debug ("couldn't parse %s: %s: %s",
 			           struct_name, asn1_strerror (ret), msg);
-		}
 		return NULL;
 	}
 
@@ -165,7 +167,7 @@ p11_asn1_encode (asn1_node asn,
                  size_t *der_len)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	unsigned char *der;
+	unsigned char *der = NULL;
 	int len;
 	int ret;
 
@@ -184,6 +186,7 @@ p11_asn1_encode (asn1_node asn,
 
 	if (ret != ASN1_SUCCESS) {
 		p11_debug_precond ("failed to encode: %s\n", message);
+		free (der);
 		return NULL;
 	}
 
@@ -216,7 +219,10 @@ p11_asn1_read (asn1_node asn,
 	return_val_if_fail (value != NULL, NULL);
 
 	ret = asn1_read_value (asn, field, value, &len);
-	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+	if (ret != ASN1_SUCCESS) {
+		free (value);
+		return_val_if_reached (NULL);
+	}
 
 	/* Courtesy zero terminated */
 	value[len] = '\0';
@@ -343,7 +349,10 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 	return_if_fail (der_len != 0);
 
 	item = calloc (1, sizeof (asn1_item));
-	return_if_fail (item != NULL);
+	if (item == NULL) {
+		asn1_delete_structure (&node);
+		return_if_reached ();
+	}
 
 	item->length = der_len;
 	item->node = node;
@@ -353,8 +362,10 @@ p11_asn1_cache_take (p11_asn1_cache *cache,
 		return_if_reached ();
 	}
 
-	if (!p11_dict_set (cache->items, (void *)der, item))
+	if (!p11_dict_set (cache->items, (void *)der, item)) {
+		free_asn1_item (item);
 		return_if_reached ();
+	}
 }
 
 void
@@ -375,7 +386,7 @@ p11_asn1_cache_defs (p11_asn1_cache *cache)
 void
 p11_asn1_cache_free (p11_asn1_cache *cache)
 {
-	if (!cache)
+	if (cache == NULL)
 		return;
 	p11_dict_free (cache->items);
 	p11_dict_free (cache->defs);
