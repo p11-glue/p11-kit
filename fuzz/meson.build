@@ -4,8 +4,16 @@ if get_option('test')
   ]
 
   fuzzer_target_names = [
-    'rpc'
+    'conf', 'rpc', 'uri',
   ]
+
+  fuzzer_deps = []
+  fuzzer_libs = [libp11_kit_testable, libp11_test, libp11_common]
+  if with_asn1
+    fuzzer_target_names += 'persist'
+    fuzzer_libs += [libtrust_testable, libp11_asn1]
+    fuzzer_deps += libtasn1_deps
+  endif
 
   fuzzer_targets = []
   foreach target : fuzzer_target_names
@@ -13,7 +21,8 @@ if get_option('test')
                    ['@0@_fuzzer.c'.format(target)] + fuzz_common_sources,
                    c_args: tests_c_args,
                    include_directories: [configinc, commoninc],
-                   link_with: [libp11_kit_testable, libp11_test, libp11_common])
+                   dependencies: fuzzer_deps,
+                   link_with: fuzzer_libs)
     fuzzer_targets += t
   endforeach
 

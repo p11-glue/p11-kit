@@ -480,7 +480,6 @@ pkcs11_json = pkcs11_json_gen.process('common/pkcs11.h')
 
 subdir('common')
 subdir('p11-kit')
-subdir('fuzz')
 if with_trust_module
   subdir('trust')
 endif
@@ -488,5 +487,6 @@ subdir('doc/manual')
 if get_option('nls')
   subdir('po')
 endif
+subdir('fuzz')
 subdir('bash-completion')
 subdir('zsh-completion')
