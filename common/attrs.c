@@ -66,7 +66,7 @@ p11_attrs_count (const CK_ATTRIBUTE *attrs)
 	CK_ULONG count;
 
 	if (attrs == NULL)
-		return 0UL;
+		return 0;
 
 	for (count = 0; !p11_attrs_terminator (attrs); count++, attrs++);
 
@@ -79,15 +79,16 @@ p11_attrs_free (void *attrs)
 	CK_ATTRIBUTE *ats = attrs;
 	int i;
 
-	if (!attrs)
+	if (attrs == NULL)
 		return;
 
-	for (i = 0; !p11_attrs_terminator (ats + i); i++) {
+	for (i = 0; !p11_attrs_terminator (ats + i); i++)
 		p11_attr_clear (&ats[i]);
-	}
 	free (ats);
 }
 
+/* Call to this function always invalidates pointer to `attrs`
+ */
 static CK_ATTRIBUTE *
 attrs_build (CK_ATTRIBUTE *attrs,
              CK_ULONG count_to_add,
@@ -110,9 +111,15 @@ attrs_build (CK_ATTRIBUTE *attrs,
 
 	/* Reallocate for how many we need */
 	length = current + count_to_add;
-	return_val_if_fail (current <= length && length < SIZE_MAX, NULL);
+	if (current > length || length >= SIZE_MAX) {
+		p11_attrs_free (attrs);
+		return_val_if_reached (NULL);
+	}
 	new_memory = reallocarray (attrs, length + 1, sizeof (CK_ATTRIBUTE));
-	return_val_if_fail (new_memory != NULL, NULL);
+	if (new_memory == NULL) {
+		p11_attrs_free (attrs);
+		return_val_if_reached (NULL);
+	}
 	attrs = new_memory;
 
 	at = current;
@@ -151,15 +158,15 @@ attrs_build (CK_ATTRIBUTE *attrs,
 
 		if (take_values) {
 			memcpy (attr, add, sizeof (CK_ATTRIBUTE));
-		} else {
-			if (!p11_attr_copy (attr, add)) {
-				return_val_if_reached (NULL);
-			}
+		} else if (!p11_attr_copy (attr, add)) {
+			attrs[at].type = CKA_INVALID;
+			p11_attrs_free (attrs);
+			return_val_if_reached (NULL);
 		}
 	}
 
 	/* Mark this as the end */
-	(attrs + at)->type = CKA_INVALID;
+	attrs[at].type = CKA_INVALID;
 	assert (p11_attrs_terminator (attrs + at));
 	return attrs;
 }
@@ -228,7 +235,7 @@ p11_attrs_merge (CK_ATTRIBUTE *attrs,
 	CK_ATTRIBUTE *ptr;
 	CK_ULONG count;
 
-	if (attrs == NULL)
+	if (attrs == NULL || attrs == merge)
 		return merge;
 
 	ptr = merge;
@@ -236,13 +243,16 @@ p11_attrs_merge (CK_ATTRIBUTE *attrs,
 
 	attrs = attrs_build (attrs, count, true, replace,
 	                     template_generator, &ptr);
+	if (attrs == NULL) {
+		p11_attrs_free (merge);
+		return_val_if_reached (NULL);
+	}
 
 	/*
 	 * Since we're supposed to own the merge attributes,
 	 * free the container array.
 	 */
 	free (merge);
-
 	return attrs;
 }
 
@@ -416,9 +426,8 @@ p11_attrs_remove (CK_ATTRIBUTE *attrs,
 	if (i == count)
 		return false;
 
-	if (attrs[i].pValue) {
+	if (attrs[i].pValue)
 		p11_attr_clear (&attrs[i]);
-	}
 
 	memmove (attrs + i, attrs + i + 1, (count - (i + 1)) * sizeof (CK_ATTRIBUTE));
 	attrs[count - 1].type = CKA_INVALID;
@@ -530,26 +539,20 @@ p11_attr_hash (const void *data)
 bool
 p11_attr_copy (CK_ATTRIBUTE *dst, const CK_ATTRIBUTE *src)
 {
+	return_val_if_fail (dst != NULL, false);
+	return_val_if_fail (src != NULL, false);
+
 	memcpy (dst, src, sizeof (CK_ATTRIBUTE));
 
-	if (!src->pValue) {
+	if (src->pValue == NULL)
 		return true;
-	}
 
-	if (src->ulValueLen == 0) {
-		dst->pValue = malloc (1);
-	} else {
-		dst->pValue = malloc (src->ulValueLen);
-	}
-	if (!dst->pValue) {
-		return_val_if_reached (false);
-	}
+	dst->pValue = malloc (src->ulValueLen == 0 ? 1 : src->ulValueLen);
+	return_val_if_fail (dst->pValue != NULL, false);
 
 	assert (dst->ulValueLen >= src->ulValueLen);
 
-	if (!IS_ATTRIBUTE_ARRAY (src)) {
-		memcpy (dst->pValue, src->pValue, src->ulValueLen);
-	} else {
+	if (IS_ATTRIBUTE_ARRAY (src)) {
 		CK_ATTRIBUTE *child_dst;
 		const CK_ATTRIBUTE *child_src;
 		size_t i;
@@ -558,9 +561,16 @@ p11_attr_copy (CK_ATTRIBUTE *dst, const CK_ATTRIBUTE *src)
 		     i < src->ulValueLen / sizeof (CK_ATTRIBUTE);
 		     i++, child_dst++, child_src++) {
 			if (!p11_attr_copy (child_dst, child_src)) {
-				return_val_if_reached (false);
+				/* Free the copied children */
+				for (size_t j = 0; j < i; j++)
+					p11_attr_clear (child_dst + j);
+				free (dst->pValue);
+				dst->pValue = NULL;
+				return false;
 			}
 		}
+	} else {
+		memcpy (dst->pValue, src->pValue, src->ulValueLen);
 	}
 
 	return true;
@@ -569,17 +579,20 @@ p11_attr_copy (CK_ATTRIBUTE *dst, const CK_ATTRIBUTE *src)
 void
 p11_attr_clear (CK_ATTRIBUTE *attr)
 {
-	if (IS_ATTRIBUTE_ARRAY (attr) && attr->pValue) {
+	if (attr == NULL || attr->pValue == NULL)
+		return;
+
+	if (IS_ATTRIBUTE_ARRAY (attr)) {
 		CK_ATTRIBUTE *child;
 		size_t i;
 
 		for (i = 0, child = attr->pValue;
 		     i < attr->ulValueLen / sizeof (CK_ATTRIBUTE);
-		     i++, child++) {
+		     i++, child++)
 			p11_attr_clear (child);
-		}
 	}
 	free (attr->pValue);
+	attr->pValue = NULL;
 }
 
 static void
