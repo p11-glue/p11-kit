@@ -2,7 +2,9 @@
 
 set -ex
 
-if test $(id -u) -eq 0; then
+if test "$RUN_AS_ROOT" = true; then
+    exec "$@"
+elif test $(id -u) -eq 0; then
     case "$RUNNER_OS" in
 	Linux)
 	    exec runuser -u "$RUNUSER" -- "$@"
