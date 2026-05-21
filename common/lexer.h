@@ -69,7 +69,7 @@ typedef struct {
 	} tok;
 } p11_lexer;
 
-void             p11_lexer_init               (p11_lexer *lexer,
+bool             p11_lexer_init               (p11_lexer *lexer,
                                                const char *filename,
                                                const char *data,
                                                size_t length);

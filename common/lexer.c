@@ -50,21 +50,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-void
+/* Only use on uninitialized lexer or after p11_lexer_done()
+ */
+bool
 p11_lexer_init (p11_lexer *lexer,
                 const char *filename,
                 const char *data,
                 size_t length)
 {
-	return_if_fail (lexer != NULL);
+	return_val_if_fail (lexer != NULL, false);
 
 	memset (lexer, 0, sizeof (p11_lexer));
 	lexer->at = data;
 	lexer->remaining = length;
 
-	return_if_fail (filename != NULL);
+	return_val_if_fail (filename != NULL, false);
 	lexer->filename = strdup (filename);
-	return_if_fail (lexer->filename != NULL);
+	return_val_if_fail (lexer->filename != NULL, false);
+	return true;
 }
 
 static void
@@ -97,7 +100,6 @@ p11_lexer_next (p11_lexer *lexer,
 	const char *line;
 	const char *end;
 	const char *pos;
-	char *part;
 
 	return_val_if_fail (lexer != NULL, false);
 
@@ -110,36 +112,33 @@ p11_lexer_next (p11_lexer *lexer,
 		assert (lexer->remaining > 0);
 
 		/* Is this line the start of a PEM block? */
-		if (strncmp (lexer->at, "-----BEGIN ", 11) == 0) {
+		if (lexer->remaining >= 11 && strncmp (lexer->at, "-----BEGIN ", 11) == 0) {
 			pos = strnstr (lexer->at, "\n-----END ", lexer->remaining);
-			if (pos != NULL) {
-				end = memchr (pos + 1, '\n', lexer->remaining - (pos - lexer->at) - 1);
-				if (end)
-					end += 1;
-				else
-					end = lexer->at + lexer->remaining;
-				/* Count newlines in the PEM block */
-				pos = lexer->at;
-				while (pos < end) {
-					pos = memchr (pos, '\n', end - pos);
-					if (!pos)
-						break;
-					lexer->line++;
-					pos++;
-				}
-				lexer->tok_type = TOK_PEM;
-				lexer->tok.pem.begin = lexer->at;
-				lexer->tok.pem.length = end - lexer->at;
-				assert (end - lexer->at <= lexer->remaining);
-				lexer->remaining -= (end - lexer->at);
-				lexer->at = end;
-				return true;
+			if (pos == NULL) {
+				p11_lexer_msg (lexer, "invalid pem block: no ending line");
+				if (failed)
+					*failed = true;
+				return false;
 			}
 
-			p11_lexer_msg (lexer, "invalid pem block: no ending line");
-			if (failed)
-				*failed = true;
-			return false;
+			end = memchr (pos + 1, '\n', lexer->remaining - (pos - lexer->at) - 1);
+			end = end ? end + 1 : lexer->at + lexer->remaining;
+			/* Count newlines in the PEM block */
+			pos = lexer->at;
+			while (pos < end) {
+				pos = memchr (pos, '\n', end - pos);
+				if (!pos)
+					break;
+				lexer->line++;
+				pos++;
+			}
+			lexer->tok_type = TOK_PEM;
+			lexer->tok.pem.begin = lexer->at;
+			lexer->tok.pem.length = end - lexer->at;
+			assert (end - lexer->at <= lexer->remaining);
+			lexer->remaining -= (end - lexer->at);
+			lexer->at = end;
+			return true;
 		}
 
 		line = lexer->at;
@@ -165,29 +164,25 @@ p11_lexer_next (p11_lexer *lexer,
 		if (line == end || line[0] == '#')
 			continue;
 
-		/* Is the the a section ? */
+		/* Is it a section ? */
 		if (line[0] == '[') {
 			if (*(end - 1) != ']') {
-				part = strndup (line, end - line);
 				p11_lexer_msg (lexer, "invalid section header: missing braces");
-				free (part);
 				if (failed)
 					*failed = true;
 				return false;
 			}
 
-			lexer->tok_type = TOK_SECTION;
 			lexer->tok.section.name = strndup (line + 1, (end - line) - 2);
 			return_val_if_fail (lexer->tok.section.name != NULL, false);
+			lexer->tok_type = TOK_SECTION;
 			return true;
 		}
 
 		/* Look for the break between name: value on the same line */
 		colon = memchr (line, ':', end - line);
-		if (!colon) {
-			part = strndup (line, end - line);
+		if (colon == NULL) {
 			p11_lexer_msg (lexer, "invalid field line: no colon");
-			free (part);
 			if (failed)
 				*failed = true;
 			return false;
@@ -200,10 +195,14 @@ p11_lexer_next (p11_lexer *lexer,
 		while (line != colon && isspace (*(colon - 1)))
 			--colon;
 
-		lexer->tok_type = TOK_FIELD;
 		lexer->tok.field.name = strndup (line, colon - line);
+		return_val_if_fail (lexer->tok.field.name != NULL, false);
 		lexer->tok.field.value = strndup (value, end - value);
-		return_val_if_fail (lexer->tok.field.name && lexer->tok.field.value, false);
+		if (lexer->tok.field.value == NULL) {
+			free (lexer->tok.field.name);
+			return_val_if_reached (false);
+		}
+		lexer->tok_type = TOK_FIELD;
 		return true;
 	}
 
