@@ -180,7 +180,7 @@ parse_bool (p11_lexer *lexer,
 	}
 
 	attr->pValue = memdup (&boolean, sizeof (boolean));
-	return_val_if_fail (attr != NULL, FALSE);
+	return_val_if_fail (attr->pValue != NULL, false);
 	attr->ulValueLen = sizeof (boolean);
 	return true;
 }
@@ -464,7 +464,10 @@ parse_oid (p11_persist *persist,
 	return_val_if_fail (ret == ASN1_SUCCESS, false);
 
 	attr->pValue = p11_asn1_encode (asn, &length);
-	return_val_if_fail (attr->pValue != NULL, false);
+	if (attr->pValue == NULL) {
+		asn1_delete_structure (&asn);
+		return_val_if_reached (false);
+	}
 	attr->ulValueLen = length;
 
 	asn1_delete_structure (&asn);
@@ -504,13 +507,13 @@ format_oid (p11_persist *persist,
 	ret = asn1_der_decoding (&asn, attr->pValue, attr->ulValueLen, message);
 	if (ret != ASN1_SUCCESS) {
 		p11_message (_("invalid oid value: %s"), message);
+		asn1_delete_structure (&asn);
 		return false;
 	}
 
 	data = p11_asn1_read (asn, "", &len);
-	return_val_if_fail (data != NULL, false);
-
 	asn1_delete_structure (&asn);
+	return_val_if_fail (data != NULL, false);
 
 	p11_buffer_add (buf, data, len - 1);
 	free (data);
@@ -580,6 +583,11 @@ field_to_attribute (p11_persist *persist,
 
 	*attrs = p11_attrs_take (*attrs, attr.type,
 	                         attr.pValue, attr.ulValueLen);
+	if (*attrs == NULL) {
+		free (attr.pValue);
+		return_val_if_reached (false);
+	}
+
 	return true;
 }
 
@@ -624,13 +632,11 @@ on_pem_block (const char *type,
 	if (strcmp (type, "CERTIFICATE") == 0) {
 		attrs = certificate_to_attributes (contents, length);
 		pb->attrs = p11_attrs_merge (pb->attrs, attrs, false);
-		pb->result = true;
-
+		pb->result = pb->attrs != NULL;
 	} else if (strcmp (type, "PUBLIC KEY") == 0) {
 		attrs = public_key_to_attributes (contents, length);
 		pb->attrs = p11_attrs_merge (pb->attrs, attrs, false);
-		pb->result = true;
-
+		pb->result = pb->attrs != NULL;
 	} else {
 		p11_lexer_msg (pb->lexer, "unsupported pem block in store");
 		pb->result = false;
@@ -648,6 +654,8 @@ pem_to_attributes (p11_lexer *lexer,
 	                       lexer->tok.pem.length,
 	                       on_pem_block, &pb);
 
+	*attrs = pb.attrs;
+
 	if (count == 0) {
 		p11_lexer_msg (lexer, "invalid pem block");
 		return false;
@@ -655,7 +663,6 @@ pem_to_attributes (p11_lexer *lexer,
 
 	/* The lexer should have only matched one block */
 	return_val_if_fail (count == 1, false);
-	*attrs = pb.attrs;
 	return pb.result;
 }
 
@@ -682,15 +689,21 @@ p11_persist_read (p11_persist *persist,
 	while (p11_lexer_next (&lexer, &failed)) {
 		switch (lexer.tok_type) {
 		case TOK_SECTION:
-			if (attrs && !p11_array_push (objects, attrs))
+			if (attrs != NULL && !p11_array_push (objects, attrs)) {
+				p11_attrs_free (attrs);
+				p11_lexer_done (&lexer);
 				return_val_if_reached (false);
+			}
 			attrs = NULL;
 			if (strcmp (lexer.tok.section.name, PERSIST_HEADER) != 0) {
 				p11_lexer_msg (&lexer, "unrecognized or invalid section header");
 				skip = true;
 			} else {
 				attrs = p11_attrs_build (NULL, NULL);
-				return_val_if_fail (attrs != NULL, false);
+				if (attrs == NULL) {
+					p11_lexer_done (&lexer);
+					return_val_if_reached (false);
+				}
 				skip = false;
 			}
 			failed = false;
@@ -698,7 +711,7 @@ p11_persist_read (p11_persist *persist,
 		case TOK_FIELD:
 			if (skip) {
 				failed = false;
-			} else if (!attrs) {
+			} else if (attrs == NULL) {
 				p11_lexer_msg (&lexer, "attribute before p11-kit section header");
 				failed = true;
 			} else {
@@ -708,7 +721,7 @@ p11_persist_read (p11_persist *persist,
 		case TOK_PEM:
 			if (skip) {
 				failed = false;
-			} else if (!attrs) {
+			} else if (attrs == NULL) {
 				p11_lexer_msg (&lexer, "pem block before p11-kit section header");
 				failed = true;
 			} else {
@@ -723,9 +736,16 @@ p11_persist_read (p11_persist *persist,
 			break;
 	}
 
-	if (attrs && !p11_array_push (objects, attrs))
-		return_val_if_reached (false);
-	attrs = NULL;
+	if (attrs != NULL) {
+		if (failed)
+			p11_attrs_free (attrs);
+		else if (!p11_array_push (objects, attrs)) {
+			p11_attrs_free (attrs);
+			p11_lexer_done (&lexer);
+			return_val_if_reached (false);
+		}
+		attrs = NULL;
+	}
 
 	p11_lexer_done (&lexer);
 	return !failed;
@@ -838,7 +858,10 @@ p11_persist_check (p11_persist *persist,
 				skip = true;
 			} else {
 				attrs = p11_attrs_build (NULL, NULL);
-				return_val_if_fail (attrs != NULL, false);
+				if (attrs == NULL) {
+					p11_lexer_done (&lexer);
+					return_val_if_reached (false);
+				}
 				skip = false;
 			}
 			break;
