@@ -53,7 +53,7 @@ p11_url_decode (const char *value,
                 const char *skip,
                 size_t *length)
 {
-	char *a, *b;
+	const char *a, *b;
 	unsigned char *result, *p;
 
 	assert (value <= end);
