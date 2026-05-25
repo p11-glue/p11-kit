@@ -200,13 +200,16 @@ setup_unreadable (void *unused)
 
 	test.unreadable = p11_path_build (anchors, "unreadable", NULL);
 	f = fopen (test.unreadable, "w");
+	assert (f != NULL);
 	fwrite ("foo", 3, 1, f);
 	fclose (f);
 	chmod (test.unreadable, 0);
 
 	p = p11_path_build (anchors, "thawte", NULL);
 	ff = fopen (p, "w");
+	assert (ff != NULL);
 	f = fopen (SRCDIR "/trust/fixtures/thawte.pem", "r");
+	assert (f != NULL);
 	while (!feof (f)) {
 		size_t size;
 		size = fread (buffer, 1, sizeof (buffer), f);
