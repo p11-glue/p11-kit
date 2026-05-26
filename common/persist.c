@@ -132,7 +132,7 @@ parse_string (p11_lexer *lexer,
 	end = value + strlen (value);
 
 	/* Not a string/binary value */
-	if (value == end || value[0] != '\"' || *(end - 1) != '\"')
+	if (end - value < 2 || value[0] != '\"' || *(end - 1) != '\"')
 		return false;
 
 	/* Note that we don't skip whitespace when decoding, as you might in other URLs */
