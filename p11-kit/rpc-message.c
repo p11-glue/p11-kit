@@ -2554,7 +2554,7 @@ p11_rpc_mechanism_is_supported (CK_MECHANISM_TYPE mech)
 }
 
 void
-p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
+p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech, int rpc_version)
 {
 	p11_rpc_mechanism_serializer *serializer = NULL;
 	size_t i;
@@ -2563,16 +2563,20 @@ p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 	p11_rpc_buffer_add_uint32 (buffer, mech->mechanism);
 
 	if (mechanism_has_no_parameters (mech->mechanism)) {
+		if (rpc_version < 2)
+			p11_rpc_buffer_add_byte_array (buffer, NULL, 0);
 		return;
 	}
 
 	assert (mechanism_has_sane_parameters (mech->mechanism));
 
-	if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
-		p11_rpc_buffer_add_byte (buffer, 0);
-		return;
-	} else {
-		p11_rpc_buffer_add_byte (buffer, 1);
+	if (rpc_version >= 2) {
+		if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
+			p11_rpc_buffer_add_byte (buffer, 0);
+			return;
+		} else {
+			p11_rpc_buffer_add_byte (buffer, 1);
+		}
 	}
 
 	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
