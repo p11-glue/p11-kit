@@ -682,6 +682,48 @@ test_get_wrap_template (void)
 }
 
 static void
+test_get_encapsulate_template (void)
+{
+	CK_RV rv;
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_BBOOL encrypt = CK_FALSE;
+	CK_ATTRIBUTE temp[] = {
+		{ 0 },
+	};
+	CK_ATTRIBUTE attrs[] = {
+		{ CKA_ENCAPSULATE_TEMPLATE, temp, sizeof (temp) },
+	};
+	CK_ULONG n_attrs = sizeof (attrs) / sizeof (attrs[0]);
+
+	module = setup_mock_module (&session);
+
+	/* First pass: get inner attribute types and sizes */
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_ENCAPSULATE_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[0].pValue, NULL);
+	assert_num_eq (temp[0].ulValueLen, sizeof (encrypt));
+
+	/* Second pass: get inner attribute values */
+	temp[0].pValue = &encrypt;
+	rv = (module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, n_attrs);
+	assert (rv == CKR_OK);
+	assert_num_eq (attrs[0].type, CKA_ENCAPSULATE_TEMPLATE);
+	assert_ptr_eq (attrs[0].pValue, temp);
+	assert_num_eq (attrs[0].ulValueLen, sizeof (temp));
+	assert_num_eq (temp[0].type, CKA_ENCRYPT);
+	assert_ptr_eq (temp[0].pValue, &encrypt);
+	assert_num_eq (temp[0].ulValueLen, sizeof (encrypt));
+	assert (encrypt == CK_TRUE);
+
+	teardown_mock_module (module);
+}
+
+static void
 test_set_wrap_template (void)
 {
 	CK_RV rv;
@@ -1891,6 +1933,172 @@ test_generate_key_pair (void)
 }
 
 static void
+test_generate_key_pair_pqc (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_OBJECT_HANDLE pub_object;
+	CK_OBJECT_HANDLE priv_object;
+	CK_RV rv;
+
+	/* Test ML-DSA key pair generation through RPC proxy */
+	{
+		CK_MECHANISM mech = { CKM_ML_DSA_KEY_PAIR_GEN, NULL, 0 };
+		CK_KEY_TYPE key_type = CKK_ML_DSA;
+		CK_ULONG param_set = CKP_ML_DSA_65;
+		char label[] = "ml-dsa-65";
+		CK_ATTRIBUTE pub_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) }
+		};
+		CK_ATTRIBUTE priv_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) }
+		};
+		CK_ULONG got_param_set = 0;
+		CK_KEY_TYPE got_key_type = 0;
+		char got_label[32] = { 0 };
+		CK_ATTRIBUTE get_attrs[] = {
+			{ CKA_LABEL, got_label, sizeof (got_label) },
+			{ CKA_KEY_TYPE, &got_key_type, sizeof (got_key_type) },
+			{ CKA_PARAMETER_SET, &got_param_set, sizeof (got_param_set) }
+		};
+
+		module = setup_mock_module (&session);
+
+		rv = (module->C_GenerateKeyPair) (session, &mech,
+		                                  pub_attrs, 3, priv_attrs, 3,
+		                                  &pub_object, &priv_object);
+		assert (rv == CKR_OK);
+
+		rv = (module->C_GetAttributeValue) (session, pub_object, get_attrs, 3);
+		assert (rv == CKR_OK);
+		assert_num_eq (strlen (label), get_attrs[0].ulValueLen);
+		assert (memcmp (got_label, label, strlen (label)) == 0);
+		assert_num_eq (CKK_ML_DSA, got_key_type);
+		assert_num_eq (CKP_ML_DSA_65, got_param_set);
+
+		/* Verify private key too */
+		got_param_set = 0;
+		got_key_type = 0;
+		memset (got_label, 0, sizeof (got_label));
+		get_attrs[0].ulValueLen = sizeof (got_label);
+		get_attrs[1].ulValueLen = sizeof (got_key_type);
+		get_attrs[2].ulValueLen = sizeof (got_param_set);
+
+		rv = (module->C_GetAttributeValue) (session, priv_object, get_attrs, 3);
+		assert (rv == CKR_OK);
+		assert_num_eq (CKK_ML_DSA, got_key_type);
+		assert_num_eq (CKP_ML_DSA_65, got_param_set);
+
+		teardown_mock_module (module);
+	}
+
+	/* Test ML-KEM key pair generation with KEM-specific attributes */
+	{
+		CK_MECHANISM mech = { CKM_ML_KEM_KEY_PAIR_GEN, NULL, 0 };
+		CK_KEY_TYPE key_type = CKK_ML_KEM;
+		CK_ULONG param_set = CKP_ML_KEM_768;
+		CK_BBOOL encap = CK_TRUE;
+		CK_BBOOL decap = CK_TRUE;
+		char label[] = "ml-kem-768";
+		CK_ATTRIBUTE pub_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) },
+			{ CKA_ENCAPSULATE, &encap, sizeof (encap) }
+		};
+		CK_ATTRIBUTE priv_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) },
+			{ CKA_DECAPSULATE, &decap, sizeof (decap) }
+		};
+		CK_ULONG got_param_set = 0;
+		CK_KEY_TYPE got_key_type = 0;
+		CK_BBOOL got_encap = CK_FALSE;
+		CK_BBOOL got_decap = CK_FALSE;
+		CK_ATTRIBUTE get_pub_attrs[] = {
+			{ CKA_KEY_TYPE, &got_key_type, sizeof (got_key_type) },
+			{ CKA_PARAMETER_SET, &got_param_set, sizeof (got_param_set) },
+			{ CKA_ENCAPSULATE, &got_encap, sizeof (got_encap) }
+		};
+		CK_ATTRIBUTE get_priv_attrs[] = {
+			{ CKA_KEY_TYPE, &got_key_type, sizeof (got_key_type) },
+			{ CKA_PARAMETER_SET, &got_param_set, sizeof (got_param_set) },
+			{ CKA_DECAPSULATE, &got_decap, sizeof (got_decap) }
+		};
+
+		module = setup_mock_module (&session);
+
+		rv = (module->C_GenerateKeyPair) (session, &mech,
+		                                  pub_attrs, 4, priv_attrs, 4,
+		                                  &pub_object, &priv_object);
+		assert (rv == CKR_OK);
+
+		rv = (module->C_GetAttributeValue) (session, pub_object, get_pub_attrs, 3);
+		assert (rv == CKR_OK);
+		assert_num_eq (CKK_ML_KEM, got_key_type);
+		assert_num_eq (CKP_ML_KEM_768, got_param_set);
+		assert_num_eq (CK_TRUE, got_encap);
+
+		got_key_type = 0;
+		got_param_set = 0;
+		get_priv_attrs[0].ulValueLen = sizeof (got_key_type);
+		get_priv_attrs[1].ulValueLen = sizeof (got_param_set);
+		get_priv_attrs[2].ulValueLen = sizeof (got_decap);
+		rv = (module->C_GetAttributeValue) (session, priv_object, get_priv_attrs, 3);
+		assert (rv == CKR_OK);
+		assert_num_eq (CKK_ML_KEM, got_key_type);
+		assert_num_eq (CKP_ML_KEM_768, got_param_set);
+		assert_num_eq (CK_TRUE, got_decap);
+
+		teardown_mock_module (module);
+	}
+
+	/* Test SLH-DSA key pair generation */
+	{
+		CK_MECHANISM mech = { CKM_SLH_DSA_KEY_PAIR_GEN, NULL, 0 };
+		CK_KEY_TYPE key_type = CKK_SLH_DSA;
+		CK_ULONG param_set = CKP_SLH_DSA_SHA2_128S;
+		char label[] = "slh-dsa";
+		CK_ATTRIBUTE pub_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) }
+		};
+		CK_ATTRIBUTE priv_attrs[] = {
+			{ CKA_LABEL, label, strlen (label) },
+			{ CKA_KEY_TYPE, &key_type, sizeof (key_type) },
+			{ CKA_PARAMETER_SET, &param_set, sizeof (param_set) }
+		};
+		CK_ULONG got_param_set = 0;
+		CK_KEY_TYPE got_key_type = 0;
+		CK_ATTRIBUTE get_attrs[] = {
+			{ CKA_KEY_TYPE, &got_key_type, sizeof (got_key_type) },
+			{ CKA_PARAMETER_SET, &got_param_set, sizeof (got_param_set) }
+		};
+
+		module = setup_mock_module (&session);
+
+		rv = (module->C_GenerateKeyPair) (session, &mech,
+		                                  pub_attrs, 3, priv_attrs, 3,
+		                                  &pub_object, &priv_object);
+		assert (rv == CKR_OK);
+
+		rv = (module->C_GetAttributeValue) (session, pub_object, get_attrs, 2);
+		assert (rv == CKR_OK);
+		assert_num_eq (CKK_SLH_DSA, got_key_type);
+		assert_num_eq (CKP_SLH_DSA_SHA2_128S, got_param_set);
+
+		teardown_mock_module (module);
+	}
+
+}
+
+static void
 test_wrap_key (void)
 {
 	CK_FUNCTION_LIST_PTR module;
@@ -2725,6 +2933,7 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_get_attribute_value, "%s/test_get_attribute_value", prefix);
 	p11_test (test_set_attribute_value, "%s/test_set_attribute_value", prefix);
 	p11_test (test_get_wrap_template, "%s/test_get_wrap_template", prefix);
+	p11_test (test_get_encapsulate_template, "%s/test_get_encapsulate_template", prefix);
 	p11_test (test_set_wrap_template, "%s/test_set_wrap_template", prefix);
 	p11_test (test_create_object, "%s/test_create_object", prefix);
 	p11_test (test_create_object_private, "%s/test_create_object_private", prefix);
@@ -2746,6 +2955,7 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 	p11_test (test_decrypt_verify, "%s/test_decrypt_verify", prefix);
 	p11_test (test_generate_key, "%s/test_generate_key", prefix);
 	p11_test (test_generate_key_pair, "%s/test_generate_key_pair", prefix);
+	p11_test (test_generate_key_pair_pqc, "%s/test_generate_key_pair_pqc", prefix);
 	p11_test (test_wrap_key, "%s/test_wrap_key", prefix);
 	p11_test (test_unwrap_key, "%s/test_unwrap_key", prefix);
 	p11_test (test_derive_key, "%s/test_derive_key", prefix);

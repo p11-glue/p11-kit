@@ -197,7 +197,7 @@ const p11_constant p11_constant_types[] = {
 	CT (CKA_VALIDATION_VENDOR_URI, "validation-vendor-uri")
 	CT (CKA_VALIDATION_PROFILE, "validation-profile")
 	CT (CKA_ENCAPSULATE_TEMPLATE, "encapsulate-template")
-	CT (CKA_DECAPSULATE_TEMPLATE, "decapsulate_template")
+	CT (CKA_DECAPSULATE_TEMPLATE, "decapsulate_template") /* underscore, unlike others; kept for compatibility */
 	CT (CKA_TRUST_SERVER_AUTH, "trust-server-auth")
 	CT (CKA_TRUST_CLIENT_AUTH, "trust-client-auth")
 	CT (CKA_TRUST_CODE_SIGNING, "trust-code-signing")

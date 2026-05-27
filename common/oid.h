@@ -244,4 +244,40 @@ static const char P11_OID_RESERVED_PURPOSE_STR[] = "1.3.6.1.4.1.3319.6.10.16";
 static const char P11_OID_PKIX1_RSA_STR[] = "1.2.840.113549.1.1.1";
 static const char P11_OID_PKIX1_EC_STR[] = "1.2.840.10045.2.1";
 
+/*
+ * 2.16.840.1.101.3.4.3.{17,18,19}: ML-DSA-{44,65,87}
+ *
+ * Defined in RFC 9881
+ */
+static const char P11_OID_ML_DSA_44_STR[] = "2.16.840.1.101.3.4.3.17";
+static const char P11_OID_ML_DSA_65_STR[] = "2.16.840.1.101.3.4.3.18";
+static const char P11_OID_ML_DSA_87_STR[] = "2.16.840.1.101.3.4.3.19";
+
+/*
+ * 2.16.840.1.101.3.4.4.{1,2,3}: ML-KEM-{512,768,1024}
+ *
+ * Defined in RFC 9935
+ */
+static const char P11_OID_ML_KEM_512_STR[] = "2.16.840.1.101.3.4.4.1";
+static const char P11_OID_ML_KEM_768_STR[] = "2.16.840.1.101.3.4.4.2";
+static const char P11_OID_ML_KEM_1024_STR[] = "2.16.840.1.101.3.4.4.3";
+
+/*
+ * 2.16.840.1.101.3.4.3.{20..31}: SLH-DSA-{SHA2,SHAKE}-{128,192,256}{s,f}
+ *
+ * Defined in RFC 9814, reproduced in RFC 9909
+ */
+static const char P11_OID_SLH_DSA_SHA2_128S_STR[] = "2.16.840.1.101.3.4.3.20";
+static const char P11_OID_SLH_DSA_SHA2_128F_STR[] = "2.16.840.1.101.3.4.3.21";
+static const char P11_OID_SLH_DSA_SHA2_192S_STR[] = "2.16.840.1.101.3.4.3.22";
+static const char P11_OID_SLH_DSA_SHA2_192F_STR[] = "2.16.840.1.101.3.4.3.23";
+static const char P11_OID_SLH_DSA_SHA2_256S_STR[] = "2.16.840.1.101.3.4.3.24";
+static const char P11_OID_SLH_DSA_SHA2_256F_STR[] = "2.16.840.1.101.3.4.3.25";
+static const char P11_OID_SLH_DSA_SHAKE_128S_STR[] = "2.16.840.1.101.3.4.3.26";
+static const char P11_OID_SLH_DSA_SHAKE_128F_STR[] = "2.16.840.1.101.3.4.3.27";
+static const char P11_OID_SLH_DSA_SHAKE_192S_STR[] = "2.16.840.1.101.3.4.3.28";
+static const char P11_OID_SLH_DSA_SHAKE_192F_STR[] = "2.16.840.1.101.3.4.3.29";
+static const char P11_OID_SLH_DSA_SHAKE_256S_STR[] = "2.16.840.1.101.3.4.3.30";
+static const char P11_OID_SLH_DSA_SHAKE_256F_STR[] = "2.16.840.1.101.3.4.3.31";
+
 #endif
