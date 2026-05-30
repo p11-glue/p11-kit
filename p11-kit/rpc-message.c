@@ -1333,6 +1333,36 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 	return true;
 }
 
+static inline bool
+p11_rpc_buffer_get_attr_val_len_by_val_type(p11_buffer *buf,
+                                            size_t *offset,
+                                            p11_rpc_value_type value_type,
+                                            uint32_t *length)
+{
+	if (!p11_rpc_buffer_get_uint32 (buf, offset, length))
+		return false;
+
+	/* Length of ULONG attribures is always sizeof(CK_ULONG) which can be 4 or 8 depending on the platform.
+	 * For interoperability always override it to the size on the current platform when deserializing. */
+	if (length != NULL && *length != 0 && value_type == P11_RPC_VALUE_ULONG){
+		assert (*length == 4 || *length == 8);
+		*length = sizeof(CK_ULONG);
+	}
+
+	return true;
+}
+
+bool
+p11_rpc_buffer_get_attr_val_length(p11_buffer *buf,
+                                   size_t *offset,
+                                   CK_ATTRIBUTE_TYPE attr_type,
+                                   uint32_t *length)
+{
+	p11_rpc_value_type value_type;
+	value_type = map_attribute_to_value_type (attr_type);
+	return p11_rpc_buffer_get_attr_val_len_by_val_type (buf, offset, value_type, length);
+}
+
 bool
 p11_rpc_message_get_attribute (p11_rpc_message *msg,
 			       p11_buffer *buffer,
@@ -1361,7 +1391,8 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 		return true;
 	}
 
-	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
+	value_type = map_attribute_to_value_type (type);
+	if (!p11_rpc_buffer_get_attr_val_len_by_val_type (buffer, offset, value_type, &length))
 		return false;
 
 	if (length == 0) {
@@ -1373,7 +1404,6 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 			return false;
 	}
 
-	value_type = map_attribute_to_value_type (type);
 	assert (value_type < ELEMS (p11_rpc_attribute_serializers));
 	serializer = &p11_rpc_attribute_serializers[value_type];
 	assert (serializer != NULL);
