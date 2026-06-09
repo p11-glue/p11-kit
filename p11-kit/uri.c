@@ -48,6 +48,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -468,10 +469,13 @@ p11_kit_uri_get_attribute (P11KitUri *uri, CK_ATTRIBUTE_TYPE attr_type)
 int
 p11_kit_uri_set_attribute (P11KitUri *uri, CK_ATTRIBUTE_PTR attr)
 {
+	CK_ATTRIBUTE *attrs;
+
 	return_val_if_fail (uri != NULL, P11_KIT_URI_UNEXPECTED);
 
-	uri->attrs = p11_attrs_buildn (uri->attrs, attr, 1);
-	return_val_if_fail (uri->attrs != NULL, P11_KIT_URI_UNEXPECTED);
+	attrs = p11_attrs_buildn (uri->attrs, attr, 1);
+	return_val_if_fail (attrs != NULL, P11_KIT_URI_UNEXPECTED);
+	uri->attrs = attrs;
 
 	return P11_KIT_URI_OK;
 }
@@ -857,7 +861,12 @@ insert_attribute (p11_array *attrs, char *name, char *value)
 	attr->name = name;
 	attr->value = value;
 
-	return p11_array_insert (attrs, i, attr);
+	if (!p11_array_insert (attrs, i, attr)) {
+		free (attr);
+		return_val_if_reached (false);
+	}
+
+	return true;
 }
 
 /**
@@ -877,6 +886,7 @@ p11_kit_uri_set_vendor_query (P11KitUri *uri, const char *name,
 			      const char *value)
 {
 	Attribute *attr;
+	char *value_, *name_;
 	size_t i;
 
 	return_val_if_fail (uri != NULL, 0);
@@ -890,14 +900,28 @@ p11_kit_uri_set_vendor_query (P11KitUri *uri, const char *name,
 	if (i == uri->qattrs->num) {
 		if (value == NULL)
 			return 0;
-		return insert_attribute (uri->qattrs,
-					 strdup (name), strdup (value));
+
+		name_ = strdup (name);
+		value_ = strdup (value);
+		if (name_ == NULL || value_ == NULL) {
+			free (name_);
+			free (value_);
+			return_val_if_reached (0);
+		}
+		if (!insert_attribute (uri->qattrs, name_, value_)) {
+			free (name_);
+			free (value_);
+			return_val_if_reached (0);
+		}
+		return 1;
 	}
 	if (value == NULL)
 		p11_array_remove (uri->qattrs, i);
 	else {
+		value_ = strdup (value);
+		return_val_if_fail (value_ != NULL, 0);
 		free (attr->value);
-		attr->value = strdup (value);
+		attr->value = value_;
 	}
 
 	return 1;
@@ -926,6 +950,10 @@ p11_kit_uri_new (void)
 	uri->module.libraryVersion.minor = (CK_BYTE)-1;
 	uri->slot_id = (CK_SLOT_ID)-1;
 	uri->qattrs = p11_array_new ((p11_destroyer)free_attribute);
+	if (uri->qattrs == NULL) {
+		free (uri);
+		return_val_if_reached (NULL);
+	}
 
 	return uri;
 }
@@ -1144,6 +1172,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		    !format_struct_string (&buffer, &sep, "library-manufacturer",
 		                           uri->module.manufacturerID,
 		                           sizeof (uri->module.manufacturerID))) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1151,6 +1180,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 	if ((uri_type & P11_KIT_URI_FOR_MODULE_WITH_VERSION) == P11_KIT_URI_FOR_MODULE_WITH_VERSION) {
 		if (!format_struct_version (&buffer, &sep, "library-version",
 		                            &uri->module.libraryVersion)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1164,6 +1194,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		                           sizeof (uri->slot.manufacturerID)) ||
 		    !format_ulong (&buffer, &sep, "slot-id",
 				   uri->slot_id)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1181,6 +1212,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		    !format_struct_string (&buffer, &sep, "token",
 		                           uri->token.label,
 		                           sizeof (uri->token.label))) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1192,11 +1224,13 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		    !format_attribute_string (&buffer, &sep, "object",
 		                              p11_kit_uri_get_attribute (uri, CKA_LABEL),
 		                              false)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 
 		if (!format_attribute_class (&buffer, &sep, "type",
 		                             p11_kit_uri_get_attribute (uri, CKA_CLASS))) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1207,6 +1241,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		if (!format_encode_string (&buffer, &sep, "pin-source",
 		                           (const unsigned char*)uri->pin_source,
 		                           strlen (uri->pin_source), 0)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1215,6 +1250,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		if (!format_encode_string (&buffer, &sep, "pin-value",
 		                           (const unsigned char*)uri->pin_value,
 		                           strlen (uri->pin_value), 0)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1223,6 +1259,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		if (!format_encode_string (&buffer, &sep, "module-name",
 		                           (const unsigned char*)uri->module_name,
 		                           strlen (uri->module_name), 0)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1231,6 +1268,7 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		if (!format_encode_string (&buffer, &sep, "module-path",
 		                           (const unsigned char*)uri->module_path,
 		                           strlen (uri->module_path), 0)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
@@ -1240,11 +1278,16 @@ p11_kit_uri_format (P11KitUri *uri, P11KitUriType uri_type, char **string)
 		if (!format_encode_string (&buffer, &sep, attr->name,
 					   (const unsigned char *) attr->value,
 					   strlen (attr->value), 0)) {
+			p11_buffer_uninit (&buffer);
 			return_val_if_reached (P11_KIT_URI_UNEXPECTED);
 		}
 	}
 
-	return_val_if_fail (p11_buffer_ok (&buffer), P11_KIT_URI_UNEXPECTED);
+	if (!p11_buffer_ok (&buffer)) {
+		p11_buffer_uninit (&buffer);
+		return_val_if_reached (P11_KIT_URI_UNEXPECTED);
+	}
+
 	*string = p11_buffer_steal (&buffer, NULL);
 	return P11_KIT_URI_OK;
 }
@@ -1385,11 +1428,21 @@ static long
 atoin (const char *start, const char *end)
 {
 	long ret = 0;
+	int d;
+
+	if (start == end)
+		return -1;
+
 	while (start != end) {
 		if (*start < '0' || *start > '9')
 			return -1;
-		ret *= 10;
-		ret += (*start - '0');
+
+		d = *start - '0';
+
+		if (ret > (LONG_MAX - d) / 10)
+			return -1;
+
+		ret = ret * 10 + d;
 		++start;
 	}
 	return ret;
