@@ -142,7 +142,7 @@ populate_trust (p11_parser *parser,
 	return p11_attrs_build (attrs, &trusted, &distrust, NULL);
 }
 
-static void
+static bool
 sink_object (p11_parser *parser,
              CK_ATTRIBUTE *attrs)
 {
@@ -151,11 +151,15 @@ sink_object (p11_parser *parser,
 	if (p11_attrs_find_ulong (attrs, CKA_CLASS, &klass) &&
 	    klass == CKO_CERTIFICATE) {
 		attrs = populate_trust (parser, attrs);
-		return_if_fail (attrs != NULL);
+		return_val_if_fail (attrs != NULL, false);
 	}
 
-	if (!p11_array_push (parser->parsed, attrs))
-		return_if_reached ();
+	if (!p11_array_push (parser->parsed, attrs)) {
+		p11_attrs_free (attrs);
+		return_val_if_reached (false);
+	}
+
+	return true;
 }
 
 static CK_ATTRIBUTE *
@@ -181,23 +185,33 @@ p11_parser_format_x509 (p11_parser *parser,
                         size_t length)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	CK_ATTRIBUTE *attrs;
-	CK_ATTRIBUTE *value;
-	asn1_node cert;
+	CK_ATTRIBUTE *attrs = NULL;
+	CK_ATTRIBUTE *value = NULL;
+	asn1_node cert = NULL;
 
 	cert = p11_asn1_decode (parser->asn1_defs, "PKIX1.Certificate", data, length, message);
 	if (cert == NULL)
 		return P11_PARSE_UNRECOGNIZED;
 
 	attrs = certificate_attrs (parser, data, length);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	if (attrs == NULL) {
+		asn1_delete_structure (&cert);
+		return_val_if_reached (P11_PARSE_FAILURE);
+	}
 
 	value = p11_attrs_find_valid (attrs, CKA_VALUE);
-	return_val_if_fail (value != NULL, P11_PARSE_FAILURE);
+	if (value == NULL) {
+		asn1_delete_structure (&cert);
+		p11_attrs_free (attrs);
+		return_val_if_reached (P11_PARSE_FAILURE);
+	}
 	p11_asn1_cache_take (parser->asn1_cache, cert, "PKIX1.Certificate",
 	                     value->pValue, value->ulValueLen);
 
-	sink_object (parser, attrs);
+	if (!sink_object (parser, attrs)) {
+		asn1_delete_structure (&cert);
+		return_val_if_reached (P11_PARSE_FAILURE);
+	}
 	return P11_PARSE_SUCCESS;
 }
 
@@ -217,9 +231,9 @@ extension_attrs (p11_parser *parser,
 	CK_ATTRIBUTE modifiable = { CKA_MODIFIABLE, &modifiablev, sizeof (modifiablev) };
 	CK_ATTRIBUTE oid = { CKA_OBJECT_ID, (void *)oid_der, p11_oid_length (oid_der) };
 
-	CK_ATTRIBUTE *attrs;
-	asn1_node dest;
-	unsigned char *der;
+	CK_ATTRIBUTE *attrs = NULL;
+	asn1_node dest = NULL;
+	unsigned char *der = NULL;
 	size_t len;
 	int ret;
 
@@ -227,27 +241,52 @@ extension_attrs (p11_parser *parser,
 	return_val_if_fail (attrs != NULL, NULL);
 
 	dest = p11_asn1_create (parser->asn1_defs, "PKIX1.Extension");
-	return_val_if_fail (dest != NULL, NULL);
+	if (dest == NULL) {
+		warn_if_reached ();
+		goto fail;
+	}
 
 	ret = asn1_write_value (dest, "extnID", oid_str, 1);
-	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+	if (ret != ASN1_SUCCESS) {
+		warn_if_reached ();
+		goto fail;
+	}
 
-	if (critical)
+	if (critical) {
 		ret = asn1_write_value (dest, "critical", "TRUE", 1);
-	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+		if (ret != ASN1_SUCCESS) {
+			warn_if_reached ();
+			goto fail;
+		}
+	}
 
 	ret = asn1_write_value (dest, "extnValue", value, length);
-	return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+	if (ret != ASN1_SUCCESS) {
+		warn_if_reached ();
+		goto fail;
+	}
 
 	der = p11_asn1_encode (dest, &len);
-	return_val_if_fail (der != NULL, NULL);
+	if (der == NULL) {
+		warn_if_reached ();
+		goto fail;
+	}
 
 	attrs = p11_attrs_take (attrs, CKA_VALUE, der, len);
-	return_val_if_fail (attrs != NULL, NULL);
+	if (attrs == NULL) {
+		warn_if_reached ();
+		free (der);
+		goto fail;
+	}
 
 	/* An opmitization so that the builder can get at this without parsing */
 	p11_asn1_cache_take (parser->asn1_cache, dest, "PKIX1.Extension", der, len);
 	return attrs;
+
+fail:
+	asn1_delete_structure (&dest);
+	p11_attrs_free (attrs);
+	return NULL;
 }
 
 static CK_ATTRIBUTE *
@@ -267,9 +306,9 @@ attached_attrs (p11_parser *parser,
 
 	attrs = extension_attrs (parser, public_key_info, oid_str, oid_der,
 	                         critical, der, len);
+	free (der);
 	return_val_if_fail (attrs != NULL, NULL);
 
-	free (der);
 	return attrs;
 }
 
@@ -284,17 +323,23 @@ load_seq_of_oid_str (asn1_node node,
 	int i;
 
 	oids = p11_dict_new (p11_dict_str_hash, p11_dict_str_equal, free, NULL);
+	return_val_if_fail (oids != NULL, NULL);
 
 	for (i = 1; ; i++) {
-		if (snprintf (field, sizeof (field), "%s.?%u", seqof, i) < 0)
+		if (snprintf (field, sizeof (field), "%s.?%u", seqof, i) < 0) {
+			p11_dict_free (oids);
 			return_val_if_reached (NULL);
+		}
 
 		oid = p11_asn1_read (node, field, &len);
 		if (oid == NULL)
 			break;
 
-		if (!p11_dict_set (oids, oid, oid))
+		if (!p11_dict_set (oids, oid, oid)) {
+			free (oid);
+			p11_dict_free (oids);
 			return_val_if_reached (NULL);
+		}
 	}
 
 	return oids;
@@ -321,10 +366,16 @@ attached_eku_attrs (p11_parser *parser,
 	p11_dict_iterate (oid_strs, &iter);
 	while (p11_dict_next (&iter, NULL, &value)) {
 		ret = asn1_write_value (dest, "", "NEW", 1);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+		if (ret != ASN1_SUCCESS) {
+			asn1_delete_structure (&dest);
+			return_val_if_reached (NULL);
+		}
 
 		ret = asn1_write_value (dest, "?LAST", value, -1);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+		if (ret != ASN1_SUCCESS) {
+			asn1_delete_structure (&dest);
+			return_val_if_reached (NULL);
+		}
 
 		count++;
 	}
@@ -344,10 +395,16 @@ attached_eku_attrs (p11_parser *parser,
 
 	if (count == 0) {
 		ret = asn1_write_value (dest, "", "NEW", 1);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+		if (ret != ASN1_SUCCESS) {
+			asn1_delete_structure (&dest);
+			return_val_if_reached (NULL);
+		}
 
 		ret = asn1_write_value (dest, "?LAST", P11_OID_RESERVED_PURPOSE_STR, -1);
-		return_val_if_fail (ret == ASN1_SUCCESS, NULL);
+		if (ret != ASN1_SUCCESS) {
+			asn1_delete_structure (&dest);
+			return_val_if_reached (NULL);
+		}
 	}
 
 
@@ -395,7 +452,10 @@ build_openssl_extensions (p11_parser *parser,
 	trust = load_seq_of_oid_str (aux, "trust");
 
 	ret = asn1_number_of_elements (aux, "reject", &num);
-	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, NULL);
+	if (ret != ASN1_SUCCESS && ret != ASN1_ELEMENT_NOT_FOUND) {
+		warn_if_reached ();
+		goto fail;
+	}
 	if (ret == ASN1_SUCCESS)
 		reject = load_seq_of_oid_str (aux, "reject");
 
@@ -417,8 +477,14 @@ build_openssl_extensions (p11_parser *parser,
 		                            P11_OID_EXTENDED_KEY_USAGE_STR,
 		                            P11_OID_EXTENDED_KEY_USAGE,
 		                            true, trust);
-		return_val_if_fail (attrs != NULL, NULL);
-		sink_object (parser, attrs);
+		if (attrs == NULL) {
+			warn_if_reached ();
+			goto fail;
+		}
+		if (!sink_object (parser, attrs)) {
+			warn_if_reached ();
+			goto fail;
+		}
 	}
 
 	/*
@@ -434,8 +500,14 @@ build_openssl_extensions (p11_parser *parser,
 		                            P11_OID_OPENSSL_REJECT_STR,
 		                            P11_OID_OPENSSL_REJECT,
 		                            false, reject);
-		return_val_if_fail (attrs != NULL, NULL);
-		sink_object (parser, attrs);
+		if (attrs == NULL) {
+			warn_if_reached ();
+			goto fail;
+		}
+		if (!sink_object (parser, attrs)) {
+			warn_if_reached ();
+			goto fail;
+		}
 	}
 
 	/*
@@ -463,10 +535,15 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	cert = p11_attrs_merge (cert, p11_attrs_dup (trust_attrs), true);
-	return_val_if_fail (cert != NULL, NULL);
+	if (cert == NULL) {
+		warn_if_reached ();
+		goto fail;
+	}
 
 	p11_dict_free (trust);
 	p11_dict_free (reject);
+	trust = NULL;
+	reject = NULL;
 
 	/*
 	 * For the keyid field we use the SubjectKeyIdentifier extension. It
@@ -484,11 +561,15 @@ build_openssl_extensions (p11_parser *parser,
 		                         P11_OID_SUBJECT_KEY_IDENTIFIER,
 		                         false, aux_der + start, (end - start) + 1);
 		return_val_if_fail (attrs != NULL, NULL);
-		sink_object (parser, attrs);
+		return_val_if_fail (sink_object (parser, attrs), NULL);
 	}
 
-
 	return cert;
+
+fail:
+	p11_dict_free (trust);
+	p11_dict_free (reject);
+	return NULL;
 }
 
 static int
@@ -497,17 +578,18 @@ parse_openssl_trusted_certificate (p11_parser *parser,
                                    size_t length)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
-	CK_ATTRIBUTE *attrs;
 	CK_ATTRIBUTE public_key_info = { CKA_PUBLIC_KEY_INFO };
-	CK_ATTRIBUTE *value;
+	CK_ATTRIBUTE *value = NULL;
+	CK_ATTRIBUTE *attrs = NULL;
 	char *label = NULL;
-	asn1_node cert;
+	asn1_node cert = NULL;
 	asn1_node aux = NULL;
 	ssize_t cert_len;
 	size_t len;
 	int start;
 	int end;
-	int ret;
+	bool ok;
+	int ret = P11_PARSE_FAILURE;
 
 	/*
 	 * This OpenSSL format is weird. It's just two DER structures
@@ -529,28 +611,39 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 		aux = p11_asn1_decode (parser->asn1_defs, "OPENSSL.CertAux", data + cert_len,
 		                       length - cert_len, message);
 		if (aux == NULL) {
-			asn1_delete_structure (&cert);
-			return P11_PARSE_UNRECOGNIZED;
+			ret = P11_PARSE_UNRECOGNIZED;
+			goto cleanup;
 		}
 	}
 
 	attrs = certificate_attrs (parser, data, cert_len);
-	return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+	if (attrs == NULL) {
+		warn_if_reached();
+		goto cleanup;
+	}
 
 	/* Cache the parsed certificate ASN.1 for later use by the builder */
 	value = p11_attrs_find_valid (attrs, CKA_VALUE);
-	return_val_if_fail (value != NULL, P11_PARSE_FAILURE);
+	if (value == NULL) {
+		warn_if_reached();
+		goto cleanup;
+	}
 
 	/* Pull out the subject public key info */
-	ret = asn1_der_decoding_startEnd (cert, data, cert_len,
-	                                  "tbsCertificate.subjectPublicKeyInfo", &start, &end);
-	return_val_if_fail (ret == ASN1_SUCCESS, P11_PARSE_FAILURE);
+	if (asn1_der_decoding_startEnd (cert, data, cert_len,
+	                                "tbsCertificate.subjectPublicKeyInfo",
+					&start, &end) != ASN1_SUCCESS) {
+		warn_if_reached();
+		goto cleanup;
+	}
 
 	public_key_info.pValue = (char *)data + start;
 	public_key_info.ulValueLen = (end - start) + 1;
 
 	p11_asn1_cache_take (parser->asn1_cache, cert, "PKIX1.Certificate",
 	                     value->pValue, value->ulValueLen);
+	/* cache owns cert */
+	cert = NULL;
 
 	/* Pull the label out of the CertAux */
 	if (aux) {
@@ -558,18 +651,37 @@ parse_openssl_trusted_certificate (p11_parser *parser,
 		label = p11_asn1_read (aux, "alias", &len);
 		if (label != NULL) {
 			attrs = p11_attrs_take (attrs, CKA_LABEL, label, strlen (label));
-			return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+			if (attrs == NULL) {
+				warn_if_reached();
+				goto cleanup;
+			}
+			/* attrs owns label */
+			label = NULL;
 		}
 
 		attrs = build_openssl_extensions (parser, attrs, &public_key_info, aux,
 		                                  data + cert_len, length - cert_len);
-		return_val_if_fail (attrs != NULL, P11_PARSE_FAILURE);
+		if (attrs == NULL) {
+			warn_if_reached();
+			goto cleanup;
+		}
 	}
 
-	sink_object (parser, attrs);
-	asn1_delete_structure (&aux);
+	ok = sink_object (parser, attrs);
+	/* attrs freed or owned by parser */
+	attrs = NULL;
+	if (!ok) {
+		warn_if_reached();
+		goto cleanup;
+	}
+	ret = P11_PARSE_SUCCESS;
 
-	return P11_PARSE_SUCCESS;
+cleanup:
+	asn1_delete_structure (&cert);
+	asn1_delete_structure (&aux);
+	p11_attrs_free (attrs);
+	free (label);
+	return ret;
 }
 
 static void
@@ -641,7 +753,10 @@ p11_parser_format_persist (p11_parser *parser,
 			modifiablev = CK_FALSE;
 		for (i = 0; i < objects->num; i++) {
 			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
-			sink_object (parser, attrs);
+			if (!sink_object (parser, attrs)) {
+				p11_array_free (objects);
+				return_val_if_reached (P11_PARSE_FAILURE);
+			}
 		}
 	}
 
@@ -652,7 +767,7 @@ p11_parser_format_persist (p11_parser *parser,
 p11_parser *
 p11_parser_new (p11_asn1_cache *asn1_cache)
 {
-	p11_parser parser = { 0, };
+	p11_parser parser = { 0, }, *result;
 
 	if (asn1_cache == NULL) {
 		parser.asn1_owned = true;
@@ -664,9 +779,20 @@ p11_parser_new (p11_asn1_cache *asn1_cache)
 	}
 
 	parser.parsed = p11_array_new (p11_attrs_free);
-	return_val_if_fail (parser.parsed != NULL, NULL);
+	if (parser.parsed == NULL) {
+		if (parser.asn1_owned)
+			p11_dict_free (parser.asn1_defs);
+		return_val_if_reached (NULL);
+	}
 
-	return memdup (&parser, sizeof (parser));
+	result = memdup (&parser, sizeof (parser));
+	if (result == NULL) {
+		p11_array_free (parser.parsed);
+		if (parser.asn1_owned)
+			p11_dict_free (parser.asn1_defs);
+		return_val_if_reached (NULL);
+	}
+	return result;
 }
 
 void
@@ -705,6 +831,7 @@ p11_parser_formats (p11_parser *parser,
 		if (func == NULL)
 			break;
 		if (!p11_array_push (formats, func)) {
+			p11_array_free (formats);
 			va_end (va);
 			return_if_reached ();
 		}
