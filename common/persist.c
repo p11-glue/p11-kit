@@ -568,6 +568,10 @@ field_to_attribute (p11_persist *persist,
 			p11_lexer_msg (lexer, "invalid or unsupported attribute");
 			return false;
 		}
+	/* Reject numerical value that matches CKA_INVALID */
+	} else if (attr.type == CKA_INVALID) {
+		p11_lexer_msg (lexer, "invalid attribute");
+		return false;
 	}
 
 	if (!parse_value (persist, lexer, &attr)) {
