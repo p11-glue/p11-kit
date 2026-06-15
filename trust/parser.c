@@ -744,7 +744,7 @@ p11_parser_format_persist (p11_parser *parser,
 		return_val_if_fail (parser->persist != NULL, P11_PARSE_UNRECOGNIZED);
 	}
 
-	objects = p11_array_new (NULL);
+	objects = p11_array_new (p11_attrs_free);
 	return_val_if_fail (objects != NULL, P11_PARSE_FAILURE);
 
 	ret = p11_persist_read (parser->persist, parser->basename, data, length, objects);
@@ -753,7 +753,11 @@ p11_parser_format_persist (p11_parser *parser,
 			modifiablev = CK_FALSE;
 		for (i = 0; i < objects->num; i++) {
 			attrs = p11_attrs_build (objects->elem[i], &modifiable, NULL);
-			if (!sink_object (parser, attrs)) {
+
+			/* Prevent double-free */
+			objects->elem[i] = NULL;
+
+			if (attrs == NULL || !sink_object (parser, attrs)) {
 				p11_array_free (objects);
 				return_val_if_reached (P11_PARSE_FAILURE);
 			}
