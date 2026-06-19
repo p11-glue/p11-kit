@@ -48,9 +48,11 @@
  * (unsigned long).  Moreover, our vendor prefix 0x58444700UL masks
  * the bit. */
 #define IS_ATTRIBUTE_ARRAY(attr) \
-	((attr)->type == CKA_WRAP_TEMPLATE ||	\
-	 (attr)->type == CKA_UNWRAP_TEMPLATE ||	\
-	 (attr)->type == CKA_DERIVE_TEMPLATE)
+	((attr)->type == CKA_WRAP_TEMPLATE ||		\
+	 (attr)->type == CKA_UNWRAP_TEMPLATE ||		\
+	 (attr)->type == CKA_DERIVE_TEMPLATE ||		\
+	 (attr)->type == CKA_ENCAPSULATE_TEMPLATE ||	\
+	 (attr)->type == CKA_DECAPSULATE_TEMPLATE)
 
 CK_ATTRIBUTE *      p11_attrs_dup           (const CK_ATTRIBUTE *attrs);
 

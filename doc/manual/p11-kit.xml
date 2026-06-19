@@ -280,12 +280,13 @@ $ <command>pkg-config p11-kit-1 --variable p11_module_path</command>
 	<para>Generate key-pair on a PKCS#11 token.</para>
 
 <programlisting>
-$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &lsqb;--label=label&rsqb; &lsqb;--id=object_id&rsqb; pkcs11:token
+$ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name|--parameter-set=set&rcub; &lsqb;--label=label&rsqb; &lsqb;--id=object_id&rsqb; pkcs11:token
 </programlisting>
 
 	<para>Generate private-public key-pair of given type on the first
 	token matched by given PKCS#11 URI. This command should be used
-	together with --type option and one of --bits or --curve options.</para>
+	together with --type option and one of --bits, --curve or
+	--parameter-set options.</para>
 
 	<para>The following options are required:</para>
 
@@ -293,7 +294,7 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
 		<varlistentry>
 			<term><option>--type=&lt;algorithm&gt;</option></term>
 			<listitem><para>Specify the type of keys to generate.
-			Supported values are rsa, ecdsa and eddsa.</para></listitem>
+			Supported values are rsa, ecdsa, eddsa, ml-dsa, ml-kem and slh-dsa.</para></listitem>
 		</varlistentry>
 		<varlistentry>
 			<term><option>--bits=&lt;n&gt;</option></term>
@@ -305,6 +306,12 @@ $ p11-kit generate-keypair --type=algorithm &lcub;--bits=n|--curve=name&rcub; &l
                         <listitem><para>Specify an elliptic curve for the key-pair generation.
                         Supported values are secp256r1, secp384r1, secp521r1, ed25519 and ed448.
 			Cannot be used together with --bits option.</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term><option>--parameter-set=&lt;set&gt;</option></term>
+			<listitem><para>Specify the parameter set for post-quantum key-pair
+			generation. Used with ml-dsa (44, 65, 87), ml-kem (512, 768, 1024)
+			and slh-dsa (e.g. sha2-128s, shake-256f).</para></listitem>
 		</varlistentry>
 	</variablelist>
 
