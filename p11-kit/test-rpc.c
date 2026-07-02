@@ -700,6 +700,32 @@ test_mechanism_unsupported (void *module)
 	teardown_mock_module (rpc_module);
 }
 
+static void
+test_recursion_limit (void *module)
+{
+	CK_FUNCTION_LIST_PTR rpc_module;
+	CK_SESSION_HANDLE session;
+	CK_RV rv;
+	CK_BBOOL val;
+	CK_ATTRIBUTE attrs[P11_RPC_MAX_RECURSION_DEPTH + 2];
+	for (size_t i = 0; i <= P11_RPC_MAX_RECURSION_DEPTH; i++) {
+		attrs[i].type = CKA_WRAP_TEMPLATE;
+		attrs[i].pValue = &attrs[i + 1];
+		attrs[i].ulValueLen = sizeof (CK_ATTRIBUTE);
+	}
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].type = CKA_ENCRYPT;
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].pValue = &val;
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].ulValueLen = sizeof (CK_BBOOL);
+
+	rpc_module = setup_test_rpc_module (&test_normal_vtable, module, &session);
+
+	/* Hit recursion limit */
+	rv = (rpc_module->C_GetAttributeValue) (session, MOCK_PUBLIC_KEY_PREFIX, attrs, 1);
+	assert_num_eq (rv, CKR_DEVICE_ERROR);
+
+	teardown_mock_module (rpc_module);
+}
+
 #ifdef OS_UNIX
 
 static void
@@ -805,6 +831,7 @@ main (int argc,
 	p11_testx (test_get_slot_list_no_device, &mock_module_v3_no_slots, "/rpc3/get-slot-list-no-device");
 	p11_testx (test_simultaneous_functions, &mock_module_v3_no_slots, "/rpc3/simultaneous-functions");
 	p11_testx (test_mechanism_unsupported, &mock_module_v3, "/rpc3/mechanism-unsupported");
+	p11_testx (test_recursion_limit, &mock_module_v3, "/rpc3/recursion-limit");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_v3_no_slots, "/rpc3/fork-and-reinitialize");

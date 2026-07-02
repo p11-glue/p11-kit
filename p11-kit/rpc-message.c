@@ -930,7 +930,8 @@ p11_rpc_message_get_byte_value (p11_rpc_message *msg,
 			        p11_buffer *buffer,
 			        size_t *offset,
 			        void *value,
-			        CK_ULONG *value_length)
+			        CK_ULONG *value_length,
+			        size_t unused)
 {
 	return p11_rpc_buffer_get_byte_value (buffer, offset, value, value_length);
 }
@@ -940,20 +941,37 @@ p11_rpc_message_get_ulong_value (p11_rpc_message *msg,
 			         p11_buffer *buffer,
 			         size_t *offset,
 			         void *value,
-			         CK_ULONG *value_length)
+			         CK_ULONG *value_length,
+			         size_t unused)
 {
 	return p11_rpc_buffer_get_ulong_value (buffer, offset, value, value_length);
 }
+
+static bool
+p11_rpc_message_get_attribute_recursive (p11_rpc_message *msg,
+					 p11_buffer *buffer,
+					 size_t *offset,
+					 CK_ATTRIBUTE *attr,
+					 size_t depth);
 
 static bool
 p11_rpc_message_get_attribute_array_value (p11_rpc_message *msg,
 					   p11_buffer *buffer,
 					   size_t *offset,
 					   void *value,
-					   CK_ULONG *value_length)
+					   CK_ULONG *value_length,
+					   size_t depth)
 {
 	uint32_t count, i;
 	CK_ATTRIBUTE *attr = value;
+
+	/* To enforce the same depth as proto_read_attribute_buffer_array
+	 * we need >= instead of > because this function is only called
+	 * for recursive attribute types instead of all types */
+	if (depth >= P11_RPC_MAX_RECURSION_DEPTH) {
+		p11_debug ("recursion depth limit reached");
+		return false;
+	}
 
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
 		return false;
@@ -965,7 +983,8 @@ p11_rpc_message_get_attribute_array_value (p11_rpc_message *msg,
 		return true;
 
 	for (i = 0; i < count; ++i)
-		if (!p11_rpc_message_get_attribute (msg, buffer, offset, attr + i))
+		if (!p11_rpc_message_get_attribute_recursive (msg, buffer, offset,
+							      attr + i, depth + 1))
 			return false;
 
 	return true;
@@ -976,7 +995,8 @@ p11_rpc_message_get_mechanism_type_array_value (p11_rpc_message *msg,
 					        p11_buffer *buffer,
 					        size_t *offset,
 					        void *value,
-					        CK_ULONG *value_length)
+					        CK_ULONG *value_length,
+					        size_t unused)
 {
 	return p11_rpc_buffer_get_mechanism_type_array_value (buffer, offset, value, value_length);
 }
@@ -986,7 +1006,8 @@ p11_rpc_message_get_date_value (p11_rpc_message *msg,
 			        p11_buffer *buffer,
 			        size_t *offset,
 			        void *value,
-			        CK_ULONG *value_length)
+			        CK_ULONG *value_length,
+			        size_t unused)
 {
 	return p11_rpc_buffer_get_date_value (buffer, offset, value, value_length);
 }
@@ -996,7 +1017,8 @@ p11_rpc_message_get_byte_array_value (p11_rpc_message *msg,
 				      p11_buffer *buffer,
 				      size_t *offset,
 				      void *value,
-				      CK_ULONG *value_length)
+				      CK_ULONG *value_length,
+				      size_t unused)
 {
 	return p11_rpc_buffer_get_byte_array_value (buffer, offset, value, value_length);
 }
@@ -1248,7 +1270,7 @@ p11_rpc_buffer_get_attribute_array_value (p11_buffer *buffer,
 					  void *value,
 					  CK_ULONG *value_length)
 {
-	return p11_rpc_message_get_attribute_array_value (NULL, buffer, offset, value, value_length);
+	return p11_rpc_message_get_attribute_array_value (NULL, buffer, offset, value, value_length, 0);
 }
 
 bool
@@ -1333,11 +1355,12 @@ p11_rpc_buffer_get_byte_array_value (p11_buffer *buffer,
 	return true;
 }
 
-bool
-p11_rpc_message_get_attribute (p11_rpc_message *msg,
-			       p11_buffer *buffer,
-			       size_t *offset,
-			       CK_ATTRIBUTE *attr)
+static bool
+p11_rpc_message_get_attribute_recursive (p11_rpc_message *msg,
+					 p11_buffer *buffer,
+					 size_t *offset,
+					 CK_ATTRIBUTE *attr,
+					 size_t depth)
 {
 	uint32_t type, length;
 	CK_ULONG decode_length;
@@ -1380,7 +1403,7 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 
 	/* Get the attribute value length */
 	saved_offset = *offset;
-	if (!serializer->decode (NULL, buffer, offset, NULL, &decode_length))
+	if (!serializer->decode (NULL, buffer, offset, NULL, &decode_length, depth))
 		return false;
 
 	/* Decode the attribute value */
@@ -1389,13 +1412,22 @@ p11_rpc_message_get_attribute (p11_rpc_message *msg,
 			return false;
 
 		*offset = saved_offset;
-		if (!serializer->decode (msg, buffer, offset, attr->pValue, NULL))
+		if (!serializer->decode (msg, buffer, offset, attr->pValue, NULL, depth))
 			return false;
 	}
 
 	attr->type = type;
 	attr->ulValueLen = length;
 	return true;
+}
+
+bool
+p11_rpc_message_get_attribute (p11_rpc_message *msg,
+			       p11_buffer *buffer,
+			       size_t *offset,
+			       CK_ATTRIBUTE *attr)
+{
+	return p11_rpc_message_get_attribute_recursive (msg, buffer, offset, attr, 0);
 }
 
 bool

@@ -44,6 +44,8 @@
 #include "pkcs11.h"
 #include "pkcs11x.h"
 
+#define P11_RPC_MAX_RECURSION_DEPTH 8
+
 /* The calls, must be in sync with array below */
 enum {
 	P11_RPC_CALL_ERROR = 0,
@@ -297,7 +299,7 @@ typedef struct {
 
 typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
 typedef bool (*p11_rpc_value_decoder) (p11_buffer *, size_t *, void *, CK_ULONG *);
-typedef bool (*p11_rpc_message_decoder) (p11_rpc_message *msg, p11_buffer *, size_t *, void *, CK_ULONG *);
+typedef bool (*p11_rpc_message_decoder) (p11_rpc_message *msg, p11_buffer *, size_t *, void *, CK_ULONG *, size_t);
 
 void             p11_rpc_message_init                    (p11_rpc_message *msg,
                                                           p11_buffer *input,
