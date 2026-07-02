@@ -217,7 +217,7 @@ p11_parser_format_x509 (p11_parser *parser,
 
 static CK_ATTRIBUTE *
 extension_attrs (p11_parser *parser,
-                 CK_ATTRIBUTE *public_key_info,
+                 const CK_ATTRIBUTE *public_key_info,
                  const char *oid_str,
                  const unsigned char *oid_der,
                  bool critical,
@@ -291,7 +291,7 @@ fail:
 
 static CK_ATTRIBUTE *
 attached_attrs (p11_parser *parser,
-                CK_ATTRIBUTE *public_key_info,
+                const CK_ATTRIBUTE *public_key_info,
                 const char *oid_str,
                 const unsigned char *oid_der,
                 bool critical,
@@ -347,7 +347,7 @@ load_seq_of_oid_str (asn1_node node,
 
 static CK_ATTRIBUTE *
 attached_eku_attrs (p11_parser *parser,
-                    CK_ATTRIBUTE *public_key_info,
+                    const CK_ATTRIBUTE *public_key_info,
                     const char *oid_str,
                     const unsigned char *oid_der,
                     bool critical,
@@ -414,10 +414,12 @@ attached_eku_attrs (p11_parser *parser,
 	return attrs;
 }
 
+/* Call to this function always invalidates pointer to `cert`
+ */
 static CK_ATTRIBUTE *
 build_openssl_extensions (p11_parser *parser,
                           CK_ATTRIBUTE *cert,
-                          CK_ATTRIBUTE *public_key_info,
+                          const CK_ATTRIBUTE *public_key_info,
                           asn1_node aux,
                           const unsigned char *aux_der,
                           size_t aux_len)
@@ -553,15 +555,20 @@ build_openssl_extensions (p11_parser *parser,
 	 */
 
 	ret = asn1_der_decoding_startEnd (aux, aux_der, aux_len, "keyid", &start, &end);
-	return_val_if_fail (ret == ASN1_SUCCESS || ret == ASN1_ELEMENT_NOT_FOUND, NULL);
+	if (ret != ASN1_SUCCESS && ret != ASN1_ELEMENT_NOT_FOUND) {
+		warn_if_reached ();
+		goto fail;
+	}
 
 	if (ret == ASN1_SUCCESS) {
 		attrs = extension_attrs (parser, public_key_info,
 		                         P11_OID_SUBJECT_KEY_IDENTIFIER_STR,
 		                         P11_OID_SUBJECT_KEY_IDENTIFIER,
 		                         false, aux_der + start, (end - start) + 1);
-		return_val_if_fail (attrs != NULL, NULL);
-		return_val_if_fail (sink_object (parser, attrs), NULL);
+		if (attrs == NULL || !sink_object (parser, attrs)) {
+			warn_if_reached ();
+			goto fail;
+		}
 	}
 
 	return cert;
@@ -569,6 +576,7 @@ build_openssl_extensions (p11_parser *parser,
 fail:
 	p11_dict_free (trust);
 	p11_dict_free (reject);
+	p11_attrs_free (cert);
 	return NULL;
 }
 
