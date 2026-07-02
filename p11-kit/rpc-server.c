@@ -250,13 +250,19 @@ proto_write_ulong_array (p11_rpc_message *msg,
 static CK_RV
 proto_read_attribute_buffer_array (p11_rpc_message *msg,
 				   CK_ATTRIBUTE_PTR *result,
-				   CK_ULONG *n_result)
+				   CK_ULONG *n_result,
+				   size_t depth)
 {
 	CK_RV rv;
 	CK_ATTRIBUTE_PTR attrs, array;
 	CK_ULONG n_array;
 	uint32_t n_attrs, i;
 	uint32_t type, length;
+
+	if (depth > P11_RPC_MAX_RECURSION_DEPTH) {
+		p11_debug ("recursion depth limit reached");
+		return PARSE_ERROR;
+	}
 
 	/* Read the number of attributes */
 	if (!p11_rpc_buffer_get_uint32 (msg->input, &msg->parsed, &n_attrs))
@@ -284,7 +290,7 @@ proto_read_attribute_buffer_array (p11_rpc_message *msg,
 			attrs[i].pValue = NULL;
 			attrs[i].ulValueLen = 0;
 		} else if (IS_ATTRIBUTE_ARRAY (attrs + i)) {
-			rv = proto_read_attribute_buffer_array (msg, &array, &n_array);
+			rv = proto_read_attribute_buffer_array (msg, &array, &n_array, depth + 1);
 			if (rv != CKR_OK)
 				return rv;
 			if ((n_array != 0 && ULONG_MAX / n_array < sizeof (CK_ATTRIBUTE)) ||
@@ -318,7 +324,7 @@ proto_read_attribute_buffer (p11_rpc_message *msg,
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "fA"));
 
-	return proto_read_attribute_buffer_array (msg, result, n_result);
+	return proto_read_attribute_buffer_array (msg, result, n_result, 0);
 }
 
 static CK_RV

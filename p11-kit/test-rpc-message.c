@@ -806,6 +806,43 @@ test_message_write (void)
 	p11_buffer_uninit (&buffer);
 }
 
+static void
+test_attribute_recursion_limit (void)
+{
+	bool ret;
+	p11_rpc_message msg;
+	p11_buffer buffer;
+	size_t offset = 0;
+	CK_BBOOL truev = CK_TRUE;
+	CK_ATTRIBUTE attrs_out;
+	CK_ATTRIBUTE attrs[P11_RPC_MAX_RECURSION_DEPTH + 2];
+	for (size_t i = 0; i <= P11_RPC_MAX_RECURSION_DEPTH; i++) {
+		attrs[i].type = CKA_WRAP_TEMPLATE;
+		attrs[i].pValue = &attrs[i + 1];
+		attrs[i].ulValueLen = sizeof (CK_ATTRIBUTE);
+	}
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].type = CKA_ENCRYPT;
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].pValue = &truev;
+	attrs[P11_RPC_MAX_RECURSION_DEPTH + 1].ulValueLen = sizeof (CK_BBOOL);
+
+	ret = p11_buffer_init (&buffer, 0);
+	assert_num_eq (true, ret);
+	p11_rpc_message_init (&msg, &buffer, &buffer);
+	ret = p11_rpc_message_write_attribute_array (&msg, attrs, ELEMS(attrs));
+	assert_num_eq (true, ret);
+
+	/* Skip the array count */
+	ret = p11_rpc_buffer_get_uint32(&buffer, &offset, NULL);
+	assert_num_eq (true, ret);
+
+	/* Hit recursion limit */
+	ret = p11_rpc_message_get_attribute(&msg, &buffer, &offset, &attrs_out);
+	assert_num_eq (false, ret);
+
+	p11_rpc_message_clear (&msg);
+	p11_buffer_uninit (&buffer);
+}
+
 #include "test-mock.c"
 
 static CK_MECHANISM_TYPE mechanisms[] = {
@@ -848,6 +885,7 @@ main (int argc,
 	p11_test (test_byte_array_value, "/rpc-message/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
 	p11_test (test_message_write, "/rpc-message/message-write");
+	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
 
 	test_mock_add_tests ("/rpc-message", NULL);
 
