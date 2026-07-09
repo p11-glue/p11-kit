@@ -331,7 +331,7 @@ session_for_store (CK_FUNCTION_LIST **module)
 	return session;
 }
 
-static bool
+static CK_RV
 create_anchor (CK_FUNCTION_LIST *module,
                CK_SESSION_HANDLE session,
                CK_ATTRIBUTE *attrs)
@@ -383,16 +383,10 @@ create_anchor (CK_FUNCTION_LIST *module,
 	                               p11_attrs_count (attrs), &object);
 
 	p11_attrs_free (attrs);
-
-	if (rv != CKR_OK) {
-		p11_message (_("couldn't create object: %s"), p11_kit_strerror (rv));
-		return false;
-	}
-
-	return true;
+	return rv;
 }
 
-static bool
+static CK_RV
 modify_anchor (CK_FUNCTION_LIST *module,
                CK_SESSION_HANDLE session,
                CK_OBJECT_HANDLE object,
@@ -415,7 +409,7 @@ modify_anchor (CK_FUNCTION_LIST *module,
 	else
 		changes = p11_attrs_build (NULL, label, NULL);
 
-	return_val_if_fail (attrs != NULL, FALSE);
+	return_val_if_fail (attrs != NULL, CKR_GENERAL_ERROR);
 
 	/* Don't need the attributes anymore */
 	p11_attrs_free (attrs);
@@ -430,13 +424,7 @@ modify_anchor (CK_FUNCTION_LIST *module,
 	                                    p11_attrs_count (changes));
 
 	p11_attrs_free (changes);
-
-	if (rv != CKR_OK) {
-		p11_message (_("couldn't create object: %s"), p11_kit_strerror (rv));
-		return false;
-	}
-
-	return true;
+	return rv;
 }
 
 static CK_OBJECT_HANDLE
@@ -475,8 +463,8 @@ anchor_store (int argc,
 	CK_FUNCTION_LIST *module = NULL;
 	CK_SESSION_HANDLE session;
 	CK_OBJECT_HANDLE object;
+	CK_RV rv = CKR_OK;
 	p11_array *anchors;
-	int ret;
 	int i;
 
 	anchors = files_to_attrs (argc, argv);
@@ -495,38 +483,39 @@ anchor_store (int argc,
 		return 1;
 	}
 
-	for (i = 0, ret = 0; i < anchors->num; i++) {
+	for (i = 0; i < anchors->num; i++) {
 		attrs = anchors->elem[i];
 		anchors->elem[i] = NULL;
 
 		object = find_anchor (module, session, attrs);
 		if (object == 0) {
 			p11_debug ("don't yet have this anchor");
-			if (create_anchor (module, session, attrs)) {
-				*changed = true;
-			} else {
-				ret = 1;
+
+			rv = create_anchor (module, session, attrs);
+			if (rv != CKR_OK) {
+				p11_message (_("couldn't create object: %s"), p11_kit_strerror (rv));
 				break;
 			}
 		} else {
 			p11_debug ("already have this anchor");
-			if (modify_anchor (module, session, object, attrs)) {
-				*changed = true;
-			} else {
-				ret = 1;
+
+			rv = modify_anchor (module, session, object, attrs);
+			if (rv != CKR_OK) {
+				p11_message (_("anchor exists but can't be modified: %s"), p11_kit_strerror (rv));
 				break;
 			}
 		}
+		*changed = true;
 	}
 
-	if (ret != 0)
+	if (rv != CKR_OK)
 		*errors = 1;
 
 	p11_array_free (anchors);
 	p11_kit_module_finalize (module);
 	p11_kit_module_release (module);
 
-	return ret;
+	return rv != CKR_OK;
 }
 
 static const char *
