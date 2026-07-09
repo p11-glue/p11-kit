@@ -1,3 +1,10 @@
+0.26.3 (stable)
+* server: fixed stack exhaustion via unbounded recursion in RPC attribute parsing by enforcing a recursion depth limit (CVE-2026-13757) [PR#768]
+* fixed confusing error message when trying to store an existing cert with trust anchor [PR#770]
+* fixed assert when parsing p11-kit files with value (") [PR#762]
+* fixed numerous memory management issues [PR#751, PR#753, PR#754, PR#756, PR#758, PR#763, PR#764, PR#765, PR#766, PR#769]
+* Build and test fixes [PR#746, PR#747, PR#752, PR#755, PR#757, PR#760, PR#761]
+
 0.26.2 (stable)
 * rpc: fix NULL dereference via C_DeriveKey with specific NULL parameters (CVE-2026-2100)
 
