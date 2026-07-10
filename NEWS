@@ -1,3 +1,7 @@
+0.26.4 (stable)
+* Build fix [PR#773]
+* Update translations [PR#743, PR#772]
+
 0.26.3 (stable)
 * server: fixed stack exhaustion via unbounded recursion in RPC attribute parsing by enforcing a recursion depth limit (CVE-2026-13757) [PR#768]
 * fixed confusing error message when trying to store an existing cert with trust anchor [PR#770]
