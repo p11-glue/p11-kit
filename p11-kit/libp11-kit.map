@@ -105,3 +105,10 @@ LIBP11_KIT_1.0 {
 	local:
 		*;
 };
+
+LIBP11_KIT_1.1 {
+	global:
+		p11_kit_check_version;
+	local:
+		*;
+} LIBP11_KIT_1.0;
