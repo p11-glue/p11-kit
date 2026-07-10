@@ -1,18 +1,24 @@
-fuzz_targets = fuzz/rpc_fuzzer fuzz/uri_fuzzer fuzz/conf_fuzzer
+fuzz_targets = fuzz/conf_fuzzer fuzz/uri_fuzzer fuzz/rpc_fuzzer
 check_PROGRAMS += $(fuzz_targets)
 fuzz: $(fuzz_targets)
 
-fuzz_rpc_fuzzer_SOURCES = fuzz/rpc_fuzzer.c fuzz/fuzz.h fuzz/main.c
-
-fuzz_rpc_fuzzer_LDADD = libp11-kit-testable.la libp11-test.la libp11-common.la
-
-fuzz_uri_fuzzer_SOURCES = fuzz/uri_fuzzer.c fuzz/fuzz.h fuzz/main.c
-
-fuzz_uri_fuzzer_LDADD = libp11-kit-testable.la libp11-test.la libp11-common.la
+fuzz_common_ldadd = libp11-kit-testable.la libp11-test.la libp11-common.la
 
 fuzz_conf_fuzzer_SOURCES = fuzz/conf_fuzzer.c fuzz/fuzz.h fuzz/main.c
+fuzz_conf_fuzzer_LDADD = $(fuzz_common_ldadd)
 
-fuzz_conf_fuzzer_LDADD = libp11-kit-testable.la libp11-test.la libp11-common.la
+fuzz_rpc_fuzzer_SOURCES = fuzz/rpc_fuzzer.c fuzz/fuzz.h fuzz/main.c
+fuzz_rpc_fuzzer_LDADD = $(fuzz_common_ldadd)
+
+fuzz_uri_fuzzer_SOURCES = fuzz/uri_fuzzer.c fuzz/fuzz.h fuzz/main.c
+fuzz_uri_fuzzer_LDADD = $(fuzz_common_ldadd)
+
+if WITH_ASN1
+fuzz_targets += fuzz/persist_fuzzer
+fuzz_persist_fuzzer_SOURCES = fuzz/persist_fuzzer.c fuzz/fuzz.h fuzz/main.c
+fuzz_persist_fuzzer_CFLAGS = $(LIBTASN1_CFLAGS)
+fuzz_persist_fuzzer_LDADD = libtrust-testable.la libtrust-data.la libp11-kit-testable.la libp11-library.la libp11-test.la libp11-asn1.la libp11-common.la $(LIBTASN1_LIBS) $(HASH_LIBS)
+endif
 
 EXTRA_DIST += fuzz/meson.build
 
