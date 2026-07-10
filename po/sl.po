@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the p11-kit package.
 #
 # Translators:
-# Jure Repinc <jlp@holodeck1.com>, 2024.
-# Martin Srebotnjak <miles@filmsi.net>, 2012-2013, 2021, 2025.
-#
+# Jure Repinc <jlp@holodeck1.com>, 2024
+# Martin Srebotnjak <miles@filmsi.net>, 2012-2013, 2021, 2025, 2026
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?component=p11-"
 "kit&product=p11-glue&resolution=---\n"
-"POT-Creation-Date: 2025-06-21 03:26+0000\n"
-"PO-Revision-Date: 2025-06-21 12:40+0200\n"
+"POT-Creation-Date: 2026-07-09 11:37+0000\n"
+"PO-Revision-Date: 2026-07-10 09:13+0200\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian GNOME Translation Team <gnome-si@googlegroups.com>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
-"%100==4 ? 3 : 0);\n"
-"X-Generator: Poedit 2.2.1\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || "
+"n%100==4 ? 3 : 0);\n"
+"X-Generator: Poedit 3.8\n"
 
 #: common/options.c:184
 #, c-format
@@ -66,7 +65,7 @@ msgstr "neznana splošna možnost: -%c"
 msgid "'%s' is not a valid command. See '%s --help'"
 msgstr "»%s« ni veljaven ukaz. Glejte »%s --help«"
 
-#: common/persist.c:496
+#: common/persist.c:509
 #, c-format
 msgid "invalid oid value: %s"
 msgstr "neveljavna vrednost oid: %s"
@@ -773,58 +772,58 @@ msgstr "Zahtevo je zavrnil uporabnik"
 msgid "Unknown error"
 msgstr "Neznana napaka"
 
-#: p11-kit/modules.c:377
+#: p11-kit/modules.c:399
 #, c-format
 msgid "couldn't load module: %s: %s"
 msgstr "ni bilo moč naložiti modula: %s: %s"
 
-#: p11-kit/modules.c:405
+#: p11-kit/modules.c:435
 #, c-format
 msgid "call to C_GetInterface failed in module: %s: %s"
 msgstr "v modulu ni bilo moč klicati C_GetInterface: %s: %s"
 
-#: p11-kit/modules.c:417
+#: p11-kit/modules.c:447
 #, c-format
 msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
 msgstr "v modulu ni bilo moč najti vstopne točke C_GetFunctionList: %s: %s"
 
-#: p11-kit/modules.c:424
+#: p11-kit/modules.c:454
 #, c-format
 msgid "call to C_GetFunctiontList failed in module: %s: %s"
 msgstr "v modulu ni bilo moč klicati C_GetFunctiontList: %s: %s"
 
-#: p11-kit/modules.c:431
+#: p11-kit/modules.c:461
 msgid "refusing to load the p11-kit-proxy.so module as a registered module"
 msgstr "zavrnitev nalaganja modula p11-kit-proxy.so kot registriranega"
 
-#: p11-kit/modules.c:580
+#: p11-kit/modules.c:611
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
 msgstr ""
 "modul »%s« ima tako možnost enable-in (omogoči v) kot tudi disable-in "
 "(onemogoči v)"
 
-#: p11-kit/modules.c:762
+#: p11-kit/modules.c:793
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
 msgstr ""
 "prekinitev začetnega nastavljanja, ker je bil modul »%s« označen kot kritičen"
 
-#: p11-kit/modules.c:787
+#: p11-kit/modules.c:818
 msgid "p11-kit initialization called recursively"
 msgstr "začetna nastavitev p11-kit klicana rekurzivno"
 
-#: p11-kit/modules.c:973
+#: p11-kit/modules.c:1004
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
 msgstr "začetno nastavljanje kritičnega modula »%s« ni uspelo: %s"
 
-#: p11-kit/modules.c:976
+#: p11-kit/modules.c:1007
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
 msgstr "izpuščanje modula »%s«, za katerega začetno nastavljanje ni uspelo: %s"
 
-#: p11-kit/modules.c:1751
+#: p11-kit/modules.c:1782
 #, c-format
 msgid "couldn't close session: %s"
 msgstr "seje ni bilo moč zapreti: %s"
@@ -832,32 +831,32 @@ msgstr "seje ni bilo moč zapreti: %s"
 #.
 #. * This is because the module is running in unmanaged mode, so turn off the
 #.
-#: p11-kit/modules.c:1928
+#: p11-kit/modules.c:1959
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
 msgstr "možnost »%s« za modul »%s« je podprta le za upravljane module"
 
-#: p11-kit/modules.c:2237 p11-kit/modules.c:2717
+#: p11-kit/modules.c:2268 p11-kit/modules.c:2748
 #, c-format
 msgid "%s: module failed to initialize: %s"
 msgstr "%s: začetno nastavljanje modula ni uspelo: %s"
 
-#: p11-kit/modules.c:2240
+#: p11-kit/modules.c:2271
 #, c-format
 msgid "%s: module failed to initialize, skipping: %s"
 msgstr "%s: modula ni bilo mogoče inicializirati, preskočeno: %s"
 
-#: p11-kit/modules.c:2250
+#: p11-kit/modules.c:2281
 #, c-format
 msgid "%s: module was already initialized"
 msgstr "%s: modul je že bil začetno nastavljen"
 
-#: p11-kit/modules.c:2346 p11-kit/modules.c:2758
+#: p11-kit/modules.c:2377 p11-kit/modules.c:2789
 #, c-format
 msgid "%s: module failed to finalize: %s"
 msgstr "%s: zaključitev modula ni uspela: %s"
 
-#: p11-kit/modules.c:2485
+#: p11-kit/modules.c:2516
 #, c-format
 msgid "module initialization failed: %s"
 msgstr "začetno nastavljanje modula ni uspelo: %s"
@@ -1004,52 +1003,52 @@ msgstr "neveljavno sporočilo: podpis se ne ujema"
 msgid "invalid length space padded string received: %d != %d"
 msgstr "prejet niz zapolnjen s presledki, ki ni veljavne dolžine: %d != %d"
 
-#: p11-kit/rpc-server.c:634
+#: p11-kit/rpc-server.c:640
 msgid "invalid request from module, probably too short"
 msgstr "neveljaven zahtevek od modula, verjetno prekratek"
 
-#: p11-kit/rpc-server.c:644
+#: p11-kit/rpc-server.c:650
 msgid "couldn't initialize rpc response"
 msgstr "ni bilo moč začetno nastaviti odziva rpc"
 
-#: p11-kit/rpc-server.c:799
+#: p11-kit/rpc-server.c:805
 msgid "invalid handshake received from connecting module"
 msgstr "prejeto neveljavno rokovanje od modula, ki se povezuje"
 
-#: p11-kit/rpc-server.c:2382
+#: p11-kit/rpc-server.c:2388
 msgid "couldn't parse pkcs11 rpc message"
 msgstr "ni bilo moč razčleniti sporočila rpc pkcs11"
 
-#: p11-kit/rpc-server.c:2495
+#: p11-kit/rpc-server.c:2501
 msgid "out of memory error putting together message"
 msgstr "napaka pomanjkanja pomnilnika med sestavljanjem sporočila"
 
-#: p11-kit/rpc-server.c:2521
+#: p11-kit/rpc-server.c:2527
 msgid "out of memory responding with error"
 msgstr "pomanjkanje pomnilnika med odzivanjem z napako"
 
-#: p11-kit/rpc-server.c:2567
+#: p11-kit/rpc-server.c:2573
 #, c-format
 msgid "unsupported version received: %d"
 msgstr "prejeta nepodprta različica: %d"
 
-#: p11-kit/rpc-server.c:2573
+#: p11-kit/rpc-server.c:2579
 msgid "couldn't read credential byte"
 msgstr "ni bilo moč prebrati bajta poverila"
 
-#: p11-kit/rpc-server.c:2585
+#: p11-kit/rpc-server.c:2591
 msgid "couldn't write credential byte"
 msgstr "ni bilo moč zapisati bajta poverila"
 
-#: p11-kit/rpc-server.c:2608
+#: p11-kit/rpc-server.c:2614
 msgid "failed to read rpc message"
 msgstr "napaka branja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2613
+#: p11-kit/rpc-server.c:2619
 msgid "unexpected error handling rpc message"
 msgstr "nepričakovana napaka obravnavanja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2631
+#: p11-kit/rpc-server.c:2637
 msgid "failed to write rpc message"
 msgstr "napaka pisanja sporočila rpc"
 
@@ -1382,34 +1381,39 @@ msgstr "nastavljeno ni nobeno zapisljivo mesto za hranjenje sider"
 msgid "no configured location to store anchors"
 msgstr "nastavljeno ni nobeno mesto za hranjenje sider"
 
-#: trust/anchor.c:388 trust/anchor.c:435
+#: trust/anchor.c:475
+msgid "specify at least one anchor input file"
+msgstr "navedite vsaj eno vhodno datoteko sidra"
+
+#: trust/anchor.c:496
 #, c-format
 msgid "couldn't create object: %s"
 msgstr "ni bilo moč ustvariti predmeta: %s"
 
-#: trust/anchor.c:487
-msgid "specify at least one anchor input file"
-msgstr "navedite vsaj eno vhodno datoteko sidra"
+#: trust/anchor.c:504
+#, c-format
+msgid "anchor exists but can't be modified: %s"
+msgstr "sidro obstaja, vendar ga ni možno spremeniti: %s"
 
-#: trust/anchor.c:570
+#: trust/anchor.c:559
 #, c-format
 msgid "couldn't remove read-only %s"
 msgstr "ni bilo moč odstraniti samo-za-branje %s"
 
-#: trust/anchor.c:573
+#: trust/anchor.c:562
 #, c-format
 msgid "couldn't remove %s: %s"
 msgstr "ni bilo moč odstraniti %s: %s"
 
-#: trust/anchor.c:599
+#: trust/anchor.c:588
 msgid "at least one file or uri must be specified"
 msgstr "navedena more biti vsaj ena datoteka ali uri"
 
-#: trust/anchor.c:665
+#: trust/anchor.c:654
 msgid "an action was already specified"
 msgstr "dejanje je že bilo navedeno"
 
-#: trust/anchor.c:702
+#: trust/anchor.c:691
 #, c-format
 msgid "%u error while processing"
 msgid_plural "%u errors while processing"
@@ -1440,84 +1444,84 @@ msgstr "manjka atribut CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
 msgstr "manjka atribut CKA_HASH_OF_ISSUER_PUBLIC_KEY"
 
-#: trust/builder.c:1084
+#: trust/builder.c:1093
 msgid "the object is not modifiable"
 msgstr "predmet ni spremenljiv"
 
-#: trust/builder.c:1091
+#: trust/builder.c:1100
 msgid "objects of this type cannot be created"
 msgstr "predmetov te vrste ni moč ustvariti"
 
-#: trust/builder.c:1111
+#: trust/builder.c:1120
 #, c-format
 msgid "the %s attribute cannot be set"
 msgstr "atributa %s ni moč nastaviti"
 
-#: trust/builder.c:1116
+#: trust/builder.c:1125
 #, c-format
 msgid "the %s attribute cannot be changed"
 msgstr "atributa %s ni moč spremeniti"
 
-#: trust/builder.c:1122
+#: trust/builder.c:1131
 #, c-format
 msgid "the %s attribute has an invalid value"
 msgstr "atribut %s nima veljavne vrednosti"
 
-#: trust/builder.c:1131
+#: trust/builder.c:1140
 #, c-format
 msgid "the %s attribute is not valid for the object"
 msgstr "atribut %s za predmet ni veljaven"
 
-#: trust/builder.c:1154
+#: trust/builder.c:1163
 #, c-format
 msgid "missing the %s attribute"
 msgstr "manjka atribut %s"
 
-#: trust/builder.c:1194
+#: trust/builder.c:1203
 msgid "no CKA_CLASS attribute found"
 msgstr "atribut CKA_CLASS ni bil najden"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 #, c-format
 msgid "cannot create a %s object"
 msgstr "ni moč ustvariti predmeta, %s"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 msgid "token"
 msgstr "ki je žeton"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 msgid "non-token"
 msgstr "ki ni žeton"
 
-#: trust/builder.c:1208
+#: trust/builder.c:1217
 #, c-format
 msgid "missing %s on object"
 msgstr "na predmetu manjka %s"
 
-#: trust/builder.c:1213
+#: trust/builder.c:1222
 #, c-format
 msgid "%s unsupported %s"
 msgstr "%s nepodprto %s"
 
-#: trust/builder.c:1234
+#: trust/builder.c:1243
 #, c-format
 msgid "%s unsupported object class"
 msgstr "%s nepodprt razred predmeta"
 
-#: trust/builder.c:1300
+#: trust/builder.c:1309
 msgid "invalid key usage certificate extension"
 msgstr "neveljavno podaljšanje potrdila uporabe ključa"
 
-#: trust/builder.c:1768
+#: trust/builder.c:1785
 msgid "invalid extended key usage certificate extension"
 msgstr "neveljavno podaljšanje potrdila podaljšane uporabe ključa"
 
-#: trust/builder.c:1776
+#: trust/builder.c:1793
 msgid "invalid reject key usage certificate extension"
 msgstr "neveljavno podaljšanje potrdila uporabe ključa zavrnitve"
 
-#: trust/check-format.c:98 trust/parser.c:766
+#: trust/check-format.c:98 trust/parser.c:905
 #, c-format
 msgid "couldn't open and map file: %s"
 msgstr "ni bilo moč odpreti in preslikati datoteke: %s"
@@ -1714,7 +1718,7 @@ msgstr "potrdilo z nezaupanjem na mesto za sidra: %s"
 msgid "overriding trust for anchor in blocklist: %s"
 msgstr "prepisovanje zaupanja za sidro v seznamu blokov: %s"
 
-#: trust/parser.c:596
+#: trust/parser.c:716
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
 msgstr "ni bilo moč razčleniti bloka PEM vrste %s"
