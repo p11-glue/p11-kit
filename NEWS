@@ -1,3 +1,6 @@
+0.26.5 (stable)
+* rpc: guard against overflow when decoding nested attributes (CVE-2026-18938) [PR#777]
+
 0.26.4 (stable)
 * Build fix [PR#773]
 * Update translations [PR#743, PR#772]
