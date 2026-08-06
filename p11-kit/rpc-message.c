@@ -976,6 +976,10 @@ p11_rpc_message_get_attribute_array_value (p11_rpc_message *msg,
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
 		return false;
 
+	/* Guard against overflow */
+	if (count != 0 && (SIZE_MAX / count) < sizeof (CK_ATTRIBUTE))
+		return false;
+
 	if (value_length != NULL)
 		*value_length = count * sizeof (CK_ATTRIBUTE);
 
@@ -1283,6 +1287,10 @@ p11_rpc_buffer_get_mechanism_type_array_value (p11_buffer *buffer,
 	CK_MECHANISM_TYPE *mech, temp;
 
 	if (!p11_rpc_buffer_get_uint32 (buffer, offset, &count))
+		return false;
+
+	/* Guard against overflow */
+	if (count != 0 && (SIZE_MAX / count) < sizeof (CK_MECHANISM_TYPE))
 		return false;
 
 	if (!value) {
