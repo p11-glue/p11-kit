@@ -419,7 +419,8 @@ mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
 
 static CK_RV
 proto_write_mechanism (p11_rpc_message *msg,
-                       CK_MECHANISM_PTR mech)
+                       CK_MECHANISM_PTR mech,
+		       int rpc_version)
 {
 	assert (msg != NULL);
 	assert (msg->output != NULL);
@@ -433,7 +434,10 @@ proto_write_mechanism (p11_rpc_message *msg,
 	 * marker to indicate that.
 	 */
 	if (mech == NULL) {
-		p11_rpc_buffer_add_uint32 (msg->output, 0xffffffff);
+		if (rpc_version < 1)
+			p11_rpc_buffer_add_uint32 (msg->output, 0);
+		else
+			p11_rpc_buffer_add_uint32 (msg->output, 0xffffffff);
 		return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 	}
 
@@ -452,7 +456,7 @@ proto_write_mechanism (p11_rpc_message *msg,
 	 * pointing to garbage if they don't think it's going to be used.
 	 */
 
-	p11_rpc_buffer_add_mechanism (msg->output, mech);
+	p11_rpc_buffer_add_mechanism (msg->output, mech, rpc_version);
 
 	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 }
@@ -690,7 +694,7 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_MECHANISM(val) \
-	_ret = proto_write_mechanism (&_msg, val); \
+	_ret = proto_write_mechanism (&_msg, val, RPC_VERSION);	\
 	if (_ret != CKR_OK) goto _cleanup;
 
 

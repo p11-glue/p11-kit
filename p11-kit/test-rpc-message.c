@@ -751,7 +751,7 @@ test_mechanism_value (void)
 	for (i = 0; i < ELEMS (mechs); i++) {
 		size_t offset2 = offset;
 
-		p11_rpc_buffer_add_mechanism (&buffer, &mechs[i]);
+		p11_rpc_buffer_add_mechanism (&buffer, &mechs[i], P11_RPC_PROTOCOL_VERSION_MAXIMUM);
 		assert (!p11_buffer_failed (&buffer));
 
 		memset (&val, 0, sizeof (val));
