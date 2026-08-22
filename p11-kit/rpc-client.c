@@ -396,25 +396,25 @@ static void
 mechanism_list_purge (CK_MECHANISM_TYPE_PTR mechs,
                       CK_ULONG *n_mechs)
 {
-	CK_ULONG i;
-
 	assert (mechs != NULL);
 	assert (n_mechs != NULL);
 
-	/* Trim unsupported mechanisms at the end */
-	for (; *n_mechs > 0 && !p11_rpc_mechanism_is_supported (mechs[*n_mechs - 1]); --*n_mechs)
-		;
-
-	for (i = 0; i < *n_mechs; ++i) {
-		if (!p11_rpc_mechanism_is_supported (mechs[i])) {
-			/* Remove the mechanism from the list */
-			memmove (&mechs[i], &mechs[i + 1],
-				 (*n_mechs - (i + 1)) * sizeof (CK_MECHANISM_TYPE));
-
-			--(*n_mechs);
-			--i;
-		}
-	}
+	/*
+	 * C_GetMechanismList used to be trimmed to the mechanisms this file
+	 * knows how to serialise. That was sound while the decision could be
+	 * taken from the type alone. It cannot be any more: whether a call can
+	 * be carried depends on whether the caller supplies a parameter, so a
+	 * mechanism this file has never heard of may be entirely usable.
+	 *
+	 * Trimming therefore hid working mechanisms. Measured against a module
+	 * offering post-quantum signatures: 72 advertised, 20 reported through
+	 * the socket, and the 52 hidden included every one the module existed
+	 * to provide.
+	 *
+	 * A mechanism that is advertised and then fails at C_*Init is ordinary
+	 * PKCS#11. A mechanism the module offers and the proxy makes invisible
+	 * is a false statement about the token.
+	 */
 }
 
 static CK_RV
@@ -437,7 +437,7 @@ proto_write_mechanism (p11_rpc_message *msg,
 		return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 	}
 
-	if (!p11_rpc_mechanism_is_supported (mech->mechanism))
+	if (!p11_rpc_mechanism_call_is_supported (mech))
 		return CKR_MECHANISM_INVALID;
 
 	/*
@@ -683,9 +683,9 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 	if (!p11_rpc_message_write_attribute_array (&_msg, (arr), (num))) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
+/* Carries a bare mechanism type, for C_GetMechanismInfo and friends:
+ * no parameter is serialised here, so there was nothing to protect. */
 #define IN_MECHANISM_TYPE(val) \
-	if(!p11_rpc_mechanism_is_supported (val)) \
-		{ _ret = CKR_MECHANISM_INVALID; goto _cleanup; } \
 	if (!p11_rpc_message_write_ulong (&_msg, val)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
