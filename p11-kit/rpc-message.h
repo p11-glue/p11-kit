@@ -512,6 +512,8 @@ bool             p11_rpc_buffer_get_byte_array_value     (p11_buffer *buffer,
 
 bool             p11_rpc_mechanism_is_supported          (CK_MECHANISM_TYPE mech);
 
+bool             p11_rpc_mechanism_call_is_supported     (const CK_MECHANISM *mech);
+
 void             p11_rpc_buffer_add_mechanism            (p11_buffer *buffer,
 							  const CK_MECHANISM *mech);
 

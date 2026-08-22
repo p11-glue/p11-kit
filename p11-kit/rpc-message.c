@@ -2578,6 +2578,26 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_IBM_SHA3_512_HMAC:
 	case CKM_IBM_ED25519_SHA512:
 	case CKM_IBM_ED448_SHA3:
+	/* SHA-3 and the post-quantum key-pair generators: no parameter in any
+	 * mode, so nothing can be misencoded. NOT here: CKM_ML_DSA, CKM_SLH_DSA
+	 * and the CKM_HASH_* family, which take an optional
+	 * CK_SIGN_ADDITIONAL_CONTEXT -- listing those would encode a supplied
+	 * context as absent and return a signature made over an empty context. */
+	case CKM_SHA3_224:
+	case CKM_SHA3_224_HMAC:
+	case CKM_SHA3_224_KEY_GEN:
+	case CKM_SHA3_256:
+	case CKM_SHA3_256_HMAC:
+	case CKM_SHA3_256_KEY_GEN:
+	case CKM_SHA3_384:
+	case CKM_SHA3_384_HMAC:
+	case CKM_SHA3_384_KEY_GEN:
+	case CKM_SHA3_512:
+	case CKM_SHA3_512_HMAC:
+	case CKM_SHA3_512_KEY_GEN:
+	case CKM_ML_DSA_KEY_PAIR_GEN:
+	case CKM_ML_KEM_KEY_PAIR_GEN:
+	case CKM_SLH_DSA_KEY_PAIR_GEN:
 		return true;
 	default:
 		return false;
@@ -2593,6 +2613,30 @@ p11_rpc_mechanism_is_supported (CK_MECHANISM_TYPE mech)
 	return false;
 }
 
+/*
+ * Whether a particular CALL can be serialised, which is not the same question
+ * as whether the mechanism type is known.
+ *
+ * The allow-list exists because a CK_MECHANISM parameter is a void* whose
+ * layout depends on the mechanism. That reasoning does not reach a call which
+ * supplied no parameter at all: the encoding is the absent-parameter byte the
+ * decoder already understands for every mechanism, and there is nothing left
+ * to misencode.
+ *
+ * Safer than adding a mechanism with an OPTIONAL parameter to the list above:
+ * if a caller does supply a context to CKM_ML_DSA, this returns false and the
+ * call is refused, rather than the context being silently dropped.
+ */
+bool
+p11_rpc_mechanism_call_is_supported (const CK_MECHANISM *mech)
+{
+	if (mech == NULL)
+		return false;
+	if (p11_rpc_mechanism_is_supported (mech->mechanism))
+		return true;
+	return mech->pParameter == NULL && mech->ulParameterLen == 0;
+}
+
 void
 p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 {
@@ -2606,7 +2650,14 @@ p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 		return;
 	}
 
-	assert (mechanism_has_sane_parameters (mech->mechanism));
+	/* A type this file does not recognise reached here only because the
+	 * call supplied no parameter -- see p11_rpc_mechanism_call_is_supported.
+	 * Encode it exactly as the absent-parameter case just below, which
+	 * p11_rpc_buffer_get_mechanism already reads back for any mechanism. */
+	if (!mechanism_has_sane_parameters (mech->mechanism)) {
+		p11_rpc_buffer_add_byte (buffer, 0);
+		return;
+	}
 
 	if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
 		p11_rpc_buffer_add_byte (buffer, 0);
