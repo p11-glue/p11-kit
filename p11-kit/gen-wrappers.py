@@ -18,6 +18,18 @@ X_EXCLUDES = [
 ]
 
 
+def version_check_expr(version, function_version):
+    if version >= [3, 2]:
+        return (f"{INDENT}if ({function_version}.major < 3 ||\n"
+                f"{INDENT}    ({function_version}.major == 3"
+                f" && {function_version}.minor < 2))\n"
+                f"{INDENT}{INDENT}return CKR_FUNCTION_NOT_SUPPORTED;\n")
+    elif version[0] >= 3:
+        return (f"{INDENT}if ({function_version}.major < 3)\n"
+                f"{INDENT}{INDENT}return CKR_FUNCTION_NOT_SUPPORTED;\n")
+    return ""
+
+
 def emit_wrapper_function(function, templates, concat_lines=False):
     arglist_separator = ", \\\n" if concat_lines else ",\n"
 
@@ -52,29 +64,24 @@ def emit_wrapper_function(function, templates, concat_lines=False):
         for index, argument in enumerate(function["arguments"])
     ])
 
+    function_version = templates.get("function_version", "funcs->version")
+    version_check = version_check_expr(function["version"], function_version)
+
     has_slot_id = next((argument for argument in function["arguments"] if argument["type"] == "CK_SLOT_ID"), None)
     has_session_handle = next((argument for argument in function["arguments"] if argument["type"] == "CK_SESSION_HANDLE"), None)
     assert not (has_slot_id and has_session_handle)
 
-    function_body_template = templates.get("function_body")
-    if function_body_template and function["version"][0] >= 3:
-        function_body_template = templates.get("function_body_v3",
-                                               function_body_template)
-
+    function_body_template = None
     if has_slot_id:
-        template = templates.get("function_body_with_slot")
-        if template is not None:
-            function_body_template = templates.get(
-                "function_body_with_slot_v3",
-                template,
-            )
+        function_body_template = templates.get("function_body_with_slot")
     elif has_session_handle:
-        template = templates.get("function_body_with_session")
-        if template is not None:
-            function_body_template = templates.get(
-                "function_body_with_session_v3",
-                template,
-            )
+        function_body_template = templates.get("function_body_with_session")
+    if function_body_template is None:
+        if function["version"][0] >= 3:
+            function_body_template = templates.get("function_body_v3",
+                                                   templates["function_body"])
+        else:
+            function_body_template = templates["function_body"]
 
     return function_body_template.format(
         indent=INDENT,
@@ -84,6 +91,7 @@ def emit_wrapper_function(function, templates, concat_lines=False):
         call_lower=call_lower,
         call_lower_arglist=call_lower_arglist,
         call_lower_arglist_indent=call_lower_arglist_indent,
+        version_check=version_check,
     )
 
 
