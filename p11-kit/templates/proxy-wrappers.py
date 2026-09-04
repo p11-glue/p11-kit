@@ -4,6 +4,7 @@
     "call_lower": "return map.funcs->{function}",
     "call_lower_v3": "return ((CK_FUNCTION_LIST_3_2_PTR)map.funcs)->{function}",
     "call_lower_argument": "{argument_name}",
+    "function_version": "map.funcs->version",
     "function_body_with_slot": """\
 static CK_RV
 {function_name} (CK_X_FUNCTION_LIST *self,
@@ -16,41 +17,7 @@ static CK_RV
 {indent}rv = map_slot_to_real (state->px, &slotID, &map);
 {indent}if (rv != CKR_OK)
 {indent}{indent}return rv;
-{indent}if (map.funcs->version.major < 3)
-{indent}{indent}return CKR_FUNCTION_NOT_SUPPORTED;
-{indent}{call_lower} ({call_lower_arglist});
-}}
-    """,
-    "function_body_with_slot_v3": """\
-static CK_RV
-{function_name} (CK_X_FUNCTION_LIST *self,
-{arglist_indent}{arglist})
-{{
-{indent}State *state = (State *)self;
-{indent}Mapping map;
-{indent}CK_RV rv;
-
-{indent}rv = map_slot_to_real (state->px, &slotID, &map);
-{indent}if (rv != CKR_OK)
-{indent}{indent}return rv;
-{indent}{call_lower} ({call_lower_arglist});
-}}
-    """,
-    "function_body_with_session_v3": """\
-static CK_RV
-{function_name} (CK_X_FUNCTION_LIST *self,
-{arglist_indent}{arglist})
-{{
-{indent}State *state = (State *)self;
-{indent}Mapping map;
-{indent}CK_RV rv;
-
-{indent}rv = map_session_to_real (state->px, &session, &map, NULL);
-{indent}if (rv != CKR_OK)
-{indent}{indent}return rv;
-{indent}if (map.funcs->version.major < 3)
-{indent}{indent}return CKR_FUNCTION_NOT_SUPPORTED;
-{indent}{call_lower} ({call_lower_arglist});
+{version_check}{indent}{call_lower} ({call_lower_arglist});
 }}
     """,
     "function_body_with_session": """\
@@ -65,24 +32,7 @@ static CK_RV
 {indent}rv = map_session_to_real (state->px, &session, &map, NULL);
 {indent}if (rv != CKR_OK)
 {indent}{indent}return rv;
-{indent}{call_lower} ({call_lower_arglist});
-}}
-    """,
-    "function_body_with_session_v3": """\
-static CK_RV
-{function_name} (CK_X_FUNCTION_LIST *self,
-{arglist_indent}{arglist})
-{{
-{indent}State *state = (State *)self;
-{indent}Mapping map;
-{indent}CK_RV rv;
-
-{indent}rv = map_session_to_real (state->px, &session, &map, NULL);
-{indent}if (rv != CKR_OK)
-{indent}{indent}return rv;
-{indent}if (map.funcs->version.major < 3)
-{indent}{indent}return CKR_FUNCTION_NOT_SUPPORTED;
-{indent}{call_lower} ({call_lower_arglist});
+{version_check}{indent}{call_lower} ({call_lower_arglist});
 }}
     """,
     "entry_argument": "",       # unused
