@@ -142,6 +142,20 @@ enum {
 	P11_RPC_CALL_C_InitToken2,
 	P11_RPC_CALL_C_DeriveKey2,
 
+	/* PKCS #11 3.2 */
+	P11_RPC_CALL_C_EncapsulateKey,
+	P11_RPC_CALL_C_DecapsulateKey,
+	P11_RPC_CALL_C_VerifySignatureInit,
+	P11_RPC_CALL_C_VerifySignature,
+	P11_RPC_CALL_C_VerifySignatureUpdate,
+	P11_RPC_CALL_C_VerifySignatureFinal,
+	P11_RPC_CALL_C_GetSessionValidationFlags,
+	P11_RPC_CALL_C_AsyncComplete,
+	P11_RPC_CALL_C_AsyncGetID,
+	P11_RPC_CALL_C_AsyncJoin,
+	P11_RPC_CALL_C_WrapKeyAuthenticated,
+	P11_RPC_CALL_C_UnwrapKeyAuthenticated,
+
 	P11_RPC_CALL_MAX
 };
 
@@ -258,6 +272,19 @@ static const p11_rpc_call p11_rpc_calls[] = {
 
 	{ P11_RPC_CALL_C_InitToken2,           "C_InitToken2",           "uays",    ""                     },
 	{ P11_RPC_CALL_C_DeriveKey2,            "C_DeriveKey2",            "uMuaA",   "uPu"                    },
+	/* PKCS #11 3.2 */
+	{ P11_RPC_CALL_C_EncapsulateKey,       "C_EncapsulateKey",       "uMuaAfy", "ayu"                  },
+	{ P11_RPC_CALL_C_DecapsulateKey,       "C_DecapsulateKey",       "uMuaAay", "u"                    },
+	{ P11_RPC_CALL_C_VerifySignatureInit,  "C_VerifySignatureInit",  "uMuay",   ""                     },
+	{ P11_RPC_CALL_C_VerifySignature,      "C_VerifySignature",      "uay",     ""                     },
+	{ P11_RPC_CALL_C_VerifySignatureUpdate, "C_VerifySignatureUpdate", "uay",    ""                     },
+	{ P11_RPC_CALL_C_VerifySignatureFinal, "C_VerifySignatureFinal", "u",       ""                     },
+	{ P11_RPC_CALL_C_GetSessionValidationFlags, "C_GetSessionValidationFlags", "uu", "u"               },
+	{ P11_RPC_CALL_C_AsyncComplete,        "C_AsyncComplete",        "uay",     "uayuu"                },
+	{ P11_RPC_CALL_C_AsyncGetID,           "C_AsyncGetID",           "uay",     "u"                    },
+	{ P11_RPC_CALL_C_AsyncJoin,            "C_AsyncJoin",            "uayuay",  ""                     },
+	{ P11_RPC_CALL_C_WrapKeyAuthenticated, "C_WrapKeyAuthenticated", "uMuuayfy", "ay"                  },
+	{ P11_RPC_CALL_C_UnwrapKeyAuthenticated, "C_UnwrapKeyAuthenticated", "uMuayayaA", "u"              },
 };
 
 #ifdef _DEBUG
