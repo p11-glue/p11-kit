@@ -79,8 +79,8 @@
 
 #endif
 
-/* There are 90 functions in PKCS#11 3.0, with a maximum of 9 args */
-#define MAX_FUNCTIONS 90
+/* 99 dispatched functions + 3 always-bound (GetFunctionList, GetInterfaceList, GetInterface) */
+#define MAX_FUNCTIONS 102
 #define MAX_ARGS 11
 
 typedef struct {
@@ -148,7 +148,7 @@ binding_C_GetFunctionList (ffi_cif *cif,
 
 #define NUM_INTERFACES 1
 CK_INTERFACE virtual_interfaces[NUM_INTERFACES] = {
-        {"PKCS 11", NULL, 0}, /* 3.0 */
+        {"PKCS 11", NULL, 0}, /* 3.2 */
 };
 
 static void
@@ -250,105 +250,113 @@ typedef struct {
 #define STRUCT_MEMBER(member_type, struct_p, struct_offset) \
 	(*(member_type*) STRUCT_MEMBER_P ((struct_p), (struct_offset)))
 
-#define FUNCTION(name) \
+#define FUNCTION(name, major, minor) \
 	#name, \
 	stack_C_##name, STRUCT_OFFSET (CK_X_FUNCTION_LIST, C_##name), \
-	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_2, C_##name), {0, 0}
-
-#define FUNCTION3(name) \
-	#name, \
-	stack_C_##name, STRUCT_OFFSET (CK_X_FUNCTION_LIST, C_##name), \
-	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_2, C_##name), {3, 0}
+	base_C_##name, STRUCT_OFFSET (CK_FUNCTION_LIST_3_2, C_##name), {major, minor}
 
 static const FunctionInfo function_info[] = {
-        { FUNCTION (Initialize) },
-        { FUNCTION (Finalize) },
-        { FUNCTION (GetInfo) },
-        { FUNCTION (GetSlotList) },
-        { FUNCTION (GetSlotInfo) },
-        { FUNCTION (GetTokenInfo) },
-        { FUNCTION (GetMechanismList) },
-        { FUNCTION (GetMechanismInfo) },
-        { FUNCTION (InitToken) },
-        { FUNCTION (InitPIN) },
-        { FUNCTION (SetPIN) },
-        { FUNCTION (OpenSession) },
-        { FUNCTION (CloseSession) },
-        { FUNCTION (CloseAllSessions) },
-        { FUNCTION (GetSessionInfo) },
-        { FUNCTION (GetOperationState) },
-        { FUNCTION (SetOperationState) },
-        { FUNCTION (Login) },
-        { FUNCTION (Logout) },
-        { FUNCTION (CreateObject) },
-        { FUNCTION (CopyObject) },
-        { FUNCTION (DestroyObject) },
-        { FUNCTION (GetObjectSize) },
-        { FUNCTION (GetAttributeValue) },
-        { FUNCTION (SetAttributeValue) },
-        { FUNCTION (FindObjectsInit) },
-        { FUNCTION (FindObjects) },
-        { FUNCTION (FindObjectsFinal) },
-        { FUNCTION (EncryptInit) },
-        { FUNCTION (Encrypt) },
-        { FUNCTION (EncryptUpdate) },
-        { FUNCTION (EncryptFinal) },
-        { FUNCTION (DecryptInit) },
-        { FUNCTION (Decrypt) },
-        { FUNCTION (DecryptUpdate) },
-        { FUNCTION (DecryptFinal) },
-        { FUNCTION (DigestInit) },
-        { FUNCTION (Digest) },
-        { FUNCTION (DigestUpdate) },
-        { FUNCTION (DigestKey) },
-        { FUNCTION (DigestFinal) },
-        { FUNCTION (SignInit) },
-        { FUNCTION (Sign) },
-        { FUNCTION (SignUpdate) },
-        { FUNCTION (SignFinal) },
-        { FUNCTION (SignRecoverInit) },
-        { FUNCTION (SignRecover) },
-        { FUNCTION (VerifyInit) },
-        { FUNCTION (Verify) },
-        { FUNCTION (VerifyUpdate) },
-        { FUNCTION (VerifyFinal) },
-        { FUNCTION (VerifyRecoverInit) },
-        { FUNCTION (VerifyRecover) },
-        { FUNCTION (DigestEncryptUpdate) },
-        { FUNCTION (DecryptDigestUpdate) },
-        { FUNCTION (SignEncryptUpdate) },
-        { FUNCTION (DecryptVerifyUpdate) },
-        { FUNCTION (GenerateKey) },
-        { FUNCTION (GenerateKeyPair) },
-        { FUNCTION (WrapKey) },
-        { FUNCTION (UnwrapKey) },
-        { FUNCTION (DeriveKey) },
-        { FUNCTION (SeedRandom) },
-        { FUNCTION (GenerateRandom) },
-        { FUNCTION (WaitForSlotEvent) },
+        { FUNCTION (Initialize, 0, 0) },
+        { FUNCTION (Finalize, 0, 0) },
+        { FUNCTION (GetInfo, 0, 0) },
+        { FUNCTION (GetSlotList, 0, 0) },
+        { FUNCTION (GetSlotInfo, 0, 0) },
+        { FUNCTION (GetTokenInfo, 0, 0) },
+        { FUNCTION (GetMechanismList, 0, 0) },
+        { FUNCTION (GetMechanismInfo, 0, 0) },
+        { FUNCTION (InitToken, 0, 0) },
+        { FUNCTION (InitPIN, 0, 0) },
+        { FUNCTION (SetPIN, 0, 0) },
+        { FUNCTION (OpenSession, 0, 0) },
+        { FUNCTION (CloseSession, 0, 0) },
+        { FUNCTION (CloseAllSessions, 0, 0) },
+        { FUNCTION (GetSessionInfo, 0, 0) },
+        { FUNCTION (GetOperationState, 0, 0) },
+        { FUNCTION (SetOperationState, 0, 0) },
+        { FUNCTION (Login, 0, 0) },
+        { FUNCTION (Logout, 0, 0) },
+        { FUNCTION (CreateObject, 0, 0) },
+        { FUNCTION (CopyObject, 0, 0) },
+        { FUNCTION (DestroyObject, 0, 0) },
+        { FUNCTION (GetObjectSize, 0, 0) },
+        { FUNCTION (GetAttributeValue, 0, 0) },
+        { FUNCTION (SetAttributeValue, 0, 0) },
+        { FUNCTION (FindObjectsInit, 0, 0) },
+        { FUNCTION (FindObjects, 0, 0) },
+        { FUNCTION (FindObjectsFinal, 0, 0) },
+        { FUNCTION (EncryptInit, 0, 0) },
+        { FUNCTION (Encrypt, 0, 0) },
+        { FUNCTION (EncryptUpdate, 0, 0) },
+        { FUNCTION (EncryptFinal, 0, 0) },
+        { FUNCTION (DecryptInit, 0, 0) },
+        { FUNCTION (Decrypt, 0, 0) },
+        { FUNCTION (DecryptUpdate, 0, 0) },
+        { FUNCTION (DecryptFinal, 0, 0) },
+        { FUNCTION (DigestInit, 0, 0) },
+        { FUNCTION (Digest, 0, 0) },
+        { FUNCTION (DigestUpdate, 0, 0) },
+        { FUNCTION (DigestKey, 0, 0) },
+        { FUNCTION (DigestFinal, 0, 0) },
+        { FUNCTION (SignInit, 0, 0) },
+        { FUNCTION (Sign, 0, 0) },
+        { FUNCTION (SignUpdate, 0, 0) },
+        { FUNCTION (SignFinal, 0, 0) },
+        { FUNCTION (SignRecoverInit, 0, 0) },
+        { FUNCTION (SignRecover, 0, 0) },
+        { FUNCTION (VerifyInit, 0, 0) },
+        { FUNCTION (Verify, 0, 0) },
+        { FUNCTION (VerifyUpdate, 0, 0) },
+        { FUNCTION (VerifyFinal, 0, 0) },
+        { FUNCTION (VerifyRecoverInit, 0, 0) },
+        { FUNCTION (VerifyRecover, 0, 0) },
+        { FUNCTION (DigestEncryptUpdate, 0, 0) },
+        { FUNCTION (DecryptDigestUpdate, 0, 0) },
+        { FUNCTION (SignEncryptUpdate, 0, 0) },
+        { FUNCTION (DecryptVerifyUpdate, 0, 0) },
+        { FUNCTION (GenerateKey, 0, 0) },
+        { FUNCTION (GenerateKeyPair, 0, 0) },
+        { FUNCTION (WrapKey, 0, 0) },
+        { FUNCTION (UnwrapKey, 0, 0) },
+        { FUNCTION (DeriveKey, 0, 0) },
+        { FUNCTION (SeedRandom, 0, 0) },
+        { FUNCTION (GenerateRandom, 0, 0) },
+        { FUNCTION (WaitForSlotEvent, 0, 0) },
         /* PKCS #11 3.0 */
-        { FUNCTION3 (LoginUser) },
-        { FUNCTION3 (SessionCancel) },
-        { FUNCTION3 (MessageEncryptInit) },
-        { FUNCTION3 (EncryptMessage) },
-        { FUNCTION3 (EncryptMessageBegin) },
-        { FUNCTION3 (EncryptMessageNext) },
-        { FUNCTION3 (MessageEncryptFinal) },
-        { FUNCTION3 (MessageDecryptInit) },
-        { FUNCTION3 (DecryptMessage) },
-        { FUNCTION3 (DecryptMessageBegin) },
-        { FUNCTION3 (DecryptMessageNext) },
-        { FUNCTION3 (MessageDecryptFinal) },
-        { FUNCTION3 (MessageSignInit) },
-        { FUNCTION3 (SignMessage) },
-        { FUNCTION3 (SignMessageBegin) },
-        { FUNCTION3 (SignMessageNext) },
-        { FUNCTION3 (MessageSignFinal) },
-        { FUNCTION3 (MessageVerifyInit) },
-        { FUNCTION3 (VerifyMessage) },
-        { FUNCTION3 (VerifyMessageBegin) },
-        { FUNCTION3 (VerifyMessageNext) },
-        { FUNCTION3 (MessageVerifyFinal) },
+        { FUNCTION (LoginUser, 3, 0) },
+        { FUNCTION (SessionCancel, 3, 0) },
+        { FUNCTION (MessageEncryptInit, 3, 0) },
+        { FUNCTION (EncryptMessage, 3, 0) },
+        { FUNCTION (EncryptMessageBegin, 3, 0) },
+        { FUNCTION (EncryptMessageNext, 3, 0) },
+        { FUNCTION (MessageEncryptFinal, 3, 0) },
+        { FUNCTION (MessageDecryptInit, 3, 0) },
+        { FUNCTION (DecryptMessage, 3, 0) },
+        { FUNCTION (DecryptMessageBegin, 3, 0) },
+        { FUNCTION (DecryptMessageNext, 3, 0) },
+        { FUNCTION (MessageDecryptFinal, 3, 0) },
+        { FUNCTION (MessageSignInit, 3, 0) },
+        { FUNCTION (SignMessage, 3, 0) },
+        { FUNCTION (SignMessageBegin, 3, 0) },
+        { FUNCTION (SignMessageNext, 3, 0) },
+        { FUNCTION (MessageSignFinal, 3, 0) },
+        { FUNCTION (MessageVerifyInit, 3, 0) },
+        { FUNCTION (VerifyMessage, 3, 0) },
+        { FUNCTION (VerifyMessageBegin, 3, 0) },
+        { FUNCTION (VerifyMessageNext, 3, 0) },
+        { FUNCTION (MessageVerifyFinal, 3, 0) },
+        /* PKCS #11 3.2 */
+        { FUNCTION (EncapsulateKey, 3, 2) },
+        { FUNCTION (DecapsulateKey, 3, 2) },
+        { FUNCTION (VerifySignatureInit, 3, 2) },
+        { FUNCTION (VerifySignature, 3, 2) },
+        { FUNCTION (VerifySignatureUpdate, 3, 2) },
+        { FUNCTION (VerifySignatureFinal, 3, 2) },
+        { FUNCTION (GetSessionValidationFlags, 3, 2) },
+        { FUNCTION (AsyncComplete, 3, 2) },
+        { FUNCTION (AsyncGetID, 3, 2) },
+        { FUNCTION (AsyncJoin, 3, 2) },
+        { FUNCTION (WrapKeyAuthenticated, 3, 2) },
+        { FUNCTION (UnwrapKeyAuthenticated, 3, 2) },
         { 0, }
 };
 
@@ -379,12 +387,12 @@ lookup_fall_through (p11_virtual *virt,
 	 * so return the function from the module.
 	 */
 	} else if (func == info->base_fallback) {
-		/* We can not point to 3.0 functions if the underlying module does not have them.
-		 * Let the base_C_* functions handle this case */
+		/* We can not fall through to functions the underlying module
+		 * does not have. Let the base_C_* functions handle this case */
 		CK_X_FUNCTION_LIST *lower = virt->lower_module;
 		if ((info->min_version.major > 0 || info->min_version.minor > 0) &&
 		    (lower->version.major < info->min_version.major ||
-		     (lower->version.major == info->min_version.major ||
+		     (lower->version.major == info->min_version.major &&
 		      lower->version.minor < info->min_version.minor)))
 			return false;
 
