@@ -2877,12 +2877,161 @@ test_message_verify (void)
 }
 
 static void
+test_encapsulate_key (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
+	CK_BYTE ciphertext[128];
+	CK_ULONG ciphertext_len;
+	CK_OBJECT_HANDLE key;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	ciphertext_len = sizeof (ciphertext);
+	rv = (module->C_EncapsulateKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                                 NULL, 0, ciphertext, &ciphertext_len, &key);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_decapsulate_key (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
+	CK_BYTE ciphertext[128];
+	CK_ULONG ciphertext_len;
+	CK_OBJECT_HANDLE key;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	ciphertext_len = sizeof (ciphertext);
+	rv = (module->C_DecapsulateKey) (session, &mech, MOCK_PRIVATE_KEY_PREFIX,
+	                                 NULL, 0, ciphertext, &ciphertext_len, &key);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_verify_signature (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	rv = (module->C_VerifySignatureInit) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                                      (CK_BYTE_PTR)"sig", 3);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignature) (session, (CK_BYTE_PTR)"data", 4);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignatureUpdate) (session, (CK_BYTE_PTR)"part", 4);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignatureFinal) (session);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_get_session_validation_flags (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_FLAGS flags;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	rv = (module->C_GetSessionValidationFlags) (session, CKS_LAST_VALIDATION_OK, &flags);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_async (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_ASYNC_DATA result;
+	CK_ULONG id;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	rv = (module->C_AsyncComplete) (session, (CK_BYTE_PTR)"C_Sign", &result);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_AsyncGetID) (session, (CK_BYTE_PTR)"C_Sign", &id);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_AsyncJoin) (session, (CK_BYTE_PTR)"C_Sign", 1, NULL, 0);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_wrap_key_authenticated (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_WRAP, "wrap", 4 };
+	CK_BYTE wrapped[128];
+	CK_ULONG wrapped_len;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	wrapped_len = sizeof (wrapped);
+	rv = (module->C_WrapKeyAuthenticated) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                                       MOCK_PRIVATE_KEY_PREFIX, NULL, 0,
+	                                       wrapped, &wrapped_len);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
+test_unwrap_key_authenticated (void)
+{
+	CK_FUNCTION_LIST_3_2_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_WRAP, "wrap", 4 };
+	CK_OBJECT_HANDLE key;
+	CK_RV rv;
+
+	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
+
+	rv = (module->C_UnwrapKeyAuthenticated) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                                         (CK_BYTE_PTR)"wrapped", 7, NULL, 0,
+	                                         NULL, 0, &key);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
+}
+
+static void
 test_pkcs11_3_not_supported (void)
 {
 	CK_FUNCTION_LIST_3_2_PTR module;
 	CK_SESSION_HANDLE session = 0;
 	CK_MECHANISM crypt_mech = { CKM_MOCK_CAPITALIZE, NULL, 0 };
 	CK_MECHANISM sign_mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
+	CK_ULONG ciphertext_len = 0;
+	CK_ULONG wrapped_key_len = 0;
 	CK_RV rv;
 
 	module = (CK_FUNCTION_LIST_3_2_PTR)setup_mock_module (&session);
@@ -2904,6 +3053,46 @@ test_pkcs11_3_not_supported (void)
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	rv = (module->C_MessageVerifyInit) (session, &sign_mech, MOCK_PUBLIC_KEY_PREFIX);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_EncapsulateKey) (session, &crypt_mech, MOCK_PUBLIC_KEY_PREFIX,
+	                                 NULL, 0, NULL, &ciphertext_len, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_DecapsulateKey) (session, &crypt_mech, MOCK_PRIVATE_KEY_PREFIX,
+	                                 NULL, 0, NULL, &ciphertext_len, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignatureInit) (session, &sign_mech, MOCK_PUBLIC_KEY_PREFIX, NULL, 0);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignature) (session, NULL, 0);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignatureUpdate) (session, NULL, 0);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_VerifySignatureFinal) (session);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_GetSessionValidationFlags) (session, 0, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_AsyncComplete) (session, NULL, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_AsyncGetID) (session, NULL, NULL);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_AsyncJoin) (session, NULL, 0, NULL, 0);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_WrapKeyAuthenticated) (session, &crypt_mech, 0, 0,
+					       NULL, 0, NULL, &wrapped_key_len);
+	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
+
+	rv = (module->C_UnwrapKeyAuthenticated) (session, &crypt_mech, 0, NULL,
+						 0, NULL, 0, NULL, 0, NULL);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	teardown_mock_module ((CK_FUNCTION_LIST_PTR) module);
@@ -2968,6 +3157,16 @@ test_mock_add_tests (const char *prefix, const CK_VERSION *version)
 		p11_test (test_message_decrypt, "%s/test_message_decrypt", prefix);
 		p11_test (test_message_sign, "%s/test_message_sign", prefix);
 		p11_test (test_message_verify, "%s/test_message_verify", prefix);
+		/* PKCS #11 3.2 tests */
+		if (version->minor >= 2) {
+			p11_test (test_encapsulate_key, "%s/test_encapsulate_key", prefix);
+			p11_test (test_decapsulate_key, "%s/test_decapsulate_key", prefix);
+			p11_test (test_verify_signature, "%s/test_verify_signature", prefix);
+			p11_test (test_get_session_validation_flags, "%s/test_get_session_validation_flags", prefix);
+			p11_test (test_async, "%s/test_async", prefix);
+			p11_test (test_wrap_key_authenticated, "%s/test_wrap_key_authenticated", prefix);
+			p11_test (test_unwrap_key_authenticated, "%s/test_unwrap_key_authenticated", prefix);
+		}
 	} else {
 		p11_test (test_pkcs11_3_not_supported, "%s/test_pkcs11_3_not_supported", prefix);
 	}
