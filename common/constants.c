@@ -863,6 +863,7 @@ const p11_constant p11_constant_mechanisms[] = {
 	CT (CKM_SKIPJACK_RELAYX, "skipjack-relayx")
 	CT (CKM_KEA_KEY_PAIR_GEN, "kea-key-pair-gen")
 	CT (CKM_KEA_KEY_DERIVE, "kea-key-derive")
+	CT (CKM_KEA_DERIVE, "kea-derive")
 	CT (CKM_FORTEZZA_TIMESTAMP, "fortezza-timestamp")
 	CT (CKM_BATON_KEY_GEN, "baton-key-gen")
 	CT (CKM_BATON_ECB128, "baton-ecb128")
