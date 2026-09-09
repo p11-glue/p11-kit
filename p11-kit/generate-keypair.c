@@ -229,7 +229,7 @@ check_args (CK_MECHANISM_TYPE type,
 		p11_message (_("no type specified"));
 		return false;
 	default:
-		p11_message (_("unkwnown mechanism type in %s"), __func__);
+		p11_message (_("unknown mechanism type in %s"), __func__);
 		return false;
 	}
 
