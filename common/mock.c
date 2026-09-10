@@ -5113,7 +5113,7 @@ mock_C_DecapsulateKey (CK_SESSION_HANDLE session,
 		       CK_ATTRIBUTE_PTR templ,
 		       CK_ULONG attribute_count,
 		       CK_BYTE_PTR ciphertext,
-		       CK_ULONG_PTR ciphertext_len,
+		       CK_ULONG ciphertext_len,
 		       CK_OBJECT_HANDLE_PTR key_ptr)
 {
 	return CKR_FUNCTION_NOT_SUPPORTED;
@@ -5126,7 +5126,7 @@ mock_C_DecapsulateKey__invalid_handle (CK_SESSION_HANDLE session,
 				       CK_ATTRIBUTE_PTR templ,
 				       CK_ULONG attribute_count,
 				       CK_BYTE_PTR ciphertext,
-				       CK_ULONG_PTR ciphertext_len,
+				       CK_ULONG ciphertext_len,
 				       CK_OBJECT_HANDLE_PTR key_ptr)
 {
 	return CKR_SESSION_HANDLE_INVALID;
@@ -5140,7 +5140,7 @@ mock_X_DecapsulateKey__invalid_handle (CK_X_FUNCTION_LIST *self,
 				       CK_ATTRIBUTE_PTR templ,
 				       CK_ULONG attribute_count,
 				       CK_BYTE_PTR ciphertext,
-				       CK_ULONG_PTR ciphertext_len,
+				       CK_ULONG ciphertext_len,
 				       CK_OBJECT_HANDLE_PTR key_ptr)
 {
 	return CKR_SESSION_HANDLE_INVALID;

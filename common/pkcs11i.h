@@ -592,7 +592,7 @@ typedef CK_RV (* CK_X_DecapsulateKey)      (CK_X_FUNCTION_LIST *,
 					    CK_ATTRIBUTE_PTR templ,
 					    CK_ULONG attribute_count,
 					    CK_BYTE_PTR ciphertext,
-					    CK_ULONG_PTR ciphertext_len,
+					    CK_ULONG ciphertext_len,
 					    CK_OBJECT_HANDLE_PTR key_ptr);
 
 typedef CK_RV (* CK_X_VerifySignatureInit) (CK_X_FUNCTION_LIST *,
