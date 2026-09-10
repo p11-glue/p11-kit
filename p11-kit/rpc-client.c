@@ -341,7 +341,8 @@ proto_read_byte_array (p11_rpc_message *msg,
 		return CKR_BUFFER_TOO_SMALL;
 
 	/* Enough space, yay */
-	memcpy (arr, val, vlen);
+	if (vlen > 0)
+		memcpy (arr, val, vlen);
 	return CKR_OK;
 }
 

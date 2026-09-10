@@ -87,6 +87,12 @@ enum {
 	 */
 	CKM_MOCK_COUNT = (CKM_VENDOR_DEFINED | 6),
 
+	/*
+	 * CKM_MOCK_ENCAPSULATE (encapsulate/decapsulate key)
+	 * - Encapsulate produces a fake ciphertext and creates a secret key
+	 */
+	CKM_MOCK_ENCAPSULATE = (CKM_VENDOR_DEFINED | 7),
+
 	MOCK_SLOT_ONE_ID = 52,
 	MOCK_SLOT_TWO_ID = 134,
 

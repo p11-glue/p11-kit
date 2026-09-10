@@ -108,6 +108,10 @@ typedef struct _Session {
 	CK_BYTE sign_prefix[128];
 	CK_ULONG n_sign_prefix;
 
+	/* For VerifySignature (signature provided at init) */
+	CK_BYTE verify_sig[128];
+	CK_ULONG verify_sig_len;
+
 	/* The random seed */
 	CK_BYTE random_seed[128];
 	CK_ULONG random_seed_len;
@@ -5076,7 +5080,60 @@ mock_C_EncapsulateKey (CK_SESSION_HANDLE session,
 		       CK_ULONG_PTR ciphertext_len,
 		       CK_OBJECT_HANDLE_PTR key_ptr)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	static const CK_BYTE mock_ciphertext[] = "encapsulated";
+	static const CK_ULONG mock_ciphertext_len = 12;
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE value;
+	Session *sess;
+	CK_BBOOL token;
+	CK_RV rv;
+
+	return_val_if_fail (mechanism, CKR_MECHANISM_INVALID);
+	return_val_if_fail (ciphertext_len, CKR_ARGUMENTS_BAD);
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	rv = lookup_object (sess, public_key, &attrs, NULL);
+	if (rv != CKR_OK)
+		return rv;
+
+	if (mechanism->mechanism != CKM_MOCK_ENCAPSULATE)
+		return CKR_MECHANISM_INVALID;
+
+	if (!ciphertext) {
+		*ciphertext_len = mock_ciphertext_len;
+		return CKR_OK;
+	}
+
+	if (*ciphertext_len < mock_ciphertext_len) {
+		*ciphertext_len = mock_ciphertext_len;
+		return CKR_BUFFER_TOO_SMALL;
+	}
+
+	memcpy (ciphertext, mock_ciphertext, mock_ciphertext_len);
+	*ciphertext_len = mock_ciphertext_len;
+
+	if (key_ptr) {
+		return_val_if_fail (templ, CKR_TEMPLATE_INCOMPLETE);
+		return_val_if_fail (attribute_count, CKR_TEMPLATE_INCOMPLETE);
+
+		value.type = CKA_VALUE;
+		value.pValue = "secret";
+		value.ulValueLen = 6;
+
+		attrs = p11_attrs_buildn (NULL, templ, attribute_count);
+		attrs = p11_attrs_buildn (attrs, &value, 1);
+
+		*key_ptr = ++unique_identifier;
+		if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
+			p11_dict_set (the_objects, handle_to_pointer (*key_ptr), attrs);
+		else
+			p11_dict_set (sess->objects, handle_to_pointer (*key_ptr), attrs);
+	}
+
+	return CKR_OK;
 }
 
 CK_RV
@@ -5116,7 +5173,45 @@ mock_C_DecapsulateKey (CK_SESSION_HANDLE session,
 		       CK_ULONG ciphertext_len,
 		       CK_OBJECT_HANDLE_PTR key_ptr)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	CK_ATTRIBUTE *attrs;
+	CK_ATTRIBUTE value;
+	Session *sess;
+	CK_BBOOL token;
+	CK_RV rv;
+
+	return_val_if_fail (mechanism, CKR_MECHANISM_INVALID);
+	return_val_if_fail (ciphertext, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (ciphertext_len > 0, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (key_ptr, CKR_ARGUMENTS_BAD);
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	rv = lookup_object (sess, private_key, &attrs, NULL);
+	if (rv != CKR_OK)
+		return rv;
+
+	if (mechanism->mechanism != CKM_MOCK_ENCAPSULATE)
+		return CKR_MECHANISM_INVALID;
+
+	return_val_if_fail (templ, CKR_TEMPLATE_INCOMPLETE);
+	return_val_if_fail (attribute_count, CKR_TEMPLATE_INCOMPLETE);
+
+	value.type = CKA_VALUE;
+	value.pValue = "secret";
+	value.ulValueLen = 6;
+
+	attrs = p11_attrs_buildn (NULL, templ, attribute_count);
+	attrs = p11_attrs_buildn (attrs, &value, 1);
+
+	*key_ptr = ++unique_identifier;
+	if (p11_attrs_find_bool (attrs, CKA_TOKEN, &token) && token)
+		p11_dict_set (the_objects, handle_to_pointer (*key_ptr), attrs);
+	else
+		p11_dict_set (sess->objects, handle_to_pointer (*key_ptr), attrs);
+
+	return CKR_OK;
 }
 
 CK_RV
@@ -5153,7 +5248,24 @@ mock_C_VerifySignatureInit (CK_SESSION_HANDLE session,
 			    CK_BYTE_PTR signature,
 			    CK_ULONG signature_len)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+	CK_RV rv;
+
+	return_val_if_fail (signature, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (signature_len > 0, CKR_ARGUMENTS_BAD);
+	return_val_if_fail (signature_len <= sizeof (sess->verify_sig), CKR_ARGUMENTS_BAD);
+
+	rv = prefix_mechanism_init (session, CKF_VERIFY, mechanism, key);
+	if (rv != CKR_OK)
+		return rv;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	assert (sess != NULL);
+
+	memcpy (sess->verify_sig, signature, signature_len);
+	sess->verify_sig_len = signature_len;
+
+	return CKR_OK;
 }
 
 CK_RV
@@ -5182,7 +5294,13 @@ mock_C_VerifySignature (CK_SESSION_HANDLE session,
 			CK_BYTE_PTR data,
 			CK_ULONG data_len)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	CK_RV rv;
+
+	rv = mock_C_VerifySignatureUpdate (session, data, data_len);
+	if (rv == CKR_OK)
+		rv = mock_C_VerifySignatureFinal (session);
+
+	return rv;
 }
 
 CK_RV
@@ -5207,7 +5325,7 @@ mock_C_VerifySignatureUpdate (CK_SESSION_HANDLE session,
 			      CK_BYTE_PTR part,
 			      CK_ULONG part_len)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	return mock_C_VerifyUpdate (session, part, part_len);
 }
 
 CK_RV
@@ -5230,7 +5348,13 @@ mock_X_VerifySignatureUpdate__invalid_handle (CK_X_FUNCTION_LIST *self,
 CK_RV
 mock_C_VerifySignatureFinal (CK_SESSION_HANDLE session)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	return mock_C_VerifyFinal (session, sess->verify_sig, sess->verify_sig_len);
 }
 
 CK_RV
@@ -5251,7 +5375,19 @@ mock_C_GetSessionValidationFlags (CK_SESSION_HANDLE session,
 				  CK_SESSION_VALIDATION_FLAGS_TYPE type,
 				  CK_FLAGS *flags_ptr)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+
+	return_val_if_fail (flags_ptr, CKR_ARGUMENTS_BAD);
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	if (type != CKS_LAST_VALIDATION_OK)
+		return CKR_ARGUMENTS_BAD;
+
+	*flags_ptr = 0;
+	return CKR_OK;
 }
 
 CK_RV
@@ -5276,7 +5412,18 @@ mock_C_AsyncComplete (CK_SESSION_HANDLE session,
 		      CK_BYTE_PTR function_name,
 		      CK_ASYNC_DATA_PTR result)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+
+	if (!function_name)
+		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (result, CKR_ARGUMENTS_BAD);
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	memset (result, 0, sizeof (*result));
+	return CKR_OK;
 }
 
 CK_RV
@@ -5301,7 +5448,18 @@ mock_C_AsyncGetID (CK_SESSION_HANDLE session,
 		   CK_BYTE_PTR function_name,
 		   CK_ULONG_PTR id_ptr)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+
+	if (!function_name)
+		return CKR_ARGUMENTS_BAD;
+	return_val_if_fail (id_ptr, CKR_ARGUMENTS_BAD);
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	*id_ptr = 1;
+	return CKR_OK;
 }
 
 CK_RV
@@ -5328,7 +5486,16 @@ mock_C_AsyncJoin (CK_SESSION_HANDLE session,
 		  CK_BYTE_PTR data,
 		  CK_ULONG data_len)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	Session *sess;
+
+	if (!function_name)
+		return CKR_ARGUMENTS_BAD;
+
+	sess = p11_dict_get (the_sessions, handle_to_pointer (session));
+	if (!sess)
+		return CKR_SESSION_HANDLE_INVALID;
+
+	return CKR_OK;
 }
 
 CK_RV
@@ -5362,7 +5529,33 @@ mock_C_WrapKeyAuthenticated (CK_SESSION_HANDLE session,
 			     CK_BYTE_PTR wrapped_key,
 			     CK_ULONG_PTR wrapped_key_len)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	CK_BYTE tmp[128];
+	CK_ULONG tmp_len = sizeof (tmp);
+	CK_ULONG total_len;
+	CK_RV rv;
+
+	rv = mock_C_WrapKey (session, mechanism, wrapping_key, key, tmp, &tmp_len);
+	if (rv != CKR_OK)
+		return rv;
+
+	total_len = tmp_len + associated_data_len;
+
+	if (!wrapped_key) {
+		*wrapped_key_len = total_len;
+		return CKR_OK;
+	}
+
+	if (*wrapped_key_len < total_len) {
+		*wrapped_key_len = total_len;
+		return CKR_BUFFER_TOO_SMALL;
+	}
+
+	if (associated_data && associated_data_len > 0)
+		memcpy (wrapped_key, associated_data, associated_data_len);
+	memcpy (wrapped_key + associated_data_len, tmp, tmp_len);
+	*wrapped_key_len = total_len;
+
+	return CKR_OK;
 }
 
 CK_RV
@@ -5404,7 +5597,17 @@ mock_C_UnwrapKeyAuthenticated (CK_SESSION_HANDLE session,
 			       CK_ULONG associated_data_len,
 			       CK_OBJECT_HANDLE_PTR key_ptr)
 {
-	return CKR_FUNCTION_NOT_SUPPORTED;
+	if (wrapped_key_len < associated_data_len)
+		return CKR_WRAPPED_KEY_LEN_RANGE;
+
+	if (associated_data && associated_data_len > 0 &&
+	    memcmp (wrapped_key, associated_data, associated_data_len) != 0)
+		return CKR_ENCRYPTED_DATA_INVALID;
+
+	return mock_C_UnwrapKey (session, mechanism, unwrapping_key,
+				wrapped_key + associated_data_len,
+				wrapped_key_len - associated_data_len,
+				templ, attribute_count, key_ptr);
 }
 
 CK_RV
