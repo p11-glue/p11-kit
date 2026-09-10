@@ -2430,7 +2430,7 @@ rpc_C_DecapsulateKey (CK_X_FUNCTION_LIST *self,
                       CK_ATTRIBUTE_PTR pTemplate,
                       CK_ULONG ulAttributeCount,
                       CK_BYTE_PTR ciphertext,
-                      CK_ULONG_PTR ciphertext_len,
+                      CK_ULONG ciphertext_len,
                       CK_OBJECT_HANDLE_PTR phKey)
 {
 	BEGIN_CALL_OR (C_DecapsulateKey, self, CKR_SESSION_HANDLE_INVALID);
@@ -2438,7 +2438,7 @@ rpc_C_DecapsulateKey (CK_X_FUNCTION_LIST *self,
 		IN_MECHANISM (mechanism);
 		IN_ULONG (private_key);
 		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount);
-		IN_BYTE_ARRAY (ciphertext, *ciphertext_len);
+		IN_BYTE_ARRAY (ciphertext, ciphertext_len);
 	PROCESS_CALL;
 		OUT_ULONG (phKey);
 	END_CALL;
