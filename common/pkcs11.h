@@ -2847,7 +2847,7 @@ _CK_DECLARE_FUNCTION (C_DecapsulateKey,
                        struct ck_attribute *templ,
                        unsigned long attribute_count,
                        unsigned char *ciphertext,
-                       unsigned long *ciphertext_len,
+                       unsigned long ciphertext_len,
                        ck_object_handle_t *key_ptr));
 _CK_DECLARE_FUNCTION (C_VerifySignatureInit,
                       (ck_session_handle_t session,

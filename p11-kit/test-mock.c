@@ -2912,7 +2912,7 @@ test_decapsulate_key (void)
 
 	ciphertext_len = sizeof (ciphertext);
 	rv = (module->C_DecapsulateKey) (session, &mech, MOCK_PRIVATE_KEY_PREFIX,
-	                                 NULL, 0, ciphertext, &ciphertext_len, &key);
+	                                 NULL, 0, ciphertext, ciphertext_len, &key);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	teardown_mock_module ((CK_FUNCTION_LIST_PTR)module);
@@ -3060,7 +3060,7 @@ test_pkcs11_3_not_supported (void)
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	rv = (module->C_DecapsulateKey) (session, &crypt_mech, MOCK_PRIVATE_KEY_PREFIX,
-	                                 NULL, 0, NULL, &ciphertext_len, NULL);
+	                                 NULL, 0, NULL, ciphertext_len, NULL);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	rv = (module->C_VerifySignatureInit) (session, &sign_mech, MOCK_PUBLIC_KEY_PREFIX, NULL, 0);

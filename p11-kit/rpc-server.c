@@ -2416,7 +2416,7 @@ rpc_C_DecapsulateKey (CK_X_FUNCTION_LIST *self,
 		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount);
 		IN_BYTE_ARRAY (ciphertext, ciphertext_len);
 	PROCESS_CALL ((self, session, mechanism, private_key, pTemplate, ulAttributeCount,
-	               ciphertext, &ciphertext_len, &phKey));
+	               ciphertext, ciphertext_len, &phKey));
 		OUT_ULONG (phKey);
 	END_CALL;
 }
