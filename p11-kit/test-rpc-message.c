@@ -847,8 +847,10 @@ static void
 test_pqc_mechanism_no_params (void)
 {
 	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
 	CK_MECHANISM mechs[] = {
 		{ CKM_ML_DSA_KEY_PAIR_GEN, NULL, 0 },
+		/* CKM_ML_DSA has an optional parameter, so omitting it is valid */
 		{ CKM_ML_DSA, NULL, 0 },
 		{ CKM_ML_KEM_KEY_PAIR_GEN, NULL, 0 },
 		{ CKM_ML_KEM, NULL, 0 },
@@ -863,6 +865,9 @@ test_pqc_mechanism_no_params (void)
 	size_t offset = 0;
 	bool ret;
 	size_t i;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
 
 	p11_buffer_init (&buffer, 0);
 
@@ -891,6 +896,8 @@ test_pqc_mechanism_no_params (void)
 	}
 
 	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
 static void
@@ -943,6 +950,266 @@ test_pqc_attribute_serialization (void)
 	p11_buffer_uninit (&buffer);
 }
 
+static void
+test_eddsa_mechanism (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_BYTE context[] = { 't', 'e', 's', 't' };
+	CK_EDDSA_PARAMS params = {
+		CK_TRUE,
+		sizeof (context),
+		context
+	};
+	CK_MECHANISM mech = { CKM_EDDSA, &params, sizeof (params) };
+	CK_MECHANISM mech_no_value = { CKM_EDDSA, NULL, 0 };
+	CK_EDDSA_PARAMS *decoded;
+	CK_MECHANISM val;
+	size_t offset = 0, offset2;
+	bool ret;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	p11_buffer_init (&buffer, 0);
+
+	/* Test with a parameter */
+	p11_rpc_buffer_add_mechanism (&buffer, &mech);
+	assert (!p11_buffer_failed (&buffer));
+
+	/* First pass only reports the length of the parameter */
+	offset2 = offset;
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_EDDSA, val.mechanism);
+	assert_ptr_eq (NULL, val.pParameter);
+	assert_num_eq (sizeof (CK_EDDSA_PARAMS), val.ulParameterLen);
+
+	val.pParameter = malloc (val.ulParameterLen);
+	assert_ptr_not_null (val.pParameter);
+
+	offset = offset2;
+	ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_EDDSA, val.mechanism);
+	assert_num_eq (sizeof (CK_EDDSA_PARAMS), val.ulParameterLen);
+
+	decoded = val.pParameter;
+	assert_num_eq (CK_TRUE, decoded->phFlag);
+	assert_num_eq (sizeof (context), decoded->ulContextDataLen);
+	assert (memcmp (decoded->pContextData, context, sizeof (context)) == 0);
+
+	free (val.pParameter);
+
+	/* Test without a parameter */
+	p11_rpc_buffer_add_mechanism (&buffer, &mech_no_value);
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_EDDSA, val.mechanism);
+	assert_ptr_eq (NULL, val.pParameter);
+	assert_num_eq (0, val.ulParameterLen);
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
+/* Mechanisms taking an optional CK_SIGN_ADDITIONAL_CONTEXT parameter,
+ * as defined by PKCS#11 3.2 sections 6.67.5, 6.67.7, 6.68.5 and 6.68.7 */
+static CK_MECHANISM_TYPE sign_additional_context_mechs[] = {
+	CKM_ML_DSA,
+	CKM_HASH_ML_DSA_SHA224,
+	CKM_HASH_ML_DSA_SHA256,
+	CKM_HASH_ML_DSA_SHA384,
+	CKM_HASH_ML_DSA_SHA512,
+	CKM_HASH_ML_DSA_SHA3_224,
+	CKM_HASH_ML_DSA_SHA3_256,
+	CKM_HASH_ML_DSA_SHA3_384,
+	CKM_HASH_ML_DSA_SHA3_512,
+	CKM_HASH_ML_DSA_SHAKE128,
+	CKM_HASH_ML_DSA_SHAKE256,
+	CKM_SLH_DSA,
+	CKM_HASH_SLH_DSA_SHA224,
+	CKM_HASH_SLH_DSA_SHA256,
+	CKM_HASH_SLH_DSA_SHA384,
+	CKM_HASH_SLH_DSA_SHA512,
+	CKM_HASH_SLH_DSA_SHA3_224,
+	CKM_HASH_SLH_DSA_SHA3_256,
+	CKM_HASH_SLH_DSA_SHA3_384,
+	CKM_HASH_SLH_DSA_SHA3_512,
+	CKM_HASH_SLH_DSA_SHAKE128,
+	CKM_HASH_SLH_DSA_SHAKE256,
+};
+
+static void
+test_sign_additional_context_mechanism (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_BYTE context[] = { 't', 'e', 's', 't' };
+	CK_SIGN_ADDITIONAL_CONTEXT params = {
+		CKH_DETERMINISTIC_REQUIRED,
+		context,
+		sizeof (context)
+	};
+	CK_SIGN_ADDITIONAL_CONTEXT *decoded;
+	CK_MECHANISM mech, val;
+	size_t offset = 0, offset2;
+	bool ret;
+	size_t i;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	p11_buffer_init (&buffer, 0);
+
+	for (i = 0; i < ELEMS (sign_additional_context_mechs); i++) {
+		mech.mechanism = sign_additional_context_mechs[i];
+		mech.pParameter = &params;
+		mech.ulParameterLen = sizeof (params);
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mech);
+		assert (!p11_buffer_failed (&buffer));
+
+		/* First pass only reports the length of the parameter */
+		offset2 = offset;
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (sizeof (CK_SIGN_ADDITIONAL_CONTEXT), val.ulParameterLen);
+
+		val.pParameter = malloc (val.ulParameterLen);
+		assert_ptr_not_null (val.pParameter);
+
+		offset = offset2;
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_num_eq (sizeof (CK_SIGN_ADDITIONAL_CONTEXT), val.ulParameterLen);
+
+		/* pContext points into the buffer, so the decoded parameter
+		 * has to be compared field by field. */
+		decoded = val.pParameter;
+		assert_num_eq (CKH_DETERMINISTIC_REQUIRED, decoded->hedgeVariant);
+		assert_num_eq (sizeof (context), decoded->ulContextLen);
+		assert (memcmp (decoded->pContext, context, sizeof (context)) == 0);
+
+		free (val.pParameter);
+
+		/* The parameter is optional */
+		mech.pParameter = NULL;
+		mech.ulParameterLen = 0;
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mech);
+		assert (!p11_buffer_failed (&buffer));
+
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (0, val.ulParameterLen);
+	}
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
+/* Mechanisms taking a required CK_HASH_SIGN_ADDITIONAL_CONTEXT parameter,
+ * as defined by PKCS#11 3.2 sections 6.67.6 and 6.68.6 */
+static CK_MECHANISM_TYPE hash_sign_additional_context_mechs[] = {
+	CKM_HASH_ML_DSA,
+	CKM_HASH_SLH_DSA,
+};
+
+static void
+test_hash_sign_additional_context_mechanism (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_BYTE context[] = { 't', 'e', 's', 't' };
+	CK_HASH_SIGN_ADDITIONAL_CONTEXT params = {
+		CKH_HEDGE_REQUIRED,
+		context,
+		sizeof (context),
+		CKM_SHA3_384
+	};
+	CK_HASH_SIGN_ADDITIONAL_CONTEXT *decoded;
+	CK_MECHANISM mech, val;
+	size_t offset = 0, offset2;
+	bool ret;
+	size_t i;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	p11_buffer_init (&buffer, 0);
+
+	for (i = 0; i < ELEMS (hash_sign_additional_context_mechs); i++) {
+		mech.mechanism = hash_sign_additional_context_mechs[i];
+		mech.pParameter = &params;
+		mech.ulParameterLen = sizeof (params);
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mech);
+		assert (!p11_buffer_failed (&buffer));
+
+		/* First pass only reports the length of the parameter */
+		offset2 = offset;
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT), val.ulParameterLen);
+
+		val.pParameter = malloc (val.ulParameterLen);
+		assert_ptr_not_null (val.pParameter);
+
+		offset = offset2;
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_num_eq (sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT), val.ulParameterLen);
+
+		/* pContext points into the buffer, so the decoded parameter
+		 * has to be compared field by field. */
+		decoded = val.pParameter;
+		assert_num_eq (CKH_HEDGE_REQUIRED, decoded->hedgeVariant);
+		assert_num_eq (sizeof (context), decoded->ulContextLen);
+		assert (memcmp (decoded->pContext, context, sizeof (context)) == 0);
+		assert_num_eq (CKM_SHA3_384, decoded->hash);
+
+		free (val.pParameter);
+
+		/* The parameter is required for these mechanisms, but rejecting
+		 * it is up to the token, so an absent parameter has to survive
+		 * the round trip instead of corrupting the stream. */
+		mech.pParameter = NULL;
+		mech.ulParameterLen = 0;
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mech);
+		assert (!p11_buffer_failed (&buffer));
+
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mech.mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (0, val.ulParameterLen);
+	}
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
 #include "test-mock.c"
 
 static CK_MECHANISM_TYPE mechanisms[] = {
@@ -984,6 +1251,9 @@ main (int argc,
 	p11_test (test_date_value_empty, "/rpc-message/date-value-empty");
 	p11_test (test_byte_array_value, "/rpc-message/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
+	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
+	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
+	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");
 	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
 	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
