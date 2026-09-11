@@ -2339,6 +2339,215 @@ log_C_MessageVerifyFinal (CK_X_FUNCTION_LIST *self,
 	DONE_CALL
 }
 
+/* PKCS #11 3.2 */
+
+static CK_RV
+log_C_EncapsulateKey (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE session,
+                      CK_MECHANISM_PTR mechanism,
+                      CK_OBJECT_HANDLE publicKey,
+                      CK_ATTRIBUTE_PTR pTemplate,
+                      CK_ULONG ulAttributeCount,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG_PTR ciphertext_len,
+                      CK_OBJECT_HANDLE_PTR phKey)
+{
+	BEGIN_CALL (EncapsulateKey)
+		IN_SESSION (session)
+		IN_MECHANISM (mechanism)
+		IN_HANDLE (publicKey)
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount)
+	PROCESS_CALL ((self, session, mechanism, publicKey, pTemplate, ulAttributeCount,
+	               ciphertext, ciphertext_len, phKey))
+		OUT_BYTE_ARRAY (ciphertext, ciphertext_len)
+		OUT_HANDLE (phKey)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_DecapsulateKey (CK_X_FUNCTION_LIST *self,
+                      CK_SESSION_HANDLE session,
+                      CK_MECHANISM_PTR mechanism,
+                      CK_OBJECT_HANDLE private_key,
+                      CK_ATTRIBUTE_PTR pTemplate,
+                      CK_ULONG ulAttributeCount,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG ciphertext_len,
+                      CK_OBJECT_HANDLE_PTR phKey)
+{
+	BEGIN_CALL (DecapsulateKey)
+		IN_SESSION (session)
+		IN_MECHANISM (mechanism)
+		IN_HANDLE (private_key)
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount)
+		IN_BYTE_ARRAY (ciphertext, ciphertext_len)
+	PROCESS_CALL ((self, session, mechanism, private_key, pTemplate, ulAttributeCount,
+	               ciphertext, ciphertext_len, phKey))
+		OUT_HANDLE (phKey)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_VerifySignatureInit (CK_X_FUNCTION_LIST *self,
+                           CK_SESSION_HANDLE session,
+                           CK_MECHANISM_PTR mechanism,
+                           CK_OBJECT_HANDLE hKey,
+                           CK_BYTE_PTR signature,
+                           CK_ULONG signature_len)
+{
+	BEGIN_CALL (VerifySignatureInit)
+		IN_SESSION (session)
+		IN_MECHANISM (mechanism)
+		IN_HANDLE (hKey)
+		IN_BYTE_ARRAY (signature, signature_len)
+	PROCESS_CALL ((self, session, mechanism, hKey, signature, signature_len))
+	DONE_CALL
+}
+
+static CK_RV
+log_C_VerifySignature (CK_X_FUNCTION_LIST *self,
+                       CK_SESSION_HANDLE session,
+                       CK_BYTE_PTR data,
+                       CK_ULONG ulDataLen)
+{
+	BEGIN_CALL (VerifySignature)
+		IN_SESSION (session)
+		IN_BYTE_ARRAY (data, ulDataLen)
+	PROCESS_CALL ((self, session, data, ulDataLen))
+	DONE_CALL
+}
+
+static CK_RV
+log_C_VerifySignatureUpdate (CK_X_FUNCTION_LIST *self,
+                             CK_SESSION_HANDLE session,
+                             CK_BYTE_PTR part,
+                             CK_ULONG part_len)
+{
+	BEGIN_CALL (VerifySignatureUpdate)
+		IN_SESSION (session)
+		IN_BYTE_ARRAY (part, part_len)
+	PROCESS_CALL ((self, session, part, part_len))
+	DONE_CALL
+}
+
+static CK_RV
+log_C_VerifySignatureFinal (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session)
+{
+	BEGIN_CALL (VerifySignatureFinal)
+		IN_SESSION (session)
+	PROCESS_CALL ((self, session))
+	DONE_CALL
+}
+
+static CK_RV
+log_C_GetSessionValidationFlags (CK_X_FUNCTION_LIST *self,
+                                 CK_SESSION_HANDLE session,
+                                 CK_SESSION_VALIDATION_FLAGS_TYPE type,
+                                 CK_FLAGS *flags_ptr)
+{
+	BEGIN_CALL (GetSessionValidationFlags)
+		IN_SESSION (session)
+		IN_ULONG (type)
+	PROCESS_CALL ((self, session, type, flags_ptr))
+		OUT_ULONG (flags_ptr)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_AsyncComplete (CK_X_FUNCTION_LIST *self,
+                     CK_SESSION_HANDLE session,
+                     CK_BYTE_PTR function_name,
+                     CK_ASYNC_DATA_PTR result)
+{
+	BEGIN_CALL (AsyncComplete)
+		IN_SESSION (session)
+		IN_POINTER (function_name)
+	PROCESS_CALL ((self, session, function_name, result))
+		OUT_POINTER (result)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_AsyncGetID (CK_X_FUNCTION_LIST *self,
+                  CK_SESSION_HANDLE session,
+                  CK_BYTE_PTR function_name,
+                  CK_ULONG_PTR id_ptr)
+{
+	BEGIN_CALL (AsyncGetID)
+		IN_SESSION (session)
+		IN_POINTER (function_name)
+	PROCESS_CALL ((self, session, function_name, id_ptr))
+		OUT_ULONG (id_ptr)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_AsyncJoin (CK_X_FUNCTION_LIST *self,
+                 CK_SESSION_HANDLE session,
+                 CK_BYTE_PTR function_name,
+                 CK_ULONG id,
+                 CK_BYTE_PTR data,
+                 CK_ULONG data_len)
+{
+	BEGIN_CALL (AsyncJoin)
+		IN_SESSION (session)
+		IN_POINTER (function_name)
+		IN_ULONG (id)
+		IN_BYTE_ARRAY (data, data_len)
+	PROCESS_CALL ((self, session, function_name, id, data, data_len))
+	DONE_CALL
+}
+
+static CK_RV
+log_C_WrapKeyAuthenticated (CK_X_FUNCTION_LIST *self,
+                            CK_SESSION_HANDLE session,
+                            CK_MECHANISM_PTR mechanism,
+                            CK_OBJECT_HANDLE wrapping_key,
+                            CK_OBJECT_HANDLE hKey,
+                            CK_BYTE_PTR associated_data,
+                            CK_ULONG associated_data_len,
+                            CK_BYTE_PTR wrapped_key,
+                            CK_ULONG_PTR wrapped_key_len)
+{
+	BEGIN_CALL (WrapKeyAuthenticated)
+		IN_SESSION (session)
+		IN_MECHANISM (mechanism)
+		IN_HANDLE (wrapping_key)
+		IN_HANDLE (hKey)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+	PROCESS_CALL ((self, session, mechanism, wrapping_key, hKey, associated_data,
+	               associated_data_len, wrapped_key, wrapped_key_len))
+		OUT_BYTE_ARRAY (wrapped_key, wrapped_key_len)
+	DONE_CALL
+}
+
+static CK_RV
+log_C_UnwrapKeyAuthenticated (CK_X_FUNCTION_LIST *self,
+                              CK_SESSION_HANDLE session,
+                              CK_MECHANISM_PTR mechanism,
+                              CK_OBJECT_HANDLE unwrapping_key,
+                              CK_BYTE_PTR wrapped_key,
+                              CK_ULONG wrapped_key_len,
+                              CK_ATTRIBUTE_PTR pTemplate,
+                              CK_ULONG ulAttributeCount,
+                              CK_BYTE_PTR associated_data,
+                              CK_ULONG associated_data_len,
+                              CK_OBJECT_HANDLE_PTR phKey)
+{
+	BEGIN_CALL (UnwrapKeyAuthenticated)
+		IN_SESSION (session)
+		IN_MECHANISM (mechanism)
+		IN_HANDLE (unwrapping_key)
+		IN_BYTE_ARRAY (wrapped_key, wrapped_key_len)
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount)
+		IN_BYTE_ARRAY (associated_data, associated_data_len)
+	PROCESS_CALL ((self, session, mechanism, unwrapping_key, wrapped_key, wrapped_key_len,
+	               pTemplate, ulAttributeCount, associated_data, associated_data_len, phKey))
+		OUT_HANDLE (phKey)
+	DONE_CALL
+}
+
 static CK_X_FUNCTION_LIST log_functions = {
 	{ -1, -1 },
 	log_C_Initialize,
@@ -2428,7 +2637,20 @@ static CK_X_FUNCTION_LIST log_functions = {
 	log_C_VerifyMessage,
 	log_C_VerifyMessageBegin,
 	log_C_VerifyMessageNext,
-	log_C_MessageVerifyFinal
+	log_C_MessageVerifyFinal,
+	/* PKCS #11 3.2 */
+	log_C_EncapsulateKey,
+	log_C_DecapsulateKey,
+	log_C_VerifySignatureInit,
+	log_C_VerifySignature,
+	log_C_VerifySignatureUpdate,
+	log_C_VerifySignatureFinal,
+	log_C_GetSessionValidationFlags,
+	log_C_AsyncComplete,
+	log_C_AsyncGetID,
+	log_C_AsyncJoin,
+	log_C_WrapKeyAuthenticated,
+	log_C_UnwrapKeyAuthenticated
 };
 
 void

@@ -2379,6 +2379,169 @@ p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
+void
+p11_rpc_buffer_add_eddsa_mechanism_value (p11_buffer *buffer,
+					  const void *value,
+					  CK_ULONG value_length)
+{
+	CK_EDDSA_PARAMS params;
+
+	if (value_length != sizeof (CK_EDDSA_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	p11_rpc_buffer_add_byte (buffer, params.phFlag ? 1 : 0);
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pContextData,
+				       params.ulContextDataLen);
+}
+
+bool
+p11_rpc_buffer_get_eddsa_mechanism_value (p11_buffer *buffer,
+					  size_t *offset,
+					  void *value,
+					  CK_ULONG *value_length)
+{
+	unsigned char flag;
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_byte (buffer, offset, &flag) ||
+	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (value) {
+		CK_EDDSA_PARAMS params;
+
+		params.phFlag = flag ? CK_TRUE : CK_FALSE;
+		params.pContextData = (void *) data;
+		params.ulContextDataLen = len;
+
+		memcpy (value, &params, sizeof (CK_EDDSA_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_EDDSA_PARAMS);
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_sign_additional_context_mechanism_value (p11_buffer *buffer,
+							    const void *value,
+							    CK_ULONG value_length)
+{
+	CK_SIGN_ADDITIONAL_CONTEXT params;
+
+	if (value_length != sizeof (CK_SIGN_ADDITIONAL_CONTEXT)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	if (params.hedgeVariant > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hedgeVariant);
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pContext,
+				       params.ulContextLen);
+}
+
+bool
+p11_rpc_buffer_get_sign_additional_context_mechanism_value (p11_buffer *buffer,
+							    size_t *offset,
+							    void *value,
+							    CK_ULONG *value_length)
+{
+	uint64_t val;
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val) ||
+	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
+		return false;
+
+	if (value) {
+		CK_SIGN_ADDITIONAL_CONTEXT params;
+
+		params.hedgeVariant = val;
+		params.pContext = (void *) data;
+		params.ulContextLen = len;
+
+		memcpy (value, &params, sizeof (CK_SIGN_ADDITIONAL_CONTEXT));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_SIGN_ADDITIONAL_CONTEXT);
+
+	return true;
+}
+
+void
+p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value (p11_buffer *buffer,
+								 const void *value,
+								 CK_ULONG value_length)
+{
+	CK_HASH_SIGN_ADDITIONAL_CONTEXT params;
+
+	if (value_length != sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	if (params.hedgeVariant > UINT64_MAX || params.hash > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hedgeVariant);
+	p11_rpc_buffer_add_byte_array (buffer,
+				       (unsigned char *)params.pContext,
+				       params.ulContextLen);
+	p11_rpc_buffer_add_uint64 (buffer, params.hash);
+}
+
+bool
+p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value (p11_buffer *buffer,
+								 size_t *offset,
+								 void *value,
+								 CK_ULONG *value_length)
+{
+	uint64_t val[2];
+	const unsigned char *data;
+	size_t len;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[0]) ||
+	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len) ||
+	    !p11_rpc_buffer_get_uint64 (buffer, offset, &val[1]))
+		return false;
+
+	if (value) {
+		CK_HASH_SIGN_ADDITIONAL_CONTEXT params;
+
+		params.hedgeVariant = val[0];
+		params.pContext = (void *) data;
+		params.ulContextLen = len;
+		params.hash = val[1];
+
+		memcpy (value, &params, sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT);
+
+	return true;
+}
+
 static p11_rpc_mechanism_serializer p11_rpc_mech_param_update_serializers[] = {
 	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mech_param_update, p11_rpc_buffer_get_ibm_btc_derive_mech_param_update },
 	{ CKM_IBM_KYBER, p11_rpc_buffer_add_ibm_kyber_mech_param_update, p11_rpc_buffer_get_ibm_kyber_mech_param_update },
@@ -2396,6 +2559,31 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_SHA512_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
 	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value },
 	{ CKM_ECDH1_DERIVE, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
+	{ CKM_EDDSA, p11_rpc_buffer_add_eddsa_mechanism_value, p11_rpc_buffer_get_eddsa_mechanism_value },
+	{ CKM_ML_DSA, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA, p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value, p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA224, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA384, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA512, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA3_224, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA3_256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA3_384, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHA3_512, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHAKE128, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_ML_DSA_SHAKE256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_SLH_DSA, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA, p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value, p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA224, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA384, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA512, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA3_224, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA3_256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA3_384, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHA3_512, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHAKE128, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
+	{ CKM_HASH_SLH_DSA_SHAKE256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
 	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value },
 	{ CKM_IBM_EC_X25519, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
 	{ CKM_IBM_EC_X448, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
@@ -2491,6 +2679,7 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_ECDSA_SHA256:
 	case CKM_ECDSA_SHA384:
 	case CKM_ECDSA_SHA512:
+	case CKM_EC_EDWARDS_KEY_PAIR_GEN:
 	case CKM_DH_PKCS_KEY_PAIR_GEN:
 	case CKM_DH_PKCS_PARAMETER_GEN:
 	case CKM_X9_42_DH_KEY_PAIR_GEN:
@@ -2591,31 +2780,7 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_ML_KEM_KEY_PAIR_GEN:
 	case CKM_ML_KEM:
 	case CKM_ML_DSA_KEY_PAIR_GEN:
-	case CKM_ML_DSA:
-	case CKM_HASH_ML_DSA:
-	case CKM_HASH_ML_DSA_SHA224:
-	case CKM_HASH_ML_DSA_SHA256:
-	case CKM_HASH_ML_DSA_SHA384:
-	case CKM_HASH_ML_DSA_SHA512:
-	case CKM_HASH_ML_DSA_SHA3_224:
-	case CKM_HASH_ML_DSA_SHA3_256:
-	case CKM_HASH_ML_DSA_SHA3_384:
-	case CKM_HASH_ML_DSA_SHA3_512:
-	case CKM_HASH_ML_DSA_SHAKE128:
-	case CKM_HASH_ML_DSA_SHAKE256:
 	case CKM_SLH_DSA_KEY_PAIR_GEN:
-	case CKM_SLH_DSA:
-	case CKM_HASH_SLH_DSA:
-	case CKM_HASH_SLH_DSA_SHA224:
-	case CKM_HASH_SLH_DSA_SHA256:
-	case CKM_HASH_SLH_DSA_SHA384:
-	case CKM_HASH_SLH_DSA_SHA512:
-	case CKM_HASH_SLH_DSA_SHA3_224:
-	case CKM_HASH_SLH_DSA_SHA3_256:
-	case CKM_HASH_SLH_DSA_SHA3_384:
-	case CKM_HASH_SLH_DSA_SHA3_512:
-	case CKM_HASH_SLH_DSA_SHAKE128:
-	case CKM_HASH_SLH_DSA_SHAKE256:
 	case CKM_HSS_KEY_PAIR_GEN:
 	case CKM_HSS:
 	case CKM_XMSS_KEY_PAIR_GEN:

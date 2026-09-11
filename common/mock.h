@@ -87,6 +87,12 @@ enum {
 	 */
 	CKM_MOCK_COUNT = (CKM_VENDOR_DEFINED | 6),
 
+	/*
+	 * CKM_MOCK_ENCAPSULATE (encapsulate/decapsulate key)
+	 * - Encapsulate produces a fake ciphertext and creates a secret key
+	 */
+	CKM_MOCK_ENCAPSULATE = (CKM_VENDOR_DEFINED | 7),
+
 	MOCK_SLOT_ONE_ID = 52,
 	MOCK_SLOT_TWO_ID = 134,
 
@@ -1587,7 +1593,7 @@ CK_RV        mock_C_DecapsulateKey                       (CK_SESSION_HANDLE sess
 					                  CK_ATTRIBUTE_PTR templ,
 					                  CK_ULONG attribute_count,
 					                  CK_BYTE_PTR ciphertext,
-					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_ULONG ciphertext_len,
 					                  CK_OBJECT_HANDLE_PTR key_ptr);
 
 CK_RV        mock_C_DecapsulateKey__invalid_handle       (CK_SESSION_HANDLE session,
@@ -1596,7 +1602,7 @@ CK_RV        mock_C_DecapsulateKey__invalid_handle       (CK_SESSION_HANDLE sess
 					                  CK_ATTRIBUTE_PTR templ,
 					                  CK_ULONG attribute_count,
 					                  CK_BYTE_PTR ciphertext,
-					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_ULONG ciphertext_len,
 					                  CK_OBJECT_HANDLE_PTR key_ptr);
 
 CK_RV        mock_X_DecapsulateKey__invalid_handle       (CK_X_FUNCTION_LIST *self,
@@ -1606,7 +1612,7 @@ CK_RV        mock_X_DecapsulateKey__invalid_handle       (CK_X_FUNCTION_LIST *se
 					                  CK_ATTRIBUTE_PTR templ,
 					                  CK_ULONG attribute_count,
 					                  CK_BYTE_PTR ciphertext,
-					                  CK_ULONG_PTR ciphertext_len,
+					                  CK_ULONG ciphertext_len,
 					                  CK_OBJECT_HANDLE_PTR key_ptr);
 
 CK_RV        mock_C_VerifySignatureInit                  (CK_SESSION_HANDLE session,

@@ -1133,6 +1133,7 @@ extern "C" {
 #define CKM_SKIPJACK_RELAYX                     (0x100aUL)
 #define CKM_KEA_KEY_PAIR_GEN                    (0x1010UL)
 #define CKM_KEA_KEY_DERIVE                      (0x1011UL)
+#define CKM_KEA_DERIVE                          (0x1012UL)
 #define CKM_FORTEZZA_TIMESTAMP                  (0x1020UL)
 #define CKM_BATON_KEY_GEN                       (0x1030UL)
 #define CKM_BATON_ECB128                        (0x1031UL)
@@ -2846,7 +2847,7 @@ _CK_DECLARE_FUNCTION (C_DecapsulateKey,
                        struct ck_attribute *templ,
                        unsigned long attribute_count,
                        unsigned char *ciphertext,
-                       unsigned long *ciphertext_len,
+                       unsigned long ciphertext_len,
                        ck_object_handle_t *key_ptr));
 _CK_DECLARE_FUNCTION (C_VerifySignatureInit,
                       (ck_session_handle_t session,

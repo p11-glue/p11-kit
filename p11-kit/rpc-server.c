@@ -2366,6 +2366,252 @@ rpc_C_MessageVerifyFinal (CK_X_FUNCTION_LIST *self,
 	END_CALL;
 }
 
+/* PKCS #11 3.2 */
+
+static CK_RV
+rpc_C_EncapsulateKey (CK_X_FUNCTION_LIST *self,
+                      p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE publicKey;
+	CK_ATTRIBUTE_PTR pTemplate;
+	CK_ULONG ulAttributeCount;
+	CK_BYTE_PTR ciphertext;
+	CK_ULONG ciphertext_len;
+	CK_OBJECT_HANDLE phKey;
+
+	BEGIN_CALL (EncapsulateKey);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (publicKey);
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount);
+		IN_BYTE_BUFFER (ciphertext, ciphertext_len);
+	PROCESS_CALL ((self, session, mechanism, publicKey, pTemplate, ulAttributeCount,
+	               ciphertext, &ciphertext_len, &phKey));
+		OUT_BYTE_ARRAY (ciphertext, ciphertext_len);
+		OUT_ULONG (phKey);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_DecapsulateKey (CK_X_FUNCTION_LIST *self,
+                      p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE private_key;
+	CK_ATTRIBUTE_PTR pTemplate;
+	CK_ULONG ulAttributeCount;
+	CK_BYTE_PTR ciphertext;
+	CK_ULONG ciphertext_len;
+	CK_OBJECT_HANDLE phKey;
+
+	BEGIN_CALL (DecapsulateKey);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (private_key);
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount);
+		IN_BYTE_ARRAY (ciphertext, ciphertext_len);
+	PROCESS_CALL ((self, session, mechanism, private_key, pTemplate, ulAttributeCount,
+	               ciphertext, ciphertext_len, &phKey));
+		OUT_ULONG (phKey);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifySignatureInit (CK_X_FUNCTION_LIST *self,
+                           p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE hKey;
+	CK_BYTE_PTR signature;
+	CK_ULONG signature_len;
+
+	BEGIN_CALL (VerifySignatureInit);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (hKey);
+		IN_BYTE_ARRAY (signature, signature_len);
+	PROCESS_CALL ((self, session, mechanism, hKey, signature, signature_len));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifySignature (CK_X_FUNCTION_LIST *self,
+                       p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_BYTE_PTR data;
+	CK_ULONG data_len;
+
+	BEGIN_CALL (VerifySignature);
+		IN_ULONG (session);
+		IN_BYTE_ARRAY (data, data_len);
+	PROCESS_CALL ((self, session, data, data_len));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifySignatureUpdate (CK_X_FUNCTION_LIST *self,
+                             p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_BYTE_PTR part;
+	CK_ULONG part_len;
+
+	BEGIN_CALL (VerifySignatureUpdate);
+		IN_ULONG (session);
+		IN_BYTE_ARRAY (part, part_len);
+	PROCESS_CALL ((self, session, part, part_len));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_VerifySignatureFinal (CK_X_FUNCTION_LIST *self,
+                            p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+
+	BEGIN_CALL (VerifySignatureFinal);
+		IN_ULONG (session);
+	PROCESS_CALL ((self, session));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_GetSessionValidationFlags (CK_X_FUNCTION_LIST *self,
+                                 p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_SESSION_VALIDATION_FLAGS_TYPE type;
+	CK_FLAGS flags;
+
+	BEGIN_CALL (GetSessionValidationFlags);
+		IN_ULONG (session);
+		IN_ULONG (type);
+	PROCESS_CALL ((self, session, type, &flags));
+		OUT_ULONG (flags);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_AsyncComplete (CK_X_FUNCTION_LIST *self,
+                     p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_BYTE_PTR function_name;
+	CK_ULONG function_name_len;
+	CK_ASYNC_DATA result = { 0, };
+
+	BEGIN_CALL (AsyncComplete);
+		IN_ULONG (session);
+		IN_BYTE_ARRAY (function_name, function_name_len);
+	PROCESS_CALL ((self, session, function_name, &result));
+		OUT_ULONG (result.ulVersion);
+		OUT_BYTE_ARRAY (result.pValue, result.ulValueLen);
+		OUT_ULONG (result.hObject);
+		OUT_ULONG (result.hAdditionalObject);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_AsyncGetID (CK_X_FUNCTION_LIST *self,
+                  p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_BYTE_PTR function_name;
+	CK_ULONG function_name_len;
+	CK_ULONG id;
+
+	BEGIN_CALL (AsyncGetID);
+		IN_ULONG (session);
+		IN_BYTE_ARRAY (function_name, function_name_len);
+	PROCESS_CALL ((self, session, function_name, &id));
+		OUT_ULONG (id);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_AsyncJoin (CK_X_FUNCTION_LIST *self,
+                 p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_BYTE_PTR function_name;
+	CK_ULONG function_name_len;
+	CK_ULONG id;
+	CK_BYTE_PTR data;
+	CK_ULONG data_len;
+
+	BEGIN_CALL (AsyncJoin);
+		IN_ULONG (session);
+		IN_BYTE_ARRAY (function_name, function_name_len);
+		IN_ULONG (id);
+		IN_BYTE_ARRAY (data, data_len);
+	PROCESS_CALL ((self, session, function_name, id, data, data_len));
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_WrapKeyAuthenticated (CK_X_FUNCTION_LIST *self,
+                            p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE wrapping_key;
+	CK_OBJECT_HANDLE hKey;
+	CK_BYTE_PTR associated_data;
+	CK_ULONG associated_data_len;
+	CK_BYTE_PTR wrapped_key;
+	CK_ULONG wrapped_key_len;
+
+	BEGIN_CALL (WrapKeyAuthenticated);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (wrapping_key);
+		IN_ULONG (hKey);
+		IN_BYTE_ARRAY (associated_data, associated_data_len);
+		IN_BYTE_BUFFER (wrapped_key, wrapped_key_len);
+	PROCESS_CALL ((self, session, mechanism, wrapping_key, hKey, associated_data,
+	               associated_data_len, wrapped_key, &wrapped_key_len));
+		OUT_BYTE_ARRAY (wrapped_key, wrapped_key_len);
+	END_CALL;
+}
+
+static CK_RV
+rpc_C_UnwrapKeyAuthenticated (CK_X_FUNCTION_LIST *self,
+                              p11_rpc_message *msg)
+{
+	CK_SESSION_HANDLE session;
+	CK_MECHANISM mechanism_;
+	CK_MECHANISM_PTR mechanism = &mechanism_;
+	CK_OBJECT_HANDLE unwrapping_key;
+	CK_BYTE_PTR wrapped_key;
+	CK_ULONG wrapped_key_len;
+	CK_ATTRIBUTE_PTR pTemplate;
+	CK_ULONG ulAttributeCount;
+	CK_BYTE_PTR associated_data;
+	CK_ULONG associated_data_len;
+	CK_OBJECT_HANDLE phKey;
+
+	BEGIN_CALL (UnwrapKeyAuthenticated);
+		IN_ULONG (session);
+		IN_MECHANISM (mechanism);
+		IN_ULONG (unwrapping_key);
+		IN_BYTE_ARRAY (wrapped_key, wrapped_key_len);
+		IN_BYTE_ARRAY (associated_data, associated_data_len);
+		IN_ATTRIBUTE_ARRAY (pTemplate, ulAttributeCount);
+	PROCESS_CALL ((self, session, mechanism, unwrapping_key, wrapped_key, wrapped_key_len,
+	               pTemplate, ulAttributeCount, associated_data, associated_data_len, &phKey));
+		OUT_ULONG (phKey);
+	END_CALL;
+}
+
 bool
 p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
                        p11_buffer *request,
@@ -2490,6 +2736,19 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 
 	CASE_CALL (C_InitToken2)
 	CASE_CALL (C_DeriveKey2)
+	/* PKCS #11 3.2 */
+	CASE_CALL (C_EncapsulateKey)
+	CASE_CALL (C_DecapsulateKey)
+	CASE_CALL (C_VerifySignatureInit)
+	CASE_CALL (C_VerifySignature)
+	CASE_CALL (C_VerifySignatureUpdate)
+	CASE_CALL (C_VerifySignatureFinal)
+	CASE_CALL (C_GetSessionValidationFlags)
+	CASE_CALL (C_AsyncComplete)
+	CASE_CALL (C_AsyncGetID)
+	CASE_CALL (C_AsyncJoin)
+	CASE_CALL (C_WrapKeyAuthenticated)
+	CASE_CALL (C_UnwrapKeyAuthenticated)
 	#undef CASE_CALL
 	default:
 		/* This should have been caught by the parse code */
