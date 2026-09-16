@@ -279,8 +279,14 @@ print_object (p11_list_printer *printer,
 	for (i = 0; i < n_attrs; ++i) {
 		p11_buffer buffer;
 
-		if (attrs[i].pValue != NULL_PTR ||
-		    attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION)
+		/* Attribute is not available. Drop the buffer so we don't
+		 * pass CK_UNAVAILABLE_INFORMATION as buffer length later */
+		if (attrs[i].ulValueLen == CK_UNAVAILABLE_INFORMATION) {
+			attrs[i].pValue = NULL_PTR;
+			continue;
+		}
+
+		if (attrs[i].pValue != NULL_PTR)
 			continue;
 
 		if (!p11_buffer_init_null (&buffer, attrs[i].ulValueLen) ||
