@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: p11-kit\n"
 "Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?component=p11-"
 "kit&product=p11-glue&resolution=---\n"
-"POT-Creation-Date: 2026-07-09 11:37+0000\n"
-"PO-Revision-Date: 2026-07-10 09:13+0200\n"
+"POT-Creation-Date: 2026-09-18 14:31+0000\n"
+"PO-Revision-Date: 2026-09-21 22:32+0200\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian GNOME Translation Team <gnome-si@googlegroups.com>\n"
 "Language: sl\n"
@@ -71,20 +71,20 @@ msgid "invalid oid value: %s"
 msgstr "neveljavna vrednost oid: %s"
 
 #: p11-kit/add-profile.c:85 p11-kit/delete-object.c:69
-#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:442
-#: p11-kit/generate-keypair.c:310 p11-kit/import-object.c:490
-#: p11-kit/list-objects.c:361 p11-kit/list-profiles.c:83
+#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:573
+#: p11-kit/generate-keypair.c:448 p11-kit/import-object.c:641
+#: p11-kit/list-objects.c:367 p11-kit/list-profiles.c:83
 msgid "failed to initialize iterator"
 msgstr "inicializacija iteratorja ni uspela"
 
 #: p11-kit/add-profile.c:92 p11-kit/delete-profile.c:92
-#: p11-kit/generate-keypair.c:317 p11-kit/import-object.c:497
+#: p11-kit/generate-keypair.c:455 p11-kit/import-object.c:648
 #: p11-kit/list-profiles.c:90 p11-kit/list-mechanisms.c:152
 msgid "no matching token"
 msgstr "ni ujemajočega se žetona"
 
 #: p11-kit/add-profile.c:94 p11-kit/delete-profile.c:94
-#: p11-kit/generate-keypair.c:319 p11-kit/import-object.c:499
+#: p11-kit/generate-keypair.c:457 p11-kit/import-object.c:650
 #: p11-kit/list-profiles.c:92 p11-kit/list-mechanisms.c:154
 #, c-format
 msgid "failed to find token: %s"
@@ -121,26 +121,28 @@ msgstr "ustvarjanje predmeta profila je spodletelo: %s"
 #: p11-kit/add-profile.c:251 p11-kit/delete-object.c:164
 #: p11-kit/delete-object.c:174 p11-kit/delete-profile.c:182
 #: p11-kit/delete-profile.c:241 p11-kit/delete-profile.c:251
-#: p11-kit/export-object.c:557 p11-kit/export-object.c:567
-#: p11-kit/generate-keypair.c:185 p11-kit/generate-keypair.c:190
-#: p11-kit/generate-keypair.c:199 p11-kit/generate-keypair.c:205
-#: p11-kit/generate-keypair.c:228 p11-kit/generate-keypair.c:235
-#: p11-kit/generate-keypair.c:249 p11-kit/generate-keypair.c:255
-#: p11-kit/generate-keypair.c:264 p11-kit/generate-keypair.c:468
-#: p11-kit/generate-keypair.c:478 p11-kit/import-object.c:124
+#: p11-kit/export-object.c:688 p11-kit/export-object.c:698
+#: p11-kit/generate-keypair.c:304 p11-kit/generate-keypair.c:310
+#: p11-kit/generate-keypair.c:319 p11-kit/generate-keypair.c:325
+#: p11-kit/generate-keypair.c:348 p11-kit/generate-keypair.c:355
+#: p11-kit/generate-keypair.c:369 p11-kit/generate-keypair.c:375
+#: p11-kit/generate-keypair.c:384 p11-kit/generate-keypair.c:394
+#: p11-kit/generate-keypair.c:400 p11-kit/generate-keypair.c:633
+#: p11-kit/generate-keypair.c:643 p11-kit/import-object.c:124
 #: p11-kit/import-object.c:133 p11-kit/import-object.c:156
 #: p11-kit/import-object.c:196 p11-kit/import-object.c:205
 #: p11-kit/import-object.c:230 p11-kit/import-object.c:303
 #: p11-kit/import-object.c:371 p11-kit/import-object.c:379
-#: p11-kit/import-object.c:634 p11-kit/import-object.c:644
-#: p11-kit/list-objects.c:187 p11-kit/list-objects.c:274
-#: p11-kit/list-objects.c:288 p11-kit/list-objects.c:295
-#: p11-kit/list-objects.c:330 p11-kit/list-objects.c:441
-#: p11-kit/list-objects.c:451 p11-kit/list-profiles.c:215
-#: p11-kit/list-profiles.c:225 p11-kit/list-mechanisms.c:180
-#: p11-kit/list-mechanisms.c:273 p11-kit/list-mechanisms.c:283
-#: p11-kit/list-tokens.c:180 p11-kit/list-tokens.c:190 p11-kit/lists.c:97
-#: p11-kit/lists.c:185 p11-kit/lists.c:239
+#: p11-kit/import-object.c:529 p11-kit/import-object.c:785
+#: p11-kit/import-object.c:795 p11-kit/list-objects.c:187
+#: p11-kit/list-objects.c:274 p11-kit/list-objects.c:294
+#: p11-kit/list-objects.c:301 p11-kit/list-objects.c:336
+#: p11-kit/list-objects.c:447 p11-kit/list-objects.c:457
+#: p11-kit/list-profiles.c:215 p11-kit/list-profiles.c:225
+#: p11-kit/list-mechanisms.c:180 p11-kit/list-mechanisms.c:273
+#: p11-kit/list-mechanisms.c:283 p11-kit/list-tokens.c:180
+#: p11-kit/list-tokens.c:190 p11-kit/lists.c:97 p11-kit/lists.c:185
+#: p11-kit/lists.c:239
 msgid "failed to allocate memory"
 msgstr "ni mogoče dodeliti pomnilnika"
 
@@ -158,9 +160,9 @@ msgid "no profile specified"
 msgstr "profil ni določen"
 
 #: p11-kit/add-profile.c:246 p11-kit/delete-object.c:169
-#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:562
-#: p11-kit/generate-keypair.c:473 p11-kit/import-object.c:639
-#: p11-kit/list-objects.c:446 p11-kit/list-profiles.c:220
+#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:693
+#: p11-kit/generate-keypair.c:638 p11-kit/import-object.c:790
+#: p11-kit/list-objects.c:452 p11-kit/list-profiles.c:220
 #: p11-kit/list-mechanisms.c:278 p11-kit/list-tokens.c:185
 msgid "failed to parse URI"
 msgstr "razčlenjevanje URI je spodletelo"
@@ -200,11 +202,11 @@ msgstr "ni bilo moč dobiti stanja poti: %s"
 msgid "invalid setting '%s' defaulting to '%s'"
 msgstr "neveljavna nastavitev »%s«, privzeto bo »%s«"
 
-#: p11-kit/delete-object.c:76 p11-kit/export-object.c:449
+#: p11-kit/delete-object.c:76 p11-kit/export-object.c:580
 msgid "no matching object"
 msgstr "ni ujemajočega se predmeta"
 
-#: p11-kit/delete-object.c:78 p11-kit/export-object.c:451
+#: p11-kit/delete-object.c:78 p11-kit/export-object.c:582
 #, c-format
 msgid "failed to find object: %s"
 msgstr "predmeta ni možno najti: %s"
@@ -216,7 +218,8 @@ msgstr "ni možno uničiti predmeta: %s"
 
 #: p11-kit/export-object.c:116 p11-kit/export-object.c:176
 #: p11-kit/export-object.c:242 p11-kit/export-object.c:250
-#: p11-kit/export-object.c:344 p11-kit/export-object.c:399
+#: p11-kit/export-object.c:367 p11-kit/export-object.c:475
+#: p11-kit/export-object.c:530
 msgid "failed to retrieve attributes"
 msgstr "atributov ni bilo mogoče pridobiti"
 
@@ -224,44 +227,56 @@ msgstr "atributov ni bilo mogoče pridobiti"
 msgid "corrupted value in attributes"
 msgstr "poškodovana vrednost v atributih"
 
-#: p11-kit/export-object.c:317
+#: p11-kit/export-object.c:373
+msgid "failed to retrieve public key value"
+msgstr "Vrednosti javnega ključa ni možno pridobiti"
+
+#: p11-kit/export-object.c:378
+msgid "failed to retrieve parameter set"
+msgstr "nabora parametrov ni možno pridobiti"
+
+#: p11-kit/export-object.c:384
+msgid "unknown PQC key type/parameter set combination"
+msgstr "Neznana kombinacija vrste ključa/nabora parametrov PQC"
+
+#: p11-kit/export-object.c:448
 #, c-format
 msgid "unsupported key type: %lu"
 msgstr "nepodprta vrsta ključa: %lu"
 
-#: p11-kit/export-object.c:358
+#: p11-kit/export-object.c:489
 msgid "unable to determine key type"
 msgstr "vrste ključa ni možno določiti"
 
-#: p11-kit/export-object.c:364 p11-kit/import-object.c:664
+#: p11-kit/export-object.c:495 p11-kit/import-object.c:815
 msgid "ASN.1 support is not compiled in"
 msgstr "Podpora ASN.1 ni prevedena v"
 
-#: p11-kit/export-object.c:371
+#: p11-kit/export-object.c:502
 msgid "failed to export public key"
 msgstr "izvoz javnega ključa ni uspel"
 
-#: p11-kit/export-object.c:405
+#: p11-kit/export-object.c:536
 msgid "unrecognized certificate type"
 msgstr "neprepoznana vrsta potrdila"
 
-#: p11-kit/export-object.c:411
+#: p11-kit/export-object.c:542
 msgid "no valid certificate value"
 msgstr "ni veljavne vrednosti potrdila"
 
-#: p11-kit/export-object.c:416
+#: p11-kit/export-object.c:547
 msgid "failed to convert DER to PEM"
 msgstr "pretvorba DER v PEM ni uspela"
 
-#: p11-kit/export-object.c:457
+#: p11-kit/export-object.c:588
 msgid "failed to retrieve attribute of an object"
 msgstr "pridobivanje atributa predmeta ni uspelo"
 
-#: p11-kit/export-object.c:471
+#: p11-kit/export-object.c:602
 msgid "unsupported object class"
 msgstr "nepodprt razred predmeta"
 
-#: p11-kit/export-object.c:476
+#: p11-kit/export-object.c:607
 msgid "failed to write PEM data to stdout"
 msgstr "ni bilo mogoče zapisati podatkov PEM v stdout"
 
@@ -269,60 +284,80 @@ msgstr "ni bilo mogoče zapisati podatkov PEM v stdout"
 msgid "filter cannot be initialized"
 msgstr "ni moč nastaviti filtra"
 
-#: p11-kit/generate-keypair.c:134
+#: p11-kit/generate-keypair.c:209
 msgid "no bits specified"
 msgstr "ni določenih bitov"
 
-#: p11-kit/generate-keypair.c:141
+#: p11-kit/generate-keypair.c:216
 msgid "no curve specified"
 msgstr "krivulja ni določena"
 
-#: p11-kit/generate-keypair.c:146
+#: p11-kit/generate-keypair.c:224
+msgid "no parameter-set specified"
+msgstr "nabor parametrov ni določen"
+
+#: p11-kit/generate-keypair.c:229
 msgid "no type specified"
 msgstr "vrsta ni določena"
 
-#: p11-kit/generate-keypair.c:149 p11-kit/generate-keypair.c:270
+#: p11-kit/generate-keypair.c:232
 #, c-format
-msgid "unkwnown mechanism type in %s"
+msgid "unknown mechanism type in %s"
 msgstr "neznana vrsta mehanizma v %s"
 
-#: p11-kit/generate-keypair.c:154
+#: p11-kit/generate-keypair.c:237
 #, c-format
 msgid "both %s and %s cannot be specified at once"
 msgstr "%s in %s ni mogoče določiti hkrati"
 
-#: p11-kit/generate-keypair.c:218 p11-kit/import-object.c:146
+#: p11-kit/generate-keypair.c:250 p11-kit/generate-keypair.c:258
+#: p11-kit/generate-keypair.c:262 p11-kit/generate-keypair.c:618
+#, c-format
+msgid "%s cannot be used with this key type"
+msgstr "%s s to vrsto ključa ni moč uporabiti"
+
+#: p11-kit/generate-keypair.c:338 p11-kit/import-object.c:146
 #: p11-kit/import-object.c:219
 #, c-format
 msgid "failed to decode hex value: %s"
 msgstr "dekodiranje šestnajstiške vrednosti ni uspelo: %s"
 
-#: p11-kit/generate-keypair.c:304
+#: p11-kit/generate-keypair.c:406
+#, c-format
+msgid "unkwnown mechanism type in %s"
+msgstr "neznana vrsta mehanizma v %s"
+
+#: p11-kit/generate-keypair.c:442
 msgid "failed to create key templates"
 msgstr "ustvarjanje predlog ključa ni uspelo"
 
-#: p11-kit/generate-keypair.c:334
+#: p11-kit/generate-keypair.c:472
 #, c-format
 msgid "key-pair generation failed: %s"
 msgstr "generiranje parov ključev ni uspelo: %s"
 
-#: p11-kit/generate-keypair.c:414
+#: p11-kit/generate-keypair.c:558
 #, c-format
 msgid "unknown mechanism type: %s"
 msgstr "neznana vrsta mehanizma: %s"
 
-#: p11-kit/generate-keypair.c:421
+#: p11-kit/generate-keypair.c:565
 #, c-format
 msgid "failed to parse bits value: %s"
 msgstr "ni bilo moč razčleniti bitne vrednosti: %s"
 
-#: p11-kit/generate-keypair.c:428
+#: p11-kit/generate-keypair.c:572
 #, c-format
 msgid "unknown curve name: %s"
 msgstr "neznano ime krivulje: %s"
 
+#: p11-kit/generate-keypair.c:623
+#, c-format
+msgid "unknown parameter-set: %s"
+msgstr "neznan nabor parametrov: %s"
+
 #: p11-kit/import-object.c:109 p11-kit/import-object.c:265
-#: p11-kit/import-object.c:271 p11-kit/import-object.c:409
+#: p11-kit/import-object.c:271 p11-kit/import-object.c:555
 msgid "failed to parse ASN.1 structure"
 msgstr "ni bilo moč razčleniti strukture ASN.1"
 
@@ -330,12 +365,12 @@ msgstr "ni bilo moč razčleniti strukture ASN.1"
 msgid "failed to obtain certificate subject name"
 msgstr "pridobivanje imena subjekta potrdila ni uspelo"
 
-#: p11-kit/import-object.c:164 p11-kit/import-object.c:437
+#: p11-kit/import-object.c:164 p11-kit/import-object.c:588
 #, c-format
 msgid "failed to create object: %s"
 msgstr "ni bilo moč ustvariti predmeta: %s"
 
-#: p11-kit/import-object.c:259
+#: p11-kit/import-object.c:259 p11-kit/import-object.c:495
 msgid "failed to obtain subject public key data"
 msgstr "ni uspelo pridobiti podatkov o javnem ključu subjekta"
 
@@ -363,34 +398,44 @@ msgstr "poškodovana vrednost EC točke"
 msgid "failed to DER encode EC point"
 msgstr "kodiranje točke EC z DER je spodletelo"
 
-#: p11-kit/import-object.c:415
+#: p11-kit/import-object.c:501
+msgid "corrupted public key value"
+msgstr "poškodovana vrednost javnega ključa"
+
+#: p11-kit/import-object.c:509
+#, c-format
+msgid "invalid public key size %zu for parameter set (expected %zu)"
+msgstr ""
+"Neveljavna velikost javnega ključa %zu za nabor parametrov (pričakovano %zu)"
+
+#: p11-kit/import-object.c:561
 msgid "failed to obtain algorithm OID"
 msgstr "ni uspelo pridobiti algoritma OID"
 
-#: p11-kit/import-object.c:428
+#: p11-kit/import-object.c:578
 #, c-format
 msgid "unrecognized algorithm OID: %s"
 msgstr "neprepoznan algoritem OID: %s"
 
-#: p11-kit/import-object.c:468
+#: p11-kit/import-object.c:619
 #, c-format
 msgid "unrecognized PEM label: %s"
 msgstr "neprepoznana oznaka PEM: %s"
 
-#: p11-kit/import-object.c:510
+#: p11-kit/import-object.c:661
 msgid "failed to load ASN.1 definitions"
 msgstr "ni bilo mogoče naložiti definicij ASN.1"
 
-#: p11-kit/import-object.c:516
+#: p11-kit/import-object.c:667
 #, c-format
 msgid "failed to read file: %s"
 msgstr "branje datoteke je spodletelo: %s"
 
-#: p11-kit/import-object.c:522
+#: p11-kit/import-object.c:673
 msgid "no object to import"
 msgstr "ni predmeta za uvoz"
 
-#: p11-kit/import-object.c:628
+#: p11-kit/import-object.c:779
 msgid "no file specified"
 msgstr "datoteka ni določena"
 
@@ -964,19 +1009,19 @@ msgstr "prejeto polje atributov z napačnim številom atributov"
 msgid "returned attributes in invalid order"
 msgstr "vrnjeni atributi v napačnem vrstnem redu"
 
-#: p11-kit/rpc-client.c:812 trust/module.c:384
+#: p11-kit/rpc-client.c:813 trust/module.c:384
 msgid "invalid set of mutex calls supplied"
 msgstr "podan neveljaven nabor klicev mutex"
 
-#: p11-kit/rpc-client.c:821 trust/module.c:393
+#: p11-kit/rpc-client.c:822 trust/module.c:393
 msgid "can't do without os locking"
 msgstr "ne gre brez zaklepanja operacijskega sistema"
 
-#: p11-kit/rpc-client.c:834
+#: p11-kit/rpc-client.c:835
 msgid "C_Initialize called twice for same process"
 msgstr "C_Initialize klican dvakrat za isto opravilo"
 
-#: p11-kit/rpc-client.c:942
+#: p11-kit/rpc-client.c:943
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
 msgstr "zaključevanje rpc modula je vrnilo napako: %lu"
@@ -1015,40 +1060,40 @@ msgstr "ni bilo moč začetno nastaviti odziva rpc"
 msgid "invalid handshake received from connecting module"
 msgstr "prejeto neveljavno rokovanje od modula, ki se povezuje"
 
-#: p11-kit/rpc-server.c:2388
+#: p11-kit/rpc-server.c:2634
 msgid "couldn't parse pkcs11 rpc message"
 msgstr "ni bilo moč razčleniti sporočila rpc pkcs11"
 
-#: p11-kit/rpc-server.c:2501
+#: p11-kit/rpc-server.c:2760
 msgid "out of memory error putting together message"
 msgstr "napaka pomanjkanja pomnilnika med sestavljanjem sporočila"
 
-#: p11-kit/rpc-server.c:2527
+#: p11-kit/rpc-server.c:2786
 msgid "out of memory responding with error"
 msgstr "pomanjkanje pomnilnika med odzivanjem z napako"
 
-#: p11-kit/rpc-server.c:2573
+#: p11-kit/rpc-server.c:2832
 #, c-format
 msgid "unsupported version received: %d"
 msgstr "prejeta nepodprta različica: %d"
 
-#: p11-kit/rpc-server.c:2579
+#: p11-kit/rpc-server.c:2838
 msgid "couldn't read credential byte"
 msgstr "ni bilo moč prebrati bajta poverila"
 
-#: p11-kit/rpc-server.c:2591
+#: p11-kit/rpc-server.c:2850
 msgid "couldn't write credential byte"
 msgstr "ni bilo moč zapisati bajta poverila"
 
-#: p11-kit/rpc-server.c:2614
+#: p11-kit/rpc-server.c:2873
 msgid "failed to read rpc message"
 msgstr "napaka branja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2619
+#: p11-kit/rpc-server.c:2878
 msgid "unexpected error handling rpc message"
 msgstr "nepričakovana napaka obravnavanja sporočila rpc"
 
-#: p11-kit/rpc-server.c:2637
+#: p11-kit/rpc-server.c:2896
 msgid "failed to write rpc message"
 msgstr "napaka pisanja sporočila rpc"
 
