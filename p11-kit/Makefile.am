@@ -43,6 +43,23 @@ p11-kit/virtual.c: $(VIRTUAL_GENERATED)
 
 CLEANFILES += $(VIRTUAL_GENERATED)
 
+RPC_GENERATED = \
+	p11-kit/rpc-message-generated.h \
+	$(NULL)
+
+BUILT_SOURCES += $(RPC_GENERATED)
+
+EXTRA_DIST += $(RPC_GENERATED)
+
+CLEANFILES += $(RPC_GENERATED)
+
+p11-kit/rpc-message-generated.h: Makefile p11-kit/gen-rpc-serializers.py p11-kit/templates/rpc-serializers.py p11-kit/templates/rpc-serializers-excludes.list p11-kit/rpc-message.c subprojects/pkcs11-json/generated/pkcs11.json
+	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-rpc-serializers.py \
+		--template $(srcdir)/p11-kit/templates/rpc-serializers.py \
+		--excludes $(srcdir)/p11-kit/templates/rpc-serializers-excludes.list \
+		--used-by $(srcdir)/p11-kit/rpc-message.c \
+		--infile $(srcdir)/subprojects/pkcs11-json/generated/pkcs11.json --outfile $@
+
 p11-kit/virtual-ffi-generated.h: Makefile p11-kit/gen-wrappers.py subprojects/pkcs11-json/generated/pkcs11.json
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/p11-kit/gen-wrappers.py \
 		--template $(srcdir)/p11-kit/templates/binding-wrappers.py \
@@ -254,6 +271,7 @@ EXTRA_DIST += \
 	p11-kit/gen-pkcs11-gnu.sh \
 	p11-kit/gen-wrappers.py \
 	p11-kit/gen-fixed-closures.py \
+	p11-kit/gen-rpc-serializers.py \
 	p11-kit/meson.build \
 	p11-kit/meson_post_install.sh \
 	p11-kit/libp11-kit.map \

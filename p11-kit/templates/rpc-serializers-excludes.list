@@ -1,0 +1,35 @@
+# Mechanism parameter structs that gen-rpc-serializers.py could serialize,
+# but are not on the wire.
+#
+# Every struct with a derivable wire format has to be either used by
+# p11_rpc_mechanism_serializers in rpc-message.c or listed here, so that a
+# parameter struct appearing in a new pkcs11.h cannot be quietly ignored.
+# Listing one here says "not on the wire yet", not "cannot be done": moving
+# a struct off this list and into the table is all it takes to let the
+# corresponding mechanisms be proxied.
+
+CK_AES_CCM_PARAMS
+CK_AES_GCM_PARAMS
+CK_CAMELLIA_CTR_PARAMS
+CK_CCM_MESSAGE_PARAMS
+CK_CCM_PARAMS
+CK_CCM_WRAP_PARAMS
+CK_ECDH_AES_KEY_WRAP_PARAMS
+CK_GCM_WRAP_PARAMS
+CK_GOSTR3410_DERIVE_PARAMS
+CK_GOSTR3410_KEY_WRAP_PARAMS
+CK_HKDF_PARAMS
+CK_IKE1_EXTENDED_DERIVE_PARAMS
+CK_IKE1_PRF_DERIVE_PARAMS
+CK_IKE2_PRF_PLUS_DERIVE_PARAMS
+CK_IKE_PRF_DERIVE_PARAMS
+CK_KEY_WRAP_SET_OAEP_PARAMS
+CK_PKCS5_PBKD2_PARAMS2
+CK_RC2_CBC_PARAMS
+CK_RC2_MAC_GENERAL_PARAMS
+CK_RC5_CBC_PARAMS
+CK_RC5_MAC_GENERAL_PARAMS
+CK_RC5_PARAMS
+CK_TLS_MAC_PARAMS
+CK_X9_42_DH1_DERIVE_PARAMS
+CK_XEDDSA_PARAMS

@@ -24,6 +24,25 @@ libp11_kit_internal_sources = [
   'rpc-client.c'
 ]
 
+libp11_kit_internal_sources += custom_target('generate rpc-message-generated.h',
+                                             input: pkcs11_json,
+                                             output: 'rpc-message-generated.h',
+                                             command: [
+                                               python,
+                                               meson.current_source_dir() / 'gen-rpc-serializers.py',
+                                               '--template', meson.current_source_dir() / 'templates' / 'rpc-serializers.py',
+                                               '--excludes', meson.current_source_dir() / 'templates' / 'rpc-serializers-excludes.list',
+                                               '--used-by', meson.current_source_dir() / 'rpc-message.c',
+                                               '--infile', '@INPUT@',
+                                               '--outfile', '@OUTPUT@',
+                                             ],
+                                             depend_files: files(
+                                               'gen-rpc-serializers.py',
+                                               'templates/rpc-serializers.py',
+                                               'templates/rpc-serializers-excludes.list',
+                                               'rpc-message.c',
+                                             ))
+
 libp11_kit_internal_sources += custom_target('generate virtual-ffi-generated.h',
                                              input: pkcs11_json,
                                              output: 'virtual-ffi-generated.h',

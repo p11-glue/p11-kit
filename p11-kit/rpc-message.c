@@ -1464,263 +1464,10 @@ typedef struct {
 	p11_rpc_value_decoder decode;
 } p11_rpc_mechanism_serializer;
 
-void
-p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value (p11_buffer *buffer,
-						 const void *value,
-						 CK_ULONG value_length)
-{
-	CK_RSA_PKCS_PSS_PARAMS params;
-
-	/* Check if value can be converted to CK_RSA_PKCS_PSS_PARAMS. */
-	if (value_length != sizeof (CK_RSA_PKCS_PSS_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.hashAlg, params.mgf, and params.sLen can be
-	 * converted to uint64_t. */
-	if (params.hashAlg > UINT64_MAX || params.mgf > UINT64_MAX ||
-	    params.sLen > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.hashAlg);
-	p11_rpc_buffer_add_uint64 (buffer, params.mgf);
-	p11_rpc_buffer_add_uint64 (buffer, params.sLen);
-}
-
-bool
-p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value (p11_buffer *buffer,
-						 size_t *offset,
-						 void *value,
-						 CK_ULONG *value_length)
-{
-	uint64_t val[3];
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[0]))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[1]))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[2]))
-		return false;
-
-	if (value) {
-		CK_RSA_PKCS_PSS_PARAMS params;
-
-		params.hashAlg = val[0];
-		params.mgf = val[1];
-		params.sLen = val[2];
-
-		memcpy (value, &params, sizeof (CK_RSA_PKCS_PSS_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_RSA_PKCS_PSS_PARAMS);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
-						  const void *value,
-						  CK_ULONG value_length)
-{
-	CK_RSA_PKCS_OAEP_PARAMS params;
-
-	/* Check if value can be converted to CK_RSA_PKCS_OAEP_PARAMS. */
-	if (value_length != sizeof (CK_RSA_PKCS_OAEP_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.hashAlg, params.mgf, and params.source can be
-	 * converted to uint64_t. */
-	if (params.hashAlg > UINT64_MAX || params.mgf > UINT64_MAX ||
-	    params.source > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.hashAlg);
-	p11_rpc_buffer_add_uint64 (buffer, params.mgf);
-	p11_rpc_buffer_add_uint64 (buffer, params.source);
-
-	/* parmas.pSourceData can only be an array of CK_BYTE or
-	 * NULL */
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pSourceData,
-				       params.ulSourceDataLen);
-}
-
-bool
-p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value (p11_buffer *buffer,
-						  size_t *offset,
-						  void *value,
-						  CK_ULONG *value_length)
-{
-	uint64_t val[3];
-	const unsigned char *data;
-	size_t len;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[0]))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[1]))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val[2]))
-		return false;
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
-		return false;
-
-	if (value) {
-		CK_RSA_PKCS_OAEP_PARAMS params;
-
-		params.hashAlg = val[0];
-		params.mgf = val[1];
-		params.source = val[2];
-		params.pSourceData = (void *) data;
-		params.ulSourceDataLen = len;
-
-		memcpy (value, &params, sizeof (CK_RSA_PKCS_OAEP_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_RSA_PKCS_OAEP_PARAMS);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_ecdh1_derive_mechanism_value (p11_buffer *buffer,
-						 const void *value,
-						 CK_ULONG value_length)
-{
-	CK_ECDH1_DERIVE_PARAMS params;
-
-	/* Check if value can be converted to CK_ECDH1_DERIVE_PARAMS. */
-	if (value_length != sizeof (CK_ECDH1_DERIVE_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.kdf can be converted to uint64_t. */
-	if (params.kdf > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.kdf);
-
-	/* parmas.pSharedData can only be an array of CK_BYTE or
-	 * NULL */
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pSharedData,
-				       params.ulSharedDataLen);
-
-	/* parmas.pPublicData can only be an array of CK_BYTE or
-	 * NULL */
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pPublicData,
-				       params.ulPublicDataLen);
-}
-
-bool
-p11_rpc_buffer_get_ecdh1_derive_mechanism_value (p11_buffer *buffer,
-						 size_t *offset,
-						 void *value,
-						 CK_ULONG *value_length)
-{
-	uint64_t val;
-	const unsigned char *data1, *data2;
-	size_t len1, len2;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
-		return false;
-
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data1, &len1))
-		return false;
-
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data2, &len2))
-		return false;
-
-
-	if (value) {
-		CK_ECDH1_DERIVE_PARAMS params;
-
-		params.kdf = val;
-		params.pSharedData = (void *) data1;
-		params.ulSharedDataLen = len1;
-		params.pPublicData = (void *) data2;
-		params.ulPublicDataLen = len2;
-
-		memcpy (value, &params, sizeof (CK_ECDH1_DERIVE_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_ECDH1_DERIVE_PARAMS);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
-						       const void *value,
-						       CK_ULONG value_length)
-{
-	CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params;
-
-	/* Check if value can be converted to CKM_IBM_ATTRIBUTEBOUND_WRAP. */
-	if (value_length != sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.hSignVerifyKey can be converted to uint64_t. */
-	if (params.hSignVerifyKey > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.hSignVerifyKey);
-}
-
-bool
-p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
-						       size_t *offset,
-						       void *value,
-						       CK_ULONG *value_length)
-{
-	uint64_t val = 0;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
-		return false;
-
-	if (value) {
-		CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params = { 0 };
-
-		params.hSignVerifyKey = val;
-
-		memcpy (value, &params, sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS);
-
-	return true;
-}
-
-void
+static void
 p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
-					 const void *value,
-					 CK_ULONG value_length)
+						const void *value,
+						CK_ULONG value_length)
 {
 	CK_IBM_KYBER_PARAMS params;
 
@@ -1746,11 +1493,11 @@ p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
 	}
 }
 
-bool
+static bool
 p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
-					 size_t *offset,
-					 void *value,
-					 CK_ULONG *value_length)
+						size_t *offset,
+						void *value,
+						CK_ULONG *value_length)
 {
 	const unsigned char *data;
 	size_t len;
@@ -1795,10 +1542,10 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
-					 const void *value,
-					 CK_ULONG value_length)
+						     const void *value,
+						     CK_ULONG value_length)
 {
 	CK_IBM_BTC_DERIVE_PARAMS params;
 
@@ -1818,11 +1565,11 @@ p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 	}
 }
 
-bool
+static bool
 p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
-					 size_t *offset,
-					 void *value,
-					 CK_ULONG *value_length)
+						     size_t *offset,
+						     void *value,
+						     CK_ULONG *value_length)
 {
 	const unsigned char *data;
 	unsigned char has_data;
@@ -1861,7 +1608,65 @@ p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 	return true;
 }
 
-void
+/*
+ * Serializers for the mechanism parameter structs whose layout can be
+ * derived from pkcs11.h; see gen-rpc-serializers.py.  Everything that
+ * cannot be derived - the vendor structs from pkcs11x.h, and the
+ * mechanisms whose parameter is a bare byte array or a single integer
+ * rather than a struct - is written out by hand below.
+ */
+#include "p11-kit/rpc-message-generated.h"
+
+static void
+p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
+						       const void *value,
+						       CK_ULONG value_length)
+{
+	CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params;
+
+	/* Check if value can be converted to CKM_IBM_ATTRIBUTEBOUND_WRAP. */
+	if (value_length != sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS)) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	memcpy (&params, value, value_length);
+
+	/* Check if params.hSignVerifyKey can be converted to uint64_t. */
+	if (params.hSignVerifyKey > UINT64_MAX) {
+		p11_buffer_fail (buffer);
+		return;
+	}
+
+	p11_rpc_buffer_add_uint64 (buffer, params.hSignVerifyKey);
+}
+
+static bool
+p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
+						       size_t *offset,
+						       void *value,
+						       CK_ULONG *value_length)
+{
+	uint64_t val = 0;
+
+	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
+		return false;
+
+	if (value) {
+		CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS params = { 0 };
+
+		params.hSignVerifyKey = val;
+
+		memcpy (value, &params, sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS));
+	}
+
+	if (value_length)
+		*value_length = sizeof (CK_IBM_ATTRIBUTEBOUND_WRAP_PARAMS);
+
+	return true;
+}
+
+static void
 p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 						    const void *value,
 						    CK_ULONG value_length)
@@ -1883,7 +1688,7 @@ p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 	p11_rpc_buffer_add_uint64 (buffer, params.submechanism);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 					    size_t *offset,
 					    void *value,
@@ -1908,7 +1713,7 @@ p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
 						       const void *value,
 						       CK_ULONG value_length)
@@ -1943,7 +1748,7 @@ p11_rpc_buffer_add_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
 	p11_rpc_buffer_add_uint64(buffer, params.version);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
 						   size_t *offset,
 						   void *value,
@@ -1979,7 +1784,7 @@ p11_rpc_buffer_get_ibm_btc_derive_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_ibm_kyber_mechanism_value (p11_buffer *buffer,
 					      const void *value,
 					      CK_ULONG value_length)
@@ -2028,7 +1833,7 @@ p11_rpc_buffer_add_ibm_kyber_mechanism_value (p11_buffer *buffer,
 	p11_rpc_buffer_add_uint64(buffer, params.hSecret);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_ibm_kyber_mechanism_value (p11_buffer *buffer,
 					      size_t *offset,
 					      void *value,
@@ -2083,7 +1888,7 @@ p11_rpc_buffer_get_ibm_kyber_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
 					   const void *value,
 					   CK_ULONG value_length)
@@ -2099,7 +1904,7 @@ p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
 				       value_length);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
 					   size_t *offset,
 					   void *value,
@@ -2123,137 +1928,7 @@ p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
-p11_rpc_buffer_add_aes_ctr_mechanism_value (p11_buffer *buffer,
-					    const void *value,
-					    CK_ULONG value_length)
-{
-	CK_AES_CTR_PARAMS params;
-
-	/* Check if value can be converted to CK_AES_CTR_PARAMS. */
-	if (value_length != sizeof (CK_AES_CTR_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.ulCounterBits can be converted to uint64_t. */
-	if (params.ulCounterBits > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.ulCounterBits);
-
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.cb,
-				       sizeof(params.cb));
-}
-
-bool
-p11_rpc_buffer_get_aes_ctr_mechanism_value (p11_buffer *buffer,
-					    size_t *offset,
-					    void *value,
-					    CK_ULONG *value_length)
-{
-	uint64_t val;
-	const unsigned char *data;
-	size_t len;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val))
-		return false;
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
-		return false;
-
-	if (value) {
-		CK_AES_CTR_PARAMS params;
-
-		params.ulCounterBits = val;
-
-		if (len != sizeof (params.cb))
-			return false;
-
-		memcpy (params.cb, data, sizeof (params.cb));
-		memcpy (value, &params, sizeof (CK_AES_CTR_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_AES_CTR_PARAMS);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_aes_gcm_mechanism_value (p11_buffer *buffer,
-					    const void *value,
-					    CK_ULONG value_length)
-{
-	CK_GCM_PARAMS params;
-
-	/* Check if value can be converted to CK_GCM_PARAMS. */
-	if (value_length != sizeof (CK_GCM_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	/* Check if params.ulTagBits/ulIvBits can be converted to uint64_t. */
-	if (params.ulTagBits > UINT64_MAX || params.ulIvBits > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pIv,
-				       params.ulIvLen);
-	p11_rpc_buffer_add_uint64 (buffer, params.ulIvBits);
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pAAD,
-				       params.ulAADLen);
-	p11_rpc_buffer_add_uint64 (buffer, params.ulTagBits);
-}
-
-bool
-p11_rpc_buffer_get_aes_gcm_mechanism_value (p11_buffer *buffer,
-					    size_t *offset,
-					    void *value,
-					    CK_ULONG *value_length)
-{
-	uint64_t val1, val2;
-	const unsigned char *data1, *data2;
-	size_t len1, len2;
-
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data1, &len1))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val1))
-		return false;
-	if (!p11_rpc_buffer_get_byte_array (buffer, offset, &data2, &len2))
-		return false;
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &val2))
-		return false;
-
-	if (value) {
-		CK_GCM_PARAMS params;
-
-		params.pIv = (void *) data1;
-		params.ulIvLen = len1;
-		params.ulIvBits = val1;
-		params.pAAD = (void *) data2;
-		params.ulAADLen = len2;
-		params.ulTagBits = val2;
-
-		memcpy (value, &params, sizeof (CK_GCM_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_GCM_PARAMS);
-
-	return true;
-}
-
-void
+static void
 p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
 					   const void *value,
 					   CK_ULONG value_length)
@@ -2269,7 +1944,7 @@ p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
 				       value_length);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
 					   size_t *offset,
 					   void *value,
@@ -2293,7 +1968,7 @@ p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_mac_general_mechanism_value (p11_buffer *buffer,
 						const void *value,
 						CK_ULONG value_length)
@@ -2316,7 +1991,7 @@ p11_rpc_buffer_add_mac_general_mechanism_value (p11_buffer *buffer,
 	p11_rpc_buffer_add_uint64 (buffer, params);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_mac_general_mechanism_value (p11_buffer *buffer,
 						size_t *offset,
 						void *value,
@@ -2339,7 +2014,7 @@ p11_rpc_buffer_get_mac_general_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
+static void
 p11_rpc_buffer_add_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 						   const void *value,
 						   CK_ULONG value_length)
@@ -2355,7 +2030,7 @@ p11_rpc_buffer_add_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 				       value_length);
 }
 
-bool
+static bool
 p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 						   size_t *offset,
 						   void *value,
@@ -2379,169 +2054,13 @@ p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-void
-p11_rpc_buffer_add_eddsa_mechanism_value (p11_buffer *buffer,
-					  const void *value,
-					  CK_ULONG value_length)
-{
-	CK_EDDSA_PARAMS params;
-
-	if (value_length != sizeof (CK_EDDSA_PARAMS)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	p11_rpc_buffer_add_byte (buffer, params.phFlag ? 1 : 0);
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pContextData,
-				       params.ulContextDataLen);
-}
-
-bool
-p11_rpc_buffer_get_eddsa_mechanism_value (p11_buffer *buffer,
-					  size_t *offset,
-					  void *value,
-					  CK_ULONG *value_length)
-{
-	unsigned char flag;
-	const unsigned char *data;
-	size_t len;
-
-	if (!p11_rpc_buffer_get_byte (buffer, offset, &flag) ||
-	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
-		return false;
-
-	if (value) {
-		CK_EDDSA_PARAMS params;
-
-		params.phFlag = flag ? CK_TRUE : CK_FALSE;
-		params.pContextData = (void *) data;
-		params.ulContextDataLen = len;
-
-		memcpy (value, &params, sizeof (CK_EDDSA_PARAMS));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_EDDSA_PARAMS);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_sign_additional_context_mechanism_value (p11_buffer *buffer,
-							    const void *value,
-							    CK_ULONG value_length)
-{
-	CK_SIGN_ADDITIONAL_CONTEXT params;
-
-	if (value_length != sizeof (CK_SIGN_ADDITIONAL_CONTEXT)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	if (params.hedgeVariant > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.hedgeVariant);
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pContext,
-				       params.ulContextLen);
-}
-
-bool
-p11_rpc_buffer_get_sign_additional_context_mechanism_value (p11_buffer *buffer,
-							    size_t *offset,
-							    void *value,
-							    CK_ULONG *value_length)
-{
-	uint64_t hedge_variant;
-	const unsigned char *data;
-	size_t len;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &hedge_variant) ||
-	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len))
-		return false;
-
-	if (value) {
-		CK_SIGN_ADDITIONAL_CONTEXT params;
-
-		params.hedgeVariant = hedge_variant;
-		params.pContext = (void *) data;
-		params.ulContextLen = len;
-
-		memcpy (value, &params, sizeof (CK_SIGN_ADDITIONAL_CONTEXT));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_SIGN_ADDITIONAL_CONTEXT);
-
-	return true;
-}
-
-void
-p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value (p11_buffer *buffer,
-								 const void *value,
-								 CK_ULONG value_length)
-{
-	CK_HASH_SIGN_ADDITIONAL_CONTEXT params;
-
-	if (value_length != sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT)) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	memcpy (&params, value, value_length);
-
-	if (params.hedgeVariant > UINT64_MAX || params.hash > UINT64_MAX) {
-		p11_buffer_fail (buffer);
-		return;
-	}
-
-	p11_rpc_buffer_add_uint64 (buffer, params.hedgeVariant);
-	p11_rpc_buffer_add_byte_array (buffer,
-				       (unsigned char *)params.pContext,
-				       params.ulContextLen);
-	p11_rpc_buffer_add_uint64 (buffer, params.hash);
-}
-
-bool
-p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value (p11_buffer *buffer,
-								 size_t *offset,
-								 void *value,
-								 CK_ULONG *value_length)
-{
-	uint64_t hedge_variant, hash;
-	const unsigned char *data;
-	size_t len;
-
-	if (!p11_rpc_buffer_get_uint64 (buffer, offset, &hedge_variant) ||
-	    !p11_rpc_buffer_get_byte_array (buffer, offset, &data, &len) ||
-	    !p11_rpc_buffer_get_uint64 (buffer, offset, &hash))
-		return false;
-
-	if (value) {
-		CK_HASH_SIGN_ADDITIONAL_CONTEXT params;
-
-		params.hedgeVariant = hedge_variant;
-		params.pContext = (void *) data;
-		params.ulContextLen = len;
-		params.hash = hash;
-
-		memcpy (value, &params, sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT));
-	}
-
-	if (value_length)
-		*value_length = sizeof (CK_HASH_SIGN_ADDITIONAL_CONTEXT);
-
-	return true;
-}
-
+/*
+ * These two tables are the wire format: they decide how the parameter of
+ * each mechanism is encoded, and a mechanism that is not listed here
+ * cannot be proxied at all.  Keep them hand-written, so that a mechanism
+ * starts going over the wire because somebody decided it should, not
+ * because a struct turned up in a new header.
+ */
 static p11_rpc_mechanism_serializer p11_rpc_mech_param_update_serializers[] = {
 	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mech_param_update, p11_rpc_buffer_get_ibm_btc_derive_mech_param_update },
 	{ CKM_IBM_KYBER, p11_rpc_buffer_add_ibm_kyber_mech_param_update, p11_rpc_buffer_get_ibm_kyber_mech_param_update },
@@ -2551,15 +2070,15 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_IBM_ECDSA_OTHER, p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value, p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value },
 	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mechanism_value, p11_rpc_buffer_get_ibm_btc_derive_mechanism_value },
 	{ CKM_IBM_KYBER, p11_rpc_buffer_add_ibm_kyber_mechanism_value, p11_rpc_buffer_get_ibm_kyber_mechanism_value },
-	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_SHA224_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_SHA256_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_SHA384_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_SHA512_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value },
-	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value },
-	{ CKM_ECDH1_DERIVE, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
-	{ CKM_EDDSA, p11_rpc_buffer_add_eddsa_mechanism_value, p11_rpc_buffer_get_eddsa_mechanism_value },
+	{ CKM_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_SHA1_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_SHA224_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_SHA256_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_SHA384_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_SHA512_RSA_PKCS_PSS, p11_rpc_buffer_add_rsa_pkcs_pss_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_pss_params_mechanism_value },
+	{ CKM_RSA_PKCS_OAEP, p11_rpc_buffer_add_rsa_pkcs_oaep_params_mechanism_value, p11_rpc_buffer_get_rsa_pkcs_oaep_params_mechanism_value },
+	{ CKM_ECDH1_DERIVE, p11_rpc_buffer_add_ecdh1_derive_params_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_params_mechanism_value },
+	{ CKM_EDDSA, p11_rpc_buffer_add_eddsa_params_mechanism_value, p11_rpc_buffer_get_eddsa_params_mechanism_value },
 	{ CKM_ML_DSA, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
 	{ CKM_HASH_ML_DSA, p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value, p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value },
 	{ CKM_HASH_ML_DSA_SHA224, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
@@ -2585,8 +2104,8 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_HASH_SLH_DSA_SHAKE128, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
 	{ CKM_HASH_SLH_DSA_SHAKE256, p11_rpc_buffer_add_sign_additional_context_mechanism_value, p11_rpc_buffer_get_sign_additional_context_mechanism_value },
 	{ CKM_IBM_ATTRIBUTEBOUND_WRAP, p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value, p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value },
-	{ CKM_IBM_EC_X25519, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
-	{ CKM_IBM_EC_X448, p11_rpc_buffer_add_ecdh1_derive_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_mechanism_value },
+	{ CKM_IBM_EC_X25519, p11_rpc_buffer_add_ecdh1_derive_params_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_params_mechanism_value },
+	{ CKM_IBM_EC_X448, p11_rpc_buffer_add_ecdh1_derive_params_mechanism_value, p11_rpc_buffer_get_ecdh1_derive_params_mechanism_value },
 	{ CKM_AES_CBC, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CBC_PAD, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_OFB, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
@@ -2595,8 +2114,8 @@ static p11_rpc_mechanism_serializer p11_rpc_mechanism_serializers[] = {
 	{ CKM_AES_CFB64, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CFB128, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
 	{ CKM_AES_CTS, p11_rpc_buffer_add_aes_iv_mechanism_value, p11_rpc_buffer_get_aes_iv_mechanism_value },
-	{ CKM_AES_CTR, p11_rpc_buffer_add_aes_ctr_mechanism_value, p11_rpc_buffer_get_aes_ctr_mechanism_value },
-	{ CKM_AES_GCM, p11_rpc_buffer_add_aes_gcm_mechanism_value, p11_rpc_buffer_get_aes_gcm_mechanism_value },
+	{ CKM_AES_CTR, p11_rpc_buffer_add_aes_ctr_params_mechanism_value, p11_rpc_buffer_get_aes_ctr_params_mechanism_value },
+	{ CKM_AES_GCM, p11_rpc_buffer_add_gcm_params_mechanism_value, p11_rpc_buffer_get_gcm_params_mechanism_value },
 	{ CKM_DES_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES_CBC_PAD, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
 	{ CKM_DES3_CBC, p11_rpc_buffer_add_des_iv_mechanism_value, p11_rpc_buffer_get_des_iv_mechanism_value },
