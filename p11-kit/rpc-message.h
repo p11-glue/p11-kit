@@ -322,6 +322,7 @@ typedef struct {
 	size_t parsed;
 	const char *sigverify;
 	void *extra;
+	uint8_t version;
 } p11_rpc_message;
 
 typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
