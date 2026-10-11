@@ -7,9 +7,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
-"POT-Creation-Date: 2021-03-06 07:45+0100\n"
-"PO-Revision-Date: 2026-03-01 08:39+0500\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?"
+"component=p11-kit&product=p11-glue&resolution=---\n"
+"POT-Creation-Date: 2026-09-18 14:31+0000\n"
+"PO-Revision-Date: 2026-10-11 20:06+0500\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh <kk_KZ@googlegroups.com>\n"
 "Language: kk\n"
@@ -17,14 +18,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.8\n"
+"X-Generator: Poedit 3.9\n"
 
-#: common/tool.c:184
+#: common/options.c:184
 #, c-format
 msgid "usage: %s command <args>...\n"
 msgstr "қолданылуы: %s команда <аргументтер>...\n"
 
-#: common/tool.c:185
+#: common/options.c:185
 #, c-format
 msgid ""
 "\n"
@@ -33,7 +34,7 @@ msgstr ""
 "\n"
 "Жалпы %s командалары:\n"
 
-#: common/tool.c:198
+#: common/options.c:198
 #, c-format
 msgid ""
 "\n"
@@ -42,24 +43,127 @@ msgstr ""
 "\n"
 "Көбірек ақпарат алу үшін '%s <команда> --help' қараңыз\n"
 
-#: common/tool.c:261 common/tool.c:333
+#: common/options.c:261 common/options.c:333
 msgid "no command specified"
 msgstr "команда көрсетілмеген"
 
-#: common/tool.c:277
+#: common/options.c:277
 #, c-format
 msgid "unknown global option: %s"
 msgstr "белгісіз глобалды опция: %s"
 
-#: common/tool.c:306
+#: common/options.c:306
 #, c-format
 msgid "unknown global option: -%c"
 msgstr "белгісіз глобалды опция: -%c"
 
-#: common/tool.c:358
+#. At this point we have no command
+#: common/options.c:358
 #, c-format
 msgid "'%s' is not a valid command. See '%s --help'"
 msgstr "'%s' — жарамды команда емес. '%s --help' қараңыз"
+
+#: common/persist.c:509
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "oid мәні жарамсыз: %s"
+
+#: p11-kit/add-profile.c:85 p11-kit/delete-object.c:69
+#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:573
+#: p11-kit/generate-keypair.c:448 p11-kit/import-object.c:641
+#: p11-kit/list-objects.c:367 p11-kit/list-profiles.c:83
+msgid "failed to initialize iterator"
+msgstr "итераторды іске қосу сәтсіз аяқталды"
+
+#: p11-kit/add-profile.c:92 p11-kit/delete-profile.c:92
+#: p11-kit/generate-keypair.c:455 p11-kit/import-object.c:648
+#: p11-kit/list-profiles.c:90 p11-kit/list-mechanisms.c:152
+msgid "no matching token"
+msgstr "сәйкес келетін токен жоқ"
+
+#: p11-kit/add-profile.c:94 p11-kit/delete-profile.c:94
+#: p11-kit/generate-keypair.c:457 p11-kit/import-object.c:650
+#: p11-kit/list-profiles.c:92 p11-kit/list-mechanisms.c:154
+#, c-format
+msgid "failed to find token: %s"
+msgstr "токенді табу сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:106 p11-kit/delete-profile.c:106
+#: p11-kit/list-profiles.c:104
+#, c-format
+msgid "failed to initialize search for objects: %s"
+msgstr "объектілерді іздеуді іске қосу сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:113 p11-kit/delete-profile.c:114
+#: p11-kit/list-profiles.c:112
+#, c-format
+msgid "failed to search for objects: %s"
+msgstr "объектілерді іздеу сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:119 p11-kit/delete-profile.c:130
+#: p11-kit/list-profiles.c:135
+#, c-format
+msgid "failed to finalize search for objects: %s"
+msgstr "объектілерді іздеуді аяқтау сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:124
+msgid "profile already exists"
+msgstr "профиль бар болып тұр"
+
+#: p11-kit/add-profile.c:130
+#, c-format
+msgid "failed to create profile object: %s"
+msgstr "профиль объектісін жасау сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:182 p11-kit/add-profile.c:241
+#: p11-kit/add-profile.c:251 p11-kit/delete-object.c:164
+#: p11-kit/delete-object.c:174 p11-kit/delete-profile.c:182
+#: p11-kit/delete-profile.c:241 p11-kit/delete-profile.c:251
+#: p11-kit/export-object.c:688 p11-kit/export-object.c:698
+#: p11-kit/generate-keypair.c:304 p11-kit/generate-keypair.c:310
+#: p11-kit/generate-keypair.c:319 p11-kit/generate-keypair.c:325
+#: p11-kit/generate-keypair.c:348 p11-kit/generate-keypair.c:355
+#: p11-kit/generate-keypair.c:369 p11-kit/generate-keypair.c:375
+#: p11-kit/generate-keypair.c:384 p11-kit/generate-keypair.c:394
+#: p11-kit/generate-keypair.c:400 p11-kit/generate-keypair.c:633
+#: p11-kit/generate-keypair.c:643 p11-kit/import-object.c:124
+#: p11-kit/import-object.c:133 p11-kit/import-object.c:156
+#: p11-kit/import-object.c:196 p11-kit/import-object.c:205
+#: p11-kit/import-object.c:230 p11-kit/import-object.c:303
+#: p11-kit/import-object.c:371 p11-kit/import-object.c:379
+#: p11-kit/import-object.c:529 p11-kit/import-object.c:785
+#: p11-kit/import-object.c:795 p11-kit/list-objects.c:187
+#: p11-kit/list-objects.c:274 p11-kit/list-objects.c:294
+#: p11-kit/list-objects.c:301 p11-kit/list-objects.c:336
+#: p11-kit/list-objects.c:447 p11-kit/list-objects.c:457
+#: p11-kit/list-profiles.c:215 p11-kit/list-profiles.c:225
+#: p11-kit/list-mechanisms.c:180 p11-kit/list-mechanisms.c:273
+#: p11-kit/list-mechanisms.c:283 p11-kit/list-tokens.c:180
+#: p11-kit/list-tokens.c:190 p11-kit/lists.c:97 p11-kit/lists.c:185
+#: p11-kit/lists.c:239
+msgid "failed to allocate memory"
+msgstr "жадыны бөлу сәтсіз аяқталды"
+
+#: p11-kit/add-profile.c:200 p11-kit/delete-profile.c:200
+msgid "multiple profiles specified"
+msgstr "бірнеше профиль көрсетілген"
+
+#: p11-kit/add-profile.c:208 p11-kit/delete-profile.c:208
+#, c-format
+msgid "failed to convert profile argument: %s"
+msgstr "профиль аргументін түрлендіру сәтсіз аяқталды: %s"
+
+#: p11-kit/add-profile.c:235 p11-kit/delete-profile.c:235
+msgid "no profile specified"
+msgstr "профиль көрсетілмеген"
+
+#: p11-kit/add-profile.c:246 p11-kit/delete-object.c:169
+#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:693
+#: p11-kit/generate-keypair.c:638 p11-kit/import-object.c:790
+#: p11-kit/list-objects.c:452 p11-kit/list-profiles.c:220
+#: p11-kit/list-mechanisms.c:278 p11-kit/list-tokens.c:185
+msgid "failed to parse URI"
+msgstr "URI талдау сәтсіз аяқталды"
 
 #: p11-kit/conf.c:161
 #, c-format
@@ -81,31 +185,309 @@ msgstr "'user-config' үшін жарамсыз режим: %s"
 msgid "invalid config filename, will be ignored in the future: %s"
 msgstr "баптау файлының аты жарамсыз, болашақта еленбейді: %s"
 
-#: p11-kit/conf.c:428 trust/save.c:558 trust/token.c:269
+#: p11-kit/conf.c:427 trust/save.c:586 trust/token.c:282
 #, c-format
 msgid "couldn't list directory: %s"
 msgstr "бума тізімін шығару мүмкін емес: %s"
 
-#: p11-kit/conf.c:439
+#: p11-kit/conf.c:438
 #, c-format
 msgid "couldn't stat path: %s"
 msgstr "жол күйін алу мүмкін емес: %s"
 
-#: p11-kit/conf.c:528
+#: p11-kit/conf.c:526
 #, c-format
 msgid "invalid setting '%s' defaulting to '%s'"
 msgstr "'%s' параметрі жарамсыз, '%s' әдепкі мәні қолданылады"
+
+#: p11-kit/delete-object.c:76 p11-kit/export-object.c:580
+msgid "no matching object"
+msgstr "сәйкес келетін объект жоқ"
+
+#: p11-kit/delete-object.c:78 p11-kit/export-object.c:582
+#, c-format
+msgid "failed to find object: %s"
+msgstr "объектіні табу сәтсіз аяқталды: %s"
+
+#: p11-kit/delete-object.c:84 p11-kit/delete-profile.c:122
+#, c-format
+msgid "failed to destroy an object: %s"
+msgstr "объектіні жою сәтсіз аяқталды: %s"
+
+#: p11-kit/export-object.c:116 p11-kit/export-object.c:176
+#: p11-kit/export-object.c:242 p11-kit/export-object.c:250
+#: p11-kit/export-object.c:367 p11-kit/export-object.c:475
+#: p11-kit/export-object.c:530
+msgid "failed to retrieve attributes"
+msgstr "атрибуттарды алу сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:276
+msgid "corrupted value in attributes"
+msgstr "атрибуттардағы мән зақымдалған"
+
+#: p11-kit/export-object.c:373
+msgid "failed to retrieve public key value"
+msgstr "ашық кілт мәнін алу сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:378
+msgid "failed to retrieve parameter set"
+msgstr "параметрлер жиынын алу сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:384
+msgid "unknown PQC key type/parameter set combination"
+msgstr "белгісіз PQC кілт түрі/параметрлер жиыны комбинациясы"
+
+#: p11-kit/export-object.c:448
+#, c-format
+msgid "unsupported key type: %lu"
+msgstr "қолдау көрсетілмейтін кілт түрі: %lu"
+
+#: p11-kit/export-object.c:489
+msgid "unable to determine key type"
+msgstr "кілт түрін анықтау мүмкін емес"
+
+#: p11-kit/export-object.c:495 p11-kit/import-object.c:815
+msgid "ASN.1 support is not compiled in"
+msgstr "ASN.1 қолдауы компиляцияланбаған"
+
+#: p11-kit/export-object.c:502
+msgid "failed to export public key"
+msgstr "ашық кілтті экспорттау сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:536
+msgid "unrecognized certificate type"
+msgstr "танылмаған сертификат түрі"
+
+#: p11-kit/export-object.c:542
+msgid "no valid certificate value"
+msgstr "жарамды сертификат мәні жоқ"
+
+#: p11-kit/export-object.c:547
+msgid "failed to convert DER to PEM"
+msgstr "DER пішімін PEM пішіміне түрлендіру сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:588
+msgid "failed to retrieve attribute of an object"
+msgstr "объект атрибутын алу сәтсіз аяқталды"
+
+#: p11-kit/export-object.c:602
+msgid "unsupported object class"
+msgstr "қолдау көрсетілмейтін объект класы"
+
+#: p11-kit/export-object.c:607
+msgid "failed to write PEM data to stdout"
+msgstr "PEM деректерін stdout-қа жазу сәтсіз аяқталды"
 
 #: p11-kit/filter.c:183
 msgid "filter cannot be initialized"
 msgstr "сүзгіні инициализациялау мүмкін емес"
 
-#: p11-kit/lists.c:116 p11-kit/lists.c:183 p11-kit/lists.c:204
+#: p11-kit/generate-keypair.c:209
+msgid "no bits specified"
+msgstr "биттер көрсетілмеген"
+
+#: p11-kit/generate-keypair.c:216
+msgid "no curve specified"
+msgstr "қисық көрсетілмеген"
+
+#: p11-kit/generate-keypair.c:224
+msgid "no parameter-set specified"
+msgstr "параметрлер жиыны көрсетілмеген"
+
+#: p11-kit/generate-keypair.c:229
+msgid "no type specified"
+msgstr "түрі көрсетілмеген"
+
+#: p11-kit/generate-keypair.c:232
+#, c-format
+msgid "unknown mechanism type in %s"
+msgstr "%s ішіндегі механизм түрі белгісіз"
+
+#: p11-kit/generate-keypair.c:237
+#, c-format
+msgid "both %s and %s cannot be specified at once"
+msgstr "%s және %s екеуін де бір уақытта көрсету мүмкін емес"
+
+#: p11-kit/generate-keypair.c:250 p11-kit/generate-keypair.c:258
+#: p11-kit/generate-keypair.c:262 p11-kit/generate-keypair.c:618
+#, c-format
+msgid "%s cannot be used with this key type"
+msgstr "%s осы кілт түрімен қолданылмайды"
+
+#: p11-kit/generate-keypair.c:338 p11-kit/import-object.c:146
+#: p11-kit/import-object.c:219
+#, c-format
+msgid "failed to decode hex value: %s"
+msgstr "он алтылық мәнді декодтау сәтсіз аяқталды: %s"
+
+#: p11-kit/generate-keypair.c:406
+#, c-format
+msgid "unkwnown mechanism type in %s"
+msgstr "%s ішіндегі механизм түрі белгісіз"
+
+#: p11-kit/generate-keypair.c:442
+msgid "failed to create key templates"
+msgstr "кілт үлгілерін жасау сәтсіз аяқталды"
+
+#: p11-kit/generate-keypair.c:472
+#, c-format
+msgid "key-pair generation failed: %s"
+msgstr "кілттер жұбын генерациялау сәтсіз аяқталды: %s"
+
+#: p11-kit/generate-keypair.c:558
+#, c-format
+msgid "unknown mechanism type: %s"
+msgstr "белгісіз механизм түрі: %s"
+
+#: p11-kit/generate-keypair.c:565
+#, c-format
+msgid "failed to parse bits value: %s"
+msgstr "биттер мәнін талдау сәтсіз аяқталды: %s"
+
+#: p11-kit/generate-keypair.c:572
+#, c-format
+msgid "unknown curve name: %s"
+msgstr "белгісіз қисық атауы: %s"
+
+#: p11-kit/generate-keypair.c:623
+#, c-format
+msgid "unknown parameter-set: %s"
+msgstr "белгісіз параметрлер жиыны: %s"
+
+#: p11-kit/import-object.c:109 p11-kit/import-object.c:265
+#: p11-kit/import-object.c:271 p11-kit/import-object.c:555
+msgid "failed to parse ASN.1 structure"
+msgstr "ASN.1 құрылымын талдау сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:115
+msgid "failed to obtain certificate subject name"
+msgstr "сертификат субъектісінің атын алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:164 p11-kit/import-object.c:588
+#, c-format
+msgid "failed to create object: %s"
+msgstr "объектіні жасау сәтсіз аяқталды: %s"
+
+#: p11-kit/import-object.c:259 p11-kit/import-object.c:495
+msgid "failed to obtain subject public key data"
+msgstr "субъектінің ашық кілт деректерін алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:277 p11-kit/import-object.c:282
+msgid "failed to obtain modulus"
+msgstr "модульді алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:290 p11-kit/import-object.c:295
+msgid "failed to obtain exponent"
+msgstr "экспонентаны алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:333 p11-kit/import-object.c:338
+msgid "failed to obtain EC parameters"
+msgstr "EC параметрлерін алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:349
+msgid "failed to obtain EC point"
+msgstr "EC нүктесін алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:357
+msgid "corrupted EC point value"
+msgstr "EC нүктесінің мәні зақымдалған"
+
+#: p11-kit/import-object.c:364
+msgid "failed to DER encode EC point"
+msgstr "EC нүктесін DER пішімінде кодтау сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:501
+msgid "corrupted public key value"
+msgstr "ашық кілт мәні зақымдалған"
+
+#: p11-kit/import-object.c:509
+#, c-format
+msgid "invalid public key size %zu for parameter set (expected %zu)"
+msgstr ""
+"параметрлер жиыны үшін ашық кілттің %zu өлшемі жарамсыз (күтілгені %zu)"
+
+#: p11-kit/import-object.c:561
+msgid "failed to obtain algorithm OID"
+msgstr "алгоритм OID мәнін алу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:578
+#, c-format
+msgid "unrecognized algorithm OID: %s"
+msgstr "танылмаған алгоритм OID-і: %s"
+
+#: p11-kit/import-object.c:619
+#, c-format
+msgid "unrecognized PEM label: %s"
+msgstr "танылмаған PEM жапсырмасы: %s"
+
+#: p11-kit/import-object.c:661
+msgid "failed to load ASN.1 definitions"
+msgstr "ASN.1 сипаттамаларын жүктеу сәтсіз аяқталды"
+
+#: p11-kit/import-object.c:667
+#, c-format
+msgid "failed to read file: %s"
+msgstr "файлды оқу сәтсіз аяқталды: %s"
+
+#: p11-kit/import-object.c:673
+msgid "no object to import"
+msgstr "импорттайтын объект жоқ"
+
+#: p11-kit/import-object.c:779
+msgid "no file specified"
+msgstr "файл көрсетілмеген"
+
+#: p11-kit/iter.c:557
+#, c-format
+msgid "PIN for %.*s"
+msgstr "%.*s үшін PIN коды"
+
+#: p11-kit/list-objects.c:193 p11-kit/list-objects.c:200
+#: p11-kit/list-objects.c:208
+#, c-format
+msgid "failed to set attribute for URI: %s"
+msgstr "URI үшін атрибутты орнату сәтсіз аяқталды: %s"
+
+#: p11-kit/list-objects.c:217 p11-kit/lists.c:105 p11-kit/lists.c:193
+#, c-format
+msgid "couldn't format URI into string: %s"
+msgstr "URI-ді жолға пішімдеу мүмкін болмады: %s"
+
+#: p11-kit/list-profiles.c:120
+#, c-format
+msgid "failed to retrieve attribute of an object: %s"
+msgstr "объект атрибутын алу сәтсіз аяқталды: %s"
+
+#: p11-kit/list-mechanisms.c:160
+msgid "failed to obtain module"
+msgstr "модульді алу сәтсіз аяқталды"
+
+#: p11-kit/list-mechanisms.c:168 p11-kit/lists.c:256
+#, c-format
+msgid "couldn't load token info: %s"
+msgstr "токен ақпаратын жүктеу мүмкін болмады: %s"
+
+#: p11-kit/list-mechanisms.c:174
+#, c-format
+msgid "querying amount of mechanisms failed: %s"
+msgstr "механизмдер санын сұрау сәтсіз аяқталды: %s"
+
+#: p11-kit/list-mechanisms.c:187
+#, c-format
+msgid "querying mechanisms failed: %s"
+msgstr "механизмдерді сұрау сәтсіз аяқталды: %s"
+
+#: p11-kit/list-mechanisms.c:194
+#, c-format
+msgid "querying mechanism info failed: %s"
+msgstr "механизм ақпаратын сұрау сәтсіз аяқталды: %s"
+
+#: p11-kit/lists.c:233 p11-kit/lists.c:245 p11-kit/lists.c:296
 #, c-format
 msgid "couldn't load module info: %s"
 msgstr "модуль ақпаратын жүктеу мүмкін емес: %s"
 
-#: p11-kit/lists.c:295
+#: p11-kit/lists.c:374 p11-kit/print-config.c:134
 msgid "extra arguments specified"
 msgstr "артық аргументтер көрсетілген"
 
@@ -433,349 +815,414 @@ msgstr "Сұранымды пайдаланушы қабылдамады"
 msgid "Unknown error"
 msgstr "Белгісіз қате"
 
-#: p11-kit/modules.c:373
+#: p11-kit/modules.c:399
 #, c-format
 msgid "couldn't load module: %s: %s"
 msgstr "модульді жүктеу мүмкін емес: %s: %s"
 
-#: p11-kit/modules.c:385
+#: p11-kit/modules.c:435
+#, c-format
+msgid "call to C_GetInterface failed in module: %s: %s"
+msgstr "%s модулінде C_GetInterface шақыру сәтсіз аяқталды: %s"
+
+#: p11-kit/modules.c:447
 #, c-format
 msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
 msgstr "модульден C_GetFunctionList кіру нүктесі табылмады: %s: %s"
 
-#: p11-kit/modules.c:393
+#: p11-kit/modules.c:454
 #, c-format
 msgid "call to C_GetFunctiontList failed in module: %s: %s"
 msgstr "модульде C_GetFunctiontList шақыру сәтсіз аяқталды: %s: %s"
 
-#: p11-kit/modules.c:399
+#: p11-kit/modules.c:461
 msgid "refusing to load the p11-kit-proxy.so module as a registered module"
-msgstr "p11-kit-proxy.so модулін тіркелген модуль ретінде жүктеуден бас тартылды"
+msgstr ""
+"p11-kit-proxy.so модулін тіркелген модуль ретінде жүктеуден бас тартылды"
 
-#: p11-kit/modules.c:548
+#: p11-kit/modules.c:611
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
 msgstr "'%s' модулінде enable-in және disable-in опцияларының екеуі де бар"
 
-#: p11-kit/modules.c:698
+#: p11-kit/modules.c:793
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
-msgstr "'%s' модулі критикалық деп белгіленгендіктен, инициализациялау тоқтатылды"
+msgstr ""
+"'%s' модулі критикалық деп белгіленгендіктен, инициализациялау тоқтатылды"
 
-#: p11-kit/modules.c:723
+#: p11-kit/modules.c:818
 msgid "p11-kit initialization called recursively"
 msgstr "p11-kit инициализациялау рекурсивті түрде шақырылды"
 
-#: p11-kit/modules.c:909
+#: p11-kit/modules.c:1004
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
 msgstr "критикалық '%s' модулін инициализациялау сәтсіз аяқталды: %s"
 
-#: p11-kit/modules.c:912
+#: p11-kit/modules.c:1007
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
 msgstr "инициализациялауы сәтсіз аяқталған '%s' модулі өткізілуде: %s"
 
-#: p11-kit/modules.c:1687
+#: p11-kit/modules.c:1782
 #, c-format
 msgid "couldn't close session: %s"
 msgstr "сессияны жабу мүмкін емес: %s"
 
-#: p11-kit/modules.c:1864
+#. * This is because the module is running in unmanaged mode, so turn off the
+#: p11-kit/modules.c:1959
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
-msgstr "'%s' модулі үшін '%s' опциясына тек басқарылатын модульдерде қолдау көрсетіледі"
+msgstr ""
+"'%s' модулі үшін '%s' опциясына тек басқарылатын модульдерде қолдау "
+"көрсетіледі"
 
-#: p11-kit/modules.c:2171
-#, c-format
-msgid "%s: module failed to initialize%s: %s"
-msgstr "%s: модуль инициализацияланбады%s: %s"
-
-#: p11-kit/modules.c:2182
-#, c-format
-msgid "%s: module was already initialized"
-msgstr "%s: модуль инициализацияланып қойған"
-
-#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
-#, c-format
-msgid "%s: module failed to finalize: %s"
-msgstr "%s: модуль жұмысын аяқтай алмады: %s"
-
-#: p11-kit/modules.c:2417
-#, c-format
-msgid "module initialization failed: %s"
-msgstr "модульді инициализациялау сәтсіз: %s"
-
-#: p11-kit/modules.c:2649
+#: p11-kit/modules.c:2268 p11-kit/modules.c:2748
 #, c-format
 msgid "%s: module failed to initialize: %s"
 msgstr "%s: модуль инициализацияланбады: %s"
 
-#: p11-kit/p11-kit.c:72
+#: p11-kit/modules.c:2271
+#, c-format
+msgid "%s: module failed to initialize, skipping: %s"
+msgstr "%s: модульді іске қосу сәтсіз аяқталды, өткізіп жіберіледі: %s"
+
+#: p11-kit/modules.c:2281
+#, c-format
+msgid "%s: module was already initialized"
+msgstr "%s: модуль инициализацияланып қойған"
+
+#: p11-kit/modules.c:2377 p11-kit/modules.c:2789
+#, c-format
+msgid "%s: module failed to finalize: %s"
+msgstr "%s: модуль жұмысын аяқтай алмады: %s"
+
+#: p11-kit/modules.c:2516
+#, c-format
+msgid "module initialization failed: %s"
+msgstr "модульді инициализациялау сәтсіз: %s"
+
+#: p11-kit/p11-kit.c:105
 msgid "List modules and tokens"
 msgstr "Модульдер мен токендерді тізімдеу"
 
-#: p11-kit/p11-kit.c:73
+#: p11-kit/p11-kit.c:106
+msgid "List tokens"
+msgstr "Токендер тізімін шығару"
+
+#: p11-kit/p11-kit.c:107
+msgid "List objects of a token"
+msgstr "Токен объектілерінің тізімін шығару"
+
+#: p11-kit/p11-kit.c:108
+msgid "Import object into a token"
+msgstr "Объектіні токенге импорттау"
+
+#: p11-kit/p11-kit.c:109
+msgid "Export object matching PKCS#11 URI"
+msgstr "PKCS#11 URI-ге сәйкес келетін объектіні экспорттау"
+
+#: p11-kit/p11-kit.c:110
+msgid "Delete objects matching PKCS#11 URI"
+msgstr "PKCS#11 URI-ге сәйкес келетін объектілерді өшіру"
+
+#: p11-kit/p11-kit.c:111
+msgid "Generate key-pair on a PKCS#11 token"
+msgstr "PKCS#11 токенінде кілттер жұбын генерациялау"
+
+#: p11-kit/p11-kit.c:112
+msgid "List PKCS#11 profiles supported by the token"
+msgstr "Токен қолдау көрсететін PKCS#11 профильдерінің тізімін шығару"
+
+#: p11-kit/p11-kit.c:113
+msgid "Add PKCS#11 profile to the token"
+msgstr "Токенге PKCS#11 профилін қосу"
+
+#: p11-kit/p11-kit.c:114
+msgid "Delete PKCS#11 profile from the token"
+msgstr "Токеннен PKCS#11 профилін өшіру"
+
+#: p11-kit/p11-kit.c:115
+msgid "Print merged configuration"
+msgstr "Біріктірілген конфигурацияны басып шығару"
+
+#: p11-kit/p11-kit.c:116
+msgid "List supported mechanisms"
+msgstr "Қолдау көрсетілетін механизмдер тізімін шығару"
+
+#: p11-kit/p11-kit.c:117
 msgid "Run a specific PKCS#11 module remotely"
 msgstr "Арнайы PKCS#11 модулін қашықтан іске қосу"
 
-#: p11-kit/p11-kit.c:74
+#: p11-kit/p11-kit.c:118
 msgid "Run a server process that exposes PKCS#11 module remotely"
 msgstr "PKCS#11 модулін қашықтан ұсынатын сервер процесін іске қосу"
 
-#: p11-kit/p11-kit.c:95
+#. At this point we have no command
+#: p11-kit/p11-kit.c:139
 msgid "couldn't run trust tool"
 msgstr "trust құралын іске қосу мүмкін емес"
 
-#: p11-kit/p11-kit.c:137
+#. At this point we have no command
+#: p11-kit/p11-kit.c:181
 #, c-format
 msgid "'%s' is not a valid command. See 'p11-kit --help'"
 msgstr "'%s' — жарамды команда емес. 'p11-kit --help' қараңыз"
 
-#: p11-kit/remote.c:108
+#: p11-kit/remote.c:109
 msgid "specify a module or tokens to remote"
 msgstr "қашықтан басқару үшін модульді немесе токендерді көрсетіңіз"
 
-#: p11-kit/remote.c:113
+#: p11-kit/remote.c:114
 msgid "the 'remote' tool is not meant to be run from a terminal"
 msgstr "'remote' құралы терминалдан іске қосуға арналмаған"
 
-#: p11-kit/remote.c:139
+#: p11-kit/remote.c:145
 msgid "only one module can be specified"
 msgstr "тек бір модуль көрсетуге болады"
 
-#: p11-kit/rpc-client.c:144
+#: p11-kit/rpc-client.c:146
 msgid "invalid rpc error response: too short"
 msgstr "жарамсыз rpc қате жауабы: тым қысқа"
 
-#: p11-kit/rpc-client.c:149
+#: p11-kit/rpc-client.c:151
 msgid "invalid rpc error response: bad error code"
 msgstr "жарамсыз rpc қате жауабы: қате коды бұрыс"
 
-#: p11-kit/rpc-client.c:159
+#: p11-kit/rpc-client.c:161
 msgid "invalid rpc response: call mismatch"
 msgstr "жарамсыз rpc жауабы: шақыру сәйкессіздігі"
 
-#: p11-kit/rpc-client.c:180
+#: p11-kit/rpc-client.c:184
 msgid "invalid rpc response: bad argument data"
 msgstr "жарамсыз rpc жауабы: аргумент деректері бұрыс"
 
-#: p11-kit/rpc-client.c:227
+#: p11-kit/rpc-client.c:231
 msgid "received an attribute array with wrong number of attributes"
 msgstr "атрибуттар саны қате атрибут массиві алынды"
 
-#: p11-kit/rpc-client.c:249
+#: p11-kit/rpc-client.c:253
 msgid "returned attributes in invalid order"
 msgstr "атрибуттар жарамсыз ретпен қайтарылды"
 
-#: p11-kit/rpc-client.c:720 trust/module.c:382
+#: p11-kit/rpc-client.c:813 trust/module.c:384
 msgid "invalid set of mutex calls supplied"
 msgstr "mutex шақыруларының жарамсыз жиыны ұсынылды"
 
-#: p11-kit/rpc-client.c:729 trust/module.c:391
+#: p11-kit/rpc-client.c:822 trust/module.c:393
 msgid "can't do without os locking"
 msgstr "os құлыптауынсыз орындау мүмкін емес"
 
-#: p11-kit/rpc-client.c:742
+#: p11-kit/rpc-client.c:835
 msgid "C_Initialize called twice for same process"
 msgstr "C_Initialize бір процесс үшін екі рет шақырылды"
 
-#: p11-kit/rpc-client.c:826
+#: p11-kit/rpc-client.c:943
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
 msgstr "rpc модулін аяқтау қате қайтарды: %lu"
 
-#: p11-kit/rpc-message.c:190
+#: p11-kit/rpc-message.c:191
 msgid "invalid message: couldn't read call identifier"
 msgstr "жарамсыз хабарлама: шақыру идентификаторын оқу мүмкін емес"
 
-#: p11-kit/rpc-message.c:199
+#: p11-kit/rpc-message.c:200
 #, c-format
 msgid "invalid message: bad call id: %d"
 msgstr "жарамсыз хабарлама: шақыру id қате: %d"
 
-#: p11-kit/rpc-message.c:217
+#: p11-kit/rpc-message.c:218
 msgid "invalid message: couldn't read signature"
 msgstr "жарамсыз хабарлама: қолтаңбаны оқу мүмкін емес"
 
-#: p11-kit/rpc-message.c:222
+#: p11-kit/rpc-message.c:223
 msgid "invalid message: signature doesn't match"
 msgstr "жарамсыз хабарлама: қолтаңба сәйкес келмейді"
 
-#: p11-kit/rpc-message.c:483
+#: p11-kit/rpc-message.c:497
 #, c-format
 msgid "invalid length space padded string received: %d != %d"
 msgstr "бос орынмен толтырылған жолдың ұзындығы жарамсыз: %d != %d"
 
-#: p11-kit/rpc-server.c:558
+#: p11-kit/rpc-server.c:640
 msgid "invalid request from module, probably too short"
 msgstr "модульден жарамсыз сұраным, тым қысқа болуы мүмкін"
 
-#: p11-kit/rpc-server.c:568
+#: p11-kit/rpc-server.c:650
 msgid "couldn't initialize rpc response"
 msgstr "rpc жауабын инициализациялау мүмкін емес"
 
-#: p11-kit/rpc-server.c:700
+#: p11-kit/rpc-server.c:805
 msgid "invalid handshake received from connecting module"
 msgstr "қосылатын модульден жарамсыз қол алысу (handshake) алынды"
 
-#: p11-kit/rpc-server.c:1817
+#: p11-kit/rpc-server.c:2634
 msgid "couldn't parse pkcs11 rpc message"
 msgstr "pkcs11 rpc хабарламасын талдау мүмкін емес"
 
-#: p11-kit/rpc-server.c:1904
+#: p11-kit/rpc-server.c:2760
 msgid "out of memory error putting together message"
 msgstr "хабарламаны құрастыру кезінде жады жетіспеу қатесі"
 
-#: p11-kit/rpc-server.c:1928
+#: p11-kit/rpc-server.c:2786
 msgid "out of memory responding with error"
 msgstr "қатемен жауап беру кезінде жады жетіспеді"
 
-#: p11-kit/rpc-server.c:1974
+#: p11-kit/rpc-server.c:2832
 #, c-format
 msgid "unsupported version received: %d"
 msgstr "қолдау көрсетілмейтін нұсқа алынды: %d"
 
-#: p11-kit/rpc-server.c:1979
+#: p11-kit/rpc-server.c:2838
 msgid "couldn't read credential byte"
 msgstr "тіркелгі деректерінің байтын оқу мүмкін емес"
 
-#: p11-kit/rpc-server.c:1988
+#: p11-kit/rpc-server.c:2850
 msgid "couldn't write credential byte"
 msgstr "тіркелгі деректерінің байтын жазу мүмкін емес"
 
-#: p11-kit/rpc-server.c:2011
+#: p11-kit/rpc-server.c:2873
 msgid "failed to read rpc message"
 msgstr "rpc хабарламасын оқу сәтсіз"
 
-#: p11-kit/rpc-server.c:2016
+#: p11-kit/rpc-server.c:2878
 msgid "unexpected error handling rpc message"
 msgstr "rpc хабарламасын өңдеуде күтпеген қате"
 
-#: p11-kit/rpc-server.c:2034
+#: p11-kit/rpc-server.c:2896
 msgid "failed to write rpc message"
 msgstr "rpc хабарламасын жазу сәтсіз"
 
-#: p11-kit/rpc-transport.c:212
+#: p11-kit/rpc-transport.c:208
 msgid "couldn't send data: closed connection"
 msgstr "деректерді жіберу мүмкін емес: байланыс жабық"
 
-#: p11-kit/rpc-transport.c:215
+#: p11-kit/rpc-transport.c:211
 msgid "couldn't send data"
 msgstr "деректерді жіберу мүмкін емес"
 
-#: p11-kit/rpc-transport.c:238
+#: p11-kit/rpc-transport.c:234
 msgid "couldn't receive data: closed connection"
 msgstr "деректерді қабылдау мүмкін емес: байланыс жабық"
 
-#: p11-kit/rpc-transport.c:242
+#: p11-kit/rpc-transport.c:238
 msgid "couldn't receive data"
 msgstr "деректерді қабылдау мүмкін емес"
 
-#: p11-kit/rpc-transport.c:270
-msgid "couldn't send socket credentials"
-msgstr "сокет тіркелгі деректерін жіберу мүмкін емес"
-
-#: p11-kit/rpc-transport.c:439
+#: p11-kit/rpc-transport.c:416
 msgid "received invalid rpc header values: perhaps wrong protocol"
 msgstr "жарамсыз rpc тақырыптама мәндері алынды: протокол қате болуы мүмкін"
 
-#: p11-kit/rpc-transport.c:482
+#: p11-kit/rpc-transport.c:459
 msgid "couldn't use select to wait on rpc pipe"
 msgstr "rpc арнасында күту үшін select пайдалану мүмкін болмады"
 
-#: p11-kit/rpc-transport.c:688 p11-kit/rpc-transport.c:694
+#: p11-kit/rpc-transport.c:648
+msgid "couldn't send socket credentials"
+msgstr "сокет тіркелгі деректерін жіберу мүмкін емес"
+
+#: p11-kit/rpc-transport.c:653
+msgid "couldn't receive socket credentials"
+msgstr "сокет тіркелу мәліметтерін қабылдау мүмкін болмады"
+
+#: p11-kit/rpc-transport.c:659
+msgid "peer protocol version is too old"
+msgstr "пир хаттамасының нұсқасы тым ескі"
+
+#: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
 msgid "closing socket due to protocol failure"
 msgstr "протокол сәтсіздігіне байланысты сокет жабылуда"
 
-#: p11-kit/rpc-transport.c:733
+#: p11-kit/rpc-transport.c:755
 #, c-format
 msgid "process %d did not exit, terminating"
 msgstr "%d процесі шықпады, мәжбүрлеп тоқтатылуда"
 
-#: p11-kit/rpc-transport.c:740
+#: p11-kit/rpc-transport.c:762
 #, c-format
 msgid "failed to wait for executed child: %d"
 msgstr "орындалған еншілес процесті күту сәтсіз: %d"
 
-#: p11-kit/rpc-transport.c:747
+#: p11-kit/rpc-transport.c:769
 #, c-format
 msgid "process %d exited with status %d"
 msgstr "%d процесі %d күйімен аяқталды"
 
-#: p11-kit/rpc-transport.c:751
+#: p11-kit/rpc-transport.c:773
 #, c-format
 msgid "process %d was terminated with signal %d"
 msgstr "%d процесі %d сигналымен тоқтатылды"
 
-#: p11-kit/rpc-transport.c:795 p11-kit/rpc-transport.c:931 p11-kit/rpc-transport.c:938
+#: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:960
 msgid "failed to create pipe for remote"
 msgstr "remote үшін арна жасау сәтсіз"
 
-#: p11-kit/rpc-transport.c:806
+#: p11-kit/rpc-transport.c:828
 msgid "failed to fork for remote"
 msgstr "remote үшін тармақтау сәтсіз"
 
-#: p11-kit/rpc-transport.c:866
+#: p11-kit/rpc-transport.c:888
 #, c-format
 msgid "process %p did not exit, terminating"
 msgstr "%p процесі шықпады, мәжбүрлеп тоқтатылуда"
 
-#: p11-kit/rpc-transport.c:868
+#: p11-kit/rpc-transport.c:890
 #, c-format
 msgid "couldn't terminate process %p"
 msgstr "%p процесін тоқтату мүмкін емес"
 
-#: p11-kit/rpc-transport.c:873
+#: p11-kit/rpc-transport.c:895
 #, c-format
 msgid "failed to wait for executed child: %p"
 msgstr "орындалған еншілес процесті күту сәтсіз: %p"
 
-#: p11-kit/rpc-transport.c:876
+#: p11-kit/rpc-transport.c:898
 #, c-format
 msgid "failed to get the exit status of %p"
 msgstr "%p процесінің шығу күйін алу сәтсіз"
 
-#: p11-kit/rpc-transport.c:880
+#: p11-kit/rpc-transport.c:902
 #, c-format
 msgid "process %p exited with status %lu"
 msgstr "%p процесі %lu күйімен аяқталды"
 
-#: p11-kit/rpc-transport.c:946
+#: p11-kit/rpc-transport.c:968
 msgid "failed to duplicate stdin"
 msgstr "stdin қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:953
+#: p11-kit/rpc-transport.c:975
 msgid "failed to duplicate stdout"
 msgstr "stdout қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:961
+#: p11-kit/rpc-transport.c:983
 msgid "failed to duplicate child end of pipe"
 msgstr "арнаның еншілес соңын қайталау сәтсіз"
 
-#: p11-kit/rpc-transport.c:971
+#: p11-kit/rpc-transport.c:993
 msgid "failed to spawn remote"
 msgstr "remote процесін бастау сәтсіз"
 
-#: p11-kit/rpc-transport.c:984
+#: p11-kit/rpc-transport.c:1006
 msgid "failed to restore file descriptors"
 msgstr "файл дескрипторларын қалпына келтіру сәтсіз"
 
-#: p11-kit/rpc-transport.c:1053
+#: p11-kit/rpc-transport.c:1075
 #, c-format
 msgid "invalid remote command line: %s"
 msgstr "жарамсыз remote пәрмен жолы: %s"
 
-#: p11-kit/rpc-transport.c:1092 p11-kit/rpc-transport.c:1172
+#: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
 msgid "failed to create socket for remote"
 msgstr "remote үшін сокет жасау сәтсіз"
 
-#: p11-kit/rpc-transport.c:1268 p11-kit/server.c:165
+#: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
 #, c-format
 msgid "failed to parse vsock address: '%s'"
 msgstr "vsock адресін талдау сәтсіз: '%s'"
 
-#: p11-kit/rpc-transport.c:1276
+#: p11-kit/rpc-transport.c:1301
 #, c-format
 msgid "remote not supported: %s"
 msgstr "remote қолдау көрсетпейді: %s"
@@ -790,389 +1237,404 @@ msgstr "%u еншілес процесі sigsegv қатесімен құлады
 msgid "child %u died with signal %d"
 msgstr "%u еншілес процесі %d сигналымен құлады"
 
-#: p11-kit/server.c:318
+#: p11-kit/server.c:336
 #, c-format
 msgid "could not create socket %s"
 msgstr "%s сокетін жасау мүмкін емес"
 
-#: p11-kit/server.c:326
+#: p11-kit/server.c:347
 #, c-format
 msgid "could not bind socket %s"
 msgstr "%s сокетін байланыстыру мүмкін емес"
 
-#: p11-kit/server.c:333
+#: p11-kit/server.c:354
 #, c-format
 msgid "could not listen to socket %s"
 msgstr "%s сокетін тыңдау мүмкін емес"
 
-#: p11-kit/server.c:341
+#: p11-kit/server.c:362
 #, c-format
 msgid "could not chown socket %s"
 msgstr "%s сокетіне chown орындау мүмкін емес"
 
-#: p11-kit/server.c:364
+#: p11-kit/server.c:385
 #, c-format
 msgid "could not create socket %u:%u"
 msgstr "%u:%u сокетін жасау мүмкін емес"
 
-#: p11-kit/server.c:371
+#: p11-kit/server.c:392
 #, c-format
 msgid "could not bind socket %u:%u"
 msgstr "%u:%u сокетін байланыстыру мүмкін емес"
 
-#: p11-kit/server.c:378
+#: p11-kit/server.c:399
 #, c-format
 msgid "could not listen to socket %u:%u"
 msgstr "%u:%u сокетін тыңдау мүмкін емес"
 
-#: p11-kit/server.c:397
+#: p11-kit/server.c:418
 msgid "could not check uid from socket"
 msgstr "сокеттен uid тексеру мүмкін емес"
 
-#: p11-kit/server.c:403
+#: p11-kit/server.c:424
 #, c-format
 msgid "connecting uid (%u) doesn't match expected (%u)"
 msgstr "қосылып тұрған uid (%u) күтілгенге сәйкес келмейді (%u)"
 
-#: p11-kit/server.c:410
+#: p11-kit/server.c:431
 #, c-format
 msgid "connecting gid (%u) doesn't match expected (%u)"
 msgstr "қосылып тұрған gid (%u) күтілгенге сәйкес келмейді (%u)"
 
-#: p11-kit/server.c:491
+#: p11-kit/server.c:557
 msgid "could not fork() to daemonize"
 msgstr "демон режиміне өту үшін fork() орындау мүмкін емес"
 
-#: p11-kit/server.c:504
+#: p11-kit/server.c:570
 msgid "could not create a new session"
 msgstr "жаңа сессия жасау мүмкін емес"
 
-#: p11-kit/server.c:512
+#: p11-kit/server.c:577
 msgid "too many file descriptors received"
 msgstr "тым көп файл дескрипторлары алынды"
 
-#: p11-kit/server.c:556
+#: p11-kit/server.c:620
 #, c-format
-msgid "no connections to %s for %lu secs, exiting"
-msgstr "%s үшін %lu секунд байланыс жоқ, шығу"
+msgid "no connections to %s for %<PRIu64> secs, exiting"
+msgstr "%s үшін %<PRIu64> секунд бойы қосылым болмады, шығу"
 
-#: p11-kit/server.c:565
+#: p11-kit/server.c:629
 #, c-format
 msgid "could not accept from socket %s"
 msgstr "%s сокетінен қабылдау мүмкін емес"
 
-#: p11-kit/server.c:576
+#: p11-kit/server.c:640
 msgid "failed to fork for accept"
 msgstr "accept үшін тармақтау сәтсіз"
 
-#: p11-kit/server.c:721 p11-kit/server.c:737
+#: p11-kit/server.c:785 p11-kit/server.c:801
 #, c-format
 msgid "unknown group: %s"
 msgstr "белгісіз топ: %s"
 
-#: p11-kit/server.c:729 p11-kit/server.c:745
+#: p11-kit/server.c:793 p11-kit/server.c:809
 #, c-format
 msgid "unknown user: %s"
 msgstr "белгісіз пайдаланушы: %s"
 
-#: p11-kit/server.c:828
+#: p11-kit/server.c:892
 #, c-format
 msgid "cannot set gid to %u"
 msgstr "gid мәнін %u деп орнату мүмкін емес"
 
-#: p11-kit/server.c:834
+#: p11-kit/server.c:898
 #, c-format
 msgid "cannot setgroups to %u"
 msgstr "setgroups мәнін %u деп орнату мүмкін емес"
 
-#: p11-kit/server.c:842
+#: p11-kit/server.c:906
 #, c-format
 msgid "cannot set uid to %u"
 msgstr "uid мәнін %u деп орнату мүмкін емес"
 
-#: p11-kit/server.c:858
+#: p11-kit/server.c:922
 msgid "cannot determine runtime directory"
 msgstr "орындалу ортасының бумасын анықтау мүмкін емес"
 
-#: p11-kit/server.c:870
+#: p11-kit/server.c:934
 #, c-format
 msgid "cannot create %s"
 msgstr "%s жасау мүмкін емес"
 
-#: p11-kit/server.c:1141
+#: p11-kit/server.c:1205
 msgid "couldn't initialize Windows security functions"
 msgstr "Windows қауіпсіздік функцияларын инициализациялау мүмкін емес"
 
-#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#: p11-kit/server.c:1366 p11-kit/server.c:1378 p11-kit/server.c:1390
 #, c-format
 msgid "unable to construct SID for %s: %lu"
 msgstr "%s үшін SID құрастыру мүмкін емес: %lu"
 
-#: p11-kit/server.c:1369
+#: p11-kit/server.c:1433
 #, c-format
 msgid "unable to construct ACL: %d"
 msgstr "ACL құрастыру мүмкін емес: %d"
 
-#: p11-kit/server.c:1375
+#: p11-kit/server.c:1439
 #, c-format
 msgid "unable to allocate security descriptor: %lu"
 msgstr "қауіпсіздік дескрипторын бөлу мүмкін емес: %lu"
 
-#: p11-kit/server.c:1381
+#: p11-kit/server.c:1445
 #, c-format
 msgid "unable to initialise security descriptor: %lu"
 msgstr "қауіпсіздік дескрипторын инициализациялау мүмкін емес: %lu"
 
-#: p11-kit/server.c:1387
+#: p11-kit/server.c:1451
 #, c-format
 msgid "unable to set owner in security descriptor: %lu"
 msgstr "қауіпсіздік дескрипторында иесін орнату мүмкін емес: %lu"
 
-#: p11-kit/server.c:1393
+#: p11-kit/server.c:1457
 #, c-format
 msgid "unable to set DACL in security descriptor: %lu"
 msgstr "қауіпсіздік дескрипторында DACL орнату мүмкін емес: %lu"
 
-#: trust/anchor.c:125
+#: trust/anchor.c:126
 #, c-format
 msgid "invalid PKCS#11 uri: %s"
 msgstr "жарамсыз PKCS#11 uri: %s"
 
-#: trust/anchor.c:147 trust/anchor.c:203
+#: trust/anchor.c:148 trust/anchor.c:204
 #, c-format
 msgid "unrecognized file format: %s"
 msgstr "танылмаған файл пішімі: %s"
 
-#: trust/anchor.c:150 trust/anchor.c:206
+#: trust/anchor.c:151 trust/anchor.c:207
 #, c-format
 msgid "failed to parse file: %s"
 msgstr "файлды талдау сәтсіз: %s"
 
-#: trust/anchor.c:245
+#: trust/anchor.c:246
 #, c-format
 msgid "%s: couldn't initialize: %s"
 msgstr "%s: инициализациялау мүмкін емес: %s"
 
-#: trust/anchor.c:256
+#: trust/anchor.c:257
 #, c-format
 msgid "%s: couldn't enumerate slots: %s"
 msgstr "%s: слоттарды нөмірлеу мүмкін емес: %s"
 
-#: trust/anchor.c:264
+#: trust/anchor.c:265
 #, c-format
 msgid "%s: couldn't get token info: %s"
 msgstr "%s: токен ақпаратын алу мүмкін емес: %s"
 
-#: trust/anchor.c:276
+#: trust/anchor.c:277
 #, c-format
 msgid "%s: couldn't open session: %s"
 msgstr "%s: сессияны ашу мүмкін емес: %s"
 
-#: trust/anchor.c:324
+#: trust/anchor.c:325
 msgid "no configured writable location to store anchors"
 msgstr "зәкірлерді сақтау үшін жазуға болатын орын бапталмаған"
 
-#: trust/anchor.c:326
+#: trust/anchor.c:327
 msgid "no configured location to store anchors"
 msgstr "зәкірлерді сақтау орны бапталмаған"
 
-#: trust/anchor.c:387 trust/anchor.c:434
+#: trust/anchor.c:475
+msgid "specify at least one anchor input file"
+msgstr "кемінде бір зәкір кіріс файлын көрсетіңіз"
+
+#: trust/anchor.c:496
 #, c-format
 msgid "couldn't create object: %s"
 msgstr "объект жасау мүмкін емес: %s"
 
-#: trust/anchor.c:486
-msgid "specify at least one anchor input file"
-msgstr "кемінде бір зәкір кіріс файлын көрсетіңіз"
+#: trust/anchor.c:504
+#, c-format
+msgid "anchor exists but can't be modified: %s"
+msgstr "зәкір бар, бірақ оны өзгерту мүмкін емес: %s"
 
-#: trust/anchor.c:569
+#: trust/anchor.c:559
 #, c-format
 msgid "couldn't remove read-only %s"
 msgstr "тек оқуға арналған %s өшіру мүмкін емес"
 
-#: trust/anchor.c:572
+#: trust/anchor.c:562
 #, c-format
 msgid "couldn't remove %s: %s"
 msgstr "%s өшіру мүмкін емес: %s"
 
-#: trust/anchor.c:598
+#: trust/anchor.c:588
 msgid "at least one file or uri must be specified"
 msgstr "кемінде бір файл немесе uri көрсетілуі керек"
 
-#: trust/anchor.c:664
+#: trust/anchor.c:654
 msgid "an action was already specified"
 msgstr "әрекет көрсетіліп қойған"
 
-#: trust/anchor.c:701
+#: trust/anchor.c:691
 #, c-format
 msgid "%u error while processing"
-msgstr "өңдеу кезінде %u қате"
+msgid_plural "%u errors while processing"
+msgstr[0] "өңдеу кезінде %u қате орын алды"
 
-#: trust/anchor.c:703
-#, c-format
-msgid "%u errors while processing"
-msgstr "өңдеу кезінде %u қате"
-
-#: trust/builder.c:153
+#: trust/builder.c:155
 #, c-format
 msgid "%.*s: invalid certificate extension"
 msgstr "%.*s: жарамсыз сертификат кеңейтуі"
 
-#: trust/builder.c:672
+#: trust/builder.c:674
 #, c-format
 msgid "%.*s: invalid basic constraints certificate extension"
 msgstr "%.*s: жарамсыз basic constraints сертификат кеңейтуі"
 
-#: trust/builder.c:674
+#: trust/builder.c:676
 msgid "unknown"
 msgstr "белгісіз"
 
-#: trust/builder.c:863
+#: trust/builder.c:865
 msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
 msgstr "CKA_HASH_OF_SUBJECT_PUBLIC_KEY атрибуты жоқ"
 
-#: trust/builder.c:868
+#: trust/builder.c:870
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
 msgstr "CKA_HASH_OF_ISSUER_PUBLIC_KEY атрибуты жоқ"
 
-#: trust/builder.c:1082
+#: trust/builder.c:1093
 msgid "the object is not modifiable"
 msgstr "объект өзгертілмейді"
 
-#: trust/builder.c:1089
+#: trust/builder.c:1100
 msgid "objects of this type cannot be created"
 msgstr "мұндай типті объектілерді жасау мүмкін емес"
 
-#: trust/builder.c:1108
+#: trust/builder.c:1120
 #, c-format
 msgid "the %s attribute cannot be set"
 msgstr "%s атрибутын орнату мүмкін емес"
 
-#: trust/builder.c:1113
+#: trust/builder.c:1125
 #, c-format
 msgid "the %s attribute cannot be changed"
 msgstr "%s атрибутын өзгерту мүмкін емес"
 
-#: trust/builder.c:1119
+#: trust/builder.c:1131
 #, c-format
 msgid "the %s attribute has an invalid value"
 msgstr "%s атрибутының мәні жарамсыз"
 
-#: trust/builder.c:1128
+#: trust/builder.c:1140
 #, c-format
 msgid "the %s attribute is not valid for the object"
 msgstr "%s атрибуты объект үшін жарамсыз"
 
-#: trust/builder.c:1150
+#: trust/builder.c:1163
 #, c-format
 msgid "missing the %s attribute"
 msgstr "%s атрибуты жоқ"
 
-#: trust/builder.c:1190
+#: trust/builder.c:1203
 msgid "no CKA_CLASS attribute found"
 msgstr "CKA_CLASS атрибуты табылмады"
 
-#: trust/builder.c:1196
+#: trust/builder.c:1209
 #, c-format
 msgid "cannot create a %s object"
 msgstr "%s объектісін жасау мүмкін емес"
 
-#: trust/builder.c:1196
+#: trust/builder.c:1209
 msgid "token"
 msgstr "токен"
 
-#: trust/builder.c:1196
+#: trust/builder.c:1209
 msgid "non-token"
 msgstr "токен емес"
 
-#: trust/builder.c:1204
+#: trust/builder.c:1217
 #, c-format
 msgid "missing %s on object"
 msgstr "объектіде %s жоқ"
 
-#: trust/builder.c:1209
+#: trust/builder.c:1222
 #, c-format
 msgid "%s unsupported %s"
 msgstr "%s қолдау көрсетілмейтін %s"
 
-#: trust/builder.c:1230
+#: trust/builder.c:1243
 #, c-format
 msgid "%s unsupported object class"
 msgstr "%s қолдау көрсетілмейтін объект класы"
 
-#: trust/builder.c:1296
+#: trust/builder.c:1309
 msgid "invalid key usage certificate extension"
 msgstr "key usage сертификат кеңейтуі жарамсыз"
 
-#: trust/builder.c:1762
+#: trust/builder.c:1785
 msgid "invalid extended key usage certificate extension"
 msgstr "extended key usage сертификат кеңейтуі жарамсыз"
 
-#: trust/builder.c:1770
+#: trust/builder.c:1793
 msgid "invalid reject key usage certificate extension"
 msgstr "reject key usage сертификат кеңейтуі жарамсыз"
+
+#: trust/check-format.c:98 trust/parser.c:905
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "файлды ашу және бейнелеу (map) мүмкін емес: %s"
+
+#: trust/check-format.c:103
+#, c-format
+msgid "file is not recognized as .p11-kit format: %s"
+msgstr "файл .p11-kit пішімі ретінде танылмады: %s"
+
+#: trust/check-format.c:171
+msgid "specify a .p11-kit file"
+msgstr ".p11-kit файлын көрсетіңіз"
 
 #: trust/dump.c:113
 msgid "could not dump object"
 msgstr "объектіні дамптау мүмкін емес"
 
-#: trust/dump.c:187 trust/list.c:256
+#: trust/dump.c:187 trust/list.c:261
 msgid "extra arguments passed to command"
 msgstr "командаға артық аргументтер берілді"
 
-#: trust/enumerate.c:77
+#: trust/enumerate.c:78
 #, c-format
 msgid "couldn't parse attached certificate extension: %s"
 msgstr "тіркелген сертификат кеңейтуін талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:148
+#: trust/enumerate.c:152
 #, c-format
 msgid "couldn't load attached extensions for certificate: %s"
 msgstr "сертификат үшін тіркелген кеңейтулерді жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:272
+#: trust/enumerate.c:276
 #, c-format
 msgid "couldn't parse certificate: %s"
 msgstr "сертификатты талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:309
+#: trust/enumerate.c:313
 #, c-format
 msgid "couldn't load attributes: %s"
 msgstr "атрибуттарды жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:320
+#: trust/enumerate.c:324
 msgid "skipping non-certificate object"
 msgstr "сертификат емес объект өткізілуде"
 
-#: trust/enumerate.c:477 trust/enumerate.c:505
+#: trust/enumerate.c:481 trust/enumerate.c:509
 #, c-format
 msgid "couldn't load blocklist: %s"
 msgstr "блоктау тізімін жүктеу мүмкін емес: %s"
 
-#: trust/enumerate.c:579
+#: trust/enumerate.c:583
 msgid "a PKCS#11 URI has already been specified"
 msgstr "PKCS#11 URI көрсетіліп қойған"
 
-#: trust/enumerate.c:586
+#: trust/enumerate.c:590
 #, c-format
 msgid "couldn't parse pkcs11 uri filter: %s"
 msgstr "pkcs11 uri сүзгісін талдау мүмкін емес: %s"
 
-#: trust/enumerate.c:591
+#: trust/enumerate.c:595
 msgid "uri contained unrecognized components, nothing will be extracted"
 msgstr "uri құрамында танылмаған құрамдастар бар, ештеңе алынбайды"
 
-#: trust/enumerate.c:618
+#: trust/enumerate.c:622
 #, c-format
 msgid "unsupported or unrecognized filter: %s"
 msgstr "қолдау көрсетілмейтін немесе танылмаған сүзгі: %s"
 
-#: trust/enumerate.c:667
+#: trust/enumerate.c:671
 #, c-format
-msgid "unsupported or unregonized purpose: %s"
+msgid "unsupported or unrecognized purpose: %s"
 msgstr "қолдау көрсетілмейтін немесе танылмаған мақсат: %s"
 
-#: trust/enumerate.c:709
+#: trust/enumerate.c:713
 msgid "no modules containing trust policy are registered"
 msgstr "сенім саясаты бар ешқандай модуль тіркелмеген"
 
@@ -1185,17 +1647,25 @@ msgstr "пішім көрсетіліп қойған"
 msgid "unsupported or unrecognized format: %s"
 msgstr "қолдау көрсетілмейтін немесе танылмаған пішім: %s"
 
+#. * If we're extracting *both* anchors and blocklist, then we must have
+#. * a format that can represent the different types of information.
 #: trust/extract.c:148
 msgid "format does not support trust policy"
 msgstr "пішім сенім саясатына қолдау көрсетпейді"
 
 #: trust/extract.c:159
-msgid "format requires a purpose, specify it with --purpose; defaulting to 'server-auth'"
-msgstr "пішім мақсатты талап етеді, оны --purpose арқылы көрсетіңіз; 'server-auth' әдепкі мәні қолданылады"
+msgid ""
+"format requires a purpose, specify it with --purpose; defaulting to 'server-"
+"auth'"
+msgstr ""
+"пішім мақсатты талап етеді, оны --purpose арқылы көрсетіңіз; 'server-auth' "
+"әдепкі мәні қолданылады"
 
 #: trust/extract.c:162
 msgid "format does not support multiple purposes, defaulting to 'server-auth'"
-msgstr "пішім бірнеше мақсатқа қолдау көрсетпейді, 'server-auth' әдепкі мәні қолданылады"
+msgstr ""
+"пішім бірнеше мақсатқа қолдау көрсетпейді, 'server-auth' әдепкі мәні "
+"қолданылады"
 
 #: trust/extract.c:283
 msgid "specify one destination file or directory"
@@ -1205,7 +1675,8 @@ msgstr "бір мақсатты файлды немесе буманы көрс�
 msgid "no output format specified"
 msgstr "шығыс пішімі көрсетілмеген"
 
-#: trust/extract.c:332
+#. At this point we have no command
+#: trust/extract.c:333
 #, c-format
 msgid "could not run %s command"
 msgstr "%s командасын орындау мүмкін емес"
@@ -1214,8 +1685,9 @@ msgstr "%s командасын орындау мүмкін емес"
 msgid "multiple certificates found but could only write one to file"
 msgstr "бірнеше сертификат табылды, бірақ файлға тек біреуін жазуға болады"
 
-#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331 trust/extract-openssl.c:369
-#: trust/extract-openssl.c:696 trust/extract-pem.c:94 trust/extract-pem.c:161
+#: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
+#: trust/extract-openssl.c:369 trust/extract-openssl.c:696
+#: trust/extract-pem.c:94 trust/extract-pem.c:161
 #, c-format
 msgid "failed to find certificates: %s"
 msgstr "сертификаттарды табу сәтсіз: %s"
@@ -1250,20 +1722,26 @@ msgstr "$SOURCE_DATE_EPOCH орта айнымалысы: Соңындағы қ�
 #: trust/extract-jks.c:284
 #, c-format
 msgid ""
-"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal to %lu but was found to be: "
-"%llu \n"
+"Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or "
+"equal to %lu but was found to be: %llu \n"
 msgstr ""
-"$SOURCE_DATE_EPOCH орта айнымалысы: мән %lu тең немесе кіші болуы керек, бірақ ол мынадай болды: %llu\n"
+"$SOURCE_DATE_EPOCH орта айнымалысы: мән %lu тең немесе кіші болуы керек, "
+"бірақ ол мынадай болды: %llu\n"
 
 #: trust/extract-jks.c:312
 msgid "could not generate a certificate alias name"
 msgstr "сертификат бүркеншік атын жасау мүмкін емес"
 
-#: trust/list.c:122
+#: trust/list.c:126
 msgid "skipping object, couldn't build uri"
 msgstr "uri құру мүмкін емес, объект өткізілуде"
 
-#: trust/module.c:303
+#: trust/module.c:299
+#, c-format
+msgid "value required for %s"
+msgstr "%s үшін мән қажет"
+
+#: trust/module.c:305
 #, c-format
 msgid "unrecognized module argument: %s"
 msgstr "танылмаған модуль аргументі: %s"
@@ -1278,107 +1756,136 @@ msgstr "зәкірлер орнында сенімсіздігі бар серт
 msgid "overriding trust for anchor in blocklist: %s"
 msgstr "блоктау тізіміндегі зәкір үшін сенім қайта анықталуда: %s"
 
-#: trust/parser.c:596
+#: trust/parser.c:716
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
 msgstr "%s түріндегі PEM блогын талдау мүмкін емес"
 
-#: trust/parser.c:766
-#, c-format
-msgid "couldn't open and map file: %s"
-msgstr "файлды ашу және бейнелеу (map) мүмкін емес: %s"
-
-#: trust/persist.c:493
-#, c-format
-msgid "invalid oid value: %s"
-msgstr "oid мәні жарамсыз: %s"
-
-#: trust/save.c:120
+#: trust/save.c:126
 #, c-format
 msgid "couldn't create file: %s%s"
 msgstr "файлды жасау мүмкін емес: %s%s"
 
-#: trust/save.c:168
+#: trust/save.c:174
 #, c-format
 msgid "couldn't write to file: %s"
 msgstr "файлға жазу мүмкін емес: %s"
 
-#: trust/save.c:205 trust/save.c:223 trust/save.c:286
+#. Continue trying other names
+#: trust/save.c:211 trust/save.c:229 trust/save.c:292
 #, c-format
 msgid "couldn't complete writing of file: %s"
 msgstr "файлды жазуды аяқтау мүмкін емес: %s"
 
-#: trust/save.c:256
+#: trust/save.c:262
 #, c-format
 msgid "couldn't write file: %s"
 msgstr "файлды жазу мүмкін емес: %s"
 
-#: trust/save.c:262
+#: trust/save.c:268
 #, c-format
 msgid "couldn't set file permissions: %s"
 msgstr "файл рұқсаттарын орнату мүмкін емес: %s"
 
-#: trust/save.c:268 trust/save.c:311
+#: trust/save.c:274 trust/save.c:317
 #, c-format
 msgid "couldn't complete writing file: %s"
 msgstr "файлды жазуды аяқтау мүмкін емес: %s"
 
-#: trust/save.c:305
+#: trust/save.c:311
 #, c-format
 msgid "couldn't remove original file: %s"
 msgstr "түпнұсқа файлды өшіру мүмкін емес: %s"
 
-#: trust/save.c:350 trust/token.c:635
+#: trust/save.c:357 trust/token.c:687
 #, c-format
 msgid "couldn't create directory: %s"
 msgstr "буманы жасау мүмкін емес: %s"
 
-#: trust/save.c:354
+#: trust/save.c:361
 #, c-format
 msgid "directory already exists: %s"
 msgstr "бума бар болып тұр: %s"
 
-#: trust/save.c:366
+#: trust/save.c:372
+#, c-format
+msgid "couldn't open directory: %s"
+msgstr "буманы ашу мүмкін болмады: %s"
+
+#: trust/save.c:376
+#, c-format
+msgid "couldn't check directory permissions: %s"
+msgstr "бума рұқсаттарын тексеру мүмкін болмады: %s"
+
+#: trust/save.c:382
 #, c-format
 msgid "couldn't make directory writable: %s"
 msgstr "буманы жазылатын ету мүмкін емес: %s"
 
-#: trust/save.c:526
+#: trust/save.c:554
 #, c-format
 msgid "couldn't create symlink: %s"
 msgstr "символдық сілтеме жасау мүмкін емес: %s"
 
-#: trust/save.c:588 trust/token.c:503
+#: trust/save.c:616 trust/token.c:555
 #, c-format
 msgid "couldn't remove file: %s"
 msgstr "файлды өшіру мүмкін емес: %s"
 
-#: trust/save.c:616
+#: trust/save.c:644
 #, c-format
 msgid "couldn't set directory permissions: %s"
 msgstr "бума рұқсаттарын орнату мүмкін емес: %s"
 
-#: trust/token.c:227
+#: trust/token.c:228
 #, c-format
 msgid "couldn't load file into objects: %s"
 msgstr "файлды объектілерге жүктеу мүмкін емес: %s"
 
-#: trust/token.c:243
+#: trust/token.c:244
 #, c-format
 msgid "couldn't stat path: %d: %s"
 msgstr "жол күйін алу мүмкін емес: %d: %s"
 
-#: trust/token.c:312
+#: trust/token.c:342
 #, c-format
 msgid "cannot access trust certificate path: %s"
 msgstr "сенім сертификат жолына қол жеткізу мүмкін емес: %s"
 
-#: trust/token.c:426
+#: trust/token.c:478
 #, c-format
 msgid "cannot access trust file: %s"
 msgstr "сенім файлына қол жеткізу мүмкін емес: %s"
 
-#: trust/token.c:475
+#: trust/token.c:527
 #, c-format
 msgid "couldn't access: %s"
 msgstr "қол жеткізу мүмкін емес: %s"
+
+#: trust/trust.c:61
+msgid "List trust or certificates"
+msgstr "Сенім немесе сертификаттар тізімін шығару"
+
+#: trust/trust.c:62
+msgid "Extract certificates and trust"
+msgstr "Сертификаттар мен сенімді тарқату"
+
+#: trust/trust.c:63
+msgid "Extract trust compatibility bundles"
+msgstr "Сенім үйлесімділігі дестелерін тарқату"
+
+#: trust/trust.c:64
+msgid "Add, remove, change trust anchors"
+msgstr "Сенім зәкірлерін қосу, өшіру, өзгерту"
+
+#: trust/trust.c:65
+msgid "Dump trust objects in internal format"
+msgstr "Сенім объектілерінің ішкі пішімдегі дампын шығару"
+
+#: trust/trust.c:66
+msgid "Check the format of .p11-kit files"
+msgstr ".p11-kit файлдарының пішімін тексеру"
+
+#, c-format
+#~ msgid "%u errors while processing"
+#~ msgstr "өңдеу кезінде %u қате"
