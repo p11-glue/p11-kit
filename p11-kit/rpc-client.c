@@ -44,6 +44,8 @@
 #include "message.h"
 #include "private.h"
 #include "rpc.h"
+#include "rpc-attribute.h"
+#include "rpc-mechanism.h"
 #include "rpc-message.h"
 #include "virtual.h"
 
