@@ -2787,6 +2787,19 @@ mechanism_has_no_parameters (CK_MECHANISM_TYPE mech)
 	case CKM_XMSSMT_KEY_PAIR_GEN:
 	case CKM_XMSS:
 	case CKM_XMSSMT:
+	/* Standard SHA-3 digests, HMACs and key generation */
+	case CKM_SHA3_224:
+	case CKM_SHA3_256:
+	case CKM_SHA3_384:
+	case CKM_SHA3_512:
+	case CKM_SHA3_224_HMAC:
+	case CKM_SHA3_256_HMAC:
+	case CKM_SHA3_384_HMAC:
+	case CKM_SHA3_512_HMAC:
+	case CKM_SHA3_224_KEY_GEN:
+	case CKM_SHA3_256_KEY_GEN:
+	case CKM_SHA3_384_KEY_GEN:
+	case CKM_SHA3_512_KEY_GEN:
 		return true;
 	default:
 		return false;
@@ -2802,6 +2815,21 @@ p11_rpc_mechanism_is_supported (CK_MECHANISM_TYPE mech)
 	return false;
 }
 
+/*
+ * A call can be carried even when its mechanism has no known
+ * parameter encoding, as long as it supplies no parameter: the
+ * encoding then only says that the parameter is absent.
+ */
+bool
+p11_rpc_mechanism_call_is_supported (const CK_MECHANISM *mech)
+{
+	if (mech == NULL)
+		return false;
+	if (p11_rpc_mechanism_is_supported (mech->mechanism))
+		return true;
+	return mech->pParameter == NULL && mech->ulParameterLen == 0;
+}
+
 void
 p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 {
@@ -2815,7 +2843,9 @@ p11_rpc_buffer_add_mechanism (p11_buffer *buffer, const CK_MECHANISM *mech)
 		return;
 	}
 
-	assert (mechanism_has_sane_parameters (mech->mechanism));
+	/* An absent parameter needs no encoding, whatever the mechanism */
+	assert (mechanism_has_sane_parameters (mech->mechanism) ||
+		(mech->pParameter == NULL && mech->ulParameterLen == 0));
 
 	if (mech->pParameter == NULL && mech->ulParameterLen == 0) {
 		p11_rpc_buffer_add_byte (buffer, 0);

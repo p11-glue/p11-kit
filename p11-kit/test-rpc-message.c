@@ -901,6 +901,54 @@ test_pqc_mechanism_no_params (void)
 }
 
 static void
+test_mechanism_call_no_params (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	unsigned char param[] = { 0x01, 0x02 };
+	CK_MECHANISM mechs[] = {
+		{ CKM_SHA3_256, NULL, 0 },
+		{ CKM_SHA3_512_HMAC, NULL, 0 },
+		{ CKM_SHA3_224_KEY_GEN, NULL, 0 },
+		/* A vendor mechanism with no known parameter encoding */
+		{ CKM_VENDOR_DEFINED | 0x1234, NULL, 0 }
+	};
+	CK_MECHANISM unknown_with_param = {
+		CKM_VENDOR_DEFINED | 0x1234, param, sizeof (param)
+	};
+	CK_MECHANISM val;
+	size_t offset = 0;
+	bool ret;
+	size_t i;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	assert_num_eq (false, p11_rpc_mechanism_call_is_supported (NULL));
+	assert_num_eq (false, p11_rpc_mechanism_call_is_supported (&unknown_with_param));
+
+	p11_buffer_init (&buffer, 0);
+
+	for (i = 0; i < ELEMS (mechs); i++) {
+		assert_num_eq (true, p11_rpc_mechanism_call_is_supported (&mechs[i]));
+
+		p11_rpc_buffer_add_mechanism (&buffer, &mechs[i]);
+		assert (!p11_buffer_failed (&buffer));
+
+		memset (&val, 0, sizeof (val));
+		ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+		assert_num_eq (true, ret);
+		assert_num_eq (mechs[i].mechanism, val.mechanism);
+		assert_ptr_eq (NULL, val.pParameter);
+		assert_num_eq (0, val.ulParameterLen);
+	}
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
+static void
 test_pqc_attribute_serialization (void)
 {
 	p11_buffer buffer;
@@ -1257,6 +1305,7 @@ main (int argc,
 	p11_test (test_message_write, "/rpc-message/message-write");
 	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
 	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
+	p11_test (test_mechanism_call_no_params, "/rpc-message/mechanism-call-no-params");
 	p11_test (test_pqc_attribute_serialization, "/rpc-message/pqc-attribute-serialization");
 
 	test_mock_add_tests ("/rpc-message", NULL);
