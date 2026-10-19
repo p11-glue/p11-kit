@@ -438,7 +438,7 @@ proto_write_mechanism (p11_rpc_message *msg,
 		return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 	}
 
-	if (!p11_rpc_mechanism_is_supported (mech->mechanism))
+	if (!p11_rpc_mechanism_call_is_supported (mech))
 		return CKR_MECHANISM_INVALID;
 
 	/*
