@@ -904,7 +904,7 @@ static void
 test_mechanism_call_no_params (void)
 {
 	p11_buffer buffer;
-	CK_MECHANISM_TYPE *mechanisms;
+	CK_MECHANISM_TYPE *saved_supported;
 	unsigned char param[] = { 0x01, 0x02 };
 	CK_MECHANISM mechs[] = {
 		{ CKM_SHA3_256, NULL, 0 },
@@ -921,7 +921,7 @@ test_mechanism_call_no_params (void)
 	bool ret;
 	size_t i;
 
-	mechanisms = p11_rpc_mechanisms_override_supported;
+	saved_supported = p11_rpc_mechanisms_override_supported;
 	p11_rpc_mechanisms_override_supported = NULL;
 
 	assert_num_eq (false, p11_rpc_mechanism_call_is_supported (NULL));
@@ -945,7 +945,7 @@ test_mechanism_call_no_params (void)
 
 	p11_buffer_uninit (&buffer);
 
-	p11_rpc_mechanisms_override_supported = mechanisms;
+	p11_rpc_mechanisms_override_supported = saved_supported;
 }
 
 static void
