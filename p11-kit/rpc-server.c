@@ -48,6 +48,8 @@
 #include "proxy.h"
 #include "remote.h"
 #include "rpc.h"
+#include "rpc-attribute.h"
+#include "rpc-mechanism.h"
 #include "rpc-message.h"
 #include "uri.h"
 
