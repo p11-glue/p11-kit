@@ -61,6 +61,7 @@
 
 static p11_virtual base;
 static unsigned int rpc_initialized = 0;
+static uint8_t rpc_version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
 
 static CK_RV
 rpc_initialize (p11_rpc_client_vtable *vtable,
@@ -79,6 +80,9 @@ rpc_authenticate (p11_rpc_client_vtable *vtable,
 {
 	assert_str_eq (vtable->data, "vtable-data");
 	assert_ptr_not_null (version);
+
+	if (*version > rpc_version)
+		*version = rpc_version;
 
 	return CKR_OK;
 }
@@ -111,7 +115,7 @@ rpc_transport (p11_rpc_client_vtable *vtable,
 	assert_str_eq (vtable->data, "vtable-data");
 
 	/* Just pass directly to the server code */
-	ret = p11_rpc_server_handle (&base.funcs, request, response);
+	ret = p11_rpc_server_handle_version (&base.funcs, rpc_version, request, response);
 	assert (ret == true);
 
 	return CKR_OK;
@@ -548,6 +552,39 @@ teardown_mock_module (CK_FUNCTION_LIST *rpc_module)
 	p11_virtual_unwrap (rpc_module);
 }
 
+/* Client and server negotiate protocol version 1, as with p11-kit <= 0.25.5 */
+static void
+test_sign_protocol_v1 (void)
+{
+	CK_FUNCTION_LIST *module;
+	CK_SESSION_HANDLE session = 0;
+	CK_MECHANISM mech = { CKM_MOCK_PREFIX, "prefix:", 7 };
+	CK_BYTE signature[128];
+	CK_ULONG length;
+	CK_RV rv;
+
+	rpc_version = 1;
+	module = setup_mock_module (&session);
+
+	rv = (module->C_Login) (session, CKU_USER, (CK_BYTE_PTR)"booo", 4);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = (module->C_SignInit) (session, &mech, MOCK_PRIVATE_KEY_PREFIX);
+	assert_num_eq (rv, CKR_OK);
+
+	rv = (module->C_Login) (session, CKU_CONTEXT_SPECIFIC, (CK_BYTE_PTR)"booo", 4);
+	assert_num_eq (rv, CKR_OK);
+
+	length = sizeof (signature);
+	rv = (module->C_Sign) (session, (CK_BYTE_PTR)"BLAh", 4, signature, &length);
+	assert_num_eq (rv, CKR_OK);
+	assert_num_eq (13, length);
+	assert (memcmp (signature, "prefix:value4", 13) == 0);
+
+	teardown_mock_module (module);
+	rpc_version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
+}
+
 static void
 test_get_info_stand_in (void *module)
 {
@@ -833,6 +870,7 @@ main (int argc,
 	p11_testx (test_simultaneous_functions, &mock_module_v3_no_slots, "/rpc3/simultaneous-functions");
 	p11_testx (test_mechanism_unsupported, &mock_module_v3, "/rpc3/mechanism-unsupported");
 	p11_testx (test_recursion_limit, &mock_module_v3, "/rpc3/recursion-limit");
+	p11_test (test_sign_protocol_v1, "/rpc3/sign-protocol-v1");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_v3_no_slots, "/rpc3/fork-and-reinitialize");

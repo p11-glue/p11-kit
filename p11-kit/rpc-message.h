@@ -322,6 +322,7 @@ typedef struct {
 	size_t parsed;
 	const char *sigverify;
 	void *extra;
+	uint8_t version;
 } p11_rpc_message;
 
 typedef void (*p11_rpc_value_encoder) (p11_buffer *, const void *, CK_ULONG);
@@ -543,6 +544,13 @@ void             p11_rpc_buffer_add_mechanism            (p11_buffer *buffer,
 							  const CK_MECHANISM *mech);
 
 bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_MECHANISM *mech);
+
+void             p11_rpc_buffer_add_mechanism_v1         (p11_buffer *buffer,
+							  const CK_MECHANISM *mech);
+
+bool             p11_rpc_buffer_get_mechanism_v1         (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 

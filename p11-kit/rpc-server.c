@@ -454,6 +454,17 @@ proto_read_space_string (p11_rpc_message *msg,
 	return CKR_OK;
 }
 
+static bool
+get_mechanism_for_version (p11_rpc_message *msg,
+                           size_t *offset,
+                           CK_MECHANISM *mech)
+{
+	/* Mechanism encoding changed with protocol version 2 */
+	if (msg->version < 2)
+		return p11_rpc_buffer_get_mechanism_v1 (msg->input, offset, mech);
+	return p11_rpc_buffer_get_mechanism (msg->input, offset, mech);
+}
+
 static CK_RV
 proto_read_mechanism (p11_rpc_message *msg,
                       CK_MECHANISM_PTR *mech)
@@ -471,7 +482,7 @@ proto_read_mechanism (p11_rpc_message *msg,
 	/* Check the length needed to store the parameter */
 	memset (&temp, 0, sizeof (temp));
 	offset = msg->parsed;
-	if (!p11_rpc_buffer_get_mechanism (msg->input, &offset, &temp)) {
+	if (!get_mechanism_for_version (msg, &offset, &temp)) {
 		msg->parsed = offset;
 		return PARSE_ERROR;
 	}
@@ -499,7 +510,7 @@ proto_read_mechanism (p11_rpc_message *msg,
 
 	/* Actually retrieve the parameter */
 	(*mech)->pParameter = p11_rpc_message_alloc_extra (msg, temp.ulParameterLen);
-	if (!p11_rpc_buffer_get_mechanism (msg->input, &msg->parsed, *mech))
+	if (!get_mechanism_for_version (msg, &msg->parsed, *mech))
 		return PARSE_ERROR;
 
 	assert (msg->parsed == offset);
@@ -2617,6 +2628,16 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
                        p11_buffer *request,
                        p11_buffer *response)
 {
+	return p11_rpc_server_handle_version (self, P11_RPC_PROTOCOL_VERSION_MAXIMUM,
+	                                      request, response);
+}
+
+bool
+p11_rpc_server_handle_version (CK_X_FUNCTION_LIST *self,
+                               uint8_t version,
+                               p11_buffer *request,
+                               p11_buffer *response)
+{
 	p11_rpc_message msg;
 	CK_RV ret;
 	int req_id;
@@ -2628,6 +2649,7 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	p11_message_clear ();
 
 	p11_rpc_message_init (&msg, request, response);
+	msg.version = version;
 
 	if (!p11_rpc_message_parse (&msg, P11_RPC_REQUEST)) {
 		p11_rpc_message_clear (&msg);
@@ -2874,7 +2896,8 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 			goto out;
 		}
 
-		if (!p11_rpc_server_handle (&server.virt.funcs, &buffer, &buffer)) {
+		if (!p11_rpc_server_handle_version (&server.virt.funcs, server.version,
+		                                    &buffer, &buffer)) {
 			p11_message (_("unexpected error handling rpc message"));
 			goto out;
 		}

@@ -1018,6 +1018,100 @@ test_eddsa_mechanism (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+/*
+ * Peers that negotiated protocol version 0 or 1 (p11-kit <= 0.25.5) encode
+ * a C_SignInit request as: mechanism type, the parameter encoding (an empty
+ * byte array for mechanisms without parameters, no "has parameter" byte),
+ * then the key handle.  Decoding must leave the key handle intact.
+ */
+static void
+test_mechanism_v1_wire_format (void)
+{
+	p11_buffer wire;
+	p11_buffer encoded;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_RSA_PKCS_PSS_PARAMS pss = { CKM_SHA256, CKG_MGF1_SHA256, 32 };
+	CK_MECHANISM rsa_pkcs = { CKM_RSA_PKCS, NULL, 0 };
+	CK_MECHANISM rsa_pss = { CKM_RSA_PKCS_PSS, &pss, sizeof (pss) };
+	CK_RSA_PKCS_PSS_PARAMS *decoded;
+	CK_MECHANISM val;
+	uint64_t handle;
+	size_t offset, offset2;
+	bool ret;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	/* Mechanism without parameters, as sent by an old peer */
+	p11_buffer_init (&wire, 0);
+	p11_rpc_buffer_add_uint32 (&wire, CKM_RSA_PKCS);
+	p11_rpc_buffer_add_byte_array (&wire, NULL, 0);
+	p11_rpc_buffer_add_uint64 (&wire, 0x12345678);
+	assert (!p11_buffer_failed (&wire));
+
+	p11_buffer_init (&encoded, 0);
+	p11_rpc_buffer_add_mechanism_v1 (&encoded, &rsa_pkcs);
+	p11_rpc_buffer_add_uint64 (&encoded, 0x12345678);
+	assert_num_eq (wire.len, encoded.len);
+	assert (memcmp (wire.data, encoded.data, wire.len) == 0);
+	p11_buffer_uninit (&encoded);
+
+	offset = 0;
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism_v1 (&wire, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_RSA_PKCS, val.mechanism);
+	assert_num_eq (0, val.ulParameterLen);
+	ret = p11_rpc_buffer_get_uint64 (&wire, &offset, &handle);
+	assert_num_eq (true, ret);
+	assert_num_eq (0x12345678, handle);
+	assert_num_eq (wire.len, offset);
+	p11_buffer_uninit (&wire);
+
+	/* Mechanism with parameters, as sent by an old peer */
+	p11_buffer_init (&wire, 0);
+	p11_rpc_buffer_add_uint32 (&wire, CKM_RSA_PKCS_PSS);
+	p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value (&wire, &pss, sizeof (pss));
+	p11_rpc_buffer_add_uint64 (&wire, 0x12345678);
+	assert (!p11_buffer_failed (&wire));
+
+	p11_buffer_init (&encoded, 0);
+	p11_rpc_buffer_add_mechanism_v1 (&encoded, &rsa_pss);
+	p11_rpc_buffer_add_uint64 (&encoded, 0x12345678);
+	assert_num_eq (wire.len, encoded.len);
+	assert (memcmp (wire.data, encoded.data, wire.len) == 0);
+	p11_buffer_uninit (&encoded);
+
+	/* First pass only reports the length of the parameter */
+	offset = 0;
+	offset2 = offset;
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism_v1 (&wire, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_RSA_PKCS_PSS, val.mechanism);
+	assert_num_eq (sizeof (CK_RSA_PKCS_PSS_PARAMS), val.ulParameterLen);
+
+	val.pParameter = malloc (val.ulParameterLen);
+	assert_ptr_not_null (val.pParameter);
+
+	offset = offset2;
+	ret = p11_rpc_buffer_get_mechanism_v1 (&wire, &offset, &val);
+	assert_num_eq (true, ret);
+	decoded = val.pParameter;
+	assert_num_eq (CKM_SHA256, decoded->hashAlg);
+	assert_num_eq (CKG_MGF1_SHA256, decoded->mgf);
+	assert_num_eq (32, decoded->sLen);
+	free (val.pParameter);
+
+	ret = p11_rpc_buffer_get_uint64 (&wire, &offset, &handle);
+	assert_num_eq (true, ret);
+	assert_num_eq (0x12345678, handle);
+	assert_num_eq (wire.len, offset);
+	p11_buffer_uninit (&wire);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
 /* Mechanisms taking an optional CK_SIGN_ADDITIONAL_CONTEXT parameter,
  * as defined by PKCS#11 3.2 sections 6.67.5, 6.67.7, 6.68.5 and 6.68.7 */
 static CK_MECHANISM_TYPE sign_additional_context_mechs[] = {
@@ -1252,6 +1346,7 @@ main (int argc,
 	p11_test (test_byte_array_value, "/rpc-message/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
 	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
+	p11_test (test_mechanism_v1_wire_format, "/rpc-message/mechanism-v1-wire-format");
 	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");

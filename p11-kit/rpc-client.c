@@ -99,6 +99,7 @@ call_prepare (rpc_client *module,
 
 	/* We use the same buffer for reading and writing */
 	p11_rpc_message_init (msg, buffer, buffer);
+	msg->version = module->version;
 
 	/* Put in the Call ID and signature */
 	if (!p11_rpc_message_prep (msg, call_id, P11_RPC_REQUEST))
@@ -453,7 +454,10 @@ proto_write_mechanism (p11_rpc_message *msg,
 	 * pointing to garbage if they don't think it's going to be used.
 	 */
 
-	p11_rpc_buffer_add_mechanism (msg->output, mech);
+	if (msg->version < 2)
+		p11_rpc_buffer_add_mechanism_v1 (msg->output, mech);
+	else
+		p11_rpc_buffer_add_mechanism (msg->output, mech);
 
 	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 }
