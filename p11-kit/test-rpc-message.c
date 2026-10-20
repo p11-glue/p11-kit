@@ -781,6 +781,120 @@ test_mechanism_value (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+/*
+ * Bit counts arrive on the wire as 64 bit values, but end up in CK_ULONG
+ * fields.  Counts that do not fit must be rejected, whether or not the
+ * array they describe is present.
+ */
+static void
+test_mechanism_value_bits_overflow (void)
+{
+	CK_BYTE counter[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	CK_BYTE nonce[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+	CK_CHACHA20_PARAMS chacha20;
+	CK_SALSA20_PARAMS salsa20;
+	CK_SALSA20_CHACHA20_POLY1305_PARAMS poly1305;
+	p11_buffer buffer;
+	size_t offset;
+	CK_ULONG len;
+
+	p11_buffer_init (&buffer, 0);
+
+	/* A well formed ChaCha20 parameter still decodes */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, 64);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, 96);
+	p11_rpc_buffer_add_byte_array (&buffer, nonce, sizeof (nonce));
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (true, p11_rpc_buffer_get_chacha20_mechanism_value (&buffer, &offset,
+									  &chacha20, &len));
+	assert_num_eq (sizeof (CK_CHACHA20_PARAMS), len);
+	assert_num_eq (64, chacha20.blockCounterBits);
+	assert_num_eq (96, chacha20.ulNonceBits);
+
+	/* A block counter bit count that cannot be represented is rejected */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, UINT64_MAX);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, 96);
+	p11_rpc_buffer_add_byte_array (&buffer, nonce, sizeof (nonce));
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (false, p11_rpc_buffer_get_chacha20_mechanism_value (&buffer, &offset,
+									   NULL, NULL));
+
+	/* ... even when the array it describes is absent */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, 64);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, UINT64_MAX);
+	p11_rpc_buffer_add_byte_array (&buffer, NULL, 0);
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (false, p11_rpc_buffer_get_chacha20_mechanism_value (&buffer, &offset,
+									   NULL, NULL));
+
+#if ULONG_MAX < UINT64_MAX
+	/*
+	 * A count that only fits once truncated to CK_ULONG must not be
+	 * accepted by matching the truncated value against the array length.
+	 */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, 64);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, (uint64_t) ULONG_MAX + 1 + 96);
+	p11_rpc_buffer_add_byte_array (&buffer, nonce, sizeof (nonce));
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (false, p11_rpc_buffer_get_chacha20_mechanism_value (&buffer, &offset,
+									   NULL, NULL));
+#endif
+
+	/* The same guard applies to Salsa20 ... */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, 96);
+	p11_rpc_buffer_add_byte_array (&buffer, nonce, sizeof (nonce));
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (true, p11_rpc_buffer_get_salsa20_mechanism_value (&buffer, &offset,
+									 &salsa20, &len));
+	assert_num_eq (96, salsa20.ulNonceBits);
+
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_byte_array (&buffer, counter, sizeof (counter));
+	p11_rpc_buffer_add_uint64 (&buffer, UINT64_MAX);
+	p11_rpc_buffer_add_byte_array (&buffer, NULL, 0);
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (false, p11_rpc_buffer_get_salsa20_mechanism_value (&buffer, &offset,
+									  NULL, NULL));
+
+	/* ... and to Poly1305 */
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, 96);
+	p11_rpc_buffer_add_byte_array (&buffer, nonce, sizeof (nonce));
+	p11_rpc_buffer_add_byte_array (&buffer, NULL, 0);
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (true, p11_rpc_buffer_get_poly1305_mechanism_value (&buffer, &offset,
+									  &poly1305, &len));
+	assert_num_eq (96, poly1305.ulNonceBits);
+
+	offset = 0;
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint64 (&buffer, UINT64_MAX);
+	p11_rpc_buffer_add_byte_array (&buffer, NULL, 0);
+	p11_rpc_buffer_add_byte_array (&buffer, NULL, 0);
+	assert (!p11_buffer_failed (&buffer));
+	assert_num_eq (false, p11_rpc_buffer_get_poly1305_mechanism_value (&buffer, &offset,
+									   NULL, NULL));
+
+	p11_buffer_uninit (&buffer);
+}
+
 static void
 test_message_write (void)
 {
@@ -1253,6 +1367,7 @@ main (int argc,
 	p11_test (test_date_value_empty, "/rpc-message/date-value-empty");
 	p11_test (test_byte_array_value, "/rpc-message/byte-array-value");
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
+	p11_test (test_mechanism_value_bits_overflow, "/rpc-message/mechanism-value-bits-overflow");
 	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
 	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
