@@ -43,6 +43,7 @@
 #include "p11-kit.h"
 #include "private.h"
 #include "rpc.h"
+#include "rpc-mechanism.h"
 #include "rpc-message.h"
 #include "virtual.h"
 
@@ -700,6 +701,150 @@ test_mechanism_unsupported (void *module)
 	teardown_mock_module (rpc_module);
 }
 
+/*
+ * Round trip a mechanism parameter through its serializer, the same way
+ * the server does it: decode once with a NULL value to learn how much
+ * space the parameter needs, then decode again into that space.
+ */
+static void *
+roundtrip_mechanism_value (p11_rpc_value_encoder encode,
+			   p11_rpc_value_decoder decode,
+			   const void *value,
+			   CK_ULONG value_length,
+			   p11_buffer *buffer)
+{
+	CK_ULONG decoded_length = 0;
+	size_t offset = 0;
+	void *decoded;
+
+	p11_buffer_init (buffer, 0);
+
+	encode (buffer, value, value_length);
+	assert (!p11_buffer_failed (buffer));
+
+	assert (decode (buffer, &offset, NULL, &decoded_length));
+	assert_num_eq (decoded_length, value_length);
+
+	decoded = malloc (decoded_length);
+	assert_ptr_not_null (decoded);
+
+	offset = 0;
+	assert (decode (buffer, &offset, decoded, &decoded_length));
+
+	return decoded;
+}
+
+/*
+ * The byte arrays a decoded parameter points at live in the buffer, so
+ * it is only released once the caller is done looking at them.
+ */
+static void
+finish_roundtrip (p11_buffer *buffer,
+		  void *decoded)
+{
+	free (decoded);
+	p11_buffer_uninit (buffer);
+}
+
+static void
+test_mechanism_value_flat (void)
+{
+	static const CK_BYTE iv[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	CK_RC2_CBC_PARAMS rc2 = { 64, { 1, 2, 3, 4, 5, 6, 7, 8 } };
+	CK_RC5_MAC_GENERAL_PARAMS rc5 = { 32, 12, 8 };
+	CK_TLS_MAC_PARAMS tls_mac = { CKM_SHA256, 12, 1 };
+	CK_RC2_CBC_PARAMS *rc2_out;
+	CK_RC5_MAC_GENERAL_PARAMS *rc5_out;
+	CK_TLS_MAC_PARAMS *tls_mac_out;
+	p11_buffer buffer;
+
+	rc2_out = roundtrip_mechanism_value (p11_rpc_buffer_add_rc2_cbc_mechanism_value,
+					     p11_rpc_buffer_get_rc2_cbc_mechanism_value,
+					     &rc2, sizeof (rc2), &buffer);
+	assert_num_eq (rc2_out->ulEffectiveBits, 64);
+	assert (memcmp (rc2_out->iv, iv, sizeof (iv)) == 0);
+	finish_roundtrip (&buffer, rc2_out);
+
+	rc5_out = roundtrip_mechanism_value (p11_rpc_buffer_add_rc5_mac_general_mechanism_value,
+					     p11_rpc_buffer_get_rc5_mac_general_mechanism_value,
+					     &rc5, sizeof (rc5), &buffer);
+	assert_num_eq (rc5_out->ulWordsize, 32);
+	assert_num_eq (rc5_out->ulRounds, 12);
+	assert_num_eq (rc5_out->ulMacLength, 8);
+	finish_roundtrip (&buffer, rc5_out);
+
+	tls_mac_out = roundtrip_mechanism_value (p11_rpc_buffer_add_tls_mac_mechanism_value,
+						 p11_rpc_buffer_get_tls_mac_mechanism_value,
+						 &tls_mac, sizeof (tls_mac), &buffer);
+	assert_num_eq (tls_mac_out->prfHashMechanism, CKM_SHA256);
+	assert_num_eq (tls_mac_out->ulMacLength, 12);
+	assert_num_eq (tls_mac_out->ulServerOrClient, 1);
+	finish_roundtrip (&buffer, tls_mac_out);
+}
+
+static void
+test_mechanism_value_byte_arrays (void)
+{
+	CK_BYTE shared[] = { 9, 8, 7 };
+	CK_BYTE public_data[] = { 1, 1, 2, 3, 5 };
+	CK_BYTE salt[] = { 4, 4, 4, 4 };
+	CK_BYTE info[] = { 7 };
+	CK_ECMQV_DERIVE_PARAMS ecmqv;
+	CK_HKDF_PARAMS hkdf;
+	CK_ECMQV_DERIVE_PARAMS *ecmqv_out;
+	CK_HKDF_PARAMS *hkdf_out;
+	p11_buffer buffer;
+
+	memset (&ecmqv, 0, sizeof (ecmqv));
+	ecmqv.kdf = CKD_SHA256_KDF;
+	ecmqv.pSharedData = shared;
+	ecmqv.ulSharedDataLen = sizeof (shared);
+	ecmqv.pPublicData = public_data;
+	ecmqv.ulPublicDataLen = sizeof (public_data);
+	ecmqv.ulPrivateDataLen = 32;
+	ecmqv.hPrivateData = 0x11;
+	ecmqv.pPublicData2 = public_data;
+	ecmqv.ulPublicDataLen2 = sizeof (public_data);
+	ecmqv.publicKey = 0x22;
+
+	ecmqv_out = roundtrip_mechanism_value (p11_rpc_buffer_add_ecmqv_derive_mechanism_value,
+					       p11_rpc_buffer_get_ecmqv_derive_mechanism_value,
+					       &ecmqv, sizeof (ecmqv), &buffer);
+	assert_num_eq (ecmqv_out->kdf, CKD_SHA256_KDF);
+	assert_num_eq (ecmqv_out->ulSharedDataLen, sizeof (shared));
+	assert (memcmp (ecmqv_out->pSharedData, shared, sizeof (shared)) == 0);
+	assert_num_eq (ecmqv_out->ulPublicDataLen2, sizeof (public_data));
+	assert (memcmp (ecmqv_out->pPublicData2, public_data, sizeof (public_data)) == 0);
+	assert_num_eq (ecmqv_out->ulPrivateDataLen, 32);
+	assert_num_eq (ecmqv_out->hPrivateData, 0x11);
+	assert_num_eq (ecmqv_out->publicKey, 0x22);
+	finish_roundtrip (&buffer, ecmqv_out);
+
+	memset (&hkdf, 0, sizeof (hkdf));
+	hkdf.bExtract = CK_TRUE;
+	hkdf.bExpand = CK_FALSE;
+	hkdf.prfHashMechanism = CKM_SHA256;
+	hkdf.ulSaltType = CKF_HKDF_SALT_DATA;
+	hkdf.pSalt = salt;
+	hkdf.ulSaltLen = sizeof (salt);
+	hkdf.hSaltKey = 0;
+	hkdf.pInfo = info;
+	hkdf.ulInfoLen = sizeof (info);
+
+	hkdf_out = roundtrip_mechanism_value (p11_rpc_buffer_add_hkdf_mechanism_value,
+					      p11_rpc_buffer_get_hkdf_mechanism_value,
+					      &hkdf, sizeof (hkdf), &buffer);
+	assert_num_eq (hkdf_out->bExtract, CK_TRUE);
+	assert_num_eq (hkdf_out->bExpand, CK_FALSE);
+	assert_num_eq (hkdf_out->prfHashMechanism, CKM_SHA256);
+	assert_num_eq (hkdf_out->ulSaltType, CKF_HKDF_SALT_DATA);
+	assert_num_eq (hkdf_out->ulSaltLen, sizeof (salt));
+	assert (memcmp (hkdf_out->pSalt, salt, sizeof (salt)) == 0);
+	assert_num_eq (hkdf_out->ulInfoLen, sizeof (info));
+	assert (memcmp (hkdf_out->pInfo, info, sizeof (info)) == 0);
+	finish_roundtrip (&buffer, hkdf_out);
+}
+
 static void
 test_recursion_limit (void *module)
 {
@@ -812,6 +957,8 @@ main (int argc,
 	p11_testx (test_get_slot_list_no_device, &mock_module_no_slots, "/rpc/get-slot-list-no-device");
 	p11_testx (test_simultaneous_functions, &mock_module_no_slots, "/rpc/simultaneous-functions");
 	p11_testx (test_mechanism_unsupported, &mock_module, "/rpc/mechanism-unsupported");
+	p11_test (test_mechanism_value_flat, "/rpc/mechanism-value-flat");
+	p11_test (test_mechanism_value_byte_arrays, "/rpc/mechanism-value-byte-arrays");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_no_slots, "/rpc/fork-and-reinitialize");

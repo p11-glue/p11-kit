@@ -47,24 +47,6 @@ bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
-void             p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
-							  const void *value,
-							  CK_ULONG value_length);
-
-bool             p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
-							  size_t *offset,
-							  void *value,
-							  CK_ULONG *value_length);
-
-void             p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
-							       const void *value,
-							       CK_ULONG value_length);
-
-bool             p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
-							       size_t *offset,
-							       void *value,
-							       CK_ULONG *value_length);
-
 void             p11_rpc_buffer_add_mech_param_update            (p11_buffer *buffer,
 							  const CK_MECHANISM *mech);
 
@@ -72,172 +54,64 @@ bool             p11_rpc_buffer_get_mech_param_update            (p11_buffer *bu
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
-void             p11_rpc_buffer_add_rsa_pkcs_pss_mechanism_value
-                                                         (p11_buffer *buffer,
-							  const void *value,
-							  CK_ULONG value_length);
+#define P11_RPC_DECLARE_MECHANISM_VALUE(name)				\
+	void	p11_rpc_buffer_add_ ## name (p11_buffer *buffer,	\
+					     const void *value,		\
+					     CK_ULONG value_length);	\
+	bool	p11_rpc_buffer_get_ ## name (p11_buffer *buffer,	\
+					     size_t *offset,		\
+					     void *value,		\
+					     CK_ULONG *value_length)
 
-bool             p11_rpc_buffer_get_rsa_pkcs_pss_mechanism_value
-                                                         (p11_buffer *buffer,
-							  size_t *offset,
-							  void *value,
-							  CK_ULONG *value_length);
-
-void             p11_rpc_buffer_add_rsa_pkcs_oaep_mechanism_value
-                                                          (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool             p11_rpc_buffer_get_rsa_pkcs_oaep_mechanism_value
-                                                          (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_ecdh1_derive_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_ecdh1_derive_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_eddsa_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_eddsa_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_sign_additional_context_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_sign_additional_context_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_hash_sign_additional_context_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_hash_sign_additional_context_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_ibm_attrbound_wrap_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_ibm_ecdsa_other_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_ibm_ecdsa_other_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_ibm_btc_derive_mechanism_value
-							(p11_buffer *buffer,
-							const void *value,
-							CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_ibm_btc_derive_mechanism_value
-						   (p11_buffer *buffer,
-						   size_t *offset,
-						   void *value,
-						   CK_ULONG *value_length);
-
-void            p11_rpc_buffer_add_ibm_kyber_mechanism_value
-						   (p11_buffer *buffer,
-						   const void *value,
-						   CK_ULONG value_length);
-
-bool            p11_rpc_buffer_get_ibm_kyber_mechanism_value
-						  (p11_buffer *buffer,
-						   size_t *offset,
-						   void *value,
-						   CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_aes_iv_mechanism_value (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_aes_iv_mechanism_value (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_aes_ctr_mechanism_value (p11_buffer *buffer,
-							    const void *value,
-							    CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_aes_ctr_mechanism_value (p11_buffer *buffer,
-							    size_t *offset,
-							    void *value,
-							    CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_aes_gcm_mechanism_value (p11_buffer *buffer,
-							    const void *value,
-							    CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_aes_gcm_mechanism_value (p11_buffer *buffer,
-							    size_t *offset,
-							    void *value,
-							    CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_des_iv_mechanism_value (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_des_iv_mechanism_value (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_mac_general_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_mac_general_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
-
-void		p11_rpc_buffer_add_dh_pkcs_derive_mechanism_value
-							  (p11_buffer *buffer,
-							   const void *value,
-							   CK_ULONG value_length);
-
-bool		p11_rpc_buffer_get_dh_pkcs_derive_mechanism_value
-							  (p11_buffer *buffer,
-							   size_t *offset,
-							   void *value,
-							   CK_ULONG *value_length);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_kyber_mech_param_update);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_btc_derive_mech_param_update);
+P11_RPC_DECLARE_MECHANISM_VALUE (rsa_pkcs_pss_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (rsa_pkcs_oaep_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ecdh1_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (eddsa_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (sign_additional_context_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (hash_sign_additional_context_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_attrbound_wrap_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_ecdsa_other_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_btc_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ibm_kyber_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (aes_iv_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (aes_ctr_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (aes_gcm_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (des_iv_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (mac_general_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (dh_pkcs_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (rc2_cbc_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (rc2_mac_general_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (rc5_cbc_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (rc5_mac_general_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (xeddsa_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (dsa_parameter_gen_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ecdh_aes_key_wrap_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (key_derivation_string_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (cbc_encrypt_data_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (des_cbc_encrypt_data_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ecmqv_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (x9_42_dh1_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (x9_42_dh2_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (x9_42_mqv_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (kea_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (aes_ccm_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (chacha20_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (salsa20_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (poly1305_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (gostr3410_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (gostr3410_key_wrap_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (hkdf_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ike_prf_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ike1_prf_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ike1_extended_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (ike2_prf_plus_derive_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (key_wrap_set_oaep_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (skipjack_private_wrap_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (skipjack_relayx_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (pkcs5_pbkd2_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (tls_mac_mechanism_value);
+P11_RPC_DECLARE_MECHANISM_VALUE (tls_kdf_mechanism_value);
 
 #endif /* _RPC_MECHANISM_H */
