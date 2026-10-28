@@ -1,1196 +1,1651 @@
-# SOME DESCRIPTIVE TITLE.
+# Norwegian bokmål translation of p11-kit.
 # Copyright (C) YEAR Collabora Ltd.
 # This file is distributed under the same license as the p11-kit package.
 #
 # Translators:
+# Roy-Magne Mo <rmo@sunnmore.net>, 2026
 msgid ""
 msgstr ""
 "Project-Id-Version: p11-kit\n"
-"Report-Msgid-Bugs-To: https://github.com/p11-glue/p11-kit/issues\n"
-"POT-Creation-Date: 2022-10-19 03:26+0000\n"
-"PO-Revision-Date: 2012-02-29 09:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Norwegian Bokmål (http://www.transifex.com/freedesktop/p11-"
-"kit/language/nb/)\n"
+"Report-Msgid-Bugs-To: https://bugs.freedesktop.org/buglist.cgi?component=p11-"
+"kit&product=p11-glue&resolution=---\n"
+"POT-Creation-Date: 2026-09-18 14:31+0000\n"
+"PO-Revision-Date: 2026-09-25 18:00+0200\n"
+"Last-Translator: Roy-Magne Mo <rmo@sunnmore.net>\n"
+"Language-Team: Norwegian Bokmål <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: common/tool.c:184
+#: common/options.c:184
 #, c-format
 msgid "usage: %s command <args>...\n"
-msgstr ""
+msgstr "bruk: %s command <args>...\n"
 
-#: common/tool.c:185
+#: common/options.c:185
 #, c-format
 msgid ""
 "\n"
 "Common %s commands are:\n"
 msgstr ""
+"\n"
+"Vanlige %s-kommandoer er:\n"
 
-#: common/tool.c:198
+#: common/options.c:198
 #, c-format
 msgid ""
 "\n"
 "See '%s <command> --help' for more information\n"
 msgstr ""
+"\n"
+"Se «%s <command> --help» for mer informasjon\n"
 
-#: common/tool.c:261 common/tool.c:333
+#: common/options.c:261 common/options.c:333
 msgid "no command specified"
-msgstr ""
+msgstr "ingen kommando angitt"
 
-#: common/tool.c:277
+#: common/options.c:277
 #, c-format
 msgid "unknown global option: %s"
-msgstr ""
+msgstr "ukjent globalt valg: %s"
 
-#: common/tool.c:306
+#: common/options.c:306
 #, c-format
 msgid "unknown global option: -%c"
-msgstr ""
+msgstr "ukjent globalt valg: -%c"
 
 #. At this point we have no command
-#: common/tool.c:358
+#: common/options.c:358
 #, c-format
 msgid "'%s' is not a valid command. See '%s --help'"
-msgstr ""
+msgstr "«%s» er ikke en gyldig kommando. Se «%s --help»"
+
+#: common/persist.c:509
+#, c-format
+msgid "invalid oid value: %s"
+msgstr "ugyldig OID-verdi: %s"
+
+#: p11-kit/add-profile.c:85 p11-kit/delete-object.c:69
+#: p11-kit/delete-profile.c:85 p11-kit/export-object.c:573
+#: p11-kit/generate-keypair.c:448 p11-kit/import-object.c:641
+#: p11-kit/list-objects.c:367 p11-kit/list-profiles.c:83
+msgid "failed to initialize iterator"
+msgstr "kunne ikke initialisere iteratoren"
+
+#: p11-kit/add-profile.c:92 p11-kit/delete-profile.c:92
+#: p11-kit/generate-keypair.c:455 p11-kit/import-object.c:648
+#: p11-kit/list-profiles.c:90 p11-kit/list-mechanisms.c:152
+msgid "no matching token"
+msgstr "ingen samsvarende token"
+
+#: p11-kit/add-profile.c:94 p11-kit/delete-profile.c:94
+#: p11-kit/generate-keypair.c:457 p11-kit/import-object.c:650
+#: p11-kit/list-profiles.c:92 p11-kit/list-mechanisms.c:154
+#, c-format
+msgid "failed to find token: %s"
+msgstr "fant ikke token: %s"
+
+#: p11-kit/add-profile.c:106 p11-kit/delete-profile.c:106
+#: p11-kit/list-profiles.c:104
+#, c-format
+msgid "failed to initialize search for objects: %s"
+msgstr "kunne ikke starte søket etter objekter: %s"
+
+#: p11-kit/add-profile.c:113 p11-kit/delete-profile.c:114
+#: p11-kit/list-profiles.c:112
+#, c-format
+msgid "failed to search for objects: %s"
+msgstr "kunne ikke søke etter objekter: %s"
+
+#: p11-kit/add-profile.c:119 p11-kit/delete-profile.c:130
+#: p11-kit/list-profiles.c:135
+#, c-format
+msgid "failed to finalize search for objects: %s"
+msgstr "kunne ikke avslutte søket etter objekter: %s"
+
+#: p11-kit/add-profile.c:124
+msgid "profile already exists"
+msgstr "profilen finnes allerede"
+
+#: p11-kit/add-profile.c:130
+#, c-format
+msgid "failed to create profile object: %s"
+msgstr "kunne ikke opprette profilobjekt: %s"
+
+#: p11-kit/add-profile.c:182 p11-kit/add-profile.c:241
+#: p11-kit/add-profile.c:251 p11-kit/delete-object.c:164
+#: p11-kit/delete-object.c:174 p11-kit/delete-profile.c:182
+#: p11-kit/delete-profile.c:241 p11-kit/delete-profile.c:251
+#: p11-kit/export-object.c:688 p11-kit/export-object.c:698
+#: p11-kit/generate-keypair.c:304 p11-kit/generate-keypair.c:310
+#: p11-kit/generate-keypair.c:319 p11-kit/generate-keypair.c:325
+#: p11-kit/generate-keypair.c:348 p11-kit/generate-keypair.c:355
+#: p11-kit/generate-keypair.c:369 p11-kit/generate-keypair.c:375
+#: p11-kit/generate-keypair.c:384 p11-kit/generate-keypair.c:394
+#: p11-kit/generate-keypair.c:400 p11-kit/generate-keypair.c:633
+#: p11-kit/generate-keypair.c:643 p11-kit/import-object.c:124
+#: p11-kit/import-object.c:133 p11-kit/import-object.c:156
+#: p11-kit/import-object.c:196 p11-kit/import-object.c:205
+#: p11-kit/import-object.c:230 p11-kit/import-object.c:303
+#: p11-kit/import-object.c:371 p11-kit/import-object.c:379
+#: p11-kit/import-object.c:529 p11-kit/import-object.c:785
+#: p11-kit/import-object.c:795 p11-kit/list-objects.c:187
+#: p11-kit/list-objects.c:274 p11-kit/list-objects.c:294
+#: p11-kit/list-objects.c:301 p11-kit/list-objects.c:336
+#: p11-kit/list-objects.c:447 p11-kit/list-objects.c:457
+#: p11-kit/list-profiles.c:215 p11-kit/list-profiles.c:225
+#: p11-kit/list-mechanisms.c:180 p11-kit/list-mechanisms.c:273
+#: p11-kit/list-mechanisms.c:283 p11-kit/list-tokens.c:180
+#: p11-kit/list-tokens.c:190 p11-kit/lists.c:97 p11-kit/lists.c:185
+#: p11-kit/lists.c:239
+msgid "failed to allocate memory"
+msgstr "kunne ikke tildele minne"
+
+#: p11-kit/add-profile.c:200 p11-kit/delete-profile.c:200
+msgid "multiple profiles specified"
+msgstr "flere profiler angitt"
+
+#: p11-kit/add-profile.c:208 p11-kit/delete-profile.c:208
+#, c-format
+msgid "failed to convert profile argument: %s"
+msgstr "kunne ikke konvertere profilargumentet: %s"
+
+#: p11-kit/add-profile.c:235 p11-kit/delete-profile.c:235
+msgid "no profile specified"
+msgstr "ingen profil angitt"
+
+#: p11-kit/add-profile.c:246 p11-kit/delete-object.c:169
+#: p11-kit/delete-profile.c:246 p11-kit/export-object.c:693
+#: p11-kit/generate-keypair.c:638 p11-kit/import-object.c:790
+#: p11-kit/list-objects.c:452 p11-kit/list-profiles.c:220
+#: p11-kit/list-mechanisms.c:278 p11-kit/list-tokens.c:185
+msgid "failed to parse URI"
+msgstr "kunne ikke tolke URI-en"
 
 #: p11-kit/conf.c:161
 #, c-format
 msgid "%s: unexpected pem block"
-msgstr ""
+msgstr "%s: uventet PEM-blokk"
 
 #: p11-kit/conf.c:165
 #, c-format
 msgid "%s: unexpected section header"
-msgstr ""
+msgstr "%s: uventet seksjonsoverskrift"
 
 #: p11-kit/conf.c:208
 #, c-format
 msgid "invalid mode for 'user-config': %s"
-msgstr ""
+msgstr "ugyldig modus for «user-config»: %s"
 
 #: p11-kit/conf.c:367
 #, c-format
 msgid "invalid config filename, will be ignored in the future: %s"
-msgstr ""
+msgstr "ugyldig filnavn for oppsett, vil bli ignorert i fremtiden: %s"
 
-#: p11-kit/conf.c:428 trust/save.c:573 trust/token.c:269
+#: p11-kit/conf.c:427 trust/save.c:586 trust/token.c:282
 #, c-format
 msgid "couldn't list directory: %s"
-msgstr ""
+msgstr "kunne ikke liste opp mappen: %s"
 
-#: p11-kit/conf.c:439
+#: p11-kit/conf.c:438
 #, c-format
 msgid "couldn't stat path: %s"
-msgstr ""
+msgstr "kunne ikke kjøre stat på stien: %s"
 
-#: p11-kit/conf.c:528
+#: p11-kit/conf.c:526
 #, c-format
 msgid "invalid setting '%s' defaulting to '%s'"
-msgstr ""
+msgstr "ugyldig innstilling «%s», bruker standardverdien «%s»"
+
+#: p11-kit/delete-object.c:76 p11-kit/export-object.c:580
+msgid "no matching object"
+msgstr "ingen samsvarende objekter"
+
+#: p11-kit/delete-object.c:78 p11-kit/export-object.c:582
+#, c-format
+msgid "failed to find object: %s"
+msgstr "fant ikke objektet: %s"
+
+#: p11-kit/delete-object.c:84 p11-kit/delete-profile.c:122
+#, c-format
+msgid "failed to destroy an object: %s"
+msgstr "kunne ikke ødelegge et objekt: %s"
+
+#: p11-kit/export-object.c:116 p11-kit/export-object.c:176
+#: p11-kit/export-object.c:242 p11-kit/export-object.c:250
+#: p11-kit/export-object.c:367 p11-kit/export-object.c:475
+#: p11-kit/export-object.c:530
+msgid "failed to retrieve attributes"
+msgstr "kunne ikke hente attributtene"
+
+#: p11-kit/export-object.c:276
+msgid "corrupted value in attributes"
+msgstr "ødelagt verdi i attributtene"
+
+#: p11-kit/export-object.c:373
+msgid "failed to retrieve public key value"
+msgstr "kunne ikke hente verdien til den offentlige nøkkelen"
+
+#: p11-kit/export-object.c:378
+msgid "failed to retrieve parameter set"
+msgstr "kunne ikke hente parametersettet"
+
+#: p11-kit/export-object.c:384
+msgid "unknown PQC key type/parameter set combination"
+msgstr "ukjent kombinasjon av PQC-nøkkeltype og parametersett"
+
+#: p11-kit/export-object.c:448
+#, c-format
+msgid "unsupported key type: %lu"
+msgstr "nøkkeltypen støttes ikke: %lu"
+
+#: p11-kit/export-object.c:489
+msgid "unable to determine key type"
+msgstr "kunne ikke avgjøre nøkkeltypen"
+
+#: p11-kit/export-object.c:495 p11-kit/import-object.c:815
+msgid "ASN.1 support is not compiled in"
+msgstr "ASN.1-støtte er ikke kompilert inn"
+
+#: p11-kit/export-object.c:502
+msgid "failed to export public key"
+msgstr "kunne ikke eksportere den offentlige nøkkelen"
+
+#: p11-kit/export-object.c:536
+msgid "unrecognized certificate type"
+msgstr "ukjent sertifikattype"
+
+#: p11-kit/export-object.c:542
+msgid "no valid certificate value"
+msgstr "ingen gyldig sertifikatverdi"
+
+#: p11-kit/export-object.c:547
+msgid "failed to convert DER to PEM"
+msgstr "kunne ikke konvertere DER til PEM"
+
+#: p11-kit/export-object.c:588
+msgid "failed to retrieve attribute of an object"
+msgstr "kunne ikke hente attributtet til et objekt"
+
+#: p11-kit/export-object.c:602
+msgid "unsupported object class"
+msgstr "objektklassen støttes ikke"
+
+#: p11-kit/export-object.c:607
+msgid "failed to write PEM data to stdout"
+msgstr "kunne ikke skrive PEM-data til standard ut"
 
 #: p11-kit/filter.c:183
 msgid "filter cannot be initialized"
-msgstr ""
+msgstr "kunne ikke initialisere filteret"
 
-#: p11-kit/lists.c:117 p11-kit/lists.c:184 p11-kit/lists.c:205
+#: p11-kit/generate-keypair.c:209
+msgid "no bits specified"
+msgstr "ingen bitlengde angitt"
+
+#: p11-kit/generate-keypair.c:216
+msgid "no curve specified"
+msgstr "ingen kurve angitt"
+
+#: p11-kit/generate-keypair.c:224
+msgid "no parameter-set specified"
+msgstr "ingen parameter-set angitt"
+
+#: p11-kit/generate-keypair.c:229
+msgid "no type specified"
+msgstr "ingen type angitt"
+
+#: p11-kit/generate-keypair.c:232
+#, c-format
+msgid "unknown mechanism type in %s"
+msgstr "ukjent mekanismetype i %s"
+
+#: p11-kit/generate-keypair.c:237
+#, c-format
+msgid "both %s and %s cannot be specified at once"
+msgstr "%s og %s kan ikke angis samtidig"
+
+#: p11-kit/generate-keypair.c:250 p11-kit/generate-keypair.c:258
+#: p11-kit/generate-keypair.c:262 p11-kit/generate-keypair.c:618
+#, c-format
+msgid "%s cannot be used with this key type"
+msgstr "%s kan ikke brukes med denne nøkkeltypen"
+
+#: p11-kit/generate-keypair.c:338 p11-kit/import-object.c:146
+#: p11-kit/import-object.c:219
+#, c-format
+msgid "failed to decode hex value: %s"
+msgstr "kunne ikke dekode heksadesimal verdi: %s"
+
+#: p11-kit/generate-keypair.c:406
+#, c-format
+msgid "unkwnown mechanism type in %s"
+msgstr "ukjent mekanismetype i %s"
+
+#: p11-kit/generate-keypair.c:442
+msgid "failed to create key templates"
+msgstr "kunne ikke opprette nøkkelmaler"
+
+#: p11-kit/generate-keypair.c:472
+#, c-format
+msgid "key-pair generation failed: %s"
+msgstr "generering av nøkkelpar mislykket: %s"
+
+#: p11-kit/generate-keypair.c:558
+#, c-format
+msgid "unknown mechanism type: %s"
+msgstr "ukjent mekanismetype: %s"
+
+#: p11-kit/generate-keypair.c:565
+#, c-format
+msgid "failed to parse bits value: %s"
+msgstr "kunne ikke tolke bitverdien: %s"
+
+#: p11-kit/generate-keypair.c:572
+#, c-format
+msgid "unknown curve name: %s"
+msgstr "ukjent kurvenavn: %s"
+
+#: p11-kit/generate-keypair.c:623
+#, c-format
+msgid "unknown parameter-set: %s"
+msgstr "ukjent parameter-set: %s"
+
+#: p11-kit/import-object.c:109 p11-kit/import-object.c:265
+#: p11-kit/import-object.c:271 p11-kit/import-object.c:555
+msgid "failed to parse ASN.1 structure"
+msgstr "kunne ikke tolke ASN.1-strukturen"
+
+#: p11-kit/import-object.c:115
+msgid "failed to obtain certificate subject name"
+msgstr "kunne ikke hente emnenavnet til sertifikatet"
+
+#: p11-kit/import-object.c:164 p11-kit/import-object.c:588
+#, c-format
+msgid "failed to create object: %s"
+msgstr "kunne ikke opprette objektet: %s"
+
+#: p11-kit/import-object.c:259 p11-kit/import-object.c:495
+msgid "failed to obtain subject public key data"
+msgstr "kunne ikke hente data om den offentlige nøkkelen til emnet"
+
+#: p11-kit/import-object.c:277 p11-kit/import-object.c:282
+msgid "failed to obtain modulus"
+msgstr "kunne ikke hente modulus"
+
+#: p11-kit/import-object.c:290 p11-kit/import-object.c:295
+msgid "failed to obtain exponent"
+msgstr "kunne ikke hente eksponenten"
+
+#: p11-kit/import-object.c:333 p11-kit/import-object.c:338
+msgid "failed to obtain EC parameters"
+msgstr "kunne ikke hente EC-parametrene"
+
+#: p11-kit/import-object.c:349
+msgid "failed to obtain EC point"
+msgstr "kunne ikke hente EC-punktet"
+
+#: p11-kit/import-object.c:357
+msgid "corrupted EC point value"
+msgstr "ødelagt EC-punktverdi"
+
+#: p11-kit/import-object.c:364
+msgid "failed to DER encode EC point"
+msgstr "kunne ikke DER-kode EC-punktet"
+
+#: p11-kit/import-object.c:501
+msgid "corrupted public key value"
+msgstr "ødelagt verdi for offentlig nøkkel"
+
+#: p11-kit/import-object.c:509
+#, c-format
+msgid "invalid public key size %zu for parameter set (expected %zu)"
+msgstr ""
+"ugyldig størrelse %zu på offentlig nøkkel for parametersettet (forventet "
+"%zu)"
+
+#: p11-kit/import-object.c:561
+msgid "failed to obtain algorithm OID"
+msgstr "kunne ikke hente algoritme-OID"
+
+#: p11-kit/import-object.c:578
+#, c-format
+msgid "unrecognized algorithm OID: %s"
+msgstr "ukjent algoritme-OID: %s"
+
+#: p11-kit/import-object.c:619
+#, c-format
+msgid "unrecognized PEM label: %s"
+msgstr "ukjent PEM-etikett: %s"
+
+#: p11-kit/import-object.c:661
+msgid "failed to load ASN.1 definitions"
+msgstr "kunne ikke laste ASN.1-definisjoner"
+
+#: p11-kit/import-object.c:667
+#, c-format
+msgid "failed to read file: %s"
+msgstr "kunne ikke lese filen: %s"
+
+#: p11-kit/import-object.c:673
+msgid "no object to import"
+msgstr "ingen objekter å importere"
+
+#: p11-kit/import-object.c:779
+msgid "no file specified"
+msgstr "ingen fil angitt"
+
+#: p11-kit/iter.c:557
+#, c-format
+msgid "PIN for %.*s"
+msgstr "PIN for %.*s"
+
+#: p11-kit/list-objects.c:193 p11-kit/list-objects.c:200
+#: p11-kit/list-objects.c:208
+#, c-format
+msgid "failed to set attribute for URI: %s"
+msgstr "kunne ikke sette attributt for URI: %s"
+
+#: p11-kit/list-objects.c:217 p11-kit/lists.c:105 p11-kit/lists.c:193
+#, c-format
+msgid "couldn't format URI into string: %s"
+msgstr "kunne ikke formatere URI-en som streng: %s"
+
+#: p11-kit/list-profiles.c:120
+#, c-format
+msgid "failed to retrieve attribute of an object: %s"
+msgstr "kunne ikke hente attributtet til et objekt: %s"
+
+#: p11-kit/list-mechanisms.c:160
+msgid "failed to obtain module"
+msgstr "kunne ikke hente modulen"
+
+#: p11-kit/list-mechanisms.c:168 p11-kit/lists.c:256
+#, c-format
+msgid "couldn't load token info: %s"
+msgstr "kunne ikke laste token-informasjon: %s"
+
+#: p11-kit/list-mechanisms.c:174
+#, c-format
+msgid "querying amount of mechanisms failed: %s"
+msgstr "spørring etter antall mekanismer feilet: %s"
+
+#: p11-kit/list-mechanisms.c:187
+#, c-format
+msgid "querying mechanisms failed: %s"
+msgstr "spørring etter mekanismer feilet: %s"
+
+#: p11-kit/list-mechanisms.c:194
+#, c-format
+msgid "querying mechanism info failed: %s"
+msgstr "spørring etter mekanismeinformasjon feilet: %s"
+
+#: p11-kit/lists.c:233 p11-kit/lists.c:245 p11-kit/lists.c:296
 #, c-format
 msgid "couldn't load module info: %s"
-msgstr ""
+msgstr "kunne ikke laste modulinformasjon: %s"
 
-#: p11-kit/lists.c:296
+#: p11-kit/lists.c:374 p11-kit/print-config.c:134
 msgid "extra arguments specified"
-msgstr ""
+msgstr "for mange argumenter angitt"
 
 #: p11-kit/messages.c:78
 msgid "The operation was cancelled"
-msgstr ""
+msgstr "Operasjonen ble avbrutt"
 
 #: p11-kit/messages.c:81
 msgid "Insufficient memory available"
-msgstr ""
+msgstr "Ikke nok minne tilgjengelig"
 
 #: p11-kit/messages.c:83
 msgid "The specified slot ID is not valid"
-msgstr ""
+msgstr "Den angitte slot-ID-en er ikke gyldig"
 
 #: p11-kit/messages.c:85
 msgid "Internal error"
-msgstr ""
+msgstr "Intern feil"
 
 #: p11-kit/messages.c:87
 msgid "The operation failed"
-msgstr ""
+msgstr "Operasjonen feilet"
 
 #: p11-kit/messages.c:89
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Ugyldige argumenter"
 
 #: p11-kit/messages.c:91
 msgid "The module cannot create needed threads"
-msgstr ""
+msgstr "Modulen kan ikke lage nødvendige tråder"
 
 #: p11-kit/messages.c:93
 msgid "The module cannot lock data properly"
-msgstr ""
+msgstr "Modulen kan ikke låse data ordentlig"
 
 #: p11-kit/messages.c:95
 msgid "The field is read-only"
-msgstr ""
+msgstr "Feltet er skrivebeskyttet"
 
 #: p11-kit/messages.c:97
 msgid "The field is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Feltet er sensitivt og kan ikke vises"
 
 #: p11-kit/messages.c:99
 msgid "The field is invalid or does not exist"
-msgstr ""
+msgstr "Feltet er ugyldig eller finnes ikke"
 
 #: p11-kit/messages.c:101
 msgid "Invalid value for field"
-msgstr ""
+msgstr "Ugyldig verdi for feltet"
 
 #: p11-kit/messages.c:103
 msgid "The data is not valid or unrecognized"
-msgstr ""
+msgstr "Dataene er ugyldige eller ukjente"
 
 #: p11-kit/messages.c:105
 msgid "The data is too long"
-msgstr ""
+msgstr "Dataene er for lange"
 
 #: p11-kit/messages.c:107
 msgid "An error occurred on the device"
-msgstr ""
+msgstr "Det oppstod en feil på enheten"
 
 #: p11-kit/messages.c:109
 msgid "Insufficient memory available on the device"
-msgstr ""
+msgstr "For lite minne tilgjengelig på enheten"
 
 #: p11-kit/messages.c:111
 msgid "The device was removed or unplugged"
-msgstr ""
+msgstr "Enheten ble fjernet eller koblet fra"
 
 #: p11-kit/messages.c:113
 msgid "The encrypted data is not valid or unrecognized"
-msgstr ""
+msgstr "De krypterte dataene er ugyldige eller ukjente"
 
 #: p11-kit/messages.c:115
 msgid "The encrypted data is too long"
-msgstr ""
+msgstr "De krypterte dataene er for lange"
 
 #: p11-kit/messages.c:117
 msgid "This operation is not supported"
-msgstr ""
+msgstr "Denne operasjonen støttes ikke"
 
 #: p11-kit/messages.c:119
 msgid "The key is missing or invalid"
-msgstr ""
+msgstr "Nøkkelen mangler eller er ugyldig"
 
 #: p11-kit/messages.c:121
 msgid "The key is the wrong size"
-msgstr ""
+msgstr "Nøkkelen har feil størrelse"
 
 #: p11-kit/messages.c:123
 msgid "The key is of the wrong type"
-msgstr ""
+msgstr "Nøkkelen er av feil type"
 
 #: p11-kit/messages.c:125
 msgid "No key is needed"
-msgstr ""
+msgstr "Ingen nøkkel er nødvendig"
 
 #: p11-kit/messages.c:127
 msgid "The key is different than before"
-msgstr ""
+msgstr "Nøkkelen er annerledes enn før"
 
 #: p11-kit/messages.c:129
 msgid "A key is needed"
-msgstr ""
+msgstr "En nøkkel er nødvendig"
 
 #: p11-kit/messages.c:131
 msgid "Cannot include the key in the digest"
-msgstr ""
+msgstr "Kan ikke ta med nøkkelen i kontrollsummen"
 
 #: p11-kit/messages.c:133
 msgid "This operation cannot be done with this key"
-msgstr ""
+msgstr "Denne operasjonen kan ikke utføres med denne nøkkelen"
 
 #: p11-kit/messages.c:135
 msgid "The key cannot be wrapped"
-msgstr ""
+msgstr "Nøkkelen kan ikke pakkes inn"
 
 #: p11-kit/messages.c:137
 msgid "Cannot export this key"
-msgstr ""
+msgstr "Kan ikke eksportere denne nøkkelen"
 
 #: p11-kit/messages.c:139
 msgid "The crypto mechanism is invalid or unrecognized"
-msgstr ""
+msgstr "Kryptomekanismen er ugyldig eller ukjent"
 
 #: p11-kit/messages.c:141
 msgid "The crypto mechanism has an invalid argument"
-msgstr ""
+msgstr "Kryptomekanismen har et ugyldig argument"
 
 #: p11-kit/messages.c:143
 msgid "The object is missing or invalid"
-msgstr ""
+msgstr "Objektet mangler eller er ugyldig"
 
 #: p11-kit/messages.c:145
 msgid "Another operation is already taking place"
-msgstr ""
+msgstr "En annen operasjon pågår allerede"
 
 #: p11-kit/messages.c:147
 msgid "No operation is taking place"
-msgstr ""
+msgstr "Ingen operasjon pågår"
 
 #: p11-kit/messages.c:149
 msgid "The password or PIN is incorrect"
-msgstr ""
+msgstr "Passordet eller PIN-koden er feil"
 
 #: p11-kit/messages.c:151
 msgid "The password or PIN is invalid"
-msgstr ""
+msgstr "Passordet eller PIN-koden er ugyldig"
 
 #: p11-kit/messages.c:153
 msgid "The password or PIN is of an invalid length"
-msgstr ""
+msgstr "Passordet eller PIN-koden har feil lengde"
 
 #: p11-kit/messages.c:155
 msgid "The password or PIN has expired"
-msgstr ""
+msgstr "Passordet eller PIN-koden er utgått"
 
 #: p11-kit/messages.c:157
 msgid "The password or PIN is locked"
-msgstr ""
+msgstr "Passordet eller PIN-koden er låst"
 
 #: p11-kit/messages.c:159
 msgid "The session is closed"
-msgstr ""
+msgstr "Økten er lukket"
 
 #: p11-kit/messages.c:161
 msgid "Too many sessions are active"
-msgstr ""
+msgstr "For mange økter er aktive"
 
 #: p11-kit/messages.c:163
 msgid "The session is invalid"
-msgstr ""
+msgstr "Økten er ugyldig"
 
 #: p11-kit/messages.c:165
 msgid "The session is read-only"
-msgstr ""
+msgstr "Økten er skrivebeskyttet"
 
 #: p11-kit/messages.c:167
 msgid "An open session exists"
-msgstr ""
+msgstr "Det finnes en åpen økt"
 
 #: p11-kit/messages.c:169
 msgid "A read-only session exists"
-msgstr ""
+msgstr "Det finnes en skrivebeskyttet økt"
 
 #: p11-kit/messages.c:171
 msgid "An administrator session exists"
-msgstr ""
+msgstr "Det finnes en administratorøkt"
 
 #: p11-kit/messages.c:173
 msgid "The signature is bad or corrupted"
-msgstr ""
+msgstr "Signaturen er ugyldig eller ødelagt"
 
 #: p11-kit/messages.c:175
 msgid "The signature is unrecognized or corrupted"
-msgstr ""
+msgstr "Signaturen er ukjent eller ødelagt"
 
 #: p11-kit/messages.c:177
 msgid "Certain required fields are missing"
-msgstr ""
+msgstr "Noen påkrevde felt mangler"
 
 #: p11-kit/messages.c:179
 msgid "Certain fields have invalid values"
-msgstr ""
+msgstr "Noen felt har ugyldige verdier"
 
 #: p11-kit/messages.c:181
 msgid "The device is not present or unplugged"
-msgstr ""
+msgstr "Enheten finnes ikke eller er koblet fra"
 
 #: p11-kit/messages.c:183
 msgid "The device is invalid or unrecognizable"
-msgstr ""
+msgstr "Enheten er ugyldig eller ukjent"
 
 #: p11-kit/messages.c:185
 msgid "The device is write protected"
-msgstr ""
+msgstr "Enheten er skrivebeskyttet"
 
 #: p11-kit/messages.c:187
 msgid "Cannot import because the key is invalid"
-msgstr ""
+msgstr "Kan ikke importere fordi nøkkelen er ugyldig"
 
 #: p11-kit/messages.c:189
 msgid "Cannot import because the key is of the wrong size"
-msgstr ""
+msgstr "Kan ikke importere fordi nøkkelen har feil størrelse"
 
 #: p11-kit/messages.c:191
 msgid "Cannot import because the key is of the wrong type"
-msgstr ""
+msgstr "Kan ikke importere fordi nøkkelen er av feil type"
 
 #: p11-kit/messages.c:193
 msgid "You are already logged in"
-msgstr ""
+msgstr "Du er allerede logget inn"
 
 #: p11-kit/messages.c:195
 msgid "No user has logged in"
-msgstr ""
+msgstr "Ingen bruker har logget inn"
 
 #: p11-kit/messages.c:197
 msgid "The user's password or PIN is not set"
-msgstr ""
+msgstr "Passordet eller PIN-koden til brukeren er ikke satt"
 
 #: p11-kit/messages.c:199
 msgid "The user is of an invalid type"
-msgstr ""
+msgstr "Brukeren er av en ugyldig type"
 
 #: p11-kit/messages.c:201
 msgid "Another user is already logged in"
-msgstr ""
+msgstr "En annen bruker er allerede logget inn"
 
 #: p11-kit/messages.c:203
 msgid "Too many users of different types are logged in"
-msgstr ""
+msgstr "For mange brukere av ulike typer er logget inn"
 
 #: p11-kit/messages.c:205
 msgid "Cannot import an invalid key"
-msgstr ""
+msgstr "Kan ikke importere en ugyldig nøkkel"
 
 #: p11-kit/messages.c:207
 msgid "Cannot import a key of the wrong size"
-msgstr ""
+msgstr "Kan ikke importere en nøkkel av feil størrelse"
 
 #: p11-kit/messages.c:209
 msgid "Cannot export because the key is invalid"
-msgstr ""
+msgstr "Kan ikke eksportere fordi nøkkelen er ugyldig"
 
 #: p11-kit/messages.c:211
 msgid "Cannot export because the key is of the wrong size"
-msgstr ""
+msgstr "Kan ikke eksportere fordi nøkkelen har feil størrelse"
 
 #: p11-kit/messages.c:213
 msgid "Cannot export because the key is of the wrong type"
-msgstr ""
+msgstr "Kan ikke eksportere fordi nøkkelen har feil type"
 
 #: p11-kit/messages.c:215
 msgid "Unable to initialize the random number generator"
-msgstr ""
+msgstr "Kunne ikke initialisere tilfeldighetsgeneratoren"
 
 #: p11-kit/messages.c:217
 msgid "No random number generator available"
-msgstr ""
+msgstr "Ingen tilfeldighetsgenerator er tilgjengelig"
 
 #: p11-kit/messages.c:219
 msgid "The crypto mechanism has an invalid parameter"
-msgstr ""
+msgstr "Kryptomekanismen har en ugyldig parameter"
 
 #: p11-kit/messages.c:221
 msgid "Not enough space to store the result"
-msgstr ""
+msgstr "Ikke nok plass til å lagre resultatet"
 
 #: p11-kit/messages.c:223
 msgid "The saved state is invalid"
-msgstr ""
+msgstr "Den lagrede tilstanden er ugyldig"
 
 #: p11-kit/messages.c:225
 msgid "The information is sensitive and cannot be revealed"
-msgstr ""
+msgstr "Informasjonen er sensitiv og kan ikke røpes"
 
 #: p11-kit/messages.c:227
 msgid "The state cannot be saved"
-msgstr ""
+msgstr "Tilstanden kan ikke lagres"
 
 #: p11-kit/messages.c:229
 msgid "The module has not been initialized"
-msgstr ""
+msgstr "Modulen er ikke initialisert"
 
 #: p11-kit/messages.c:231
 msgid "The module has already been initialized"
-msgstr ""
+msgstr "Modulen er allerede initialisert"
 
 #: p11-kit/messages.c:233
 msgid "Cannot lock data"
-msgstr ""
+msgstr "Kan ikke låse data"
 
 #: p11-kit/messages.c:235
 msgid "The data cannot be locked"
-msgstr ""
+msgstr "Dataene kan ikke låses"
 
 #: p11-kit/messages.c:237
 msgid "The request was rejected by the user"
-msgstr ""
+msgstr "Forespørselen ble avvist av brukeren"
 
 #: p11-kit/messages.c:240
 msgid "Unknown error"
-msgstr ""
-
-#: p11-kit/modules.c:373
-#, c-format
-msgid "couldn't load module: %s: %s"
-msgstr ""
-
-#: p11-kit/modules.c:385
-#, c-format
-msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
-msgstr ""
-
-#: p11-kit/modules.c:393
-#, c-format
-msgid "call to C_GetFunctiontList failed in module: %s: %s"
-msgstr ""
+msgstr "Ukjent feil"
 
 #: p11-kit/modules.c:399
-msgid "refusing to load the p11-kit-proxy.so module as a registered module"
-msgstr ""
+#, c-format
+msgid "couldn't load module: %s: %s"
+msgstr "kunne ikke laste modulen: %s: %s"
 
-#: p11-kit/modules.c:548
+#: p11-kit/modules.c:435
+#, c-format
+msgid "call to C_GetInterface failed in module: %s: %s"
+msgstr "kallet til C_GetInterface feilet i modulen: %s: %s"
+
+#: p11-kit/modules.c:447
+#, c-format
+msgid "couldn't find C_GetFunctionList entry point in module: %s: %s"
+msgstr "fant ikke inngangspunktet C_GetFunctionList i modulen: %s: %s"
+
+#: p11-kit/modules.c:454
+#, c-format
+msgid "call to C_GetFunctiontList failed in module: %s: %s"
+msgstr "kallet til C_GetFunctiontList feilet i modulen: %s: %s"
+
+#: p11-kit/modules.c:461
+msgid "refusing to load the p11-kit-proxy.so module as a registered module"
+msgstr "nekter å laste modulen p11-kit-proxy.so som en registrert modul"
+
+#: p11-kit/modules.c:611
 #, c-format
 msgid "module '%s' has both enable-in and disable-in options"
-msgstr ""
+msgstr "modulen «%s» har både enable-in- og disable-in-valg"
 
-#: p11-kit/modules.c:698
+#: p11-kit/modules.c:793
 #, c-format
 msgid "aborting initialization because module '%s' was marked as critical"
-msgstr ""
+msgstr "avbryter initialiseringen fordi modulen «%s» er merket som kritisk"
 
-#: p11-kit/modules.c:723
+#: p11-kit/modules.c:818
 msgid "p11-kit initialization called recursively"
-msgstr ""
+msgstr "p11-kit-initialiseringen ble kalt rekursivt"
 
-#: p11-kit/modules.c:909
+#: p11-kit/modules.c:1004
 #, c-format
 msgid "initialization of critical module '%s' failed: %s"
-msgstr ""
+msgstr "initialiseringen av den kritiske modulen «%s» feilet: %s"
 
-#: p11-kit/modules.c:912
+#: p11-kit/modules.c:1007
 #, c-format
 msgid "skipping module '%s' whose initialization failed: %s"
-msgstr ""
+msgstr "hopper over modulen «%s», som ikke kunne initialiseres: %s"
 
-#: p11-kit/modules.c:1687
+#: p11-kit/modules.c:1782
 #, c-format
 msgid "couldn't close session: %s"
-msgstr ""
+msgstr "kunne ikke lukke økten: %s"
 
 #.
 #. * This is because the module is running in unmanaged mode, so turn off the
 #.
-#: p11-kit/modules.c:1864
+#: p11-kit/modules.c:1959
 #, c-format
 msgid "the '%s' option for module '%s' is only supported for managed modules"
-msgstr ""
+msgstr "valget «%s» for modulen «%s» støttes bare for håndterte moduler"
 
-#: p11-kit/modules.c:2173 p11-kit/modules.c:2649
+#: p11-kit/modules.c:2268 p11-kit/modules.c:2748
 #, c-format
 msgid "%s: module failed to initialize: %s"
-msgstr ""
+msgstr "%s: modulen kunne ikke initialiseres: %s"
 
-#: p11-kit/modules.c:2176
+#: p11-kit/modules.c:2271
 #, c-format
 msgid "%s: module failed to initialize, skipping: %s"
-msgstr ""
+msgstr "%s: modulen kunne ikke initialiseres, hopper over: %s"
 
-#: p11-kit/modules.c:2182
+#: p11-kit/modules.c:2281
 #, c-format
 msgid "%s: module was already initialized"
-msgstr ""
+msgstr "%s: modulen er allerede initialisert"
 
-#: p11-kit/modules.c:2278 p11-kit/modules.c:2690
+#: p11-kit/modules.c:2377 p11-kit/modules.c:2789
 #, c-format
 msgid "%s: module failed to finalize: %s"
-msgstr ""
+msgstr "%s: modulen kunne ikke avsluttes: %s"
 
-#: p11-kit/modules.c:2417
+#: p11-kit/modules.c:2516
 #, c-format
 msgid "module initialization failed: %s"
-msgstr ""
+msgstr "initialiseringen av modulen feilet: %s"
 
-#: p11-kit/p11-kit.c:72
+#: p11-kit/p11-kit.c:105
 msgid "List modules and tokens"
-msgstr ""
+msgstr "List opp moduler og tokener"
 
-#: p11-kit/p11-kit.c:73
+#: p11-kit/p11-kit.c:106
+msgid "List tokens"
+msgstr "List opp tokener"
+
+#: p11-kit/p11-kit.c:107
+msgid "List objects of a token"
+msgstr "List opp objektene i et token"
+
+#: p11-kit/p11-kit.c:108
+msgid "Import object into a token"
+msgstr "Importer objekt til et token"
+
+#: p11-kit/p11-kit.c:109
+msgid "Export object matching PKCS#11 URI"
+msgstr "Eksporter objekt som samsvarer med PKCS#11-URI"
+
+#: p11-kit/p11-kit.c:110
+msgid "Delete objects matching PKCS#11 URI"
+msgstr "Slett objekter som samsvarer med PKCS#11-URI"
+
+#: p11-kit/p11-kit.c:111
+msgid "Generate key-pair on a PKCS#11 token"
+msgstr "Lag et nøkkelpar på et PKCS#11-token"
+
+#: p11-kit/p11-kit.c:112
+msgid "List PKCS#11 profiles supported by the token"
+msgstr "List opp PKCS#11-profiler som tokenet støtter"
+
+#: p11-kit/p11-kit.c:113
+msgid "Add PKCS#11 profile to the token"
+msgstr "Legg til PKCS#11-profil i tokenet"
+
+#: p11-kit/p11-kit.c:114
+msgid "Delete PKCS#11 profile from the token"
+msgstr "Slett PKCS#11-profilen fra tokenet"
+
+#: p11-kit/p11-kit.c:115
+msgid "Print merged configuration"
+msgstr "Skriv ut sammenslått oppsett"
+
+#: p11-kit/p11-kit.c:116
+msgid "List supported mechanisms"
+msgstr "List opp støttede mekanismer"
+
+#: p11-kit/p11-kit.c:117
 msgid "Run a specific PKCS#11 module remotely"
-msgstr ""
+msgstr "Kjør en bestemt PKCS#11-modul som ekstern modul"
 
-#: p11-kit/p11-kit.c:74
+#: p11-kit/p11-kit.c:118
 msgid "Run a server process that exposes PKCS#11 module remotely"
 msgstr ""
+"Kjør en tjenerprosess som gjør PKCS#11-modulen tilgjengelig over nettverket"
 
 #. At this point we have no command
-#: p11-kit/p11-kit.c:95
+#: p11-kit/p11-kit.c:139
 msgid "couldn't run trust tool"
-msgstr ""
+msgstr "kunne ikke kjøre trust-verktøyet"
 
 #. At this point we have no command
-#: p11-kit/p11-kit.c:137
+#: p11-kit/p11-kit.c:181
 #, c-format
 msgid "'%s' is not a valid command. See 'p11-kit --help'"
-msgstr ""
+msgstr "«%s» er ikke en gyldig kommando. Se «p11-kit --help»"
 
-#: p11-kit/remote.c:108
+#: p11-kit/remote.c:109
 msgid "specify a module or tokens to remote"
-msgstr ""
+msgstr "angi en modul eller tokener som skal gjøres tilgjengelige"
 
-#: p11-kit/remote.c:113
+#: p11-kit/remote.c:114
 msgid "the 'remote' tool is not meant to be run from a terminal"
-msgstr ""
+msgstr "verktøyet «remote» er ikke ment å kjøres fra en terminal"
 
-#: p11-kit/remote.c:139
+#: p11-kit/remote.c:145
 msgid "only one module can be specified"
-msgstr ""
+msgstr "bare én modul kan angis"
 
 #: p11-kit/rpc-client.c:146
 msgid "invalid rpc error response: too short"
-msgstr ""
+msgstr "ugyldig RPC-feilsvar: for kort"
 
 #: p11-kit/rpc-client.c:151
 msgid "invalid rpc error response: bad error code"
-msgstr ""
+msgstr "ugyldig RPC-feilsvar: ugyldig feilkode"
 
 #: p11-kit/rpc-client.c:161
 msgid "invalid rpc response: call mismatch"
-msgstr ""
+msgstr "ugyldig RPC-svar: kallet samsvarer ikke"
 
-#: p11-kit/rpc-client.c:182
+#: p11-kit/rpc-client.c:184
 msgid "invalid rpc response: bad argument data"
-msgstr ""
+msgstr "ugyldig RPC-svar: ugyldige argumentdata"
 
-#: p11-kit/rpc-client.c:229
+#: p11-kit/rpc-client.c:231
 msgid "received an attribute array with wrong number of attributes"
-msgstr ""
+msgstr "mottok en attributtabell med feil antall attributter"
 
-#: p11-kit/rpc-client.c:256
+#: p11-kit/rpc-client.c:253
 msgid "returned attributes in invalid order"
-msgstr ""
+msgstr "attributtene ble returnert i ugyldig rekkefølge"
 
-#: p11-kit/rpc-client.c:727 trust/module.c:382
+#: p11-kit/rpc-client.c:813 trust/module.c:384
 msgid "invalid set of mutex calls supplied"
-msgstr ""
+msgstr "ugyldig sett med mutex-kall"
 
-#: p11-kit/rpc-client.c:736 trust/module.c:391
+#: p11-kit/rpc-client.c:822 trust/module.c:393
 msgid "can't do without os locking"
-msgstr ""
+msgstr "klarer seg ikke uten låsing i operativsystemet"
 
-#: p11-kit/rpc-client.c:749
+#: p11-kit/rpc-client.c:835
 msgid "C_Initialize called twice for same process"
-msgstr ""
+msgstr "C_Initialize ble kalt to ganger for samme prosess"
 
-#: p11-kit/rpc-client.c:856
+#: p11-kit/rpc-client.c:943
 #, c-format
 msgid "finalizing rpc module returned an error: %lu"
-msgstr ""
+msgstr "avslutningen av RPC-modulen returnerte en feil: %lu"
 
-#: p11-kit/rpc-message.c:190
+#: p11-kit/rpc-message.c:191
 msgid "invalid message: couldn't read call identifier"
-msgstr ""
+msgstr "ugyldig melding: kunne ikke lese kall-ID-en"
 
-#: p11-kit/rpc-message.c:199
+#: p11-kit/rpc-message.c:200
 #, c-format
 msgid "invalid message: bad call id: %d"
-msgstr ""
+msgstr "ugyldig melding: ugyldig kall-ID: %d"
 
-#: p11-kit/rpc-message.c:217
+#: p11-kit/rpc-message.c:218
 msgid "invalid message: couldn't read signature"
-msgstr ""
+msgstr "ugyldig melding: kunne ikke lese signaturen"
 
-#: p11-kit/rpc-message.c:222
+#: p11-kit/rpc-message.c:223
 msgid "invalid message: signature doesn't match"
-msgstr ""
+msgstr "ugyldig melding: signaturen stemmer ikke"
 
-#: p11-kit/rpc-message.c:483
+#: p11-kit/rpc-message.c:497
 #, c-format
 msgid "invalid length space padded string received: %d != %d"
-msgstr ""
+msgstr "mottok en streng med ugyldig lengde utfylt med mellomrom: %d != %d"
 
-#: p11-kit/rpc-server.c:575
+#: p11-kit/rpc-server.c:640
 msgid "invalid request from module, probably too short"
-msgstr ""
+msgstr "ugyldig forespørsel fra modulen, sannsynligvis for kort"
 
-#: p11-kit/rpc-server.c:585
+#: p11-kit/rpc-server.c:650
 msgid "couldn't initialize rpc response"
-msgstr ""
+msgstr "kunne ikke initialisere RPC-svaret"
 
-#: p11-kit/rpc-server.c:717
+#: p11-kit/rpc-server.c:805
 msgid "invalid handshake received from connecting module"
-msgstr ""
+msgstr "mottok ugyldig håndtrykk fra modulen som kobler til"
 
-#: p11-kit/rpc-server.c:1834
+#: p11-kit/rpc-server.c:2634
 msgid "couldn't parse pkcs11 rpc message"
-msgstr ""
+msgstr "kunne ikke tolke PKCS#11-RPC-meldingen"
 
-#: p11-kit/rpc-server.c:1921
+#: p11-kit/rpc-server.c:2760
 msgid "out of memory error putting together message"
-msgstr ""
+msgstr "tom for minne da meldingen ble satt sammen"
 
-#: p11-kit/rpc-server.c:1945
+#: p11-kit/rpc-server.c:2786
 msgid "out of memory responding with error"
-msgstr ""
+msgstr "tom for minne da det ble svart med feil"
 
-#: p11-kit/rpc-server.c:1991
+#: p11-kit/rpc-server.c:2832
 #, c-format
 msgid "unsupported version received: %d"
-msgstr ""
+msgstr "mottok versjon som ikke støttes: %d"
 
-#: p11-kit/rpc-server.c:1997
+#: p11-kit/rpc-server.c:2838
 msgid "couldn't read credential byte"
-msgstr ""
+msgstr "kunne ikke lese legitimasjonsbyten"
 
-#: p11-kit/rpc-server.c:2009
+#: p11-kit/rpc-server.c:2850
 msgid "couldn't write credential byte"
-msgstr ""
+msgstr "kunne ikke skrive legitimasjonsbyten"
 
-#: p11-kit/rpc-server.c:2032
+#: p11-kit/rpc-server.c:2873
 msgid "failed to read rpc message"
-msgstr ""
+msgstr "kunne ikke lese RPC-meldingen"
 
-#: p11-kit/rpc-server.c:2037
+#: p11-kit/rpc-server.c:2878
 msgid "unexpected error handling rpc message"
-msgstr ""
+msgstr "uventet feil ved behandling av RPC-meldingen"
 
-#: p11-kit/rpc-server.c:2055
+#: p11-kit/rpc-server.c:2896
 msgid "failed to write rpc message"
-msgstr ""
+msgstr "kunne ikke skrive RPC-meldingen"
 
 #: p11-kit/rpc-transport.c:208
 msgid "couldn't send data: closed connection"
-msgstr ""
+msgstr "kunne ikke sende data: tilkoblingen er lukket"
 
 #: p11-kit/rpc-transport.c:211
 msgid "couldn't send data"
-msgstr ""
+msgstr "kunne ikke sende data"
 
 #: p11-kit/rpc-transport.c:234
 msgid "couldn't receive data: closed connection"
-msgstr ""
+msgstr "kunne ikke motta data: tilkoblingen er lukket"
 
 #: p11-kit/rpc-transport.c:238
 msgid "couldn't receive data"
-msgstr ""
+msgstr "kunne ikke motta data"
 
 #: p11-kit/rpc-transport.c:416
 msgid "received invalid rpc header values: perhaps wrong protocol"
-msgstr ""
+msgstr "mottok ugyldige verdier i RPC-hodet: kanskje feil protokoll"
 
 #: p11-kit/rpc-transport.c:459
 msgid "couldn't use select to wait on rpc pipe"
-msgstr ""
+msgstr "kunne ikke bruke select til å vente på RPC-røret"
 
 #: p11-kit/rpc-transport.c:648
 msgid "couldn't send socket credentials"
-msgstr ""
+msgstr "kunne ikke sende legitimasjon over socketen"
 
 #: p11-kit/rpc-transport.c:653
 msgid "couldn't receive socket credentials"
-msgstr ""
+msgstr "kunne ikke motta legitimasjon over socketen"
 
 #: p11-kit/rpc-transport.c:659
 msgid "peer protocol version is too old"
-msgstr ""
+msgstr "protokollversjonen til motparten er for gammel"
 
 #: p11-kit/rpc-transport.c:710 p11-kit/rpc-transport.c:716
 msgid "closing socket due to protocol failure"
-msgstr ""
+msgstr "lukker socketen på grunn av protokollfeil"
 
 #: p11-kit/rpc-transport.c:755
 #, c-format
 msgid "process %d did not exit, terminating"
-msgstr ""
+msgstr "prosessen %d avsluttet ikke, stopper den"
 
 #: p11-kit/rpc-transport.c:762
 #, c-format
 msgid "failed to wait for executed child: %d"
-msgstr ""
+msgstr "kunne ikke vente på den kjørte barneprosessen: %d"
 
 #: p11-kit/rpc-transport.c:769
 #, c-format
 msgid "process %d exited with status %d"
-msgstr ""
+msgstr "prosessen %d avsluttet med status %d"
 
 #: p11-kit/rpc-transport.c:773
 #, c-format
 msgid "process %d was terminated with signal %d"
-msgstr ""
+msgstr "prosessen %d ble stoppet med signal %d"
 
 #: p11-kit/rpc-transport.c:817 p11-kit/rpc-transport.c:953
 #: p11-kit/rpc-transport.c:960
 msgid "failed to create pipe for remote"
-msgstr ""
+msgstr "kunne ikke opprette rør for fjernprosessen"
 
 #: p11-kit/rpc-transport.c:828
 msgid "failed to fork for remote"
-msgstr ""
+msgstr "kunne ikke forgrene for fjernprosessen"
 
 #: p11-kit/rpc-transport.c:888
 #, c-format
 msgid "process %p did not exit, terminating"
-msgstr ""
+msgstr "prosessen %p avsluttet ikke, stopper den"
 
 #: p11-kit/rpc-transport.c:890
 #, c-format
 msgid "couldn't terminate process %p"
-msgstr ""
+msgstr "kunne ikke stoppe prosessen %p"
 
 #: p11-kit/rpc-transport.c:895
 #, c-format
 msgid "failed to wait for executed child: %p"
-msgstr ""
+msgstr "kunne ikke vente på den kjørte barneprosessen: %p"
 
 #: p11-kit/rpc-transport.c:898
 #, c-format
 msgid "failed to get the exit status of %p"
-msgstr ""
+msgstr "kunne ikke hente avslutningsstatusen til %p"
 
 #: p11-kit/rpc-transport.c:902
 #, c-format
 msgid "process %p exited with status %lu"
-msgstr ""
+msgstr "prosessen %p avsluttet med status %lu"
 
 #: p11-kit/rpc-transport.c:968
 msgid "failed to duplicate stdin"
-msgstr ""
+msgstr "kunne ikke duplisere stdin"
 
 #: p11-kit/rpc-transport.c:975
 msgid "failed to duplicate stdout"
-msgstr ""
+msgstr "kunne ikke duplisere stdout"
 
 #: p11-kit/rpc-transport.c:983
 msgid "failed to duplicate child end of pipe"
-msgstr ""
+msgstr "kunne ikke duplisere barneprosessens ende av røret"
 
 #: p11-kit/rpc-transport.c:993
 msgid "failed to spawn remote"
-msgstr ""
+msgstr "kunne ikke starte fjernprosessen"
 
 #: p11-kit/rpc-transport.c:1006
 msgid "failed to restore file descriptors"
-msgstr ""
+msgstr "kunne ikke gjenopprette fildeskriptorene"
 
 #: p11-kit/rpc-transport.c:1075
 #, c-format
 msgid "invalid remote command line: %s"
-msgstr ""
+msgstr "ugyldig kommandolinje for fjernprosessen: %s"
 
 #: p11-kit/rpc-transport.c:1115 p11-kit/rpc-transport.c:1196
 msgid "failed to create socket for remote"
-msgstr ""
+msgstr "kunne ikke opprette socket for fjernprosessen"
 
 #: p11-kit/rpc-transport.c:1293 p11-kit/server.c:165
 #, c-format
 msgid "failed to parse vsock address: '%s'"
-msgstr ""
+msgstr "kunne ikke tolke vsock-adressen: «%s»"
 
 #: p11-kit/rpc-transport.c:1301
 #, c-format
 msgid "remote not supported: %s"
-msgstr ""
+msgstr "fjerntilkobling støttes ikke: %s"
 
 #: p11-kit/server.c:243
 #, c-format
 msgid "child %u died with sigsegv"
-msgstr ""
+msgstr "barneprosessen %u døde med sigsegv"
 
 #: p11-kit/server.c:245
 #, c-format
 msgid "child %u died with signal %d"
-msgstr ""
+msgstr "barneprosessen %u døde med signal %d"
 
-#: p11-kit/server.c:318
+#: p11-kit/server.c:336
 #, c-format
 msgid "could not create socket %s"
-msgstr ""
+msgstr "kunne ikke opprette socketen %s"
 
-#: p11-kit/server.c:326
+#: p11-kit/server.c:347
 #, c-format
 msgid "could not bind socket %s"
-msgstr ""
+msgstr "kunne ikke binde socketen %s"
 
-#: p11-kit/server.c:333
+#: p11-kit/server.c:354
 #, c-format
 msgid "could not listen to socket %s"
-msgstr ""
+msgstr "kunne ikke lytte på socketen %s"
 
-#: p11-kit/server.c:341
+#: p11-kit/server.c:362
 #, c-format
 msgid "could not chown socket %s"
-msgstr ""
+msgstr "kunne ikke kjøre chown på socketen %s"
 
-#: p11-kit/server.c:364
+#: p11-kit/server.c:385
 #, c-format
 msgid "could not create socket %u:%u"
-msgstr ""
+msgstr "kunne ikke opprette socketen %u:%u"
 
-#: p11-kit/server.c:371
+#: p11-kit/server.c:392
 #, c-format
 msgid "could not bind socket %u:%u"
-msgstr ""
+msgstr "kunne ikke binde socketen %u:%u"
 
-#: p11-kit/server.c:378
+#: p11-kit/server.c:399
 #, c-format
 msgid "could not listen to socket %u:%u"
-msgstr ""
+msgstr "kunne ikke lytte på socketen %u:%u"
 
-#: p11-kit/server.c:397
+#: p11-kit/server.c:418
 msgid "could not check uid from socket"
-msgstr ""
+msgstr "kunne ikke sjekke UID fra socketen"
 
-#: p11-kit/server.c:403
+#: p11-kit/server.c:424
 #, c-format
 msgid "connecting uid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "UID-en som kobler til (%u), samsvarer ikke med den forventede (%u)"
 
-#: p11-kit/server.c:410
+#: p11-kit/server.c:431
 #, c-format
 msgid "connecting gid (%u) doesn't match expected (%u)"
-msgstr ""
+msgstr "GID-en som kobler til (%u), samsvarer ikke med den forventede (%u)"
 
-#: p11-kit/server.c:491
+#: p11-kit/server.c:557
 msgid "could not fork() to daemonize"
-msgstr ""
+msgstr "kunne ikke kjøre fork() for å bli bakgrunnsprosess"
 
-#: p11-kit/server.c:504
+#: p11-kit/server.c:570
 msgid "could not create a new session"
-msgstr ""
+msgstr "kunne ikke opprette en ny økt"
 
-#: p11-kit/server.c:512
+#: p11-kit/server.c:577
 msgid "too many file descriptors received"
-msgstr ""
+msgstr "mottok for mange fildeskriptorer"
 
-#: p11-kit/server.c:556
+#: p11-kit/server.c:620
 #, c-format
-msgid "no connections to %s for %lu secs, exiting"
-msgstr ""
+msgid "no connections to %s for %<PRIu64> secs, exiting"
+msgstr "ingen tilkoblinger til %s på %<PRIu64> sekunder, avslutter"
 
-#: p11-kit/server.c:565
+#: p11-kit/server.c:629
 #, c-format
 msgid "could not accept from socket %s"
-msgstr ""
+msgstr "kunne ikke ta imot tilkobling på socketen %s"
 
-#: p11-kit/server.c:576
+#: p11-kit/server.c:640
 msgid "failed to fork for accept"
-msgstr ""
+msgstr "kunne ikke forgrene for å ta imot tilkobling"
 
-#: p11-kit/server.c:721 p11-kit/server.c:737
+#: p11-kit/server.c:785 p11-kit/server.c:801
 #, c-format
 msgid "unknown group: %s"
-msgstr ""
+msgstr "ukjent gruppe: %s"
 
-#: p11-kit/server.c:729 p11-kit/server.c:745
+#: p11-kit/server.c:793 p11-kit/server.c:809
 #, c-format
 msgid "unknown user: %s"
-msgstr ""
+msgstr "ukjent bruker: %s"
 
-#: p11-kit/server.c:828
+#: p11-kit/server.c:892
 #, c-format
 msgid "cannot set gid to %u"
-msgstr ""
+msgstr "kan ikke sette GID til %u"
 
-#: p11-kit/server.c:834
+#: p11-kit/server.c:898
 #, c-format
 msgid "cannot setgroups to %u"
-msgstr ""
+msgstr "kan ikke kjøre setgroups til %u"
 
-#: p11-kit/server.c:842
+#: p11-kit/server.c:906
 #, c-format
 msgid "cannot set uid to %u"
-msgstr ""
+msgstr "kan ikke sette UID til %u"
 
-#: p11-kit/server.c:858
+#: p11-kit/server.c:922
 msgid "cannot determine runtime directory"
-msgstr ""
+msgstr "kan ikke avgjøre kjøretidsmappen"
 
-#: p11-kit/server.c:870
+#: p11-kit/server.c:934
 #, c-format
 msgid "cannot create %s"
-msgstr ""
+msgstr "kan ikke lage %s"
 
-#: p11-kit/server.c:1141
+#: p11-kit/server.c:1205
 msgid "couldn't initialize Windows security functions"
-msgstr ""
+msgstr "kunne ikke initialisere sikkerhetsfunksjonene i Windows"
 
-#: p11-kit/server.c:1302 p11-kit/server.c:1314 p11-kit/server.c:1326
+#: p11-kit/server.c:1366 p11-kit/server.c:1378 p11-kit/server.c:1390
 #, c-format
 msgid "unable to construct SID for %s: %lu"
-msgstr ""
+msgstr "kunne ikke opprette SID for %s: %lu"
 
-#: p11-kit/server.c:1369
+#: p11-kit/server.c:1433
 #, c-format
 msgid "unable to construct ACL: %d"
-msgstr ""
+msgstr "kunne ikke opprette ACL: %d"
 
-#: p11-kit/server.c:1375
+#: p11-kit/server.c:1439
 #, c-format
 msgid "unable to allocate security descriptor: %lu"
-msgstr ""
+msgstr "kunne ikke tildele sikkerhetsdeskriptor: %lu"
 
-#: p11-kit/server.c:1381
+#: p11-kit/server.c:1445
 #, c-format
 msgid "unable to initialise security descriptor: %lu"
-msgstr ""
+msgstr "kunne ikke initialisere sikkerhetsdeskriptor: %lu"
 
-#: p11-kit/server.c:1387
+#: p11-kit/server.c:1451
 #, c-format
 msgid "unable to set owner in security descriptor: %lu"
-msgstr ""
+msgstr "kunne ikke sette eier i sikkerhetsdeskriptoren: %lu"
 
-#: p11-kit/server.c:1393
+#: p11-kit/server.c:1457
 #, c-format
 msgid "unable to set DACL in security descriptor: %lu"
-msgstr ""
+msgstr "kunne ikke sette DACL i sikkerhetsdeskriptoren: %lu"
 
 #: trust/anchor.c:126
 #, c-format
 msgid "invalid PKCS#11 uri: %s"
-msgstr ""
+msgstr "ugyldig PKCS#11-URI: %s"
 
 #: trust/anchor.c:148 trust/anchor.c:204
 #, c-format
 msgid "unrecognized file format: %s"
-msgstr ""
+msgstr "ukjent filformat: %s"
 
 #: trust/anchor.c:151 trust/anchor.c:207
 #, c-format
 msgid "failed to parse file: %s"
-msgstr ""
+msgstr "kunne ikke tolke filen: %s"
 
 #: trust/anchor.c:246
 #, c-format
 msgid "%s: couldn't initialize: %s"
-msgstr ""
+msgstr "%s: kunne ikke initialisere: %s"
 
 #: trust/anchor.c:257
 #, c-format
 msgid "%s: couldn't enumerate slots: %s"
-msgstr ""
+msgstr "%s: kunne ikke liste opp slotter: %s"
 
 #: trust/anchor.c:265
 #, c-format
 msgid "%s: couldn't get token info: %s"
-msgstr ""
+msgstr "%s: kunne ikke hente token-informasjon: %s"
 
 #: trust/anchor.c:277
 #, c-format
 msgid "%s: couldn't open session: %s"
-msgstr ""
+msgstr "%s: kunne ikke åpne økt: %s"
 
 #: trust/anchor.c:325
 msgid "no configured writable location to store anchors"
-msgstr ""
+msgstr "ingen skrivbar plassering er satt opp for lagring av ankre"
 
 #: trust/anchor.c:327
 msgid "no configured location to store anchors"
-msgstr ""
+msgstr "ingen plassering er satt opp for lagring av ankre"
 
-#: trust/anchor.c:388 trust/anchor.c:435
+#: trust/anchor.c:475
+msgid "specify at least one anchor input file"
+msgstr "angi minst én inndatafil med ankre"
+
+#: trust/anchor.c:496
 #, c-format
 msgid "couldn't create object: %s"
-msgstr ""
+msgstr "kunne ikke opprette objektet: %s"
 
-#: trust/anchor.c:487
-msgid "specify at least one anchor input file"
-msgstr ""
+#: trust/anchor.c:504
+#, c-format
+msgid "anchor exists but can't be modified: %s"
+msgstr "ankeret finnes, men kan ikke endres: %s"
 
-#: trust/anchor.c:570
+#: trust/anchor.c:559
 #, c-format
 msgid "couldn't remove read-only %s"
-msgstr ""
+msgstr "kunne ikke fjerne den skrivebeskyttede %s"
 
-#: trust/anchor.c:573
+#: trust/anchor.c:562
 #, c-format
 msgid "couldn't remove %s: %s"
-msgstr ""
+msgstr "kunne ikke fjerne %s: %s"
 
-#: trust/anchor.c:599
+#: trust/anchor.c:588
 msgid "at least one file or uri must be specified"
-msgstr ""
+msgstr "minst én fil eller URI må angis"
 
-#: trust/anchor.c:665
+#: trust/anchor.c:654
 msgid "an action was already specified"
-msgstr ""
+msgstr "en handling er allerede angitt"
 
-#: trust/anchor.c:702
+#: trust/anchor.c:691
 #, c-format
 msgid "%u error while processing"
 msgid_plural "%u errors while processing"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u feil under behandling"
+msgstr[1] "%u feil under behandling"
 
 #: trust/builder.c:155
 #, c-format
 msgid "%.*s: invalid certificate extension"
-msgstr ""
+msgstr "%.*s: ugyldig sertifikatutvidelse"
 
 #: trust/builder.c:674
 #, c-format
 msgid "%.*s: invalid basic constraints certificate extension"
-msgstr ""
+msgstr "%.*s: ugyldig sertifikatutvidelse for grunnleggende begrensninger"
 
 #: trust/builder.c:676
 msgid "unknown"
-msgstr ""
+msgstr "ukjent"
 
 #: trust/builder.c:865
 msgid "missing the CKA_HASH_OF_SUBJECT_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "mangler attributtet CKA_HASH_OF_SUBJECT_PUBLIC_KEY"
 
 #: trust/builder.c:870
 msgid "missing the CKA_HASH_OF_ISSUER_PUBLIC_KEY attribute"
-msgstr ""
+msgstr "mangler attributtet CKA_HASH_OF_ISSUER_PUBLIC_KEY"
 
-#: trust/builder.c:1084
+#: trust/builder.c:1093
 msgid "the object is not modifiable"
-msgstr ""
+msgstr "objektet kan ikke endres"
 
-#: trust/builder.c:1091
+#: trust/builder.c:1100
 msgid "objects of this type cannot be created"
-msgstr ""
+msgstr "objekter av denne typen kan ikke opprettes"
 
-#: trust/builder.c:1111
+#: trust/builder.c:1120
 #, c-format
 msgid "the %s attribute cannot be set"
-msgstr ""
+msgstr "attributtet %s kan ikke settes"
 
-#: trust/builder.c:1116
+#: trust/builder.c:1125
 #, c-format
 msgid "the %s attribute cannot be changed"
-msgstr ""
-
-#: trust/builder.c:1122
-#, c-format
-msgid "the %s attribute has an invalid value"
-msgstr ""
+msgstr "attributtet %s kan ikke endres"
 
 #: trust/builder.c:1131
 #, c-format
-msgid "the %s attribute is not valid for the object"
-msgstr ""
+msgid "the %s attribute has an invalid value"
+msgstr "attributtet %s har en ugyldig verdi"
 
-#: trust/builder.c:1154
+#: trust/builder.c:1140
+#, c-format
+msgid "the %s attribute is not valid for the object"
+msgstr "attributtet %s er ikke gyldig for objektet"
+
+#: trust/builder.c:1163
 #, c-format
 msgid "missing the %s attribute"
-msgstr ""
+msgstr "mangler attributtet %s"
 
-#: trust/builder.c:1194
+#: trust/builder.c:1203
 msgid "no CKA_CLASS attribute found"
-msgstr ""
+msgstr "fant ikke noe CKA_CLASS-attributt"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 #, c-format
 msgid "cannot create a %s object"
-msgstr ""
+msgstr "kan ikke opprette et %s-objekt"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 msgid "token"
-msgstr ""
+msgstr "token"
 
-#: trust/builder.c:1200
+#: trust/builder.c:1209
 msgid "non-token"
-msgstr ""
+msgstr "ikke-token"
 
-#: trust/builder.c:1208
+#: trust/builder.c:1217
 #, c-format
 msgid "missing %s on object"
-msgstr ""
+msgstr "mangler %s på objektet"
 
-#: trust/builder.c:1213
+#: trust/builder.c:1222
 #, c-format
 msgid "%s unsupported %s"
-msgstr ""
+msgstr "%s ikke støttet %s"
 
-#: trust/builder.c:1234
+#: trust/builder.c:1243
 #, c-format
 msgid "%s unsupported object class"
-msgstr ""
+msgstr "%s: objektklassen støttes ikke"
 
-#: trust/builder.c:1300
+#: trust/builder.c:1309
 msgid "invalid key usage certificate extension"
-msgstr ""
+msgstr "ugyldig sertifikatutvidelse for nøkkelbruk"
 
-#: trust/builder.c:1768
+#: trust/builder.c:1785
 msgid "invalid extended key usage certificate extension"
-msgstr ""
+msgstr "ugyldig sertifikatutvidelse for utvidet nøkkelbruk"
 
-#: trust/builder.c:1776
+#: trust/builder.c:1793
 msgid "invalid reject key usage certificate extension"
-msgstr ""
+msgstr "ugyldig sertifikatutvidelse for avvist nøkkelbruk"
+
+#: trust/check-format.c:98 trust/parser.c:905
+#, c-format
+msgid "couldn't open and map file: %s"
+msgstr "kunne ikke åpne og minnekartlegge filen: %s"
+
+#: trust/check-format.c:103
+#, c-format
+msgid "file is not recognized as .p11-kit format: %s"
+msgstr "filen gjenkjennes ikke som .p11-kit-format: %s"
+
+#: trust/check-format.c:171
+msgid "specify a .p11-kit file"
+msgstr "angi en .p11-kit-fil"
 
 #: trust/dump.c:113
 msgid "could not dump object"
-msgstr ""
+msgstr "kunne ikke dumpe objektet"
 
-#: trust/dump.c:187 trust/list.c:256
+#: trust/dump.c:187 trust/list.c:261
 msgid "extra arguments passed to command"
-msgstr ""
+msgstr "for mange argumenter til kommandoen"
 
 #: trust/enumerate.c:78
 #, c-format
 msgid "couldn't parse attached certificate extension: %s"
-msgstr ""
+msgstr "kunne ikke tolke den tilknyttede sertifikatutvidelsen: %s"
 
-#: trust/enumerate.c:151
+#: trust/enumerate.c:152
 #, c-format
 msgid "couldn't load attached extensions for certificate: %s"
-msgstr ""
+msgstr "kunne ikke laste de tilknyttede utvidelsene for sertifikatet: %s"
 
-#: trust/enumerate.c:275
+#: trust/enumerate.c:276
 #, c-format
 msgid "couldn't parse certificate: %s"
-msgstr ""
+msgstr "kunne ikke tolke sertifikatet: %s"
 
-#: trust/enumerate.c:312
+#: trust/enumerate.c:313
 #, c-format
 msgid "couldn't load attributes: %s"
-msgstr ""
+msgstr "kunne ikke laste attributtene: %s"
 
-#: trust/enumerate.c:323
+#: trust/enumerate.c:324
 msgid "skipping non-certificate object"
-msgstr ""
+msgstr "hopper over objekt som ikke er et sertifikat"
 
-#: trust/enumerate.c:480 trust/enumerate.c:508
+#: trust/enumerate.c:481 trust/enumerate.c:509
 #, c-format
 msgid "couldn't load blocklist: %s"
-msgstr ""
+msgstr "kunne ikke laste blokkeringslisten: %s"
 
-#: trust/enumerate.c:582
+#: trust/enumerate.c:583
 msgid "a PKCS#11 URI has already been specified"
-msgstr ""
+msgstr "en PKCS#11-URI er allerede angitt"
 
-#: trust/enumerate.c:589
+#: trust/enumerate.c:590
 #, c-format
 msgid "couldn't parse pkcs11 uri filter: %s"
-msgstr ""
+msgstr "kunne ikke tolke PKCS#11-URI-filteret: %s"
 
-#: trust/enumerate.c:594
+#: trust/enumerate.c:595
 msgid "uri contained unrecognized components, nothing will be extracted"
-msgstr ""
+msgstr "URI-en inneholdt ukjente komponenter, ingenting blir hentet ut"
 
-#: trust/enumerate.c:621
+#: trust/enumerate.c:622
 #, c-format
 msgid "unsupported or unrecognized filter: %s"
-msgstr ""
+msgstr "filteret støttes ikke eller er ukjent: %s"
 
-#: trust/enumerate.c:670
+#: trust/enumerate.c:671
 #, c-format
 msgid "unsupported or unrecognized purpose: %s"
-msgstr ""
+msgstr "formålet støttes ikke eller er ukjent: %s"
 
-#: trust/enumerate.c:712
+#: trust/enumerate.c:713
 msgid "no modules containing trust policy are registered"
-msgstr ""
+msgstr "ingen moduler med tillitspolicy er registrert"
 
 #: trust/extract.c:98
 msgid "a format was already specified"
-msgstr ""
+msgstr "et format er allerede angitt"
 
 #: trust/extract.c:110
 #, c-format
 msgid "unsupported or unrecognized format: %s"
-msgstr ""
+msgstr "formatet støttes ikke eller er ukjent: %s"
 
 #.
 #. * If we're extracting *both* anchors and blocklist, then we must have
@@ -1198,69 +1653,72 @@ msgstr ""
 #.
 #: trust/extract.c:148
 msgid "format does not support trust policy"
-msgstr ""
+msgstr "formatet støtter ikke tillitspolicy"
 
 #: trust/extract.c:159
 msgid ""
 "format requires a purpose, specify it with --purpose; defaulting to 'server-"
 "auth'"
 msgstr ""
+"formatet krever et formål, angi det med --purpose; bruker standardverdien "
+"«server-auth»"
 
 #: trust/extract.c:162
 msgid "format does not support multiple purposes, defaulting to 'server-auth'"
 msgstr ""
+"formatet støtter ikke flere formål, bruker standardverdien «server-auth»"
 
 #: trust/extract.c:283
 msgid "specify one destination file or directory"
-msgstr ""
+msgstr "angi én målfil eller målmappe"
 
 #: trust/extract.c:288
 msgid "no output format specified"
-msgstr ""
+msgstr "ingen utdataformat angitt"
 
 #. At this point we have no command
 #: trust/extract.c:333
 #, c-format
 msgid "could not run %s command"
-msgstr ""
+msgstr "kunne ikke kjøre %s-kommandoen"
 
 #: trust/extract-cer.c:62
 msgid "multiple certificates found but could only write one to file"
-msgstr ""
+msgstr "fant flere sertifikater, men kunne bare skrive ett til filen"
 
 #: trust/extract-cer.c:75 trust/extract-cer.c:115 trust/extract-jks.c:331
 #: trust/extract-openssl.c:369 trust/extract-openssl.c:696
 #: trust/extract-pem.c:94 trust/extract-pem.c:161
 #, c-format
 msgid "failed to find certificates: %s"
-msgstr ""
+msgstr "kunne ikke finne sertifikater: %s"
 
 #: trust/extract-cer.c:80
 msgid "no certificate found"
-msgstr ""
+msgstr "fant ingen sertifikater"
 
 #: trust/extract-edk2.c:192
 #, c-format
 msgid "failed to find certificate: %s"
-msgstr ""
+msgstr "fant ikke sertifikatet: %s"
 
 #: trust/extract-jks.c:142
 msgid "truncating long string"
-msgstr ""
+msgstr "forkorter lang streng"
 
 #: trust/extract-jks.c:272
 msgid "Environment variable $SOURCE_DATE_EPOCH: strtoull"
-msgstr ""
+msgstr "Miljøvariabelen $SOURCE_DATE_EPOCH: strtoull"
 
 #: trust/extract-jks.c:276
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: No digits were found: %s\n"
-msgstr ""
+msgstr "Miljøvariabelen $SOURCE_DATE_EPOCH: Fant ingen sifre: %s\n"
 
 #: trust/extract-jks.c:280
 #, c-format
 msgid "Environment variable $SOURCE_DATE_EPOCH: Trailing garbage: %s\n"
-msgstr ""
+msgstr "Miljøvariabelen $SOURCE_DATE_EPOCH: Overflødige tegn på slutten: %s\n"
 
 #: trust/extract-jks.c:284
 #, c-format
@@ -1268,162 +1726,163 @@ msgid ""
 "Environment variable $SOURCE_DATE_EPOCH: value must be smaller than or equal "
 "to %lu but was found to be: %llu \n"
 msgstr ""
+"Miljøvariabelen $SOURCE_DATE_EPOCH: verdien må være mindre enn eller lik "
+"%lu, men var: %llu \n"
 
 #: trust/extract-jks.c:312
 msgid "could not generate a certificate alias name"
-msgstr ""
+msgstr "kunne ikke lage aliasnavn for sertifikatet"
 
-#: trust/list.c:122
+#: trust/list.c:126
 msgid "skipping object, couldn't build uri"
-msgstr ""
+msgstr "hopper over objektet, kunne ikke bygge URI"
 
-#: trust/module.c:303
+#: trust/module.c:299
+#, c-format
+msgid "value required for %s"
+msgstr "%s krever en verdi"
+
+#: trust/module.c:305
 #, c-format
 msgid "unrecognized module argument: %s"
-msgstr ""
+msgstr "ukjent modulargument: %s"
 
 #: trust/parser.c:109
 #, c-format
 msgid "certificate with distrust in location for anchors: %s"
-msgstr ""
+msgstr "sertifikat med mistillit på plasseringen for ankre: %s"
 
 #: trust/parser.c:123
 #, c-format
 msgid "overriding trust for anchor in blocklist: %s"
-msgstr ""
+msgstr "overstyrer tilliten for anker i blokkeringslisten: %s"
 
-#: trust/parser.c:596
+#: trust/parser.c:716
 #, c-format
 msgid "Couldn't parse PEM block of type %s"
-msgstr ""
+msgstr "Kunne ikke tolke PEM-blokk av typen %s"
 
-#: trust/parser.c:766
-#, c-format
-msgid "couldn't open and map file: %s"
-msgstr ""
-
-#: trust/persist.c:493
-#, c-format
-msgid "invalid oid value: %s"
-msgstr ""
-
-#: trust/save.c:124
+#: trust/save.c:126
 #, c-format
 msgid "couldn't create file: %s%s"
-msgstr ""
+msgstr "kunne ikke opprette filen: %s%s"
 
-#: trust/save.c:172
+#: trust/save.c:174
 #, c-format
 msgid "couldn't write to file: %s"
-msgstr ""
+msgstr "kunne ikke skrive til filen: %s"
 
 #. Continue trying other names
-#: trust/save.c:209 trust/save.c:227 trust/save.c:290
+#: trust/save.c:211 trust/save.c:229 trust/save.c:292
 #, c-format
 msgid "couldn't complete writing of file: %s"
-msgstr ""
+msgstr "kunne ikke fullføre skrivingen av filen: %s"
 
-#: trust/save.c:260
+#: trust/save.c:262
 #, c-format
 msgid "couldn't write file: %s"
-msgstr ""
+msgstr "kunne ikke skrive filen: %s"
 
-#: trust/save.c:266
+#: trust/save.c:268
 #, c-format
 msgid "couldn't set file permissions: %s"
-msgstr ""
+msgstr "kunne ikke sette filtillatelser: %s"
 
-#: trust/save.c:272 trust/save.c:315
+#: trust/save.c:274 trust/save.c:317
 #, c-format
 msgid "couldn't complete writing file: %s"
-msgstr ""
+msgstr "kunne ikke fullføre skrivingen av filen: %s"
 
-#: trust/save.c:309
+#: trust/save.c:311
 #, c-format
 msgid "couldn't remove original file: %s"
-msgstr ""
+msgstr "kunne ikke fjerne den opprinnelige filen: %s"
 
-#: trust/save.c:355 trust/token.c:635
+#: trust/save.c:357 trust/token.c:687
 #, c-format
 msgid "couldn't create directory: %s"
-msgstr ""
+msgstr "kunne ikke opprette mappen: %s"
 
-#: trust/save.c:359
+#: trust/save.c:361
 #, c-format
 msgid "directory already exists: %s"
-msgstr ""
+msgstr "mappen finnes allerede: %s"
 
-#: trust/save.c:370
+#: trust/save.c:372
 #, c-format
 msgid "couldn't open directory: %s"
-msgstr ""
+msgstr "kunne ikke åpne mappen: %s"
 
-#: trust/save.c:374
+#: trust/save.c:376
 #, c-format
 msgid "couldn't check directory permissions: %s"
-msgstr ""
+msgstr "kunne ikke sjekke mappetillatelser: %s"
 
-#: trust/save.c:380
+#: trust/save.c:382
 #, c-format
 msgid "couldn't make directory writable: %s"
-msgstr ""
+msgstr "kunne ikke gjøre mappen skrivbar: %s"
 
-#: trust/save.c:541
+#: trust/save.c:554
 #, c-format
 msgid "couldn't create symlink: %s"
-msgstr ""
+msgstr "kunne ikke opprette symbolsk lenke: %s"
 
-#: trust/save.c:603 trust/token.c:503
+#: trust/save.c:616 trust/token.c:555
 #, c-format
 msgid "couldn't remove file: %s"
-msgstr ""
+msgstr "kunne ikke fjerne filen: %s"
 
-#: trust/save.c:631
+#: trust/save.c:644
 #, c-format
 msgid "couldn't set directory permissions: %s"
-msgstr ""
+msgstr "kunne ikke sette mappetillatelser: %s"
 
-#: trust/token.c:227
+#: trust/token.c:228
 #, c-format
 msgid "couldn't load file into objects: %s"
-msgstr ""
+msgstr "kunne ikke laste filen inn i objekter: %s"
 
-#: trust/token.c:243
+#: trust/token.c:244
 #, c-format
 msgid "couldn't stat path: %d: %s"
-msgstr ""
+msgstr "kunne ikke kjøre stat på stien: %d: %s"
 
-#: trust/token.c:312
+#: trust/token.c:342
 #, c-format
 msgid "cannot access trust certificate path: %s"
-msgstr ""
+msgstr "har ikke tilgang til stien for tillitssertifikater: %s"
 
-#: trust/token.c:426
+#: trust/token.c:478
 #, c-format
 msgid "cannot access trust file: %s"
-msgstr ""
+msgstr "har ikke tilgang til tillitsfilen: %s"
 
-#: trust/token.c:475
+#: trust/token.c:527
 #, c-format
 msgid "couldn't access: %s"
-msgstr ""
-
-#: trust/trust.c:60
-msgid "List trust or certificates"
-msgstr ""
+msgstr "har ikke tilgang: %s"
 
 #: trust/trust.c:61
-msgid "Extract certificates and trust"
-msgstr ""
+msgid "List trust or certificates"
+msgstr "List opp tillit eller sertifikater"
 
 #: trust/trust.c:62
-msgid "Extract trust compatibility bundles"
-msgstr ""
+msgid "Extract certificates and trust"
+msgstr "Hent ut sertifikater og tillit"
 
 #: trust/trust.c:63
-msgid "Add, remove, change trust anchors"
-msgstr ""
+msgid "Extract trust compatibility bundles"
+msgstr "Hent ut samlinger med tillit for kompatibilitet"
 
 #: trust/trust.c:64
+msgid "Add, remove, change trust anchors"
+msgstr "Legg til, fjern eller endre tillitsankre"
+
+#: trust/trust.c:65
 msgid "Dump trust objects in internal format"
-msgstr ""
+msgstr "Dump tillitsobjekter i internt format"
+
+#: trust/trust.c:66
+msgid "Check the format of .p11-kit files"
+msgstr "Kontroller formatet til .p11-kit-filer"
