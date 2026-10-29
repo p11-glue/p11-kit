@@ -11,7 +11,8 @@ if get_option('test')
   fuzzer_libs = [libp11_kit_testable, libp11_test, libp11_common]
   if with_asn1
     fuzzer_target_names += 'persist'
-    fuzzer_libs += [libtrust_testable, libp11_asn1]
+    fuzzer_target_names += 'trust_pipeline'
+    fuzzer_libs += [libtrust_testable, libtrust_extract_testable, libp11_asn1]
     fuzzer_deps += libtasn1_deps
   endif
 
@@ -22,6 +23,7 @@ if get_option('test')
                    c_args: tests_c_args,
                    include_directories: [configinc, commoninc],
                    dependencies: fuzzer_deps,
+                   link_args: ['-Wl,--allow-multiple-definition'],
                    link_with: fuzzer_libs)
     fuzzer_targets += t
   endforeach
