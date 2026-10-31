@@ -3290,13 +3290,13 @@ test_pkcs11_3_not_supported (void)
 	rv = (module->C_GetSessionValidationFlags) (session, 0, NULL);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
-	rv = (module->C_AsyncComplete) (session, NULL, NULL);
+	rv = (module->C_AsyncComplete) (session, (CK_BYTE_PTR)"C_Sign", NULL);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
-	rv = (module->C_AsyncGetID) (session, NULL, NULL);
+	rv = (module->C_AsyncGetID) (session, (CK_BYTE_PTR)"C_Sign", NULL);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
-	rv = (module->C_AsyncJoin) (session, NULL, 0, NULL, 0);
+	rv = (module->C_AsyncJoin) (session, (CK_BYTE_PTR)"C_Sign", 0, NULL, 0);
 	assert_num_eq (rv, CKR_FUNCTION_NOT_SUPPORTED);
 
 	rv = (module->C_WrapKeyAuthenticated) (session, &crypt_mech, 0, 0,

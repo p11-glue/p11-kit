@@ -154,38 +154,6 @@ proto_read_byte_array (p11_rpc_message *msg,
 	return CKR_OK;
 }
 
-/*
- * Like proto_read_byte_array, but for a UTF-8 string argument that the
- * module expects to be NUL terminated. The wire format carries only the
- * string bytes, so copy them out and terminate the copy.
- */
-static CK_RV
-proto_read_byte_string (p11_rpc_message *msg,
-                        CK_BYTE_PTR *val)
-{
-	CK_BYTE_PTR data;
-	CK_ULONG n_data;
-	CK_RV ret;
-
-	ret = proto_read_byte_array (msg, &data, &n_data);
-	if (ret != CKR_OK)
-		return ret;
-
-	if (data == NULL) {
-		*val = NULL;
-		return CKR_OK;
-	}
-
-	*val = p11_rpc_message_alloc_extra (msg, n_data + 1);
-	if (*val == NULL)
-		return CKR_DEVICE_MEMORY;
-
-	memcpy (*val, data, n_data);
-	(*val)[n_data] = 0;
-
-	return CKR_OK;
-}
-
 static CK_RV
 proto_write_byte_array (p11_rpc_message *msg,
                         CK_BYTE_PTR array,
@@ -734,10 +702,6 @@ call_ready (p11_rpc_message *msg)
 
 #define IN_BYTE_ARRAY(buffer, buffer_len) \
 	_ret = proto_read_byte_array (msg, &buffer, &buffer_len); \
-	if (_ret != CKR_OK) goto _cleanup;
-
-#define IN_BYTE_STRING(val) \
-	_ret = proto_read_byte_string (msg, &val); \
 	if (_ret != CKR_OK) goto _cleanup;
 
 #define IN_ULONG_BUFFER(buffer, buffer_len) \
@@ -2547,7 +2511,7 @@ rpc_C_AsyncComplete (CK_X_FUNCTION_LIST *self,
 
 	BEGIN_CALL (AsyncComplete);
 		IN_ULONG (session);
-		IN_BYTE_STRING (function_name);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL ((self, session, function_name, &result));
 		OUT_ULONG (result.ulVersion);
 		OUT_BYTE_ARRAY (result.pValue, result.ulValueLen);
@@ -2566,7 +2530,7 @@ rpc_C_AsyncGetID (CK_X_FUNCTION_LIST *self,
 
 	BEGIN_CALL (AsyncGetID);
 		IN_ULONG (session);
-		IN_BYTE_STRING (function_name);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL ((self, session, function_name, &id));
 		OUT_ULONG (id);
 	END_CALL;
@@ -2584,7 +2548,7 @@ rpc_C_AsyncJoin (CK_X_FUNCTION_LIST *self,
 
 	BEGIN_CALL (AsyncJoin);
 		IN_ULONG (session);
-		IN_BYTE_STRING (function_name);
+		IN_ZERO_STRING (function_name);
 		IN_ULONG (id);
 		IN_BYTE_ARRAY (data, data_len);
 	PROCESS_CALL ((self, session, function_name, id, data, data_len));

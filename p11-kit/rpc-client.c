@@ -643,6 +643,8 @@ proto_read_sesssion_info (p11_rpc_message *msg,
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
 #define IN_ZERO_STRING(val) \
+	if ((val) == NULL) \
+		{ _ret = CKR_ARGUMENTS_BAD; goto _cleanup; } \
 	if (!p11_rpc_message_write_zero_string (&_msg, val)) \
 		{ _ret = CKR_HOST_MEMORY; goto _cleanup; }
 
@@ -2522,7 +2524,7 @@ rpc_C_AsyncComplete (CK_X_FUNCTION_LIST *self,
 {
 	BEGIN_CALL_OR (C_AsyncComplete, self, CKR_SESSION_HANDLE_INVALID);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name ? strlen ((char *)function_name) : 0);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL;
 		OUT_ULONG (&result->ulVersion);
 		OUT_BYTE_ARRAY (result->pValue, &result->ulValueLen);
@@ -2539,7 +2541,7 @@ rpc_C_AsyncGetID (CK_X_FUNCTION_LIST *self,
 {
 	BEGIN_CALL_OR (C_AsyncGetID, self, CKR_SESSION_HANDLE_INVALID);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name ? strlen ((char *)function_name) : 0);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL;
 		OUT_ULONG (id_ptr);
 	END_CALL;
@@ -2555,7 +2557,7 @@ rpc_C_AsyncJoin (CK_X_FUNCTION_LIST *self,
 {
 	BEGIN_CALL_OR (C_AsyncJoin, self, CKR_SESSION_HANDLE_INVALID);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name ? strlen ((char *)function_name) : 0);
+		IN_ZERO_STRING (function_name);
 		IN_ULONG (id);
 		IN_BYTE_ARRAY (data, data_len);
 	PROCESS_CALL;
