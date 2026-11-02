@@ -95,4 +95,24 @@ EOF
 	fi
 }
 
-run test_import_cert test_import_pubkey_rsa test_import_pubkey_ec
+test_import_pubkey_rsa_malformed() {
+	# A SubjectPublicKeyInfo whose RSAPublicKey carries far fewer bytes than
+	# its inner DER length fields declare. subjectPublicKey is a BIT STRING,
+	# so its reported length is in bits; the RSA import path must divide by 8
+	# before bounding the inner DER parse. If it treats the bit count as a
+	# byte count it reads past the payload into uninitialized heap and stores
+	# it as the modulus and exponent. Import must reject this input.
+	cat > malformed.pem <<EOF
+-----BEGIN PUBLIC KEY-----
+MFIwDQYJKoZIhvcNAQEBBQADQQAwggH8AjBBQUFBQUFBQUFBQUFBQUFBQUFBQUFB
+QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUECggHGAQEBAQEB
+-----END PUBLIC KEY-----
+EOF
+
+	if "$abs_top_builddir"/p11-kit/p11-kit-testable import-object -q --login --file="malformed.pem" --label=bad --id="5a:bc:f6:9a" "pkcs11:token=PERSIST%20LABEL%20ONE?pin-value=booo"; then
+		assert_fail "p11-kit import-object accepted a malformed RSA public key"
+	fi
+}
+
+run test_import_cert test_import_pubkey_rsa test_import_pubkey_ec \
+    test_import_pubkey_rsa_malformed
