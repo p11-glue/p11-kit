@@ -260,6 +260,14 @@ add_attrs_pubkey_rsa (CK_ATTRIBUTE *attrs,
 		goto cleanup;
 	}
 
+	/* subjectPublicKey is a BIT STRING, so its length is in bits.
+	 * The RSAPublicKey DER it carries is byte-aligned. */
+	if (pubkey_len % 8 != 0) {
+		p11_message (_("corrupted public key value"));
+		goto cleanup;
+	}
+	pubkey_len /= 8;
+
 	pubkey_len = p11_asn1_tlv_length (pubkey, pubkey_len);
 	if ((ssize_t)pubkey_len == -1) {
 		p11_message (_("failed to parse ASN.1 structure"));
