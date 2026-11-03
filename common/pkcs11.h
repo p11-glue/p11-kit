@@ -1838,8 +1838,8 @@ struct ck_dsa_parameter_gen_param {
 struct ck_ecdh_aes_key_wrap_params {
   unsigned long aes_key_bits;
   ck_ec_kdf_type_t kdf;
-  unsigned long seed_len;
-  unsigned long index;
+  unsigned long shared_data_len;
+  unsigned char *shared_data;
 };
 
 struct ck_ecdh1_derive_params {

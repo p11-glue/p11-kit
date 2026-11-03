@@ -46,6 +46,10 @@ option('systemd', type : 'feature',
        value : 'auto',
        description : 'Use systemd socket activation')
 
+option('systemduserunitdir', type : 'string',
+       value : '',
+       description : 'Override default location for systemd user units')
+
 option('bashcompdir', type : 'string',
        value : '',
        description : 'Override default location for bash completion files')

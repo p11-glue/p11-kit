@@ -269,6 +269,7 @@ p11_x509_parse_directory_string (const unsigned char *input,
 	int len_len;
 	const void *octets;
 	long octet_len;
+	char *string;
 	int ret;
 
 	ret = asn1_get_tag_der (input, input_len, &cls, &tag_len, &tag);
@@ -292,9 +293,14 @@ p11_x509_parse_directory_string (const unsigned char *input,
 	case 19: /* PrintableString */
 		if (!p11_utf8_validate (octets, octet_len))
 			return NULL;
+		/* The octets may contain NUL bytes, so not strndup () */
+		string = malloc (octet_len + 1);
+		return_val_if_fail (string != NULL, NULL);
+		memcpy (string, octets, octet_len);
+		string[octet_len] = '\0';
 		if (string_len)
 			*string_len = octet_len;
-		return strndup (octets, octet_len);
+		return string;
 
 	case 28: /* UniversalString */
 		return p11_utf8_for_ucs4be (octets, octet_len, string_len);

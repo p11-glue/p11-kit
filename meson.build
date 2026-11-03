@@ -456,9 +456,14 @@ conf.set_quoted('TRUST_PATHS', trust_paths)
 # systemd
 
 with_systemd = false
-systemd = dependency('systemd', required: get_option('systemd'))
-if systemd.found()
-  systemduserunitdir = systemd.get_variable(pkgconfig : 'systemduserunitdir')
+systemduserunitdir = get_option('systemduserunitdir')
+if systemduserunitdir == ''
+  systemd = dependency('systemd', required: get_option('systemd'))
+  if systemd.found()
+    systemduserunitdir = systemd.get_variable(pkgconfig : 'systemduserunitdir')
+    with_systemd = true
+  endif
+else
   with_systemd = true
 endif
 

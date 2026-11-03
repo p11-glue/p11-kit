@@ -22,6 +22,8 @@ COMMON_SRCS = \
 	p11-kit/messages.c \
 	p11-kit/rpc-transport.c p11-kit/rpc.h \
 	p11-kit/rpc-message.c p11-kit/rpc-message.h \
+	p11-kit/rpc-attribute.c p11-kit/rpc-attribute.h \
+	p11-kit/rpc-mechanism.c p11-kit/rpc-mechanism.h \
 	p11-kit/rpc-client.c \
 	p11-kit/uri.c \
 	p11-kit/virtual.c p11-kit/virtual.h \

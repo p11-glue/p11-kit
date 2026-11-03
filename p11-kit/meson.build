@@ -21,6 +21,8 @@ libp11_kit_internal_sources = [
   'filter.c',
   'rpc-transport.c',
   'rpc-message.c',
+  'rpc-attribute.c',
+  'rpc-mechanism.c',
   'rpc-client.c'
 ]
 

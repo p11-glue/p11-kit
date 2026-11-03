@@ -48,6 +48,8 @@
 #include "proxy.h"
 #include "remote.h"
 #include "rpc.h"
+#include "rpc-attribute.h"
+#include "rpc-mechanism.h"
 #include "rpc-message.h"
 #include "uri.h"
 
@@ -2505,12 +2507,11 @@ rpc_C_AsyncComplete (CK_X_FUNCTION_LIST *self,
 {
 	CK_SESSION_HANDLE session;
 	CK_BYTE_PTR function_name;
-	CK_ULONG function_name_len;
 	CK_ASYNC_DATA result = { 0, };
 
 	BEGIN_CALL (AsyncComplete);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name_len);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL ((self, session, function_name, &result));
 		OUT_ULONG (result.ulVersion);
 		OUT_BYTE_ARRAY (result.pValue, result.ulValueLen);
@@ -2525,12 +2526,11 @@ rpc_C_AsyncGetID (CK_X_FUNCTION_LIST *self,
 {
 	CK_SESSION_HANDLE session;
 	CK_BYTE_PTR function_name;
-	CK_ULONG function_name_len;
 	CK_ULONG id;
 
 	BEGIN_CALL (AsyncGetID);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name_len);
+		IN_ZERO_STRING (function_name);
 	PROCESS_CALL ((self, session, function_name, &id));
 		OUT_ULONG (id);
 	END_CALL;
@@ -2542,14 +2542,13 @@ rpc_C_AsyncJoin (CK_X_FUNCTION_LIST *self,
 {
 	CK_SESSION_HANDLE session;
 	CK_BYTE_PTR function_name;
-	CK_ULONG function_name_len;
 	CK_ULONG id;
 	CK_BYTE_PTR data;
 	CK_ULONG data_len;
 
 	BEGIN_CALL (AsyncJoin);
 		IN_ULONG (session);
-		IN_BYTE_ARRAY (function_name, function_name_len);
+		IN_ZERO_STRING (function_name);
 		IN_ULONG (id);
 		IN_BYTE_ARRAY (data, data_len);
 	PROCESS_CALL ((self, session, function_name, id, data, data_len));

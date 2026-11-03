@@ -3,7 +3,7 @@ if bashcompdir == ''
   bashcomp = dependency('bash-completion', required: get_option('bash_completion'))
   if bashcomp.found()
     bashcompdir = bashcomp.get_variable(pkgconfig : 'completionsdir')
-  else
+  elif not get_option('bash_completion').disabled()
     warning('Will not install bash completion due to missing dependencies!')
   endif
 endif
