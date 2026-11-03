@@ -845,6 +845,45 @@ test_mechanism_value_byte_arrays (void)
 	finish_roundtrip (&buffer, hkdf_out);
 }
 
+static CK_RV
+mock_C_AsyncJoin__check_name (CK_SESSION_HANDLE session,
+                              CK_BYTE_PTR function_name,
+                              CK_ULONG id,
+                              CK_BYTE_PTR data,
+                              CK_ULONG data_len)
+{
+	/* A module treats function_name as a NUL terminated string */
+	if (function_name == NULL || strcmp ((char *)function_name, "C_Sign") != 0)
+		return CKR_ARGUMENTS_BAD;
+
+	return mock_C_AsyncJoin (session, function_name, id, data, data_len);
+}
+
+static void
+test_async_function_name (void *module)
+{
+	CK_FUNCTION_LIST_3_2 module_template;
+	CK_FUNCTION_LIST_3_2_PTR rpc_module;
+	CK_SESSION_HANDLE session;
+	CK_RV rv;
+
+	memcpy (&module_template, module, sizeof (CK_FUNCTION_LIST_3_2));
+	module_template.C_AsyncJoin = mock_C_AsyncJoin__check_name;
+
+	rpc_module = (CK_FUNCTION_LIST_3_2_PTR)setup_test_rpc_module (&test_normal_vtable,
+	                                                              &module_template, &session);
+
+	/*
+	 * The id is serialized right after the function name, so with all
+	 * bits set it leaves no zero byte to stop at if the name isn't
+	 * terminated on the server side.
+	 */
+	rv = (rpc_module->C_AsyncJoin) (session, (CK_BYTE_PTR)"C_Sign", (CK_ULONG)-1, NULL, 0);
+	assert_num_eq (rv, CKR_OK);
+
+	teardown_mock_module ((CK_FUNCTION_LIST_PTR)rpc_module);
+}
+
 static void
 test_recursion_limit (void *module)
 {
@@ -980,6 +1019,7 @@ main (int argc,
 	p11_testx (test_simultaneous_functions, &mock_module_v3_no_slots, "/rpc3/simultaneous-functions");
 	p11_testx (test_mechanism_unsupported, &mock_module_v3, "/rpc3/mechanism-unsupported");
 	p11_testx (test_recursion_limit, &mock_module_v3, "/rpc3/recursion-limit");
+	p11_testx (test_async_function_name, &mock_module_v3, "/rpc3/async-function-name");
 
 #ifdef OS_UNIX
 	p11_testx (test_fork_and_reinitialize, &mock_module_v3_no_slots, "/rpc3/fork-and-reinitialize");

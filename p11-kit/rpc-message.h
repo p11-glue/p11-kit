@@ -280,9 +280,9 @@ static const p11_rpc_call p11_rpc_calls[] = {
 	{ P11_RPC_CALL_C_VerifySignatureUpdate, "C_VerifySignatureUpdate", "uay",    ""                     },
 	{ P11_RPC_CALL_C_VerifySignatureFinal, "C_VerifySignatureFinal", "u",       ""                     },
 	{ P11_RPC_CALL_C_GetSessionValidationFlags, "C_GetSessionValidationFlags", "uu", "u"               },
-	{ P11_RPC_CALL_C_AsyncComplete,        "C_AsyncComplete",        "uay",     "uayuu"                },
-	{ P11_RPC_CALL_C_AsyncGetID,           "C_AsyncGetID",           "uay",     "u"                    },
-	{ P11_RPC_CALL_C_AsyncJoin,            "C_AsyncJoin",            "uayuay",  ""                     },
+	{ P11_RPC_CALL_C_AsyncComplete,        "C_AsyncComplete",        "uz",      "uayuu"                },
+	{ P11_RPC_CALL_C_AsyncGetID,           "C_AsyncGetID",           "uz",      "u"                    },
+	{ P11_RPC_CALL_C_AsyncJoin,            "C_AsyncJoin",            "uzuay",   ""                     },
 	{ P11_RPC_CALL_C_WrapKeyAuthenticated, "C_WrapKeyAuthenticated", "uMuuayfy", "ay"                  },
 	{ P11_RPC_CALL_C_UnwrapKeyAuthenticated, "C_UnwrapKeyAuthenticated", "uMuayayaA", "u"              },
 };
