@@ -1283,6 +1283,99 @@ test_ibm_btc_derive_mech_param_update (void)
 	p11_buffer_uninit (&buffer);
 }
 
+/*
+ * A module that supports CKM_IBM_BTC_DERIVE and writes a chain code
+ * shorter than the buffer the caller provided.  Anything else is left
+ * to the mock module.
+ */
+static CK_RV
+mock_C_DeriveKey__btc (CK_SESSION_HANDLE session,
+		       CK_MECHANISM_PTR mechanism,
+		       CK_OBJECT_HANDLE base_key,
+		       CK_ATTRIBUTE_PTR template,
+		       CK_ULONG count,
+		       CK_OBJECT_HANDLE_PTR key)
+{
+	CK_MECHANISM derive = { CKM_MOCK_DERIVE, "derive", 6 };
+	CK_IBM_BTC_DERIVE_PARAMS *params;
+
+	if (mechanism == NULL || mechanism->mechanism != CKM_IBM_BTC_DERIVE)
+		return mock_C_DeriveKey (session, mechanism, base_key,
+					 template, count, key);
+
+	params = mechanism->pParameter;
+	if (params == NULL || mechanism->ulParameterLen != sizeof (*params))
+		return CKR_MECHANISM_PARAM_INVALID;
+
+	if (params->pChainCode != NULL) {
+		if (params->ulChainCodeLen < CK_IBM_BTC_CHAINCODE_LENGTH)
+			return CKR_BUFFER_TOO_SMALL;
+		memset (params->pChainCode, 0xbc, CK_IBM_BTC_CHAINCODE_LENGTH);
+	}
+	params->ulChainCodeLen = CK_IBM_BTC_CHAINCODE_LENGTH;
+
+	return mock_C_DeriveKey (session, &derive, base_key, template, count, key);
+}
+
+static CK_FUNCTION_LIST *
+setup_btc_derive_module (CK_SESSION_HANDLE *session)
+{
+	static CK_FUNCTION_LIST module_template;
+
+	memcpy (&module_template, &mock_module, sizeof (module_template));
+	module_template.C_DeriveKey = mock_C_DeriveKey__btc;
+
+	return setup_test_rpc_module (&test_normal_vtable, &module_template,
+				      session);
+}
+
+/*
+ * Drive C_DeriveKey () all the way through the RPC client and server,
+ * with a module that writes a chain code shorter than the buffer the
+ * caller supplied.  The caller's buffer must come back filled in, and
+ * still be the caller's own memory once the call has returned.
+ */
+static void
+test_ibm_btc_derive_roundtrip (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_OBJECT_HANDLE object;
+	CK_IBM_BTC_DERIVE_PARAMS params;
+	CK_MECHANISM mech = { CKM_IBM_BTC_DERIVE, &params, sizeof (params) };
+	CK_BYTE chain_code[64];
+	CK_BYTE expected[CK_IBM_BTC_CHAINCODE_LENGTH];
+	CK_ATTRIBUTE attrs[1];
+	char label[] = "Derived";
+	CK_RV rv;
+
+	module = setup_btc_derive_module (&session);
+
+	memset (chain_code, 0, sizeof (chain_code));
+	memset (expected, 0xbc, sizeof (expected));
+
+	memset (&params, 0, sizeof (params));
+	params.type = CK_IBM_BIP0032_MASTERK;
+	params.version = CK_IBM_BTC_DERIVE_PARAMS_VERSION_1;
+	params.pChainCode = chain_code;
+	params.ulChainCodeLen = sizeof (chain_code);
+
+	attrs[0].type = CKA_LABEL;
+	attrs[0].pValue = label;
+	attrs[0].ulValueLen = strlen (label);
+
+	rv = (module->C_DeriveKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                            attrs, 1, &object);
+	assert (rv == CKR_OK);
+
+	/* The parameter still points at the caller's buffer, not the reply */
+	assert_ptr_eq (chain_code, params.pChainCode);
+	assert_num_eq (sizeof (expected), params.ulChainCodeLen);
+	assert (memcmp (chain_code, expected, sizeof (expected)) == 0);
+
+	teardown_mock_module (module);
+}
+
 /* Mechanisms taking an optional CK_SIGN_ADDITIONAL_CONTEXT parameter,
  * as defined by PKCS#11 3.2 sections 6.67.5, 6.67.7, 6.68.5 and 6.68.7 */
 static CK_MECHANISM_TYPE sign_additional_context_mechs[] = {
@@ -1484,6 +1577,7 @@ static CK_MECHANISM_TYPE mechanisms[] = {
 	CKM_MOCK_WRAP,
 	CKM_MOCK_DERIVE,
 	CKM_MOCK_COUNT,
+	CKM_IBM_BTC_DERIVE,
 	0,
 };
 
@@ -1520,6 +1614,7 @@ main (int argc,
 	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
 	p11_test (test_ibm_kyber_mech_param_update, "/rpc-message/ibm-kyber-mech-param-update");
 	p11_test (test_ibm_btc_derive_mech_param_update, "/rpc-message/ibm-btc-derive-mech-param-update");
+	p11_test (test_ibm_btc_derive_roundtrip, "/rpc-message/ibm-btc-derive-roundtrip");
 	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");
