@@ -325,7 +325,8 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 
 		if (has_data) {
 			if (!p11_rpc_buffer_get_byte_array (buffer, offset,
-							    &cipher, &cipher_len))
+							    &cipher, &cipher_len) ||
+			    cipher == NULL)
 				return false;
 		} else {
 			if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
@@ -336,15 +337,10 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 		if (value) {
 			CK_IBM_KYBER_PARAMS *params = (CK_IBM_KYBER_PARAMS *) value;
 
-			if (has_data) {
-				assert (cipher != NULL);
-
-				if (params->pCipher &&
-				    params->ulCipherLen == cipher_len)
-					memcpy (params->pCipher, cipher,
-						cipher_len);
-				else
-					params->pCipher = (void *) cipher;
+			if (has_data && params->pCipher != NULL) {
+				if (params->ulCipherLen < cipher_len)
+					return false;
+				memcpy (params->pCipher, cipher, cipher_len);
 			}
 			params->ulCipherLen = cipher_len;
 		}
@@ -397,7 +393,8 @@ p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 
 	if (has_data) {
 		if (!p11_rpc_buffer_get_byte_array (buffer, offset,
-						    &chain_code, &chain_code_len))
+						    &chain_code, &chain_code_len) ||
+		    chain_code == NULL)
 			return false;
 	} else {
 		if (!p11_rpc_buffer_get_uint32 (buffer, offset, &length))
@@ -408,15 +405,10 @@ p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 	if (value) {
 		CK_IBM_BTC_DERIVE_PARAMS *params = (CK_IBM_BTC_DERIVE_PARAMS *) value;
 
-		if (has_data) {
-			assert (chain_code != NULL);
-
-			if (params->pChainCode &&
-			    params->ulChainCodeLen == chain_code_len)
-				memcpy (params->pChainCode, chain_code,
-					chain_code_len);
-			else
-				params->pChainCode = (void *) chain_code;
+		if (has_data && params->pChainCode != NULL) {
+			if (params->ulChainCodeLen < chain_code_len)
+				return false;
+			memcpy (params->pChainCode, chain_code, chain_code_len);
 		}
 		params->ulChainCodeLen = chain_code_len;
 	}
