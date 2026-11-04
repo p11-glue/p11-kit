@@ -1191,6 +1191,155 @@ test_eddsa_mechanism (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+/*
+ * The mechanism parameter update returned by C_DeriveKey2 () is decoded
+ * into the buffer the application supplied.  It must never be made to
+ * point into the reply buffer, which the RPC client frees before the
+ * call returns.
+ */
+static void
+test_ibm_kyber_mech_param_update (void)
+{
+	CK_BYTE cipher[768];
+	CK_BYTE output[1568];
+	CK_IBM_KYBER_PARAMS reply = { 0 };
+	CK_IBM_KYBER_PARAMS params;
+	p11_buffer buffer;
+	size_t offset;
+	bool ret;
+
+	memset (cipher, 0x5a, sizeof (cipher));
+	memset (output, 0, sizeof (output));
+
+	reply.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	reply.pCipher = cipher;
+	reply.ulCipherLen = sizeof (cipher);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
+							sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	/* The module wrote fewer bytes than the caller's buffer holds */
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	params.pCipher = output;
+	params.ulCipherLen = sizeof (output);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (output, params.pCipher);
+	assert_num_eq (sizeof (cipher), params.ulCipherLen);
+	assert_mem_eq (output, sizeof (cipher), cipher, sizeof (cipher));
+
+	/* A reply longer than the caller's buffer is rejected */
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	params.pCipher = output;
+	params.ulCipherLen = sizeof (cipher) - 1;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (false, ret);
+	assert_ptr_eq (output, params.pCipher);
+
+	p11_buffer_uninit (&buffer);
+
+	/* Without a caller buffer only the required length is reported */
+	memset (&reply, 0, sizeof (reply));
+	reply.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	reply.ulCipherLen = sizeof (cipher);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
+							sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (NULL, params.pCipher);
+	assert_num_eq (sizeof (cipher), params.ulCipherLen);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_ibm_btc_derive_mech_param_update (void)
+{
+	CK_BYTE chain_code[CK_IBM_BTC_CHAINCODE_LENGTH];
+	CK_BYTE output[64];
+	CK_IBM_BTC_DERIVE_PARAMS reply = { 0 };
+	CK_IBM_BTC_DERIVE_PARAMS params;
+	p11_buffer buffer;
+	size_t offset;
+	bool ret;
+
+	memset (chain_code, 0xa5, sizeof (chain_code));
+	memset (output, 0, sizeof (output));
+
+	reply.pChainCode = chain_code;
+	reply.ulChainCodeLen = sizeof (chain_code);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
+							     sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	/* The module wrote fewer bytes than the caller's buffer holds */
+	memset (&params, 0, sizeof (params));
+	params.pChainCode = output;
+	params.ulChainCodeLen = sizeof (output);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (output, params.pChainCode);
+	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
+	assert_mem_eq (output, sizeof (chain_code), chain_code, sizeof (chain_code));
+
+	/* A reply longer than the caller's buffer is rejected */
+	memset (&params, 0, sizeof (params));
+	params.pChainCode = output;
+	params.ulChainCodeLen = sizeof (chain_code) - 1;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (false, ret);
+	assert_ptr_eq (output, params.pChainCode);
+
+	p11_buffer_uninit (&buffer);
+
+	/* Without a caller buffer only the required length is reported */
+	memset (&reply, 0, sizeof (reply));
+	reply.ulChainCodeLen = sizeof (chain_code);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
+							     sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (NULL, params.pChainCode);
+	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
+
+	p11_buffer_uninit (&buffer);
+}
+
 /* Mechanisms taking an optional CK_SIGN_ADDITIONAL_CONTEXT parameter,
  * as defined by PKCS#11 3.2 sections 6.67.5, 6.67.7, 6.68.5 and 6.68.7 */
 static CK_MECHANISM_TYPE sign_additional_context_mechs[] = {
@@ -1426,6 +1575,8 @@ main (int argc,
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
 	p11_test (test_mechanism_value_bits_overflow, "/rpc-message/mechanism-value-bits-overflow");
 	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
+	p11_test (test_ibm_kyber_mech_param_update, "/rpc-message/ibm-kyber-mech-param-update");
+	p11_test (test_ibm_btc_derive_mech_param_update, "/rpc-message/ibm-btc-derive-mech-param-update");
 	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");
