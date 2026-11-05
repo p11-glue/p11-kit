@@ -959,6 +959,63 @@ test_attribute_recursion_limit (void)
 	p11_buffer_uninit (&buffer);
 }
 
+/*
+ * Decoding a nested template attribute writes into storage the caller
+ * supplied, but the length of the child value comes from the peer.  The
+ * nested levels have to refuse to write past the caller's child buffer,
+ * the way rpc-client.c already does for the top level attribute.
+ */
+static void
+test_attribute_nested_short_buffer (void)
+{
+	p11_buffer buffer;
+	size_t offset = 0;
+	bool ret;
+
+	/* What the peer sends: CKA_WRAP_TEMPLATE holding a 9 byte CKA_LABEL */
+	unsigned char wire_label[9];
+	CK_ATTRIBUTE wire_child;
+	CK_ATTRIBUTE wire;
+
+	/*
+	 * What the caller provides.  The array is larger than the buffer the
+	 * caller declares, so that an overrun lands in the spare bytes and
+	 * can be detected without relying on a sanitizer.
+	 */
+	unsigned char value[16];
+	CK_ATTRIBUTE child;
+	CK_ATTRIBUTE attr;
+
+	memset (wire_label, 'A', sizeof (wire_label));
+	wire_child.type = CKA_LABEL;
+	wire_child.pValue = wire_label;
+	wire_child.ulValueLen = sizeof (wire_label);
+	wire.type = CKA_WRAP_TEMPLATE;
+	wire.pValue = &wire_child;
+	wire.ulValueLen = sizeof (wire_child);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_attribute (&buffer, &wire);
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (value, 0, sizeof (value));
+	child.type = CKA_LABEL;
+	child.pValue = value;
+	child.ulValueLen = 8;
+	attr.type = CKA_WRAP_TEMPLATE;
+	attr.pValue = &child;
+	attr.ulValueLen = sizeof (child);
+
+	/* The same call the RPC client makes on a C_GetAttributeValue reply */
+	ret = p11_rpc_buffer_get_attribute (&buffer, &offset, &attr);
+	assert_num_eq (false, ret);
+
+	/* Nothing was written past the 8 bytes the caller offered */
+	assert_num_eq (0, value[8]);
+
+	p11_buffer_uninit (&buffer);
+}
+
 static void
 test_pqc_mechanism_no_params (void)
 {
@@ -1373,6 +1430,7 @@ main (int argc,
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");
 	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
+	p11_test (test_attribute_nested_short_buffer, "/rpc-message/attribute-nested-short-buffer");
 	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
 	p11_test (test_pqc_attribute_serialization, "/rpc-message/pqc-attribute-serialization");
 
