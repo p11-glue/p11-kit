@@ -664,6 +664,9 @@ p11_rpc_message_get_attribute_recursive (p11_rpc_message *msg,
 		attr->pValue = p11_rpc_message_alloc_extra (msg, length);
 		if (attr->pValue == NULL)
 			return false;
+	} else if (attr->pValue != NULL && attr->ulValueLen < length) {
+		/* Caller-provided storage: do not write past it */
+		return false;
 	}
 
 	value_type = map_attribute_to_value_type (type);
