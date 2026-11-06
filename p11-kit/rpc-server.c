@@ -2611,18 +2611,14 @@ rpc_C_UnwrapKeyAuthenticated (CK_X_FUNCTION_LIST *self,
 	END_CALL;
 }
 
-bool
-p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
-                       p11_buffer *request,
-                       p11_buffer *response)
+static bool
+rpc_server_handle (CK_X_FUNCTION_LIST *self,
+                   p11_buffer *request,
+                   p11_buffer *response)
 {
 	p11_rpc_message msg;
 	CK_RV ret;
 	int req_id;
-
-	return_val_if_fail (self != NULL, false);
-	return_val_if_fail (request != NULL, false);
-	return_val_if_fail (response != NULL, false);
 
 	p11_message_clear ();
 
@@ -2792,6 +2788,36 @@ p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
 	return true;
 }
 
+bool
+p11_rpc_server_handle (CK_X_FUNCTION_LIST *self,
+                       p11_buffer *request,
+                       p11_buffer *response)
+{
+	p11_buffer scratch;
+	bool ret;
+
+	return_val_if_fail (self != NULL, false);
+	return_val_if_fail (request != NULL, false);
+	return_val_if_fail (response != NULL, false);
+
+	if (request != response)
+		return rpc_server_handle (self, request, response);
+
+	p11_buffer_init (&scratch, 0);
+
+	ret = rpc_server_handle (self, request, &scratch);
+	if (ret) {
+		p11_buffer_reset (response, 0);
+		if (scratch.len > 0)
+			p11_buffer_add (response, scratch.data, scratch.len);
+		ret = !p11_buffer_failed (response);
+	}
+
+	p11_buffer_uninit (&scratch);
+
+	return ret;
+}
+
 /**
  * p11_kit_remote_serve_module:
  * @module: a pointer to a loaded module
@@ -2811,6 +2837,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 	rpc_server server;
 	p11_buffer options;
 	p11_buffer buffer;
+	p11_buffer response;
 	size_t state;
 	int ret = 1;
 	int code;
@@ -2819,6 +2846,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 
 	p11_buffer_init (&options, 0);
 	p11_buffer_init (&buffer, 0);
+	p11_buffer_init (&response, 0);
 
 	p11_virtual_init (&server.virt, &p11_virtual_base, module, NULL);
 
@@ -2873,7 +2901,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 			goto out;
 		}
 
-		if (!p11_rpc_server_handle (&server.virt.funcs, &buffer, &buffer)) {
+		if (!p11_rpc_server_handle (&server.virt.funcs, &buffer, &response)) {
 			p11_message (_("unexpected error handling rpc message"));
 			goto out;
 		}
@@ -2882,7 +2910,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 		options.len = 0;
 		do {
 			status = p11_rpc_transport_write (out_fd, &state, code,
-			                                  &options, &buffer);
+			                                  &options, &response);
 		} while (status == P11_RPC_AGAIN);
 
 		switch (status) {
@@ -2898,6 +2926,7 @@ p11_kit_remote_serve_module (CK_FUNCTION_LIST *module,
 	}
 
 out:
+	p11_buffer_uninit (&response);
 	p11_buffer_uninit (&buffer);
 	p11_buffer_uninit (&options);
 

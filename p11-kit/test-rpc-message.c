@@ -1191,6 +1191,248 @@ test_eddsa_mechanism (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+/*
+ * The mechanism parameter update returned by C_DeriveKey2 () is decoded
+ * into the buffer the application supplied.  It must never be made to
+ * point into the reply buffer, which the RPC client frees before the
+ * call returns.
+ */
+static void
+test_ibm_kyber_mech_param_update (void)
+{
+	CK_BYTE cipher[768];
+	CK_BYTE output[1568];
+	CK_IBM_KYBER_PARAMS reply = { 0 };
+	CK_IBM_KYBER_PARAMS params;
+	p11_buffer buffer;
+	size_t offset;
+	bool ret;
+
+	memset (cipher, 0x5a, sizeof (cipher));
+	memset (output, 0, sizeof (output));
+
+	reply.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	reply.pCipher = cipher;
+	reply.ulCipherLen = sizeof (cipher);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
+							sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	/* The module wrote fewer bytes than the caller's buffer holds */
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	params.pCipher = output;
+	params.ulCipherLen = sizeof (output);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (output, params.pCipher);
+	assert_num_eq (sizeof (cipher), params.ulCipherLen);
+	assert (memcmp (output, cipher, sizeof (cipher)) == 0);
+
+	/* A reply longer than the caller's buffer is rejected */
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	params.pCipher = output;
+	params.ulCipherLen = sizeof (cipher) - 1;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (false, ret);
+	assert_ptr_eq (output, params.pCipher);
+
+	p11_buffer_uninit (&buffer);
+
+	/* Without a caller buffer only the required length is reported */
+	memset (&reply, 0, sizeof (reply));
+	reply.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	reply.ulCipherLen = sizeof (cipher);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
+							sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (NULL, params.pCipher);
+	assert_num_eq (sizeof (cipher), params.ulCipherLen);
+
+	p11_buffer_uninit (&buffer);
+}
+
+static void
+test_ibm_btc_derive_mech_param_update (void)
+{
+	CK_BYTE chain_code[CK_IBM_BTC_CHAINCODE_LENGTH];
+	CK_BYTE output[64];
+	CK_IBM_BTC_DERIVE_PARAMS reply = { 0 };
+	CK_IBM_BTC_DERIVE_PARAMS params;
+	p11_buffer buffer;
+	size_t offset;
+	bool ret;
+
+	memset (chain_code, 0xa5, sizeof (chain_code));
+	memset (output, 0, sizeof (output));
+
+	reply.pChainCode = chain_code;
+	reply.ulChainCodeLen = sizeof (chain_code);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
+							     sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	/* The module wrote fewer bytes than the caller's buffer holds */
+	memset (&params, 0, sizeof (params));
+	params.pChainCode = output;
+	params.ulChainCodeLen = sizeof (output);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (output, params.pChainCode);
+	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
+	assert (memcmp (output, chain_code, sizeof (chain_code)) == 0);
+
+	/* A reply longer than the caller's buffer is rejected */
+	memset (&params, 0, sizeof (params));
+	params.pChainCode = output;
+	params.ulChainCodeLen = sizeof (chain_code) - 1;
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (false, ret);
+	assert_ptr_eq (output, params.pChainCode);
+
+	p11_buffer_uninit (&buffer);
+
+	/* Without a caller buffer only the required length is reported */
+	memset (&reply, 0, sizeof (reply));
+	reply.ulChainCodeLen = sizeof (chain_code);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
+							     sizeof (reply));
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (NULL, params.pChainCode);
+	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
+
+	p11_buffer_uninit (&buffer);
+}
+
+/*
+ * A module that supports CKM_IBM_BTC_DERIVE and writes a chain code
+ * shorter than the buffer the caller provided.  Anything else is left
+ * to the mock module.
+ */
+static CK_RV
+mock_C_DeriveKey__btc (CK_SESSION_HANDLE session,
+		       CK_MECHANISM_PTR mechanism,
+		       CK_OBJECT_HANDLE base_key,
+		       CK_ATTRIBUTE_PTR template,
+		       CK_ULONG count,
+		       CK_OBJECT_HANDLE_PTR key)
+{
+	CK_MECHANISM derive = { CKM_MOCK_DERIVE, "derive", 6 };
+	CK_IBM_BTC_DERIVE_PARAMS *params;
+
+	if (mechanism == NULL || mechanism->mechanism != CKM_IBM_BTC_DERIVE)
+		return mock_C_DeriveKey (session, mechanism, base_key,
+					 template, count, key);
+
+	params = mechanism->pParameter;
+	if (params == NULL || mechanism->ulParameterLen != sizeof (*params))
+		return CKR_MECHANISM_PARAM_INVALID;
+
+	if (params->pChainCode != NULL) {
+		if (params->ulChainCodeLen < CK_IBM_BTC_CHAINCODE_LENGTH)
+			return CKR_BUFFER_TOO_SMALL;
+		memset (params->pChainCode, 0xbc, CK_IBM_BTC_CHAINCODE_LENGTH);
+	}
+	params->ulChainCodeLen = CK_IBM_BTC_CHAINCODE_LENGTH;
+
+	return mock_C_DeriveKey (session, &derive, base_key, template, count, key);
+}
+
+static CK_FUNCTION_LIST *
+setup_btc_derive_module (CK_SESSION_HANDLE *session)
+{
+	static CK_FUNCTION_LIST module_template;
+
+	memcpy (&module_template, &mock_module, sizeof (module_template));
+	module_template.C_DeriveKey = mock_C_DeriveKey__btc;
+
+	return setup_test_rpc_module (&test_normal_vtable, &module_template,
+				      session);
+}
+
+/*
+ * Drive C_DeriveKey () all the way through the RPC client and server,
+ * with a module that writes a chain code shorter than the buffer the
+ * caller supplied.  The caller's buffer must come back filled in, and
+ * still be the caller's own memory once the call has returned.
+ */
+static void
+test_ibm_btc_derive_roundtrip (void)
+{
+	CK_FUNCTION_LIST_PTR module;
+	CK_SESSION_HANDLE session = 0;
+	CK_OBJECT_HANDLE object;
+	CK_IBM_BTC_DERIVE_PARAMS params;
+	CK_MECHANISM mech = { CKM_IBM_BTC_DERIVE, &params, sizeof (params) };
+	CK_BYTE chain_code[64];
+	CK_BYTE expected[CK_IBM_BTC_CHAINCODE_LENGTH];
+	CK_ATTRIBUTE attrs[1];
+	char label[] = "Derived";
+	CK_RV rv;
+
+	module = setup_btc_derive_module (&session);
+
+	memset (chain_code, 0, sizeof (chain_code));
+	memset (expected, 0xbc, sizeof (expected));
+
+	memset (&params, 0, sizeof (params));
+	params.type = CK_IBM_BIP0032_MASTERK;
+	params.version = CK_IBM_BTC_DERIVE_PARAMS_VERSION_1;
+	params.pChainCode = chain_code;
+	params.ulChainCodeLen = sizeof (chain_code);
+
+	attrs[0].type = CKA_LABEL;
+	attrs[0].pValue = label;
+	attrs[0].ulValueLen = strlen (label);
+
+	rv = (module->C_DeriveKey) (session, &mech, MOCK_PUBLIC_KEY_PREFIX,
+	                            attrs, 1, &object);
+	assert (rv == CKR_OK);
+
+	/* The parameter still points at the caller's buffer, not the reply */
+	assert_ptr_eq (chain_code, params.pChainCode);
+	assert_num_eq (sizeof (expected), params.ulChainCodeLen);
+	assert (memcmp (chain_code, expected, sizeof (expected)) == 0);
+
+	teardown_mock_module (module);
+}
+
 /* Mechanisms taking an optional CK_SIGN_ADDITIONAL_CONTEXT parameter,
  * as defined by PKCS#11 3.2 sections 6.67.5, 6.67.7, 6.68.5 and 6.68.7 */
 static CK_MECHANISM_TYPE sign_additional_context_mechs[] = {
@@ -1392,6 +1634,7 @@ static CK_MECHANISM_TYPE mechanisms[] = {
 	CKM_MOCK_WRAP,
 	CKM_MOCK_DERIVE,
 	CKM_MOCK_COUNT,
+	CKM_IBM_BTC_DERIVE,
 	0,
 };
 
@@ -1426,6 +1669,9 @@ main (int argc,
 	p11_test (test_mechanism_value, "/rpc-message/mechanism-value");
 	p11_test (test_mechanism_value_bits_overflow, "/rpc-message/mechanism-value-bits-overflow");
 	p11_test (test_eddsa_mechanism, "/rpc-message/eddsa-mechanism");
+	p11_test (test_ibm_kyber_mech_param_update, "/rpc-message/ibm-kyber-mech-param-update");
+	p11_test (test_ibm_btc_derive_mech_param_update, "/rpc-message/ibm-btc-derive-mech-param-update");
+	p11_test (test_ibm_btc_derive_roundtrip, "/rpc-message/ibm-btc-derive-roundtrip");
 	p11_test (test_sign_additional_context_mechanism, "/rpc-message/sign-additional-context-mechanism");
 	p11_test (test_hash_sign_additional_context_mechanism, "/rpc-message/hash-sign-additional-context-mechanism");
 	p11_test (test_message_write, "/rpc-message/message-write");
