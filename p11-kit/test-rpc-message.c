@@ -1016,6 +1016,83 @@ test_attribute_nested_short_buffer (void)
 	p11_buffer_uninit (&buffer);
 }
 
+/*
+ * The RPC client decodes a mechanism parameter update from the reply into
+ * the caller's mechanism, and the reply buffer is freed once the call
+ * returns.  The output data has to end up in the caller's own buffer, even
+ * when its length differs from what the module returned.
+ */
+static void
+test_mech_param_update_caller_buffer (void)
+{
+	unsigned char wire_data[4] = { 'C', 'C', 'C', 'C' };
+	unsigned char out[8];
+	CK_IBM_KYBER_PARAMS kyber;
+	CK_IBM_BTC_DERIVE_PARAMS btc;
+	CK_MECHANISM mech;
+	p11_buffer buffer;
+	size_t offset;
+	bool ret;
+
+	p11_buffer_init (&buffer, 0);
+
+	/* What the server sends: a 4 byte cipher */
+	memset (&kyber, 0, sizeof (kyber));
+	kyber.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	kyber.pCipher = wire_data;
+	kyber.ulCipherLen = sizeof (wire_data);
+	mech.mechanism = CKM_IBM_KYBER;
+	mech.pParameter = &kyber;
+	mech.ulParameterLen = sizeof (kyber);
+	p11_rpc_buffer_add_mech_param_update (&buffer, &mech);
+	assert (!p11_buffer_failed (&buffer));
+
+	/* The caller's buffer is larger than the cipher */
+	memset (out, 0, sizeof (out));
+	kyber.pCipher = out;
+	kyber.ulCipherLen = sizeof (out);
+	offset = 0;
+	ret = p11_rpc_buffer_get_mech_param_update (&buffer, &offset, &mech);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (out, kyber.pCipher);
+	assert_num_eq (sizeof (wire_data), kyber.ulCipherLen);
+	assert (memcmp (out, wire_data, sizeof (wire_data)) == 0);
+
+	/* The caller's buffer is too small: only the length is returned */
+	memset (out, 0, sizeof (out));
+	kyber.pCipher = out;
+	kyber.ulCipherLen = 2;
+	offset = 0;
+	ret = p11_rpc_buffer_get_mech_param_update (&buffer, &offset, &mech);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (out, kyber.pCipher);
+	assert_num_eq (sizeof (wire_data), kyber.ulCipherLen);
+	assert_num_eq (0, out[0]);
+
+	/* Same for the chain code returned by CKM_IBM_BTC_DERIVE */
+	p11_buffer_reset (&buffer, 0);
+	memset (&btc, 0, sizeof (btc));
+	btc.pChainCode = wire_data;
+	btc.ulChainCodeLen = sizeof (wire_data);
+	mech.mechanism = CKM_IBM_BTC_DERIVE;
+	mech.pParameter = &btc;
+	mech.ulParameterLen = sizeof (btc);
+	p11_rpc_buffer_add_mech_param_update (&buffer, &mech);
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (out, 0, sizeof (out));
+	btc.pChainCode = out;
+	btc.ulChainCodeLen = sizeof (out);
+	offset = 0;
+	ret = p11_rpc_buffer_get_mech_param_update (&buffer, &offset, &mech);
+	assert_num_eq (true, ret);
+	assert_ptr_eq (out, btc.pChainCode);
+	assert_num_eq (sizeof (wire_data), btc.ulChainCodeLen);
+	assert (memcmp (out, wire_data, sizeof (wire_data)) == 0);
+
+	p11_buffer_uninit (&buffer);
+}
+
 static void
 test_pqc_mechanism_no_params (void)
 {
@@ -1431,6 +1508,7 @@ main (int argc,
 	p11_test (test_message_write, "/rpc-message/message-write");
 	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
 	p11_test (test_attribute_nested_short_buffer, "/rpc-message/attribute-nested-short-buffer");
+	p11_test (test_mech_param_update_caller_buffer, "/rpc-message/mech-param-update-caller-buffer");
 	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
 	p11_test (test_pqc_attribute_serialization, "/rpc-message/pqc-attribute-serialization");
 

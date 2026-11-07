@@ -336,15 +336,19 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 		if (value) {
 			CK_IBM_KYBER_PARAMS *params = (CK_IBM_KYBER_PARAMS *) value;
 
+			/*
+			 * The reply buffer is freed when the call returns, so
+			 * copy into the caller's buffer rather than pointing
+			 * at the reply.  If it doesn't fit, only the length
+			 * is returned.
+			 */
 			if (has_data) {
 				assert (cipher != NULL);
 
 				if (params->pCipher &&
-				    params->ulCipherLen == cipher_len)
+				    params->ulCipherLen >= cipher_len)
 					memcpy (params->pCipher, cipher,
 						cipher_len);
-				else
-					params->pCipher = (void *) cipher;
 			}
 			params->ulCipherLen = cipher_len;
 		}
@@ -408,15 +412,14 @@ p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 	if (value) {
 		CK_IBM_BTC_DERIVE_PARAMS *params = (CK_IBM_BTC_DERIVE_PARAMS *) value;
 
+		/* As above, never point the caller at the reply buffer */
 		if (has_data) {
 			assert (chain_code != NULL);
 
 			if (params->pChainCode &&
-			    params->ulChainCodeLen == chain_code_len)
+			    params->ulChainCodeLen >= chain_code_len)
 				memcpy (params->pChainCode, chain_code,
 					chain_code_len);
-			else
-				params->pChainCode = (void *) chain_code;
 		}
 		params->ulChainCodeLen = chain_code_len;
 	}
