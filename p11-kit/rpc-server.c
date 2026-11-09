@@ -599,7 +599,8 @@ proto_write_error (p11_rpc_message *msg, CK_RV err)
 
 static CK_RV
 proto_write_mech_param_update (p11_rpc_message *msg,
-                       CK_MECHANISM_PTR *mech)
+                       CK_MECHANISM_PTR *mech,
+                       CK_RV ret)
 {
 	assert (msg != NULL);
 	assert (msg->output != NULL);
@@ -607,7 +608,7 @@ proto_write_mech_param_update (p11_rpc_message *msg,
 	/* Make sure this is in the right order */
 	assert (!msg->signature || p11_rpc_message_verify_part (msg, "P"));
 
-	p11_rpc_buffer_add_mech_param_update (msg->output, *mech);
+	p11_rpc_buffer_add_mech_param_update (msg->output, *mech, ret != CKR_OK);
 
 	return p11_buffer_failed (msg->output) ? CKR_HOST_MEMORY : CKR_OK;
 }
@@ -726,7 +727,7 @@ call_ready (p11_rpc_message *msg)
 		_ret = PREP_ERROR;
 
 #define OUT_MECH_PARAM_UPDATE(mech) \
-	_ret2 = proto_write_mech_param_update (msg, &mech); \
+	_ret2 = proto_write_mech_param_update (msg, &mech, _ret); \
 	if (_ret2 != CKR_OK) { \
 		_ret = _ret2; \
 		goto _cleanup; \

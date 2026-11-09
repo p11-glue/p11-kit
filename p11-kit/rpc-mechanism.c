@@ -57,6 +57,15 @@ typedef struct {
 	p11_rpc_value_decoder decode;
 } p11_rpc_mechanism_serializer;
 
+typedef void (*p11_rpc_param_update_encoder) (p11_buffer *, const void *,
+					      CK_ULONG, bool);
+
+typedef struct {
+	CK_MECHANISM_TYPE type;
+	p11_rpc_param_update_encoder encode;
+	p11_rpc_value_decoder decode;
+} p11_rpc_param_update_serializer;
+
 /*
  * Convert a bit count into the number of bytes needed to hold it.
  * The count is read off the wire as a uint64_t, so reject values that
@@ -276,7 +285,8 @@ p11_rpc_buffer_get_ibm_attrbound_wrap_mechanism_value (p11_buffer *buffer,
 void
 p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
 						const void *value,
-						CK_ULONG value_length)
+						CK_ULONG value_length,
+						bool length_only)
 {
 	CK_IBM_KYBER_PARAMS params;
 
@@ -290,7 +300,12 @@ p11_rpc_buffer_add_ibm_kyber_mech_param_update (p11_buffer *buffer,
 	if (params.mode == CK_IBM_KYBER_KEM_ENCAPSULATE) {
 		p11_rpc_buffer_add_byte (buffer, CK_IBM_KYBER_KEM_ENCAPSULATE);
 
-		if (params.pCipher == NULL) {
+		/*
+		 * With length_only, ulCipherLen is the length the module
+		 * requires and pCipher still points at the caller's shorter
+		 * buffer; serializing that many bytes would read past it.
+		 */
+		if (params.pCipher == NULL || length_only) {
 			p11_rpc_buffer_add_byte (buffer, 0);
 			p11_rpc_buffer_add_uint32 (buffer, params.ulCipherLen);
 		} else {
@@ -355,7 +370,8 @@ p11_rpc_buffer_get_ibm_kyber_mech_param_update (p11_buffer *buffer,
 void
 p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 						     const void *value,
-						     CK_ULONG value_length)
+						     CK_ULONG value_length,
+						     bool length_only)
 {
 	CK_IBM_BTC_DERIVE_PARAMS params;
 
@@ -366,7 +382,12 @@ p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (p11_buffer *buffer,
 
 	memcpy (&params, value, value_length);
 
-	if (params.pChainCode == NULL) {
+	/*
+	 * With length_only, ulChainCodeLen is the length the module
+	 * requires and pChainCode still points at the caller's shorter
+	 * buffer; serializing that many bytes would read past it.
+	 */
+	if (params.pChainCode == NULL || length_only) {
 		p11_rpc_buffer_add_byte (buffer, 0);
 		p11_rpc_buffer_add_uint32 (buffer, params.ulChainCodeLen);
 	} else {
@@ -2885,7 +2906,7 @@ p11_rpc_buffer_get_tls_kdf_mechanism_value (p11_buffer *buffer,
 	return true;
 }
 
-static p11_rpc_mechanism_serializer p11_rpc_mech_param_update_serializers[] = {
+static p11_rpc_param_update_serializer p11_rpc_mech_param_update_serializers[] = {
 	{ CKM_IBM_BTC_DERIVE, p11_rpc_buffer_add_ibm_btc_derive_mech_param_update, p11_rpc_buffer_get_ibm_btc_derive_mech_param_update },
 	{ CKM_IBM_KYBER, p11_rpc_buffer_add_ibm_kyber_mech_param_update, p11_rpc_buffer_get_ibm_kyber_mech_param_update },
 };
@@ -3404,9 +3425,10 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 }
 
 void
-p11_rpc_buffer_add_mech_param_update (p11_buffer *buffer, const CK_MECHANISM *mech)
+p11_rpc_buffer_add_mech_param_update (p11_buffer *buffer, const CK_MECHANISM *mech,
+				      bool length_only)
 {
-	p11_rpc_mechanism_serializer *serializer = NULL;
+	p11_rpc_param_update_serializer *serializer = NULL;
 	size_t i;
 
 	if (mechanism_has_no_parameters (mech->mechanism)) {
@@ -3430,7 +3452,7 @@ p11_rpc_buffer_add_mech_param_update (p11_buffer *buffer, const CK_MECHANISM *me
 	if (serializer == NULL)
 		return;
 
-	serializer->encode (buffer, mech->pParameter, mech->ulParameterLen);
+	serializer->encode (buffer, mech->pParameter, mech->ulParameterLen, length_only);
 }
 
 bool
@@ -3438,7 +3460,7 @@ p11_rpc_buffer_get_mech_param_update (p11_buffer *buffer,
 				      size_t *offset,
 				      CK_MECHANISM *mech)
 {
-	p11_rpc_mechanism_serializer *serializer = NULL;
+	p11_rpc_param_update_serializer *serializer = NULL;
 	size_t i;
 	unsigned char has_param;
 

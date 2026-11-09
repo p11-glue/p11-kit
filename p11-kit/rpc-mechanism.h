@@ -48,7 +48,8 @@ bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
 							  CK_MECHANISM *mech);
 
 void             p11_rpc_buffer_add_mech_param_update            (p11_buffer *buffer,
-							  const CK_MECHANISM *mech);
+							  const CK_MECHANISM *mech,
+							  bool length_only);
 
 bool             p11_rpc_buffer_get_mech_param_update            (p11_buffer *buffer,
 							  size_t *offset,
@@ -63,8 +64,18 @@ bool             p11_rpc_buffer_get_mech_param_update            (p11_buffer *bu
 					     void *value,		\
 					     CK_ULONG *value_length)
 
-P11_RPC_DECLARE_MECHANISM_VALUE (ibm_kyber_mech_param_update);
-P11_RPC_DECLARE_MECHANISM_VALUE (ibm_btc_derive_mech_param_update);
+#define P11_RPC_DECLARE_MECHANISM_PARAM_UPDATE(name)			\
+	void	p11_rpc_buffer_add_ ## name (p11_buffer *buffer,	\
+					     const void *value,		\
+					     CK_ULONG value_length,	\
+					     bool length_only);		\
+	bool	p11_rpc_buffer_get_ ## name (p11_buffer *buffer,	\
+					     size_t *offset,		\
+					     void *value,		\
+					     CK_ULONG *value_length)
+
+P11_RPC_DECLARE_MECHANISM_PARAM_UPDATE (ibm_kyber_mech_param_update);
+P11_RPC_DECLARE_MECHANISM_PARAM_UPDATE (ibm_btc_derive_mech_param_update);
 P11_RPC_DECLARE_MECHANISM_VALUE (rsa_pkcs_pss_mechanism_value);
 P11_RPC_DECLARE_MECHANISM_VALUE (rsa_pkcs_oaep_mechanism_value);
 P11_RPC_DECLARE_MECHANISM_VALUE (ecdh1_derive_mechanism_value);

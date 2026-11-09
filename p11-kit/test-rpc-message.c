@@ -1217,7 +1217,7 @@ test_ibm_kyber_mech_param_update (void)
 
 	p11_buffer_init (&buffer, 0);
 	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
-							sizeof (reply));
+							sizeof (reply), false);
 	assert (!p11_buffer_failed (&buffer));
 
 	/* The module wrote fewer bytes than the caller's buffer holds */
@@ -1234,7 +1234,10 @@ test_ibm_kyber_mech_param_update (void)
 	assert_num_eq (sizeof (cipher), params.ulCipherLen);
 	assert_mem_eq (output, sizeof (cipher), cipher, sizeof (cipher));
 
-	/* A reply longer than the caller's buffer is rejected */
+	/*
+	 * A reply longer than the caller's buffer is rejected, and the
+	 * caller's parameter is left as it was
+	 */
 	memset (&params, 0, sizeof (params));
 	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
 	params.pCipher = output;
@@ -1245,6 +1248,7 @@ test_ibm_kyber_mech_param_update (void)
 							      &params, NULL);
 	assert_num_eq (false, ret);
 	assert_ptr_eq (output, params.pCipher);
+	assert_num_eq (sizeof (cipher) - 1, params.ulCipherLen);
 
 	p11_buffer_uninit (&buffer);
 
@@ -1255,7 +1259,7 @@ test_ibm_kyber_mech_param_update (void)
 
 	p11_buffer_init (&buffer, 0);
 	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
-							sizeof (reply));
+							sizeof (reply), false);
 	assert (!p11_buffer_failed (&buffer));
 
 	memset (&params, 0, sizeof (params));
@@ -1267,6 +1271,37 @@ test_ibm_kyber_mech_param_update (void)
 	assert_num_eq (true, ret);
 	assert_ptr_eq (NULL, params.pCipher);
 	assert_num_eq (sizeof (cipher), params.ulCipherLen);
+
+	p11_buffer_uninit (&buffer);
+
+	/*
+	 * On CKR_BUFFER_TOO_SMALL the module leaves pCipher pointing at the
+	 * caller's shorter buffer and only raises ulCipherLen.  Encoding
+	 * must not read the buffer, and must still carry the length, so
+	 * that the caller can retry with a buffer of the right size.
+	 */
+	memset (&reply, 0, sizeof (reply));
+	reply.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	reply.pCipher = cipher;
+	reply.ulCipherLen = sizeof (output);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_kyber_mech_param_update (&buffer, &reply,
+							sizeof (reply), true);
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+	params.mode = CK_IBM_KYBER_KEM_ENCAPSULATE;
+	params.pCipher = output;
+	params.ulCipherLen = sizeof (cipher);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_kyber_mech_param_update (&buffer, &offset,
+							      &params, NULL);
+	assert_num_eq (true, ret);
+	assert_num_eq (buffer.len, offset);
+	assert_ptr_eq (output, params.pCipher);
+	assert_num_eq (sizeof (output), params.ulCipherLen);
 
 	p11_buffer_uninit (&buffer);
 }
@@ -1290,7 +1325,8 @@ test_ibm_btc_derive_mech_param_update (void)
 
 	p11_buffer_init (&buffer, 0);
 	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
-							     sizeof (reply));
+							     sizeof (reply),
+							     false);
 	assert (!p11_buffer_failed (&buffer));
 
 	/* The module wrote fewer bytes than the caller's buffer holds */
@@ -1306,7 +1342,10 @@ test_ibm_btc_derive_mech_param_update (void)
 	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
 	assert_mem_eq (output, sizeof (chain_code), chain_code, sizeof (chain_code));
 
-	/* A reply longer than the caller's buffer is rejected */
+	/*
+	 * A reply longer than the caller's buffer is rejected, and the
+	 * caller's parameter is left as it was
+	 */
 	memset (&params, 0, sizeof (params));
 	params.pChainCode = output;
 	params.ulChainCodeLen = sizeof (chain_code) - 1;
@@ -1316,6 +1355,7 @@ test_ibm_btc_derive_mech_param_update (void)
 								   &params, NULL);
 	assert_num_eq (false, ret);
 	assert_ptr_eq (output, params.pChainCode);
+	assert_num_eq (sizeof (chain_code) - 1, params.ulChainCodeLen);
 
 	p11_buffer_uninit (&buffer);
 
@@ -1325,7 +1365,8 @@ test_ibm_btc_derive_mech_param_update (void)
 
 	p11_buffer_init (&buffer, 0);
 	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
-							     sizeof (reply));
+							     sizeof (reply),
+							     false);
 	assert (!p11_buffer_failed (&buffer));
 
 	memset (&params, 0, sizeof (params));
@@ -1336,6 +1377,37 @@ test_ibm_btc_derive_mech_param_update (void)
 	assert_num_eq (true, ret);
 	assert_ptr_eq (NULL, params.pChainCode);
 	assert_num_eq (sizeof (chain_code), params.ulChainCodeLen);
+
+	p11_buffer_uninit (&buffer);
+
+	/*
+	 * On CKR_BUFFER_TOO_SMALL the module leaves pChainCode pointing at
+	 * the caller's shorter buffer and only raises ulChainCodeLen.
+	 * Encoding must not read the buffer, and must still carry the
+	 * length, so that the caller can retry with a buffer of the right
+	 * size.
+	 */
+	memset (&reply, 0, sizeof (reply));
+	reply.pChainCode = chain_code;
+	reply.ulChainCodeLen = sizeof (output);
+
+	p11_buffer_init (&buffer, 0);
+	p11_rpc_buffer_add_ibm_btc_derive_mech_param_update (&buffer, &reply,
+							     sizeof (reply),
+							     true);
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&params, 0, sizeof (params));
+	params.pChainCode = output;
+	params.ulChainCodeLen = sizeof (chain_code);
+
+	offset = 0;
+	ret = p11_rpc_buffer_get_ibm_btc_derive_mech_param_update (&buffer, &offset,
+								   &params, NULL);
+	assert_num_eq (true, ret);
+	assert_num_eq (buffer.len, offset);
+	assert_ptr_eq (output, params.pChainCode);
+	assert_num_eq (sizeof (output), params.ulChainCodeLen);
 
 	p11_buffer_uninit (&buffer);
 }
