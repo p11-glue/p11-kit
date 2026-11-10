@@ -18,12 +18,16 @@ fuzz_targets += fuzz/persist_fuzzer
 fuzz_persist_fuzzer_SOURCES = fuzz/persist_fuzzer.c fuzz/fuzz.h fuzz/main.c
 fuzz_persist_fuzzer_CFLAGS = $(LIBTASN1_CFLAGS)
 fuzz_persist_fuzzer_LDADD = libtrust-testable.la libtrust-data.la libp11-kit-testable.la libp11-library.la libp11-test.la libp11-asn1.la libp11-common.la $(LIBTASN1_LIBS) $(HASH_LIBS)
+fuzz_targets += fuzz/trust_pipeline_fuzzer
+fuzz_trust_pipeline_fuzzer_SOURCES = fuzz/trust_pipeline_fuzzer.c fuzz/fuzz.h fuzz/main.c
+fuzz_trust_pipeline_fuzzer_CFLAGS = $(LIBTASN1_CFLAGS) -DP11_KIT_FUTURE_UNSTABLE_API
+fuzz_trust_pipeline_fuzzer_LDADD = libtrust-extract-testable.la libtrust-testable.la libtrust-data.la libp11-kit-testable.la libp11-library.la libp11-test.la libp11-asn1.la libp11-common.la $(LIBTASN1_LIBS) $(HASH_LIBS)
 endif
 
 EXTRA_DIST += fuzz/meson.build
 
 # Build fuzzers that only need libp11-kit libraries
-oss-fuzz: libp11-kit-testable.la libp11-test.la libp11-common.la libp11-library.la libp11-asn1.la libtrust-testable.la libtrust-data.la
+oss-fuzz: libp11-kit-testable.la libp11-test.la libp11-common.la libp11-library.la libp11-asn1.la libtrust-testable.la libtrust-extract-testable.la libtrust-data.la
 	if test "$$OUT" != ""; then \
 	for src_file in $(top_srcdir)/fuzz/*_fuzzer.c; do \
 	fuzzer=$$(basename $$src_file .c); \
@@ -31,11 +35,11 @@ oss-fuzz: libp11-kit-testable.la libp11-test.la libp11-common.la libp11-library.
 	-I$(top_builddir)/trust $(LIBTASN1_CFLAGS) \
 	-c $(top_srcdir)"/fuzz/$${fuzzer}.c" -o "$${fuzzer}.o" ; \
 	$$CXX $$CXXFLAGS "$${fuzzer}.o" -o "$$OUT/$${fuzzer}" \
-	.libs/libtrust-testable.a .libs/libtrust-data.a \
+	.libs/libtrust-extract-testable.a .libs/libtrust-testable.a .libs/libtrust-data.a \
 	.libs/libp11-kit-testable.a .libs/libp11-test.a \
 	.libs/libp11-asn1.a .libs/libp11-library.a .libs/libp11-common.a \
 	-lffi -ldl -lpthread $(LIBTASN1_LIBS) $(HASH_LIBS) \
-	$${LIB_FUZZING_ENGINE} || exit 1; \
+	$${LIB_FUZZING_ENGINE} -Wl,--allow-multiple-definition || exit 1; \
 	done; \
 	fi
 
