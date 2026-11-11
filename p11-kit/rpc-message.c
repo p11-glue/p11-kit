@@ -69,6 +69,7 @@ p11_rpc_message_init (p11_rpc_message *msg,
 
 	msg->output = output;
 	msg->input = input;
+	msg->version = P11_RPC_PROTOCOL_VERSION_MAXIMUM;
 }
 
 void

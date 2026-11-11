@@ -47,6 +47,13 @@ bool             p11_rpc_buffer_get_mechanism            (p11_buffer *buffer,
 							  size_t *offset,
 							  CK_MECHANISM *mech);
 
+void             p11_rpc_buffer_add_mechanism_v1         (p11_buffer *buffer,
+							  const CK_MECHANISM *mech);
+
+bool             p11_rpc_buffer_get_mechanism_v1         (p11_buffer *buffer,
+							  size_t *offset,
+							  CK_MECHANISM *mech);
+
 void             p11_rpc_buffer_add_mech_param_update            (p11_buffer *buffer,
 							  const CK_MECHANISM *mech,
 							  bool length_only);
