@@ -3425,6 +3425,26 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 }
 
 /*
+ * p11-kit up to 0.25.5 listed these mechanisms as having no parameters and
+ * so sent, and expected, an empty byte array for them.  They have since
+ * gained parameter serializers, which peers at protocol version 0 or 1 do
+ * not know.
+ */
+static bool
+mechanism_v1_has_no_parameters (CK_MECHANISM_TYPE type)
+{
+	switch (type) {
+	case CKM_SHA512_T:
+	case CKM_SHA512_T_HMAC:
+	case CKM_SSL3_MD5_MAC:
+	case CKM_SSL3_SHA1_MAC:
+		return true;
+	default:
+		return mechanism_has_no_parameters (type);
+	}
+}
+
+/*
  * Mechanism encoding used by RPC protocol versions 0 and 1 (p11-kit up to
  * 0.25.5): no "has parameter" byte, and mechanisms without parameters are
  * followed by an empty byte array.  Peers that negotiated a version below 2
@@ -3439,7 +3459,7 @@ p11_rpc_buffer_add_mechanism_v1 (p11_buffer *buffer, const CK_MECHANISM *mech)
 	/* The mechanism type */
 	p11_rpc_buffer_add_uint32 (buffer, mech->mechanism);
 
-	if (mechanism_has_no_parameters (mech->mechanism)) {
+	if (mechanism_v1_has_no_parameters (mech->mechanism)) {
 		p11_rpc_buffer_add_byte_array (buffer, NULL, 0);
 		return;
 	}
@@ -3485,10 +3505,12 @@ p11_rpc_buffer_get_mechanism_v1 (p11_buffer *buffer,
 		return true;
 	}
 
-	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
-		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
-			serializer = &p11_rpc_mechanism_serializers[i];
-			break;
+	if (!mechanism_v1_has_no_parameters (mech->mechanism)) {
+		for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
+			if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
+				serializer = &p11_rpc_mechanism_serializers[i];
+				break;
+			}
 		}
 	}
 
