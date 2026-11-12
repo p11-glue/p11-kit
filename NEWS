@@ -1,3 +1,14 @@
+0.26.6 (stable)
+* rpc: added PQC support [PR#745, PR#781]
+* rpc: added support for more mechanisms [PR#790]
+* rpc: list-objects should no longer print garbage when used via RPC [PR#782]
+* rpc: memory management fixes and hardening [PR#794, PR#796, PR#797, PR#799]
+* p11-kit: import-object now rejects malformed RSA public keys [PR#795]
+* trust: do not truncate DirectoryStrings with embeded NULL byte  [PR#793]
+* Build fixes [PR#788, PR#789]
+* Update translations [PR#783, PR#784, PR#787]
+* Documentation [PR#780]
+
 0.26.5 (stable)
 * rpc: guard against overflow when decoding nested attributes (CVE-2026-18938) [PR#777]
 
