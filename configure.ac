@@ -64,7 +64,8 @@ AC_PROG_CPP
 AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
 AM_PATH_PYTHON([3.6],, [:])
-AM_MISSING_PROG([CASTXML], [castxml])
+AC_PATH_PROG([CASTXML], [castxml])
+AM_CONDITIONAL([HAVE_CASTXML], [test -n "$CASTXML"])
 
 LINGUAS=""
 AM_GNU_GETTEXT([external], [need-ngettext])
