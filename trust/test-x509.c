@@ -76,6 +76,14 @@ static const char test_ku_cert_crl_sign[] = {
 	0x03, 0x03, 0x07, 0x06, 0x00,
 };
 
+static const char test_ku_ds_ke_short[] = {
+	0x03, 0x02, 0x05, 0xa0,
+};
+
+static const char test_ku_empty[] = {
+	0x03, 0x01, 0x00,
+};
+
 static const char test_eku_server_and_client[] = {
 	0x30, 0x14, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01, 0x06, 0x08, 0x2b, 0x06,
 	0x01, 0x05, 0x05, 0x07, 0x03, 0x02,
@@ -307,6 +315,8 @@ struct {
 	{ test_ku_ds_and_np, sizeof (test_ku_ds_and_np), P11_KU_DIGITAL_SIGNATURE | P11_KU_NON_REPUDIATION },
 	{ test_ku_none, sizeof (test_ku_none), 0 },
 	{ test_ku_cert_crl_sign, sizeof (test_ku_cert_crl_sign), P11_KU_KEY_CERT_SIGN | P11_KU_CRL_SIGN },
+	{ test_ku_ds_ke_short, sizeof (test_ku_ds_ke_short), P11_KU_DIGITAL_SIGNATURE | P11_KU_KEY_ENCIPHERMENT },
+	{ test_ku_empty, sizeof (test_ku_empty), 0 },
 	{ NULL },
 };
 
