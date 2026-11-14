@@ -177,7 +177,7 @@ p11_x509_parse_key_usage (p11_dict *asn1_defs,
                           unsigned int *ku)
 {
 	char message[ASN1_MAX_ERROR_DESCRIPTION_SIZE] = { 0, };
-	unsigned char buf[2];
+	unsigned char buf[2] = { 0, };
 	asn1_node ext;
 	int len;
 	int ret;
