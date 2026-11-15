@@ -90,7 +90,9 @@ test_ucs2be_fail (void)
 		const unsigned char input[100];
 		size_t input_len;
 	} fixtures[] = {
-		{ { 0x00, 'T', 0x00, 'h', 0x00, 'i', 0x00, }, 7 /* truncated */ }
+		{ { 0x00, 'T', 0x00, 'h', 0x00, 'i', 0x00, }, 7 /* truncated */ },
+		{ { 0x00, 'T', 0xD8, 0x00 }, 4 /* lone surrogate */ },
+		{ { 0xD8, 0x3D, 0xDE, 0x00 }, 4 /* surrogate pair */ },
 	};
 
 	for (i = 0; i < ELEMS (fixtures); i++) {
@@ -172,7 +174,9 @@ test_ucs4be_fail (void)
 		    0x00, 0x00, 0x00, ' ',
 		    0xD8, 0x00, 0xDF, 0x19,
 		  }, 20,
-		}
+		},
+		{ { 0x00, 0x00, 0xDF, 0xFF }, 4 /* surrogate */ },
+		{ { 0x00, 0x11, 0x00, 0x00 }, 4 /* above U+10FFFF */ },
 	};
 
 	for (i = 0; i < ELEMS (fixtures); i++) {
