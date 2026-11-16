@@ -5,6 +5,7 @@ noinst_LTLIBRARIES += \
 
 check_LTLIBRARIES += \
 	libtrust-testable.la \
+	libtrust-extract-testable.la \
 	$(NULL)
 
 libtrust_data_la_SOURCES = \
@@ -72,6 +73,29 @@ libtrust_testable_la_CFLAGS = \
 	$(LIBTASN1_CFLAGS)
 
 libtrust_testable_la_LIBADD = \
+	$(LIBTASN1_LIBS)
+
+# Extra testable build of the enumerate/extract sources for fuzzing
+# (normally only compiled into the trust tool binary).
+libtrust_extract_testable_la_SOURCES = \
+	trust/enumerate.c trust/enumerate.h \
+	trust/extract.c trust/extract.h \
+	trust/extract-jks.c \
+	trust/extract-edk2.c \
+	trust/extract-openssl.c \
+	trust/extract-pem.c \
+	trust/extract-cer.c \
+	trust/utf8.c trust/utf8.h \
+	trust/x509.c trust/x509.h \
+	$(NULL)
+
+libtrust_extract_testable_la_CFLAGS = \
+	-DP11_DEFAULT_TRUST_PREFIX="$(builddir)/trust/default" \
+	-DP11_SYSTEM_TRUST_PREFIX="$(builddir)/trust/system" \
+	-I$(builddir)/trust \
+	$(LIBTASN1_CFLAGS)
+
+libtrust_extract_testable_la_LIBADD = \
 	$(LIBTASN1_LIBS)
 
 bin_PROGRAMS += trust/trust
