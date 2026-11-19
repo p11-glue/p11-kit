@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2034
 
 set -euf
 
@@ -21,12 +22,12 @@ script=$(basename $0)
 
 warning()
 {
-	echo "$script: $@" >&2
+	echo "$script: $*" >&2
 }
 
 assert_fail()
 {
-	warning $@
+	warning "$@"
 	exit 1
 }
 
@@ -58,7 +59,7 @@ teardown_dirty()
 skip()
 {
 	TEST_SKIP=yes
-	echo "ok $TEST_NUMBER # skip $TEST_NAME: $@"
+	echo "ok $TEST_NUMBER # skip $TEST_NAME: $*"
 }
 
 setup()
@@ -69,14 +70,14 @@ setup()
 run()
 {
 	TOTAL=0
-	for TEST_NAME in $@; do
+	for TEST_NAME in "$@"; do
 		TOTAL=$(expr $TOTAL + 1)
 	done
 
 	echo "1..$TOTAL"
 
 	TEST_NUMBER=0
-	for TEST_NAME in $@; do
+	for TEST_NAME in "$@"; do
 		TEST_NUMBER=$(expr $TEST_NUMBER + 1)
 		(
 			trap teardown_dirty EXIT

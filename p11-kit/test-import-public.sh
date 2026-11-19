@@ -15,7 +15,7 @@ test "${abs_top_srcdir+set}" = set || {
 setup() {
 	testdir=$PWD/test-import-$$
 	test -d "$testdir" || mkdir "$testdir"
-	cd "$testdir"
+	cd "$testdir" || exit 1
 }
 
 teardown() {

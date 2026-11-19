@@ -12,7 +12,7 @@ test "${abs_top_builddir+set}" = set || {
 setup() {
 	testdir=$PWD/test-objects-$$
 	test -d "$testdir" || mkdir "$testdir"
-	cd "$testdir"
+	cd "$testdir" || exit 1
 }
 
 teardown() {
@@ -28,6 +28,8 @@ usage: p11-kit list-tokens [--only-uris] pkcs11:token
   --only-uris         only print token URIs
   --provider=<...>    specify the module to use
 EOF
+	# stderr carries debug output and must not end up in list.out
+	# shellcheck disable=SC2069
 	if "$abs_top_builddir"/p11-kit/p11-kit-testable list-tokens -q 2>&1 > list.out; then
 		assert_fail "p11-kit list-tokens succeeded without token URI"
 	fi

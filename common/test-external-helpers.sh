@@ -1,3 +1,4 @@
+# shellcheck shell=sh disable=SC2154
 # Shared helpers for integration tests against external PKCS#11 tokens.
 # Source this file from individual token test scripts after test-init.sh.
 #

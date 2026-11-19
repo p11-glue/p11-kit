@@ -5,13 +5,18 @@ test "${abs_top_builddir+set}" = set || {
 	exit 1
 }
 
+test "${abs_top_srcdir+set}" = set || {
+	echo "set abs_top_srcdir" 1>&2
+	exit 1
+}
+
 . "$abs_top_builddir/common/test-init.sh"
 . "$abs_top_srcdir/common/test-external-helpers.sh"
 
 setup() {
 	testdir=$PWD/test-kryoptic-$$
 	test -d "$testdir" || mkdir "$testdir"
-	cd "$testdir"
+	cd "$testdir" || exit 1
 
 	# Find kryoptic module
 	if test -z "${KRYOPTIC_MODULE-}"; then
