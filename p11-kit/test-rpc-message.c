@@ -1073,6 +1073,59 @@ test_pqc_mechanism_no_params (void)
 	p11_rpc_mechanisms_override_supported = mechanisms;
 }
 
+/*
+ * A parameter the RPC layer has no serializer for must not be handed
+ * on as raw bytes: CK_TLS12_KEY_MAT_PARAMS carries pointers, and the
+ * module would write the returned key material through them.
+ */
+static void
+test_mechanism_unsupported_param (void)
+{
+	p11_buffer buffer;
+	CK_MECHANISM_TYPE *mechanisms;
+	CK_TLS12_KEY_MAT_PARAMS params;
+	CK_MECHANISM val;
+	size_t offset = 0;
+	bool ret;
+
+	mechanisms = p11_rpc_mechanisms_override_supported;
+	p11_rpc_mechanisms_override_supported = NULL;
+
+	memset (&params, 0, sizeof (params));
+	params.pReturnedKeyMaterial = (CK_SSL3_KEY_MAT_OUT_PTR)(uintptr_t)0x41414141;
+
+	p11_buffer_init (&buffer, 0);
+
+	/* Encoded by hand, as p11_rpc_buffer_add_mechanism () refuses to */
+	p11_rpc_buffer_add_uint32 (&buffer, CKM_TLS12_KEY_AND_MAC_DERIVE);
+	p11_rpc_buffer_add_byte (&buffer, 1);
+	p11_rpc_buffer_add_byte_array (&buffer, (unsigned char *)&params,
+				       sizeof (params));
+	assert (!p11_buffer_failed (&buffer));
+
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+	assert_num_eq (false, ret);
+
+	/* Without a parameter there is nothing to misinterpret */
+	p11_buffer_reset (&buffer, 0);
+	p11_rpc_buffer_add_uint32 (&buffer, CKM_TLS12_KEY_AND_MAC_DERIVE);
+	p11_rpc_buffer_add_byte (&buffer, 0);
+	assert (!p11_buffer_failed (&buffer));
+
+	offset = 0;
+	memset (&val, 0, sizeof (val));
+	ret = p11_rpc_buffer_get_mechanism (&buffer, &offset, &val);
+	assert_num_eq (true, ret);
+	assert_num_eq (CKM_TLS12_KEY_AND_MAC_DERIVE, val.mechanism);
+	assert_ptr_eq (NULL, val.pParameter);
+	assert_num_eq (0, val.ulParameterLen);
+
+	p11_buffer_uninit (&buffer);
+
+	p11_rpc_mechanisms_override_supported = mechanisms;
+}
+
 static void
 test_pqc_attribute_serialization (void)
 {
@@ -1750,6 +1803,7 @@ main (int argc,
 	p11_test (test_attribute_recursion_limit, "/rpc-message/attribute-recursion-limit");
 	p11_test (test_attribute_nested_short_buffer, "/rpc-message/attribute-nested-short-buffer");
 	p11_test (test_pqc_mechanism_no_params, "/rpc-message/pqc-mechanism-no-params");
+	p11_test (test_mechanism_unsupported_param, "/rpc-message/mechanism-unsupported-param");
 	p11_test (test_pqc_attribute_serialization, "/rpc-message/pqc-attribute-serialization");
 
 	test_mock_add_tests ("/rpc-message", NULL);

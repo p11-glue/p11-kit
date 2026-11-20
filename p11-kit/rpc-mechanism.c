@@ -3407,6 +3407,14 @@ p11_rpc_buffer_get_mechanism (p11_buffer *buffer,
 		return true;
 	}
 
+	/*
+	 * p11_rpc_buffer_add_mechanism () never encodes a parameter for
+	 * other mechanisms.  Passing the raw bytes on would hand the
+	 * module a parameter structure whose pointers the peer chose.
+	 */
+	if (!mechanism_has_sane_parameters (mech->mechanism))
+		return false;
+
 	for (i = 0; i < ELEMS (p11_rpc_mechanism_serializers); i++) {
 		if (p11_rpc_mechanism_serializers[i].type == mech->mechanism) {
 			serializer = &p11_rpc_mechanism_serializers[i];
