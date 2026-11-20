@@ -67,6 +67,11 @@ bool                   p11_rpc_server_handle       (CK_X_FUNCTION_LIST *funcs,
                                                     p11_buffer *request,
                                                     p11_buffer *response);
 
+bool                   p11_rpc_server_handle_version (CK_X_FUNCTION_LIST *funcs,
+                                                      uint8_t version,
+                                                      p11_buffer *request,
+                                                      p11_buffer *response);
+
 extern CK_MECHANISM_TYPE *  p11_rpc_mechanisms_override_supported;
 
 typedef struct _p11_rpc_transport p11_rpc_transport;
