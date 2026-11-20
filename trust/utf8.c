@@ -304,6 +304,12 @@ utf8_for_convert (ssize_t (* convert) (const unsigned char *, size_t, uint32_t *
 		str += ret;
 		num_bytes -= ret;
 
+		/* Same code points that utf8_to_uchar () refuses */
+		if ((uc >= 0xd800 && uc <= 0xdfff) || uc > 0x10ffff) {
+			p11_buffer_uninit (&buf);
+			return NULL;
+		}
+
 		ret = utf8_for_uchar (uc, block, 6);
 		if (ret < 0) {
 			p11_buffer_uninit (&buf);
