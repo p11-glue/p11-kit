@@ -15,7 +15,7 @@ setup() {
 		echo "cannot create temporary directory" >&2
 		exit 77
 	fi
-	cd "$testdir"
+	cd "$testdir" || exit 1
 
 	unset P11_KIT_SERVER_ADDRESS
 	unset P11_KIT_SERVER_PID

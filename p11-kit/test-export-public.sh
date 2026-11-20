@@ -12,7 +12,7 @@ test "${abs_top_builddir+set}" = set || {
 setup() {
 	testdir=$PWD/test-objects-$$
 	test -d "$testdir" || mkdir "$testdir"
-	cd "$testdir"
+	cd "$testdir" || exit 1
 }
 
 teardown() {

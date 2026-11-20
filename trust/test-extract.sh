@@ -24,7 +24,7 @@ openssl_quiet()
 (
 	command='/Generating a|-----|^[.+]+$|writing new private key/d'
 	exec 3>&1
-	openssl $@ 2>&1 >&3 3>&- | sed -r "$command" 3>&-
+	openssl "$@" 2>&1 >&3 3>&- | sed -r "$command" 3>&-
 )
 
 setup()
@@ -55,8 +55,7 @@ setup()
 
 	# Make a temporary directory
 	dir=$(mktemp -d)
-	cd $dir
-	CLEANUP="$dir $TD"
+	cd "$dir" || exit 1
 
 	# Generate a unique identifier
 	CERT_1_CN=test_$("$DD" if=/dev/urandom count=40 bs=1 status=none | base64 | tr -d '+/=')
@@ -124,7 +123,7 @@ test_blocklist()
 test_persist()
 {
 	if ! (trust dump --filter "pkcs11:object=$CERT_4_CN" | \
-		  grep '^nss-server-distrust-after: "191228000000Z"$') 2>&1 >/dev/null; then
+		  grep '^nss-server-distrust-after: "191228000000Z"$') >/dev/null 2>&1; then
 		assert_fail "nss-server-distrust-after is not preserved"
 	fi
 }
