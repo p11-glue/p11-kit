@@ -819,6 +819,26 @@ test_valid_dates (void)
 	p11_attrs_free (attrs);
 	attrs = NULL;
 
+	memcpy (date.year, "2000", sizeof (date.year));
+	memcpy (date.month, "12", sizeof (date.month));
+	memcpy (date.day, "31", sizeof (date.day));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
+	memcpy (date.year, "2000", sizeof (date.year));
+	memcpy (date.month, "01", sizeof (date.month));
+	memcpy (date.day, "31", sizeof (date.day));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
+	attrs = NULL;
+
 	input[0].ulValueLen = 0;
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_OK, rv);
@@ -853,6 +873,12 @@ test_invalid_dates (void)
 	memcpy (date.year, "2000", sizeof (date.year));
 	memcpy (date.month, "15", sizeof (date.month));
 	memcpy (date.day, "80", sizeof (date.day));
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	memcpy (date.year, "2001", sizeof (date.year));
+	memcpy (date.month, "02", sizeof (date.month));
+	memcpy (date.day, "29", sizeof (date.day));
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 
@@ -901,6 +927,14 @@ test_valid_false_or_time (void)
 
 	p11_attrs_free (extra);
 	p11_attrs_free (attrs);
+
+	input[0].pValue = "20191231235959Z";
+	input[0].ulValueLen = 15;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_OK, rv);
+
+	p11_attrs_free (extra);
+	p11_attrs_free (attrs);
 }
 
 static void
@@ -926,6 +960,21 @@ test_invalid_false_or_time (void)
 
 	input[0].pValue = "\x01\x02\x03";
 	input[0].ulValueLen = 3;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = "20191301000000Z";
+	input[0].ulValueLen = 15;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = "190230000000Z";
+	input[0].ulValueLen = 13;
+	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
+	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
+
+	input[0].pValue = "20190701240000Z";
+	input[0].ulValueLen = 15;
 	rv = p11_builder_build (test.builder, test.index, attrs, input, &extra);
 	assert_num_eq (CKR_ATTRIBUTE_VALUE_INVALID, rv);
 

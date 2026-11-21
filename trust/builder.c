@@ -269,6 +269,9 @@ type_date (p11_builder *builder,
 	if (tm.tm_year < 0 || tm.tm_mon <= 0 || tm.tm_mday <= 0)
 		return false;
 
+	/* struct tm months are 0-based */
+	tm.tm_mon--;
+
 	memcpy (&two, &tm, sizeof (tm));
 	two.tm_isdst = -1;	// do not perform tz fixup
 	if (mktime (&two) < 0)
@@ -361,6 +364,7 @@ type_false_or_time (p11_builder *builder,
 		return true;
 
 	value = attr->pValue;
+	memset (&tm, 0, sizeof (tm));
 
 	switch (attr->ulValueLen) {
 	case 13:
@@ -409,8 +413,13 @@ type_false_or_time (p11_builder *builder,
 	    tm.tm_hour < 0 || tm.tm_min < 0 || tm.tm_sec < 0)
 		return false;
 
+	/* struct tm counts years from 1900 and months from 0 */
+	tm.tm_year -= 1900;
+	tm.tm_mon--;
+
 	memcpy (&two, &tm, sizeof (tm));
 	two.tm_isdst = -1;	/* do not perform tz fixup */
+	mktime (&two);
 
 	/* If mktime changed anything, then bad time */
 	if (tm.tm_year != two.tm_year ||
