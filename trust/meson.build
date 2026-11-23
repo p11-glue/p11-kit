@@ -41,6 +41,7 @@ shared_module('p11-kit-trust',
 
 if get_option('test')
   libtrust_testable_c_args = [
+    '-DC_GetFunctionList=p11_trust_C_GetFunctionList',
     '-DP11_DEFAULT_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'default'),
     '-DP11_SYSTEM_TRUST_PREFIX="@0@"'.format(meson.current_build_dir() / 'system')
   ]
@@ -50,6 +51,24 @@ if get_option('test')
                                      include_directories: [configinc, commoninc],
                                      c_args: libtrust_testable_c_args,
                                      dependencies: [asn_h_dep] + libtasn1_deps)
+
+  # Extra testable build of the enumerate/extract sources for fuzzing
+  # (normally only compiled into the trust tool binary).
+  libtrust_extract_sources = [
+    'enumerate.c',
+    'extract.c',
+    'extract-jks.c',
+    'extract-edk2.c',
+    'extract-openssl.c',
+    'extract-pem.c',
+    'extract-cer.c',
+  ]
+
+  libtrust_extract_testable = static_library('libtrust-extract-testable',
+                                             libtrust_extract_sources,
+                                             include_directories: [configinc, commoninc],
+                                             c_args: libtrust_testable_c_args + common_c_args,
+                                             dependencies: [asn_h_dep] + libtasn1_deps)
 endif
 
 trust_sources = [
