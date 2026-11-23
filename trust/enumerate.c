@@ -761,11 +761,26 @@ p11_enumerate_comment (p11_enumerate *ex,
 {
 	char *comment;
 	char *label;
+	char *p;
 
 	if (!(ex->flags & P11_EXTRACT_COMMENT))
 		return NULL;
 
 	label = extract_label (ex);
+
+	/*
+	 * The label comes from the certificate, so keep it on the
+	 * comment line and don't let it look like PEM armor.
+	 */
+	if (label) {
+		for (p = label; *p != '\0'; p++) {
+			if ((unsigned char)*p < 0x20 || *p == 0x7f)
+				*p = ' ';
+		}
+		while ((p = strstr (label, "-----")) != NULL)
+			*p = '_';
+	}
+
 	if (!asprintf (&comment, "%s# %s\n",
 	               first ? "" : "\n",
 	               label ? label : ""))

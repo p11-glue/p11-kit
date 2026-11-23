@@ -121,6 +121,25 @@ test_comment_for_label (void)
 }
 
 static void
+test_comment_label_one_line (void)
+{
+	CK_ATTRIBUTE label = { CKA_LABEL, "CA\n-----BEGIN X-----\r\tY-----END X-----", 38 };
+	p11_enumerate ex;
+	char *comment;
+
+	p11_enumerate_init (&ex);
+
+	ex.flags = P11_EXTRACT_COMMENT | P11_ENUMERATE_CORRELATE;
+	ex.attrs = p11_attrs_build (NULL, &label, NULL);
+
+	comment = p11_enumerate_comment (&ex, true);
+	assert_str_eq ("# CA _----BEGIN X_----  Y_----END X_----\n", comment);
+	free (comment);
+
+	p11_enumerate_cleanup (&ex);
+}
+
+static void
 test_comment_not_enabled (void)
 {
 	CK_ATTRIBUTE label = { CKA_LABEL, "The Label!", 10 };
@@ -550,6 +569,7 @@ main (int argc,
 	p11_test (test_file_name_for_label, "/extract/test_file_name_for_label");
 	p11_test (test_file_name_for_class, "/extract/test_file_name_for_class");
 	p11_test (test_comment_for_label, "/extract/test_comment_for_label");
+	p11_test (test_comment_label_one_line, "/extract/test_comment_label_one_line");
 	p11_test (test_comment_not_enabled, "/extract/test_comment_not_enabled");
 
 	p11_fixture (setup, teardown);
